@@ -4,8 +4,11 @@
 #+STARTUP: indent
 #+TODO: TODO(t) ONGOING(o@/!) WAIT(w@/!) | DONE(d@/!) CANCELED(c@)
 
-* add tag bounding boxes
-* let user select multiple image files
+* TODO add tag bounding boxes
+* TODO let user select multiple image files
 ** add multiple to input field and handle it in UI
-* save user annotations to local storage for safety
-* 
+* TODO save user annotations to local storage for safety
+* TODO update existing bounding boxes
+** move
+** resize
+* TODO image zoom in/out during annotation
