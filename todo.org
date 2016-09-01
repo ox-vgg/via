@@ -4,6 +4,9 @@
 #+STARTUP: indent
 #+TODO: TODO(t) ONGOING(o@/!) WAIT(w@/!) | DONE(d@/!) CANCELED(c@)
 
+* ONGOING update UI
+- State "ONGOING"    from "TODO"       [2016-09-01 Thu 14:21]
+** added status bar
 * TODO add tag bounding boxes
 * TODO let user select multiple image files
 ** add multiple to input field and handle it in UI

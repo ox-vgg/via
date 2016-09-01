@@ -5,8 +5,16 @@
  * Aug. 31, 2016
  */
 
+var VIA_VERSION = "0.1";
 var image_canvas;
 var image_context;
+
+var image_panel_width;
+var image_panel_height;
+var canvas_width;
+var canvas_height;
+var scale_factor_width = 0;
+var scale_factor_height = 0;
 
 var local_file_selector;
 var image;
@@ -20,7 +28,16 @@ var annotation_bbox_count = 0;
 var x0 = []; var y0 = []; // bounding box: top-left corner
 var x1 = []; var y1 = []; // bounding box: bottom-right corner
 
-var json_download_link = document.getElementById("link_download_json");
+var json_download_link = document.getElementById("link_download_annotation");
+var status_bar = document.getElementById("status_bar");
+
+// source: http://stackoverflow.com/questions/3437786/get-the-size-of-the-screen-current-web-page-and-browser-window
+var w = window,
+    d = document,
+    e = d.documentElement,
+    g = d.getElementsByTagName('body')[0],
+    x = w.innerWidth || e.clientWidth || g.clientWidth,
+    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
 
 // initialize the canvas on which image annotation takes place
 image_canvas = document.getElementById("image_canvas");
@@ -43,7 +60,7 @@ json_download_link.addEventListener('click', function(e) {
 	json_download_link.name = "annotations.json";
 	json_download_link.target = "_new";
     } else {
-	csv_download_link.href="javascript:void(0)";
+	json_download_link.href="javascript:void(0)";
     }
 });
 				   
@@ -59,6 +76,8 @@ image_canvas.addEventListener('mouseup', function(e) {
     x0.push(click_x); y0.push(click_y);
     x1.push(e.offsetX); y1.push(e.offsetY);
     annotation_bbox_count = annotation_bbox_count + 1;
+
+    status("Saved [" + annotation_bbox_count + "] annotations");
     
     annotation_ongoing = false;
     
@@ -100,7 +119,7 @@ function draw_all_bbox() {
 
 function redraw_image_canvas() {
     if (image != null) {
-	image_context.drawImage(image, 0, 0);
+	image_context.drawImage(image, 0, 0, canvas_width, canvas_height);
 	draw_all_bbox();
     }
 }
@@ -108,8 +127,18 @@ function redraw_image_canvas() {
 function main() {
     console.log('VGG Image Annotator (via)');
 
-    local_file_selector = document.getElementById("local_file_selector");
+    local_file_selector = document.getElementById("invisible_file_input");
     local_file_selector.addEventListener("change", load_local_file, false);
+
+    // get the width of image_panel
+    var image_panel = document.getElementById('image_panel');
+    image_panel_width = image_panel.clientWidth;
+
+    //set the height according to user screen
+    image_panel_height = y*0.6;
+    image_panel.clientHeight = image_panel_height;
+
+    status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
 }
 
 function load_local_file(d) {
@@ -118,17 +147,35 @@ function load_local_file(d) {
 	return;
     } else {
 	image_original_filename = d.target.files[0].name;
+	status("Loading image " + image_original_filename + " ... ");
 	img_reader = new FileReader();
 	img_reader.onload = function(d) {
 	    image = new Image();
 	    image.src = img_reader.result;
 
+	    scale_factor_height = image_panel_height/image.naturalHeight;
+	    canvas_width = image.naturalWidth * scale_factor_height;
+	    if (canvas_width > image_panel_width) {
+		scale_factor_width = image_panel_width/canvas_width;
+		canvas_height = image_panel_height * scale_factor_width;
+	    } else {
+		canvas_height = image_panel_height;
+	    }
+
 	    // set the canvas size to match that of the image
-	    image_canvas.height = image.naturalHeight;
-	    image_canvas.width = image.naturalWidth;
+	    image_canvas.height = canvas_height;
+	    image_canvas.width = canvas_width;
 	    
-	    image_context.drawImage(image, 0, 0);
+	    image_context.drawImage(image, 0, 0, canvas_width, canvas_height);
+	    status("done", true);
 	};
 	img_reader.readAsDataURL(img_file);
     }
+}
+
+function status(msg, append=false) {
+    if(append)
+	status_bar.innerHTML = status_bar.innerHTML + msg;
+    else
+	status_bar.innerHTML = msg;
 }
