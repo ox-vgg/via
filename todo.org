@@ -1,17 +1,1 @@
-#+TITLE: TODO for VGG Image Annotator
-#+DATE: August 31, 2016
-#+AUTHOR: Abhishek Dutta <http://abhishekdutta.org>
-#+STARTUP: indent
-#+TODO: TODO(t) ONGOING(o@/!) WAIT(w@/!) | DONE(d@/!) CANCELED(c@)
-
-* ONGOING update UI
-- State "ONGOING"    from "TODO"       [2016-09-01 Thu 14:21]
-** added status bar
-* TODO add tag bounding boxes
-* TODO let user select multiple image files
-** add multiple to input field and handle it in UI
-* TODO save user annotations to local storage for safety
-* TODO update existing bounding boxes
-** move
-** resize
-* TODO image zoom in/out during annotation
+see [[https://gitlab.com/vgg/via]]
