@@ -16,7 +16,7 @@ var canvas_height;
 var scale_factor = 0; // preserving aspect ratio
 
 var local_file_selector;
-var image;
+var image = new Image();
 var image_original_filename;
 
 var user_drawing_bounding_box = false;
@@ -65,7 +65,6 @@ function main() {
     image_panel_width = image_panel.offsetWidth;
     image_panel_height = image_panel.offsetHeight;  
     console.log("image panel (w,h) = (" + image_panel_width + "," + image_panel_height + ")");
-
 }
 
 // Let users download the annotations as a CSV file
@@ -215,12 +214,12 @@ function load_local_files(files) {
 
 	try {
 	    img_reader = new FileReader();
-	    img_reader.onerror = function(e) {
-		console.log("error: " + e.type);
-	    };
+
+	    img_reader.addEventListener( "error", function() {
+		status("error!", true);
+	    }, false);
 	    
-	    img_reader.onload = function(d) {
-		image = new Image();
+	    img_reader.addEventListener( "load", function() {
 		image.src = img_reader.result;
 
 		console.log("image (w,h) = (" + image.naturalWidth + "," + image.naturalHeight + ")");
@@ -253,7 +252,8 @@ function load_local_files(files) {
 		console.log("canvas (w,h) = (" + image_canvas.width + "," + image_canvas.height + ")");
 		console.log("image (w,h) = (" + image.naturalWidth + "," + image.naturalHeight + ")");
 		console.log("scale factor = " + scale_factor);
-	    };
+	    }, false);
+	    
 	    img_reader.readAsDataURL(img_file);
 	} catch (e) {
 	    console.log("Exception : " + e.message);
