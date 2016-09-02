@@ -31,14 +31,6 @@ var x1 = []; var y1 = []; // bounding box: bottom-right corner
 var json_download_link = document.getElementById("link_download_annotation");
 var status_bar = document.getElementById("status_bar");
 
-// source: http://stackoverflow.com/questions/3437786/get-the-size-of-the-screen-current-web-page-and-browser-window
-var w = window,
-    d = document,
-    e = d.documentElement,
-    g = d.getElementsByTagName('body')[0],
-    x = w.innerWidth || e.clientWidth || g.clientWidth,
-    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
-
 // initialize the canvas on which image annotation takes place
 image_canvas = document.getElementById("image_canvas");
 image_context = image_canvas.getContext("2d");
@@ -133,12 +125,12 @@ function main() {
     // get the width of image_panel
     var image_panel = document.getElementById('image_panel');
     image_panel_width = image_panel.clientWidth;
-
-    //set the height according to user screen
-    image_panel_height = y*0.6;
-    image_panel.clientHeight = image_panel_height;
+    image_panel_height = image_panel.clientHeight;
 
     status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
+
+    // debug
+    console.log("image panel (w,h) = (" + image_panel_width + "," + image_panel_height + ")");
 }
 
 function load_local_file(d) {
@@ -163,11 +155,16 @@ function load_local_file(d) {
 	    }
 
 	    // set the canvas size to match that of the image
-	    image_canvas.height = canvas_height;
-	    image_canvas.width = canvas_width;
+	    image_canvas.height = Math.round(canvas_height);
+	    image_canvas.width = Math.round(canvas_width);
 	    
 	    image_context.drawImage(image, 0, 0, canvas_width, canvas_height);
 	    status("done", true);
+
+	    // debug
+	    console.log("image panel (w,h) = (" + image_panel_width + "," + image_panel_height + ")");
+	    console.log("canvas (w,h) = (" + canvas_width + "," + canvas_height + ")");
+	    console.log("image (w,h) = (" + image.naturalWidth + "," + image.naturalHeight + ")");
 	};
 	img_reader.readAsDataURL(img_file);
     }

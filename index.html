@@ -8,13 +8,19 @@
 <html>
   <head>
     <meta charset="UTF-8"> 
-    <title>VGG Image Annotator (via) -- version 0.1</title>
+    <title>VGG Image Annotator</title>
 
     <!-- CSS style definition -->
     <style>
+      body {
+      height: 98vh;
+      }
+      
       div.container {
-      display: block;
+      position: relative;
+      overflow: hidden;
       max-width: 100%;
+      height: 98%;
       background-color: white;
       }
       
@@ -57,7 +63,7 @@
       display: inline-block;
       width: 10%;
       vertical-align: middle;
-      padding: 25% 0;
+      padding-top: 25%;
       }
 
       .svg_navigation_symbol {
@@ -69,8 +75,9 @@
       display: inline-block;
       position: relative;
       background-color: white;
-      width: 80%;
-            text-align:center;
+      width: 100%;
+      height: 100%;
+      text-align:center;
       }
       
       #image_canvas {
@@ -84,7 +91,7 @@
       float: right;
       display: inline-block;
       width: 10%;
-      padding: 25% 0;
+      padding-top: 25%;
       }
       
       #invisible_file_input {
@@ -128,39 +135,32 @@
 	  <li><a href="#" alt="Settings" title="Settings"><svg width="32" viewBox="0 0 32 32"><path d="M29.181 19.070c-1.679-2.908-0.669-6.634 2.255-8.328l-3.145-5.447c-0.898 0.527-1.943 0.829-3.058 0.829-3.361 0-6.085-2.742-6.085-6.125h-6.289c0.008 1.044-0.252 2.103-0.811 3.070-1.679 2.908-5.411 3.897-8.339 2.211l-3.144 5.447c0.905 0.515 1.689 1.268 2.246 2.234 1.676 2.903 0.672 6.623-2.241 8.319l3.145 5.447c0.895-0.522 1.935-0.82 3.044-0.82 3.35 0 6.067 2.725 6.084 6.092h6.289c-0.003-1.034 0.259-2.080 0.811-3.038 1.676-2.903 5.399-3.894 8.325-2.219l3.145-5.447c-0.899-0.515-1.678-1.266-2.232-2.226zM16 22.479c-3.578 0-6.479-2.901-6.479-6.479s2.901-6.479 6.479-6.479c3.578 0 6.479 2.901 6.479 6.479s-2.901 6.479-6.479 6.479z"></path></svg></a></li>
 	  <li><a href="#" alt="Help" title="Help"><svg width="32" viewBox="0 0 32 32"><path d="M14 22h4v4h-4zM22 8c1.105 0 2 0.895 2 2v6l-6 4h-4v-2l6-4v-2h-10v-4h12zM16 3c-3.472 0-6.737 1.352-9.192 3.808s-3.808 5.72-3.808 9.192c0 3.472 1.352 6.737 3.808 9.192s5.72 3.808 9.192 3.808c3.472 0 6.737-1.352 9.192-3.808s3.808-5.72 3.808-9.192c0-3.472-1.352-6.737-3.808-9.192s-5.72-3.808-9.192-3.808zM16 0v0c8.837 0 16 7.163 16 16s-7.163 16-16 16c-8.837 0-16-7.163-16-16s7.163-16 16-16z"></path></svg></a></li> 
 	</ul>
+	<div id="status_bar"></div>
       </div> <!-- end of toolbar -->
-      
-      <div id="status_bar"></div>
-    
+
+      <!--
       <div class="navigation_left"><a href="" alt="Previous Image" title="Previous Image">
 	<svg class="svg_navigation_symbol" width="30%" viewBox="0 0 32 32">
 	  <path d="M1 16l15 15v-9h16v-12h-16v-9z"></path>
 	</svg>
       </a></div>
+      -->
       <div id="image_panel">
 	<!--<img src="sample_img2.jpg">-->
 	<canvas id="image_canvas">
 	  Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.
 	</canvas>
       </div>
+      <!--
       <div class="navigation_right"><a href="" alt="Next Image" title="Next Image">
 	<svg class="svg_navigation_symbol" width="30%" viewBox="0 0 32 32">
 	  <path d="M31 16l-15-15v9h-16v12h16v9z"></path>
 	</svg>
       </a></div>
+      -->
+
     </div> <!-- end of container -->
     
-    <!--
-    <input type="file" id="local_file_selector" accept='image/*' />
-    <input type="text" name="bbox_annotation_text">
-    <ul>
-      <li><a href="" id="link_download_json">Download annotations as json</a></li>
-    </ul>
-    
-    <canvas id="image_canvas">
-    Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.
-    </canvas>
--->
   </body>
 
   <script type="text/javascript" src="via.js"></script>
