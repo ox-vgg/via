@@ -163,7 +163,8 @@ image_canvas.addEventListener('mouseup', function(e) {
 	    annotate_bounding_box(bounding_box_id);
 	} else {
 	    if ( user_entering_annotation ) {
-		bbox_annotation_textbox.focus();
+		user_entering_annotation = false;
+		window.focus();
 	    } else {
 		redraw_image_canvas();
 	    }
@@ -211,6 +212,7 @@ image_canvas.addEventListener('mousemove', function(e) {
 	} else {
 	    image_context.strokeRect(click_x0, click_y0, w, h);
 	}
+	image_canvas.focus();
     }
 });
 
@@ -252,7 +254,7 @@ function draw_all_annotations() {
 	    // draw text over this background rectangle
 	    image_context.globalAlpha=1.0;
 	    image_context.fillStyle = 'yellow';
-	    image_context.fillText(annotations[i], x0[i] + bgnd_rect_height, y0[i] - bgnd_rect_height/5);
+	    image_context.fillText(annotations[i], x0[i] + bgnd_rect_height, y0[i] - bgnd_rect_height/4);
 	}
     }
 }
@@ -324,7 +326,7 @@ function is_inside_bounding_box(x, y) {
 	if ( x > x0[i] && x < x1[i] && y > y0[i] && y < y1[i] ) {
 	    return i;
 	}
-	console.log("["+i+"] bbox = ("+x0[i]+","+y0[i]+") to ("+x1[i]+","+y1[i]+") : (x,y)=("+x+","+y+")");
+	//console.log("["+i+"] bbox = ("+x0[i]+","+y0[i]+") to ("+x1[i]+","+y1[i]+") : (x,y)=("+x+","+y+")");
     }    
     return -1;
 }
@@ -347,16 +349,35 @@ function annotate_bounding_box(bounding_box_id) {
 
 // when the user types annotation text and presses the Enter key
 bbox_annotation_textbox.addEventListener("keydown", function(e) {
+    console.log("bbox_annotation_textbox: key = " + e.which + ", user_entering_annotation = " + user_entering_annotation);
+    
     if ( e.which == 13 ) { // Enter
-	annotations[current_annotation_bounding_box_id] = bbox_annotation_textbox.value;
-	annotation_count = annotation_count + 1;
-	bbox_annotation_textbox.value = "";
-	//bbox_annotation_textbox.style.display = "none";
-	bbox_annotation_textbox.style.visibility = "hidden";
-	user_entering_annotation = false;
+	if ( user_entering_annotation ) {
+	    annotations[current_annotation_bounding_box_id] = bbox_annotation_textbox.value;
+	    bbox_annotation_textbox.value = "";
+	    //bbox_annotation_textbox.style.display = "none";
+	    bbox_annotation_textbox.style.visibility = "hidden";
+	    
+	    show_status("Saved [" + bounding_box_count + "] bounding boxes and [" + annotations.length + "] annotations", false);
+	    redraw_image_canvas();
 
-	show_status("Saved [" + bounding_box_count + "] bounding boxes and [" + annotation_count + "] annotations", false);
-	redraw_image_canvas();
+	    // if there are more bounding boxes, move to them
+	    if ( annotations.length > 1 ) {
+		if ( current_annotation_bounding_box_id == (bounding_box_count-1) ) {
+		    // move to first bounding box
+		    current_annotation_bounding_box_id = 0;
+		} else {
+		    // move to next bounding box
+		    current_annotation_bounding_box_id = current_annotation_bounding_box_id + 1;
+		}
+		annotate_bounding_box(current_annotation_bounding_box_id);
+	    } else {
+		bbox_annotation_textbox.style.visibility = "hidden";
+		current_annotation_bounding_box_id = -1;
+		user_entering_annotation = false;
+	    }
+	    e.preventDefault();
+	}
     }
     if ( e.which == 27 ) { // Esc
 	//bbox_annotation_textbox.style.display = "none";
@@ -366,7 +387,27 @@ bbox_annotation_textbox.addEventListener("keydown", function(e) {
     }
 });
 
-
+// when user presses Enter key, the annotation process begins
+// automatically with the first bounding box
+// a TAB key moves annotation focus to the next bounding box
+window.addEventListener("keydown", function(e) {
+    console.log("window: key = " + e.which + ", user_entering_annotation = " + user_entering_annotation);
+    
+    if ( e.which == 13 ) { // Enter
+	if ( !user_entering_annotation ) {
+	    // move to first bounding box
+	    user_entering_annotation = true;
+	    current_annotation_bounding_box_id = 0;	    
+	    annotate_bounding_box(current_annotation_bounding_box_id);
+	}
+	e.preventDefault();
+    }
+    if ( e.which == 27 ) { // Esc
+	user_entering_annotation = false;
+	redraw_image_canvas();
+    }
+});
+			      
 function show_status(msg, append) {
     if(append)
 	status_bar.innerHTML = status_bar.innerHTML + msg;
