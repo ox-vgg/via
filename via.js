@@ -5,7 +5,7 @@
  * Aug. 31, 2016
  */
 
-var VIA_VERSION = "0.1";
+var VIA_VERSION = "0.1b";
 
 var image_panel_width;
 var image_panel_height;
