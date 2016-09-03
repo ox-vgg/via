@@ -13,8 +13,9 @@ var canvas_width;
 var canvas_height;
 var scale_factor = 0; // preserving aspect ratio
 
-var image = new Image();
+var image;
 var image_original_filename;
+var image_loaded = false;
 
 var user_drawing_bounding_box = false;
 var user_entering_annotation = false;
@@ -49,8 +50,14 @@ function main() {
 
     // Handler for toolbar buttons
     home_button.addEventListener("click", function(e) {
-	image_canvas.style.display = "none";
-	starting_information_panel.style.display = "block";
+	if (image_loaded) {
+	    image_canvas.style.display = "inline";
+	    starting_information_panel.style.display = "none";
+	} else {
+	    image_canvas.style.display = "none";
+	    starting_information_panel.style.display = "block";
+	}
+
 	help_panel.style.display = "none";
     }, false);
 
@@ -58,6 +65,10 @@ function main() {
 	// source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
 	if (invisible_file_input) {
 	    invisible_file_input.click();
+	    
+	    image_canvas.style.display = "inline";
+	    starting_information_panel.style.display = "none";
+	    help_panel.style.display = "none";
 	}
 	e.preventDefault(); // prevent navigation to "#"
     }, false);
@@ -220,31 +231,24 @@ function redraw_image_canvas() {
 }
 
 function load_local_files(files) {
-    // hide canvas and show starting information
-    image_canvas.style.display = "";
-    starting_information_panel.style.display = "none";
-
     var img_file = files[0];
     if (!img_file) {
 	return;
     } else {
-	image_original_filename = files[0].name;
-	try {
-	    img_reader = new FileReader();
+	image_original_filename = img_file.name;
+	img_reader = new FileReader();
 
-	    img_reader.addEventListener( "progress", function(e) {
-		show_status("Loading image " + image_original_filename + " ... ", false);
-	    }, false);
+	img_reader.addEventListener( "progress", function(e) {
+	    show_status("Loading image " + image_original_filename + " ... ", false);
+	}, false);
 
-	    img_reader.addEventListener( "error", function() {
-		show_status("Error loading image " + image_original_filename + " !", false);
-	    }, false);
-	    
-	    img_reader.addEventListener( "load", function() {
-		image.src = img_reader.result;
-
-		//console.log("image (w,h) = (" + image.naturalWidth + "," + image.naturalHeight + ")");
-		
+	img_reader.addEventListener( "error", function() {
+	    show_status("Error loading image " + image_original_filename + " !", false);
+	}, false);
+	
+	img_reader.addEventListener( "load", function() {
+	    image = new Image();
+	    image.addEventListener( "load", function() {
 		canvas_width = image.naturalWidth;
 		canvas_height = image.naturalHeight;
 		
@@ -254,33 +258,26 @@ function load_local_files(files) {
 		    canvas_width = image_panel_width;
 		    canvas_height = image.naturalHeight * scale_factor;		
 		}
+		// resize image if its height is larger than the image panel
 		if ( canvas_height > image_panel_height ) {
 		    scale_factor = image_panel_height / canvas_height;
 		    canvas_height = image_panel_height;
 		    canvas_width = canvas_width * scale_factor;
 		}
-		//console.log("computed canvas (w,h) = (" + canvas_width + "," + canvas_height + ")");
-		
 		// set the canvas size to match that of the image
 		image_canvas.height = canvas_height;
 		image_canvas.width = canvas_width;
 		
 		image_context.drawImage(image, 0, 0, canvas_width, canvas_height);
-		show_status("Loaded " + image_original_filename, false);
 
-		/*
-		// debug
-		console.log("image panel (w,h) = (" + image_panel_width + "," + image_panel_height + ")");
-		console.log("canvas (w,h) = (" + image_canvas.width + "," + image_canvas.height + ")");
-		console.log("image (w,h) = (" + image.naturalWidth + "," + image.naturalHeight + ")");
-		console.log("scale factor = " + scale_factor);
-		*/
-	    }, false);
-	    
-	    img_reader.readAsDataURL(img_file);
-	} catch (e) {
-	    console.log("Exception : " + e.message);
-	}
+		var img_dim_str = " ( " + this.naturalWidth + " x " + this.naturalHeight;
+		var img_size_str = ", " + Math.round(img_file.size/1024) + " KB )";
+		show_status("Loaded " + image_original_filename + img_dim_str + img_size_str, false);
+		image_loaded = true;
+	    });
+	    image.src = img_reader.result;
+	}, false);
+	img_reader.readAsDataURL(img_file);
     }
 }
 
