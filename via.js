@@ -58,7 +58,7 @@ function main() {
 
     image_panel_width = image_panel.offsetWidth;
     image_panel_height = image_panel.offsetHeight;  
-    console.log("image panel (w,h) = (" + image_panel_width + "," + image_panel_height + ")");
+    //console.log("image panel (w,h) = (" + image_panel_width + "," + image_panel_height + ")");
 
     // hide canvas and show starting information
     image_canvas.style.display = "none";
@@ -91,7 +91,7 @@ json_download_link.addEventListener('click', function(e) {
 image_canvas.addEventListener('mousedown', function(e) {
     user_drawing_bounding_box = true;
     click_x0 = e.offsetX; click_y0 = e.offsetY;
-    console.log("mouse click (x,y) = (" + click_x0 + "," + click_y0 + ")");
+    //console.log("mouse click (x,y) = (" + click_x0 + "," + click_y0 + ")");
 });
 
 // A click on canvas indicates annotation of an object in image
@@ -101,7 +101,7 @@ image_canvas.addEventListener('mouseup', function(e) {
 
     var dx = Math.abs(click_x1 - click_x0);
     var dy = Math.abs(click_y1 - click_y0);
-    console.log("d(x,y) = (" + dx + "," + dy + ")");
+    //console.log("d(x,y) = (" + dx + "," + dy + ")");
     if ( dx < 10 || dy < 10 ) {	
 	// this was a single click event which triggers image annotation
 	user_drawing_bounding_box = false;
@@ -203,24 +203,30 @@ function redraw_image_canvas() {
 }
 
 function load_local_files(files) {
+    // hide canvas and show starting information
+    image_canvas.style.display = "";
+    starting_information_panel.style.display = "none";
+
     var img_file = files[0];
     if (!img_file) {
 	return;
     } else {
 	image_original_filename = files[0].name;
-	show_status("Loading image " + image_original_filename + " ... ", false);
-
 	try {
 	    img_reader = new FileReader();
 
+	    img_reader.addEventListener( "progress", function(e) {
+		show_status("Loading image " + image_original_filename + " ... ", false);
+	    }, false);
+
 	    img_reader.addEventListener( "error", function() {
-		show_status("error!", true);
+		show_status("Error loading image " + image_original_filename + " !", false);
 	    }, false);
 	    
 	    img_reader.addEventListener( "load", function() {
 		image.src = img_reader.result;
 
-		console.log("image (w,h) = (" + image.naturalWidth + "," + image.naturalHeight + ")");
+		//console.log("image (w,h) = (" + image.naturalWidth + "," + image.naturalHeight + ")");
 		
 		canvas_width = image.naturalWidth;
 		canvas_height = image.naturalHeight;
@@ -236,20 +242,22 @@ function load_local_files(files) {
 		    canvas_height = image_panel_height;
 		    canvas_width = canvas_width * scale_factor;
 		}
-		console.log("computed canvas (w,h) = (" + canvas_width + "," + canvas_height + ")");
+		//console.log("computed canvas (w,h) = (" + canvas_width + "," + canvas_height + ")");
 		
 		// set the canvas size to match that of the image
 		image_canvas.height = canvas_height;
 		image_canvas.width = canvas_width;
 		
 		image_context.drawImage(image, 0, 0, canvas_width, canvas_height);
-		show_status("done", true);
+		show_status("Loaded " + image_original_filename, false);
 
+		/*
 		// debug
 		console.log("image panel (w,h) = (" + image_panel_width + "," + image_panel_height + ")");
 		console.log("canvas (w,h) = (" + image_canvas.width + "," + image_canvas.height + ")");
 		console.log("image (w,h) = (" + image.naturalWidth + "," + image.naturalHeight + ")");
 		console.log("scale factor = " + scale_factor);
+		*/
 	    }, false);
 	    
 	    img_reader.readAsDataURL(img_file);
