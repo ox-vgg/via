@@ -34,51 +34,21 @@ var image_canvas = document.getElementById("image_canvas");
 var image_context = image_canvas.getContext("2d");
 
 var open_file_button = document.getElementById("open_file_button");
-var help_button = document.getElementById('help_button');
-var home_button = document.getElementById('home_button');
+var help_button = document.getElementById("help_button");
+var home_button = document.getElementById("home_button");
+var delete_annotations_button = document.getElementById("delete_annotations_button");
+var settings_button = document.getElementById("settings_button");
 
 var invisible_file_input = document.getElementById("invisible_file_input");
 var json_download_link = document.getElementById("link_download_annotations");
 var status_bar = document.getElementById("status_bar");
 var bbox_annotation_textbox = document.getElementById("bbox_annotation_textbox");
-var image_panel = document.getElementById('image_panel');
-var starting_information_panel = document.getElementById('starting_information');
-var help_panel = document.getElementById('help_panel');
+var image_panel = document.getElementById("image_panel");
+var starting_information_panel = document.getElementById("starting_information");
+var help_panel = document.getElementById("help_panel");
 
 function main() {
     console.log('VGG Image Annotator (via)');
-
-    // Handler for toolbar buttons
-    home_button.addEventListener("click", function(e) {
-	if (image_loaded) {
-	    image_canvas.style.display = "inline";
-	    starting_information_panel.style.display = "none";
-	} else {
-	    image_canvas.style.display = "none";
-	    starting_information_panel.style.display = "block";
-	}
-
-	help_panel.style.display = "none";
-    }, false);
-
-    open_file_button.addEventListener("click", function(e) {
-	// source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
-	if (invisible_file_input) {
-	    invisible_file_input.click();
-	    
-	    image_canvas.style.display = "inline";
-	    starting_information_panel.style.display = "none";
-	    help_panel.style.display = "none";
-	}
-	e.preventDefault(); // prevent navigation to "#"
-    }, false);
-
-    help_button.addEventListener("click", function(e) {
-	// hide canvas and show starting information
-	image_canvas.style.display = "none";
-	starting_information_panel.style.display = "none";
-	help_panel.style.display = "block";
-    }, false);
 
     bbox_annotation_textbox.style.visibility = "hidden";
 
@@ -86,14 +56,38 @@ function main() {
 
     image_panel_width = image_panel.offsetWidth;
     image_panel_height = image_panel.offsetHeight;  
-    //console.log("image panel (w,h) = (" + image_panel_width + "," + image_panel_height + ")");
 
     // hide canvas and show starting information
     image_canvas.style.display = "none";
     starting_information_panel.style.display = "block";
+    help_panel.style.display = "none";
 }
 
-// Let users download the annotations as a CSV file
+home_button.addEventListener("click", function(e) {
+    if (image_loaded) {
+	image_canvas.style.display = "inline";
+	starting_information_panel.style.display = "none";
+    } else {
+	image_canvas.style.display = "none";
+	starting_information_panel.style.display = "block";
+    }
+
+    help_panel.style.display = "none";
+    show_status("", false);
+}, false);
+
+open_file_button.addEventListener("click", function(e) {
+    // source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
+    if (invisible_file_input) {
+	invisible_file_input.click();
+	
+	image_canvas.style.display = "inline";
+	starting_information_panel.style.display = "none";
+	help_panel.style.display = "none";
+    }
+    e.preventDefault(); // prevent navigation to "#"
+}, false);
+
 json_download_link.addEventListener('click', function(e) {
     if ( bounding_box_count > 0 ) {
 	x0_json = JSON.stringify(x0);
@@ -111,10 +105,39 @@ json_download_link.addEventListener('click', function(e) {
 	json_download_link.name = "annotations.json";
 	json_download_link.target = "_new";
     } else {
-	json_download_link.href="javascript:void(0)";
+	show_status("Are you serious? Do some annotations first.", false);
     }
 });
-				   
+
+delete_annotations_button.addEventListener("click", function(e) {
+    if ( bounding_box_count > 0 || annotation_count > 0 ) {
+	bounding_box_count = 0;
+	annotation_count = 0;
+	x0 = []; y0 = [];
+	x1 = []; y1 = [];
+	annotations = [];
+	current_annotation_bounding_box_id = -1;
+
+	show_status("All bounding boxes deleted! I hope this was not a mistake :-)", false);
+        redraw_image_canvas();
+    } else {
+	show_status("Common man! how can I delete something that is not there?", false);
+    }
+}, false);
+
+settings_button.addEventListener('click', function(e) {
+    show_status("Not implemented yet! I am working on it.", false);
+}, false);
+
+help_button.addEventListener("click", function(e) {
+    // hide canvas and show starting information
+    image_canvas.style.display = "none";
+    starting_information_panel.style.display = "none";
+    help_panel.style.display = "block";
+
+    show_status("", false);
+}, false);
+
 // A click on canvas indicates annotation of an object in image
 image_canvas.addEventListener('mousedown', function(e) {
     user_drawing_bounding_box = true;
@@ -164,7 +187,7 @@ image_canvas.addEventListener('mouseup', function(e) {
         redraw_image_canvas();
     }
 });
-					 
+
 // highlight existing annotations
 image_canvas.addEventListener("mouseover", function(e) {
     redraw_image_canvas();
@@ -191,9 +214,7 @@ image_canvas.addEventListener('mousemove', function(e) {
     }
 });
 
-function draw_all_bbox() {
-    image_context.save();
-
+function draw_all_bounding_box() {
     // draw bounding boxes
     for (var i=0; i<bounding_box_count; ++i) {
 	// draw bounding box
@@ -208,7 +229,9 @@ function draw_all_bbox() {
 	image_context.shadowColor="white";
 	image_context.strokeRect(x0[i], y0[i], x1[i]-x0[i], y1[i]-y0[i]);
     }
+}
 
+function draw_all_annotations() {
     image_context.shadowColor = "transparent";
     // draw annotation text
     for (var i=0; i<bounding_box_count; ++i) {
@@ -216,17 +239,29 @@ function draw_all_bbox() {
 	    var w = Math.abs(x1[i] - x0[i]);
 	    image_context.font = '12pt Sans';
 
-	    // draw the annotation
+	    var bgnd_rect_height = 1.8 * image_context.measureText('M').width;
+	    var bgnd_rect_width = 2*bgnd_rect_height + image_context.measureText(annotations[i]).width;
+	    
+	    // draw a background rectangle first
 	    image_context.fillStyle = 'black';
-	    image_context.fillText(annotations[i], x0[i], y0[i]);
+	    image_context.globalAlpha=0.5;
+	    image_context.fillRect(x0[i],
+				   y0[i] - bgnd_rect_height,
+				   bgnd_rect_width,
+				   bgnd_rect_height);
+	    // draw text over this background rectangle
+	    image_context.globalAlpha=1.0;
+	    image_context.fillStyle = 'yellow';
+	    image_context.fillText(annotations[i], x0[i] + bgnd_rect_height, y0[i] - bgnd_rect_height/5);
 	}
     }
 }
 
 function redraw_image_canvas() {
-    if (image != null) {
+    if (image_loaded) {
 	image_context.drawImage(image, 0, 0, canvas_width, canvas_height);
-	draw_all_bbox();
+	draw_all_bounding_box();
+	draw_all_annotations();
     }
 }
 
@@ -272,7 +307,10 @@ function load_local_files(files) {
 
 		var img_dim_str = " ( " + this.naturalWidth + " x " + this.naturalHeight;
 		var img_size_str = ", " + Math.round(img_file.size/1024) + " KB )";
-		show_status("Loaded " + image_original_filename + img_dim_str + img_size_str, false);
+		show_status("Loaded " +
+			    image_original_filename +
+			    img_dim_str +
+			    img_size_str, false);
 		image_loaded = true;
 	    });
 	    image.src = img_reader.result;
@@ -300,7 +338,7 @@ function annotate_bounding_box(bounding_box_id) {
     bbox_annotation_textbox.style.left = canvas_x0 + x0[bounding_box_id];
     bbox_annotation_textbox.style.opacity = 0.5;
     bbox_annotation_textbox.value = annotations[bounding_box_id]; // existing annotation
-        bbox_annotation_textbox.style.visibility = "visible";
+    bbox_annotation_textbox.style.visibility = "visible";
     //bbox_annotation_textbox.style.display = "inline";
     bbox_annotation_textbox.style.width = Math.max(10, w - w/4);
     bbox_annotation_textbox.style.height = "1.5em";
