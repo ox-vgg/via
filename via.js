@@ -32,26 +32,43 @@ var current_annotation_bounding_box_id = -1;
 var image_canvas = document.getElementById("image_canvas");
 var image_context = image_canvas.getContext("2d");
 
-var local_file_selector = document.getElementById("local_file_selector");
+var open_file_button = document.getElementById("open_file_button");
+var help_button = document.getElementById('help_button');
+var home_button = document.getElementById('home_button');
+
 var invisible_file_input = document.getElementById("invisible_file_input");
 var json_download_link = document.getElementById("link_download_annotations");
 var status_bar = document.getElementById("status_bar");
 var bbox_annotation_textbox = document.getElementById("bbox_annotation_textbox");
 var image_panel = document.getElementById('image_panel');
 var starting_information_panel = document.getElementById('starting_information');
+var help_panel = document.getElementById('help_panel');
 
 function main() {
     console.log('VGG Image Annotator (via)');
 
-    // source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
-    var local_file_selector_handler = function(e) {
+    // Handler for toolbar buttons
+    home_button.addEventListener("click", function(e) {
+	image_canvas.style.display = "none";
+	starting_information_panel.style.display = "block";
+	help_panel.style.display = "none";
+    }, false);
+
+    open_file_button.addEventListener("click", function(e) {
+	// source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
 	if (invisible_file_input) {
 	    invisible_file_input.click();
 	}
 	e.preventDefault(); // prevent navigation to "#"
-    }
-    local_file_selector.addEventListener("click", local_file_selector_handler, false);
-    
+    }, false);
+
+    help_button.addEventListener("click", function(e) {
+	// hide canvas and show starting information
+	image_canvas.style.display = "none";
+	starting_information_panel.style.display = "none";
+	help_panel.style.display = "block";
+    }, false);
+
     bbox_annotation_textbox.style.visibility = "hidden";
 
     show_status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !", false);
