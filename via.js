@@ -6,8 +6,6 @@
  */
 
 var VIA_VERSION = "0.1";
-var image_canvas;
-var image_context;
 
 var image_panel_width;
 var image_panel_height;
@@ -15,7 +13,6 @@ var canvas_width;
 var canvas_height;
 var scale_factor = 0; // preserving aspect ratio
 
-var local_file_selector;
 var image = new Image();
 var image_original_filename;
 
@@ -31,40 +28,41 @@ var x1 = []; var y1 = []; // bounding box: bottom-right corner
 var annotations = []; // annotation text
 var current_annotation_bounding_box_id = -1;
 
-var json_download_link;
-var status_bar;
-var bbox_annotation_textbox;
-var image_panel;
-
 // initialize the canvas on which image annotation takes place
-image_canvas = document.getElementById("image_canvas");
-image_context = image_canvas.getContext("2d");
+var image_canvas = document.getElementById("image_canvas");
+var image_context = image_canvas.getContext("2d");
 
-local_file_selector = document.getElementById("local_file_selector");
-invisible_file_input = document.getElementById("invisible_file_input");
-json_download_link = document.getElementById("link_download_annotation");
-status_bar = document.getElementById("status_bar");
-bbox_annotation_textbox = document.getElementById("bbox_annotation_textbox");
-image_panel = document.getElementById('image_panel');
+var local_file_selector = document.getElementById("local_file_selector");
+var invisible_file_input = document.getElementById("invisible_file_input");
+var json_download_link = document.getElementById("link_download_annotations");
+var status_bar = document.getElementById("status_bar");
+var bbox_annotation_textbox = document.getElementById("bbox_annotation_textbox");
+var image_panel = document.getElementById('image_panel');
+var starting_information_panel = document.getElementById('starting_information');
 
 function main() {
     console.log('VGG Image Annotator (via)');
 
     // source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
-    local_file_selector.addEventListener("click", function(e) {
+    var local_file_selector_handler = function(e) {
 	if (invisible_file_input) {
 	    invisible_file_input.click();
 	}
 	e.preventDefault(); // prevent navigation to "#"
-    }, false);
-
+    }
+    local_file_selector.addEventListener("click", local_file_selector_handler, false);
+    
     bbox_annotation_textbox.style.visibility = "hidden";
 
-    status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
+    show_status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !", false);
 
     image_panel_width = image_panel.offsetWidth;
     image_panel_height = image_panel.offsetHeight;  
     console.log("image panel (w,h) = (" + image_panel_width + "," + image_panel_height + ")");
+
+    // hide canvas and show starting information
+    image_canvas.style.display = "none";
+    starting_information_panel.style.display = "block";
 }
 
 // Let users download the annotations as a CSV file
@@ -104,7 +102,7 @@ image_canvas.addEventListener('mouseup', function(e) {
     var dx = Math.abs(click_x1 - click_x0);
     var dy = Math.abs(click_y1 - click_y0);
     console.log("d(x,y) = (" + dx + "," + dy + ")");
-    if ( dx < 1 || dy < 1 ) {	
+    if ( dx < 10 || dy < 10 ) {	
 	// this was a single click event which triggers image annotation
 	user_drawing_bounding_box = false;
 	var bounding_box_id = is_inside_bounding_box(click_x0, click_y0);
@@ -133,7 +131,7 @@ image_canvas.addEventListener('mouseup', function(e) {
 	annotations.push("");
 	bounding_box_count = bounding_box_count + 1;
 
-	status("Saved [" + bounding_box_count + "] bounding boxes and [" + annotation_count + "] annotations");
+	show_status("Saved [" + bounding_box_count + "] bounding boxes and [" + annotation_count + "] annotations", false);
 	user_drawing_bounding_box = false;
         redraw_image_canvas();
     }
@@ -210,13 +208,13 @@ function load_local_files(files) {
 	return;
     } else {
 	image_original_filename = files[0].name;
-	status("Loading image " + image_original_filename + " ... ");
+	show_status("Loading image " + image_original_filename + " ... ", false);
 
 	try {
 	    img_reader = new FileReader();
 
 	    img_reader.addEventListener( "error", function() {
-		status("error!", true);
+		show_status("error!", true);
 	    }, false);
 	    
 	    img_reader.addEventListener( "load", function() {
@@ -245,7 +243,7 @@ function load_local_files(files) {
 		image_canvas.width = canvas_width;
 		
 		image_context.drawImage(image, 0, 0, canvas_width, canvas_height);
-		status("done", true);
+		show_status("done", true);
 
 		// debug
 		console.log("image panel (w,h) = (" + image_panel_width + "," + image_panel_height + ")");
@@ -297,7 +295,7 @@ bbox_annotation_textbox.addEventListener("keydown", function(e) {
 	bbox_annotation_textbox.style.visibility = "hidden";
 	user_entering_annotation = false;
 
-	status("Saved [" + bounding_box_count + "] bounding boxes and [" + annotation_count + "] annotations");
+	show_status("Saved [" + bounding_box_count + "] bounding boxes and [" + annotation_count + "] annotations", false);
 	redraw_image_canvas();
     }
     if ( e.which == 27 ) { // Esc
@@ -309,7 +307,7 @@ bbox_annotation_textbox.addEventListener("keydown", function(e) {
 });
 
 
-function status(msg, append=false) {
+function show_status(msg, append) {
     if(append)
 	status_bar.innerHTML = status_bar.innerHTML + msg;
     else
