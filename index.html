@@ -244,7 +244,7 @@
     
     <div class="container">
       <div class="toolbar">
-	<input type="file" id="invisible_file_input" multiple accept="image/*" style="display:none" onchange="load_local_files(this.files)">
+	<input type="file" id="invisible_file_input" multiple accept="image/*" style="display:none" onchange="upload_local_files(this.files)">
 	<ul>
 	  <li><a href="#" id="home_button" alt="Home" title="Home"><svg width="32" viewBox="0 0 32 32"><use xlink:href="#icon_home"></use></svg></a></li>
 	  <li><a href="#" id="open_file_button" alt="Open Files" title="Open Files"><svg width="32" viewBox="0 0 32 32"><use xlink:href="#icon_open_files"></use></svg></a></li>
@@ -272,7 +272,7 @@
 	</canvas>
 
 	<div id="starting_information">	  
-	  <span style="color: red">To begin</span> the image annotation process, <span style="color: red;">click <a href="#" alt="Open Files" title="Open Files" onclick="document.getElementById('open_file_button').click()"><svg width="32" viewBox="0 0 32 32"><use xlink:href="#icon_open_files"></use></svg></a></span> to select a folder containing images or to select multiple images.
+	  <span style="color: red">To begin</span> the image annotation process, <span style="color: red;">click <a href="#" alt="Open Files" title="Open Files" onclick="document.getElementById('open_file_button').click()"><svg width="32" viewBox="0 0 32 32"><use xlink:href="#icon_open_files"></use></svg></a></span> to select multiple images.
 	</div>
 
 	<div id="help_panel">
