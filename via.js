@@ -39,11 +39,10 @@ var current_annotation_bounding_box_id = -1;
 var image_canvas = document.getElementById("image_canvas");
 var image_context = image_canvas.getContext("2d");
 
-var open_file_button = document.getElementById("open_file_button");
+var load_images_button = document.getElementById("load_images_button");
 var help_button = document.getElementById("help_button");
 var home_button = document.getElementById("home_button");
 var delete_annotations_button = document.getElementById("delete_annotations_button");
-var settings_button = document.getElementById("settings_button");
 
 var invisible_file_input = document.getElementById("invisible_file_input");
 var json_download_link = document.getElementById("link_download_annotations");
@@ -82,7 +81,7 @@ home_button.addEventListener("click", function(e) {
     show_status("", false);
 }, false);
 
-open_file_button.addEventListener("click", function(e) {
+load_images_button.addEventListener("click", function(e) {
     // source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
     if (invisible_file_input) {
 	invisible_file_input.click();
@@ -134,10 +133,6 @@ delete_annotations_button.addEventListener("click", function(e) {
     } else {
 	show_status("Common man! how can I delete something that is not there?", false);
     }
-}, false);
-
-settings_button.addEventListener('click', function(e) {
-    show_status("Not implemented yet! I am working on it.", false);
 }, false);
 
 help_button.addEventListener("click", function(e) {
