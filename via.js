@@ -22,6 +22,7 @@ var current_image_filename;
 
 var current_image;
 var current_image_loaded = false;
+var prefetched_next_img, prefetched_prev_img;
 
 var user_drawing_bounding_box = false;
 var user_entering_annotation = false;
@@ -343,6 +344,31 @@ function load_local_file(file_id) {
 		} else {
 		    image_context.drawImage(current_image, 0, 0, canvas_width, canvas_height);
 		}
+		image_canvas.style.visibility = "visible";
+		
+		// let the browser pre-fetch previous/next image in its cache
+		var next_image_index, prev_image_index;
+		if ( current_image_index == (image_filename_list-1) ) {
+		    next_image_index = 0;
+		    prev_image_index = current_image_index - 1;
+		} else {
+		    if ( current_image_index == 0 ) {
+			next_image_index = 1
+			prev_image_index = image_filename_list - 1;
+		    } else {
+			next_image_index = current_image_index + 1;
+		    }
+		}
+
+		/*
+		prefetched_next_img = new Image();
+		prefetched_next_img.addEventListener("load", function() {
+		    prefetched_prev_img = new Image();
+		    prefetched_prev_img.src = user_uploaded_images[prev_image_index];
+		}, false);
+		prefetched_next_img.src = user_uploaded_images[next_image_index];
+		*/
+		
 	    });
 	    current_image.src = img_reader.result;
 	}, false);
@@ -471,7 +497,9 @@ window.addEventListener("keydown", function(e) {
 	    }
 	    
 	    show_status("Moving to next image ...", false);
-	    image_context.clearRect(0, 0, image_canvas.width, image_canvas.height);
+	    image_canvas.style.visibility = "hidden";
+
+	    //image_context.clearRect(0, 0, image_canvas.width, image_canvas.height);
 	    if ( current_image_index == (user_uploaded_images.length - 1) ) {
 		load_local_file(0);
 	    } else {
