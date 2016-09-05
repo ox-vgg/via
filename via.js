@@ -70,7 +70,7 @@ function main() {
 
 function window_resized() {
     image_panel_width = image_panel.offsetWidth;
-    image_panel_height = image_panel.offsetHeight * 0.65;
+    image_panel_height = image_panel.offsetHeight * 0.85;
 
     load_local_file(current_image_index);
     redraw_image_canvas();    
@@ -87,7 +87,11 @@ home_button.addEventListener("click", function(e) {
     }
 
     help_panel.style.display = "none";
-    show_status("", false);
+    
+    show_status(current_image_filename +
+		" | " + bounding_box_count + " boxes and " + annotation_count + " annotations" + 
+		" | Press <b>Enter</b> key to annotate, <b>Arrow keys</b> to move to next image.", false);
+
 }, false);
 
 load_images_button.addEventListener("click", function(e) {
@@ -220,7 +224,9 @@ image_canvas.addEventListener('mouseup', function(e) {
 	annotations[current_image_filename].push("");
 	bounding_box_count = bounding_box_count + 1;
 
-	show_status("Saved [" + bounding_box_count + "] bounding boxes and [" + annotation_count + "] annotations", false);
+	show_status(current_image_filename +
+		    " | " + bounding_box_count + " boxes and " + annotation_count + " annotations" + 
+		    " | Press <b>Enter</b> key to annotate, <b>Arrow keys</b> to move to next image.", false);
 	user_drawing_bounding_box = false;
         redraw_image_canvas();
     }
@@ -342,8 +348,8 @@ function load_local_file(file_id) {
     if (!img_file) {
 	return;
     } else {
-	status_prefix = "[ " + (current_image_index+1) + " of " +
-	    user_uploaded_images.length + " images ] : ";
+	status_prefix = "[" + (current_image_index+1) + "/" +
+	    user_uploaded_images.length + "] ";
 	
 	current_image_filename = image_filename_list[current_image_index];
 	img_reader = new FileReader();
@@ -385,18 +391,17 @@ function load_local_file(file_id) {
 		// set the canvas size to match that of the image
 		image_canvas.height = canvas_height;
 		image_canvas.width = canvas_width;	
-		
-		var img_dim_str = " ( " + this.naturalWidth + " x " + this.naturalHeight;
-		var img_size_str = ", " + Math.round(img_file.size/1024) + " KB )";
-		show_status("Loaded " +
-			    current_image_filename +
-			    img_dim_str +
-			    img_size_str, false);
 
 		current_image_loaded = true;
 		// reset all variable
 		bounding_box_count = x0[current_image_filename].length;
-		annotation_count = annotations[current_image_filename].length;
+		annotation_count = 0;
+		for ( var i=0; i<annotations[current_image_filename].length; ++i) {
+		    if ( annotations[current_image_filename][i] != "" ) {
+			annotation_count = annotation_count + 1;
+		    }
+		}
+		
 		click_x0 = 0; click_y0 = 0;
 		click_x1 = 0; click_y1 = 0;
 		user_drawing_bounding_box = false;
@@ -408,6 +413,11 @@ function load_local_file(file_id) {
 		    image_context.drawImage(current_image, 0, 0, canvas_width, canvas_height);
 		}
 		image_canvas.style.visibility = "visible";
+
+		show_status(current_image_filename +
+			    " | " + bounding_box_count + " boxes and " + annotation_count + " annotations" + 
+			    " | Press <b>Enter</b> key to annotate, <b>Arrow keys</b> to move to next image.", false);
+
 	    });
 	    current_image.src = img_reader.result;
 	}, false);
@@ -504,11 +514,10 @@ window.addEventListener("keydown", function(e) {
 		// store current annotation and
 		// if there are more bounding boxes, move to them
 		annotations[current_image_filename][current_annotation_bounding_box_id] = annotation_textbox.value;
+		annotation_count = annotation_count + 1;
 		annotation_textbox.value = "";
 		annotation_textbox.style.visibility = "hidden";
 		redraw_image_canvas();
-		
-		show_status("Saved [" + bounding_box_count + "] bounding boxes and [" + annotations[current_image_filename].length + "] annotations", false);
 
 		if ( bounding_box_count > 1 && (current_annotation_bounding_box_id != (bounding_box_count-1)) ) {
 		    // move to next bounding box
@@ -520,6 +529,11 @@ window.addEventListener("keydown", function(e) {
 		    annotation_textbox.style.visibility = "hidden";
 		    current_annotation_bounding_box_id = -1;
 		}
+
+		show_status(current_image_filename +
+			    " | " + bounding_box_count + " boxes and " + annotation_count + " annotations" + 
+			    " | Press <b>Enter</b> key to annotate, <b>Arrow keys</b> to move to next image.", false);
+
 	    }
 	}
 	e.preventDefault();
@@ -531,47 +545,52 @@ window.addEventListener("keydown", function(e) {
 	redraw_image_canvas();
     }
     if ( e.which == 39 ) { // right arrow
-	if ( user_uploaded_images != null ) {
-
-	    if ( user_entering_annotation) {
-		user_entering_annotation = false;
-		annotation_textbox.style.visibility = "hidden";
-		current_annotation_bounding_box_id = -1;
-	    }
-	    
-	    show_status("Moving to next image ...", false);
-	    image_canvas.style.visibility = "hidden";
-
-	    //image_context.clearRect(0, 0, image_canvas.width, image_canvas.height);
-	    if ( current_image_index == (user_uploaded_images.length - 1) ) {
-		load_local_file(0);
-	    } else {
-		load_local_file(current_image_index + 1);
-	    }
-	}
+	move_to_next_image();
     }
     if ( e.which == 37 ) { // left arrow
-	if ( user_uploaded_images != null ) {
-	    if ( user_entering_annotation) {
-		user_entering_annotation = false;
-		annotation_textbox.style.visibility = "hidden";
-		current_annotation_bounding_box_id = -1;
-	    }
-	    
-	    show_status("Moving to previous image ...", false);
-	    image_context.clearRect(0, 0, image_canvas.width, image_canvas.height);	
-	    if ( current_image_index == 0 ) {
-		load_local_file(user_uploaded_images.length - 1);
-	    } else {
-		load_local_file(current_image_index - 1);
-	    }
-	}
+	move_to_prev_image();
     }
     if ( e.which == 121 ) { // F10 key used for debugging
 	print_current_annotations();
     }
 });
-			      
+
+function move_to_prev_image() {
+    if ( user_uploaded_images != null ) {
+	if ( user_entering_annotation) {
+	    user_entering_annotation = false;
+	    annotation_textbox.style.visibility = "hidden";
+	    current_annotation_bounding_box_id = -1;
+	}
+
+	image_context.clearRect(0, 0, image_canvas.width, image_canvas.height);	
+	if ( current_image_index == 0 ) {
+	    load_local_file(user_uploaded_images.length - 1);
+	} else {
+	    load_local_file(current_image_index - 1);
+	}
+    }    
+}
+
+function move_to_next_image() {
+    if ( user_uploaded_images != null ) {
+
+	if ( user_entering_annotation) {
+	    user_entering_annotation = false;
+	    annotation_textbox.style.visibility = "hidden";
+	    current_annotation_bounding_box_id = -1;
+	}
+	image_canvas.style.visibility = "hidden";
+
+	image_context.clearRect(0, 0, image_canvas.width, image_canvas.height);
+	if ( current_image_index == (user_uploaded_images.length - 1) ) {
+	    load_local_file(0);
+	} else {
+	    load_local_file(current_image_index + 1);
+	}
+    }
+}
+
 function show_status(msg, append) {
     if(append)
 	status_bar.innerHTML = status_bar.innerHTML + status_prefix + msg;
