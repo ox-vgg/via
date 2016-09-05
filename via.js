@@ -81,17 +81,20 @@ home_button.addEventListener("click", function(e) {
 	image_canvas.style.display = "inline";
 	starting_information_panel.style.display = "none";
 	redraw_image_canvas();
+
+	show_status(current_image_filename +
+		    " | " + bounding_box_count + " boxes and " + annotation_count + " annotations" + 
+		    " | Press <b>Enter</b> key to annotate, <b>Arrow keys</b> to move to next image.", false);
     } else {
 	image_canvas.style.display = "none";
 	starting_information_panel.style.display = "block";
+
+	status_prefix = "";
+	show_status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !", false);
     }
 
     help_panel.style.display = "none";
     
-    show_status(current_image_filename +
-		" | " + bounding_box_count + " boxes and " + annotation_count + " annotations" + 
-		" | Press <b>Enter</b> key to annotate, <b>Arrow keys</b> to move to next image.", false);
-
 }, false);
 
 load_images_button.addEventListener("click", function(e) {
