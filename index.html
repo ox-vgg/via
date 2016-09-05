@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
     VGG Image Annotator (via)
 
@@ -5,14 +6,15 @@
     Aug. 31, 2016
 -->
 
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8"> 
     <title>VGG Image Annotator</title>
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VGG Image Annotator (via) is a light weight image annotator built solely using HTML, CSS and pure Javascript (without using any libraries).">
+
     <!-- CSS style definition -->
-    <style>
+    <style type="text/css">
       
       div.container {
       position: relative;
@@ -27,6 +29,7 @@
       float: left;
       min-width: 100%;
       margin: auto;
+      margin-bottom: 2em;
       }
       
       .toolbar ul {
@@ -60,15 +63,6 @@
       background-color: #f2f2f2;
       vertical-align: middle;
       }
-      
-      .navigation_left {
-      position: relative;
-      float: left;
-      display: inline-block;
-      width: 10%;
-      vertical-align: middle;
-      padding-top: 25%;
-      }
 
       .svg_navigation_symbol {
       display: block;
@@ -80,7 +74,7 @@
       position: relative;
       background-color: white;
       width: 100%;
-      height: 80%;
+      height: 100%;
       text-align:center;
       border: 0;
       }
@@ -88,14 +82,6 @@
       #image_canvas {
       display: inline;
       border: 0;
-      }
-      
-      .navigation_right {
-      position: relative;
-      float: right;
-      display: inline-block;
-      width: 10%;
-      padding-top: 25%;
       }
       
       #invisible_file_input {
@@ -111,7 +97,7 @@
       cursor: pointer;
       }
       
-      #bbox_annotation_textbox {
+      #annotation_textbox {
       border: 1px solid #000000;
       background-color: #ffffff;
       font-family: mono;
@@ -175,11 +161,11 @@
       <div class="toolbar">
 	<input type="file" id="invisible_file_input" multiple accept="image/*" style="display:none" onchange="upload_local_files(this.files)">
 	<ul>
-	  <li><a href="#" id="home_button" alt="Home" title="Home"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_home"></use></svg></a></li>
-	  <li><a href="#" id="load_images_button" alt="Select Images" title="Select Images"><svg width="48" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></li>
-	  <li><a id="link_download_annotations" href="#" alt="Download Annotations" title="Download Annotations"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_download_annotations"></use></svg></a></li>
-	  <li><a href="#" id="delete_annotations_button" alt="Delete Annotations" title="Delete Annotations"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_delete_annotations"></use></svg></a></li>
-	  <li><a href="#" id="help_button" alt="Help" title="Help"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_help"></use></svg></a></li> 
+	  <li><a href="#" id="home_button" title="Home"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_home"></use></svg></a></li>
+	  <li><a href="#" id="load_images_button" title="Select Images"><svg width="48" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></li>
+	  <li><a id="link_download_annotations" href="#" title="Download Annotations"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_download_annotations"></use></svg></a></li>
+	  <li><a href="#" id="delete_annotations_button" title="Delete Annotations"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_delete_annotations"></use></svg></a></li>
+	  <li><a href="#" id="help_button" title="Help"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_help"></use></svg></a></li> 
 	</ul>
 	<div id="status_bar"></div>
       </div> <!-- end of toolbar -->
@@ -198,7 +184,7 @@
 	</canvas>
 
 	<div id="starting_information">
-	  <span style="color: red">To begin</span> the image annotation process, <span style="color: red;">click <a href="#" alt="Open Files" title="Open Files" onclick="document.getElementById('open_file_button').click()"><svg width="32" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></span> to select multiple images.
+	  <span style="color: red">To begin</span> the image annotation process, <span style="color: red;">click <a href="#" title="Open Files" onclick="document.getElementById('open_file_button').click()"><svg width="32" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></span> to select multiple images.
 	</div>
 
 	<div id="help_panel">
@@ -206,7 +192,7 @@
 	    <div style="font-family: Sans; font-size: 3em; padding: 1em 0;">VGG Image Annotator</div>
 
 	    <div style="width: 50%; margin: auto;">VGG Image Annotator (via) is an open source project released under the BSD-2 clause license. You are welcome to contribute <a href="https://gitlab.com/vgg/via/issues">error report</a>, <a href="https://gitlab.com/vgg/via/wikis/user-feedback">feedback</a>, or <a href="https://gitlab.com/vgg/via/tree/master">code</a> to <a href="https://gitlab.com/vgg/via">this project</a>.</div>
-	    <div style="width: 50%; margin: auto; padding-top: 1em;">This image annotation tool uses HTML, CSS and Javascript (<b>no dependencies on any javascript libraries</b>). It has been designed with portability in mind and therefore does not have any dependencies other than a modern web browser. For further information, please contact <a href="mailto: adutta@robots.ox.ac.uk">Abhishek Dutta</a></div>
+	    <div style="width: 50%; margin: auto; padding-top: 1em;">This image annotation tool uses HTML, CSS and Javascript (<b>no dependencies on any javascript libraries</b>). It has been designed with portability in mind and therefore does not have any dependencies other than a modern web browser. For further information, please contact <a href="mailto:adutta-REMOVE-ME@robots.ox.ac.uk">Abhishek Dutta</a></div>
 	    
 	  </div>
 
@@ -221,12 +207,9 @@
 	</svg>
       </a></div>
       -->
-      <input type="text" id="bbox_annotation_textbox">
+      <input type="text" id="annotation_textbox">
 
     </div> <!-- end of container -->
-    
+    <script type="text/javascript" src="via.js"></script>    
   </body>
-
-  <script type="text/javascript" src="via.js"></script>
-  
 </html>
