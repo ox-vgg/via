@@ -9,7 +9,6 @@ var VIA_VERSION = "0.1b";
 
 var image_panel_width; var image_panel_height;
 var canvas_width; var canvas_height;
-var scale_x = 1.0; var scale_y = 1.0;
 
 var status_prefix = "";
 
@@ -32,8 +31,7 @@ var annotation_count = 0;
 var x0 = new Map(); var y0 = new Map(); // bounding box: top-left corner
 var x1 = new Map(); var y1 = new Map(); // bounding box: bottom-right corner
 var annotations = new Map(); // annotation text
-var bounding_box_scale_x = new Map();
-var bounding_box_scale_y = new Map();
+var scale_factor = new Map();
 var current_annotation_bounding_box_id = -1;
 
 var image_canvas = document.getElementById("image_canvas");
@@ -63,7 +61,6 @@ function main() {
 
     image_panel_width = image_panel.offsetWidth;
     image_panel_height = image_panel.offsetHeight * 0.85;
-    console.log("image panel (w,h) = " + image_panel.offsetWidth + "," + image_panel.offsetHeight + ")");
 
     // hide canvas and show starting information
     image_canvas.style.display = "none";
@@ -104,15 +101,14 @@ json_download_link.addEventListener('click', function(e) {
 	    
 	    // only write non-empty bounding boxes
 	    if ( x0[filename].length > 0 ) {
-		var scale_x = bounding_box_scale_x[filename];
-		var scale_y = bounding_box_scale_y[filename];
-
 		var scaled_x0 = x0[filename]; var scaled_x1 = x1[filename];
 		var scaled_y0 = y0[filename]; var scaled_y1 = y1[filename];
 
-		for ( var i=0; i<scaled_x0.length; ++i) {
-		    scaled_x0 = scaled_x0 * scale_x; scaled_x1 = scaled_x1 * scale_x;
-		    scaled_y0 = scaled_y0 * scale_y; scaled_y1 = scaled_y1 * scale_y;
+		for ( var j=0; j<scaled_x0.length; ++j) {
+		    scaled_x0[j] = Math.round(scaled_x0[j] * scale_factor[filename]);
+		    scaled_x1[j] = Math.round(scaled_x1[j] * scale_factor[filename]);
+		    scaled_y0[j] = Math.round(scaled_y0[j] * scale_factor[filename]);
+		    scaled_y1[j] = Math.round(scaled_y1[j] * scale_factor[filename]);
 		}
 		
 		var img_annotation_json = {"filename":filename,
@@ -127,9 +123,10 @@ json_download_link.addEventListener('click', function(e) {
 	var json_file = new Blob(json_str, {type : 'text/json'});
 	json_download_link.href = URL.createObjectURL(json_file);
 	json_download_link.name = "annotations.json";
+	json_download_link.title = "annotations.json";
 	json_download_link.target = "_new";
     } else {
-	show_status("Are you serious? Do some annotations first.", false);
+	show_status("Please do some annotations first.", false);
     }
 });
 
@@ -140,12 +137,13 @@ delete_annotations_button.addEventListener("click", function(e) {
 	x0[current_image_filename] = []; y0[current_image_filename] = [];
 	x1[current_image_filename] = []; y1[current_image_filename] = [];
 	annotations[current_image_filename] = [];
+	scale_factor[current_image_filename] = 1.0;
 	current_annotation_bounding_box_id = -1;
 
 	show_status("All bounding boxes deleted! I hope this was not a mistake :-)", false);
         redraw_image_canvas();
     } else {
-	show_status("Common man! how can I delete something that is not there?", false);
+	show_status("Bounding boxes are not present!", false);
     }
 }, false);
 
@@ -162,7 +160,7 @@ help_button.addEventListener("click", function(e) {
 image_canvas.addEventListener('mousedown', function(e) {
     user_drawing_bounding_box = true;
     click_x0 = e.offsetX; click_y0 = e.offsetY;
-    console.log("mouse click : scaled image (x,y) = (" + click_x0 + "," + click_y0 + ") | original space (x,y) = (" + Math.round(click_x0/bounding_box_scale_x[current_image_filename]) + "," + Math.round(click_y0/bounding_box_scale_x[current_image_filename]) + ")");
+    //console.log("mouse click : scaled image (x,y) = (" + click_x0 + "," + click_y0 + ") | original space (x,y) = (" + Math.round(click_x0*bounding_box_scale_x[current_image_filename]) + "," + Math.round(click_y0*bounding_box_scale_x[current_image_filename]) + ")");
 });
 
 // A click on canvas indicates annotation of an object in image
@@ -302,7 +300,7 @@ function load_local_file(file_id) {
 	status_prefix = "[ " + (current_image_index+1) + " of " +
 	    user_uploaded_images.length + " images ] : ";
 	
-	current_image_filename = img_file.name;
+	current_image_filename = image_filename_list[current_image_index];
 	img_reader = new FileReader();
 
 	img_reader.addEventListener( "progress", function(e) {
@@ -318,30 +316,30 @@ function load_local_file(file_id) {
 	    current_image.addEventListener( "load", function() {
 		canvas_width = current_image.naturalWidth;
 		canvas_height = current_image.naturalHeight;
-		
+
+		var scale_width, scale_height;
 		if ( canvas_width > image_panel_width ) {
 		    // resize image to match the panel width
-		    scale_x = image_panel_width / current_image.naturalWidth;
+		    scale_width = image_panel_width / current_image.naturalWidth;
 		    canvas_width = image_panel_width;
-		    canvas_height = current_image.naturalHeight * scale_x;
+		    canvas_height = current_image.naturalHeight * scale_width;
 		}
 		// resize image if its height is larger than the image panel
 		if ( canvas_height > image_panel_height ) {
-		    scale_y = image_panel_height / canvas_height;
+		    scale_height = image_panel_height / canvas_height;
 
 		    canvas_height = image_panel_height;
-		    canvas_width = canvas_width * scale_y;
+		    canvas_width = canvas_width * scale_height;
 		}
-		console.log("scale_x=" + scale_x + ", scale_y=" + scale_y);
+
+		canvas_width = Math.round(canvas_width);
+		canvas_height = Math.round(canvas_height);
 		
-		bounding_box_scale_x[current_image_filename] = scale_x;
-		bounding_box_scale_y[current_image_filename] = scale_y;
-		console.log("bounding_box_scale_x=" + bounding_box_scale_x[current_image_filename] + ", bounding_box_scale_y=" + bounding_box_scale_y[current_image_filename]);
+		scale_factor[current_image_filename] = current_image.naturalWidth / canvas_width;
 		
 		// set the canvas size to match that of the image
 		image_canvas.height = canvas_height;
-		image_canvas.width = canvas_width;
-		
+		image_canvas.width = canvas_width;	
 		
 		var img_dim_str = " ( " + this.naturalWidth + " x " + this.naturalHeight;
 		var img_size_str = ", " + Math.round(img_file.size/1024) + " KB )";
@@ -397,15 +395,14 @@ function upload_local_files(user_selected_files) {
 	x1[filename] = []; y1[filename] = [];
 	annotations[filename] = [];
 	image_filename_list[i] = filename;
-	bounding_box_scale_x[filename] = 1.0;
-	bounding_box_scale_y[filename] = 1.0;
+	scale_factor[filename] = 1.0;
     }
     
     if ( user_uploaded_images.length > 0 ) {
 	// start with the first file
 	load_local_file(0);
     } else {
-	status("Get serious in life. No files were uploaded!", false);
+	status("Please upload some files!", false);
     }
 }
 
@@ -480,7 +477,7 @@ window.addEventListener("keydown", function(e) {
 		annotation_textbox.style.visibility = "hidden";
 		redraw_image_canvas();
 		
-		show_status("Saved [" + bounding_box_count + "] bounding boxes and [" + annotations.length + "] annotations", false);
+		show_status("Saved [" + bounding_box_count + "] bounding boxes and [" + annotations[current_image_filename].length + "] annotations", false);
 
 		if ( bounding_box_count > 1 ) {
 		    if ( current_annotation_bounding_box_id == (bounding_box_count-1) ) {
@@ -544,7 +541,7 @@ window.addEventListener("keydown", function(e) {
 	    }
 	}
     }
-    if ( e.which == 68 ) {
+    if ( e.which == 121 ) { // F10 key used for debugging
 	print_current_annotations();
     }
 });
@@ -559,12 +556,38 @@ function show_status(msg, append) {
 function print_current_annotations() {    
     for ( var i=0; i<image_filename_list.length; ++i) {
 	var fn = image_filename_list[i];
-	var logstr = "[" + fn + "] : ";
-	logstr = logstr + "x0=" + x0[fn].length + ", ";
-	logstr = logstr + "y0=" + y0[fn].length + ", ";
-	logstr = logstr + "x1=" + x1[fn].length + ", ";
-	logstr = logstr + "y1=" + y1[fn].length + ", ";
-	logstr = logstr + "annotations=" + annotations[fn].length + ", ";
+	
+	var logstr = "Showing annotations for file [" + fn + "] : ";
+	logstr = logstr + "x0=[";
+	for (var j=0; j<x0[fn].length; ++j) {
+	    logstr = logstr + x0[fn][j] + ","
+	}
+	logstr = logstr + "] ";
+
+	logstr = logstr + "y0=[";
+	for (var j=0; j<y0[fn].length; ++j) {
+	    logstr = logstr + y0[fn][j] + ","
+	}
+	logstr = logstr + "] ";
+	
+	logstr = logstr + "x1=[";
+	for (var j=0; j<x1[fn].length; ++j) {
+	    logstr = logstr + x1[fn][j] + ","
+	}
+	logstr = logstr + "] ";
+
+	logstr = logstr + "y1=[";
+	for (var j=0; j<y1[fn].length; ++j) {
+	    logstr = logstr + y1[fn][j] + ","
+	}
+	logstr = logstr + "] ";
+	
+	logstr = logstr + "annotations=[";
+	for (var j=0; j<annotations[fn].length; ++j) {
+	    logstr = logstr + annotations[fn][j] + ","
+	}
+	logstr = logstr + "]";
+	
 	console.log(logstr);
     }
 }
