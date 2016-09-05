@@ -11,11 +11,10 @@
     <meta charset="UTF-8"> 
     <title>VGG Image Annotator</title>
     <meta name="author" content="Abhishek Dutta">
-    <meta name="description" content="VGG Image Annotator (via) is a light weight image annotator built solely using HTML, CSS and pure Javascript (without using any libraries).">
+    <meta name="description" content="VGG Image Annotator (via) is a light-weight image annotation tool built solely using HTML, CSS and pure Javascript (not using any javascript libraries).">
 
     <!-- CSS style definition -->
     <style type="text/css">
-      
       div.container {
       position: relative;
       max-width: 100%;
@@ -124,9 +123,8 @@
     </style>
   </head>
 
-  <body onload="main()">
-
-    <!-- Start: Define SVG for icons -->
+  <body onload="main()" onresize="window_resized()">
+    <!-- Start: Definition SVG for icons -->
     <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
      <defs>
       <symbol id="icon_home">

@@ -56,7 +56,7 @@ annotation_textbox.style.visibility = "hidden";
 
 function main() {
     console.log('VGG Image Annotator (via)');
-
+    
     show_status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !", false);
 
     image_panel_width = image_panel.offsetWidth;
@@ -66,6 +66,14 @@ function main() {
     image_canvas.style.display = "none";
     starting_information_panel.style.display = "block";
     help_panel.style.display = "none";
+}
+
+function window_resized() {
+    image_panel_width = image_panel.offsetWidth;
+    image_panel_height = image_panel.offsetHeight * 0.65;
+
+    load_local_file(current_image_index);
+    redraw_image_canvas();    
 }
 
 home_button.addEventListener("click", function(e) {
@@ -192,11 +200,21 @@ image_canvas.addEventListener('mouseup', function(e) {
 
 	// ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
 	if ( click_x0 < click_x1 ) {
-	    x0[current_image_filename].push(click_x0); y0[current_image_filename].push(click_y0);
-	    x1[current_image_filename].push(click_x1); y1[current_image_filename].push(click_y1);
+	    if ( click_y0 < click_y1 ) {
+		x0[current_image_filename].push(click_x0); y0[current_image_filename].push(click_y0);
+		x1[current_image_filename].push(click_x1); y1[current_image_filename].push(click_y1);	
+	    } else {
+		x0[current_image_filename].push(click_x0); y0[current_image_filename].push(click_y1);
+		x1[current_image_filename].push(click_x1); y1[current_image_filename].push(click_y0);
+	    }
 	} else {
-	    x0[current_image_filename].push(click_x1); y0[current_image_filename].push(click_y1);
-	    x1[current_image_filename].push(click_x0); y1[current_image_filename].push(click_y0);
+	    if ( click_y0 < click_y1 ) {
+		x0[current_image_filename].push(click_x1); y0[current_image_filename].push(click_y0);
+		x1[current_image_filename].push(click_x0); y1[current_image_filename].push(click_y1);		
+	    } else {
+		x0[current_image_filename].push(click_x1); y0[current_image_filename].push(click_y1);
+		x1[current_image_filename].push(click_x0); y1[current_image_filename].push(click_y0);
+	    }
 	}
 	annotations[current_image_filename].push("");
 	bounding_box_count = bounding_box_count + 1;
@@ -219,19 +237,45 @@ image_canvas.addEventListener('mousemove', function(e) {
 	redraw_image_canvas();
 	
 	current_x = e.offsetX; current_y = e.offsetY;
-	var w = current_x - click_x0;
-	var h = current_y - click_y0;
+	var w = Math.abs(current_x - click_x0);
+	var h = Math.abs(current_y - click_y0);
+	var top_left_x, top_left_y;
+
+	if ( click_x0 < current_x ) {
+	    if ( click_y0 < current_y ) {
+		top_left_x = click_x0;
+		top_left_y = click_y0;
+	    } else {
+		top_left_x = click_x0;
+		top_left_y = current_y;
+	    }
+	} else {
+	    if ( click_y0 < current_y ) {
+		top_left_x = current_x;
+		top_left_y = click_y0;
+	    } else {
+		top_left_x = current_x;
+		top_left_y = current_y;
+	    }
+	}
+	
 	image_context.strokeStyle="#FF0000";
 	image_context.shadowBlur=5;
 	image_context.shadowColor="white";
-	if (w<0 || h <0) {
-	    // rectangle is not drawn towards positive x and y quadrant
-	    image_context.strokeRect(current_x, current_y, Math.abs(w), Math.abs(h));
-	} else {
-	    image_context.strokeRect(click_x0, click_y0, w, h);
-	}
+	image_context.strokeRect(top_left_x, top_left_y, w, h);
 	image_canvas.focus();
     }
+    /* @todo: implement settings -> show guide
+    else {
+	redraw_image_canvas();
+	current_x = e.offsetX; current_y = e.offsetY;
+	image_context.strokeStyle="#ffffff";
+	image_context.setLineDash([0]);
+	image_context.strokeRect(0, current_y, canvas_width, 1);
+	image_context.strokeRect(current_x, 0, 1, canvas_height);
+	image_canvas.focus();
+    }
+    */
 });
 
 function draw_all_bounding_box() {
