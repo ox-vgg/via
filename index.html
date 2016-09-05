@@ -104,12 +104,17 @@
       }
 
       #starting_information {
-      width: 50%;
+      width: 60%;
       height: 100%;
       font-family: Mono;
       font-size: 2em;
       margin: auto;
       padding: 10%;
+      text-align: left;
+      line-height: 1.5em;
+      }
+      #starting_information li {
+      padding: 0.5em 0;
       }
 
       .via_logo {
@@ -175,8 +180,13 @@
 	</canvas>
 
 	<div id="starting_information">
-	  <span style="color: red">To begin</span> the image annotation process, <span style="color: red;">click <a href="#" title="Open Files" onclick="document.getElementById('open_file_button').click()"><svg width="32" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></span> to select multiple images.
+	  <ul>
+	  <li><span style="color: red">To begin</span> the image annotation process, <span style="color: red;">click <a href="#" title="Open Files" onclick="document.getElementById('open_file_button').click()"><svg width="32" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></span> to select multiple images.</li>
+
+	  <li>First, <span style="color: blue">draw</span> all bounding boxes, then press <span style="color: blue">Enter</span> key to annotate. Finally, use <span style="color: blue">Left/Right arrow keys</span> to move to previous/next image.</li>
+	  </ul>
 	</div>
+	
 
 	<div id="help_panel">
 	  <div class="via_logo">

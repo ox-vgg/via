@@ -60,7 +60,7 @@ function main() {
     show_status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !", false);
 
     image_panel_width = image_panel.offsetWidth;
-    image_panel_height = image_panel.offsetHeight * 0.85;
+    image_panel_height = image_panel.offsetHeight * 0.65;
 
     // hide canvas and show starting information
     image_canvas.style.display = "none";
@@ -363,20 +363,6 @@ function load_local_file(file_id) {
 		    image_context.drawImage(current_image, 0, 0, canvas_width, canvas_height);
 		}
 		image_canvas.style.visibility = "visible";
-		
-		// let the browser pre-fetch previous/next image in its cache
-		var next_image_index, prev_image_index;
-		if ( current_image_index == (image_filename_list-1) ) {
-		    next_image_index = 0;
-		    prev_image_index = current_image_index - 1;
-		} else {
-		    if ( current_image_index == 0 ) {
-			next_image_index = 1
-			prev_image_index = image_filename_list - 1;
-		    } else {
-			next_image_index = current_image_index + 1;
-		    }
-		}
 	    });
 	    current_image.src = img_reader.result;
 	}, false);
