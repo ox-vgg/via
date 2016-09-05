@@ -101,8 +101,8 @@ json_download_link.addEventListener('click', function(e) {
 	    
 	    // only write non-empty bounding boxes
 	    if ( x0[filename].length > 0 ) {
-		var scaled_x0 = x0[filename]; var scaled_x1 = x1[filename];
-		var scaled_y0 = y0[filename]; var scaled_y1 = y1[filename];
+		var scaled_x0 = x0[filename].slice(); var scaled_x1 = x1[filename].slice();
+		var scaled_y0 = y0[filename].slice(); var scaled_y1 = y1[filename].slice();
 
 		for ( var j=0; j<scaled_x0.length; ++j) {
 		    scaled_x0[j] = Math.round(scaled_x0[j] * scale_factor[filename]);
