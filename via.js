@@ -77,9 +77,10 @@ function window_resized() {
 }
 
 home_button.addEventListener("click", function(e) {
-    if (image_loaded) {
+    if (current_image_loaded) {
 	image_canvas.style.display = "inline";
 	starting_information_panel.style.display = "none";
+	redraw_image_canvas();
     } else {
 	image_canvas.style.display = "none";
 	starting_information_panel.style.display = "block";
