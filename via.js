@@ -509,14 +509,9 @@ window.addEventListener("keydown", function(e) {
 		
 		show_status("Saved [" + bounding_box_count + "] bounding boxes and [" + annotations[current_image_filename].length + "] annotations", false);
 
-		if ( bounding_box_count > 1 ) {
-		    if ( current_annotation_bounding_box_id == (bounding_box_count-1) ) {
-			// move to first bounding box
-			current_annotation_bounding_box_id = 0;
-		    } else {
-			// move to next bounding box
-			current_annotation_bounding_box_id = current_annotation_bounding_box_id + 1;
-		    }
+		if ( bounding_box_count > 1 && (current_annotation_bounding_box_id != (bounding_box_count-1)) ) {
+		    // move to next bounding box
+		    current_annotation_bounding_box_id = current_annotation_bounding_box_id + 1;
 		    user_entering_annotation = true;
 		    annotate_bounding_box(current_annotation_bounding_box_id);
 		} else {
