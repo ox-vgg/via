@@ -6,7 +6,6 @@
  */
 
 var VIA_VERSION = "0.1b";
-
 var image_panel_width, image_panel_height;
 var canvas_width, canvas_height;
 
@@ -61,6 +60,13 @@ annotation_textbox.style.visibility = "hidden";
 
 var window_resize_timer;
 var is_window_resized = false;
+
+var is_user_resizing_bounding_box = false;
+@@@@@@@@@@@@@@@@@@@@@
+@todo
+@@@@@@@@@@@@@@@@@@@@@
+var bounding_box_edge = [-1, -1];
+var bounding_box_edge_tol = 5;
 
 function main() {
     console.log('VGG Image Annotator (via)');    
@@ -180,6 +186,14 @@ help_button.addEventListener("click", function(e) {
 image_canvas.addEventListener('mousedown', function(e) {
     user_drawing_bounding_box = true;
     click_x0 = e.offsetX; click_y0 = e.offsetY;
+
+    if ( is_user_resizing_bounding_box ) {
+	@@@@@@@@@@@@@@@@
+	@todo
+	@@@@@@@@@@@@@@@
+	bounding_box_edge[0] : which bbox id
+	bounding_box_edge[1] : which corner
+    }
 });
 
 image_canvas.addEventListener('mouseup', function(e) {
@@ -293,6 +307,28 @@ image_canvas.addEventListener('mousemove', function(e) {
         image_context.shadowColor="white";
         image_context.strokeRect(top_left_x, top_left_y, w, h);
         image_canvas.focus();
+    } else {
+	current_x = e.offsetX; current_y = e.offsetY;
+	bounding_box_edge = is_on_bounding_box_corner(current_x, current_y, bounding_box_edge_tol);
+	if ( bounding_box_edge[1] > 0 ) {
+	    is_user_resizing_bounding_box = true;
+	    resizing_bounding_box_id = bounding_box_edge[0];
+	    switch(bounding_box_edge[1]) {
+	    case 1: // top-left
+	    case 3: // bottom-right
+		image_canvas.style.cursor = "nwse-resize";
+		break;
+	    case 2: // top-right
+	    case 4: // bottom-left		
+		image_canvas.style.cursor = "nesw-resize";
+		break;
+	    default:
+		image_canvas.style.cursor = "default";
+	    }
+	} else {
+	    is_user_resizing_bounding_box = true;
+	    image_canvas.style.cursor = "default";
+	}
     }
     /* @todo: implement settings -> show guide
        else {
@@ -489,6 +525,40 @@ function is_inside_bounding_box(x, y) {
         }
     }    
     return -1;
+}
+
+function is_on_bounding_box_corner(x, y, tolerance) {
+    var cx0, cy0, cx1, cy1;
+    var bounding_box_edge = [-1, -1]; // bounding_box_id, corner_id [top-left=1,top-right=2,bottom-right=3,bottom-left=4]
+    
+    for (var i=0; i<bounding_box_count; ++i) {
+	dx0 = Math.abs( canvas_x0[current_image_filename][i] - x );
+	dy0 = Math.abs( canvas_y0[current_image_filename][i] - y );
+	dx1 = Math.abs( canvas_x1[current_image_filename][i] - x );
+	dy1 = Math.abs( canvas_y1[current_image_filename][i] - y );
+	
+	bounding_box_edge[0] = i;
+        if ( dx0 < tolerance && dy0 < tolerance ) {
+	    bounding_box_edge[1] = 1;
+	    return bounding_box_edge;
+	} else {
+	    if ( dx1 < tolerance && dy0 < tolerance ) {
+		bounding_box_edge[1] = 2;
+		return bounding_box_edge;
+	    } else {
+		if ( dx1 < tolerance && dy1 < tolerance ) {
+		    bounding_box_edge[1] = 3;
+		    return bounding_box_edge;
+		} else {
+		    if ( dx0 < tolerance && dy1 < tolerance ) {
+			bounding_box_edge[1] = 4;
+			return bounding_box_edge;
+		    }
+		}
+	    }
+	}
+    }
+    return bounding_box_edge;
 }
 
 function annotate_bounding_box(bounding_box_id) {
