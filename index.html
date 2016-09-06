@@ -4,7 +4,7 @@
 
     Copyright (C) 2016, Abhishek Dutta <adutta@robots.ox.ac.uk>
     Aug. 31, 2016
--->
+  -->
 
 <html lang="en">
   <head>
@@ -124,77 +124,79 @@
   <body onload="main()" onresize="update_ui_components()">
     <!-- Start: Definition SVG for icons -->
     <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-     <defs>
-      <symbol id="icon_home">
-	<title>Home</title>
-	<path d="M32 19l-6-6v-9h-4v5l-6-6-16 16v1h4v10h10v-6h4v6h10v-10h4z"></path>
-      </symbol>
-      
-      <symbol id="icon_download_annotations">
-	<title>Download annotations</title>
-	<path d="M18 8l-4-4h-14v26h32v-22h-14zM16 27l-7-7h5v-8h4v8h5l-7 7z"></path>
-      </symbol>
-      
-      <symbol id="icon_select_images">
-	<title>Select images</title>
-	<path d="M34 4h-2v-2c0-1.1-0.9-2-2-2h-28c-1.1 0-2 0.9-2 2v24c0 1.1 0.9 2 2 2h2v2c0 1.1 0.9 2 2 2h28c1.1 0 2-0.9 2-2v-24c0-1.1-0.9-2-2-2zM4 6v20h-1.996c-0.001-0.001-0.003-0.002-0.004-0.004v-23.993c0.001-0.001 0.002-0.003 0.004-0.004h27.993c0.001 0.001 0.003 0.002 0.004 0.004v1.996h-24c-1.1 0-2 0.9-2 2v0zM34 29.996c-0.001 0.001-0.002 0.003-0.004 0.004h-27.993c-0.001-0.001-0.003-0.002-0.004-0.004v-23.993c0.001-0.001 0.002-0.003 0.004-0.004h27.993c0.001 0.001 0.003 0.002 0.004 0.004v23.993z"></path>
-	<path d="M30 11c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z"></path>
-	<path d="M32 28h-24v-4l7-12 8 10h2l7-6z"></path>
-      </symbol>
-      
-      <symbol id="icon_delete_annotations">
-	<title>Delete annotations</title>
-	<path d="M4 10v20c0 1.1 0.9 2 2 2h18c1.1 0 2-0.9 2-2v-20h-22zM10 28h-2v-14h2v14zM14 28h-2v-14h2v14zM18 28h-2v-14h2v14zM22 28h-2v-14h2v14z"></path>
-	<path d="M26.5 4h-6.5v-2.5c0-0.825-0.675-1.5-1.5-1.5h-7c-0.825 0-1.5 0.675-1.5 1.5v2.5h-6.5c-0.825 0-1.5 0.675-1.5 1.5v2.5h26v-2.5c0-0.825-0.675-1.5-1.5-1.5zM18 4h-6v-1.975h6v1.975z"></path>
-      </symbol>
-      
-      <symbol id="icon_help">
-	<title>Help</title>
-	<path d="M14 22h4v4h-4zM22 8c1.105 0 2 0.895 2 2v6l-6 4h-4v-2l6-4v-2h-10v-4h12zM16 3c-3.472 0-6.737 1.352-9.192 3.808s-3.808 5.72-3.808 9.192c0 3.472 1.352 6.737 3.808 9.192s5.72 3.808 9.192 3.808c3.472 0 6.737-1.352 9.192-3.808s3.808-5.72 3.808-9.192c0-3.472-1.352-6.737-3.808-9.192s-5.72-3.808-9.192-3.808zM16 0v0c8.837 0 16 7.163 16 16s-7.163 16-16 16c-8.837 0-16-7.163-16-16s7.163-16 16-16z"></path>
-      </symbol>
-      
-    </defs>
+      <defs>
+        <symbol id="icon_home">
+          <title>Home</title>
+          <path d="M32 19l-6-6v-9h-4v5l-6-6-16 16v1h4v10h10v-6h4v6h10v-10h4z"></path>
+        </symbol>
+        
+        <symbol id="icon_download_annotations">
+          <title>Download annotations</title>
+          <path d="M18 8l-4-4h-14v26h32v-22h-14zM16 27l-7-7h5v-8h4v8h5l-7 7z"></path>
+        </symbol>
+        
+        <symbol id="icon_select_images">
+          <title>Select images</title>
+          <path d="M34 4h-2v-2c0-1.1-0.9-2-2-2h-28c-1.1 0-2 0.9-2 2v24c0 1.1 0.9 2 2 2h2v2c0 1.1 0.9 2 2 2h28c1.1 0 2-0.9 2-2v-24c0-1.1-0.9-2-2-2zM4 6v20h-1.996c-0.001-0.001-0.003-0.002-0.004-0.004v-23.993c0.001-0.001 0.002-0.003 0.004-0.004h27.993c0.001 0.001 0.003 0.002 0.004 0.004v1.996h-24c-1.1 0-2 0.9-2 2v0zM34 29.996c-0.001 0.001-0.002 0.003-0.004 0.004h-27.993c-0.001-0.001-0.003-0.002-0.004-0.004v-23.993c0.001-0.001 0.002-0.003 0.004-0.004h27.993c0.001 0.001 0.003 0.002 0.004 0.004v23.993z"></path>
+          <path d="M30 11c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z"></path>
+          <path d="M32 28h-24v-4l7-12 8 10h2l7-6z"></path>
+        </symbol>
+        
+        <symbol id="icon_delete_annotations">
+          <title>Delete annotations</title>
+          <path d="M4 10v20c0 1.1 0.9 2 2 2h18c1.1 0 2-0.9 2-2v-20h-22zM10 28h-2v-14h2v14zM14 28h-2v-14h2v14zM18 28h-2v-14h2v14zM22 28h-2v-14h2v14z"></path>
+          <path d="M26.5 4h-6.5v-2.5c0-0.825-0.675-1.5-1.5-1.5h-7c-0.825 0-1.5 0.675-1.5 1.5v2.5h-6.5c-0.825 0-1.5 0.675-1.5 1.5v2.5h26v-2.5c0-0.825-0.675-1.5-1.5-1.5zM18 4h-6v-1.975h6v1.975z"></path>
+        </symbol>
+        
+        <symbol id="icon_help">
+          <title>Help</title>
+          <path d="M14 22h4v4h-4zM22 8c1.105 0 2 0.895 2 2v6l-6 4h-4v-2l6-4v-2h-10v-4h12zM16 3c-3.472 0-6.737 1.352-9.192 3.808s-3.808 5.72-3.808 9.192c0 3.472 1.352 6.737 3.808 9.192s5.72 3.808 9.192 3.808c3.472 0 6.737-1.352 9.192-3.808s3.808-5.72 3.808-9.192c0-3.472-1.352-6.737-3.808-9.192s-5.72-3.808-9.192-3.808zM16 0v0c8.837 0 16 7.163 16 16s-7.163 16-16 16c-8.837 0-16-7.163-16-16s7.163-16 16-16z"></path>
+        </symbol>
+        
+      </defs>
     </svg>
 
     <!-- End: Define SVG for icons -->
     
     <div class="container">
       <div class="toolbar">
-	<input type="file" id="invisible_file_input" multiple accept="image/*" style="display:none" onchange="upload_local_files(this.files)">
-	<ul>
-	  <li><a href="#" id="home_button" title="Home"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_home"></use></svg></a></li>
-	  <li><a href="#" id="load_images_button" title="Select Images"><svg width="48" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></li>
-	  <li><a id="link_download_annotations" href="#" title="Download Annotations"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_download_annotations"></use></svg></a></li>
-	  <li><a href="#" id="delete_annotations_button" title="Delete Annotations"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_delete_annotations"></use></svg></a></li>
-	  <li><a href="#" id="help_button" title="Help"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_help"></use></svg></a></li> 
-	</ul>
-	<div id="status_bar"></div>
+        <input type="file" id="invisible_file_input" multiple accept="image/*" style="display:none" onchange="upload_local_files(this.files)">
+        <ul>
+          <li><a href="#" id="home_button" title="Home"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_home"></use></svg></a></li>
+          <li><a href="#" id="load_images_button" title="Select Images"><svg width="48" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></li>
+          <li><a id="link_download_annotations" href="#" title="Download Annotations"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_download_annotations"></use></svg></a></li>
+          <li><a href="#" id="delete_annotations_button" title="Delete Annotations"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_delete_annotations"></use></svg></a></li>
+          <li><a href="#" id="help_button" title="Help"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_help"></use></svg></a></li> 
+        </ul>
+        <div id="status_bar"></div>
       </div> <!-- end of toolbar -->
       <div id="image_panel">
-	<canvas id="image_canvas">
-	  Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.
-	</canvas>
+        <canvas id="image_canvas">
+          Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.
+        </canvas>
 
-	<div id="starting_information">
-	  <span style="color: red">To begin</span> the image annotation process, <span style="color: red;">click <a href="#" title="Open Files" onclick="document.getElementById('load_images_button').click()"><svg width="32" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></span> to select multiple images.
-	</div>
+        <div id="starting_information">
+          <span style="color: red">To begin</span> the image annotation process, <span style="color: red;">click <a href="#" title="Open Files" onclick="document.getElementById('load_images_button').click()"><svg width="32" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></span> to select multiple images.
+        </div>
 
-	<div id="help_panel">
-	  <div class="via_logo">
-	    <div style="font-family: Sans; font-size: xx-large; padding: 1em 0;">VGG Image Annotator</div>
+        <div id="help_panel">
+          <div class="via_logo">
+            <div style="font-family: Sans; font-size: xx-large; padding: 1em 0;">VGG Image Annotator</div>
 
-	    <div style="width: 50%; margin: auto;">VGG Image Annotator (via) is an open source project released under the BSD-2 clause license. You are welcome to contribute <a href="https://gitlab.com/vgg/via/issues">error report</a>, <a href="https://gitlab.com/vgg/via/wikis/user-feedback">feedback</a>, or <a href="https://gitlab.com/vgg/via/tree/master">code</a> to <a href="https://gitlab.com/vgg/via">this project</a>.</div>
-	    <div style="width: 50%; margin: auto; padding-top: 1em;">This image annotation tool uses HTML, CSS and Javascript (<b>no dependencies on any javascript libraries</b>). It has been designed with portability in mind and therefore does not have any dependencies other than a modern web browser. For further information, please contact <a href="mailto:adutta-REMOVE-ME@robots.ox.ac.uk">Abhishek Dutta</a></div>
-	    
-	  </div>
+            <div style="width: 50%; margin: auto;">VGG Image Annotator (via) is an open source project released under the BSD-2 clause license. You are welcome to contribute <a href="https://gitlab.com/vgg/via/issues">error report</a>, <a href="https://gitlab.com/vgg/via/wikis/user-feedback">feedback</a>, or <a href="https://gitlab.com/vgg/via/tree/master">code</a> to <a href="https://gitlab.com/vgg/via">this project</a>.</div>
+            <div style="width: 50%; margin: auto; padding-top: 1em;">This image annotation tool uses HTML, CSS and Javascript (<b>no dependencies on any javascript libraries</b>). It has been designed with portability in mind and therefore does not have any dependencies other than a modern web browser. For further information, please contact <a href="mailto:adutta-REMOVE-ME@robots.ox.ac.uk">Abhishek Dutta</a></div>
+            
+          </div>
 
-	</div>
-	
-	
+        </div>
+        
+        
       </div>
       <input type="text" id="annotation_textbox">
 
     </div> <!-- end of container -->
-    <script type="text/javascript" src="via.js"></script>    
+    <script type="text/javascript">
+    <!--AUTO_INSERT_VIA_JS_HERE-->
+    </script>
   </body>
 </html>
