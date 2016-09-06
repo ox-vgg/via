@@ -18,7 +18,6 @@
       div.container {
       position: relative;
       max-width: 100%;
-      max-height: 100%;
       background-color: white;
       border: 0;
       }
@@ -53,11 +52,10 @@
       #status_bar {
       position: relative;
       float: left;
-      min-width: 100%;
+      width: 100%;
       text-align: center;
       font-family: Mono;
-      font-size: 0.8em;
-      min-height: 2em;
+      font-size: small;
       line-height: 2em;
       background-color: #f2f2f2;
       vertical-align: middle;
@@ -73,7 +71,8 @@
       position: relative;
       background-color: white;
       width: 100%;
-      height: 100%;
+      height: 50em; /* fallback if vh is not supported */
+      height: 80vh;
       text-align:center;
       border: 0;
       }
@@ -103,14 +102,13 @@
       }
 
       #starting_information {
-      width: 50%;
-      height: 100%;
       font-family: Mono;
-      font-size: 2em;
+      font-size: xx-large;
       margin: auto;
-      padding: 10%;
+      padding: 5% 2%;
       text-align: center;
       line-height: 1.5em;
+      vertical-align: middle;
       }
       #starting_information li {
       padding: 0.5em 0;
@@ -123,7 +121,7 @@
     </style>
   </head>
 
-  <body onload="main()" onresize="window_resized()">
+  <body onload="main()" onresize="update_ui_components()">
     <!-- Start: Definition SVG for icons -->
     <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
      <defs>
@@ -178,13 +176,12 @@
 	</canvas>
 
 	<div id="starting_information">
-	  <span style="color: red">To begin</span> the image annotation process, <span style="color: red;">click <a href="#" title="Open Files" onclick="document.getElementById('load_images_button').click()"><svg width="32" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></span> to select multiple images.</li>
+	  <span style="color: red">To begin</span> the image annotation process, <span style="color: red;">click <a href="#" title="Open Files" onclick="document.getElementById('load_images_button').click()"><svg width="32" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></span> to select multiple images.
 	</div>
-	
 
 	<div id="help_panel">
 	  <div class="via_logo">
-	    <div style="font-family: Sans; font-size: 3em; padding: 1em 0;">VGG Image Annotator</div>
+	    <div style="font-family: Sans; font-size: xx-large; padding: 1em 0;">VGG Image Annotator</div>
 
 	    <div style="width: 50%; margin: auto;">VGG Image Annotator (via) is an open source project released under the BSD-2 clause license. You are welcome to contribute <a href="https://gitlab.com/vgg/via/issues">error report</a>, <a href="https://gitlab.com/vgg/via/wikis/user-feedback">feedback</a>, or <a href="https://gitlab.com/vgg/via/tree/master">code</a> to <a href="https://gitlab.com/vgg/via">this project</a>.</div>
 	    <div style="width: 50%; margin: auto; padding-top: 1em;">This image annotation tool uses HTML, CSS and Javascript (<b>no dependencies on any javascript libraries</b>). It has been designed with portability in mind and therefore does not have any dependencies other than a modern web browser. For further information, please contact <a href="mailto:adutta-REMOVE-ME@robots.ox.ac.uk">Abhishek Dutta</a></div>
