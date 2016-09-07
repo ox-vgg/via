@@ -27,6 +27,7 @@ var bounding_box_count = 0;
 var annotation_count = 0;
 var annotations = new Map();
 var current_annotation_bounding_box_id = -1;
+var current_selected_bounding_box_index = -1;
 
 // bounding box coordinates in original image space
 var x0 = new Map(); var y0 = new Map(); var x1 = new Map(); var y1 = new Map();
@@ -64,6 +65,9 @@ var is_window_resized = false;
 var is_user_resizing_bounding_box = false;
 var bounding_box_edge = [-1, -1];
 var bounding_box_edge_tol = 5;
+
+var bounding_box_being_moved = false;
+var box_click_x, box_click_y;
 
 function main() {
     console.log('VGG Image Annotator (via)');    
@@ -180,110 +184,191 @@ help_button.addEventListener("click", function(e) {
     show_status("VGG Image Annotator (via) version " + VIA_VERSION, false);
 }, false);
 
-image_canvas.addEventListener('mousedown', function(e) {
-    if ( bounding_box_edge[1] >= 0 ) {
-	// user clicked on an existing bounding box edge
-	is_user_resizing_bounding_box = true;
-    } else {
-	is_user_resizing_bounding_box = false;
-	user_drawing_bounding_box = true;
-	click_x0 = e.offsetX; click_y0 = e.offsetY;
+// enter annotation mode on double click
+image_canvas.addEventListener('dblclick', function(e) {
+    click_x1 = e.offsetX; click_y1 = e.offsetY;
+
+    var bounding_box_id = is_inside_bounding_box(click_x1, click_y1);
+    if ( bounding_box_id >= 0 ) {
+	current_selected_bounding_box_index = -1;
+	user_entering_annotation = true;
+	current_annotation_bounding_box_id = bounding_box_id;
+	annotate_bounding_box(current_annotation_bounding_box_id);
     }
-});
+
+}, false);
+
+image_canvas.addEventListener('mousedown', function(e) {
+    click_x0 = e.offsetX; click_y0 = e.offsetY;
+
+    if ( current_selected_bounding_box_index >= 0 ) {
+	bounding_box_edge = is_on_bounding_box_corner(click_x0, click_y0, bounding_box_edge_tol);
+	
+	if ( bounding_box_edge[1] > 0 &&
+	     !is_user_resizing_bounding_box ) {
+	    if ( bounding_box_edge[0] == current_selected_bounding_box_index ) {
+		is_user_resizing_bounding_box = true;
+	    } else {
+		current_selected_bounding_box_index = bounding_box_edge[0];
+	    }
+	} else {
+	    var bounding_box_id = is_inside_bounding_box(click_x0, click_y0);
+	    if ( bounding_box_id >=0 &&
+	         !bounding_box_being_moved ) {
+		if( bounding_box_id == current_selected_bounding_box_index ) {
+		    bounding_box_being_moved = true;
+		    box_click_x = click_x0;
+		    box_click_y = click_y0;
+		} else {
+		    current_selected_bounding_box_index = bounding_box_id;
+		    bounding_box_being_moved = true;
+		    box_click_x = click_x0;
+		    box_click_y = click_y0;
+		}
+	    }
+	}
+    } else {
+	// this is a bounding box drawing event
+	is_user_resizing_bounding_box = false;
+	bounding_box_being_moved = false;
+	user_drawing_bounding_box = true;
+	current_selected_bounding_box_index = -1;
+    }
+    e.preventDefault();
+}, false);
 
 image_canvas.addEventListener('mouseup', function(e) {
     click_x1 = e.offsetX; click_y1 = e.offsetY;
 
     var dx = Math.abs(click_x1 - click_x0);
     var dy = Math.abs(click_y1 - click_y0);
+    
     if ( dx < 5 || dy < 5 ) {
-        // a single click - trigger image annotation
         user_drawing_bounding_box = false;
         var bounding_box_id = is_inside_bounding_box(click_x0, click_y0);
         if ( bounding_box_id >= 0 ) {
-	    user_entering_annotation = true;
-	    current_annotation_bounding_box_id = bounding_box_id;
-	    annotate_bounding_box(bounding_box_id);
+	    if ( current_selected_bounding_box_index == -1 ) {
+		// first click selects the bounding box for further action
+		current_selected_bounding_box_index = bounding_box_id;
+		user_entering_annotation = false;
+
+		show_status(current_image_filename +
+			    " | Selected bounding box" + 
+			    " | Press <span style='color:red;'>Del</span> to delete, " +
+			    "<span style='color:red'>Mouse</span> to move and resize,", false);
+
+		redraw_image_canvas();
+	    }
         } else {
+	    // click on other non-boxed area
 	    if ( user_entering_annotation ) {
                 annotation_textbox.style.visibility = "hidden";
                 current_annotation_bounding_box_id = -1;
                 user_entering_annotation = false;
-                redraw_image_canvas();
 	    }
-        }
-    } else {
-        // this was a bounding box drawing event
-	if ( is_user_resizing_bounding_box ) {
-	    is_user_resizing_bounding_box = false;
-
-	    // update the bounding box
-	    var box_id = bounding_box_edge[0];
-	    var new_x0, new_y0, new_x1, new_y1;
-	    
-	    switch(bounding_box_edge[1]) {
-	    case 1: // top-left
-		canvas_x0[current_image_filename][box_id] = click_x1;
-		x0[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
-		canvas_y0[current_image_filename][box_id] = click_y1;
-		y0[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];
-		break;
-	    case 3: // bottom-right
-		canvas_x1[current_image_filename][box_id] = click_x1;
-		x1[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
-		canvas_y1[current_image_filename][box_id] = click_y1;
-		y1[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];		
-		break;
-	    case 2: // top-right
-		canvas_y0[current_image_filename][box_id] = click_y1;
-		y0[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];
-		canvas_x1[current_image_filename][box_id] = click_x1;
-		x1[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
-		break;
-	    case 4: // bottom-left
-		canvas_x0[current_image_filename][box_id] = click_x1;
-		x0[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
-		canvas_y1[current_image_filename][box_id] = click_y1;
-		y1[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];
-		break;
+	    if ( current_selected_bounding_box_index != -1 ) {
+		// clear all bounding box selection
+		current_selected_bounding_box_index = -1;
+		
+		show_status(current_image_filename +
+			    " | " + bounding_box_count + " boxes and " + annotation_count + " annotations" +
+			    " | Press <span style='color:red;'>Enter</span> key to annotate, " +
+			    " <span style='color:red'>Arrow keys</span> to move to next image.", false);		
 	    }
 	    redraw_image_canvas();
-	} else {
-            // ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
-            if ( click_x0 < click_x1 ) {
-                x0[current_image_filename].push(click_x0 * scale_factor[current_image_filename]);
-                x1[current_image_filename].push(click_x1 * scale_factor[current_image_filename]);
-		canvas_x0[current_image_filename].push(click_x0);
-		canvas_x1[current_image_filename].push(click_x1);		
-            } else {
-		x0[current_image_filename].push(click_x1 * scale_factor[current_image_filename]);
-                x1[current_image_filename].push(click_x0 * scale_factor[current_image_filename]);
-		canvas_x0[current_image_filename].push(click_x1);
-		canvas_x1[current_image_filename].push(click_x0);
-	    }
+        }
+    }
+    if ( bounding_box_being_moved ) {
+	var move_x = (box_click_x - click_x1);
+	var move_y = (box_click_y - click_y1);
 
-	    if ( click_y0 < click_y1 ) {
-                y0[current_image_filename].push(click_y0 * scale_factor[current_image_filename]);
-                y1[current_image_filename].push(click_y1 * scale_factor[current_image_filename]);
-                canvas_y0[current_image_filename].push(click_y0);
-                canvas_y1[current_image_filename].push(click_y1);
-	    } else {
-                y0[current_image_filename].push(click_y1 * scale_factor[current_image_filename]);
-                y1[current_image_filename].push(click_y0 * scale_factor[current_image_filename]);
-                canvas_y0[current_image_filename].push(click_y1);
-                canvas_y1[current_image_filename].push(click_y0);
-	    }
-	    
-            annotations[current_image_filename].push("");
-            bounding_box_count = bounding_box_count + 1;
+	canvas_x0[current_image_filename][current_selected_bounding_box_index] -= move_x;
+	canvas_y0[current_image_filename][current_selected_bounding_box_index] -= move_y;
+	canvas_x1[current_image_filename][current_selected_bounding_box_index] -= move_x;
+	canvas_y1[current_image_filename][current_selected_bounding_box_index] -= move_y;
 
-            show_status(current_image_filename +
-			" | " + bounding_box_count + " boxes and " + annotation_count + " annotations" +
-			" | Press <span style='color:red;'>Enter</span> key to annotate, " +
-			" <span style='color:red'>Arrow keys</span> to move to next image.", false);
-            user_drawing_bounding_box = false;
-            redraw_image_canvas();
+	x0[current_image_filename][current_selected_bounding_box_index] -= move_x*scale_factor[current_image_filename];
+	y0[current_image_filename][current_selected_bounding_box_index] -= move_y*scale_factor[current_image_filename];
+	x1[current_image_filename][current_selected_bounding_box_index] -= move_x*scale_factor[current_image_filename];
+	y1[current_image_filename][current_selected_bounding_box_index] -= move_y*scale_factor[current_image_filename];
+	
+	bounding_box_being_moved = false;
+	redraw_image_canvas();
+    }
+
+    // this was a bounding box drawing event
+    if ( is_user_resizing_bounding_box ) {
+	is_user_resizing_bounding_box = false;
+
+	// update the bounding box
+	var box_id = bounding_box_edge[0];
+	var new_x0, new_y0, new_x1, new_y1;
+	
+	switch(bounding_box_edge[1]) {
+	case 1: // top-left
+	    canvas_x0[current_image_filename][box_id] = click_x1;
+	    x0[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
+	    canvas_y0[current_image_filename][box_id] = click_y1;
+	    y0[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];
+	    break;
+	case 3: // bottom-right
+	    canvas_x1[current_image_filename][box_id] = click_x1;
+	    x1[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
+	    canvas_y1[current_image_filename][box_id] = click_y1;
+	    y1[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];		
+	    break;
+	case 2: // top-right
+	    canvas_y0[current_image_filename][box_id] = click_y1;
+	    y0[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];
+	    canvas_x1[current_image_filename][box_id] = click_x1;
+	    x1[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
+	    break;
+	case 4: // bottom-left
+	    canvas_x0[current_image_filename][box_id] = click_x1;
+	    x0[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
+	    canvas_y1[current_image_filename][box_id] = click_y1;
+	    y1[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];
+	    break;
 	}
+	redraw_image_canvas();
+    }
+
+    if (user_drawing_bounding_box) {
+	
+	// ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
+        if ( click_x0 < click_x1 ) {
+            x0[current_image_filename].push(click_x0 * scale_factor[current_image_filename]);
+            x1[current_image_filename].push(click_x1 * scale_factor[current_image_filename]);
+	    canvas_x0[current_image_filename].push(click_x0);
+	    canvas_x1[current_image_filename].push(click_x1);		
+        } else {
+	    x0[current_image_filename].push(click_x1 * scale_factor[current_image_filename]);
+            x1[current_image_filename].push(click_x0 * scale_factor[current_image_filename]);
+	    canvas_x0[current_image_filename].push(click_x1);
+	    canvas_x1[current_image_filename].push(click_x0);
+	}
+
+	if ( click_y0 < click_y1 ) {
+            y0[current_image_filename].push(click_y0 * scale_factor[current_image_filename]);
+            y1[current_image_filename].push(click_y1 * scale_factor[current_image_filename]);
+            canvas_y0[current_image_filename].push(click_y0);
+            canvas_y1[current_image_filename].push(click_y1);
+	} else {
+            y0[current_image_filename].push(click_y1 * scale_factor[current_image_filename]);
+            y1[current_image_filename].push(click_y0 * scale_factor[current_image_filename]);
+            canvas_y0[current_image_filename].push(click_y1);
+            canvas_y1[current_image_filename].push(click_y0);
+	}
+	
+        annotations[current_image_filename].push("");
+        bounding_box_count = bounding_box_count + 1;
+
+        show_status(current_image_filename +
+		    " | " + bounding_box_count + " boxes and " + annotation_count + " annotations" +
+		    " | Press <span style='color:red;'>Enter</span> key to annotate, " +
+		    " <span style='color:red'>Arrow keys</span> to move to next image.", false);
+        user_drawing_bounding_box = false;
+        redraw_image_canvas();
     }
     
 });
@@ -295,25 +380,32 @@ image_canvas.addEventListener("mouseover", function(e) {
 image_canvas.addEventListener('mousemove', function(e) {
     current_x = e.offsetX; current_y = e.offsetY;
 
-    // user may have placed mouse cursor over bounding box edge
-    if ( !is_user_resizing_bounding_box ) {
-	bounding_box_edge = is_on_bounding_box_corner(current_x, current_y, bounding_box_edge_tol);
-	if ( bounding_box_edge[1] > 0 ) {
-	    resizing_bounding_box_id = bounding_box_edge[0];
-	    switch(bounding_box_edge[1]) {
-	    case 1: // top-left
-	    case 3: // bottom-right
-		image_canvas.style.cursor = "nwse-resize";
-		break;
-	    case 2: // top-right
-	    case 4: // bottom-left		
-		image_canvas.style.cursor = "nesw-resize";
-		break;
-	    default:
-		image_canvas.style.cursor = "default";
+    if ( current_selected_bounding_box_index >= 0) {
+	if ( !is_user_resizing_bounding_box ) {
+	    bounding_box_edge = is_on_bounding_box_corner(current_x, current_y, bounding_box_edge_tol);
+	    
+	    if ( bounding_box_edge[0] == current_selected_bounding_box_index ) {	
+		switch(bounding_box_edge[1]) {
+		case 1: // top-left
+		case 3: // bottom-right
+		    image_canvas.style.cursor = "nwse-resize";
+		    break;
+		case 2: // top-right
+		case 4: // bottom-left		
+		    image_canvas.style.cursor = "nesw-resize";
+		    break;
+		default:
+		    image_canvas.style.cursor = "default";
+		}
+	    } else {
+		// a bounding box has been selected
+		var bounding_box_id = is_inside_bounding_box(current_x, current_y);
+		if ( bounding_box_id == current_selected_bounding_box_index ) {
+		    image_canvas.style.cursor = "move";
+		} else {
+		    image_canvas.style.cursor = "default";
+		}
 	    }
-	} else {
-	    image_canvas.style.cursor = "default";
 	}
     }
     
@@ -382,7 +474,6 @@ image_canvas.addEventListener('mousemove', function(e) {
 	    h = Math.abs(current_y - canvas_y0[current_image_filename][sel_box_id]);
 	    break;
 	}
-
         image_context.strokeStyle="#FF0000";
         image_context.shadowBlur=5;
         image_context.shadowColor="green";
@@ -390,6 +481,24 @@ image_canvas.addEventListener('mousemove', function(e) {
         image_canvas.focus();
     }
 
+    if ( bounding_box_being_moved ) {
+	redraw_image_canvas();
+	var move_x = (box_click_x - current_x);
+	var move_y = (box_click_y - current_y);
+
+	var moved_x0 = canvas_x0[current_image_filename][current_selected_bounding_box_index] - move_x;
+	var moved_y0 = canvas_y0[current_image_filename][current_selected_bounding_box_index] - move_y;
+	var moved_x1 = canvas_x1[current_image_filename][current_selected_bounding_box_index] - move_x;
+	var moved_y1 = canvas_y1[current_image_filename][current_selected_bounding_box_index] - move_y;
+
+	image_context.strokeStyle="#FF0000";
+        image_context.shadowBlur=5;
+        image_context.shadowColor="white";
+        image_context.strokeRect(moved_x0, moved_y0,
+				 Math.abs(moved_x1 - moved_x0),
+				 Math.abs(moved_y1 - moved_y0));
+        image_canvas.focus();	
+    }
     //console.log("user_drawing_bounding_box=" + user_drawing_bounding_box + ", is_user_resizing_bounding_box=" + is_user_resizing_bounding_box + ", bounding_box_edge=" + bounding_box_edge[0] + "," + bounding_box_edge[1]);
     
     /* @todo: implement settings -> show guide
@@ -407,15 +516,23 @@ image_canvas.addEventListener('mousemove', function(e) {
 
 function draw_all_bounding_box() {
     for (var i=0; i<bounding_box_count; ++i) {
-        if ( annotations[current_image_filename][i] == "" ) {
-            image_context.setLineDash([9, 3]);
-            image_context.strokeStyle="#FF0000";            
-        } else {
-            image_context.setLineDash([0]);
-            image_context.strokeStyle="#0000FF";            
-        }
         image_context.shadowBlur=3;
         image_context.shadowColor="white";
+        if ( annotations[current_image_filename][i] == "" ) {
+            image_context.setLineDash([9, 3]);
+            image_context.strokeStyle="#FF0000";
+        } else {
+            image_context.setLineDash([0]);
+            image_context.strokeStyle="#0000FF";
+        }
+
+	if ( current_selected_bounding_box_index == i ) {
+	    image_context.strokeStyle="#00FF00";
+	    image_context.shadowColor="#000000";
+            image_context.shadowBlur=1;  
+	    image_context.setLineDash([0]);
+	}
+	
         image_context.strokeRect(canvas_x0[current_image_filename][i],
                                  canvas_y0[current_image_filename][i],
                                  canvas_x1[current_image_filename][i] - canvas_x0[current_image_filename][i],
@@ -645,39 +762,53 @@ window.addEventListener("keydown", function(e) {
     if ( e.which == 13 ) { // Enter
         // when user presses Enter key, enter bounding box annotation mode
         if ( !user_entering_annotation && bounding_box_count > 0 ) {
-            user_entering_annotation = true;
             current_annotation_bounding_box_id = -1;
-            // find the un-annotated bounding box
-            for ( var i=0; i<annotations.length; ++i) {
-                if ( annotations[current_image_filename][i] == "" ) {
-                    current_annotation_bounding_box_id = i;
-                    break;
-                }
-            }
-            // if not found, move to the first bounding box
-            if ( current_annotation_bounding_box_id == -1 ) {
-                current_annotation_bounding_box_id = 0;
-            }
-            annotate_bounding_box(current_annotation_bounding_box_id);
+
+    	    if ( current_selected_bounding_box_index != -1 ) {
+		current_annotation_bounding_box_id = current_selected_bounding_box_index;
+		user_entering_annotation = true;		    		
+		annotate_bounding_box(current_annotation_bounding_box_id);		
+	    } else {
+		// find the un-annotated bounding box
+		for ( var i=0; i<annotations[current_image_filename].length; ++i) {
+                    if ( annotations[current_image_filename][i] == "" ) {
+			current_annotation_bounding_box_id = i;
+			break;
+                    }
+		}
+
+		if ( current_annotation_bounding_box_id != -1 ) {
+		    // enter annotation mode only if an un annotated box is present
+		    user_entering_annotation = true;		    
+		    annotate_bounding_box(current_annotation_bounding_box_id);
+		}
+	    }
+
         } else {
-            if ( bounding_box_count > 0 ) {
+            if ( user_entering_annotation && bounding_box_count > 0 ) {
                 // Enter key pressed after user updates annotations in textbox
                 annotations[current_image_filename][current_annotation_bounding_box_id] = annotation_textbox.value;
-                annotation_count = annotation_count + 1;
                 annotation_textbox.value = "";
                 annotation_textbox.style.visibility = "hidden";
                 redraw_image_canvas();
 
-                if ( bounding_box_count > 1 && (current_annotation_bounding_box_id != (bounding_box_count-1)) ) {
-                    // move to next bounding box
-                    current_annotation_bounding_box_id = current_annotation_bounding_box_id + 1;
+		// find a unannotated bounding box to next move to
+		current_annotation_bounding_box_id = -1;
+		for ( var i=0; i<annotations[current_image_filename].length; ++i) {
+		    if ( annotations[current_image_filename][i] == "" ) {
+			current_annotation_bounding_box_id = i;
+			break;
+		    }
+		}
+
+		if ( current_annotation_bounding_box_id != -1 ) {
                     user_entering_annotation = true;
                     annotate_bounding_box(current_annotation_bounding_box_id);
                 } else {
-                    // exist bounding box annotation mode
+                    // exit bounding box annotation mode
+                    current_annotation_bounding_box_id = -1;		    
                     user_entering_annotation = false;
                     annotation_textbox.style.visibility = "hidden";
-                    current_annotation_bounding_box_id = -1;
                 }
 
                 show_status(current_image_filename +
@@ -687,20 +818,49 @@ window.addEventListener("keydown", function(e) {
         }
         e.preventDefault();
     }
+    if ( e.which == 46 ) { // Del
+	if ( current_selected_bounding_box_index != -1 ) {
+	    x0[current_image_filename].splice(current_selected_bounding_box_index, 1);
+	    y0[current_image_filename].splice(current_selected_bounding_box_index, 1);
+	    x1[current_image_filename].splice(current_selected_bounding_box_index, 1);
+	    y1[current_image_filename].splice(current_selected_bounding_box_index, 1);
+
+	    canvas_x0[current_image_filename].splice(current_selected_bounding_box_index, 1);
+	    canvas_y0[current_image_filename].splice(current_selected_bounding_box_index, 1);
+	    canvas_x1[current_image_filename].splice(current_selected_bounding_box_index, 1);
+	    canvas_y1[current_image_filename].splice(current_selected_bounding_box_index, 1);
+
+	    annotations[current_image_filename].splice(current_selected_bounding_box_index, 1);
+	    
+	    annotation_count = annotation_count - 1;
+	    current_selected_bounding_box_index = -1;
+	    redraw_image_canvas();
+	}
+    }
+    
     if ( e.which == 27 ) { // Esc
 	if ( user_entering_annotation ) {
             // exit bounding box annotation model
             annotation_textbox.style.visibility = "hidden";
             current_annotation_bounding_box_id = -1;
             user_entering_annotation = false;
-            redraw_image_canvas();
 	}
 
 	if ( is_user_resizing_bounding_box ) {
 	    // cancel bounding box resizing action
 	    is_user_resizing_bounding_box = false;
-	    redraw_image_canvas();
 	}
+	
+	if ( current_selected_bounding_box_index != -1 ) {
+	    // clear all bounding box selection
+	    current_selected_bounding_box_index = -1;
+	    
+	    show_status(current_image_filename +
+			" | " + bounding_box_count + " boxes and " + annotation_count + " annotations" +
+			" | Press <span style='color:red;'>Enter</span> key to annotate, " +
+			" <span style='color:red'>Arrow keys</span> to move to next image.", false);			    
+	}
+	redraw_image_canvas();
     }
     if ( e.which == 39 ) { // right arrow
         move_to_next_image();
