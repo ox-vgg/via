@@ -62,9 +62,6 @@ var window_resize_timer;
 var is_window_resized = false;
 
 var is_user_resizing_bounding_box = false;
-@@@@@@@@@@@@@@@@@@@@@
-@todo
-@@@@@@@@@@@@@@@@@@@@@
 var bounding_box_edge = [-1, -1];
 var bounding_box_edge_tol = 5;
 
@@ -184,15 +181,13 @@ help_button.addEventListener("click", function(e) {
 }, false);
 
 image_canvas.addEventListener('mousedown', function(e) {
-    user_drawing_bounding_box = true;
-    click_x0 = e.offsetX; click_y0 = e.offsetY;
-
-    if ( is_user_resizing_bounding_box ) {
-	@@@@@@@@@@@@@@@@
-	@todo
-	@@@@@@@@@@@@@@@
-	bounding_box_edge[0] : which bbox id
-	bounding_box_edge[1] : which corner
+    if ( bounding_box_edge[1] >= 0 ) {
+	// user clicked on an existing bounding box edge
+	is_user_resizing_bounding_box = true;
+    } else {
+	is_user_resizing_bounding_box = false;
+	user_drawing_bounding_box = true;
+	click_x0 = e.offsetX; click_y0 = e.offsetY;
     }
 });
 
@@ -201,73 +196,96 @@ image_canvas.addEventListener('mouseup', function(e) {
 
     var dx = Math.abs(click_x1 - click_x0);
     var dy = Math.abs(click_y1 - click_y0);
-    if ( dx < 10 || dy < 10 ) {
+    if ( dx < 5 || dy < 5 ) {
         // a single click - trigger image annotation
         user_drawing_bounding_box = false;
         var bounding_box_id = is_inside_bounding_box(click_x0, click_y0);
         if ( bounding_box_id >= 0 ) {
-            user_entering_annotation = true;
-            current_annotation_bounding_box_id = bounding_box_id;
-            annotate_bounding_box(bounding_box_id);
+	    user_entering_annotation = true;
+	    current_annotation_bounding_box_id = bounding_box_id;
+	    annotate_bounding_box(bounding_box_id);
         } else {
-            if ( user_entering_annotation ) {
+	    if ( user_entering_annotation ) {
                 annotation_textbox.style.visibility = "hidden";
                 current_annotation_bounding_box_id = -1;
                 user_entering_annotation = false;
                 redraw_image_canvas();
-            }
+	    }
         }
     } else {
         // this was a bounding box drawing event
+	if ( is_user_resizing_bounding_box ) {
+	    is_user_resizing_bounding_box = false;
 
-        // ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
-        if ( click_x0 < click_x1 ) {
-            if ( click_y0 < click_y1 ) {
+	    // update the bounding box
+	    var box_id = bounding_box_edge[0];
+	    var new_x0, new_y0, new_x1, new_y1;
+	    
+	    switch(bounding_box_edge[1]) {
+	    case 1: // top-left
+		canvas_x0[current_image_filename][box_id] = click_x1;
+		x0[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
+		canvas_y0[current_image_filename][box_id] = click_y1;
+		y0[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];
+		break;
+	    case 3: // bottom-right
+		canvas_x1[current_image_filename][box_id] = click_x1;
+		x1[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
+		canvas_y1[current_image_filename][box_id] = click_y1;
+		y1[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];		
+		break;
+	    case 2: // top-right
+		canvas_y0[current_image_filename][box_id] = click_y1;
+		y0[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];
+		canvas_x1[current_image_filename][box_id] = click_x1;
+		x1[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
+		break;
+	    case 4: // bottom-left
+		canvas_x0[current_image_filename][box_id] = click_x1;
+		x0[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
+		canvas_y1[current_image_filename][box_id] = click_y1;
+		y1[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];
+		break;
+	    }
+	    redraw_image_canvas();
+	} else {
+            // ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
+            if ( click_x0 < click_x1 ) {
                 x0[current_image_filename].push(click_x0 * scale_factor[current_image_filename]);
-                y0[current_image_filename].push(click_y0 * scale_factor[current_image_filename]);
                 x1[current_image_filename].push(click_x1 * scale_factor[current_image_filename]);
-                y1[current_image_filename].push(click_y1 * scale_factor[current_image_filename]);
-
-                canvas_x0[current_image_filename].push(click_x0); canvas_y0[current_image_filename].push(click_y0);
-                canvas_x1[current_image_filename].push(click_x1); canvas_y1[current_image_filename].push(click_y1);
+		canvas_x0[current_image_filename].push(click_x0);
+		canvas_x1[current_image_filename].push(click_x1);		
             } else {
-                x0[current_image_filename].push(click_x0 * scale_factor[current_image_filename]);
-                y0[current_image_filename].push(click_y1 * scale_factor[current_image_filename]);
-                x1[current_image_filename].push(click_x1 * scale_factor[current_image_filename]);
-                y1[current_image_filename].push(click_y0 * scale_factor[current_image_filename]);
+		x0[current_image_filename].push(click_x1 * scale_factor[current_image_filename]);
+                x1[current_image_filename].push(click_x0 * scale_factor[current_image_filename]);
+		canvas_x0[current_image_filename].push(click_x1);
+		canvas_x1[current_image_filename].push(click_x0);
+	    }
 
-                canvas_x0[current_image_filename].push(click_x0); canvas_y0[current_image_filename].push(click_y1);
-                canvas_x1[current_image_filename].push(click_x1); canvas_y1[current_image_filename].push(click_y0);
-            }
-        } else {
-            if ( click_y0 < click_y1 ) {
-                x0[current_image_filename].push(click_x1 * scale_factor[current_image_filename]);
+	    if ( click_y0 < click_y1 ) {
                 y0[current_image_filename].push(click_y0 * scale_factor[current_image_filename]);
-                x1[current_image_filename].push(click_x0 * scale_factor[current_image_filename]);
                 y1[current_image_filename].push(click_y1 * scale_factor[current_image_filename]);
-
-                canvas_x0[current_image_filename].push(click_x1); canvas_y0[current_image_filename].push(click_y0);
-                canvas_x1[current_image_filename].push(click_x0); canvas_y1[current_image_filename].push(click_y1);
-            } else {
-                x0[current_image_filename].push(click_x1 * scale_factor[current_image_filename]);
+                canvas_y0[current_image_filename].push(click_y0);
+                canvas_y1[current_image_filename].push(click_y1);
+	    } else {
                 y0[current_image_filename].push(click_y1 * scale_factor[current_image_filename]);
-                x1[current_image_filename].push(click_x0 * scale_factor[current_image_filename]);
                 y1[current_image_filename].push(click_y0 * scale_factor[current_image_filename]);
+                canvas_y0[current_image_filename].push(click_y1);
+                canvas_y1[current_image_filename].push(click_y0);
+	    }
+	    
+            annotations[current_image_filename].push("");
+            bounding_box_count = bounding_box_count + 1;
 
-                canvas_x0[current_image_filename].push(click_x1); canvas_y0[current_image_filename].push(click_y1);
-                canvas_x1[current_image_filename].push(click_x0); canvas_y1[current_image_filename].push(click_y0);
-            }
-        }
-        annotations[current_image_filename].push("");
-        bounding_box_count = bounding_box_count + 1;
-
-        show_status(current_image_filename +
-                    " | " + bounding_box_count + " boxes and " + annotation_count + " annotations" +
-                    " | Press <span style='color:red;'>Enter</span> key to annotate, " +
-                    " <span style='color:red'>Arrow keys</span> to move to next image.", false);
-        user_drawing_bounding_box = false;
-        redraw_image_canvas();
+            show_status(current_image_filename +
+			" | " + bounding_box_count + " boxes and " + annotation_count + " annotations" +
+			" | Press <span style='color:red;'>Enter</span> key to annotate, " +
+			" <span style='color:red'>Arrow keys</span> to move to next image.", false);
+            user_drawing_bounding_box = false;
+            redraw_image_canvas();
+	}
     }
+    
 });
 
 image_canvas.addEventListener("mouseover", function(e) {
@@ -275,11 +293,34 @@ image_canvas.addEventListener("mouseover", function(e) {
 });
 
 image_canvas.addEventListener('mousemove', function(e) {
+    current_x = e.offsetX; current_y = e.offsetY;
+
+    // user may have placed mouse cursor over bounding box edge
+    if ( !is_user_resizing_bounding_box ) {
+	bounding_box_edge = is_on_bounding_box_corner(current_x, current_y, bounding_box_edge_tol);
+	if ( bounding_box_edge[1] > 0 ) {
+	    resizing_bounding_box_id = bounding_box_edge[0];
+	    switch(bounding_box_edge[1]) {
+	    case 1: // top-left
+	    case 3: // bottom-right
+		image_canvas.style.cursor = "nwse-resize";
+		break;
+	    case 2: // top-right
+	    case 4: // bottom-left		
+		image_canvas.style.cursor = "nesw-resize";
+		break;
+	    default:
+		image_canvas.style.cursor = "default";
+	    }
+	} else {
+	    image_canvas.style.cursor = "default";
+	}
+    }
+    
     if(user_drawing_bounding_box) {
         // draw rectangle as the user drags the mouse cousor
         redraw_image_canvas(); // clear old intermediate rectangle
-        
-        current_x = e.offsetX; current_y = e.offsetY;
+
         var w = Math.abs(current_x - click_x0);
         var h = Math.abs(current_y - click_y0);
         var top_left_x, top_left_y;
@@ -307,29 +348,50 @@ image_canvas.addEventListener('mousemove', function(e) {
         image_context.shadowColor="white";
         image_context.strokeRect(top_left_x, top_left_y, w, h);
         image_canvas.focus();
-    } else {
-	current_x = e.offsetX; current_y = e.offsetY;
-	bounding_box_edge = is_on_bounding_box_corner(current_x, current_y, bounding_box_edge_tol);
-	if ( bounding_box_edge[1] > 0 ) {
-	    is_user_resizing_bounding_box = true;
-	    resizing_bounding_box_id = bounding_box_edge[0];
-	    switch(bounding_box_edge[1]) {
-	    case 1: // top-left
-	    case 3: // bottom-right
-		image_canvas.style.cursor = "nwse-resize";
-		break;
-	    case 2: // top-right
-	    case 4: // bottom-left		
-		image_canvas.style.cursor = "nesw-resize";
-		break;
-	    default:
-		image_canvas.style.cursor = "default";
-	    }
-	} else {
-	    is_user_resizing_bounding_box = true;
-	    image_canvas.style.cursor = "default";
-	}
     }
+    
+    if ( is_user_resizing_bounding_box ) {
+	// user has clicked mouse on bounding box edge and is now moving it
+        redraw_image_canvas(); // clear old intermediate rectangle
+
+        var top_left_x, top_left_y, w, h;
+	var sel_box_id = bounding_box_edge[0];
+	switch(bounding_box_edge[1]) {
+	case 1: // top-left
+	    top_left_x = current_x;
+	    top_left_y = current_y;
+	    w = Math.abs(current_x - canvas_x1[current_image_filename][sel_box_id]);
+	    h = Math.abs(current_y - canvas_y1[current_image_filename][sel_box_id]);
+	    break;
+	case 3: // bottom-right
+	    top_left_x = canvas_x0[current_image_filename][sel_box_id];
+	    top_left_y = canvas_y0[current_image_filename][sel_box_id];
+	    w = Math.abs(top_left_x - current_x);
+	    h = Math.abs(top_left_y - current_y);
+	    break;
+	case 2: // top-right
+	    top_left_x = canvas_x0[current_image_filename][sel_box_id];
+	    top_left_y = current_y;
+	    w = Math.abs(top_left_x - current_x);
+	    h = Math.abs(canvas_y1[current_image_filename][sel_box_id] - current_y);
+	    break;
+	case 4: // bottom-left
+	    top_left_x = current_x;
+	    top_left_y = canvas_y0[current_image_filename][sel_box_id];
+	    w = Math.abs(canvas_x1[current_image_filename][sel_box_id] - current_x);
+	    h = Math.abs(current_y - canvas_y0[current_image_filename][sel_box_id]);
+	    break;
+	}
+
+        image_context.strokeStyle="#FF0000";
+        image_context.shadowBlur=5;
+        image_context.shadowColor="green";
+        image_context.strokeRect(top_left_x, top_left_y, w, h);
+        image_canvas.focus();
+    }
+
+    //console.log("user_drawing_bounding_box=" + user_drawing_bounding_box + ", is_user_resizing_bounding_box=" + is_user_resizing_bounding_box + ", bounding_box_edge=" + bounding_box_edge[0] + "," + bounding_box_edge[1]);
+    
     /* @todo: implement settings -> show guide
        else {
        redraw_image_canvas();
@@ -626,11 +688,19 @@ window.addEventListener("keydown", function(e) {
         e.preventDefault();
     }
     if ( e.which == 27 ) { // Esc
-        // exit bounding box annotation model
-        annotation_textbox.style.visibility = "hidden";
-        current_annotation_bounding_box_id = -1;
-        user_entering_annotation = false;
-        redraw_image_canvas();
+	if ( user_entering_annotation ) {
+            // exit bounding box annotation model
+            annotation_textbox.style.visibility = "hidden";
+            current_annotation_bounding_box_id = -1;
+            user_entering_annotation = false;
+            redraw_image_canvas();
+	}
+
+	if ( is_user_resizing_bounding_box ) {
+	    // cancel bounding box resizing action
+	    is_user_resizing_bounding_box = false;
+	    redraw_image_canvas();
+	}
     }
     if ( e.which == 39 ) { // right arrow
         move_to_next_image();
