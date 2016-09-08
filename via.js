@@ -790,6 +790,7 @@ window.addEventListener("keydown", function(e) {
                 annotations[current_image_filename][current_annotation_bounding_box_id] = annotation_textbox.value;
                 annotation_textbox.value = "";
                 annotation_textbox.style.visibility = "hidden";
+		annotation_count = annotation_count + 1;
                 redraw_image_canvas();
 
 		// find a unannotated bounding box to next move to
