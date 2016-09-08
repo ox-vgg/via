@@ -1,0 +1,62 @@
+\chapter{VGG Image Annotator}
+
+VGG Image Annotator [[via]] html application is contained in a single html file containing the definitions of html and css for web content and style and javascript for the annotation application.
+Here is the overall strucutre of [[via]]:
+
+<<via.html>>=
+<<source license declaration>>
+
+<html lang="en">
+<head>
+<<html meta tags definition>>
+
+<style type="text/css">
+  <<css definition>>
+</style>
+</head>
+
+<body onload="main()" onresize="update_ui_components()">
+<<html content definition>>
+<script type="text/javascript">
+  <<via javascript definition>>
+</script>
+</body>
+</html
+@
+
+[[via]] is a open source project distributed under the BSD-2 clause license which means that you are free to not only use it or modify it but also to contribute to this project.
+<<source license declaration>>=
+Copyright (c) 2016, Abhishek Dutta.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+@
+
+The standard html meta tags for this application are defined as follows:
+<<html meta tags definition>>=
+  <meta charset="UTF-8"> 
+  <title>VGG Image Annotator</title>
+  <meta name="author" content="Abhishek Dutta">
+  <meta name="description" content="VGG Image Annotator (via) is a light-weight image annotation tool built solely using HTML, CSS and pure Javascript (not using any javascript libraries).">
+@
+
+The html contents is
+
