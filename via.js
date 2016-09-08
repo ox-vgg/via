@@ -515,6 +515,7 @@ image_canvas.addEventListener('mousemove', function(e) {
 });
 
 function draw_all_bounding_box() {
+    annotation_count = 0;
     for (var i=0; i<bounding_box_count; ++i) {
         image_context.shadowBlur=3;
         image_context.shadowColor="white";
@@ -524,6 +525,7 @@ function draw_all_bounding_box() {
         } else {
             image_context.setLineDash([0]);
             image_context.strokeStyle="#0000FF";
+	    annotation_count = annotation_count + 1;
         }
 
 	if ( current_selected_bounding_box_index == i ) {
@@ -787,10 +789,9 @@ window.addEventListener("keydown", function(e) {
         } else {
             if ( user_entering_annotation && bounding_box_count > 0 ) {
                 // Enter key pressed after user updates annotations in textbox
-                annotations[current_image_filename][current_annotation_bounding_box_id] = annotation_textbox.value;
+		annotations[current_image_filename][current_annotation_bounding_box_id] = annotation_textbox.value;
                 annotation_textbox.value = "";
                 annotation_textbox.style.visibility = "hidden";
-		annotation_count = annotation_count + 1;
                 redraw_image_canvas();
 
 		// find a unannotated bounding box to next move to
