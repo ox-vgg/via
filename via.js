@@ -16,7 +16,6 @@ var current_image_filename;
 
 var current_image;
 var current_image_loaded = false;
-var prefetched_next_img, prefetched_prev_img;
 
 var user_drawing_bounding_box = false;
 var user_entering_annotation = false;
@@ -49,9 +48,14 @@ var delete_annotations_button = document.getElementById("delete_annotations_butt
 
 var invisible_file_input = document.getElementById("invisible_file_input");
 var json_download_link = document.getElementById("link_download_annotations");
-var status_bar = document.getElementById("status_bar");
 
-var image_panel = document.getElementById("image_panel");
+var status_bar = document.getElementById("status_bar");
+var navigation_info = document.getElementById("navigation_info");
+var annotation_info = document.getElementById("annotation_info");
+var attributes_panel = document.getElementById("attributes_panel");
+
+var container = document.getElementById("container");
+var main_content = document.getElementById("main_content");
 var starting_information_panel = document.getElementById("starting_information");
 var help_panel = document.getElementById("help_panel");
 var container = document.getElementById("container");
@@ -68,6 +72,12 @@ var bounding_box_edge_tol = 5;
 
 var bounding_box_being_moved = false;
 var box_click_x, box_click_y;
+
+var SEL_BBOX_COLOR = "#FF6600";
+var SEL_BBOX_SHADOW_COLOR = "#000000";
+
+var BBOX_COLOR = "#0066FF";
+var BBOX_SHADOW_COLOR = "#000000";
 
 function main() {
     console.log('VGG Image Annotator (via)');    
@@ -92,16 +102,22 @@ home_button.addEventListener("click", function(e) {
         starting_information_panel.style.display = "none";
         redraw_image_canvas();
 
-        show_status(current_image_filename +
-                    " | " + bounding_box_count + " boxes and " + annotation_count + " annotations" +
-                    " | Press <span style='color:red;'>Enter</span> key to annotate, " +
-                    " <span style='color:red'>Arrow keys</span> to move to next image.", false);
+	show_navigation_info("(" + (current_image_index+1) + "/" +
+			     user_uploaded_images.length + ") " +
+			     current_image_filename);
+	show_annotation_info("[" + bounding_box_count + "] boxes and [" +
+			     annotation_count + "] annotations");
+	show_status("Press <span style='color:red;'>Enter</span> key to annotate," +
+                    " <span style='color:red'>Arrow keys</span> to move to next image.");
     } else {
         image_canvas.style.display = "none";
         starting_information_panel.style.display = "block";
 
         status_prefix = "";
-        show_status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !", false);
+	
+	show_navigation_info("");
+	show_annotation_info("");
+	show_status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
     }
 
     help_panel.style.display = "none";
@@ -181,7 +197,12 @@ help_button.addEventListener("click", function(e) {
     starting_information_panel.style.display = "none";
     help_panel.style.display = "block";
 
-    show_status("VGG Image Annotator (via) version " + VIA_VERSION, false);
+    show_navigation_info("(" + (current_image_index+1) + "/" +
+			 user_uploaded_images.length + ") " +
+			 current_image_filename);
+    show_annotation_info("[" + bounding_box_count + "] boxes and [" +
+			 annotation_count + "] annotations");
+    show_status("VGG Image Annotator (via) version " + VIA_VERSION);
 }, false);
 
 // enter annotation mode on double click
@@ -194,6 +215,8 @@ image_canvas.addEventListener('dblclick', function(e) {
 	user_entering_annotation = true;
 	current_annotation_bounding_box_id = bounding_box_id;
 	annotate_bounding_box(current_annotation_bounding_box_id);
+
+	show_status("Please enter annotation");
     }
 
 }, false);
@@ -232,7 +255,7 @@ image_canvas.addEventListener('mousedown', function(e) {
 	is_user_resizing_bounding_box = false;
 	bounding_box_being_moved = false;
 	user_drawing_bounding_box = true;
-	current_selected_bounding_box_index = -1;
+	current_selected_bounding_box_index = -1;	
     }
     e.preventDefault();
 }, false);
@@ -251,13 +274,8 @@ image_canvas.addEventListener('mouseup', function(e) {
 		// first click selects the bounding box for further action
 		current_selected_bounding_box_index = bounding_box_id;
 		user_entering_annotation = false;
-
-		show_status(current_image_filename +
-			    " | Selected bounding box" + 
-			    " | Press <span style='color:red;'>Del</span> to delete, " +
-			    "<span style='color:red'>Mouse</span> to move and resize,", false);
-
 		redraw_image_canvas();
+		show_status("<span style='color:red;'>Del</span> to delete and <span style='color:red;'>Mouse over</span> to update");
 	    }
         } else {
 	    // click on other non-boxed area
@@ -268,14 +286,11 @@ image_canvas.addEventListener('mouseup', function(e) {
 	    }
 	    if ( current_selected_bounding_box_index != -1 ) {
 		// clear all bounding box selection
-		current_selected_bounding_box_index = -1;
-		
-		show_status(current_image_filename +
-			    " | " + bounding_box_count + " boxes and " + annotation_count + " annotations" +
-			    " | Press <span style='color:red;'>Enter</span> key to annotate, " +
-			    " <span style='color:red'>Arrow keys</span> to move to next image.", false);		
+		current_selected_bounding_box_index = -1;		
 	    }
 	    redraw_image_canvas();
+	    show_status("Press <span style='color:red;'>Enter</span> key to annotate," +
+                        " <span style='color:red'>Arrow keys</span> to move to next image.");
         }
     }
     if ( bounding_box_being_moved ) {
@@ -363,10 +378,8 @@ image_canvas.addEventListener('mouseup', function(e) {
         annotations[current_image_filename].push("");
         bounding_box_count = bounding_box_count + 1;
 
-        show_status(current_image_filename +
-		    " | " + bounding_box_count + " boxes and " + annotation_count + " annotations" +
-		    " | Press <span style='color:red;'>Enter</span> key to annotate, " +
-		    " <span style='color:red'>Arrow keys</span> to move to next image.", false);
+	show_annotation_info("[" + bounding_box_count + "] boxes and [" +
+			     annotation_count + "] annotations");
         user_drawing_bounding_box = false;
         redraw_image_canvas();
     }
@@ -382,9 +395,9 @@ image_canvas.addEventListener('mousemove', function(e) {
 
     if ( current_selected_bounding_box_index >= 0) {
 	if ( !is_user_resizing_bounding_box ) {
-	    bounding_box_edge = is_on_bounding_box_corner(current_x, current_y, bounding_box_edge_tol);
+	    bounding_box_edge = is_on_bounding_box_corner(current_x, current_y, bounding_box_edge_tol);   
 	    
-	    if ( bounding_box_edge[0] == current_selected_bounding_box_index ) {	
+	    if ( bounding_box_edge[0] == current_selected_bounding_box_index ) {
 		switch(bounding_box_edge[1]) {
 		case 1: // top-left
 		case 3: // bottom-right
@@ -434,10 +447,9 @@ image_canvas.addEventListener('mousemove', function(e) {
                 top_left_y = current_y;
             }
         }
-        
-        image_context.strokeStyle="#FF0000";
-        image_context.shadowBlur=5;
-        image_context.shadowColor="white";
+        image_context.strokeStyle=BBOX_COLOR;
+        image_context.shadowBlur=1;
+        image_context.shadowColor=BBOX_SHADOW_COLOR;
         image_context.strokeRect(top_left_x, top_left_y, w, h);
         image_canvas.focus();
     }
@@ -474,9 +486,9 @@ image_canvas.addEventListener('mousemove', function(e) {
 	    h = Math.abs(current_y - canvas_y0[current_image_filename][sel_box_id]);
 	    break;
 	}
-        image_context.strokeStyle="#FF0000";
-        image_context.shadowBlur=5;
-        image_context.shadowColor="green";
+        image_context.strokeStyle=SEL_BBOX_COLOR;
+        image_context.shadowBlur=1;
+        image_context.shadowColor=SEL_BBOX_SHADOW_COLOR;
         image_context.strokeRect(top_left_x, top_left_y, w, h);
         image_canvas.focus();
     }
@@ -491,9 +503,9 @@ image_canvas.addEventListener('mousemove', function(e) {
 	var moved_x1 = canvas_x1[current_image_filename][current_selected_bounding_box_index] - move_x;
 	var moved_y1 = canvas_y1[current_image_filename][current_selected_bounding_box_index] - move_y;
 
-	image_context.strokeStyle="#FF0000";
-        image_context.shadowBlur=5;
-        image_context.shadowColor="white";
+        image_context.strokeStyle=SEL_BBOX_COLOR;
+        image_context.shadowBlur=1;
+        image_context.shadowColor=SEL_BBOX_SHADOW_COLOR;
         image_context.strokeRect(moved_x0, moved_y0,
 				 Math.abs(moved_x1 - moved_x0),
 				 Math.abs(moved_y1 - moved_y0));
@@ -515,22 +527,23 @@ image_canvas.addEventListener('mousemove', function(e) {
 });
 
 function draw_all_bounding_box() {
+
     annotation_count = 0;
     for (var i=0; i<bounding_box_count; ++i) {
-        image_context.shadowBlur=3;
-        image_context.shadowColor="white";
+        image_context.shadowBlur=1;
+        image_context.strokeStyle=BBOX_COLOR;
+        image_context.shadowColor=BBOX_SHADOW_COLOR;
+
         if ( annotations[current_image_filename][i] == "" ) {
             image_context.setLineDash([9, 3]);
-            image_context.strokeStyle="#FF0000";
         } else {
             image_context.setLineDash([0]);
-            image_context.strokeStyle="#0000FF";
 	    annotation_count = annotation_count + 1;
         }
 
 	if ( current_selected_bounding_box_index == i ) {
-	    image_context.strokeStyle="#00FF00";
-	    image_context.shadowColor="#000000";
+	    image_context.strokeStyle=SEL_BBOX_COLOR;
+	    image_context.shadowColor=SEL_BBOX_SHADOW_COLOR;
             image_context.shadowBlur=1;  
 	    image_context.setLineDash([0]);
 	}
@@ -583,10 +596,7 @@ function load_local_file(file_id) {
 
     if (!img_file) {
         return;
-    } else {
-        status_prefix = "(" + (current_image_index+1) + "/" +
-            user_uploaded_images.length + ") ";
-        
+    } else {       
         current_image_filename = image_filename_list[current_image_index];
         img_reader = new FileReader();
 
@@ -602,23 +612,24 @@ function load_local_file(file_id) {
             current_image = new Image();
             current_image.addEventListener( "load", function() {
                 // retrive image panel dim. to stretch image_canvas to fit panel
-                image_panel_width = image_panel.offsetWidth;
-                image_panel_height = image_panel.offsetHeight;
+                main_content_width = main_content.offsetWidth;
+                //main_content_height = main_content.offsetHeight;
+		main_content_height = container.offsetHeight*0.8;
                 
                 canvas_width = current_image.naturalWidth;
                 canvas_height = current_image.naturalHeight;
 
                 var scale_width, scale_height;
-                if ( canvas_width > image_panel_width ) {
+                if ( canvas_width > main_content_width ) {
                     // resize image to match the panel width
-                    scale_width = image_panel_width / current_image.naturalWidth;
-                    canvas_width = image_panel_width;
+                    scale_width = main_content_width / current_image.naturalWidth;
+                    canvas_width = main_content_width;
                     canvas_height = current_image.naturalHeight * scale_width;
                 }
                 // resize image if its height is larger than the image panel
-                if ( canvas_height > image_panel_height ) {
-                    scale_height = image_panel_height / canvas_height;
-                    canvas_height = image_panel_height;
+                if ( canvas_height > main_content_height ) {
+                    scale_height = main_content_height / canvas_height;
+                    canvas_height = main_content_height;
                     canvas_width = canvas_width * scale_height;
                 }
 
@@ -665,10 +676,13 @@ function load_local_file(file_id) {
                 starting_information_panel.style.display = "none";
                 help_panel.style.display = "none";
 
-                show_status(current_image_filename +
-                            " | " + bounding_box_count + " boxes and " + annotation_count + " annotations" +
-                            " | Press <span style='color:red;'>Enter</span> key to annotate, " +
-                            " <span style='color:red'>Arrow keys</span> to move to next image.", false);
+		show_navigation_info("(" + (current_image_index+1) + "/" +
+				     user_uploaded_images.length + ") " +
+				     current_image_filename);
+		show_annotation_info("[" + bounding_box_count + "] boxes and [" +
+				     annotation_count + "] annotations");
+		show_status("Press <span style='color:red;'>Enter</span> key to annotate," +
+                            " <span style='color:red'>Arrow keys</span> to move to next image.");
             });
             current_image.src = img_reader.result;
         }, false);
@@ -692,7 +706,7 @@ function upload_local_files(user_selected_files) {
     if ( user_uploaded_images.length > 0 ) {
         load_local_file(0);
     } else {
-        status("Please upload some files!", false);
+        show_status("Please upload some files!", false);
     }
 }
 
@@ -739,6 +753,7 @@ function is_on_bounding_box_corner(x, y, tolerance) {
 	    }
 	}
     }
+    bounding_box_edge[0] = -1;
     return bounding_box_edge;
 }
 
@@ -813,9 +828,14 @@ window.addEventListener("keydown", function(e) {
                     annotation_textbox.style.visibility = "hidden";
                 }
 
-                show_status(current_image_filename +
-                            " | " + bounding_box_count + " boxes and " + annotation_count + " annotations" +
-                            " | Press <span style='color:red;'>Enter</span> key to annotate, <span style='color:red'>Arrow keys</span> to move to next image.", false);
+		show_navigation_info("(" + (current_image_index+1) + "/" +
+				     user_uploaded_images.length + ") " +
+				     current_image_filename);
+		show_annotation_info("[" + bounding_box_count + "] boxes and [" +
+				     annotation_count + "] annotations");
+		show_status("Press <span style='color:red;'>Enter</span> key to annotate," +
+                            " <span style='color:red'>Arrow keys</span> to move to next image.");
+		
             }
         }
         e.preventDefault();
@@ -856,13 +876,10 @@ window.addEventListener("keydown", function(e) {
 	if ( current_selected_bounding_box_index != -1 ) {
 	    // clear all bounding box selection
 	    current_selected_bounding_box_index = -1;
-	    
-	    show_status(current_image_filename +
-			" | " + bounding_box_count + " boxes and " + annotation_count + " annotations" +
-			" | Press <span style='color:red;'>Enter</span> key to annotate, " +
-			" <span style='color:red'>Arrow keys</span> to move to next image.", false);			    
 	}
 	redraw_image_canvas();
+	show_status("Press <span style='color:red;'>Enter</span> key to annotate," +
+                    " <span style='color:red'>Arrow keys</span> to move to next image.");	
     }
     if ( e.which == 39 ) { // right arrow
         move_to_next_image();
@@ -912,11 +929,16 @@ function move_to_next_image() {
     }
 }
 
-function show_status(msg, append) {
-    if(append)
-        status_bar.innerHTML = status_bar.innerHTML + status_prefix + msg;
-    else
-        status_bar.innerHTML = status_prefix + msg;
+function show_status(msg) {
+    status_bar.innerHTML = msg;
+}
+
+function show_navigation_info(msg) {
+    navigation_info.innerHTML = msg;
+}
+
+function show_annotation_info(msg) {
+    annotation_info.innerHTML = msg;
 }
 
 function print_current_annotations() {    
