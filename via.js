@@ -25,6 +25,7 @@ var click_x1 = 0; var click_y1 = 0;
 var bounding_box_count = 0;
 var annotation_count = 0;
 var annotations = new Map();
+var annotation_keys = [];
 var current_annotation_bounding_box_id = -1;
 var current_selected_bounding_box_index = -1;
 
@@ -52,7 +53,7 @@ var json_download_link = document.getElementById("link_download_annotations");
 var status_bar = document.getElementById("status_bar");
 var navigation_info = document.getElementById("navigation_info");
 var annotation_info = document.getElementById("annotation_info");
-var attributes_panel = document.getElementById("attributes_panel");
+var info_bar = document.getElementById("info_bar");
 
 var container = document.getElementById("container");
 var main_content = document.getElementById("main_content");
@@ -85,6 +86,9 @@ var SEL_BBOX_SHADOW_COLOR = "#000000";
 var BBOX_COLOR = "#0066FF";
 var BBOX_SHADOW_COLOR = "#000000";
 
+var COLOR_KEY = "#0000FF";
+var COLOR_VALUE = "#000000";
+
 function main() {
     console.log('VGG Image Annotator (via)');    
 
@@ -100,6 +104,8 @@ function main() {
     } else {
 	is_local_storage_available = false;
     }
+    show_info("");
+    invisible_file_input.click();
 }
 function update_ui_components() {
     if ( !is_window_resized && current_image_loaded ) {
@@ -289,6 +295,10 @@ image_canvas.addEventListener('mouseup', function(e) {
 		user_entering_annotation = false;
 		redraw_image_canvas();
 		show_status("<span style='color:red;'>Del</span> to delete and <span style='color:red;'>Mouse over</span> to update");
+
+		// show full annotations
+		var bbox_annotation = annotations[current_image_filename][current_selected_bounding_box_index];
+		show_info( highlight_key_value(bbox_annotation) );
 	    }
         } else {
 	    // click on other non-boxed area
@@ -388,8 +398,8 @@ image_canvas.addEventListener('mouseup', function(e) {
             canvas_y1[current_image_filename].push(click_y0);
 	}
 	
-        annotations[current_image_filename].push("");
         bounding_box_count = bounding_box_count + 1;
+        annotations[current_image_filename].push("");
 
 	show_annotation_info("[" + bounding_box_count + "] boxes and [" +
 			     annotation_count + "] annotations");
@@ -607,7 +617,17 @@ function draw_all_annotations() {
             image_context.font = '12pt Sans';
 
             var bgnd_rect_height = 1.8 * image_context.measureText('M').width;
-            var bgnd_rect_width = 2*bgnd_rect_height + image_context.measureText(annotations[i]).width;
+            var bgnd_rect_width = image_context.measureText(annotations[current_image_filename][i]).width;
+	    var bbox_width = Math.abs( canvas_x1[current_image_filename][i] - canvas_x0[current_image_filename][i] );
+
+	    var annotation_str = annotations[current_image_filename][i];
+	    if ( bgnd_rect_width > bbox_width ) {
+		var max_str_len = Math.round(annotation_str.length * (bbox_width/bgnd_rect_width)) - 4;
+		annotation_str = annotation_str.substring(0, max_str_len) + '...';
+		bgnd_rect_width = bbox_width;
+	    } else {
+		bgnd_rect_width = bgnd_rect_width + 0.6*bgnd_rect_height;
+	    }
             
             // first, draw a background rectangle first
             image_context.fillStyle = 'black';
@@ -619,9 +639,9 @@ function draw_all_annotations() {
             // then, draw text over this background rectangle
             image_context.globalAlpha=1.0;
             image_context.fillStyle = 'yellow';
-            image_context.fillText(annotations[current_image_filename][i],
-                                   canvas_x0[current_image_filename][i] + bgnd_rect_height,
-                                   canvas_y0[current_image_filename][i] - bgnd_rect_height/4);
+            image_context.fillText(annotation_str,
+                                   canvas_x0[current_image_filename][i] + bgnd_rect_height/4,
+                                   canvas_y0[current_image_filename][i] - bgnd_rect_height/3);
         }
     }
 }
@@ -729,6 +749,7 @@ function load_local_file(file_id) {
 				     annotation_count + "] annotations");
 		show_status("Press <span style='color:red;'>Enter</span> key to annotate," +
                             " <span style='color:red'>Arrow keys</span> to move to next image.");
+
             });
             current_image.src = img_reader.result;
         }, false);
@@ -816,7 +837,7 @@ function annotate_bounding_box(bounding_box_id) {
     annotation_textbox.style.opacity = 0.5;
     annotation_textbox.value = annotations[current_image_filename][bounding_box_id];
     annotation_textbox.style.visibility = "visible";
-    annotation_textbox.style.width = Math.min(canvas_width/4, w - w/4).toString() + "px";
+    annotation_textbox.style.width = Math.max(canvas_width/3, w).toString() + "px";
     annotation_textbox.style.height = "1.5em";
     annotation_textbox.focus();
 }
@@ -1029,6 +1050,17 @@ function show_navigation_info(msg) {
 
 function show_annotation_info(msg) {
     annotation_info.innerHTML = msg;
+}
+
+function show_info(msg) {
+    info_bar.innerHTML = msg;
+}
+
+function highlight_key_value(str) {
+    // key1=val1;key2=val2;...
+    // <span style='color:blue;'>key1</span>=<span style='color:black;'>val1</span> ; ...
+
+    return str;
 }
 
 function print_current_annotations() {    
