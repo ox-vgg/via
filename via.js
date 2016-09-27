@@ -63,7 +63,6 @@ var container = document.getElementById("container");
 var annotation_textbox = document.getElementById("annotation_textbox");    
 annotation_textbox.style.visibility = "hidden";
 
-var window_resize_timer;
 var is_window_resized = false;
 
 var is_user_resizing_bounding_box = false;
@@ -73,6 +72,13 @@ var bounding_box_edge_tol = 5;
 var bounding_box_being_moved = false;
 var box_click_x, box_click_y;
 
+var zoom_active = false;
+var ZOOM_SIZE_PERCENT = 0.1;
+var zoom_size_img = -1;
+var zoom_size_canvas = -1;
+
+var is_local_storage_available = false;
+
 var SEL_BBOX_COLOR = "#FF6600";
 var SEL_BBOX_SHADOW_COLOR = "#000000";
 
@@ -81,12 +87,19 @@ var BBOX_SHADOW_COLOR = "#000000";
 
 function main() {
     console.log('VGG Image Annotator (via)');    
-    show_status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !", false);
 
     // hide canvas and show starting information
     image_canvas.style.display = "none";
     starting_information_panel.style.display = "block";
     help_panel.style.display = "none";
+
+    // initialize local storage
+    if ( check_local_storage ) {
+	is_local_storage_available = true;
+	show_status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !", false);
+    } else {
+	is_local_storage_available = false;
+    }
 }
 function update_ui_components() {
     if ( !is_window_resized && current_image_loaded ) {
@@ -163,7 +176,7 @@ json_download_link.addEventListener('click', function(e) {
                 json_str.push( JSON.stringify(img_annotation_json) );
             }
         }
-        var json_file = new Blob(json_str, {type : 'text/json'});
+        var json_file = new Blob(json_str, {type: "text/plain;charset=utf-8"});
         json_download_link.href = URL.createObjectURL(json_file);
         json_download_link.name = "annotations.json";
         json_download_link.title = "annotations.json";
@@ -391,6 +404,10 @@ image_canvas.addEventListener("mouseover", function(e) {
 });
 
 image_canvas.addEventListener('mousemove', function(e) {
+    if ( !current_image_loaded ) {
+	return;
+    }
+    
     current_x = e.offsetX; current_y = e.offsetY;
 
     if ( current_selected_bounding_box_index >= 0) {
@@ -511,6 +528,33 @@ image_canvas.addEventListener('mousemove', function(e) {
 				 Math.abs(moved_y1 - moved_y0));
         image_canvas.focus();	
     }
+    
+    if ( zoom_active &&
+	 !bounding_box_being_moved &&
+	 !is_user_resizing_bounding_box ) {
+
+	var sf = scale_factor[current_image_filename];
+	var original_image_x = current_x * sf;
+	var original_image_y = current_y * sf;
+
+	//console.log("zoom_size_pixel=" + zoom_size_pixel + ", sf=" + sf);
+	//console.log("original_image_x=" + original_image_x + ", original_image_y=" + original_image_y);
+	
+	redraw_image_canvas();
+	image_context.drawImage(current_image,
+				original_image_x - 30,
+				original_image_y - 30,
+				2*30,
+				2*30,
+				current_x - 100,
+				current_y - 100,
+				2*100,
+				2*100
+			       );
+	
+
+    }
+	 
     //console.log("user_drawing_bounding_box=" + user_drawing_bounding_box + ", is_user_resizing_bounding_box=" + is_user_resizing_bounding_box + ", bounding_box_edge=" + bounding_box_edge[0] + "," + bounding_box_edge[1]);
     
     /* @todo: implement settings -> show guide
@@ -641,6 +685,8 @@ function load_local_file(file_id) {
                 // set the canvas size to match that of the image
                 image_canvas.height = canvas_height;
                 image_canvas.width = canvas_width;
+
+		zoom_size_pixel = Math.round(ZOOM_SIZE_PERCENT * Math.min(canvas_width, canvas_height));
 
                 current_image_loaded = true;
                 bounding_box_count = x0[current_image_filename].length;
@@ -890,6 +936,24 @@ window.addEventListener("keydown", function(e) {
     if ( e.which == 121 ) { // F10 key used for debugging
         print_current_annotations();
     }
+    if ( e.which == 90 ) { // z used to toggle zoom
+	if ( zoom_active ) {
+            zoom_active=false;
+	    show_status("Press <span style='color:red;'>Enter</span> key to annotate," +
+			" <span style='color:red'>Arrow keys</span> to move to next image.");
+	} else {
+	    zoom_active=true;
+	    show_status("Zoom Enabled");
+	}
+	redraw_image_canvas();
+    }
+    if ( e.which == 36 ) { // Home
+	home_button.click();
+    }
+    if ( e.which == 112 ) { // F1 for help
+	help_button.click();
+    }
+    
 });
 
 function move_to_prev_image() {
@@ -927,6 +991,32 @@ function move_to_next_image() {
             load_local_file(current_image_index + 1);
         }
     }
+}
+
+function check_local_storage() {
+    // https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
+    try {
+	var storage = window[type];
+	var x = '__storage_test__';
+	storage.setItem(x, x);
+	storage.removeItem(x);
+	return true;
+    }
+    catch(e) {
+	return false;
+    }
+}
+
+function get_annotations_json() {
+
+}
+
+function save_current_annotations() {
+
+}
+
+function clear_current_annotations() {
+
 }
 
 function show_status(msg) {
