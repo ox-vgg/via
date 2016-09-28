@@ -75,10 +75,10 @@ var bounding_box_being_moved = false;
 var box_click_x, box_click_y;
 
 var zoom_active = false;
-var ZOOM_SIZE_PERCENT = 0.1;
+var ZOOM_SIZE_PERCENT = 0.2;
 var zoom_size_img = -1;
 var zoom_size_canvas = -1;
-
+var ZOOM_BOUNDARY_COLOR = "#ffaaaa";
 var is_local_storage_available = false;
 
 var COLOR_KEY = "#0000FF";
@@ -551,15 +551,21 @@ image_canvas.addEventListener('mousemove', function(e) {
 	
 	redraw_image_canvas();
 	image_context.drawImage(current_image,
-				original_image_x - 30,
-				original_image_y - 30,
-				2*30,
-				2*30,
-				current_x - 100,
-				current_y - 100,
+				original_image_x - 100,
+				original_image_y - 100,
 				2*100,
-				2*100
+				2*100,
+				current_x - 200,
+				current_y - 200,
+				2*200,
+				2*200
 			       );
+	
+	draw_bounding_box(current_x - 200,
+			  current_y - 200,
+			  2*200,
+			  2*200,
+			  ZOOM_BOUNDARY_COLOR);
     }
     
     //console.log("user_drawing_bounding_box=" + user_drawing_bounding_box + ", is_user_resizing_bounding_box=" + is_user_resizing_bounding_box + ", bounding_box_edge=" + bounding_box_edge[0] + "," + bounding_box_edge[1]);
@@ -906,18 +912,21 @@ window.addEventListener("keydown", function(e) {
         } else {
             if ( user_entering_annotation && bounding_box_count > 0 ) {
                 // Enter key pressed after user updates annotations in textbox
-		annotations[current_image_filename][current_annotation_bounding_box_id] = annotation_textbox.value;
-
 		// update annotation_attributes
 		var m = str2map(annotation_textbox.value);
+		var annotation_parsed_str = "";
 		if ( m.size != 0 ) {
 		    // updates keys and ensure consistency of existing keys
 		    for ( var [key, value] of m ) {
 			if ( ! annotation_attributes.has(key) ) {
 			    annotation_attributes.add(key);
-			}			    
+			}
+			annotation_parsed_str = annotation_parsed_str + key + "=" + value + ";"
 		    }
+		} else {
+		     annotation_parsed_str = annotation_textbox.value;
 		}
+		annotations[current_image_filename][current_annotation_bounding_box_id] = annotation_parsed_str;
 		show_info("");
 		
 		// update the list of attributes
@@ -993,6 +1002,11 @@ window.addEventListener("keydown", function(e) {
 	    // clear all bounding box selection
 	    current_selected_bounding_box_index = -1;
 	}
+
+	if ( zoom_active ) {
+            zoom_active=false;
+	}
+	
 	redraw_image_canvas();
 	show_status("Press <span style='color:red;'>Enter</span> key to annotate," +
                     " <span style='color:red'>Arrow keys</span> to move to next image.");	
@@ -1013,7 +1027,7 @@ window.addEventListener("keydown", function(e) {
 			" <span style='color:red'>Arrow keys</span> to move to next image.");
 	} else {
 	    zoom_active=true;
-	    show_status("Zoom Enabled");
+	    show_status("Zoom Enabled ( Press <span style='color:red;'>z</span> toggle zoom )");
 	}
 	redraw_image_canvas();
     }
@@ -1137,15 +1151,26 @@ function str2map(str) {
 	}
 	return m;
     } else {
-	for ( var i=0; i < tokens.length; ++i) {
-	    var kvi = tokens[i];
-	    var kv_split = kvi.split("=");
-	    if ( kv_split.length > 1 ) {
-		m.set(kv_split[0], kv_split[1]);
+	if ( tokens.length == annotation_attributes.size &&
+	     str.search("=") == -1 ) {
+	    // user only entered the values : value1; value2; ...
+	    var attr_i = 0;
+	    for ( let attribute of annotation_attributes ) {
+		m.set(attribute, tokens[attr_i]);
+		attr_i = attr_i + 1;
 	    }
-	    else {
-		// ignore malformed input
-		continue;
+	} else {
+	    for ( var i=0; i < tokens.length; ++i) {
+		var kvi = tokens[i];
+		var kv_split = kvi.split("=");
+		if ( kv_split.length > 1 ) {
+		    m.set(kv_split[0], kv_split[1]);
+		}
+		else {
+		    
+		    // ignore malformed input
+		    continue;
+		}
 	    }
 	}
 	return m;
