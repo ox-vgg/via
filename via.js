@@ -28,6 +28,7 @@ var annotations = new Map();
 var annotation_keys = [];
 var current_annotation_bounding_box_id = -1;
 var current_selected_bounding_box_index = -1;
+var annotation_attributes = new Set();
 
 // bounding box coordinates in original image space
 var x0 = new Map(); var y0 = new Map(); var x1 = new Map(); var y1 = new Map();
@@ -80,14 +81,16 @@ var zoom_size_canvas = -1;
 
 var is_local_storage_available = false;
 
-var SEL_BBOX_COLOR = "#FF6600";
-var SEL_BBOX_SHADOW_COLOR = "#000000";
-
-var BBOX_COLOR = "#0066FF";
-var BBOX_SHADOW_COLOR = "#000000";
-
 var COLOR_KEY = "#0000FF";
 var COLOR_VALUE = "#000000";
+var COLOR_MISSING_VALUE = "#FF0000";
+
+var BBOX_LINE_WIDTH = 4;
+var BBOX_BOUNDARY_FILL_COLOR_ANNOTATED = "#f2f2f2";
+var BBOX_BOUNDARY_FILL_COLOR_NEW = "#aaeeff";
+var BBOX_BOUNDARY_LINE_COLOR = "#1a1a1a";
+var BBOX_SELECTED_FILL_COLOR = "#ffffff";
+var BBOX_SELECTED_OPACITY = 0.3;
 
 function main() {
     console.log('VGG Image Annotator (via)');    
@@ -105,7 +108,6 @@ function main() {
 	is_local_storage_available = false;
     }
     show_info("");
-    invisible_file_input.click();
 }
 function update_ui_components() {
     if ( !is_window_resized && current_image_loaded ) {
@@ -215,13 +217,6 @@ help_button.addEventListener("click", function(e) {
     image_canvas.style.display = "none";
     starting_information_panel.style.display = "none";
     help_panel.style.display = "block";
-
-    show_navigation_info("(" + (current_image_index+1) + "/" +
-			 user_uploaded_images.length + ") " +
-			 current_image_filename);
-    show_annotation_info("[" + bounding_box_count + "] boxes and [" +
-			 annotation_count + "] annotations");
-    show_status("VGG Image Annotator (via) version " + VIA_VERSION);
 }, false);
 
 // enter annotation mode on double click
@@ -289,17 +284,15 @@ image_canvas.addEventListener('mouseup', function(e) {
         user_drawing_bounding_box = false;
         var bounding_box_id = is_inside_bounding_box(click_x0, click_y0);
         if ( bounding_box_id >= 0 ) {
-	    if ( current_selected_bounding_box_index == -1 ) {
-		// first click selects the bounding box for further action
-		current_selected_bounding_box_index = bounding_box_id;
-		user_entering_annotation = false;
-		redraw_image_canvas();
-		show_status("<span style='color:red;'>Del</span> to delete and <span style='color:red;'>Mouse over</span> to update");
+	    // first click selects the bounding box for further action
+	    current_selected_bounding_box_index = bounding_box_id;
+	    user_entering_annotation = false;
+	    redraw_image_canvas();
+	    show_status("<span style='color:red;'>Del</span> to delete and <span style='color:red;'>Mouse over</span> to update");
 
-		// show full annotations
-		var bbox_annotation = annotations[current_image_filename][current_selected_bounding_box_index];
-		show_info( highlight_key_value(bbox_annotation) );
-	    }
+	    // show full annotations
+	    var bbox_annotation_str = annotations[current_image_filename][current_selected_bounding_box_index];
+	    show_info( parse_annotation_str(bbox_annotation_str) );
         } else {
 	    // click on other non-boxed area
 	    if ( user_entering_annotation ) {
@@ -314,9 +307,20 @@ image_canvas.addEventListener('mouseup', function(e) {
 	    redraw_image_canvas();
 	    show_status("Press <span style='color:red;'>Enter</span> key to annotate," +
                         " <span style='color:red'>Arrow keys</span> to move to next image.");
+	    
+	    var annotation_attributes_str = "";
+	    for ( let attributes of annotation_attributes ) {
+		annotation_attributes_str += "<span style='color:" + COLOR_KEY + ";'>" + attributes + "</span> ,";
+	    }
+	    // remove last comma
+	    annotation_attributes_str = annotation_attributes_str.substring(0, annotation_attributes_str.length-1);
+	    show_info( "Attributes : [ " + annotation_attributes_str + " ]" );
         }
     }
     if ( bounding_box_being_moved ) {
+	bounding_box_being_moved = false;
+	image_canvas.style.cursor = "default";
+
 	var move_x = (box_click_x - click_x1);
 	var move_y = (box_click_y - click_y1);
 
@@ -330,14 +334,14 @@ image_canvas.addEventListener('mouseup', function(e) {
 	x1[current_image_filename][current_selected_bounding_box_index] -= move_x*scale_factor[current_image_filename];
 	y1[current_image_filename][current_selected_bounding_box_index] -= move_y*scale_factor[current_image_filename];
 	
-	bounding_box_being_moved = false;
 	redraw_image_canvas();
     }
 
     // this was a bounding box drawing event
     if ( is_user_resizing_bounding_box ) {
 	is_user_resizing_bounding_box = false;
-
+	image_canvas.style.cursor = "default";
+	
 	// update the bounding box
 	var box_id = bounding_box_edge[0];
 	var new_x0, new_y0, new_x1, new_y1;
@@ -474,10 +478,9 @@ image_canvas.addEventListener('mousemove', function(e) {
                 top_left_y = current_y;
             }
         }
-        image_context.strokeStyle=BBOX_COLOR;
-        image_context.shadowBlur=1;
-        image_context.shadowColor=BBOX_SHADOW_COLOR;
-        image_context.strokeRect(top_left_x, top_left_y, w, h);
+
+	draw_bounding_box(top_left_x, top_left_y, w, h,
+			  BBOX_BOUNDARY_FILL_COLOR_NEW);
         image_canvas.focus();
     }
     
@@ -513,10 +516,8 @@ image_canvas.addEventListener('mousemove', function(e) {
 	    h = Math.abs(current_y - canvas_y0[current_image_filename][sel_box_id]);
 	    break;
 	}
-        image_context.strokeStyle=SEL_BBOX_COLOR;
-        image_context.shadowBlur=1;
-        image_context.shadowColor=SEL_BBOX_SHADOW_COLOR;
-        image_context.strokeRect(top_left_x, top_left_y, w, h);
+	draw_bounding_box(top_left_x, top_left_y, w, h,
+			  BBOX_BOUNDARY_FILL_COLOR_NEW);
         image_canvas.focus();
     }
 
@@ -530,12 +531,10 @@ image_canvas.addEventListener('mousemove', function(e) {
 	var moved_x1 = canvas_x1[current_image_filename][current_selected_bounding_box_index] - move_x;
 	var moved_y1 = canvas_y1[current_image_filename][current_selected_bounding_box_index] - move_y;
 
-        image_context.strokeStyle=SEL_BBOX_COLOR;
-        image_context.shadowBlur=1;
-        image_context.shadowColor=SEL_BBOX_SHADOW_COLOR;
-        image_context.strokeRect(moved_x0, moved_y0,
-				 Math.abs(moved_x1 - moved_x0),
-				 Math.abs(moved_y1 - moved_y0));
+	draw_bounding_box(moved_x0, moved_y0,
+			  Math.abs(moved_x1 - moved_x0),
+			  Math.abs(moved_y1 - moved_y0),
+			  BBOX_BOUNDARY_FILL_COLOR_NEW);
         image_canvas.focus();	
     }
     
@@ -561,10 +560,8 @@ image_canvas.addEventListener('mousemove', function(e) {
 				2*100,
 				2*100
 			       );
-	
-
     }
-	 
+    
     //console.log("user_drawing_bounding_box=" + user_drawing_bounding_box + ", is_user_resizing_bounding_box=" + is_user_resizing_bounding_box + ", bounding_box_edge=" + bounding_box_edge[0] + "," + bounding_box_edge[1]);
     
     /* @todo: implement settings -> show guide
@@ -581,32 +578,52 @@ image_canvas.addEventListener('mousemove', function(e) {
 });
 
 function draw_all_bounding_box() {
-
     annotation_count = 0;
+    image_context.shadowBlur = 0;
+    var bbox_boundary_fill_color = "";
     for (var i=0; i<bounding_box_count; ++i) {
-        image_context.shadowBlur=1;
-        image_context.strokeStyle=BBOX_COLOR;
-        image_context.shadowColor=BBOX_SHADOW_COLOR;
-
         if ( annotations[current_image_filename][i] == "" ) {
-            image_context.setLineDash([9, 3]);
+	    bbox_boundary_fill_color = BBOX_BOUNDARY_FILL_COLOR_NEW;
         } else {
-            image_context.setLineDash([0]);
+	    bbox_boundary_fill_color = BBOX_BOUNDARY_FILL_COLOR_ANNOTATED;
 	    annotation_count = annotation_count + 1;
         }
-
-	if ( current_selected_bounding_box_index == i ) {
-	    image_context.strokeStyle=SEL_BBOX_COLOR;
-	    image_context.shadowColor=SEL_BBOX_SHADOW_COLOR;
-            image_context.shadowBlur=1;  
-	    image_context.setLineDash([0]);
-	}
 	
-        image_context.strokeRect(canvas_x0[current_image_filename][i],
-                                 canvas_y0[current_image_filename][i],
-                                 canvas_x1[current_image_filename][i] - canvas_x0[current_image_filename][i],
-                                 canvas_y1[current_image_filename][i] - canvas_y0[current_image_filename][i]);
+	draw_bounding_box(canvas_x0[current_image_filename][i],
+			  canvas_y0[current_image_filename][i],
+			  canvas_x1[current_image_filename][i] - canvas_x0[current_image_filename][i],
+			  canvas_y1[current_image_filename][i] - canvas_y0[current_image_filename][i],
+			  bbox_boundary_fill_color);
+	
+	if ( current_selected_bounding_box_index == i ) {
+	    image_context.fillStyle=BBOX_SELECTED_FILL_COLOR;
+	    image_context.globalAlpha = BBOX_SELECTED_OPACITY;
+	    image_context.fillRect(canvas_x0[current_image_filename][i] + BBOX_LINE_WIDTH/2,
+                                   canvas_y0[current_image_filename][i] + BBOX_LINE_WIDTH/2,
+                                   canvas_x1[current_image_filename][i] - canvas_x0[current_image_filename][i] - BBOX_LINE_WIDTH,
+                                   canvas_y1[current_image_filename][i] - canvas_y0[current_image_filename][i] - BBOX_LINE_WIDTH);
+	    image_context.globalAlpha = 1.0;
+	}
     }
+}
+
+function draw_bounding_box(x0, y0, w, h, boundary_fill_color) {
+    image_context.strokeStyle = boundary_fill_color;
+    image_context.lineWidth = BBOX_LINE_WIDTH/2;    
+    image_context.strokeRect(x0 - BBOX_LINE_WIDTH/4,
+                             y0 - BBOX_LINE_WIDTH/4,
+                             w + BBOX_LINE_WIDTH/4,
+                             h + BBOX_LINE_WIDTH/4);
+    image_context.lineWidth = BBOX_LINE_WIDTH/4;
+    image_context.strokeStyle = BBOX_BOUNDARY_LINE_COLOR;
+    image_context.strokeRect(x0 - BBOX_LINE_WIDTH/2 - 0.5,
+                             y0 - BBOX_LINE_WIDTH/2 - 0.5,
+                             w + BBOX_LINE_WIDTH,
+                             h + BBOX_LINE_WIDTH);
+    image_context.strokeRect(x0 + BBOX_LINE_WIDTH/4 - 0.5,
+                             y0 + BBOX_LINE_WIDTH/4 - 0.5,
+                             w - BBOX_LINE_WIDTH/2,
+                             h - BBOX_LINE_WIDTH/2);
 }
 
 function draw_all_annotations() {
@@ -837,9 +854,27 @@ function annotate_bounding_box(bounding_box_id) {
     annotation_textbox.style.opacity = 0.5;
     annotation_textbox.value = annotations[current_image_filename][bounding_box_id];
     annotation_textbox.style.visibility = "visible";
-    annotation_textbox.style.width = Math.max(canvas_width/3, w).toString() + "px";
+
+    if ( w > (canvas_width/2) ) {
+	annotation_textbox.style.width = (canvas_width/2).toString() + "px";
+    } else {
+	annotation_textbox.style.width = (w - w/4).toString() + "px";
+    }
     annotation_textbox.style.height = "1.5em";
     annotation_textbox.focus();
+
+    if ( annotation_attributes.size > 0 ) {
+	var help_str1 = "";
+	var help_str2 = "";
+	for ( let attributes of annotation_attributes ) {
+	    help_str1 += "<span style='color:" + COLOR_KEY + ";'>" + attributes + "</span>=" +
+		"<span style='color:" + COLOR_VALUE + ";'>value1; ";
+	    help_str2 += "<span style='color:" + COLOR_VALUE + ";'>value1; ";
+	}
+	show_info("Enter value of the attributes as follows | " + help_str1 + " | " + help_str2);
+    } else {
+	show_info("Enter value of the attributes as follows | key1=value1;key2=value2; ..." + " | value1;value2;..." );
+    }
 }
 
 window.addEventListener("keydown", function(e) {
@@ -872,6 +907,20 @@ window.addEventListener("keydown", function(e) {
             if ( user_entering_annotation && bounding_box_count > 0 ) {
                 // Enter key pressed after user updates annotations in textbox
 		annotations[current_image_filename][current_annotation_bounding_box_id] = annotation_textbox.value;
+
+		// update annotation_attributes
+		var m = str2map(annotation_textbox.value);
+		if ( m.size != 0 ) {
+		    // updates keys and ensure consistency of existing keys
+		    for ( var [key, value] of m ) {
+			if ( ! annotation_attributes.has(key) ) {
+			    annotation_attributes.add(key);
+			}			    
+		    }
+		}
+		show_info("");
+		
+		// update the list of attributes
                 annotation_textbox.value = "";
                 annotation_textbox.style.visibility = "hidden";
                 redraw_image_canvas();
@@ -1056,11 +1105,51 @@ function show_info(msg) {
     info_bar.innerHTML = msg;
 }
 
-function highlight_key_value(str) {
+function parse_annotation_str(str) {
     // key1=val1;key2=val2;...
     // <span style='color:blue;'>key1</span>=<span style='color:black;'>val1</span> ; ...
+    var m = str2map(str);
+    if ( m.size == 0 ) {
+	return str;
+    } else {
+	var html_str = "";
+	for ( let attribute of annotation_attributes ) {
+	    if ( m.has(attribute) ) {
+		html_str = html_str + "<span style='color:" + COLOR_KEY + ";'>" + attribute + "</span> = ";
+		html_str = html_str + "<span style='color:" + COLOR_VALUE + ";'>" + m.get(attribute) + "</span> ; ";
+	    } else {
+		html_str = html_str + "<span style='color:" + COLOR_KEY + ";'>" + attribute + "</span> = ";
+		html_str = html_str + "<span style='color:" + COLOR_MISSING_VALUE + ";'>N/A</span> ; ";
+	    }
+	}
+	return html_str;
+    }
+}
 
-    return str;
+function str2map(str) {
+    var m = new Map();
+    var tokens = str.split(";");
+    if ( tokens.length == 1 ) {
+	var kv_split = str.split("=");
+	if ( kv_split.length == 2 ) {
+	    // a single key=value may be present
+	    m.set(kv_split[0], kv_split[1]);
+	}
+	return m;
+    } else {
+	for ( var i=0; i < tokens.length; ++i) {
+	    var kvi = tokens[i];
+	    var kv_split = kvi.split("=");
+	    if ( kv_split.length > 1 ) {
+		m.set(kv_split[0], kv_split[1]);
+	    }
+	    else {
+		// ignore malformed input
+		continue;
+	    }
+	}
+	return m;
+    }
 }
 
 function print_current_annotations() {    
