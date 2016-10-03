@@ -12,6 +12,7 @@ var canvas_width, canvas_height;
 var user_uploaded_images;
 var image_filename_list = [];
 var current_image_index = -1;
+var current_image_id = '';
 var current_image_filename;
 
 var current_image;
@@ -32,6 +33,10 @@ var annotation_attributes = new Set();
 
 // bounding box coordinates in original image space
 var x0 = new Map(); var y0 = new Map(); var x1 = new Map(); var y1 = new Map();
+
+var image_annotation_list = new Map();
+var image_id_list = [];
+
 // bounding box coordinates in original canvas space
 var canvas_x0 = new Map(); var canvas_y0 = new Map();
 var canvas_x1 = new Map(); var canvas_y1 = new Map();
@@ -55,6 +60,8 @@ var status_bar = document.getElementById("status_bar");
 var navigation_info = document.getElementById("navigation_info");
 var annotation_info = document.getElementById("annotation_info");
 var info_bar = document.getElementById("info_bar");
+var via_session_data_panel = document.getElementById("via_session_data_panel");
+var image_annotation_list_snippet = document.getElementById("image_annotation_list_snippet");
 
 var container = document.getElementById("container");
 var main_content = document.getElementById("main_content");
@@ -64,6 +71,8 @@ var container = document.getElementById("container");
 
 var annotation_textbox = document.getElementById("annotation_textbox");    
 annotation_textbox.style.visibility = "hidden";
+
+var save_via_session_data_button = document.getElementById("save_via_session_data_button");
 
 var is_window_resized = false;
 
@@ -99,16 +108,147 @@ function main() {
     image_canvas.style.display = "none";
     starting_information_panel.style.display = "block";
     help_panel.style.display = "none";
+    via_session_data_panel.style.display = "none";
 
     // initialize local storage
     if ( check_local_storage ) {
 	is_local_storage_available = true;
-	show_status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !", false);
+
+	if ( localStorage.getItem('image_annotation_list') ) {
+	    load_image_annotation_from_localstorage();
+
+	    populate_image_annotation_list_snippet();
+	    image_canvas.style.display = "none";
+	    starting_information_panel.style.display = "none";
+	    help_panel.style.display = "none";
+	    via_session_data_panel.style.display = "block";
+	}
+
+	show_status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
     } else {
 	is_local_storage_available = false;
+	show_info("Warning: your browser does not allow local storage. Remember to save your work before exiting.");
     }
     show_info("");
 }
+
+function populate_image_annotation_list_snippet() {
+    var table_str = "<table style='margin:auto; padding: 1em; line-height:1.5em; text-align: left;'><tr><th>Filename</th><th>description</th><th>annotations</th></tr>";
+    var entry_count = 0;
+    for ( var image_id in image_annotation_list ) {
+	var filename = image_annotation_list[image_id].filename;
+	var file_description = image_annotation_list[image_id].description;
+	var file_annotations = "";
+	for ( var ri=0; ri<image_annotation_list[image_id].image_region_list.length; ++ri) {
+	    file_annotations += image_annotation_list[image_id].image_region_list[ri].description + ", ";
+	}
+	file_annotations = file_annotations.substring(0, file_annotations.length - 2); // remove last comma
+	
+	table_str += "<tr><td>" + filename + "</td>";
+	table_str += "<td>" + file_description + "</td>";
+	table_str += "<td>" + file_annotations + "</td></tr>";
+
+	if ( entry_count >= 1 ) {
+	    table_str += "<tr><td>...</td>";
+	    table_str += "<td>...</td>";
+	    table_str += "<td>...</td></tr>";
+
+	    break;
+	}
+	entry_count = entry_count + 1;
+    }
+    table_str += "</table>";
+    image_annotation_list_snippet.innerHTML = table_str;
+}
+
+
+function load_image_annotation_from_localstorage() {
+    console.log(localStorage.getItem("image_annotation_list"));
+    var robj = JSON.parse(localStorage.getItem("image_annotation_list"));
+    console.log(robj);    
+    for ( var image_id in robj ) {
+	var image_annotation = new ImageAnnotation(robj[image_id].filename,
+						   robj[image_id].size,
+						   robj[image_id].description);
+	for ( var ri=0; ri<robj[image_id].image_region_list.length; ++ri) {
+	    var region = new ImageRegion(robj[image_id].image_region_list[ri].x0,
+					 robj[image_id].image_region_list[ri].y0,
+					 robj[image_id].image_region_list[ri].x1,
+					 robj[image_id].image_region_list[ri].y1,
+					 robj[image_id].image_region_list[ri].description);
+	    image_annotation.image_region_list.push(region);
+	    console.log(region);
+	}
+	image_annotation_list[image_id] = image_annotation;
+	console.log(image_annotation_list);
+    }
+}
+
+function save_image_annotation_data(type) {
+    var image_annotation_list_str = get_image_annotation_list(type);
+    console.log(image_annotation_list_str);
+    var image_annotation_list_blob = new Blob([image_annotation_list_str], {type: 'text/'+type+';charset=utf-8'});
+    
+    save_data_to_local_file(image_annotation_list_blob, 'annotations.'+type);
+    console.log(image_annotation_list_str);
+}
+
+function discard_via_session_data() {
+    localStorage.clear();
+    show_info("Cleared annotations from previous session");
+    
+    image_canvas.style.display = "none";
+    starting_information_panel.style.display = "block";
+    help_panel.style.display = "none";
+    via_session_data_panel.style.display = "none";
+}
+
+function get_image_annotation_list(type) {
+    console.log(image_annotation_list);
+    if( type == "csv" ) {
+	csv_str = "#filename,size,file_description,x0,y0,x1,y1,region_description";
+
+	for ( var image_id in image_annotation_list ) {
+	    var image_annotation = image_annotation_list[image_id];
+	    var prefix_str = image_annotation.filename;
+	    prefix_str += "," + image_annotation.size;
+	    prefix_str += "," + image_annotation.description;
+
+	    var region_count = image_annotation.image_region_list.length;
+	    for ( var i=0; i<region_count; ++i) {
+		var region_str = "\n" + prefix_str + "," + i;
+		region_str += "," + image_annotation.image_region_list[i].x0;
+		region_str += "," + image_annotation.image_region_list[i].y0;
+		region_str += "," + image_annotation.image_region_list[i].x1;
+		region_str += "," + image_annotation.image_region_list[i].y1;
+		region_str += "," + image_annotation.image_region_list[i].description;
+		csv_str += region_str;
+	    }
+	}
+	return csv_str;
+    } else {
+	return JSON.stringify(image_annotation_list);
+    }    
+}
+
+function save_data_to_local_file(data, filename) {
+    console.log(data);
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(data);
+    a.target = '_blank';
+    a.download = filename;
+
+    // simulate a mouse click event
+    var event = new MouseEvent('click', {
+        view: window,
+        bubbles: true,
+        cancelable: true
+    });
+    
+    a.dispatchEvent(event);
+
+}
+
 function update_ui_components() {
     if ( !is_window_resized && current_image_loaded ) {
         show_status("Resizing window ...", false);
@@ -142,6 +282,7 @@ home_button.addEventListener("click", function(e) {
     }
 
     help_panel.style.display = "none";
+    via_session_data_panel.style.display = "none";
     
 }, false);
 
@@ -153,6 +294,7 @@ load_images_button.addEventListener("click", function(e) {
         image_canvas.style.display = "inline";
         starting_information_panel.style.display = "none";
         help_panel.style.display = "none";
+	via_session_data_panel.style.display = "none";
     }
     e.preventDefault(); // prevent navigation to "#"
 }, false);
@@ -376,14 +518,20 @@ image_canvas.addEventListener('mouseup', function(e) {
     }
 
     if (user_drawing_bounding_box) {
-	
+	var regx0, regy0, regx1, regy1;
 	// ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
         if ( click_x0 < click_x1 ) {
+	    regx0 = click_x0 * scale_factor[current_image_filename];
+	    regx1 = click_x1 * scale_factor[current_image_filename];
+	    
             x0[current_image_filename].push(click_x0 * scale_factor[current_image_filename]);
             x1[current_image_filename].push(click_x1 * scale_factor[current_image_filename]);
 	    canvas_x0[current_image_filename].push(click_x0);
 	    canvas_x1[current_image_filename].push(click_x1);		
         } else {
+	    regx0 = click_x1 * scale_factor[current_image_filename];
+	    regx1 = click_x0 * scale_factor[current_image_filename];
+	    
 	    x0[current_image_filename].push(click_x1 * scale_factor[current_image_filename]);
             x1[current_image_filename].push(click_x0 * scale_factor[current_image_filename]);
 	    canvas_x0[current_image_filename].push(click_x1);
@@ -391,16 +539,26 @@ image_canvas.addEventListener('mouseup', function(e) {
 	}
 
 	if ( click_y0 < click_y1 ) {
+	    regy0 = click_y0 * scale_factor[current_image_filename];
+	    regy1 = click_y1 * scale_factor[current_image_filename];
+	    
             y0[current_image_filename].push(click_y0 * scale_factor[current_image_filename]);
             y1[current_image_filename].push(click_y1 * scale_factor[current_image_filename]);
             canvas_y0[current_image_filename].push(click_y0);
             canvas_y1[current_image_filename].push(click_y1);
 	} else {
+	    regy0 = click_y1 * scale_factor[current_image_filename];
+	    regy1 = click_y0 * scale_factor[current_image_filename];
+
             y0[current_image_filename].push(click_y1 * scale_factor[current_image_filename]);
             y1[current_image_filename].push(click_y0 * scale_factor[current_image_filename]);
             canvas_y0[current_image_filename].push(click_y1);
             canvas_y1[current_image_filename].push(click_y0);
 	}
+
+	add_image_region(current_image_id,
+			 regx0, regy0,
+			 regx1, regy1);
 	
         bounding_box_count = bounding_box_count + 1;
         annotations[current_image_filename].push("");
@@ -679,6 +837,7 @@ function redraw_image_canvas() {
 
 function load_local_file(file_id) {
     current_image_index = file_id;
+    current_image_id = image_id_list[file_id];
     var img_file = user_uploaded_images[current_image_index];
 
     if (!img_file) {
@@ -784,6 +943,7 @@ function upload_local_files(user_selected_files) {
     user_uploaded_images = user_selected_files;
     for ( var i=0; i<user_uploaded_images.length; ++i) {
         var filename = user_uploaded_images[i].name;
+	var size = user_uploaded_images[i].size;
         x0[filename] = []; y0[filename] = [];
         x1[filename] = []; y1[filename] = [];
         canvas_x0[filename] = []; canvas_y0[filename] = [];
@@ -791,6 +951,9 @@ function upload_local_files(user_selected_files) {
         annotations[filename] = [];
         image_filename_list[i] = filename;
         scale_factor[filename] = 1.0;
+
+	var image_id = init_image_annotation(filename, size);
+	image_id_list[i] = image_id;
     }
     
     if ( user_uploaded_images.length > 0 ) {
@@ -872,10 +1035,12 @@ function annotate_bounding_box(bounding_box_id) {
     if ( annotation_attributes.size > 0 ) {
 	var help_str1 = "";
 	var help_str2 = "";
+	var value_count = 1;
 	for ( let attributes of annotation_attributes ) {
 	    help_str1 += "<span style='color:" + COLOR_KEY + ";'>" + attributes + "</span>=" +
-		"<span style='color:" + COLOR_VALUE + ";'>value1; ";
-	    help_str2 += "<span style='color:" + COLOR_VALUE + ";'>value1; ";
+		"<span style='color:" + COLOR_VALUE + ";'>value" + value_count + "; ";
+	    help_str2 += "<span style='color:" + COLOR_VALUE + ";'>value" + value_count + "; ";
+	    value_count = value_count + 1;
 	}
 	show_info("Enter value of the attributes as follows | " + help_str1 + " | " + help_str2);
     } else {
@@ -914,6 +1079,7 @@ window.addEventListener("keydown", function(e) {
                 // Enter key pressed after user updates annotations in textbox
 		// update annotation_attributes
 		var m = str2map(annotation_textbox.value);
+		console.log(m);
 		var annotation_parsed_str = "";
 		if ( m.size != 0 ) {
 		    // updates keys and ensure consistency of existing keys
@@ -924,9 +1090,11 @@ window.addEventListener("keydown", function(e) {
 			annotation_parsed_str = annotation_parsed_str + key + "=" + value + ";"
 		    }
 		} else {
-		     annotation_parsed_str = annotation_textbox.value;
+		    annotation_parsed_str = annotation_textbox.value;
 		}
 		annotations[current_image_filename][current_annotation_bounding_box_id] = annotation_parsed_str;
+		add_image_region_description(current_image_id, current_annotation_bounding_box_id, annotation_parsed_str);
+		console.log("annotation_parsed_str=" + annotation_parsed_str);
 		show_info("");
 		
 		// update the list of attributes
@@ -1080,27 +1248,14 @@ function move_to_next_image() {
 function check_local_storage() {
     // https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
     try {
-	var storage = window[type];
 	var x = '__storage_test__';
-	storage.setItem(x, x);
-	storage.removeItem(x);
+	localStorage.setItem(x, x);
+	localStorage.removeItem(x);
 	return true;
     }
     catch(e) {
 	return false;
     }
-}
-
-function get_annotations_json() {
-
-}
-
-function save_current_annotations() {
-
-}
-
-function clear_current_annotations() {
-
 }
 
 function show_status(msg) {
@@ -1148,6 +1303,13 @@ function str2map(str) {
 	if ( kv_split.length == 2 ) {
 	    // a single key=value may be present
 	    m.set(kv_split[0], kv_split[1]);
+	} else {
+	    if ( annotation_attributes.size == 1 &&
+		 tokens[0].includes(";")) {
+		for ( let attribute of annotation_attributes ) {
+		    m.set(attribute, tokens[0]);
+		}
+	    }
 	}
 	return m;
     } else {
@@ -1215,5 +1377,57 @@ function print_current_annotations() {
         logstr = logstr + "]";
         
         console.log(logstr);
+    }
+}
+
+function ImageAnnotation(filename, size) {
+    this.filename = filename;
+    this.size = size;
+    this.description = "NA";
+    this.image_region_list = [];
+}
+
+function ImageRegion(x0, y0, x1, y1, description) {
+    this.x0 = Math.round(x0);
+    this.y0 = Math.round(y0);
+    this.x1 = Math.round(x1);
+    this.y1 = Math.round(y1);
+    this.description = description;
+}
+
+function get_image_id(filename, size) {
+    return filename + size;
+}
+
+function init_image_annotation(filename, size) {
+    var image_id = get_image_id(filename, size);
+    if ( !image_annotation_list.has(image_id) ) {
+	image_annotation_list[image_id] = new ImageAnnotation(filename, size);
+    } else {
+	
+    }
+    return image_id;
+}
+
+function add_image_region(image_id, x0, y0, x1, y1, description) {
+    if( typeof description == "undefined" ) {
+	description = '';
+    }
+    console.log("description=" + description);
+    var r = new ImageRegion(x0, y0, x1, y1, description);
+    var region_id = image_annotation_list[image_id].image_region_list.push(r);
+    save_image_annotation_list();
+    region_id = region_id - 1; // 0 based indexing
+    return region_id;
+}
+
+function add_image_region_description(image_id, region_id, description) {
+    console.log("description=" + description);
+    image_annotation_list[image_id].image_region_list[region_id].description = description;
+}
+
+function save_image_annotation_list() {
+    if ( is_local_storage_available ) {
+	localStorage.setItem('image_annotation_list', JSON.stringify(image_annotation_list));
     }
 }
