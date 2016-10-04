@@ -27,7 +27,7 @@ var bounding_box_count = 0;
 var annotation_count = 0;
 var current_annotation_bounding_box_id = -1;
 var current_selected_bounding_box_index = -1;
-var annotation_attributes = new Set();
+var attribute_list = new Set();
 
 var annotation_list = new Map();
 var image_id_list = [];
@@ -128,6 +128,7 @@ function main() {
 	show_info("Warning: your browser does not allow local storage. Remember to save your work before exiting.");
     }
     show_info("");
+    invisible_file_input.click();
 }
 
 function populate_annotation_list_snippet() {
@@ -446,13 +447,13 @@ image_canvas.addEventListener('mouseup', function(e) {
 	    show_status("Press <span style='color:red;'>Enter</span> key to annotate," +
                         " <span style='color:red'>Arrow keys</span> to move to next image.");
 	    
-	    var annotation_attributes_str = "";
-	    for ( let attributes of annotation_attributes ) {
-		annotation_attributes_str += "<span style='color:" + COLOR_KEY + ";'>" + attributes + "</span> ,";
+	    var attribute_list_str = "";
+	    for ( let attributes of attribute_list ) {
+		attribute_list_str += "<span style='color:" + COLOR_KEY + ";'>" + attributes + "</span> ,";
 	    }
 	    // remove last comma
-	    annotation_attributes_str = annotation_attributes_str.substring(0, annotation_attributes_str.length-1);
-	    show_info( "Attributes : [ " + annotation_attributes_str + " ]" );
+	    attribute_list_str = attribute_list_str.substring(0, attribute_list_str.length-1);
+	    show_info( "Attributes : [ " + attribute_list_str + " ]" );
         }
     }
     if ( bounding_box_being_moved ) {
@@ -780,16 +781,18 @@ function draw_bounding_box(x0, y0, w, h, boundary_fill_color) {
 
 function draw_all_annotations() {
     image_context.shadowColor = "transparent";
-    for (var i=0; i<bounding_box_count; ++i) {
-        if ( annotation_list[current_image_id].regions[i].description != "" ) {
+    for (var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
+	var ri = annotation_list[current_image_id].regions[i];
+	console.log(ri);
+        if ( ri.description != "" ) {
             var w = Math.abs(canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i]);
             image_context.font = '12pt Sans';
-
+	    var annotation_str = ri.description;
+	    
             var bgnd_rect_height = 1.8 * image_context.measureText('M').width;
-            var bgnd_rect_width = image_context.measureText(annotations[current_image_id][i]).width;
+            var bgnd_rect_width = image_context.measureText(annotation_str).width;
 	    var bbox_width = Math.abs( canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i] );
 
-	    var annotation_str = annotations[current_image_id][i];
 	    if ( bgnd_rect_width > bbox_width ) {
 		var max_str_len = Math.round(annotation_str.length * (bbox_width/bgnd_rect_width)) - 4;
 		annotation_str = annotation_str.substring(0, max_str_len) + '...';
@@ -797,7 +800,7 @@ function draw_all_annotations() {
 	    } else {
 		bgnd_rect_width = bgnd_rect_width + 0.6*bgnd_rect_height;
 	    }
-            
+
             // first, draw a background rectangle first
             image_context.fillStyle = 'black';
             image_context.globalAlpha=0.5;          
@@ -995,18 +998,22 @@ function is_on_bounding_box_corner(x, y, tolerance) {
 }
 
 function annotate_bounding_box(bounding_box_id) {
+    console.log('annotate_bounding_box='+bounding_box_id);
     var region = annotation_list[current_image_id].regions[bounding_box_id];
-    var w = region.x1 - region.x0;
+
+    var w = canvas_x1[current_image_id][bounding_box_id] - canvas_x0[current_image_id][bounding_box_id];
     var canvas_origin_x0 = image_canvas.getBoundingClientRect().left;
     var canvas_origin_y0 = image_canvas.getBoundingClientRect().top;
     var annotation_textbox_y = canvas_origin_y0 + canvas_y0[current_image_id][bounding_box_id];
     var annotation_textbox_x = canvas_origin_x0 + canvas_x0[current_image_id][bounding_box_id];
 
+    console.log('annotation_textbox.style.visibility='+annotation_textbox.style.visibility);
+    
     annotation_textbox.style.position = "fixed";
     annotation_textbox.style.top = annotation_textbox_y.toString() + "px";
     annotation_textbox.style.left = annotation_textbox_x.toString() + "px";
     annotation_textbox.style.opacity = 0.5;
-    annotation_textbox.value = annotations[current_image_id][bounding_box_id];
+    annotation_textbox.value = region.description;
     annotation_textbox.style.visibility = "visible";
 
     if ( w > (canvas_width/2) ) {
@@ -1017,11 +1024,11 @@ function annotate_bounding_box(bounding_box_id) {
     annotation_textbox.style.height = "1.5em";
     annotation_textbox.focus();
 
-    if ( annotation_attributes.size > 0 ) {
+    if ( attribute_list.size > 0 ) {
 	var help_str1 = "";
 	var help_str2 = "";
 	var value_count = 1;
-	for ( let attributes of annotation_attributes ) {
+	for ( let attributes of attribute_list ) {
 	    help_str1 += "<span style='color:" + COLOR_KEY + ";'>" + attributes + "</span>=" +
 		"<span style='color:" + COLOR_VALUE + ";'>value" + value_count + "; ";
 	    help_str2 += "<span style='color:" + COLOR_VALUE + ";'>value" + value_count + "; ";
@@ -1035,11 +1042,12 @@ function annotate_bounding_box(bounding_box_id) {
 
 window.addEventListener("keydown", function(e) {
     if ( e.which == 13 ) { // Enter
-	console.log('enter');
+	console.log('user_entering_annotation='+user_entering_annotation+', bounding_box_count='+bounding_box_count);
         // when user presses Enter key, enter bounding box annotation mode
         if ( !user_entering_annotation && bounding_box_count > 0 ) {
             current_annotation_bounding_box_id = -1;
-
+	    console.log('current_annotation_bounding_box_id='+current_annotation_bounding_box_id);
+	    console.log('annotation_list[current_image_id].regions.length='+annotation_list[current_image_id].regions.length);
     	    if ( current_selected_bounding_box_index != -1 ) {
 		current_annotation_bounding_box_id = current_selected_bounding_box_index;
 		user_entering_annotation = true;		    		
@@ -1059,18 +1067,18 @@ window.addEventListener("keydown", function(e) {
 		    annotate_bounding_box(current_annotation_bounding_box_id);
 		}
 	    }
+	    console.log('current_annotation_bounding_box_id='+current_annotation_bounding_box_id);
         } else {
             if ( user_entering_annotation && bounding_box_count > 0 ) {
                 // Enter key pressed after user updates annotations in textbox
-		// update annotation_attributes
+		// update attribute_list
 		var m = str2map(annotation_textbox.value);
-		console.log(m);
 		var annotation_parsed_str = "";
 		if ( m.size != 0 ) {
 		    // updates keys and ensure consistency of existing keys
 		    for ( var [key, value] of m ) {
-			if ( ! annotation_attributes.has(key) ) {
-			    annotation_attributes.add(key);
+			if ( ! attribute_list.has(key) ) {
+			    attribute_list.add(key);
 			}
 			annotation_parsed_str = annotation_parsed_str + key + "=" + value + ";"
 		    }
@@ -1078,7 +1086,6 @@ window.addEventListener("keydown", function(e) {
 		    annotation_parsed_str = annotation_textbox.value;
 		}
 		add_image_region_description(current_image_id, current_annotation_bounding_box_id, annotation_parsed_str);
-		console.log("annotation_parsed_str=" + annotation_parsed_str);
 		show_info("");
 		
 		// update the list of attributes
@@ -1265,7 +1272,7 @@ function parse_annotation_str(str) {
 	return str;
     } else {
 	var html_str = "";
-	for ( let attribute of annotation_attributes ) {
+	for ( let attribute of attribute_list ) {
 	    if ( m.has(attribute) ) {
 		html_str = html_str + "<span style='color:" + COLOR_KEY + ";'>" + attribute + "</span> = ";
 		html_str = html_str + "<span style='color:" + COLOR_VALUE + ";'>" + m.get(attribute) + "</span> ; ";
@@ -1287,20 +1294,20 @@ function str2map(str) {
 	    // a single key=value may be present
 	    m.set(kv_split[0], kv_split[1]);
 	} else {
-	    if ( annotation_attributes.size == 1 &&
+	    if ( attribute_list.size == 1 &&
 		 tokens[0].includes(";")) {
-		for ( let attribute of annotation_attributes ) {
+		for ( let attribute of attribute_list ) {
 		    m.set(attribute, tokens[0]);
 		}
 	    }
 	}
 	return m;
     } else {
-	if ( tokens.length == annotation_attributes.size &&
+	if ( tokens.length == attribute_list.size &&
 	     str.search("=") == -1 ) {
 	    // user only entered the values : value1; value2; ...
 	    var attr_i = 0;
-	    for ( let attribute of annotation_attributes ) {
+	    for ( let attribute of attribute_list ) {
 		m.set(attribute, tokens[attr_i]);
 		attr_i = attr_i + 1;
 	    }
