@@ -25,22 +25,17 @@ var click_x1 = 0; var click_y1 = 0;
 
 var bounding_box_count = 0;
 var annotation_count = 0;
-var annotations = new Map();
-var annotation_keys = [];
 var current_annotation_bounding_box_id = -1;
 var current_selected_bounding_box_index = -1;
 var annotation_attributes = new Set();
 
-// bounding box coordinates in original image space
-var x0 = new Map(); var y0 = new Map(); var x1 = new Map(); var y1 = new Map();
-
-var image_annotation_list = new Map();
+var annotation_list = new Map();
 var image_id_list = [];
 
 // bounding box coordinates in original canvas space
 var canvas_x0 = new Map(); var canvas_y0 = new Map();
 var canvas_x1 = new Map(); var canvas_y1 = new Map();
-var scale_factor = new Map(); // canvas_x0 = x0 * scale_factor
+var canvas_scale = new Map(); // canvas_x0 = x0 * canvas_scale
 
 var status_prefix = "";
 
@@ -61,7 +56,7 @@ var navigation_info = document.getElementById("navigation_info");
 var annotation_info = document.getElementById("annotation_info");
 var info_bar = document.getElementById("info_bar");
 var via_session_data_panel = document.getElementById("via_session_data_panel");
-var image_annotation_list_snippet = document.getElementById("image_annotation_list_snippet");
+var annotation_list_snippet = document.getElementById("annotation_list_snippet");
 
 var container = document.getElementById("container");
 var main_content = document.getElementById("main_content");
@@ -114,14 +109,17 @@ function main() {
     if ( check_local_storage ) {
 	is_local_storage_available = true;
 
-	if ( localStorage.getItem('image_annotation_list') ) {
+	if ( localStorage.getItem('annotation_list') ) {
+	    localStorage.clear();
+	    /*
 	    load_image_annotation_from_localstorage();
 
-	    populate_image_annotation_list_snippet();
+	    populate_annotation_list_snippet();
 	    image_canvas.style.display = "none";
 	    starting_information_panel.style.display = "none";
 	    help_panel.style.display = "none";
 	    via_session_data_panel.style.display = "block";
+	    */
 	}
 
 	show_status("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
@@ -132,15 +130,15 @@ function main() {
     show_info("");
 }
 
-function populate_image_annotation_list_snippet() {
+function populate_annotation_list_snippet() {
     var table_str = "<table style='margin:auto; padding: 1em; line-height:1.5em; text-align: left;'><tr><th>Filename</th><th>description</th><th>annotations</th></tr>";
     var entry_count = 0;
-    for ( var image_id in image_annotation_list ) {
-	var filename = image_annotation_list[image_id].filename;
-	var file_description = image_annotation_list[image_id].description;
+    for ( var image_id in annotation_list ) {
+	var filename = annotation_list[image_id].filename;
+	var file_description = annotation_list[image_id].description;
 	var file_annotations = "";
-	for ( var ri=0; ri<image_annotation_list[image_id].image_region_list.length; ++ri) {
-	    file_annotations += image_annotation_list[image_id].image_region_list[ri].description + ", ";
+	for ( var ri=0; ri<annotation_list[image_id].regions.length; ++ri) {
+	    file_annotations += annotation_list[image_id].regions[ri].description + ", ";
 	}
 	file_annotations = file_annotations.substring(0, file_annotations.length - 2); // remove last comma
 	
@@ -158,39 +156,39 @@ function populate_image_annotation_list_snippet() {
 	entry_count = entry_count + 1;
     }
     table_str += "</table>";
-    image_annotation_list_snippet.innerHTML = table_str;
+    annotation_list_snippet.innerHTML = table_str;
 }
 
 
 function load_image_annotation_from_localstorage() {
-    console.log(localStorage.getItem("image_annotation_list"));
-    var robj = JSON.parse(localStorage.getItem("image_annotation_list"));
+    console.log(localStorage.getItem("annotation_list"));
+    var robj = JSON.parse(localStorage.getItem("annotation_list"));
     console.log(robj);    
     for ( var image_id in robj ) {
 	var image_annotation = new ImageAnnotation(robj[image_id].filename,
 						   robj[image_id].size,
 						   robj[image_id].description);
-	for ( var ri=0; ri<robj[image_id].image_region_list.length; ++ri) {
-	    var region = new ImageRegion(robj[image_id].image_region_list[ri].x0,
-					 robj[image_id].image_region_list[ri].y0,
-					 robj[image_id].image_region_list[ri].x1,
-					 robj[image_id].image_region_list[ri].y1,
-					 robj[image_id].image_region_list[ri].description);
-	    image_annotation.image_region_list.push(region);
+	for ( var ri=0; ri<robj[image_id].regions.length; ++ri) {
+	    var region = new ImageRegion(robj[image_id].regions[ri].x0,
+					 robj[image_id].regions[ri].y0,
+					 robj[image_id].regions[ri].x1,
+					 robj[image_id].regions[ri].y1,
+					 robj[image_id].regions[ri].description);
+	    image_annotation.regions.push(region);
 	    console.log(region);
 	}
-	image_annotation_list[image_id] = image_annotation;
-	console.log(image_annotation_list);
+	annotation_list[image_id] = image_annotation;
+	console.log(annotation_list);
     }
 }
 
 function save_image_annotation_data(type) {
-    var image_annotation_list_str = get_image_annotation_list(type);
-    console.log(image_annotation_list_str);
-    var image_annotation_list_blob = new Blob([image_annotation_list_str], {type: 'text/'+type+';charset=utf-8'});
+    var annotation_list_str = get_annotation_list(type);
+    console.log(annotation_list_str);
+    var annotation_list_blob = new Blob([annotation_list_str], {type: 'text/'+type+';charset=utf-8'});
     
-    save_data_to_local_file(image_annotation_list_blob, 'annotations.'+type);
-    console.log(image_annotation_list_str);
+    save_data_to_local_file(annotation_list_blob, 'annotations.'+type);
+    console.log(annotation_list_str);
 }
 
 function discard_via_session_data() {
@@ -203,31 +201,31 @@ function discard_via_session_data() {
     via_session_data_panel.style.display = "none";
 }
 
-function get_image_annotation_list(type) {
-    console.log(image_annotation_list);
+function get_annotation_list(type) {
+    console.log(annotation_list);
     if( type == "csv" ) {
 	csv_str = "#filename,size,file_description,x0,y0,x1,y1,region_description";
 
-	for ( var image_id in image_annotation_list ) {
-	    var image_annotation = image_annotation_list[image_id];
+	for ( var image_id in annotation_list ) {
+	    var image_annotation = annotation_list[image_id];
 	    var prefix_str = image_annotation.filename;
 	    prefix_str += "," + image_annotation.size;
 	    prefix_str += "," + image_annotation.description;
 
-	    var region_count = image_annotation.image_region_list.length;
+	    var region_count = image_annotation.regions.length;
 	    for ( var i=0; i<region_count; ++i) {
 		var region_str = "\n" + prefix_str + "," + i;
-		region_str += "," + image_annotation.image_region_list[i].x0;
-		region_str += "," + image_annotation.image_region_list[i].y0;
-		region_str += "," + image_annotation.image_region_list[i].x1;
-		region_str += "," + image_annotation.image_region_list[i].y1;
-		region_str += "," + image_annotation.image_region_list[i].description;
+		region_str += "," + image_annotation.regions[i].x0;
+		region_str += "," + image_annotation.regions[i].y0;
+		region_str += "," + image_annotation.regions[i].x1;
+		region_str += "," + image_annotation.regions[i].y1;
+		region_str += "," + image_annotation.regions[i].description;
 		csv_str += region_str;
 	    }
 	}
 	return csv_str;
     } else {
-	return JSON.stringify(image_annotation_list);
+	return JSON.stringify(annotation_list);
     }    
 }
 
@@ -340,12 +338,10 @@ delete_annotations_button.addEventListener("click", function(e) {
     if ( bounding_box_count > 0 || annotation_count > 0 ) {
         bounding_box_count = 0;
         annotation_count = 0;
-        x0[current_image_filename] = []; y0[current_image_filename] = [];
-        x1[current_image_filename] = []; y1[current_image_filename] = [];
-        canvas_x0[current_image_filename] = []; canvas_y0[current_image_filename] = [];
-        canvas_x1[current_image_filename] = []; canvas_y1[current_image_filename] = [];
+	annotation_list[current_image_id].regions = [];
+        canvas_x0[current_image_id] = []; canvas_y0[current_image_id] = [];
+        canvas_x1[current_image_id] = []; canvas_y1[current_image_id] = [];
 
-        annotations[current_image_filename] = [];
         current_annotation_bounding_box_id = -1;
 
         show_status("All bounding boxes deleted! I hope this was not a mistake :-)", false);
@@ -433,7 +429,7 @@ image_canvas.addEventListener('mouseup', function(e) {
 	    show_status("<span style='color:red;'>Del</span> to delete and <span style='color:red;'>Mouse over</span> to update");
 
 	    // show full annotations
-	    var bbox_annotation_str = annotations[current_image_filename][current_selected_bounding_box_index];
+	    var bbox_annotation_str = annotation_list[current_image_id].regions[current_selected_bounding_box_index].description;
 	    show_info( parse_annotation_str(bbox_annotation_str) );
         } else {
 	    // click on other non-boxed area
@@ -466,20 +462,20 @@ image_canvas.addEventListener('mouseup', function(e) {
 	var move_x = (box_click_x - click_x1);
 	var move_y = (box_click_y - click_y1);
 
-	canvas_x0[current_image_filename][current_selected_bounding_box_index] -= move_x;
-	canvas_y0[current_image_filename][current_selected_bounding_box_index] -= move_y;
-	canvas_x1[current_image_filename][current_selected_bounding_box_index] -= move_x;
-	canvas_y1[current_image_filename][current_selected_bounding_box_index] -= move_y;
+	canvas_x0[current_image_id][current_selected_bounding_box_index] -= move_x;
+	canvas_y0[current_image_id][current_selected_bounding_box_index] -= move_y;
+	canvas_x1[current_image_id][current_selected_bounding_box_index] -= move_x;
+	canvas_y1[current_image_id][current_selected_bounding_box_index] -= move_y;
 
-	x0[current_image_filename][current_selected_bounding_box_index] -= move_x*scale_factor[current_image_filename];
-	y0[current_image_filename][current_selected_bounding_box_index] -= move_y*scale_factor[current_image_filename];
-	x1[current_image_filename][current_selected_bounding_box_index] -= move_x*scale_factor[current_image_filename];
-	y1[current_image_filename][current_selected_bounding_box_index] -= move_y*scale_factor[current_image_filename];
+	annotation_list[current_image_id].regions[current_selected_bounding_box_index].x0 -= move_x*canvas_scale[current_image_id];
+	annotation_list[current_image_id].regions[current_selected_bounding_box_index].y0 -= move_y*canvas_scale[current_image_id];
+	annotation_list[current_image_id].regions[current_selected_bounding_box_index].x1 -= move_x*canvas_scale[current_image_id];
+	annotation_list[current_image_id].regions[current_selected_bounding_box_index].y1 -= move_y*canvas_scale[current_image_id];
 	
 	redraw_image_canvas();
     }
 
-    // this was a bounding box drawing event
+    // this was a bounding box resize event
     if ( is_user_resizing_bounding_box ) {
 	is_user_resizing_bounding_box = false;
 	image_canvas.style.cursor = "default";
@@ -490,83 +486,75 @@ image_canvas.addEventListener('mouseup', function(e) {
 	
 	switch(bounding_box_edge[1]) {
 	case 1: // top-left
-	    canvas_x0[current_image_filename][box_id] = click_x1;
-	    x0[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
-	    canvas_y0[current_image_filename][box_id] = click_y1;
-	    y0[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];
+	    canvas_x0[current_image_id][box_id] = click_x1;
+	    canvas_y0[current_image_id][box_id] = click_y1;
+	    annotation_list[current_image_id].regions[box_id].x0 = click_x1 * canvas_scale[current_image_id];
+	    annotation_list[current_image_id].regions[box_id].y0 = click_y1 * canvas_scale[current_image_id];
 	    break;
 	case 3: // bottom-right
-	    canvas_x1[current_image_filename][box_id] = click_x1;
-	    x1[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
-	    canvas_y1[current_image_filename][box_id] = click_y1;
-	    y1[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];		
+	    canvas_x1[current_image_id][box_id] = click_x1;
+	    canvas_y1[current_image_id][box_id] = click_y1;
+	    
+	    annotation_list[current_image_id].regions[box_id].x1 = click_x1 * canvas_scale[current_image_id];
+	    annotation_list[current_image_id].regions[box_id].y1 = click_y1 * canvas_scale[current_image_id];
 	    break;
 	case 2: // top-right
-	    canvas_y0[current_image_filename][box_id] = click_y1;
-	    y0[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];
-	    canvas_x1[current_image_filename][box_id] = click_x1;
-	    x1[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
+	    canvas_y0[current_image_id][box_id] = click_y1;
+	    canvas_x1[current_image_id][box_id] = click_x1;
+	    annotation_list[current_image_id].regions[box_id].y0 = click_y1 * canvas_scale[current_image_id];
+	    annotation_list[current_image_id].regions[box_id].x1 = click_x1 * canvas_scale[current_image_id];
 	    break;
 	case 4: // bottom-left
-	    canvas_x0[current_image_filename][box_id] = click_x1;
-	    x0[current_image_filename][box_id] = click_x1 * scale_factor[current_image_filename];
-	    canvas_y1[current_image_filename][box_id] = click_y1;
-	    y1[current_image_filename][box_id] = click_y1 * scale_factor[current_image_filename];
+	    canvas_x0[current_image_id][box_id] = click_x1;
+	    canvas_y1[current_image_id][box_id] = click_y1;
+	    annotation_list[current_image_id].regions[box_id].x0 = click_x1 * canvas_scale[current_image_id];
+	    annotation_list[current_image_id].regions[box_id].y1 = click_y1 * canvas_scale[current_image_id];
 	    break;
 	}
 	redraw_image_canvas();
+	image_canvas.focus();
     }
 
     if (user_drawing_bounding_box) {
 	var regx0, regy0, regx1, regy1;
 	// ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
         if ( click_x0 < click_x1 ) {
-	    regx0 = click_x0 * scale_factor[current_image_filename];
-	    regx1 = click_x1 * scale_factor[current_image_filename];
+	    regx0 = click_x0 * canvas_scale[current_image_id];
+	    regx1 = click_x1 * canvas_scale[current_image_id];
 	    
-            x0[current_image_filename].push(click_x0 * scale_factor[current_image_filename]);
-            x1[current_image_filename].push(click_x1 * scale_factor[current_image_filename]);
-	    canvas_x0[current_image_filename].push(click_x0);
-	    canvas_x1[current_image_filename].push(click_x1);		
+	    canvas_x0[current_image_id].push(click_x0);
+	    canvas_x1[current_image_id].push(click_x1);		
         } else {
-	    regx0 = click_x1 * scale_factor[current_image_filename];
-	    regx1 = click_x0 * scale_factor[current_image_filename];
+	    regx0 = click_x1 * canvas_scale[current_image_id];
+	    regx1 = click_x0 * canvas_scale[current_image_id];
 	    
-	    x0[current_image_filename].push(click_x1 * scale_factor[current_image_filename]);
-            x1[current_image_filename].push(click_x0 * scale_factor[current_image_filename]);
-	    canvas_x0[current_image_filename].push(click_x1);
-	    canvas_x1[current_image_filename].push(click_x0);
+	    canvas_x0[current_image_id].push(click_x1);
+	    canvas_x1[current_image_id].push(click_x0);
 	}
 
 	if ( click_y0 < click_y1 ) {
-	    regy0 = click_y0 * scale_factor[current_image_filename];
-	    regy1 = click_y1 * scale_factor[current_image_filename];
+	    regy0 = click_y0 * canvas_scale[current_image_id];
+	    regy1 = click_y1 * canvas_scale[current_image_id];
 	    
-            y0[current_image_filename].push(click_y0 * scale_factor[current_image_filename]);
-            y1[current_image_filename].push(click_y1 * scale_factor[current_image_filename]);
-            canvas_y0[current_image_filename].push(click_y0);
-            canvas_y1[current_image_filename].push(click_y1);
+            canvas_y0[current_image_id].push(click_y0);
+            canvas_y1[current_image_id].push(click_y1);
 	} else {
-	    regy0 = click_y1 * scale_factor[current_image_filename];
-	    regy1 = click_y0 * scale_factor[current_image_filename];
+	    regy0 = click_y1 * canvas_scale[current_image_id];
+	    regy1 = click_y0 * canvas_scale[current_image_id];
 
-            y0[current_image_filename].push(click_y1 * scale_factor[current_image_filename]);
-            y1[current_image_filename].push(click_y0 * scale_factor[current_image_filename]);
-            canvas_y0[current_image_filename].push(click_y1);
-            canvas_y1[current_image_filename].push(click_y0);
+            canvas_y0[current_image_id].push(click_y1);
+            canvas_y1[current_image_id].push(click_y0);
 	}
 
-	add_image_region(current_image_id,
-			 regx0, regy0,
-			 regx1, regy1);
+	add_image_region(current_image_id, regx0, regy0, regx1, regy1);
 	
         bounding_box_count = bounding_box_count + 1;
-        annotations[current_image_filename].push("");
 
 	show_annotation_info("[" + bounding_box_count + "] boxes and [" +
 			     annotation_count + "] annotations");
         user_drawing_bounding_box = false;
         redraw_image_canvas();
+	image_canvas.focus();
     }
     
 });
@@ -652,26 +640,26 @@ image_canvas.addEventListener('mousemove', function(e) {
 	case 1: // top-left
 	    top_left_x = current_x;
 	    top_left_y = current_y;
-	    w = Math.abs(current_x - canvas_x1[current_image_filename][sel_box_id]);
-	    h = Math.abs(current_y - canvas_y1[current_image_filename][sel_box_id]);
+	    w = Math.abs(current_x - canvas_x1[current_image_id][sel_box_id]);
+	    h = Math.abs(current_y - canvas_y1[current_image_id][sel_box_id]);
 	    break;
 	case 3: // bottom-right
-	    top_left_x = canvas_x0[current_image_filename][sel_box_id];
-	    top_left_y = canvas_y0[current_image_filename][sel_box_id];
+	    top_left_x = canvas_x0[current_image_id][sel_box_id];
+	    top_left_y = canvas_y0[current_image_id][sel_box_id];
 	    w = Math.abs(top_left_x - current_x);
 	    h = Math.abs(top_left_y - current_y);
 	    break;
 	case 2: // top-right
-	    top_left_x = canvas_x0[current_image_filename][sel_box_id];
+	    top_left_x = canvas_x0[current_image_id][sel_box_id];
 	    top_left_y = current_y;
 	    w = Math.abs(top_left_x - current_x);
-	    h = Math.abs(canvas_y1[current_image_filename][sel_box_id] - current_y);
+	    h = Math.abs(canvas_y1[current_image_id][sel_box_id] - current_y);
 	    break;
 	case 4: // bottom-left
 	    top_left_x = current_x;
-	    top_left_y = canvas_y0[current_image_filename][sel_box_id];
-	    w = Math.abs(canvas_x1[current_image_filename][sel_box_id] - current_x);
-	    h = Math.abs(current_y - canvas_y0[current_image_filename][sel_box_id]);
+	    top_left_y = canvas_y0[current_image_id][sel_box_id];
+	    w = Math.abs(canvas_x1[current_image_id][sel_box_id] - current_x);
+	    h = Math.abs(current_y - canvas_y0[current_image_id][sel_box_id]);
 	    break;
 	}
 	draw_bounding_box(top_left_x, top_left_y, w, h,
@@ -684,10 +672,10 @@ image_canvas.addEventListener('mousemove', function(e) {
 	var move_x = (box_click_x - current_x);
 	var move_y = (box_click_y - current_y);
 
-	var moved_x0 = canvas_x0[current_image_filename][current_selected_bounding_box_index] - move_x;
-	var moved_y0 = canvas_y0[current_image_filename][current_selected_bounding_box_index] - move_y;
-	var moved_x1 = canvas_x1[current_image_filename][current_selected_bounding_box_index] - move_x;
-	var moved_y1 = canvas_y1[current_image_filename][current_selected_bounding_box_index] - move_y;
+	var moved_x0 = canvas_x0[current_image_id][current_selected_bounding_box_index] - move_x;
+	var moved_y0 = canvas_y0[current_image_id][current_selected_bounding_box_index] - move_y;
+	var moved_x1 = canvas_x1[current_image_id][current_selected_bounding_box_index] - move_x;
+	var moved_y1 = canvas_y1[current_image_id][current_selected_bounding_box_index] - move_y;
 
 	draw_bounding_box(moved_x0, moved_y0,
 			  Math.abs(moved_x1 - moved_x0),
@@ -700,7 +688,7 @@ image_canvas.addEventListener('mousemove', function(e) {
 	 !bounding_box_being_moved &&
 	 !is_user_resizing_bounding_box ) {
 
-	var sf = scale_factor[current_image_filename];
+	var sf = canvas_scale[current_image_id];
 	var original_image_x = current_x * sf;
 	var original_image_y = current_y * sf;
 
@@ -746,26 +734,26 @@ function draw_all_bounding_box() {
     image_context.shadowBlur = 0;
     var bbox_boundary_fill_color = "";
     for (var i=0; i<bounding_box_count; ++i) {
-        if ( annotations[current_image_filename][i] == "" ) {
+        if ( annotation_list[current_image_id].regions[i].description == "" ) {
 	    bbox_boundary_fill_color = BBOX_BOUNDARY_FILL_COLOR_NEW;
         } else {
 	    bbox_boundary_fill_color = BBOX_BOUNDARY_FILL_COLOR_ANNOTATED;
 	    annotation_count = annotation_count + 1;
         }
 	
-	draw_bounding_box(canvas_x0[current_image_filename][i],
-			  canvas_y0[current_image_filename][i],
-			  canvas_x1[current_image_filename][i] - canvas_x0[current_image_filename][i],
-			  canvas_y1[current_image_filename][i] - canvas_y0[current_image_filename][i],
+	draw_bounding_box(canvas_x0[current_image_id][i],
+			  canvas_y0[current_image_id][i],
+			  canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i],
+			  canvas_y1[current_image_id][i] - canvas_y0[current_image_id][i],
 			  bbox_boundary_fill_color);
 	
 	if ( current_selected_bounding_box_index == i ) {
 	    image_context.fillStyle=BBOX_SELECTED_FILL_COLOR;
 	    image_context.globalAlpha = BBOX_SELECTED_OPACITY;
-	    image_context.fillRect(canvas_x0[current_image_filename][i] + BBOX_LINE_WIDTH/2,
-                                   canvas_y0[current_image_filename][i] + BBOX_LINE_WIDTH/2,
-                                   canvas_x1[current_image_filename][i] - canvas_x0[current_image_filename][i] - BBOX_LINE_WIDTH,
-                                   canvas_y1[current_image_filename][i] - canvas_y0[current_image_filename][i] - BBOX_LINE_WIDTH);
+	    image_context.fillRect(canvas_x0[current_image_id][i] + BBOX_LINE_WIDTH/2,
+                                   canvas_y0[current_image_id][i] + BBOX_LINE_WIDTH/2,
+                                   canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i] - BBOX_LINE_WIDTH,
+                                   canvas_y1[current_image_id][i] - canvas_y0[current_image_id][i] - BBOX_LINE_WIDTH);
 	    image_context.globalAlpha = 1.0;
 	}
     }
@@ -793,15 +781,15 @@ function draw_bounding_box(x0, y0, w, h, boundary_fill_color) {
 function draw_all_annotations() {
     image_context.shadowColor = "transparent";
     for (var i=0; i<bounding_box_count; ++i) {
-        if ( annotations[current_image_filename][i] != "" ) {
-            var w = Math.abs(canvas_x1[current_image_filename][i] - canvas_x0[current_image_filename][i]);
+        if ( annotation_list[current_image_id].regions[i].description != "" ) {
+            var w = Math.abs(canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i]);
             image_context.font = '12pt Sans';
 
             var bgnd_rect_height = 1.8 * image_context.measureText('M').width;
-            var bgnd_rect_width = image_context.measureText(annotations[current_image_filename][i]).width;
-	    var bbox_width = Math.abs( canvas_x1[current_image_filename][i] - canvas_x0[current_image_filename][i] );
+            var bgnd_rect_width = image_context.measureText(annotations[current_image_id][i]).width;
+	    var bbox_width = Math.abs( canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i] );
 
-	    var annotation_str = annotations[current_image_filename][i];
+	    var annotation_str = annotations[current_image_id][i];
 	    if ( bgnd_rect_width > bbox_width ) {
 		var max_str_len = Math.round(annotation_str.length * (bbox_width/bgnd_rect_width)) - 4;
 		annotation_str = annotation_str.substring(0, max_str_len) + '...';
@@ -813,16 +801,16 @@ function draw_all_annotations() {
             // first, draw a background rectangle first
             image_context.fillStyle = 'black';
             image_context.globalAlpha=0.5;          
-            image_context.fillRect(canvas_x0[current_image_filename][i],
-                                   canvas_y0[current_image_filename][i] - bgnd_rect_height,
+            image_context.fillRect(canvas_x0[current_image_id][i],
+                                   canvas_y0[current_image_id][i] - bgnd_rect_height,
                                    bgnd_rect_width,
                                    bgnd_rect_height);
             // then, draw text over this background rectangle
             image_context.globalAlpha=1.0;
             image_context.fillStyle = 'yellow';
             image_context.fillText(annotation_str,
-                                   canvas_x0[current_image_filename][i] + bgnd_rect_height/4,
-                                   canvas_y0[current_image_filename][i] - bgnd_rect_height/3);
+                                   canvas_x0[current_image_id][i] + bgnd_rect_height/4,
+                                   canvas_y0[current_image_id][i] - bgnd_rect_height/3);
         }
     }
 }
@@ -843,7 +831,7 @@ function load_local_file(file_id) {
     if (!img_file) {
         return;
     } else {       
-        current_image_filename = image_filename_list[current_image_index];
+        current_image_filename = annotation_list[current_image_id].filename;
         img_reader = new FileReader();
 
         img_reader.addEventListener( "progress", function(e) {
@@ -861,7 +849,7 @@ function load_local_file(file_id) {
                 main_content_width = main_content.offsetWidth;
                 //main_content_height = main_content.offsetHeight;
 		main_content_height = container.offsetHeight*0.8;
-                
+                 
                 canvas_width = current_image.naturalWidth;
                 canvas_height = current_image.naturalHeight;
 
@@ -882,7 +870,7 @@ function load_local_file(file_id) {
                 canvas_width = Math.round(canvas_width);
                 canvas_height = Math.round(canvas_height);
                 
-                scale_factor[current_image_filename] = current_image.naturalWidth / canvas_width;
+                canvas_scale[current_image_id] = current_image.naturalWidth / canvas_width;
                 
                 // set the canvas size to match that of the image
                 image_canvas.height = canvas_height;
@@ -891,10 +879,10 @@ function load_local_file(file_id) {
 		zoom_size_pixel = Math.round(ZOOM_SIZE_PERCENT * Math.min(canvas_width, canvas_height));
 
                 current_image_loaded = true;
-                bounding_box_count = x0[current_image_filename].length;
+                bounding_box_count = annotation_list[current_image_id].regions.length;
                 annotation_count = 0;
-                for ( var i=0; i<annotations[current_image_filename].length; ++i) {
-                    if ( annotations[current_image_filename][i] != "" ) {
+                for ( var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
+                    if ( annotation_list[current_image_id].regions[i].description != "" ) {
                         annotation_count = annotation_count + 1;
                     }
                 }
@@ -907,12 +895,11 @@ function load_local_file(file_id) {
 
                 if ( bounding_box_count > 0 ) {
                     // update the canvas image space coordinates
-                    var fn = current_image_filename;
-                    for ( var j=0; j<x0[current_image_filename].length; ++j ) {
-                        canvas_x0[fn][j] = x0[fn][j] / scale_factor[fn];
-                        canvas_y0[fn][j] = y0[fn][j] / scale_factor[fn];
-                        canvas_x1[fn][j] = x1[fn][j] / scale_factor[fn];
-                        canvas_y1[fn][j] = y1[fn][j] / scale_factor[fn];
+                    for ( var j=0; j<annotation_list[current_image_id].regions.length; ++j ) {
+			canvas_x0[current_image_id][j] = annotation_list[current_image_id].regions[j].x0 / canvas_scale[current_image_id];
+                        canvas_y0[current_image_id][j] = annotation_list[current_image_id].regions[j].y0 / canvas_scale[current_image_id];
+                        canvas_x1[current_image_id][j] = annotation_list[current_image_id].regions[j].x1 / canvas_scale[current_image_id];
+                        canvas_y1[current_image_id][j] = annotation_list[current_image_id].regions[j].y1 / canvas_scale[current_image_id];
                     }
 
                     redraw_image_canvas();
@@ -936,6 +923,7 @@ function load_local_file(file_id) {
             current_image.src = img_reader.result;
         }, false);
         img_reader.readAsDataURL(img_file);
+	image_canvas.focus();
     }
 }
 
@@ -944,16 +932,12 @@ function upload_local_files(user_selected_files) {
     for ( var i=0; i<user_uploaded_images.length; ++i) {
         var filename = user_uploaded_images[i].name;
 	var size = user_uploaded_images[i].size;
-        x0[filename] = []; y0[filename] = [];
-        x1[filename] = []; y1[filename] = [];
-        canvas_x0[filename] = []; canvas_y0[filename] = [];
-        canvas_x1[filename] = []; canvas_y1[filename] = [];
-        annotations[filename] = [];
-        image_filename_list[i] = filename;
-        scale_factor[filename] = 1.0;
-
 	var image_id = init_image_annotation(filename, size);
 	image_id_list[i] = image_id;
+
+	canvas_x0[image_id] = []; canvas_y0[image_id] = [];
+        canvas_x1[image_id] = []; canvas_y1[image_id] = [];
+        canvas_scale[image_id] = 1.0;
     }
     
     if ( user_uploaded_images.length > 0 ) {
@@ -965,10 +949,10 @@ function upload_local_files(user_selected_files) {
 
 function is_inside_bounding_box(x, y) {
     for (var i=0; i<bounding_box_count; ++i) {
-        if ( x > canvas_x0[current_image_filename][i] &&
-             x < canvas_x1[current_image_filename][i] &&
-             y > canvas_y0[current_image_filename][i] &&
-             y < canvas_y1[current_image_filename][i] ) {
+        if ( x > canvas_x0[current_image_id][i] &&
+             x < canvas_x1[current_image_id][i] &&
+             y > canvas_y0[current_image_id][i] &&
+             y < canvas_y1[current_image_id][i] ) {
             return i;
         }
     }    
@@ -980,10 +964,10 @@ function is_on_bounding_box_corner(x, y, tolerance) {
     var bounding_box_edge = [-1, -1]; // bounding_box_id, corner_id [top-left=1,top-right=2,bottom-right=3,bottom-left=4]
     
     for (var i=0; i<bounding_box_count; ++i) {
-	dx0 = Math.abs( canvas_x0[current_image_filename][i] - x );
-	dy0 = Math.abs( canvas_y0[current_image_filename][i] - y );
-	dx1 = Math.abs( canvas_x1[current_image_filename][i] - x );
-	dy1 = Math.abs( canvas_y1[current_image_filename][i] - y );
+	dx0 = Math.abs( canvas_x0[current_image_id][i] - x );
+	dy0 = Math.abs( canvas_y0[current_image_id][i] - y );
+	dx1 = Math.abs( canvas_x1[current_image_id][i] - x );
+	dy1 = Math.abs( canvas_y1[current_image_id][i] - y );
 	
 	bounding_box_edge[0] = i;
         if ( dx0 < tolerance && dy0 < tolerance ) {
@@ -1011,17 +995,18 @@ function is_on_bounding_box_corner(x, y, tolerance) {
 }
 
 function annotate_bounding_box(bounding_box_id) {
-    var w = x1[current_image_filename][bounding_box_id] - x0[current_image_filename][bounding_box_id];
+    var region = annotation_list[current_image_id].regions[bounding_box_id];
+    var w = region.x1 - region.x0;
     var canvas_origin_x0 = image_canvas.getBoundingClientRect().left;
     var canvas_origin_y0 = image_canvas.getBoundingClientRect().top;
-    var annotation_textbox_y = canvas_origin_y0 + canvas_y0[current_image_filename][bounding_box_id];
-    var annotation_textbox_x = canvas_origin_x0 + canvas_x0[current_image_filename][bounding_box_id];
+    var annotation_textbox_y = canvas_origin_y0 + canvas_y0[current_image_id][bounding_box_id];
+    var annotation_textbox_x = canvas_origin_x0 + canvas_x0[current_image_id][bounding_box_id];
 
     annotation_textbox.style.position = "fixed";
     annotation_textbox.style.top = annotation_textbox_y.toString() + "px";
     annotation_textbox.style.left = annotation_textbox_x.toString() + "px";
     annotation_textbox.style.opacity = 0.5;
-    annotation_textbox.value = annotations[current_image_filename][bounding_box_id];
+    annotation_textbox.value = annotations[current_image_id][bounding_box_id];
     annotation_textbox.style.visibility = "visible";
 
     if ( w > (canvas_width/2) ) {
@@ -1050,6 +1035,7 @@ function annotate_bounding_box(bounding_box_id) {
 
 window.addEventListener("keydown", function(e) {
     if ( e.which == 13 ) { // Enter
+	console.log('enter');
         // when user presses Enter key, enter bounding box annotation mode
         if ( !user_entering_annotation && bounding_box_count > 0 ) {
             current_annotation_bounding_box_id = -1;
@@ -1060,8 +1046,8 @@ window.addEventListener("keydown", function(e) {
 		annotate_bounding_box(current_annotation_bounding_box_id);		
 	    } else {
 		// find the un-annotated bounding box
-		for ( var i=0; i<annotations[current_image_filename].length; ++i) {
-                    if ( annotations[current_image_filename][i] == "" ) {
+		for ( var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
+                    if ( annotation_list[current_image_id].regions[i].description == "" ) {
 			current_annotation_bounding_box_id = i;
 			break;
                     }
@@ -1073,7 +1059,6 @@ window.addEventListener("keydown", function(e) {
 		    annotate_bounding_box(current_annotation_bounding_box_id);
 		}
 	    }
-
         } else {
             if ( user_entering_annotation && bounding_box_count > 0 ) {
                 // Enter key pressed after user updates annotations in textbox
@@ -1092,7 +1077,6 @@ window.addEventListener("keydown", function(e) {
 		} else {
 		    annotation_parsed_str = annotation_textbox.value;
 		}
-		annotations[current_image_filename][current_annotation_bounding_box_id] = annotation_parsed_str;
 		add_image_region_description(current_image_id, current_annotation_bounding_box_id, annotation_parsed_str);
 		console.log("annotation_parsed_str=" + annotation_parsed_str);
 		show_info("");
@@ -1104,8 +1088,8 @@ window.addEventListener("keydown", function(e) {
 
 		// find a unannotated bounding box to next move to
 		current_annotation_bounding_box_id = -1;
-		for ( var i=0; i<annotations[current_image_filename].length; ++i) {
-		    if ( annotations[current_image_filename][i] == "" ) {
+		for ( var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
+		    if ( annotation_list[current_image_id].regions[i].description == "" ) {
 			current_annotation_bounding_box_id = i;
 			break;
 		    }
@@ -1135,17 +1119,12 @@ window.addEventListener("keydown", function(e) {
     }
     if ( e.which == 46 ) { // Del
 	if ( current_selected_bounding_box_index != -1 ) {
-	    x0[current_image_filename].splice(current_selected_bounding_box_index, 1);
-	    y0[current_image_filename].splice(current_selected_bounding_box_index, 1);
-	    x1[current_image_filename].splice(current_selected_bounding_box_index, 1);
-	    y1[current_image_filename].splice(current_selected_bounding_box_index, 1);
-
-	    canvas_x0[current_image_filename].splice(current_selected_bounding_box_index, 1);
-	    canvas_y0[current_image_filename].splice(current_selected_bounding_box_index, 1);
-	    canvas_x1[current_image_filename].splice(current_selected_bounding_box_index, 1);
-	    canvas_y1[current_image_filename].splice(current_selected_bounding_box_index, 1);
-
-	    annotations[current_image_filename].splice(current_selected_bounding_box_index, 1);
+	    annotation_list[current_image_id].regions.splice(current_selected_bounding_box_index, 1);
+	    
+	    canvas_x0[current_image_id].splice(current_selected_bounding_box_index, 1);
+	    canvas_y0[current_image_id].splice(current_selected_bounding_box_index, 1);
+	    canvas_x1[current_image_id].splice(current_selected_bounding_box_index, 1);
+	    canvas_y1[current_image_id].splice(current_selected_bounding_box_index, 1);
 	    
 	    annotation_count = annotation_count - 1;
 	    current_selected_bounding_box_index = -1;
@@ -1180,10 +1159,14 @@ window.addEventListener("keydown", function(e) {
                     " <span style='color:red'>Arrow keys</span> to move to next image.");	
     }
     if ( e.which == 39 ) { // right arrow
-        move_to_next_image();
+	if ( !user_entering_annotation ) {
+	    move_to_next_image();
+	}
     }
     if ( e.which == 37 ) { // left arrow
-        move_to_prev_image();
+	if ( !user_entering_annotation ) {
+            move_to_prev_image();
+	}
     }
     if ( e.which == 121 ) { // F10 key used for debugging
         print_current_annotations();
@@ -1340,42 +1323,20 @@ function str2map(str) {
 }
 
 function print_current_annotations() {    
-    for ( var i=0; i<image_filename_list.length; ++i) {
-        var fn = image_filename_list[i];
-        
+    for ( var image_id in annotation_list) {
+        var fn = annotation_list[image_id].filename;
         var logstr = "Showing annotations for file [" + fn + "] : ";
-        logstr = logstr + "scale_factor=" + scale_factor[fn] + ", ";
-        
-        logstr = logstr + "x0/canvas_x0=[";
-        for (var j=0; j<x0[fn].length; ++j) {
-            logstr = logstr + Math.round(x0[fn][j]) + "/" + Math.round(canvas_x0[fn][j]) + ","
-        }
-        logstr = logstr + "] ";
 
-        logstr = logstr + "y0=[";
-        for (var j=0; j<y0[fn].length; ++j) {
-            logstr = logstr + Math.round(y0[fn][j]) + "/" + Math.round(canvas_y0[fn][j]) + ","
-        }
-        logstr = logstr + "] ";
-        
-        logstr = logstr + "x1=[";
-        for (var j=0; j<x1[fn].length; ++j) {
-            logstr = logstr + Math.round(x1[fn][j]) + "/" + Math.round(canvas_x1[fn][j]) + ","
-        }
-        logstr = logstr + "] ";
-
-        logstr = logstr + "y1=[";
-        for (var j=0; j<y1[fn].length; ++j) {
-            logstr = logstr + Math.round(y1[fn][j]) + "/" + Math.round(canvas_y1[fn][j]) + ","
-        }
-        logstr = logstr + "] ";
-        
-        logstr = logstr + "annotations=[";
-        for (var j=0; j<annotations[fn].length; ++j) {
-            logstr = logstr + annotations[fn][j] + ","
-        }
-        logstr = logstr + "]";
-        
+        for ( var i=0; i<annotation_list[image_id].regions.length; ++i) {
+	    var x0 = annotation_list[image_id].regions[i].x0;
+	    var y0 = annotation_list[image_id].regions[i].y0;
+	    var x1 = annotation_list[image_id].regions[i].x1;
+	    var y1 = annotation_list[image_id].regions[i].y1;
+	    var description = annotation_list[image_id].regions[i].description;
+	    logstr += "[" + description + " : (" + x0 + "," + y0 + ")";
+	    logstr += " to (" + x1 + "," + y1 + ") ], ";
+	    
+	}
         console.log(logstr);
     }
 }
@@ -1384,7 +1345,7 @@ function ImageAnnotation(filename, size) {
     this.filename = filename;
     this.size = size;
     this.description = "NA";
-    this.image_region_list = [];
+    this.regions = [];
 }
 
 function ImageRegion(x0, y0, x1, y1, description) {
@@ -1401,10 +1362,8 @@ function get_image_id(filename, size) {
 
 function init_image_annotation(filename, size) {
     var image_id = get_image_id(filename, size);
-    if ( !image_annotation_list.has(image_id) ) {
-	image_annotation_list[image_id] = new ImageAnnotation(filename, size);
-    } else {
-	
+    if ( !annotation_list.has(image_id) ) {
+	annotation_list[image_id] = new ImageAnnotation(filename, size);
     }
     return image_id;
 }
@@ -1415,19 +1374,19 @@ function add_image_region(image_id, x0, y0, x1, y1, description) {
     }
     console.log("description=" + description);
     var r = new ImageRegion(x0, y0, x1, y1, description);
-    var region_id = image_annotation_list[image_id].image_region_list.push(r);
-    save_image_annotation_list();
+    var region_id = annotation_list[image_id].regions.push(r);
+    save_annotation_list();
     region_id = region_id - 1; // 0 based indexing
     return region_id;
 }
 
 function add_image_region_description(image_id, region_id, description) {
     console.log("description=" + description);
-    image_annotation_list[image_id].image_region_list[region_id].description = description;
+    annotation_list[image_id].regions[region_id].description = description;
 }
 
-function save_image_annotation_list() {
+function save_annotation_list() {
     if ( is_local_storage_available ) {
-	localStorage.setItem('image_annotation_list', JSON.stringify(image_annotation_list));
+	localStorage.setItem('annotation_list', JSON.stringify(annotation_list));
     }
 }
