@@ -14,9 +14,7 @@
     <meta name="description" content="VGG Image Annotator (via) is a light-weight image annotation tool built solely using HTML, CSS and pure Javascript (not using any javascript libraries).">
 
     <!-- CSS style definition -->
-    <style type="text/css">
-
-      
+    <style type="text/css">    
       #container {
       position: absolute;
       top: 0;
@@ -26,210 +24,162 @@
       background-color: white;
       border: 0;
       }
-      
-      .toolbar {
-      display: block;
-      }
-      
-      .toolbar ul {
-      text-align: center;
-      margin: 1em 0;
-      padding: 0;
-      list-style-type: none;
-      }
 
-      .toolbar li {
-      display: inline;
-      }
-      
-      .toolbar li a {
-      padding: 1% 1%;
-      }
-
-      .toolbar li a:hover svg {
-      fill: red;
-      }
-
-      #info_bar {
-      position: relative;
-      display: block;
-      font-size: small;
+      #navbar {
       font-family: Sans;
-      background-color: #f9f9f9;
-      height: 2em;
-      line-height: 2em;
-      text-align: center;
-      margin-bottom: 1em;
       }
       
-      #footer {
-      position: relative;
-      display: block;
-      font-size: small;
-      font-family: Mono;
-      background-color: #f9f9f9;
-      height: 2em;
-      line-height: 2em;
-      }
-            
-      #footer #annotation_info {
-      display: inline-block;
-      width: 25%;
-      text-align: right;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      #navbar ul {
+      font-size: normal;
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
       overflow: hidden;
-      }
-      
-      #footer #status_bar {
-      display: inline-block;
-      text-align: center;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      overflow: hidden;
-      width: 48%;
+      background-color: #333;
       }
 
-      #footer #navigation_info {
+      #navbar li {
+      float: left;
+      }
+
+      #navbar li a, .drop_menu_item {
       display: inline-block;
-      max-width: 25%;
-      text-align: left;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      overflow: hidden;
+      color: white;
+      text-align: center;
+      padding: 1em 1.2em;
+      text-decoration: none;
       }
-      
-      #main_content {
-      display: block;
-      text-align:center;
+
+      #navbar li a:hover, .dropdown:hover .drop_menu_item {
+      background-color: #999999;
       }
-            
-      #invisible_file_input {
-      width: 0.1px;
-      height: 0.1px;
-      opacity: 0;
-      overflow: hidden;
+
+      #navbar li.dropdown {
+      display: inline-block;
+      }
+
+      #navbar .dropdown-content {
+      display: none;
       position: absolute;
-      z-index: -1;
+      background-color: #333333;
+      min-width: 160px;
       }
 
-      label:hover {
-      cursor: pointer;
+      #navbar .dropdown-content a {
+      color: #ffffff;
+      padding: 0.4em 0.6em;
+      text-decoration: none;
+      font-size: small;
+      display: block;
+      text-align: left;
+      background-color: #333333;
+      float: none;
+      }
+
+      #navbar .dropdown-content a:hover {
+      background-color: #000000;
+      color: #ffff00;
+      }
+
+      #navbar .dropdown:hover .dropdown-content {
+      display: block;
       }
       
-      #annotation_textbox {
-      border: 1px solid #000000;
-      background-color: #ffffff;
-      font-family: mono;
+      #info_panel {
+      position: absolute;
+      height: 95%;
+      display: inline;
+      float: left;
+      width: 20%;
+      border: 1px solid #0000ff;
+      bottom: 0;
+      left: 0;
       }
 
-      #starting_information {
-      font-family: Mono;
-      font-size: xx-large;
-      margin: auto;
-      padding: 5% 20%;
-      text-align: center;
-      line-height: 1.5em;
-      vertical-align: middle;
-      }
-
-      .via_logo {
-      text-align: center;
-      padding: 1em 1em;
+      #image_panel {
+      position: absolute;
+      height: 95%;
+      display: inline;
+      float: right;
+      width: 78%;
+      border: 1px solid #ff0000;
+      bottom: 0;
+      right: 0;
       }
     </style>
   </head>
 
-  <body onload="main()" onresize="update_ui_components()">
+  <body>
     <!-- Start: Definition SVG for icons -->
     <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
-        <symbol id="icon_home">
-          <title>Home</title>
-          <path d="M32 19l-6-6v-9h-4v5l-6-6-16 16v1h4v10h10v-6h4v6h10v-10h4z"></path>
-        </symbol>
-        
-        <symbol id="icon_download_annotations">
-          <title>Download annotations</title>
-          <path d="M18 8l-4-4h-14v26h32v-22h-14zM16 27l-7-7h5v-8h4v8h5l-7 7z"></path>
-        </symbol>
-        
-        <symbol id="icon_select_images">
-          <title>Select images</title>
-          <path d="M34 4h-2v-2c0-1.1-0.9-2-2-2h-28c-1.1 0-2 0.9-2 2v24c0 1.1 0.9 2 2 2h2v2c0 1.1 0.9 2 2 2h28c1.1 0 2-0.9 2-2v-24c0-1.1-0.9-2-2-2zM4 6v20h-1.996c-0.001-0.001-0.003-0.002-0.004-0.004v-23.993c0.001-0.001 0.002-0.003 0.004-0.004h27.993c0.001 0.001 0.003 0.002 0.004 0.004v1.996h-24c-1.1 0-2 0.9-2 2v0zM34 29.996c-0.001 0.001-0.002 0.003-0.004 0.004h-27.993c-0.001-0.001-0.003-0.002-0.004-0.004v-23.993c0.001-0.001 0.002-0.003 0.004-0.004h27.993c0.001 0.001 0.003 0.002 0.004 0.004v23.993z"></path>
-          <path d="M30 11c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z"></path>
-          <path d="M32 28h-24v-4l7-12 8 10h2l7-6z"></path>
-        </symbol>
-        
-        <symbol id="icon_delete_annotations">
-          <title>Delete annotations</title>
-          <path d="M4 10v20c0 1.1 0.9 2 2 2h18c1.1 0 2-0.9 2-2v-20h-22zM10 28h-2v-14h2v14zM14 28h-2v-14h2v14zM18 28h-2v-14h2v14zM22 28h-2v-14h2v14z"></path>
-          <path d="M26.5 4h-6.5v-2.5c0-0.825-0.675-1.5-1.5-1.5h-7c-0.825 0-1.5 0.675-1.5 1.5v2.5h-6.5c-0.825 0-1.5 0.675-1.5 1.5v2.5h26v-2.5c0-0.825-0.675-1.5-1.5-1.5zM18 4h-6v-1.975h6v1.975z"></path>
-        </symbol>
-        
-        <symbol id="icon_help">
-          <title>Help</title>
-          <path d="M14 22h4v4h-4zM22 8c1.105 0 2 0.895 2 2v6l-6 4h-4v-2l6-4v-2h-10v-4h12zM16 3c-3.472 0-6.737 1.352-9.192 3.808s-3.808 5.72-3.808 9.192c0 3.472 1.352 6.737 3.808 9.192s5.72 3.808 9.192 3.808c3.472 0 6.737-1.352 9.192-3.808s3.808-5.72 3.808-9.192c0-3.472-1.352-6.737-3.808-9.192s-5.72-3.808-9.192-3.808zM16 0v0c8.837 0 16 7.163 16 16s-7.163 16-16 16c-8.837 0-16-7.163-16-16s7.163-16 16-16z"></path>
-        </symbol>
-        
+        <symbol id="via_logo">
+          <title>VGG Image Annotator Logo</title>
+	  <rect
+	     style="fill:none;fill-opacity:1;stroke:#cccccc;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+	     id="rect4153-6-2"
+	     width="37.347492"
+	     height="22.650368"
+	     x="20.995586"
+	     y="-51.218704"
+	     transform="matrix(0,1,-1,0,0,0)" />
+	  <rect
+	     style="fill:none;fill-opacity:1;stroke:#cccccc;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+	     id="rect4153-6-2-9"
+	     width="37.347492"
+	     height="22.650368"
+	     x="12.841601"
+	     y="-35.217949"
+	     transform="matrix(0,1,-1,0,0,0)" />
+	  <rect
+	     style="fill:none;fill-opacity:1;stroke:#cccccc;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+	     id="rect4153-6-2-3"
+	     width="37.347492"
+	     height="22.650368"
+	     x="5.2432055"
+	     y="-45.178741"
+	     transform="matrix(0,1,-1,0,0,0)" />
+        </symbol>       
       </defs>
     </svg>
-
     <!-- End: Define SVG for icons -->
-    
-    <div id="container">
-      <div class="toolbar">
-        <input type="file" id="invisible_file_input" multiple accept="image/*" style="display:none" onchange="upload_local_files(this.files)">
-        <ul>
-          <li><a href="#" id="home_button" title="Home (Home key)"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_home"></use></svg></a></li>
-          <li><a href="#" id="load_images_button" title="Select Images"><svg width="48" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></li>
-          <li><a id="link_download_annotations" href="#" title="Download Annotations"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_download_annotations"></use></svg></a></li>
-          <li><a href="#" id="delete_annotations_button" title="Delete Annotations"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_delete_annotations"></use></svg></a></li>
-          <li><a href="#" id="help_button" title="Help (F1 key)"><svg width="48" viewBox="0 0 32 32"><use xlink:href="#icon_help"></use></svg></a></li> 
-        </ul>
-      </div> <!-- end of toolbar -->
-      <div id="info_bar">Annotation attributes will be shown here.</div>
+    <div id="navbar">
+      <ul>
+	<li><svg height="50" viewBox="0 0 64 64"><use xlink:href="#via_logo"></use></svg></li>
+        <li><a href="#" title="Home">Home</a></li>
+        <li class="dropdown"><a href="#" title="Image" class="drop_menu_item">Image &#9662</a>
+	  <div class="dropdown-content">
+	    <a href="#" title="Load a set of images from local disk">Load Images</a>
+	    <a href="#" title="Add new images to the current set of images being annotated">Add Images</a>
+	  </div>
+	</li>
+        <li class="dropdown"><a href="#" title="Annotations" class="drop_menu_item">Annotation &#9662</a>
+	  <div class="dropdown-content">
+	    <a href="#" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
+	    <a href="#" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
+	    <a href="#" title="Import existing annotations from a file">Import annotation</a>
+	  </div>
+	</li>
+        <li class="dropdown"><a href="#" title="Attributes" class="drop_menu_item">Attributes &#9662</a>
+	  <div class="dropdown-content">
+	    <a href="#" title="Save image region attributes to a local file">Save attributes</a>
+	    <a href="#" title="Import existing attributes from a file">Import attributes</a>
+	  </div>
+	</li>
+	<li><a href="#" title="Change settings of VGG Image Annotator">Settings</a>
+	<li><a href="#" title="About VGG Image Annotator">About</a>
+      </ul>
       
-      <div id="main_content">
-        <canvas id="image_canvas">
-          Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.
-        </canvas>
+      <input type="file" id="invisible_file_input" multiple accept="image/*" style="display:none" onchange="upload_local_files(this.files)">
+    </div> <!-- end of navbar -->
 
-        <div id="starting_information">
-          <span style="color: red">To begin</span> the image annotation process, <span style="color: red;">click <a href="#" title="Open Files" onclick="document.getElementById('load_images_button').click()"><svg width="32" viewBox="0 0 36 32"><use xlink:href="#icon_select_images"></use></svg></a></span> to select multiple images.
-        </div>
-
-        <div id="via_session_data_panel">
-          <span style="color: red">Annotations from previous session exists</span>
-	  <div id="image_annotation_list_snippet"> </div>
-	  <button onclick="save_image_annotation_data('csv')">Download CSV</button>
-	  <button onclick="save_image_annotation_data('json')">Download JSON</button>
-	  <button onclick="discard_via_session_data()">Discard Annotations</button>
-        </div>
-	
-        <div id="help_panel">
-          <div class="via_logo">
-            <div style="font-family: Sans; font-size: xx-large; padding: 1em 0;">VGG Image Annotator</div>
-
-            <div style="font-family: Sans; width: 50%; margin: auto;">VGG Image Annotator (via) is an open source project released under the BSD-2 clause license. You are welcome to contribute <a href="https://gitlab.com/vgg/via/issues">error report</a>, <a href="https://gitlab.com/vgg/via/wikis/user-feedback">feedback</a>, or <a href="https://gitlab.com/vgg/via/tree/master">code</a> to <a href="https://gitlab.com/vgg/via">this project</a>.</div>
-            <div style="font-family: Sans; width: 50%; margin: auto; padding-top: 1em;">This image annotation tool uses HTML, CSS and Javascript (<b>no dependencies on any javascript libraries</b>). It has been designed with portability in mind and therefore does not have any dependencies other than a modern web browser. For further information, please contact <a href="mailto:adutta-REMOVE-ME@robots.ox.ac.uk">Abhishek Dutta</a></div>
-            
-          </div>
-
-        </div>
-        
-        
-      </div>
-
-      <div id="footer">
-	  <div id="annotation_info"></div><!-- prevents space between 
-elements--><div id="status_bar"></div><!--
-	--><div id="navigation_info"></div>
-      </div>
-
-      <input type="text" id="annotation_textbox">
-    </div> <!-- end of container -->
-    <script type="text/javascript" src="via.js">
+<!--
+    <div id="container">
+      <div id="info_panel"></div>
+      <div id="image_panel"></div>
+    </div>
+-->
+    <script type="text/javascript">
     <!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
   </body>
