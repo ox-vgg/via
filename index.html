@@ -14,11 +14,7 @@
     <meta name="description" content="VGG Image Annotator (via) is a light-weight image annotation tool built solely using HTML, CSS and pure Javascript (not using any javascript libraries).">
 
     <!-- CSS style definition -->
-    <style type="text/css">
-      @media screen and (max-width: 800px) {
-      % todo
-      }
-      
+    <style type="text/css">     
       body {
       min-width: 800px;
       padding: 0;
@@ -34,58 +30,18 @@
       }
 
       #navbar {
+      position: relative;
+      top: 0;
+      left: 0;
       font-family: Sans;
       display: table;
       height: 1px;
       background: #000000;
       width: 100%;
       }
-
-      .main {
-      height: 100%;
-      display: table;
-      width: 100%;
-      }
-      .box {
-      display: table-cell;
-      }
-
-      .box canvas {
-      position: relative;
-      width: 100%;
-      height: 0px;
-      display: block;
-      }
-      
-      .sidebar {
-      font-family: Mono;
-      font-size: small;
-      width: 250px;
-      padding: 1em 1em;
-      border: 1px solid #ff0000;
-      }
-
-      .sidebar .title {
-      font-family: Sans;
-      font-size: large;
-      padding-top: 1em;
-      padding-bottom: 0.5em;
-      }
-      .sidebar table {
-      border-collapse: collapse;
-      table-layout: fixed;
-      width: 250px;
-      }
-      .sidebar table, td {
-      border: 1px solid #cccccc;
-      padding: 0 0.4em;
-      line-height: 2em;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      }
       
       #navbar ul {
-      font-size: normal;
+      font-size: medium;
       list-style-type: none;
       margin: 0;
       padding: 0;
@@ -107,6 +63,7 @@
 
       #navbar li a:hover, .dropdown:hover .drop_menu_item {
       background-color: #999999;
+      cursor: pointer;
       }
 
       #navbar li.dropdown {
@@ -139,8 +96,52 @@
       #navbar .dropdown:hover .dropdown-content {
       display: block;
       }
+
+      .main {
+      height: 100%;
+      display: table;
+      width: 100%;
+      }
+
+      .box {
+      display: table-cell;
+      padding: 1em 0;
+      vertical-align: top;
+      }
+
+      .box canvas {
+      position: relative;
+      width: 100%;
+      }
       
-      #status_panel {
+      .sidebar {
+      font-family: Mono;
+      font-size: small;
+      width: 250px;
+      padding: 1em 1em;
+      vertical-align: top;
+      }
+
+      .sidebar .title {
+      font-family: Sans;
+      font-size: large;
+      padding-top: 1em;
+      padding-bottom: 0.5em;
+      }
+      .sidebar table {
+      border-collapse: collapse;
+      table-layout: fixed;
+      width: 250px;
+      }
+      .sidebar table, td {
+      border: 1px solid #cccccc;
+      padding: 0 0.4em;
+      line-height: 2em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      }
+
+      #message_panel {
       position: fixed;
       left: 0;
       bottom: 0px;
@@ -149,15 +150,30 @@
       width: 100%;
       background-color: #333333;
       color: #ffff00;
-      font-size: normal;
+      font-size: small;
       font-family: Mono;
       text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      }
+      
+      #annotation_textarea {
+      display: none;
       }
 
+      #invisible_file_input {
+      width: 0.1px;
+      height: 0.1px;
+      opacity: 0;
+      overflow: hidden;
+      position: absolute;
+      z-index: -1;
+      }
     </style>
   </head>
 
-  <body>
+  <body onload="main()" onresize="update_ui_components()">
     <!-- Start: Definition SVG for icons -->
     <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
@@ -196,31 +212,31 @@
       <div id="navbar">
 	<ul>
 	  <li><svg height="50" viewBox="0 0 64 64"><use xlink:href="#via_logo"></use></svg></li>
-          <li><a href="#" title="Home">Home</a></li>
-          <li class="dropdown"><a href="#" title="Image" class="drop_menu_item">Image &#9662</a>
+          <li><a onclick="show_home_panel()" title="Home">Home</a></li>
+          <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662</a>
 	    <div class="dropdown-content">
-	      <a href="#" title="Load a set of images from local disk">Load Images</a>
-	      <a href="#" title="Add new images to the current set of images being annotated">Add Images</a>
+	      <a onclick="load_images()" title="Load a set of images from local disk">Load Images</a>
+	      <a onclick="add_images()" title="Add new images to the current set of images being annotated">Add Images</a>
 	    </div>
 	  </li>
-          <li class="dropdown"><a href="#" title="Annotations" class="drop_menu_item">Annotation &#9662</a>
+          <li class="dropdown"><a title="Annotations" class="drop_menu_item">Annotation &#9662</a>
 	    <div class="dropdown-content">
-	      <a href="#" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
-	      <a href="#" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
-	      <a href="#" title="Import existing annotations from a file">Import annotation</a>
+	      <a onclick="save_annotations('csv')" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
+	      <a onclick="save_annotations('json')" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
+	      <a onclick="import_annotations()" title="Import existing annotations from a file">Import annotation</a>
 	    </div>
 	  </li>
-          <li class="dropdown"><a href="#" title="Attributes" class="drop_menu_item">Attributes &#9662</a>
+          <li class="dropdown"><a title="Attributes" class="drop_menu_item">Attributes &#9662</a>
 	    <div class="dropdown-content">
-	      <a href="#" title="Save image region attributes to a local file">Save attributes</a>
-	      <a href="#" title="Import existing attributes from a file">Import attributes</a>
+	      <a onclick="save_attributes()" title="Save image region attributes to a local file">Save attributes</a>
+	      <a onclick="import_attributes()" title="Import existing attributes from a file">Import attributes</a>
 	    </div>
 	  </li>
-	  <li><a href="#" title="Change settings of VGG Image Annotator">Settings</a>
-	  <li><a href="#" title="About VGG Image Annotator">About</a>
+	  <li><a onclick="show_settings_panel()" title="Change settings of VGG Image Annotator">Settings</a>
+	  <li><a onclick="show_about_panel()" title="About VGG Image Annotator">About</a>
 	</ul>
 	
-	<input type="file" id="invisible_file_input" multiple accept="image/*" style="display:none" onchange="upload_local_files(this.files)">
+	<input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">
       </div> <!-- end of navbar -->
 
       <div class="main">
@@ -319,13 +335,35 @@
 	</div>
 	
 	<div class="box" id="image_panel">
-	  <canvas style="position:relative;" id="image_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
+	  <canvas id="image_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
+
+	  <div id="via_start_info_panel">
+	    <p>To begin the image annotation process, click <a href="#" title="Load images" onclick="load_images()">Load images</a> in the Image menu.
+	  </div>
+	  
+	  <div id="session_data_panel">
+            <span style="color: red">Annotations from previous session exists</span>
+	    <div id="image_annotation_list_snippet"></div>
+	    <button onclick="save_image_annotation_data('csv')">Download CSV</button>
+	    <button onclick="save_image_annotation_data('json')">Download JSON</button>
+	    <button onclick="discard_via_session_data()">Discard Annotations</button>
+          </div>
+
+	  <div class="" id="about_panel">
+	    <svg height="100" viewBox="0 0 64 64"><use xlink:href="#via_logo"></use></svg>
+	    <div style="font-family: Sans; font-size: xx-large;">VGG Image Annotator</div>
+            <p>VGG Image Annotator (via) is an open source project released under the BSD-2 clause license. This work was supported by EPSRC programme grant <a href="http://www.seebibyte.org/index.html">Seebibyte: Visual Search for the Era of Big Data</a> (<a href="http://gow.epsrc.ac.uk/NGBOViewGrant.aspx?GrantRef=EP/M013774/1">EP/M013774/1</a>).</p>
+	    <p>This image annotation tool uses HTML, CSS and Javascript (<b>no dependencies on any javascript libraries</b>). It has been designed with portability in mind and therefore does not have any dependencies other than a modern web browser. For further information, please contact <a href="mailto:adutta-REMOVE-ME@robots.ox.ac.uk">Abhishek Dutta</a>.</p>
+          </div>
+	  
 	</div>
+	<textarea id="annotation_textarea" row="5" col="20"></textarea>
       </div> <!-- end of main -->
     </div> <!-- end of wrapper -->
-    <div id="status_panel">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</div>
-    <script type="text/javascript">
-    <!--AUTO_INSERT_VIA_JS_HERE-->
-    </script>
+    <div id="message_panel"></div>
+
+    <script type="text/javascript" src="via.js">
+      <!--AUTO_INSERT_VIA_JS_HERE-->
+    </script>   
   </body>
 </html>
