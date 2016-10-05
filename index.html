@@ -19,13 +19,11 @@
       min-width: 800px;
       padding: 0;
       margin: 0;
-      margin-bottom: 2em;
+      margin-bottom: 3em;
       }
       
       #wrapper {
-      height: 100%;
       display: table;
-      width: 100%;
       text-align: center;
       }
 
@@ -98,7 +96,6 @@
       }
 
       .main {
-      height: 100%;
       display: table;
       width: 100%;
       }
@@ -111,13 +108,12 @@
 
       .box canvas {
       position: relative;
-      width: 100%;
       }
       
       .sidebar {
       font-family: Mono;
       font-size: small;
-      width: 250px;
+      /*width: 250px;*/
       padding: 1em 1em;
       vertical-align: top;
       }
@@ -131,6 +127,8 @@
       .sidebar table {
       border-collapse: collapse;
       table-layout: fixed;
+      min-width: 250px;
+      max-width: 600px;
       width: 250px;
       }
       .sidebar table, td {
@@ -145,8 +143,7 @@
       position: fixed;
       left: 0;
       bottom: 0px;
-      height: 2em;
-      line-height: 2em;
+      line-height: 3em;
       width: 100%;
       background-color: #333333;
       color: #ffff00;
@@ -169,6 +166,10 @@
       overflow: hidden;
       position: absolute;
       z-index: -1;
+      }
+      #image_panel {
+      display: inline-block;
+      margin: auto;
       }
     </style>
   </head>
@@ -211,7 +212,7 @@
     <div class="wrapper">
       <div id="navbar">
 	<ul>
-	  <li><svg height="50" viewBox="0 0 64 64"><use xlink:href="#via_logo"></use></svg></li>
+	  <li><svg height="40" viewBox="0 0 64 64"><use xlink:href="#via_logo"></use></svg></li>
           <li><a onclick="show_home_panel()" title="Home">Home</a></li>
           <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662</a>
 	    <div class="dropdown-content">
@@ -242,14 +243,14 @@
       <div class="main">
 	<div class="box sidebar" id="info_panel">
 	  <div class="title">Image Information</div>
-	  <table>
+	  <table id="image_info_table">
 	    <tr>
 	      <td style="width: 7em;">File Id</td>
 	      <td id="info_current_file_id">1 of 200</td>
 	    </tr>
 	    <tr>
 	      <td>File</td>
-	      <td id="info_current_filename">sample_image4_with_long_name.jpg</td>
+	      <td id="info_current_filename">sample_image4_with_long_long_long_long_long_long_long_long_long_long_long_long_long_name.jpg</td>
 	    </tr>
 	    <tr>
 	      <td>Regions</td>
@@ -262,7 +263,7 @@
 	  </table>
 	  
 	  <div class="title">Region Attributes</div>
-	  <table>
+	  <table id="region_attributes_table">
 	    <tr><td>artistic_style</td></tr>
 	    <tr><td>creator_of_the_image_and_description_(owners_institution</td></tr>
 	    <tr><td>creator_of_the_image_and_description_(scholar)</td></tr>
@@ -278,7 +279,7 @@
 	  </table>
 	  
 	  <div class="title">Keyboard Shortcuts</div>
-	  <table>
+	  <table id="keyboard_shortcuts_table">
 	    <tr>
 	      <td style="width: 5.6em;">Alt + d</td>
 	      <td>Delete image region</td>

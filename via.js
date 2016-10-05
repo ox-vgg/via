@@ -49,6 +49,8 @@ var via_start_info_panel = document.getElementById("via_start_info_panel");
 var session_data_panel = document.getElementById("session_data_panel");
 var message_panel = document.getElementById("message_panel");
 var image_panel = document.getElementById("image_panel");
+var navbar_panel = document.getElementById("navbar");
+var info_panel = document.getElementById("info_panel");
 
 var annotation_list_snippet = document.getElementById("annotation_list_snippet");
 var annotation_textarea = document.getElementById("annotation_textarea");    
@@ -809,8 +811,9 @@ function load_local_file(file_id) {
             current_image = new Image();
             current_image.addEventListener( "load", function() {
                 // retrive image panel dim. to stretch image_canvas to fit panel
-                main_content_width = image_panel.offsetWidth;
-		main_content_height = image_panel.offsetWidth;
+                //main_content_width = 0.9*image_panel.offsetWidth;
+		main_content_width = document.documentElement.clientWidth - 250;
+		main_content_height = document.documentElement.clientHeight - 2.2*navbar_panel.offsetHeight;
                  
                 canvas_width = current_image.naturalWidth;
                 canvas_height = current_image.naturalHeight;
@@ -838,6 +841,15 @@ function load_local_file(file_id) {
                 image_canvas.height = canvas_height;
                 image_canvas.width = canvas_width;
 
+		// let the info_panel use the empty horizontal space (if available)
+		info_panel_width = (document.documentElement.clientWidth - canvas_width - 80) + "px";
+		document.getElementById("image_info_table").style.width = info_panel_width;
+		document.getElementById("region_attributes_table").style.width = info_panel_width;
+		document.getElementById("keyboard_shortcuts_table").style.width = info_panel_width;
+
+		console.log("canvas: " + image_canvas.width + "," + image_canvas.height);
+		console.log("space left for info panel = " + (document.documentElement.clientWidth - canvas_width));
+		
 		zoom_size_pixel = Math.round(ZOOM_SIZE_PERCENT * Math.min(canvas_width, canvas_height));
 
                 current_image_loaded = true;
