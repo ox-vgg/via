@@ -14,19 +14,74 @@
     <meta name="description" content="VGG Image Annotator (via) is a light-weight image annotation tool built solely using HTML, CSS and pure Javascript (not using any javascript libraries).">
 
     <!-- CSS style definition -->
-    <style type="text/css">    
-      #container {
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      background-color: white;
-      border: 0;
+    <style type="text/css">
+      @media screen and (max-width: 800px) {
+      % todo
+      }
+      
+      body {
+      min-width: 800px;
+      padding: 0;
+      margin: 0;
+      margin-bottom: 2em;
+      }
+      
+      #wrapper {
+      height: 100%;
+      display: table;
+      width: 100%;
+      text-align: center;
       }
 
       #navbar {
       font-family: Sans;
+      display: table;
+      height: 1px;
+      background: #000000;
+      width: 100%;
+      }
+
+      .main {
+      height: 100%;
+      display: table;
+      width: 100%;
+      }
+      .box {
+      display: table-cell;
+      }
+
+      .box canvas {
+      position: relative;
+      width: 100%;
+      height: 0px;
+      display: block;
+      }
+      
+      .sidebar {
+      font-family: Mono;
+      font-size: small;
+      width: 250px;
+      padding: 1em 1em;
+      border: 1px solid #ff0000;
+      }
+
+      .sidebar .title {
+      font-family: Sans;
+      font-size: large;
+      padding-top: 1em;
+      padding-bottom: 0.5em;
+      }
+      .sidebar table {
+      border-collapse: collapse;
+      table-layout: fixed;
+      width: 250px;
+      }
+      .sidebar table, td {
+      border: 1px solid #cccccc;
+      padding: 0 0.4em;
+      line-height: 2em;
+      overflow: hidden;
+      text-overflow: ellipsis;
       }
       
       #navbar ul {
@@ -85,27 +140,20 @@
       display: block;
       }
       
-      #info_panel {
-      position: absolute;
-      height: 95%;
-      display: inline;
-      float: left;
-      width: 20%;
-      border: 1px solid #0000ff;
-      bottom: 0;
+      #status_panel {
+      position: fixed;
       left: 0;
+      bottom: 0px;
+      height: 2em;
+      line-height: 2em;
+      width: 100%;
+      background-color: #333333;
+      color: #ffff00;
+      font-size: normal;
+      font-family: Mono;
+      text-align: center;
       }
 
-      #image_panel {
-      position: absolute;
-      height: 95%;
-      display: inline;
-      float: right;
-      width: 78%;
-      border: 1px solid #ff0000;
-      bottom: 0;
-      right: 0;
-      }
     </style>
   </head>
 
@@ -143,42 +191,139 @@
       </defs>
     </svg>
     <!-- End: Define SVG for icons -->
-    <div id="navbar">
-      <ul>
-	<li><svg height="50" viewBox="0 0 64 64"><use xlink:href="#via_logo"></use></svg></li>
-        <li><a href="#" title="Home">Home</a></li>
-        <li class="dropdown"><a href="#" title="Image" class="drop_menu_item">Image &#9662</a>
-	  <div class="dropdown-content">
-	    <a href="#" title="Load a set of images from local disk">Load Images</a>
-	    <a href="#" title="Add new images to the current set of images being annotated">Add Images</a>
-	  </div>
-	</li>
-        <li class="dropdown"><a href="#" title="Annotations" class="drop_menu_item">Annotation &#9662</a>
-	  <div class="dropdown-content">
-	    <a href="#" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
-	    <a href="#" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
-	    <a href="#" title="Import existing annotations from a file">Import annotation</a>
-	  </div>
-	</li>
-        <li class="dropdown"><a href="#" title="Attributes" class="drop_menu_item">Attributes &#9662</a>
-	  <div class="dropdown-content">
-	    <a href="#" title="Save image region attributes to a local file">Save attributes</a>
-	    <a href="#" title="Import existing attributes from a file">Import attributes</a>
-	  </div>
-	</li>
-	<li><a href="#" title="Change settings of VGG Image Annotator">Settings</a>
-	<li><a href="#" title="About VGG Image Annotator">About</a>
-      </ul>
-      
-      <input type="file" id="invisible_file_input" multiple accept="image/*" style="display:none" onchange="upload_local_files(this.files)">
-    </div> <!-- end of navbar -->
 
-<!--
-    <div id="container">
-      <div id="info_panel"></div>
-      <div id="image_panel"></div>
-    </div>
--->
+    <div class="wrapper">
+      <div id="navbar">
+	<ul>
+	  <li><svg height="50" viewBox="0 0 64 64"><use xlink:href="#via_logo"></use></svg></li>
+          <li><a href="#" title="Home">Home</a></li>
+          <li class="dropdown"><a href="#" title="Image" class="drop_menu_item">Image &#9662</a>
+	    <div class="dropdown-content">
+	      <a href="#" title="Load a set of images from local disk">Load Images</a>
+	      <a href="#" title="Add new images to the current set of images being annotated">Add Images</a>
+	    </div>
+	  </li>
+          <li class="dropdown"><a href="#" title="Annotations" class="drop_menu_item">Annotation &#9662</a>
+	    <div class="dropdown-content">
+	      <a href="#" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
+	      <a href="#" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
+	      <a href="#" title="Import existing annotations from a file">Import annotation</a>
+	    </div>
+	  </li>
+          <li class="dropdown"><a href="#" title="Attributes" class="drop_menu_item">Attributes &#9662</a>
+	    <div class="dropdown-content">
+	      <a href="#" title="Save image region attributes to a local file">Save attributes</a>
+	      <a href="#" title="Import existing attributes from a file">Import attributes</a>
+	    </div>
+	  </li>
+	  <li><a href="#" title="Change settings of VGG Image Annotator">Settings</a>
+	  <li><a href="#" title="About VGG Image Annotator">About</a>
+	</ul>
+	
+	<input type="file" id="invisible_file_input" multiple accept="image/*" style="display:none" onchange="upload_local_files(this.files)">
+      </div> <!-- end of navbar -->
+
+      <div class="main">
+	<div class="box sidebar" id="info_panel">
+	  <div class="title">Image Information</div>
+	  <table>
+	    <tr>
+	      <td style="width: 7em;">File Id</td>
+	      <td id="info_current_file_id">1 of 200</td>
+	    </tr>
+	    <tr>
+	      <td>File</td>
+	      <td id="info_current_filename">sample_image4_with_long_name.jpg</td>
+	    </tr>
+	    <tr>
+	      <td>Regions</td>
+	      <td id="info_region"></td>
+	    </tr>
+	    <tr>
+	      <td>Annotation</td>
+	      <td id="info_annotation"></td>
+	    </tr>	
+	  </table>
+	  
+	  <div class="title">Region Attributes</div>
+	  <table>
+	    <tr><td>artistic_style</td></tr>
+	    <tr><td>creator_of_the_image_and_description_(owners_institution</td></tr>
+	    <tr><td>creator_of_the_image_and_description_(scholar)</td></tr>
+	    <tr><td>date_that_the_image_was_made</td></tr>
+	    <tr><td>folio</td></tr>
+	    <tr><td>iconclass</td></tr>
+	    <tr><td>internal_number_of_object</td></tr>
+	    <tr><td>keywords</td></tr>
+	    <tr><td>name</td></tr>
+	    <tr><td>state_of_conservation</td></tr>
+	    <tr><td>technique_(aat)</td></tr>
+	    <tr><td>type_of_cut</td></tr>
+	  </table>
+	  
+	  <div class="title">Keyboard Shortcuts</div>
+	  <table>
+	    <tr>
+	      <td style="width: 5.6em;">Alt + d</td>
+	      <td>Delete image region</td>
+	    </tr>
+	    <tr>
+	      <td>Alt + n/p</td>
+	      <td>Next/Previous image</td>
+	    </tr>
+	    <tr>
+	      <td>Alt + a</td>
+	      <td>Enter annotation</td>
+	    </tr>
+	    <tr>
+	      <td>Alt + d</td>
+	      <td>Delete image region</td>
+	    </tr>
+	    <tr>
+	      <td>Alt + n/p</td>
+	      <td>Next/Previous image</td>
+	    </tr>
+	    <tr>
+	      <td>Alt + a</td>
+	      <td>Enter annotation</td>
+	    </tr>
+	    <tr>
+	      <td>Alt + d</td>
+	      <td>Delete image region</td>
+	    </tr>
+	    <tr>
+	      <td>Alt + n/p</td>
+	      <td>Next/Previous image</td>
+	    </tr>
+	    <tr>
+	      <td>Alt + a</td>
+	      <td>Enter annotation</td>
+	    </tr>
+	    <tr>
+	      <td>Alt + a</td>
+	      <td>Enter annotation</td>
+	    </tr>
+	    <tr>
+	      <td>Alt + d</td>
+	      <td>Delete image region</td>
+	    </tr>
+	    <tr>
+	      <td>Alt + n/p</td>
+	      <td>Next/Previous image</td>
+	    </tr>
+	    <tr>
+	      <td>Alt + a</td>
+	      <td>Enter annotation</td>
+	    </tr>
+	  </table>
+	</div>
+	
+	<div class="box" id="image_panel">
+	  <canvas style="position:relative;" id="image_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
+	</div>
+      </div> <!-- end of main -->
+    </div> <!-- end of wrapper -->
+    <div id="status_panel">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</div>
     <script type="text/javascript">
     <!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
