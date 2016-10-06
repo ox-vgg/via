@@ -36,6 +36,7 @@
       height: 1px;
       background: #000000;
       width: 100%;
+      z-index: 1000;
       }
       
       #navbar ul {
@@ -73,6 +74,7 @@
       position: absolute;
       background-color: #333333;
       min-width: 160px;
+      border: 1px solid #ffffff;
       }
 
       #navbar .dropdown-content a {
@@ -174,6 +176,13 @@
       background-color: #cccccc;
       color: #000000;
       }
+      .action_text_link {
+      background-color: #aaeeff;
+      color: #000000;
+      }
+      .action_text_link:hover {
+      cursor: pointer;
+      }
     </style>
   </head>
 
@@ -234,6 +243,7 @@
 	    <div class="dropdown-content">
 	      <a onclick="save_attributes()" title="Save image region attributes to a local file">Save attributes</a>
 	      <a onclick="import_attributes()" title="Import existing attributes from a file">Import attributes</a>
+	      <a onclick="delete_all_attributes()" title="Delete all attributes">Delete attributes</a>
 	    </div>
 	  </li>
 	  <li><a onclick="show_settings_panel()" title="Change settings of VGG Image Annotator">Settings</a>
@@ -253,7 +263,7 @@
 	    </tr>
 	    <tr>
 	      <td>File</td>
-	      <td id="info_current_filename"></td>
+	      <td id="info_current_filename"><span class="action_text_link" onclick="load_images()" title="Import existing attributes from a file">[click to load images]</span></td>
 	    </tr>
 	    <tr>
 	      <td>Region</td>
@@ -282,14 +292,6 @@
 	      <td>Alt + n/p</td>
 	      <td>Next/Previous image</td>
 	    </tr>
-	    <tr>
-	      <td>Alt + x</td>
-	      <td>Enter annotation</td>
-	    </tr>
-	    <tr>
-	      <td>Alt + d</td>
-	      <td>Delete image region</td>
-	    </tr>
 	  </table>
 	</div>
 	
@@ -297,7 +299,7 @@
 	  <canvas id="image_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
 
 	  <div id="via_start_info_panel">
-	    <p>To begin the image annotation process, click <a href="#" title="Load images" onclick="load_images()">Load images</a> in the Image menu.
+	    <p>To begin the image annotation process, click <a title="Load images" style="cursor: pointer;" onclick="load_images()">Load images</a> in the Image menu.
 	  </div>
 	  
 	  <div id="session_data_panel">
