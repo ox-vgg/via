@@ -128,8 +128,7 @@
       border-collapse: collapse;
       table-layout: fixed;
       min-width: 250px;
-      max-width: 600px;
-      width: 250px;
+      max-width: 400px;
       }
       .sidebar table, td {
       border: 1px solid #cccccc;
@@ -170,6 +169,10 @@
       #image_panel {
       display: inline-block;
       margin: auto;
+      }
+      .editable_table tr:hover {
+      background-color: #cccccc;
+      color: #000000;
       }
     </style>
   </head>
@@ -246,40 +249,31 @@
 	  <table id="image_info_table">
 	    <tr>
 	      <td style="width: 7em;">File Id</td>
-	      <td id="info_current_file_id">1 of 200</td>
+	      <td id="info_current_fileid"></td>
 	    </tr>
 	    <tr>
 	      <td>File</td>
-	      <td id="info_current_filename">sample_image4_with_long_long_long_long_long_long_long_long_long_long_long_long_long_name.jpg</td>
+	      <td id="info_current_filename"></td>
 	    </tr>
 	    <tr>
-	      <td>Regions</td>
+	      <td>Region</td>
 	      <td id="info_region"></td>
 	    </tr>
 	    <tr>
 	      <td>Annotation</td>
 	      <td id="info_annotation"></td>
 	    </tr>	
+	    <tr>
+	      <td>Attributes</td>
+	      <td id="info_attribute"></td>
+	    </tr>	
 	  </table>
 	  
 	  <div class="title">Region Attributes</div>
-	  <table id="region_attributes_table">
-	    <tr><td>artistic_style</td></tr>
-	    <tr><td>creator_of_the_image_and_description_(owners_institution</td></tr>
-	    <tr><td>creator_of_the_image_and_description_(scholar)</td></tr>
-	    <tr><td>date_that_the_image_was_made</td></tr>
-	    <tr><td>folio</td></tr>
-	    <tr><td>iconclass</td></tr>
-	    <tr><td>internal_number_of_object</td></tr>
-	    <tr><td>keywords</td></tr>
-	    <tr><td>name</td></tr>
-	    <tr><td>state_of_conservation</td></tr>
-	    <tr><td>technique_(aat)</td></tr>
-	    <tr><td>type_of_cut</td></tr>
-	  </table>
+	  <table id="region_info_table"></table>
 	  
 	  <div class="title">Keyboard Shortcuts</div>
-	  <table id="keyboard_shortcuts_table">
+	  <table>
 	    <tr>
 	      <td style="width: 5.6em;">Alt + d</td>
 	      <td>Delete image region</td>
@@ -289,48 +283,12 @@
 	      <td>Next/Previous image</td>
 	    </tr>
 	    <tr>
-	      <td>Alt + a</td>
+	      <td>Alt + x</td>
 	      <td>Enter annotation</td>
 	    </tr>
 	    <tr>
 	      <td>Alt + d</td>
 	      <td>Delete image region</td>
-	    </tr>
-	    <tr>
-	      <td>Alt + n/p</td>
-	      <td>Next/Previous image</td>
-	    </tr>
-	    <tr>
-	      <td>Alt + a</td>
-	      <td>Enter annotation</td>
-	    </tr>
-	    <tr>
-	      <td>Alt + d</td>
-	      <td>Delete image region</td>
-	    </tr>
-	    <tr>
-	      <td>Alt + n/p</td>
-	      <td>Next/Previous image</td>
-	    </tr>
-	    <tr>
-	      <td>Alt + a</td>
-	      <td>Enter annotation</td>
-	    </tr>
-	    <tr>
-	      <td>Alt + a</td>
-	      <td>Enter annotation</td>
-	    </tr>
-	    <tr>
-	      <td>Alt + d</td>
-	      <td>Delete image region</td>
-	    </tr>
-	    <tr>
-	      <td>Alt + n/p</td>
-	      <td>Next/Previous image</td>
-	    </tr>
-	    <tr>
-	      <td>Alt + a</td>
-	      <td>Enter annotation</td>
 	    </tr>
 	  </table>
 	</div>
@@ -358,7 +316,6 @@
           </div>
 	  
 	</div>
-	<textarea id="annotation_textarea" row="5" col="20"></textarea>
       </div> <!-- end of main -->
     </div> <!-- end of wrapper -->
     <div id="message_panel"></div>

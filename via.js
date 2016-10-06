@@ -18,16 +18,30 @@ var current_image_filename;
 var current_image;
 var current_image_loaded = false;
 
-var user_drawing_bounding_box = false;
+var user_drawing_region = false;
 var user_entering_annotation = false;
 var click_x0 = 0; var click_y0 = 0;
 var click_x1 = 0; var click_y1 = 0;
 
-var bounding_box_count = 0;
+var region_count = 0;
 var annotation_count = 0;
-var current_annotation_bounding_box_id = -1;
-var current_selected_bounding_box_index = -1;
+var current_annotation_region_id = -1;
+var current_selected_region_id = -1;
 var attribute_list = new Set();
+
+// for debugging
+attribute_list.add("artistic_style");
+attribute_list.add("creator_of_the_image_and_description_(owners_institution");
+attribute_list.add("creator_of_the_image_and_description_(scholar)");
+attribute_list.add("date_that_the_image_was_made");
+attribute_list.add("folio");
+attribute_list.add("iconclass");
+attribute_list.add("internal_number_of_object");
+attribute_list.add("keywords");
+attribute_list.add("name");
+attribute_list.add("state_of_conservation");
+attribute_list.add("technique_(aat)");
+attribute_list.add("type_of_cut");
 
 var annotation_list = new Map();
 var image_id_list = [];
@@ -55,13 +69,19 @@ var info_panel = document.getElementById("info_panel");
 var annotation_list_snippet = document.getElementById("annotation_list_snippet");
 var annotation_textarea = document.getElementById("annotation_textarea");    
 
+var is_user_updating_attribute_name = false;
+var is_user_updating_attribute_value = false;
+var current_update_attribute_name = "";
+
+var region_info_table = document.getElementById("region_info_table");
+
 var is_window_resized = false;
 
-var is_user_resizing_bounding_box = false;
-var bounding_box_edge = [-1, -1];
-var bounding_box_edge_tol = 5;
+var is_user_resizing_region = false;
+var region_edge = [-1, -1];
+var region_edge_tol = 5;
 
-var bounding_box_being_moved = false;
+var region_being_moved = false;
 var box_click_x, box_click_y;
 
 var zoom_active = false;
@@ -85,6 +105,7 @@ var BBOX_SELECTED_OPACITY = 0.3;
 function main() {
     console.log("via");
     show_home_panel();
+    show_region_attribute_info();
     
     // initialize local storage
     if ( check_local_storage ) {
@@ -324,12 +345,12 @@ function update_ui_components() {
 image_canvas.addEventListener('dblclick', function(e) {
     click_x1 = e.offsetX; click_y1 = e.offsetY;
 
-    var bounding_box_id = is_inside_bounding_box(click_x1, click_y1);
-    if ( bounding_box_id >= 0 ) {
-	current_selected_bounding_box_index = -1;
+    var region_id = is_inside_region(click_x1, click_y1);
+    if ( region_id >= 0 ) {
+	current_selected_region_id = -1;
 	user_entering_annotation = true;
-	current_annotation_bounding_box_id = bounding_box_id;
-	annotate_bounding_box(current_annotation_bounding_box_id);
+	current_annotation_region_id = region_id;
+	annotate_region(current_annotation_region_id);
 
 	show_message("Please enter annotation");
     }
@@ -339,27 +360,27 @@ image_canvas.addEventListener('dblclick', function(e) {
 image_canvas.addEventListener('mousedown', function(e) {
     click_x0 = e.offsetX; click_y0 = e.offsetY;
 
-    if ( current_selected_bounding_box_index >= 0 ) {
-	bounding_box_edge = is_on_bounding_box_corner(click_x0, click_y0, bounding_box_edge_tol);
+    if ( current_selected_region_id >= 0 ) {
+	region_edge = is_on_region_corner(click_x0, click_y0, region_edge_tol);
 	
-	if ( bounding_box_edge[1] > 0 &&
-	     !is_user_resizing_bounding_box ) {
-	    if ( bounding_box_edge[0] == current_selected_bounding_box_index ) {
-		is_user_resizing_bounding_box = true;
+	if ( region_edge[1] > 0 &&
+	     !is_user_resizing_region ) {
+	    if ( region_edge[0] == current_selected_region_id ) {
+		is_user_resizing_region = true;
 	    } else {
-		current_selected_bounding_box_index = bounding_box_edge[0];
+		current_selected_region_id = region_edge[0];
 	    }
 	} else {
-	    var bounding_box_id = is_inside_bounding_box(click_x0, click_y0);
-	    if ( bounding_box_id >=0 &&
-	         !bounding_box_being_moved ) {
-		if( bounding_box_id == current_selected_bounding_box_index ) {
-		    bounding_box_being_moved = true;
+	    var region_id = is_inside_region(click_x0, click_y0);
+	    if ( region_id >=0 &&
+	         !region_being_moved ) {
+		if( region_id == current_selected_region_id ) {
+		    region_being_moved = true;
 		    box_click_x = click_x0;
 		    box_click_y = click_y0;
 		} else {
-		    current_selected_bounding_box_index = bounding_box_id;
-		    bounding_box_being_moved = true;
+		    current_selected_region_id = region_id;
+		    region_being_moved = true;
 		    box_click_x = click_x0;
 		    box_click_y = click_y0;
 		}
@@ -367,10 +388,10 @@ image_canvas.addEventListener('mousedown', function(e) {
 	}
     } else {
 	// this is a bounding box drawing event
-	is_user_resizing_bounding_box = false;
-	bounding_box_being_moved = false;
-	user_drawing_bounding_box = true;
-	current_selected_bounding_box_index = -1;	
+	is_user_resizing_region = false;
+	region_being_moved = false;
+	user_drawing_region = true;
+	current_selected_region_id = -1;	
     }
     e.preventDefault();
 }, false);
@@ -382,32 +403,26 @@ image_canvas.addEventListener('mouseup', function(e) {
     var dy = Math.abs(click_y1 - click_y0);
     
     if ( dx < 5 || dy < 5 ) {
-        user_drawing_bounding_box = false;
-        var bounding_box_id = is_inside_bounding_box(click_x0, click_y0);
-        if ( bounding_box_id >= 0 ) {
+        user_drawing_region = false;
+        var region_id = is_inside_region(click_x0, click_y0);
+        if ( region_id >= 0 ) {
 	    // first click selects the bounding box for further action
-	    current_selected_bounding_box_index = bounding_box_id;
+	    current_selected_region_id = region_id;
 	    user_entering_annotation = false;
 	    redraw_image_canvas();
-	    show_message("<span style='color:red;'>Del</span> to delete and <span style='color:red;'>Mouse over</span> to update");
-
-	    // show full annotations
-	    var bbox_annotation_str = annotation_list[current_image_id].regions[current_selected_bounding_box_index].description;
-	    show_message( parse_annotation_str(bbox_annotation_str) );
+	    show_region_attribute_info();
         } else {
 	    // click on other non-boxed area
 	    if ( user_entering_annotation ) {
                 annotation_textarea.style.visibility = "hidden";
-                current_annotation_bounding_box_id = -1;
+                current_annotation_region_id = -1;
                 user_entering_annotation = false;
 	    }
-	    if ( current_selected_bounding_box_index != -1 ) {
+	    if ( current_selected_region_id != -1 ) {
 		// clear all bounding box selection
-		current_selected_bounding_box_index = -1;		
+		current_selected_region_id = -1;		
 	    }
 	    redraw_image_canvas();
-	    show_message("Press <span style='color:red;'>Enter</span> key to annotate," +
-                        " <span style='color:red'>Arrow keys</span> to move to next image.");
 	    
 	    var attribute_list_str = "";
 	    for ( let attributes of attribute_list ) {
@@ -418,36 +433,36 @@ image_canvas.addEventListener('mouseup', function(e) {
 	    show_message( "Attributes : [ " + attribute_list_str + " ]" );
         }
     }
-    if ( bounding_box_being_moved ) {
-	bounding_box_being_moved = false;
+    if ( region_being_moved ) {
+	region_being_moved = false;
 	image_canvas.style.cursor = "default";
 
 	var move_x = (box_click_x - click_x1);
 	var move_y = (box_click_y - click_y1);
 
-	canvas_x0[current_image_id][current_selected_bounding_box_index] -= move_x;
-	canvas_y0[current_image_id][current_selected_bounding_box_index] -= move_y;
-	canvas_x1[current_image_id][current_selected_bounding_box_index] -= move_x;
-	canvas_y1[current_image_id][current_selected_bounding_box_index] -= move_y;
+	canvas_x0[current_image_id][current_selected_region_id] -= move_x;
+	canvas_y0[current_image_id][current_selected_region_id] -= move_y;
+	canvas_x1[current_image_id][current_selected_region_id] -= move_x;
+	canvas_y1[current_image_id][current_selected_region_id] -= move_y;
 
-	annotation_list[current_image_id].regions[current_selected_bounding_box_index].x0 -= move_x*canvas_scale[current_image_id];
-	annotation_list[current_image_id].regions[current_selected_bounding_box_index].y0 -= move_y*canvas_scale[current_image_id];
-	annotation_list[current_image_id].regions[current_selected_bounding_box_index].x1 -= move_x*canvas_scale[current_image_id];
-	annotation_list[current_image_id].regions[current_selected_bounding_box_index].y1 -= move_y*canvas_scale[current_image_id];
+	annotation_list[current_image_id].regions[current_selected_region_id].x0 -= move_x*canvas_scale[current_image_id];
+	annotation_list[current_image_id].regions[current_selected_region_id].y0 -= move_y*canvas_scale[current_image_id];
+	annotation_list[current_image_id].regions[current_selected_region_id].x1 -= move_x*canvas_scale[current_image_id];
+	annotation_list[current_image_id].regions[current_selected_region_id].y1 -= move_y*canvas_scale[current_image_id];
 	
 	redraw_image_canvas();
     }
 
     // this was a bounding box resize event
-    if ( is_user_resizing_bounding_box ) {
-	is_user_resizing_bounding_box = false;
+    if ( is_user_resizing_region ) {
+	is_user_resizing_region = false;
 	image_canvas.style.cursor = "default";
 	
 	// update the bounding box
-	var box_id = bounding_box_edge[0];
+	var box_id = region_edge[0];
 	var new_x0, new_y0, new_x1, new_y1;
 	
-	switch(bounding_box_edge[1]) {
+	switch(region_edge[1]) {
 	case 1: // top-left
 	    canvas_x0[current_image_id][box_id] = click_x1;
 	    canvas_y0[current_image_id][box_id] = click_y1;
@@ -478,7 +493,7 @@ image_canvas.addEventListener('mouseup', function(e) {
 	image_canvas.focus();
     }
 
-    if (user_drawing_bounding_box) {
+    if (user_drawing_region) {
 	var regx0, regy0, regx1, regy1;
 	// ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
         if ( click_x0 < click_x1 ) {
@@ -511,11 +526,10 @@ image_canvas.addEventListener('mouseup', function(e) {
 
 	add_image_region(current_image_id, regx0, regy0, regx1, regy1);
 	
-        bounding_box_count = bounding_box_count + 1;
+	region_count = annotation_list[current_image_id].regions.length
+	show_region_info(region_count);
 
-	show_annotation_info("[" + bounding_box_count + "] boxes and [" +
-			     annotation_count + "] annotations");
-        user_drawing_bounding_box = false;
+        user_drawing_region = false;
         redraw_image_canvas();
 	image_canvas.focus();
     }
@@ -533,12 +547,12 @@ image_canvas.addEventListener('mousemove', function(e) {
     
     current_x = e.offsetX; current_y = e.offsetY;
 
-    if ( current_selected_bounding_box_index >= 0) {
-	if ( !is_user_resizing_bounding_box ) {
-	    bounding_box_edge = is_on_bounding_box_corner(current_x, current_y, bounding_box_edge_tol);   
+    if ( current_selected_region_id >= 0) {
+	if ( !is_user_resizing_region ) {
+	    region_edge = is_on_region_corner(current_x, current_y, region_edge_tol);   
 	    
-	    if ( bounding_box_edge[0] == current_selected_bounding_box_index ) {
-		switch(bounding_box_edge[1]) {
+	    if ( region_edge[0] == current_selected_region_id ) {
+		switch(region_edge[1]) {
 		case 1: // top-left
 		case 3: // bottom-right
 		    image_canvas.style.cursor = "nwse-resize";
@@ -552,8 +566,8 @@ image_canvas.addEventListener('mousemove', function(e) {
 		}
 	    } else {
 		// a bounding box has been selected
-		var bounding_box_id = is_inside_bounding_box(current_x, current_y);
-		if ( bounding_box_id == current_selected_bounding_box_index ) {
+		var region_id = is_inside_region(current_x, current_y);
+		if ( region_id == current_selected_region_id ) {
 		    image_canvas.style.cursor = "move";
 		} else {
 		    image_canvas.style.cursor = "default";
@@ -562,7 +576,7 @@ image_canvas.addEventListener('mousemove', function(e) {
 	}
     }
     
-    if(user_drawing_bounding_box) {
+    if(user_drawing_region) {
         // draw rectangle as the user drags the mouse cousor
         redraw_image_canvas(); // clear old intermediate rectangle
 
@@ -588,18 +602,18 @@ image_canvas.addEventListener('mousemove', function(e) {
             }
         }
 
-	draw_bounding_box(top_left_x, top_left_y, w, h,
+	draw_region(top_left_x, top_left_y, w, h,
 			  BBOX_BOUNDARY_FILL_COLOR_NEW);
         image_canvas.focus();
     }
     
-    if ( is_user_resizing_bounding_box ) {
+    if ( is_user_resizing_region ) {
 	// user has clicked mouse on bounding box edge and is now moving it
         redraw_image_canvas(); // clear old intermediate rectangle
 
         var top_left_x, top_left_y, w, h;
-	var sel_box_id = bounding_box_edge[0];
-	switch(bounding_box_edge[1]) {
+	var sel_box_id = region_edge[0];
+	switch(region_edge[1]) {
 	case 1: // top-left
 	    top_left_x = current_x;
 	    top_left_y = current_y;
@@ -625,22 +639,22 @@ image_canvas.addEventListener('mousemove', function(e) {
 	    h = Math.abs(current_y - canvas_y0[current_image_id][sel_box_id]);
 	    break;
 	}
-	draw_bounding_box(top_left_x, top_left_y, w, h,
+	draw_region(top_left_x, top_left_y, w, h,
 			  BBOX_BOUNDARY_FILL_COLOR_NEW);
         image_canvas.focus();
     }
 
-    if ( bounding_box_being_moved ) {
+    if ( region_being_moved ) {
 	redraw_image_canvas();
 	var move_x = (box_click_x - current_x);
 	var move_y = (box_click_y - current_y);
 
-	var moved_x0 = canvas_x0[current_image_id][current_selected_bounding_box_index] - move_x;
-	var moved_y0 = canvas_y0[current_image_id][current_selected_bounding_box_index] - move_y;
-	var moved_x1 = canvas_x1[current_image_id][current_selected_bounding_box_index] - move_x;
-	var moved_y1 = canvas_y1[current_image_id][current_selected_bounding_box_index] - move_y;
+	var moved_x0 = canvas_x0[current_image_id][current_selected_region_id] - move_x;
+	var moved_y0 = canvas_y0[current_image_id][current_selected_region_id] - move_y;
+	var moved_x1 = canvas_x1[current_image_id][current_selected_region_id] - move_x;
+	var moved_y1 = canvas_y1[current_image_id][current_selected_region_id] - move_y;
 
-	draw_bounding_box(moved_x0, moved_y0,
+	draw_region(moved_x0, moved_y0,
 			  Math.abs(moved_x1 - moved_x0),
 			  Math.abs(moved_y1 - moved_y0),
 			  BBOX_BOUNDARY_FILL_COLOR_NEW);
@@ -648,8 +662,8 @@ image_canvas.addEventListener('mousemove', function(e) {
     }
     
     if ( zoom_active &&
-	 !bounding_box_being_moved &&
-	 !is_user_resizing_bounding_box ) {
+	 !region_being_moved &&
+	 !is_user_resizing_region ) {
 
 	var sf = canvas_scale[current_image_id];
 	var original_image_x = current_x * sf;
@@ -670,14 +684,14 @@ image_canvas.addEventListener('mousemove', function(e) {
 				2*200
 			       );
 	
-	draw_bounding_box(current_x - 200,
+	draw_region(current_x - 200,
 			  current_y - 200,
 			  2*200,
 			  2*200,
 			  ZOOM_BOUNDARY_COLOR);
     }
     
-    //console.log("user_drawing_bounding_box=" + user_drawing_bounding_box + ", is_user_resizing_bounding_box=" + is_user_resizing_bounding_box + ", bounding_box_edge=" + bounding_box_edge[0] + "," + bounding_box_edge[1]);
+    //console.log("user_drawing_region=" + user_drawing_region + ", is_user_resizing_region=" + is_user_resizing_region + ", region_edge=" + region_edge[0] + "," + region_edge[1]);
     
     /* @todo: implement settings -> show guide
        else {
@@ -692,11 +706,12 @@ image_canvas.addEventListener('mousemove', function(e) {
     */
 });
 
-function draw_all_bounding_box() {
+function draw_all_region() {
     annotation_count = 0;
     image_context.shadowBlur = 0;
     var bbox_boundary_fill_color = "";
-    for (var i=0; i<bounding_box_count; ++i) {
+    region_count = annotation_list[current_image_id].regions.length;
+    for (var i=0; i<region_count; ++i) {
         if ( annotation_list[current_image_id].regions[i].description == "" ) {
 	    bbox_boundary_fill_color = BBOX_BOUNDARY_FILL_COLOR_NEW;
         } else {
@@ -704,13 +719,13 @@ function draw_all_bounding_box() {
 	    annotation_count = annotation_count + 1;
         }
 	
-	draw_bounding_box(canvas_x0[current_image_id][i],
+	draw_region(canvas_x0[current_image_id][i],
 			  canvas_y0[current_image_id][i],
 			  canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i],
 			  canvas_y1[current_image_id][i] - canvas_y0[current_image_id][i],
 			  bbox_boundary_fill_color);
 	
-	if ( current_selected_bounding_box_index == i ) {
+	if ( current_selected_region_id == i ) {
 	    image_context.fillStyle=BBOX_SELECTED_FILL_COLOR;
 	    image_context.globalAlpha = BBOX_SELECTED_OPACITY;
 	    image_context.fillRect(canvas_x0[current_image_id][i] + BBOX_LINE_WIDTH/2,
@@ -722,7 +737,7 @@ function draw_all_bounding_box() {
     }
 }
 
-function draw_bounding_box(x0, y0, w, h, boundary_fill_color) {
+function draw_region(x0, y0, w, h, boundary_fill_color) {
     image_context.strokeStyle = boundary_fill_color;
     image_context.lineWidth = BBOX_LINE_WIDTH/2;    
     image_context.strokeRect(x0 - BBOX_LINE_WIDTH/4,
@@ -745,8 +760,8 @@ function draw_all_annotations() {
     image_context.shadowColor = "transparent";
     for (var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
 	var ri = annotation_list[current_image_id].regions[i];
-	console.log(ri);
         if ( ri.description != "" ) {
+	    annotation_count = annotation_count + 1;
             var w = Math.abs(canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i]);
             image_context.font = '12pt Sans';
 	    var annotation_str = ri.description;
@@ -783,7 +798,7 @@ function draw_all_annotations() {
 function redraw_image_canvas() {
     if (current_image_loaded) {
         image_context.drawImage(current_image, 0, 0, canvas_width, canvas_height);
-        draw_all_bounding_box();
+        draw_all_region();
         draw_all_annotations();
     }
 }
@@ -800,11 +815,11 @@ function load_local_file(file_id) {
         img_reader = new FileReader();
 
         img_reader.addEventListener( "progress", function(e) {
-            show_message("Loading image " + current_image_filename + " ... ", false);
+            show_message("Loading image " + current_image_filename + " ... ");
         }, false);
 
         img_reader.addEventListener( "error", function() {
-            show_message("Error loading image " + current_image_filename + " !", false);
+            show_message("Error loading image " + current_image_filename + " !");
         }, false);
         
         img_reader.addEventListener( "load", function() {
@@ -844,30 +859,28 @@ function load_local_file(file_id) {
 		// let the info_panel use the empty horizontal space (if available)
 		info_panel_width = (document.documentElement.clientWidth - canvas_width - 80) + "px";
 		document.getElementById("image_info_table").style.width = info_panel_width;
-		document.getElementById("region_attributes_table").style.width = info_panel_width;
-		document.getElementById("keyboard_shortcuts_table").style.width = info_panel_width;
-
-		console.log("canvas: " + image_canvas.width + "," + image_canvas.height);
-		console.log("space left for info panel = " + (document.documentElement.clientWidth - canvas_width));
+		document.getElementById("region_info_table").style.width = info_panel_width;
 		
 		zoom_size_pixel = Math.round(ZOOM_SIZE_PERCENT * Math.min(canvas_width, canvas_height));
 
                 current_image_loaded = true;
-                bounding_box_count = annotation_list[current_image_id].regions.length;
+                region_count = annotation_list[current_image_id].regions.length;
                 annotation_count = 0;
                 for ( var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
                     if ( annotation_list[current_image_id].regions[i].description != "" ) {
                         annotation_count = annotation_count + 1;
                     }
                 }
+		show_region_info(region_count);
+		show_annotation_info(annotation_count);
                 
                 click_x0 = 0; click_y0 = 0;
                 click_x1 = 0; click_y1 = 0;
-                user_drawing_bounding_box = false;
+                user_drawing_region = false;
                 user_entering_annotation = false;
                 is_window_resized = false;
 
-                if ( bounding_box_count > 0 ) {
+                if ( region_count > 0 ) {
                     // update the canvas image space coordinates
                     for ( var j=0; j<annotation_list[current_image_id].regions.length; ++j ) {
 			canvas_x0[current_image_id][j] = annotation_list[current_image_id].regions[j].x0 / canvas_scale[current_image_id];
@@ -884,6 +897,11 @@ function load_local_file(file_id) {
                 image_canvas.style.display = "inline";
                 via_start_info_panel.style.display = "none";
 
+		// update the info panel
+		show_filename_info(current_image_filename);
+		show_fileid_info(current_image_index);
+		show_message("");
+
             });
             current_image.src = img_reader.result;
         }, false);
@@ -892,8 +910,8 @@ function load_local_file(file_id) {
     }
 }
 
-function is_inside_bounding_box(x, y) {
-    for (var i=0; i<bounding_box_count; ++i) {
+function is_inside_region(x, y) {
+    for (var i=0; i<region_count; ++i) {
         if ( x > canvas_x0[current_image_id][i] &&
              x < canvas_x1[current_image_id][i] &&
              y > canvas_y0[current_image_id][i] &&
@@ -904,180 +922,145 @@ function is_inside_bounding_box(x, y) {
     return -1;
 }
 
-function is_on_bounding_box_corner(x, y, tolerance) {
+function is_on_region_corner(x, y, tolerance) {
     var cx0, cy0, cx1, cy1;
-    var bounding_box_edge = [-1, -1]; // bounding_box_id, corner_id [top-left=1,top-right=2,bottom-right=3,bottom-left=4]
+    var region_edge = [-1, -1]; // region_id, corner_id [top-left=1,top-right=2,bottom-right=3,bottom-left=4]
     
-    for (var i=0; i<bounding_box_count; ++i) {
+    for (var i=0; i<region_count; ++i) {
 	dx0 = Math.abs( canvas_x0[current_image_id][i] - x );
 	dy0 = Math.abs( canvas_y0[current_image_id][i] - y );
 	dx1 = Math.abs( canvas_x1[current_image_id][i] - x );
 	dy1 = Math.abs( canvas_y1[current_image_id][i] - y );
 	
-	bounding_box_edge[0] = i;
+	region_edge[0] = i;
         if ( dx0 < tolerance && dy0 < tolerance ) {
-	    bounding_box_edge[1] = 1;
-	    return bounding_box_edge;
+	    region_edge[1] = 1;
+	    return region_edge;
 	} else {
 	    if ( dx1 < tolerance && dy0 < tolerance ) {
-		bounding_box_edge[1] = 2;
-		return bounding_box_edge;
+		region_edge[1] = 2;
+		return region_edge;
 	    } else {
 		if ( dx1 < tolerance && dy1 < tolerance ) {
-		    bounding_box_edge[1] = 3;
-		    return bounding_box_edge;
+		    region_edge[1] = 3;
+		    return region_edge;
 		} else {
 		    if ( dx0 < tolerance && dy1 < tolerance ) {
-			bounding_box_edge[1] = 4;
-			return bounding_box_edge;
+			region_edge[1] = 4;
+			return region_edge;
 		    }
 		}
 	    }
 	}
     }
-    bounding_box_edge[0] = -1;
-    return bounding_box_edge;
+    region_edge[0] = -1;
+    return region_edge;
 }
 
-function annotate_bounding_box(bounding_box_id) {
-    console.log('annotate_bounding_box='+bounding_box_id);
-    var region = annotation_list[current_image_id].regions[bounding_box_id];
+function annotate_region(region_id) {
+    console.log('annotate_region='+region_id);
+    var region = annotation_list[current_image_id].regions[region_id];
 
-    var w = canvas_x1[current_image_id][bounding_box_id] - canvas_x0[current_image_id][bounding_box_id];
-    var canvas_origin_x0 = image_canvas.getBoundingClientRect().left;
-    var canvas_origin_y0 = image_canvas.getBoundingClientRect().top;
-    var annotation_textarea_y = canvas_origin_y0 + canvas_y0[current_image_id][bounding_box_id];
-    var annotation_textarea_x = canvas_origin_x0 + canvas_x0[current_image_id][bounding_box_id];
-
-    console.log('annotation_textarea.style.visibility='+annotation_textarea.style.visibility);
-    
-    annotation_textarea.style.position = "fixed";
-    annotation_textarea.style.top = annotation_textarea_y.toString() + "px";
-    annotation_textarea.style.left = annotation_textarea_x.toString() + "px";
-    annotation_textarea.style.opacity = 0.5;
-    annotation_textarea.value = region.description;
-    annotation_textarea.style.visibility = "visible";
-
-    if ( w > (canvas_width/2) ) {
-	annotation_textarea.style.width = (canvas_width/2).toString() + "px";
-    } else {
-	annotation_textarea.style.width = (w - w/4).toString() + "px";
-    }
-    annotation_textarea.style.height = "1.5em";
-    annotation_textarea.focus();
-
-    if ( attribute_list.size > 0 ) {
-	var help_str1 = "";
-	var help_str2 = "";
-	var value_count = 1;
-	for ( let attributes of attribute_list ) {
-	    help_str1 += "<span style='color:" + COLOR_KEY + ";'>" + attributes + "</span>=" +
-		"<span style='color:" + COLOR_VALUE + ";'>value" + value_count + "; ";
-	    help_str2 += "<span style='color:" + COLOR_VALUE + ";'>value" + value_count + "; ";
-	    value_count = value_count + 1;
-	}
-	show_message("Enter value of the attributes as follows | " + help_str1 + " | " + help_str2);
-    } else {
-	show_message("Enter value of the attributes as follows | key1=value1;key2=value2; ..." + " | value1;value2;..." );
-    }
+    // find the first 
 }
 
 window.addEventListener("keydown", function(e) {
-    if ( e.which == 13 ) { // Enter
-	console.log('user_entering_annotation='+user_entering_annotation+', bounding_box_count='+bounding_box_count);
-        // when user presses Enter key, enter bounding box annotation mode
-        if ( !user_entering_annotation && bounding_box_count > 0 ) {
-            current_annotation_bounding_box_id = -1;
-	    console.log('current_annotation_bounding_box_id='+current_annotation_bounding_box_id);
+
+    if ( (e.altKey || e.metaKey) && e.which == 88 ) { // Alt + x
+	console.log('user_entering_annotation='+user_entering_annotation+', region_count='+region_count);
+	// when user presses Enter key, enter bounding box annotation mode
+        if ( !user_entering_annotation && region_count > 0 ) {
+            current_annotation_region_id = -1;
+	    console.log('current_annotation_region_id='+current_annotation_region_id);
 	    console.log('annotation_list[current_image_id].regions.length='+annotation_list[current_image_id].regions.length);
-    	    if ( current_selected_bounding_box_index != -1 ) {
-		current_annotation_bounding_box_id = current_selected_bounding_box_index;
+    	    if ( current_selected_region_id != -1 ) {
+		current_annotation_region_id = current_selected_region_id;
 		user_entering_annotation = true;		    		
-		annotate_bounding_box(current_annotation_bounding_box_id);		
+		annotate_region(current_annotation_region_id);		
 	    } else {
 		// find the un-annotated bounding box
 		for ( var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
                     if ( annotation_list[current_image_id].regions[i].description == "" ) {
-			current_annotation_bounding_box_id = i;
+			current_annotation_region_id = i;
 			break;
                     }
 		}
 
-		if ( current_annotation_bounding_box_id != -1 ) {
+		if ( current_annotation_region_id != -1 ) {
 		    // enter annotation mode only if an un annotated box is present
 		    user_entering_annotation = true;		    
-		    annotate_bounding_box(current_annotation_bounding_box_id);
+		    annotate_region(current_annotation_region_id);
 		}
 	    }
-	    console.log('current_annotation_bounding_box_id='+current_annotation_bounding_box_id);
-        } else {
-            if ( user_entering_annotation && bounding_box_count > 0 ) {
-                // Enter key pressed after user updates annotations in textbox
-		// update attribute_list
-		var m = str2map(annotation_textarea.value);
-		var annotation_parsed_str = "";
-		if ( m.size != 0 ) {
-		    // updates keys and ensure consistency of existing keys
-		    for ( var [key, value] of m ) {
-			if ( ! attribute_list.has(key) ) {
-			    attribute_list.add(key);
-			}
-			annotation_parsed_str = annotation_parsed_str + key + "=" + value + ";"
+	    console.log('current_annotation_region_id='+current_annotation_region_id);
+        }
+    }
+    
+    if ( e.which == 13 ) { // Enter
+	console.log('user_entering_annotation='+user_entering_annotation+', region_count='+region_count);
+
+        if ( user_entering_annotation && region_count > 0 ) {
+            // Enter key pressed after user updates annotations in textbox
+	    // update attribute_list
+	    var m = str2map(annotation_textarea.value);
+	    var annotation_parsed_str = "";
+	    if ( m.size != 0 ) {
+		// updates keys and ensure consistency of existing keys
+		for ( var [key, value] of m ) {
+		    if ( ! attribute_list.has(key) ) {
+			attribute_list.add(key);
 		    }
-		} else {
-		    annotation_parsed_str = annotation_textarea.value;
+		    annotation_parsed_str = annotation_parsed_str + key + "=" + value + ";"
 		}
-		add_image_region_description(current_image_id, current_annotation_bounding_box_id, annotation_parsed_str);
-		show_message("");
-		
-		// update the list of attributes
-                annotation_textarea.value = "";
+	    } else {
+		annotation_parsed_str = annotation_textarea.value;
+	    }
+	    add_image_region_description(current_image_id, current_annotation_region_id, annotation_parsed_str);
+	    show_message("");
+	    
+	    // update the list of attributes
+            annotation_textarea.value = "";
+            annotation_textarea.style.visibility = "hidden";
+            redraw_image_canvas();
+
+	    // find a unannotated bounding box to next move to
+	    current_annotation_region_id = -1;
+	    for ( var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
+		if ( annotation_list[current_image_id].regions[i].description == "" ) {
+		    current_annotation_region_id = i;
+		    break;
+		}
+	    }
+
+	    if ( current_annotation_region_id != -1 ) {
+                user_entering_annotation = true;
+                annotate_region(current_annotation_region_id);
+            } else {
+                // exit bounding box annotation mode
+                current_annotation_region_id = -1;		    
+                user_entering_annotation = false;
                 annotation_textarea.style.visibility = "hidden";
-                redraw_image_canvas();
-
-		// find a unannotated bounding box to next move to
-		current_annotation_bounding_box_id = -1;
-		for ( var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
-		    if ( annotation_list[current_image_id].regions[i].description == "" ) {
-			current_annotation_bounding_box_id = i;
-			break;
-		    }
-		}
-
-		if ( current_annotation_bounding_box_id != -1 ) {
-                    user_entering_annotation = true;
-                    annotate_bounding_box(current_annotation_bounding_box_id);
-                } else {
-                    // exit bounding box annotation mode
-                    current_annotation_bounding_box_id = -1;		    
-                    user_entering_annotation = false;
-                    annotation_textarea.style.visibility = "hidden";
-                }
-
-		show_navigation_info("(" + (current_image_index+1) + "/" +
-				     user_uploaded_images.length + ") " +
-				     current_image_filename);
-		show_annotation_info("[" + bounding_box_count + "] boxes and [" +
-				     annotation_count + "] annotations");
-		show_message("Press <span style='color:red;'>Enter</span> key to annotate," +
-                            " <span style='color:red'>Arrow keys</span> to move to next image.");
-		
-            }
+            }		
         }
         e.preventDefault();
     }
-    if ( e.which == 46 ) { // Del
-	if ( current_selected_bounding_box_index != -1 ) {
-	    annotation_list[current_image_id].regions.splice(current_selected_bounding_box_index, 1);
+			
+    if ( (e.altKey || e.metaKey) && e.which == 68 ) { // Alt + d
+	if ( current_selected_region_id != -1 ) {
+	    annotation_list[current_image_id].regions.splice(current_selected_region_id, 1);
 	    
-	    canvas_x0[current_image_id].splice(current_selected_bounding_box_index, 1);
-	    canvas_y0[current_image_id].splice(current_selected_bounding_box_index, 1);
-	    canvas_x1[current_image_id].splice(current_selected_bounding_box_index, 1);
-	    canvas_y1[current_image_id].splice(current_selected_bounding_box_index, 1);
-	    
-	    annotation_count = annotation_count - 1;
-	    current_selected_bounding_box_index = -1;
+	    canvas_x0[current_image_id].splice(current_selected_region_id, 1);
+	    canvas_y0[current_image_id].splice(current_selected_region_id, 1);
+	    canvas_x1[current_image_id].splice(current_selected_region_id, 1);
+	    canvas_y1[current_image_id].splice(current_selected_region_id, 1);
+
+	    current_selected_region_id = -1;
 	    redraw_image_canvas();
+
+	    region_count = annotation_list[current_image_id].regions.length
+	    show_region_info( region_count );
+	    show_annotation_info( annotation_count );
+	    show_region_attribute_info()
 	}
     }
     
@@ -1085,18 +1068,18 @@ window.addEventListener("keydown", function(e) {
 	if ( user_entering_annotation ) {
             // exit bounding box annotation model
             annotation_textarea.style.visibility = "hidden";
-            current_annotation_bounding_box_id = -1;
+            current_annotation_region_id = -1;
             user_entering_annotation = false;
 	}
 
-	if ( is_user_resizing_bounding_box ) {
+	if ( is_user_resizing_region ) {
 	    // cancel bounding box resizing action
-	    is_user_resizing_bounding_box = false;
+	    is_user_resizing_region = false;
 	}
 	
-	if ( current_selected_bounding_box_index != -1 ) {
+	if ( current_selected_region_id != -1 ) {
 	    // clear all bounding box selection
-	    current_selected_bounding_box_index = -1;
+	    current_selected_region_id = -1;
 	}
 
 	if ( zoom_active ) {
@@ -1107,12 +1090,12 @@ window.addEventListener("keydown", function(e) {
 	show_message("Press <span style='color:red;'>Enter</span> key to annotate," +
                     " <span style='color:red'>Arrow keys</span> to move to next image.");	
     }
-    if ( e.which == 39 ) { // right arrow
+    if ( (e.altKey || e.metaKey) && (e.which == 78 || e.which == 39) ) { // Alt + n or Alt + right arrow
 	if ( !user_entering_annotation ) {
 	    move_to_next_image();
 	}
     }
-    if ( e.which == 37 ) { // left arrow
+    if ( (e.altKey || e.metaKey) && (e.which == 80 || e.which == 37) ) { // Alt + p or Alt + left arrow
 	if ( !user_entering_annotation ) {
             move_to_prev_image();
 	}
@@ -1130,14 +1113,7 @@ window.addEventListener("keydown", function(e) {
 	    show_message("Zoom Enabled ( Press <span style='color:red;'>z</span> toggle zoom )");
 	}
 	redraw_image_canvas();
-    }
-    if ( e.which == 36 ) { // Home
-	home_button.click();
-    }
-    if ( e.which == 112 ) { // F1 for help
-	help_button.click();
-    }
-    
+    }    
 });
 
 function move_to_prev_image() {
@@ -1145,7 +1121,7 @@ function move_to_prev_image() {
         if ( user_entering_annotation) {
             user_entering_annotation = false;
             annotation_textarea.style.visibility = "hidden";
-            current_annotation_bounding_box_id = -1;
+            current_annotation_region_id = -1;
         }
         image_canvas.style.display = "none";
         image_context.clearRect(0, 0, image_canvas.width, image_canvas.height);
@@ -1164,7 +1140,7 @@ function move_to_next_image() {
         if ( user_entering_annotation) {
             user_entering_annotation = false;
             annotation_textarea.style.visibility = "hidden";
-            current_annotation_bounding_box_id = -1;
+            current_annotation_region_id = -1;
         }
         image_canvas.style.display = "none";
 
@@ -1192,6 +1168,112 @@ function check_local_storage() {
 
 function show_message(msg) {
     message_panel.innerHTML = msg;
+}
+
+function show_annotation_info(msg) {
+    document.getElementById("info_annotation").innerHTML = msg;
+}
+
+function show_region_info(msg) {
+    document.getElementById("info_region").innerHTML = msg;
+}
+
+function show_filename_info(filename) {
+    document.getElementById("info_current_filename").innerHTML = filename;
+}
+
+function show_fileid_info(fileid) {
+    document.getElementById("info_current_fileid").innerHTML = (fileid+1) + " of " + user_uploaded_images.length;
+}
+
+function show_region_attribute_info() {
+    var region_info = '<table class="editable_table">';
+    for (let attribute of attribute_list) {
+	region_info += '<tr><td onclick="update_attribute_name(\'' + attribute + '\')">' + attribute + '</td>';
+	if ( current_selected_region_id != -1 ) {
+	    if ( annotation_list[current_image_id].regions[current_selected_region_id].annotations.has(attribute) ) {
+		var attribute_value = annotation_list[current_image_id].regions[current_selected_region_id].annotations.get(attribute);
+		region_info += '<td onclick="update_attribute_value(\'' + attribute + '\')">' + attribute_value + '</td></tr>';
+	    } else {
+		region_info += '<td onclick="update_attribute_value(\'' + attribute + '\')">' + '<span style="color:#00aad4">[click to a set value]</span>' + '</td></tr>';
+	    }
+	} else {
+	    region_info += '</tr>';
+	}
+    }
+    region_info += "</table>";
+    region_info_table.innerHTML = region_info;
+
+    document.getElementById("info_attribute").innerHTML = attribute_list.size;
+}
+
+function update_attribute_name(attribute) {
+    is_user_updating_attribute_name = true;
+    current_update_attribute_name = attribute;
+    
+    show_message("Press Enter to save the updated attribute name");
+    var region_info = '<table style="border: 0;">'
+    region_info += '<tr><td style="border: 0;" colspan="2"><textarea id="textarea_attribute_name" rows="8" cols="20">' + attribute + '</textarea></td></tr>';
+    region_info += '<tr><td style="border: 0;"><button type="button" onclick="save_attribute_name()">Save</button></td>';
+    region_info += '<td style="border: 0;"><button type="button" onclick="cancel_attribute_update()">Cancel</button></td></tr>';
+
+    region_info += '</table>';
+    region_info_table.innerHTML = region_info;
+    document.getElementById("textarea_attribute_name").focus();
+}
+
+// @todo: find a way to update an element in Set data structure
+function save_attribute_name() {
+    var new_attribute_name = document.getElementById("textarea_attribute_name").value;
+
+    if ( new_attribute_name == "" ) {
+	// delete this attribute
+	attribute_list.delete(current_update_attribute_name);
+    } else {
+	var updated_attribute_list = new Set();
+	for (let attribute of attribute_list) {
+	    if ( attribute == current_update_attribute_name ) {
+		updated_attribute_list.add();
+	    } else {
+		updated_attribute_list.add(attribute);
+	    }
+	}
+	attribute_list.clear();
+	attribute_list = new Set(updated_attribute_list);
+    }
+    is_user_updating_attribute_name = false;
+    current_update_attribute_name = "";
+    show_region_attribute_info();
+}
+
+function cancel_attribute_update() {
+    is_user_updating_attribute_name = false;
+    current_update_attribute_name = "";
+    show_region_attribute_info();
+}
+
+function update_attribute_value(attribute) {
+    is_user_updating_attribute_value = true;
+    current_update_attribute_name = attribute;
+
+    var region_info = '<table>'
+    region_info += '<tr><td colspan="2">' + attribute + '</td></tr>';
+    region_info += '<tr><td colspan="2"><textarea id="textarea_attribute_value" rows="8" cols="20">' + attribute + '</textarea></td></tr>';
+    region_info += '<tr><td><button type="button" onclick="save_attribute_value()">Save</button></td>';
+    region_info += '<td><button type="button" onclick="cancel_attribute_update()">Cancel</button></td></tr>';
+
+    region_info += '</table>'
+
+    region_info_table.innerHTML = region_info;
+    document.getElementById("textarea_attribute_value").focus();
+}
+
+function save_attribute_value() {
+    var new_attribute_value = document.getElementById("textarea_attribute_value").value;
+    add_annotation(current_image_id, current_selected_region_id, current_update_attribute_name, new_attribute_value);
+    is_user_updating_attribute_name = false;
+    current_update_attribute_name = "";
+    show_region_attribute_info();
 }
 
 function parse_annotation_str(str) {
@@ -1285,12 +1367,12 @@ function ImageAnnotation(filename, size) {
     this.regions = [];
 }
 
-function ImageRegion(x0, y0, x1, y1, description) {
+function ImageRegion(x0, y0, x1, y1) {
     this.x0 = Math.round(x0);
     this.y0 = Math.round(y0);
     this.x1 = Math.round(x1);
     this.y1 = Math.round(y1);
-    this.description = description;
+    this.annotations = new Map();
 }
 
 function get_image_id(filename, size) {
@@ -1305,16 +1387,16 @@ function init_image_annotation(filename, size) {
     return image_id;
 }
 
-function add_image_region(image_id, x0, y0, x1, y1, description) {
-    if( typeof description == "undefined" ) {
-	description = '';
-    }
-    console.log("description=" + description);
-    var r = new ImageRegion(x0, y0, x1, y1, description);
+function add_image_region(image_id, x0, y0, x1, y1) {
+    var r = new ImageRegion(x0, y0, x1, y1);
     var region_id = annotation_list[image_id].regions.push(r);
     save_annotation_list();
     region_id = region_id - 1; // 0 based indexing
     return region_id;
+}
+
+function add_annotation(image_id, region_id, key, value) {
+    annotation_list[image_id].regions[region_id].annotations.set(key, value);
 }
 
 function add_image_region_description(image_id, region_id, description) {
