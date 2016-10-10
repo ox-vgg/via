@@ -111,7 +111,8 @@
       .box canvas {
       position: relative;
       }
-      
+
+      /* Panel in the left hand side of image canvas */
       .sidebar {
       font-family: Mono;
       font-size: small;
@@ -119,20 +120,19 @@
       padding: 1em 1em;
       vertical-align: top;
       }
-
       .sidebar .title {
       font-family: Sans;
       font-size: large;
       padding-top: 1em;
       padding-bottom: 0.5em;
       }
-      .sidebar table {
+      .sidebar .info table {
       border-collapse: collapse;
       table-layout: fixed;
       min-width: 250px;
       max-width: 400px;
       }
-      .sidebar table, td {
+      .sidebar .info table, td {
       border: 1px solid #cccccc;
       padding: 0 0.4em;
       line-height: 2em;
@@ -140,6 +140,26 @@
       text-overflow: ellipsis;
       }
 
+      /* Toolbar to select region shape */
+      .region_shape {
+      display: inline-block;
+      stroke: #333333;
+      fill: #cccccc;
+      background-color: #ffffff;
+      padding: 0 0.5em;
+      }
+      .region_shape:hover {
+      fill: #ff0000;
+      cursor: pointer;
+      }
+      .region_shape_selected {
+      background-color: #e5e5e5;
+      }
+      .region_shape_selected:hover {
+      fill: #cccccc;
+      }
+      
+      
       #message_panel {
       position: fixed;
       left: 0;
@@ -176,12 +196,32 @@
       background-color: #cccccc;
       color: #000000;
       }
+      
       .action_text_link {
       background-color: #aaeeff;
       color: #000000;
       }
       .action_text_link:hover {
       cursor: pointer;
+      }
+
+      .clickable_tbl_entry {
+      background-color: #ffffff;
+      color: #000000;
+      }
+      .clickable_tbl_entry:hover {
+      background-color: #333333;
+      color: #cccccc;
+      cursor: pointer;
+      }
+      .selected_tbl_entry {
+      background-color: #333333;
+      color: #cccccc;
+      }
+      .selected_tbl_entry:hover {
+      background-color: #333333;
+      color: #cccccc;
+      cursor: default;
       }
     </style>
   </head>
@@ -192,31 +232,27 @@
       <defs>
         <symbol id="via_logo">
           <title>VGG Image Annotator Logo</title>
-	  <rect
-	     style="fill:none;fill-opacity:1;stroke:#cccccc;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-	     id="rect4153-6-2"
-	     width="37.347492"
-	     height="22.650368"
-	     x="20.995586"
-	     y="-51.218704"
-	     transform="matrix(0,1,-1,0,0,0)" />
-	  <rect
-	     style="fill:none;fill-opacity:1;stroke:#cccccc;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-	     id="rect4153-6-2-9"
-	     width="37.347492"
-	     height="22.650368"
-	     x="12.841601"
-	     y="-35.217949"
-	     transform="matrix(0,1,-1,0,0,0)" />
-	  <rect
-	     style="fill:none;fill-opacity:1;stroke:#cccccc;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-	     id="rect4153-6-2-3"
-	     width="37.347492"
-	     height="22.650368"
-	     x="5.2432055"
-	     y="-45.178741"
-	     transform="matrix(0,1,-1,0,0,0)" />
-        </symbol>       
+	  <rect width="37.347492" height="22.650368" x="20.995586" y="-51.218704" transform="matrix(0,1,-1,0,0,0)" />
+	  <rect width="37.347492" height="22.650368" x="12.841601" y="-35.217949" transform="matrix(0,1,-1,0,0,0)" />
+	  <rect width="37.347492" height="22.650368" x="5.2432055" y="-45.178741" transform="matrix(0,1,-1,0,0,0)" />
+        </symbol>
+	<symbol id="shape_rectangle">
+	  <title>Rectangular region shape</title>
+	  <rect width="20" height="12" x="6" y="10" transform="matrix(1,0,0,1,0,0)" />
+	</symbol>
+	<symbol id="shape_circle">
+	  <title>Circular region shape</title>
+	  <circle r="10" cx="16" cy="16" transform="matrix(1,0,0,1,0,0)" />
+	</symbol>
+	<symbol id="shape_ellipse">
+	  <title>Elliptical region shape</title>
+	  <ellipse rx="12" ry="8" cx="16" cy="16" transform="matrix(1,0,0,1,0,0)" />
+	</symbol>
+	<symbol id="shape_polyline">
+	  <title>Polyline region shape</title>
+	  <path d="m 10,4 -7,15 10,10 12,0 5,-10" transform="matrix(1,0,0,1,0,0)" />
+	</symbol>
+
       </defs>
     </svg>
     <!-- End: Define SVG for icons -->
@@ -224,7 +260,7 @@
     <div class="wrapper">
       <div id="navbar">
 	<ul>
-	  <li><svg height="40" viewBox="0 0 64 64"><use xlink:href="#via_logo"></use></svg></li>
+	  <li><svg style="stroke: #cccccc; fill: #000000;" height="40" viewBox="0 0 64 64"><use xlink:href="#via_logo"></use></svg></li>
           <li><a onclick="show_home_panel()" title="Home">Home</a></li>
           <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662</a>
 	    <div class="dropdown-content">
@@ -249,50 +285,67 @@
 	  <li><a onclick="show_settings_panel()" title="Change settings of VGG Image Annotator">Settings</a>
 	  <li><a onclick="show_about_panel()" title="About VGG Image Annotator">About</a>
 	</ul>
-	
+
 	<input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">
       </div> <!-- end of navbar -->
 
       <div class="main">
 	<div class="box sidebar" id="info_panel">
+	  <div class="title">Select Region Shape</div>
+	  <div>
+	    <div class="region_shape region_shape_selected" onclick="select_region_shape('rect')" id="region_shape_rect"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></div>
+	    <div class="region_shape" onclick="select_region_shape('circle')" id="region_shape_circle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></div>
+	    <div class="region_shape" onclick="select_region_shape('ellipse')" id="region_shape_ellipse"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></div>
+	    <div class="region_shape" onclick="select_region_shape('polyline')" id="region_shape_polyline"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polyline"></use></svg></div>
+	  </div>
+	  
+
 	  <div class="title">Image Information</div>
-	  <table id="image_info_table">
-	    <tr>
-	      <td style="width: 7em;">File Id</td>
-	      <td id="info_current_fileid"></td>
-	    </tr>
-	    <tr>
-	      <td>File</td>
-	      <td id="info_current_filename"><span class="action_text_link" onclick="load_images()" title="Import existing attributes from a file">[click to load images]</span></td>
-	    </tr>
-	    <tr>
-	      <td>Region</td>
-	      <td id="info_region"></td>
-	    </tr>
-	    <tr>
-	      <td>Annotation</td>
-	      <td id="info_annotation"></td>
-	    </tr>	
-	    <tr>
-	      <td>Attributes</td>
-	      <td id="info_attribute"></td>
-	    </tr>	
-	  </table>
+	  <div class="info">
+	    <table id="image_info_table">
+	      <tr>
+		<td style="width: 7em;">File Id</td>
+		<td id="info_current_fileid"></td>
+	      </tr>
+	      <tr>
+		<td>File</td>
+		<td id="info_current_filename"><span class="action_text_link" onclick="load_images()" title="Import existing attributes from a file">[click to load images]</span></td>
+	      </tr>
+	      <tr>
+		<td>Region</td>
+		<td id="info_region"></td>
+	      </tr>
+	      <tr>
+		<td>Annotation</td>
+		<td id="info_annotation"></td>
+	      </tr>	
+	      <tr>
+		<td>Attributes</td>
+		<td id="info_attribute"></td>
+	      </tr>	
+	    </table>
+	  </div>
 	  
 	  <div class="title">Region Attributes</div>
 	  <table id="region_info_table"></table>
 	  
 	  <div class="title">Keyboard Shortcuts</div>
-	  <table>
-	    <tr>
-	      <td style="width: 5.6em;">Alt + d</td>
-	      <td>Delete image region</td>
-	    </tr>
-	    <tr>
-	      <td>Alt + n/p</td>
-	      <td>Next/Previous image</td>
-	    </tr>
-	  </table>
+	  <div class="info">
+	    <table>
+	      <tr>
+		<td style="width: 5.6em;">Alt + d</td>
+		<td>Delete image region</td>
+	      </tr>
+	      <tr>
+		<td>n/p</td>
+		<td>Next/Previous image</td>
+	      </tr>
+	      <tr>
+		<td>Alt + l</td>
+		<td>Load or add images</td>
+	      </tr>
+	    </table>
+	  </div>
 	</div>
 	
 	<div class="box" id="image_panel">

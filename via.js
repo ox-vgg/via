@@ -3,29 +3,52 @@
  *
  * Copyright (C) 2016, Abhishek Dutta <adutta@robots.ox.ac.uk>
  * Aug. 31, 2016
+ *
+ * Notes:
+ *  - Style guide : [https://google.github.io/styleguide/javascriptguide.xml]
  */
 
 var VIA_VERSION = "0.1b";
-var image_panel_width, image_panel_height;
-var canvas_width, canvas_height;
+var VIA_REGION_SHAPE = { RECT:'rect',
+			 CIRCLE:'circle',
+			 ELLIPSE:'ellipse',
+			 POLYLINE:'polyline'};
+var VIA__VIA_REGION_EDGE_TOL = 5;
 
-var user_uploaded_images = [];
-var image_filename_list = [];
-var current_image_index = -1;
-var current_image_id; // filename+length
-var current_image_filename;
+var _via_images = {};                // everything related to an image
+var _via_images_count = 0;
+var _via_canvas_regions = [];   // image regions spec. in canvas space
+var _via_canvas_scale = 1.0;  // current scale of canvas image
 
-var current_image;
-var current_image_loaded = false;
+var _via_image_id_list = [];         // array of image id (in original order)
+var _via_image_id = '';              // id={filename+length} of current image
+var _via_image_index = -1;           // index 
 
-var user_drawing_region = false;
-var user_entering_annotation = false;
-var click_x0 = 0; var click_y0 = 0;
-var click_x1 = 0; var click_y1 = 0;
+var _via_current_image_filename;
+var _via_current_image;
 
-var region_count = 0;
-var current_selected_region_annotation_count = 0;
-var current_selected_region_id = -1;
+// image canvas
+var _via_canvas = document.getElementById("image_canvas");
+var _via_ctx = _via_canvas.getContext("2d");
+var _via_canvas_width, _via_canvas_height;
+
+// state of the application
+var _via_user_entering_annotation = false;
+var _via_is_user_drawing_region = false;
+var _via_current_image_loaded = false;
+var is_window_resized = false;
+var _via_is_user_resizing_region = false;
+var _via_is_region_being_moved = false;
+
+// region
+var _via_current_shape = VIA_REGION_SHAPE.RECT;
+var _via_current_sel_region_id = -1;
+var _via_click_x0 = 0; var _via_click_y0 = 0;
+var _via_click_x1 = 0; var _via_click_y1 = 0;
+var _via_region_edge = [-1, -1];
+var _via_box_click_x, _via_box_click_y;
+
+// attributes
 var attribute_list = new Set();
 
 // for debugging
@@ -43,7 +66,9 @@ var attribute_list = new Set();
 // attribute_list.add("type_of_cut");
 
 var annotation_list = new Map();
-var image_id_list = [];
+var image_panel_width, image_panel_height;
+
+
 
 // bounding box coordinates in original canvas space
 var canvas_x0 = new Map(); var canvas_y0 = new Map();
@@ -51,9 +76,6 @@ var canvas_x1 = new Map(); var canvas_y1 = new Map();
 var canvas_scale = new Map(); // canvas_x0 = x0 * canvas_scale
 
 var status_prefix = "";
-
-var image_canvas = document.getElementById("image_canvas");
-var image_context = image_canvas.getContext("2d");
 
 var invisible_file_input = document.getElementById("invisible_file_input");
 
@@ -74,14 +96,6 @@ var current_update_attribute_name = "";
 
 var region_info_table = document.getElementById("region_info_table");
 
-var is_window_resized = false;
-
-var is_user_resizing_region = false;
-var region_edge = [-1, -1];
-var region_edge_tol = 5;
-
-var region_being_moved = false;
-var box_click_x, box_click_y;
 
 var zoom_active = false;
 var ZOOM_SIZE_PERCENT = 0.2;
@@ -101,33 +115,30 @@ var BBOX_BOUNDARY_LINE_COLOR = "#1a1a1a";
 var BBOX_SELECTED_FILL_COLOR = "#ffffff";
 var BBOX_SELECTED_OPACITY = 0.3;
 
+function ImageAttributes(fileref, filename, size) {
+    this.filename = filename;
+    this.size = size;
+    this.fileref = fileref;
+    this.attributes = new Map(); // image attributes
+    this.base64_data = '';       // image data stored as base 64
+    this.regions = [];
+}
+
+function ImageRegion() {
+    this.pathd = '';             // SVG path d attribute
+    this.attributes = new Map(); // region attributes
+}
+
+function get_image_id(filename, size) {
+    return filename + size;
+}
+
+
 function main() {
     console.log("via");
-    show_home_panel();
-    show_current_attributes();
-    
-    // initialize local storage
-    if ( check_local_storage ) {
-	is_local_storage_available = true;
-
-	if ( localStorage.getItem('annotation_list') ) {
-	    localStorage.clear();
-	    /*
-	    load_image_annotation_from_localstorage();
-
-	    populate_annotation_list_snippet();
-	    image_canvas.style.display = "none";
-	    via_start_info_panel.style.display = "none";
-	    help_panel.style.display = "none";
-	    via_session_data_panel.style.display = "block";
-	    */
-	}
-
-	show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
-    } else {
-	is_local_storage_available = false;
-	show_message("Warning: your browser does not allow local storage. Remember to save your work before exiting.");
-    }
+    show_home_panel();   
+    show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
+    //load_images();
 }
 
 //
@@ -136,7 +147,7 @@ function main() {
 function show_home_panel() {
     via_start_info_panel.style.display = "block";
     about_panel.style.display = "none";
-    image_canvas.style.display = "none";
+    _via_canvas.style.display = "none";
     session_data_panel.style.display = "none";
 }
 function load_images() {
@@ -148,7 +159,11 @@ function load_images() {
     }
 }
 function add_images() {
-    show_message("Not implemented yet!");
+    if (invisible_file_input) {
+	invisible_file_input.accept='image/*';
+	invisible_file_input.onchange = upload_local_images;
+        invisible_file_input.click();
+    }
 }
 function save_annotations(type) {
     console.log('save_annotations: ' + type);
@@ -180,38 +195,52 @@ function show_settings_panel() {
 }
 function show_about_panel() {
     about_panel.style.display = "block";
-    image_canvas.style.display = "none";
+    _via_canvas.style.display = "none";
     via_start_info_panel.style.display = "none";
     session_data_panel.style.display = "none";
 }
 function delete_all_attributes() {
     attribute_list.clear();
     show_current_attributes();
-    redraw_image_canvas();
+    redraw__via_canvas();
 }
 
 //
 // Local file uploaders
 //
 function upload_local_images(event) {
-        user_uploaded_images = event.target.files;
-    for ( var i=0; i<user_uploaded_images.length; ++i) {
-        var filename = user_uploaded_images[i].name;
-	var size = user_uploaded_images[i].size;
-	var image_id = init_image_annotation(filename, size);
-	image_id_list[i] = image_id;
+    let user_selected_images = event.target.files;
+    let original_image_count = _via_images_count;
+    for ( var i=0; i<user_selected_images.length; ++i) {
+        let filename = user_selected_images[i].name;
+	let size = user_selected_images[i].size;
+	let img_id = get_image_id(filename, size);
 
-	canvas_x0[image_id] = []; canvas_y0[image_id] = [];
-        canvas_x1[image_id] = []; canvas_y1[image_id] = [];
-        canvas_scale[image_id] = 1.0;
-	console.log(filename + size);
+	if ( _via_images[img_id] ) {
+	    show_message('Image ' + filename + ' already loaded. Skipping!');
+	} else {
+	    _via_images[img_id] = new ImageAttributes(user_selected_images[i], filename, size);
+	    _via_image_id_list.push(img_id);
+	    _via_images_count += 1;
+
+	    if (i==0 &&
+		_via_images_count != 1) {
+		// save the index of recently added image
+		added_image_index = _via_images_count - 1;
+	    }
+	}
     }
-    
-    if ( user_uploaded_images.length > 0 ) {
-        load_local_file(0);
+
+    if ( _via_images ) {
+	if (_via_image_index == -1) {
+	    show_image(0);
+	} else {
+	    show_image( original_image_count );
+	}
     } else {
-        show_message("Please upload some files!", false);
+	show_message("Please upload some image files!");
     }
+
 }
 
 function upload_local_attributes(event) {
@@ -244,12 +273,15 @@ function upload_local_attributes(event) {
 
 	    show_message('Imported ' + added_attributes_count + ' attributes');
 	    show_current_attributes();
-	    redraw_image_canvas();
+	    redraw__via_canvas();
         }, false);
         csv_reader.readAsText(csv_file);
     }
 }
 
+//
+// Data Importer
+//
 function parse_csv_file(csv_file) {
     if (!csv_file) {
         return;
@@ -277,67 +309,688 @@ function upload_local_annotations(user_selected_files) {
 }
 
 
-function populate_annotation_list_snippet() {
-    var table_str = "<table style='margin:auto; padding: 1em; line-height:1.5em; text-align: left;'><tr><th>Filename</th><th>description</th><th>annotations</th></tr>";
-    var entry_count = 0;
-    for ( var image_id in annotation_list ) {
-	var filename = annotation_list[image_id].filename;
-	var file_description = annotation_list[image_id].description;
-	var file_annotations = "";
-	for ( var ri=0; ri<annotation_list[image_id].regions.length; ++ri) {
-	    file_annotations += annotation_list[image_id].regions[ri].description + ", ";
-	}
-	file_annotations = file_annotations.substring(0, file_annotations.length - 2); // remove last comma
+//
+// Data Exporter
+//
+
+//
+// Setup Elements in User Interface
+//
+function show_image(image_index) {
+    let img_id = _via_image_id_list[image_index]
+    if (_via_images[img_id]) {
+	let img_filename = _via_images[img_id].filename;
+        let img_reader = new FileReader();
+
+        img_reader.addEventListener( "progress", function(e) {
+            show_message("Loading image " + img_filename + " ... ");
+        }, false);
+
+        img_reader.addEventListener( "error", function() {
+            show_message("Error loading image " + img_filename + " !");
+        }, false);
+        
+        img_reader.addEventListener( "load", function() {
+            _via_current_image = new Image();
+            _via_current_image.addEventListener( "load", function() {
+		_via_image_id = img_id;
+		_via_image_index = image_index;
+		_via_current_image_filename = img_filename;
+		_via__via_current_image_loaded = true;
+		
+                // retrive image panel dim. to stretch _via_canvas to fit panel
+                //main_content_width = 0.9*image_panel.offsetWidth;
+		canvas_panel_width = document.documentElement.clientWidth - 250;
+		canvas_panel_height = document.documentElement.clientHeight - 2.2*navbar_panel.offsetHeight;
+                 
+                _via_canvas_width = _via_current_image.naturalWidth;
+                _via_canvas_height = _via_current_image.naturalHeight;
+
+                var scale_width, scale_height;
+                if ( _via_canvas_width > canvas_panel_width ) {
+                    // resize image to match the panel width
+                    let scale_width = canvas_panel_width / _via_current_image.naturalWidth;
+                    _via_canvas_width = canvas_panel_width;
+                    _via_canvas_height = _via_current_image.naturalHeight * scale_width;
+                }
+                // resize image if its height is larger than the image panel
+                if ( _via_canvas_height > canvas_panel_height ) {
+                    let scale_height = canvas_panel_height / _via_canvas_height;
+                    _via_canvas_height = canvas_panel_height;
+                    _via_canvas_width = _via_canvas_width * scale_height;
+                }
+
+                _via_canvas_width = Math.round(_via_canvas_width);
+                _via_canvas_height = Math.round(_via_canvas_height);
+                _via_canvas_scale = _via_current_image.naturalWidth / _via_canvas_width;
+                
+                // set the canvas size to match that of the image
+                _via_canvas.height = _via_canvas_height;
+                _via_canvas.width = _via_canvas_width;
+		//console.log("Canvas = " + _via_canvas.width + "," + _via_canvas.height);
+               
+                _via_click_x0 = 0; _via_click_y0 = 0;
+                _via_click_x1 = 0; _via_click_y1 = 0;
+                _via_is_user_drawing_region = false;
+                user_entering_annotation = false;
+                is_window_resized = false;
+		_via_canvas_regions = [];
+
+		// draw image on the canvas
+                _via_ctx.drawImage(_via_current_image, 0, 0, _via_canvas_width, _via_canvas_height);
+		_via_canvas.focus();
+
+		clear_image_display_area();
+		_via_canvas.style.display = "inline";
+
+                _via_current_image_loaded = true;
+            });
+            _via_current_image.src = img_reader.result;
+        }, false);
+        img_reader.readAsDataURL( _via_images[img_id].fileref );
+    }
+}
+
+function clear_image_display_area() {
+    _via_canvas.style.display = "none";
+    about_panel.style.display = 'none';
+    via_start_info_panel.style.display = 'none';
+    session_data_panel.style.display = 'none';
+}
+
+//
+// UI Control Elements (buttons, etc)
+//
+
+// updates currently selected region shape
+function select_region_shape(sel_shape_name) {
+    for (var shape_name in VIA_REGION_SHAPE) {
+	let ui_element = document.getElementById('region_shape_' + VIA_REGION_SHAPE[shape_name]);
+	ui_element.classList.remove('region_shape_selected');
+    }
+
+    _via_current_shape = sel_shape_name;
+    let ui_element = document.getElementById('region_shape_' + _via_current_shape);
+    ui_element.classList.add('region_shape_selected');
+    console.log(_via_current_shape);
+}
+
+// enter annotation mode on double click
+_via_canvas.addEventListener('dblclick', function(e) {
+    _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
+
+    var region_id = is_inside_region(_via_click_x1, _via_click_y1);
+    if ( region_id >= 0 ) {
+	_via_current_sel_region_id = -1;
+	user_entering_annotation = true;
+	_via_current_sel_region_id = region_id;
+	annotate_region(_via_current_sel_region_id);
+
+	show_message("Please enter annotation");
+    }
+
+}, false);
+
+// user clicks on the canvas
+_via_canvas.addEventListener('mousedown', function(e) {
+    _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
+
+    if ( _via_current_sel_region_id >= 0 ) {
+	_via_region_edge = is_on_region_corner(_via_click_x0, _via_click_y0, VIA__VIA_REGION_EDGE_TOL);
 	
-	table_str += "<tr><td>" + filename + "</td>";
-	table_str += "<td>" + file_description + "</td>";
-	table_str += "<td>" + file_annotations + "</td></tr>";
+	if ( _via_region_edge[1] > 0 &&
+	     !_via_is_user_resizing_region ) {
+	    if ( _via_region_edge[0] == _via_current_sel_region_id ) {
+		_via_is_user_resizing_region = true;
+	    } else {
+		_via_current_sel_region_id = _via_region_edge[0];
+	    }
+	} else {
+	    let region_id = is_inside_region(_via_click_x0, _via_click_y0);
+	    if ( region_id >=0 &&
+	         !_via_is_region_being_moved ) {
+		if( region_id == _via_current_sel_region_id ) {
+		    _via_is_region_being_moved = true;
+		    _via_box_click_x = _via_click_x0;
+		    _via_box_click_y = _via_click_y0;
+		} else {
+		    _via_current_sel_region_id = region_id;
+		    _via_is_region_being_moved = true;
+		    _via_box_click_x = _via_click_x0;
+		    _via_box_click_y = _via_click_y0;
+		}
+	    }
+	}
+    } else {
+	// this is a bounding box drawing event
+	_via_is_user_drawing_region = true;
+	_via_user_entering_annotation = false;
+	_via_is_user_resizing_region = false;
+	_via_is_region_being_moved = false;
+	_via_current_sel_region_id = -1;	
+    }
+    e.preventDefault();
+}, false);
 
-	if ( entry_count >= 1 ) {
-	    table_str += "<tr><td>...</td>";
-	    table_str += "<td>...</td>";
-	    table_str += "<td>...</td></tr>";
+_via_canvas.addEventListener('mouseup', function(e) {
+    _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
 
+    var dx = Math.abs(_via_click_x1 - _via_click_x0);
+    var dy = Math.abs(_via_click_y1 - _via_click_y0);
+    
+    if ( dx < 5 || dy < 5 ) {
+        _via_is_user_drawing_region = false;
+        var region_id = is_inside_region(_via_click_x0, _via_click_y0);
+        if ( region_id >= 0 ) {
+	    // first click selects the region for further action
+	    _via_current_sel_region_id = region_id;
+	    user_entering_annotation = false;
+
+	    update_current_region_annotation_count();
+	    
+	    redraw__via_canvas();
+	    show_annotation_info();
+	    show_current_attributes();
+        } else {
+	    // click on other non-region area
+	    if ( user_entering_annotation ) {
+                annotation_textarea.style.visibility = "hidden";
+                _via_current_sel_region_id = -1;
+                user_entering_annotation = false;
+	    }
+	    if ( _via_current_sel_region_id != -1 ) {
+		// clear all region selection
+		_via_current_sel_region_id = -1;		
+	    }
+	    redraw__via_canvas();
+	    show_annotation_info();
+	    show_current_attributes();
+        }
+    }
+    if ( _via_is_region_being_moved ) {
+	_via_is_region_being_moved = false;
+	_via_canvas.style.cursor = "default";
+
+	var move_x = (_via_box_click_x - _via_click_x1);
+	var move_y = (_via_box_click_y - _via_click_y1);
+
+	canvas_x0[current_image_id][_via_current_sel_region_id] -= move_x;
+	canvas_y0[current_image_id][_via_current_sel_region_id] -= move_y;
+	canvas_x1[current_image_id][_via_current_sel_region_id] -= move_x;
+	canvas_y1[current_image_id][_via_current_sel_region_id] -= move_y;
+
+	annotation_list[current_image_id].regions[_via_current_sel_region_id].x0 -= move_x*canvas_scale[current_image_id];
+	annotation_list[current_image_id].regions[_via_current_sel_region_id].y0 -= move_y*canvas_scale[current_image_id];
+	annotation_list[current_image_id].regions[_via_current_sel_region_id].x1 -= move_x*canvas_scale[current_image_id];
+	annotation_list[current_image_id].regions[_via_current_sel_region_id].y1 -= move_y*canvas_scale[current_image_id];
+	
+	redraw__via_canvas();
+    }
+
+    // this was a region resize event
+    if ( _via_is_user_resizing_region ) {
+	// _via_click(x0,y0) to _via_click(x1,y1)
+	_via_is_user_resizing_region = false;
+	_via_canvas.style.cursor = "default";
+	
+	// update the bounding box
+	var box_id = _via_region_edge[0];
+	var new_x0, new_y0, new_x1, new_y1;
+	
+	switch(_via_region_edge[1]) {
+	case 1: // top-left
+	    canvas_x0[current_image_id][box_id] = _via_click_x1;
+	    canvas_y0[current_image_id][box_id] = _via_click_y1;
+	    annotation_list[current_image_id].regions[box_id].x0 = _via_click_x1 * canvas_scale[current_image_id];
+	    annotation_list[current_image_id].regions[box_id].y0 = _via_click_y1 * canvas_scale[current_image_id];
+	    break;
+	case 3: // bottom-right
+	    canvas_x1[current_image_id][box_id] = _via_click_x1;
+	    canvas_y1[current_image_id][box_id] = _via_click_y1;
+	    
+	    annotation_list[current_image_id].regions[box_id].x1 = _via_click_x1 * canvas_scale[current_image_id];
+	    annotation_list[current_image_id].regions[box_id].y1 = _via_click_y1 * canvas_scale[current_image_id];
+	    break;
+	case 2: // top-right
+	    canvas_y0[current_image_id][box_id] = _via_click_y1;
+	    canvas_x1[current_image_id][box_id] = _via_click_x1;
+	    annotation_list[current_image_id].regions[box_id].y0 = _via_click_y1 * canvas_scale[current_image_id];
+	    annotation_list[current_image_id].regions[box_id].x1 = _via_click_x1 * canvas_scale[current_image_id];
+	    break;
+	case 4: // bottom-left
+	    canvas_x0[current_image_id][box_id] = _via_click_x1;
+	    canvas_y1[current_image_id][box_id] = _via_click_y1;
+	    annotation_list[current_image_id].regions[box_id].x0 = _via_click_x1 * canvas_scale[current_image_id];
+	    annotation_list[current_image_id].regions[box_id].y1 = _via_click_y1 * canvas_scale[current_image_id];
 	    break;
 	}
-	entry_count = entry_count + 1;
+	redraw__via_canvas();
+	_via_canvas.focus();
     }
-    table_str += "</table>";
-    annotation_list_snippet.innerHTML = table_str;
-}
 
-
-function load_image_annotation_from_localstorage() {
-    console.log(localStorage.getItem("annotation_list"));
-    var robj = JSON.parse(localStorage.getItem("annotation_list"));
-    console.log(robj);    
-    for ( var image_id in robj ) {
-	var image_annotation = new ImageAnnotation(robj[image_id].filename,
-						   robj[image_id].size,
-						   robj[image_id].description);
-	for ( var ri=0; ri<robj[image_id].regions.length; ++ri) {
-	    var region = new ImageRegion(robj[image_id].regions[ri].x0,
-					 robj[image_id].regions[ri].y0,
-					 robj[image_id].regions[ri].x1,
-					 robj[image_id].regions[ri].y1,
-					 robj[image_id].regions[ri].description);
-	    image_annotation.regions.push(region);
-	    console.log(region);
+    // this was a region drawing event
+    if (_via_is_user_drawing_region) {
+	let region_x0, region_y0, region_x1, region_y1;
+	// ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
+        if ( _via_click_x0 < _via_click_x1 ) {
+	    region_x0 = _via_click_x0;
+	    region_x1 = _via_click_x1;
+        } else {
+	    region_x0 = _via_click_x1;
+	    region_x1 = _via_click_x0;
 	}
-	annotation_list[image_id] = image_annotation;
-	console.log(annotation_list);
+
+	if ( _via_click_y0 < _via_click_y1 ) {
+	    region_y0 = _via_click_y0;
+	    region_y1 = _via_click_y1;
+	} else {
+	    region_y0 = _via_click_y1;
+	    region_y1 = _via_click_y0;
+	}
+
+	let original_img_region = new ImageRegion();
+	let canvas_img_region = new ImageRegion();
+	var dx = region_x1 - region_x0;
+	var dy = region_y1 - region_y0
+	switch(_via_current_shape) {
+	case VIA_REGION_SHAPE.RECT:
+	    original_img_region.attributes.set('name', 'rect');
+	    original_img_region.attributes.set('x', Math.round(region_x0 * _via_canvas_scale));
+	    original_img_region.attributes.set('y', Math.round(region_y0 * _via_canvas_scale));
+	    original_img_region.attributes.set('width', Math.round(dx * _via_canvas_scale));
+	    original_img_region.attributes.set('height', Math.round(dy * _via_canvas_scale));
+
+	    canvas_img_region.attributes.set('name', 'rect');
+	    canvas_img_region.attributes.set('x', Math.round(region_x0));
+	    canvas_img_region.attributes.set('y', Math.round(region_y0));
+	    canvas_img_region.attributes.set('width', dx);
+	    canvas_img_region.attributes.set('height', dy);
+	    break;
+	case VIA_REGION_SHAPE.CIRCLE:
+	    let circle_radius = Math.round(Math.sqrt( dx*dx + dy*dy ));
+	    original_img_region.attributes.set('name', 'circle');
+	    original_img_region.attributes.set('cx', Math.round(region_x0 * _via_canvas_scale));
+	    original_img_region.attributes.set('cy', Math.round(region_y0 * _via_canvas_scale));
+	    original_img_region.attributes.set('r', circle_radius * _via_canvas_scale);
+
+	    canvas_img_region.attributes.set('name', 'circle');
+	    canvas_img_region.attributes.set('cx', Math.round(region_x0));
+	    canvas_img_region.attributes.set('cy', Math.round(region_y0));
+	    canvas_img_region.attributes.set('r', circle_radius);
+	    break;
+	case VIA_REGION_SHAPE.ELLIPSE:
+	    original_img_region.attributes.set('name', 'ellipse');
+	    original_img_region.attributes.set('cx', Math.round(region_x0 * _via_canvas_scale));
+	    original_img_region.attributes.set('cy', Math.round(region_y0 * _via_canvas_scale));
+	    original_img_region.attributes.set('rx', Math.round(dx * _via_canvas_scale));
+	    original_img_region.attributes.set('ry', Math.round(dy * _via_canvas_scale));
+
+	    canvas_img_region.attributes.set('name', 'ellipse');
+	    canvas_img_region.attributes.set('cx', Math.round(region_x0));
+	    canvas_img_region.attributes.set('cy', Math.round(region_y0));
+	    canvas_img_region.attributes.set('rx', Math.round(dx));
+	    canvas_img_region.attributes.set('ry', Math.round(dy));
+	    break;
+	case VIA_REGION_SHAPE.POLYLINE:
+	    show_message("Not implemented");
+	    break;
+	}
+	_via_images[_via_image_id].regions.push(original_img_region);
+	_via_canvas_regions.push(canvas_img_region);
+	
+
+	console.log(_via_images[_via_image_id].regions);
+	console.log(_via_canvas_regions);
+	
+	//via_redraw_canvas();
+	//_via_is_user_drawing_region = false;
+	_via_canvas.focus();
+    }
+    
+});
+
+_via_canvas.addEventListener("mouseover", function(e) {
+    // change the mouse cursor icon
+    _via_redraw_canvas();
+});
+
+_via_canvas.addEventListener('mousemove', function(e) {
+    if ( !_via_current_image_loaded ) {
+	return;
+    }
+    
+    _via_current_x = e.offsetX; _via_current_y = e.offsetY;
+
+    if ( _via_current_sel_region_id >= 0) {
+	if ( !_via_is_user_resizing_region ) {
+	    _via_region_edge = is_on_region_corner(_via_current_x, _via_current_y, VIA__VIA_REGION_EDGE_TOL);   
+	    
+	    if ( _via_region_edge[0] == _via_current_sel_region_id ) {
+		switch(_via_region_edge[1]) {
+		case 1: // top-left
+		case 3: // bottom-right
+		    _via_canvas.style.cursor = "nwse-resize";
+		    break;
+		case 2: // top-right
+		case 4: // bottom-left		
+		    _via_canvas.style.cursor = "nesw-resize";
+		    break;
+		default:
+		    _via_canvas.style.cursor = "default";
+		}
+	    } else {
+		// a bounding box has been selected
+		var region_id = is_inside_region(_via_current_x, _via_current_y);
+		if ( region_id == _via_current_sel_region_id ) {
+		    _via_canvas.style.cursor = "move";
+		} else {
+		    _via_canvas.style.cursor = "default";
+		}
+	    }
+	}
+    }
+    
+    if(_via_is_user_drawing_region) {
+        // draw rectangle as the user drags the mouse cousor
+        _via_redraw_canvas(); // clear old intermediate rectangle
+
+        var w = Math.abs(_via_current_x - _via_click_x0);
+        var h = Math.abs(_via_current_y - _via_click_y0);
+        var top_left_x, top_left_y;
+
+        if ( _via_click_x0 < _via_current_x ) {
+            if ( _via_click_y0 < _via_current_y ) {
+                top_left_x = _via_click_x0;
+                top_left_y = _via_click_y0;
+            } else {
+                top_left_x = _via_click_x0;
+                top_left_y = _via_current_y;
+            }
+        } else {
+            if ( _via_click_y0 < _via_current_y ) {
+                top_left_x = _via_current_x;
+                top_left_y = _via_click_y0;
+            } else {
+                top_left_x = _via_current_x;
+                top_left_y = _via_current_y;
+            }
+        }
+
+	//draw_region(top_left_x, top_left_y, w, h, BBOX_BOUNDARY_FILL_COLOR_NEW);
+        _via_canvas.focus();
+    }
+    
+    if ( _via_is_user_resizing_region ) {
+	// user has clicked mouse on bounding box edge and is now moving it
+        redraw__via_canvas(); // clear old intermediate rectangle
+
+        var top_left_x, top_left_y, w, h;
+	var sel_box_id = _via_region_edge[0];
+	switch(_via_region_edge[1]) {
+	case 1: // top-left
+	    top_left_x = _via_current_x;
+	    top_left_y = _via_current_y;
+	    w = Math.abs(_via_current_x - canvas_x1[current_image_id][sel_box_id]);
+	    h = Math.abs(_via_current_y - canvas_y1[current_image_id][sel_box_id]);
+	    break;
+	case 3: // bottom-right
+	    top_left_x = canvas_x0[current_image_id][sel_box_id];
+	    top_left_y = canvas_y0[current_image_id][sel_box_id];
+	    w = Math.abs(top_left_x - _via_current_x);
+	    h = Math.abs(top_left_y - _via_current_y);
+	    break;
+	case 2: // top-right
+	    top_left_x = canvas_x0[current_image_id][sel_box_id];
+	    top_left_y = _via_current_y;
+	    w = Math.abs(top_left_x - _via_current_x);
+	    h = Math.abs(canvas_y1[current_image_id][sel_box_id] - _via_current_y);
+	    break;
+	case 4: // bottom-left
+	    top_left_x = _via_current_x;
+	    top_left_y = canvas_y0[current_image_id][sel_box_id];
+	    w = Math.abs(canvas_x1[current_image_id][sel_box_id] - _via_current_x);
+	    h = Math.abs(_via_current_y - canvas_y0[current_image_id][sel_box_id]);
+	    break;
+	}
+	draw_region(top_left_x, top_left_y, w, h,
+			  BBOX_BOUNDARY_FILL_COLOR_NEW);
+        _via_canvas.focus();
+    }
+
+    if ( _via_is_region_being_moved ) {
+	redraw__via_canvas();
+	var move_x = (_via_box_click_x - _via_current_x);
+	var move_y = (_via_box_click_y - _via_current_y);
+
+	var moved_x0 = canvas_x0[current_image_id][_via_current_sel_region_id] - move_x;
+	var moved_y0 = canvas_y0[current_image_id][_via_current_sel_region_id] - move_y;
+	var moved_x1 = canvas_x1[current_image_id][_via_current_sel_region_id] - move_x;
+	var moved_y1 = canvas_y1[current_image_id][_via_current_sel_region_id] - move_y;
+
+	draw_region(moved_x0, moved_y0,
+			  Math.abs(moved_x1 - moved_x0),
+			  Math.abs(moved_y1 - moved_y0),
+			  BBOX_BOUNDARY_FILL_COLOR_NEW);
+        _via_canvas.focus();	
+    }
+    
+    if ( zoom_active &&
+	 !_via_is_region_being_moved &&
+	 !_via_is_user_resizing_region ) {
+
+	var sf = canvas_scale[current_image_id];
+	var original_image_x = _via_current_x * sf;
+	var original_image_y = _via_current_y * sf;
+
+	//console.log("zoom_size_pixel=" + zoom_size_pixel + ", sf=" + sf);
+	//console.log("original_image_x=" + original_image_x + ", original_image_y=" + original_image_y);
+	
+	_via_redraw_canvas();
+	_via_ctx.drawImage(current_image,
+				original_image_x - 100,
+				original_image_y - 100,
+				2*100,
+				2*100,
+				_via_current_x - 200,
+				_via_current_y - 200,
+				2*200,
+				2*200
+			       );
+	
+	draw_region(_via_current_x - 200,
+			  _via_current_y - 200,
+			  2*200,
+			  2*200,
+			  ZOOM_BOUNDARY_COLOR);
+    }
+    
+    //console.log("_via_is_user_drawing_region=" + _via_is_user_drawing_region + ", _via_is_user_resizing_region=" + _via_is_user_resizing_region + ", _via_region_edge=" + _via_region_edge[0] + "," + _via_region_edge[1]);
+    
+    /* @todo: implement settings -> show guide
+       else {
+       redraw__via_canvas();
+       _via_current_x = e.offsetX; _via_current_y = e.offsetY;
+       _via_ctx.strokeStyle="#ffffff";
+       _via_ctx.setLineDash([0]);
+       _via_ctx.strokeRect(0, _via_current_y, canvas_width, 1);
+       _via_ctx.strokeRect(_via_current_x, 0, 1, canvas_height);
+       _via_canvas.focus();
+       }
+    */
+});
+
+//
+// Canvas update routines
+//
+
+function _via_redraw_canvas() {
+    if (_via_current_image_loaded) {
+        _via_ctx.drawImage(_via_current_image, 0, 0, _via_canvas_width, _via_canvas_height);
+        draw_all_region();
+        //draw_all_annotations();
     }
 }
 
-function discard_via_session_data() {
-    localStorage.clear();
-    show_message("Cleared annotations from previous session");
-    
-    image_canvas.style.display = "none";
-    via_start_info_panel.style.display = "block";
-    help_panel.style.display = "none";
-    via_session_data_panel.style.display = "none";
+function draw_all_region() {
+    _via_ctx.shadowBlur = 0;
+    var bbox_boundary_fill_color = "";
+
+    for (var i=0; i < _via_canvas_regions.length; ++i) {
+	let attr = _via_canvas_regions[i].attributes;
+	switch( attr.get('name') ) {
+	case VIA_REGION_SHAPE.RECT:
+	    draw_rect(attr.get('x'),
+		      attr.get('y'),
+		      attr.get('width'),
+		      attr.get('height'),
+		      BBOX_BOUNDARY_FILL_COLOR_NEW);
+	    break;
+	case VIA_REGION_SHAPE.CIRCLE:
+	    draw_circle(attr.get('cx'),
+			attr.get('cy'),
+			attr.get('r'),
+			BBOX_BOUNDARY_FILL_COLOR_NEW);
+	    break;
+	case 'ellipse':
+	case 'polyline':	    
+	}
+    }
 }
+
+function draw_rect(x, y, w, h, boundary_fill_color) {
+    //console.log('Drawing rectangle: x=' + x + ', y=' + y + ', w=' + w + ', h=' + h);
+    _via_ctx.strokeStyle = boundary_fill_color;
+    _via_ctx.lineWidth = BBOX_LINE_WIDTH/2;    
+    _via_ctx.strokeRect(x - BBOX_LINE_WIDTH/4,
+                             y - BBOX_LINE_WIDTH/4,
+                             w + BBOX_LINE_WIDTH/4,
+                             h + BBOX_LINE_WIDTH/4);
+    _via_ctx.lineWidth = BBOX_LINE_WIDTH/4;
+    _via_ctx.strokeStyle = BBOX_BOUNDARY_LINE_COLOR;
+    _via_ctx.strokeRect(x - BBOX_LINE_WIDTH/2 - 0.5,
+                             y - BBOX_LINE_WIDTH/2 - 0.5,
+                             w + BBOX_LINE_WIDTH,
+                             h + BBOX_LINE_WIDTH);
+    _via_ctx.strokeRect(x + BBOX_LINE_WIDTH/4 - 0.5,
+                             y + BBOX_LINE_WIDTH/4 - 0.5,
+                             w - BBOX_LINE_WIDTH/2,
+                             h - BBOX_LINE_WIDTH/2);
+}
+
+function draw_circle(cx, cy, r, boundary_fill_color) {
+    //console.log('Drawing circle: cx=' + cx + ', cy=' + cy + ', r=' + r);
+    _via_ctx.strokeStyle = boundary_fill_color;
+    _via_ctx.lineWidth = BBOX_LINE_WIDTH/2;    
+    _via_ctx.beginPath();
+    _via_ctx.arc(cx, cy, r, 0, 2*Math.PI, false);
+    _via_ctx.stroke();    
+}
+
+
+function draw_all_annotations() { 
+    _via_ctx.shadowColor = "transparent";
+    for (var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
+	var ri = annotation_list[current_image_id].regions[i];
+
+	var region_annotation_count = 0;
+	for (var key in ri.annotations) {
+	    region_annotation_count += 1;
+	}
+	    
+	if ( attribute_list.size > 0 &&
+	     region_annotation_count != attribute_list.size) {
+	    var annotation_str = (attribute_list.size - region_annotation_count) + ' missing attributes';
+	    var w = Math.abs(canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i]);
+	    _via_ctx.font = '12pt Sans';
+	    
+	    var bgnd_rect_height = 1.8 * _via_ctx.measureText('M').width;
+	    var bgnd_rect_width = _via_ctx.measureText(annotation_str).width;
+	    var bbox_width = Math.abs( canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i] );
+
+	    if ( bgnd_rect_width > bbox_width ) {
+		var max_str_len = Math.round(annotation_str.length * (bbox_width/bgnd_rect_width)) - 4;
+		annotation_str = annotation_str.substring(0, max_str_len) + '...';
+		bgnd_rect_width = bbox_width;
+	    } else {
+		bgnd_rect_width = bgnd_rect_width + 0.6*bgnd_rect_height;
+	    }
+
+	    // first, draw a background rectangle first
+	    _via_ctx.fillStyle = 'black';
+	    _via_ctx.globalAlpha=0.5;          
+	    _via_ctx.fillRect(canvas_x0[current_image_id][i],
+                                   canvas_y0[current_image_id][i] - bgnd_rect_height,
+                                   bgnd_rect_width,
+                                   bgnd_rect_height);
+	    // then, draw text over this background rectangle
+	    _via_ctx.globalAlpha=1.0;
+	    _via_ctx.fillStyle = 'yellow';
+	    _via_ctx.fillText(annotation_str,
+                                   canvas_x0[current_image_id][i] + bgnd_rect_height/4,
+                                   canvas_y0[current_image_id][i] - bgnd_rect_height/3);
+	}
+    }
+}
+
+//
+// Region collision routines
+//
+function is_inside_region(x, y) {
+    for (var i=0; i<region_count; ++i) {
+        if ( x > canvas_x0[current_image_id][i] &&
+             x < canvas_x1[current_image_id][i] &&
+             y > canvas_y0[current_image_id][i] &&
+             y < canvas_y1[current_image_id][i] ) {
+            return i;
+        }
+    }    
+    return -1;
+}
+
+function is_on_region_corner(x, y, tolerance) {
+    var cx0, cy0, cx1, cy1;
+    var _via_region_edge = [-1, -1]; // region_id, corner_id [top-left=1,top-right=2,bottom-right=3,bottom-left=4]
+    
+    for (var i=0; i<region_count; ++i) {
+	dx0 = Math.abs( canvas_x0[current_image_id][i] - x );
+	dy0 = Math.abs( canvas_y0[current_image_id][i] - y );
+	dx1 = Math.abs( canvas_x1[current_image_id][i] - x );
+	dy1 = Math.abs( canvas_y1[current_image_id][i] - y );
+	
+	_via_region_edge[0] = i;
+        if ( dx0 < tolerance && dy0 < tolerance ) {
+	    _via_region_edge[1] = 1;
+	    return _via_region_edge;
+	} else {
+	    if ( dx1 < tolerance && dy0 < tolerance ) {
+		_via_region_edge[1] = 2;
+		return _via_region_edge;
+	    } else {
+		if ( dx1 < tolerance && dy1 < tolerance ) {
+		    _via_region_edge[1] = 3;
+		    return _via_region_edge;
+		} else {
+		    if ( dx0 < tolerance && dy1 < tolerance ) {
+			_via_region_edge[1] = 4;
+			return _via_region_edge;
+		    }
+		}
+	    }
+	}
+    }
+    _via_region_edge[0] = -1;
+    return _via_region_edge;
+}
+
+function annotate_region(region_id) {
+    console.log('annotate_region='+region_id);
+    var region = annotation_list[current_image_id].regions[region_id];
+
+    // find the first 
+}
+
+
+
 
 function get_annotation_list(type) {
     if( type == "csv" ) {
@@ -396,626 +1049,13 @@ function save_data_to_local_file(data, filename) {
 }
 
 function update_ui_components() {
-    if ( !is_window_resized && current_image_loaded ) {
+    if ( !is_window_resized && _via_current_image_loaded ) {
         show_message("Resizing window ...", false);
         is_window_resized = true;
-        load_local_file(current_image_index);
+        show_image(current_image_index);
     }
 }
 
-// enter annotation mode on double click
-image_canvas.addEventListener('dblclick', function(e) {
-    click_x1 = e.offsetX; click_y1 = e.offsetY;
-
-    var region_id = is_inside_region(click_x1, click_y1);
-    if ( region_id >= 0 ) {
-	current_selected_region_id = -1;
-	user_entering_annotation = true;
-	current_selected_region_id = region_id;
-	annotate_region(current_selected_region_id);
-
-	show_message("Please enter annotation");
-    }
-
-}, false);
-
-image_canvas.addEventListener('mousedown', function(e) {
-    click_x0 = e.offsetX; click_y0 = e.offsetY;
-
-    if ( current_selected_region_id >= 0 ) {
-	region_edge = is_on_region_corner(click_x0, click_y0, region_edge_tol);
-	
-	if ( region_edge[1] > 0 &&
-	     !is_user_resizing_region ) {
-	    if ( region_edge[0] == current_selected_region_id ) {
-		is_user_resizing_region = true;
-	    } else {
-		current_selected_region_id = region_edge[0];
-	    }
-	} else {
-	    var region_id = is_inside_region(click_x0, click_y0);
-	    if ( region_id >=0 &&
-	         !region_being_moved ) {
-		if( region_id == current_selected_region_id ) {
-		    region_being_moved = true;
-		    box_click_x = click_x0;
-		    box_click_y = click_y0;
-		} else {
-		    current_selected_region_id = region_id;
-		    region_being_moved = true;
-		    box_click_x = click_x0;
-		    box_click_y = click_y0;
-		}
-	    }
-	}
-    } else {
-	// this is a bounding box drawing event
-	is_user_resizing_region = false;
-	region_being_moved = false;
-	user_drawing_region = true;
-	current_selected_region_id = -1;	
-    }
-    e.preventDefault();
-}, false);
-
-image_canvas.addEventListener('mouseup', function(e) {
-    click_x1 = e.offsetX; click_y1 = e.offsetY;
-
-    var dx = Math.abs(click_x1 - click_x0);
-    var dy = Math.abs(click_y1 - click_y0);
-    
-    if ( dx < 5 || dy < 5 ) {
-        user_drawing_region = false;
-        var region_id = is_inside_region(click_x0, click_y0);
-        if ( region_id >= 0 ) {
-	    // first click selects the bounding box for further action
-	    current_selected_region_id = region_id;
-	    user_entering_annotation = false;
-
-	    update_current_region_annotation_count();
-	    
-	    redraw_image_canvas();
-	    show_annotation_info();
-	    show_current_attributes();
-        } else {
-	    // click on other non-boxed area
-	    if ( user_entering_annotation ) {
-                annotation_textarea.style.visibility = "hidden";
-                current_selected_region_id = -1;
-                user_entering_annotation = false;
-	    }
-	    if ( current_selected_region_id != -1 ) {
-		// clear all bounding box selection
-		current_selected_region_id = -1;		
-	    }
-	    redraw_image_canvas();
-	    show_annotation_info();
-	    show_current_attributes();
-        }
-    }
-    if ( region_being_moved ) {
-	region_being_moved = false;
-	image_canvas.style.cursor = "default";
-
-	var move_x = (box_click_x - click_x1);
-	var move_y = (box_click_y - click_y1);
-
-	canvas_x0[current_image_id][current_selected_region_id] -= move_x;
-	canvas_y0[current_image_id][current_selected_region_id] -= move_y;
-	canvas_x1[current_image_id][current_selected_region_id] -= move_x;
-	canvas_y1[current_image_id][current_selected_region_id] -= move_y;
-
-	annotation_list[current_image_id].regions[current_selected_region_id].x0 -= move_x*canvas_scale[current_image_id];
-	annotation_list[current_image_id].regions[current_selected_region_id].y0 -= move_y*canvas_scale[current_image_id];
-	annotation_list[current_image_id].regions[current_selected_region_id].x1 -= move_x*canvas_scale[current_image_id];
-	annotation_list[current_image_id].regions[current_selected_region_id].y1 -= move_y*canvas_scale[current_image_id];
-	
-	redraw_image_canvas();
-    }
-
-    // this was a bounding box resize event
-    if ( is_user_resizing_region ) {
-	is_user_resizing_region = false;
-	image_canvas.style.cursor = "default";
-	
-	// update the bounding box
-	var box_id = region_edge[0];
-	var new_x0, new_y0, new_x1, new_y1;
-	
-	switch(region_edge[1]) {
-	case 1: // top-left
-	    canvas_x0[current_image_id][box_id] = click_x1;
-	    canvas_y0[current_image_id][box_id] = click_y1;
-	    annotation_list[current_image_id].regions[box_id].x0 = click_x1 * canvas_scale[current_image_id];
-	    annotation_list[current_image_id].regions[box_id].y0 = click_y1 * canvas_scale[current_image_id];
-	    break;
-	case 3: // bottom-right
-	    canvas_x1[current_image_id][box_id] = click_x1;
-	    canvas_y1[current_image_id][box_id] = click_y1;
-	    
-	    annotation_list[current_image_id].regions[box_id].x1 = click_x1 * canvas_scale[current_image_id];
-	    annotation_list[current_image_id].regions[box_id].y1 = click_y1 * canvas_scale[current_image_id];
-	    break;
-	case 2: // top-right
-	    canvas_y0[current_image_id][box_id] = click_y1;
-	    canvas_x1[current_image_id][box_id] = click_x1;
-	    annotation_list[current_image_id].regions[box_id].y0 = click_y1 * canvas_scale[current_image_id];
-	    annotation_list[current_image_id].regions[box_id].x1 = click_x1 * canvas_scale[current_image_id];
-	    break;
-	case 4: // bottom-left
-	    canvas_x0[current_image_id][box_id] = click_x1;
-	    canvas_y1[current_image_id][box_id] = click_y1;
-	    annotation_list[current_image_id].regions[box_id].x0 = click_x1 * canvas_scale[current_image_id];
-	    annotation_list[current_image_id].regions[box_id].y1 = click_y1 * canvas_scale[current_image_id];
-	    break;
-	}
-	redraw_image_canvas();
-	image_canvas.focus();
-    }
-
-    if (user_drawing_region) {
-	var regx0, regy0, regx1, regy1;
-	// ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
-        if ( click_x0 < click_x1 ) {
-	    regx0 = click_x0 * canvas_scale[current_image_id];
-	    regx1 = click_x1 * canvas_scale[current_image_id];
-	    
-	    canvas_x0[current_image_id].push(click_x0);
-	    canvas_x1[current_image_id].push(click_x1);		
-        } else {
-	    regx0 = click_x1 * canvas_scale[current_image_id];
-	    regx1 = click_x0 * canvas_scale[current_image_id];
-	    
-	    canvas_x0[current_image_id].push(click_x1);
-	    canvas_x1[current_image_id].push(click_x0);
-	}
-
-	if ( click_y0 < click_y1 ) {
-	    regy0 = click_y0 * canvas_scale[current_image_id];
-	    regy1 = click_y1 * canvas_scale[current_image_id];
-	    
-            canvas_y0[current_image_id].push(click_y0);
-            canvas_y1[current_image_id].push(click_y1);
-	} else {
-	    regy0 = click_y1 * canvas_scale[current_image_id];
-	    regy1 = click_y0 * canvas_scale[current_image_id];
-
-            canvas_y0[current_image_id].push(click_y1);
-            canvas_y1[current_image_id].push(click_y0);
-	}
-
-	add_image_region(current_image_id, regx0, regy0, regx1, regy1);
-
-	show_region_info();
-        user_drawing_region = false;
-        redraw_image_canvas();
-	image_canvas.focus();
-    }
-    
-});
-
-image_canvas.addEventListener("mouseover", function(e) {
-    redraw_image_canvas();
-});
-
-image_canvas.addEventListener('mousemove', function(e) {
-    if ( !current_image_loaded ) {
-	return;
-    }
-    
-    current_x = e.offsetX; current_y = e.offsetY;
-
-    if ( current_selected_region_id >= 0) {
-	if ( !is_user_resizing_region ) {
-	    region_edge = is_on_region_corner(current_x, current_y, region_edge_tol);   
-	    
-	    if ( region_edge[0] == current_selected_region_id ) {
-		switch(region_edge[1]) {
-		case 1: // top-left
-		case 3: // bottom-right
-		    image_canvas.style.cursor = "nwse-resize";
-		    break;
-		case 2: // top-right
-		case 4: // bottom-left		
-		    image_canvas.style.cursor = "nesw-resize";
-		    break;
-		default:
-		    image_canvas.style.cursor = "default";
-		}
-	    } else {
-		// a bounding box has been selected
-		var region_id = is_inside_region(current_x, current_y);
-		if ( region_id == current_selected_region_id ) {
-		    image_canvas.style.cursor = "move";
-		} else {
-		    image_canvas.style.cursor = "default";
-		}
-	    }
-	}
-    }
-    
-    if(user_drawing_region) {
-        // draw rectangle as the user drags the mouse cousor
-        redraw_image_canvas(); // clear old intermediate rectangle
-
-        var w = Math.abs(current_x - click_x0);
-        var h = Math.abs(current_y - click_y0);
-        var top_left_x, top_left_y;
-
-        if ( click_x0 < current_x ) {
-            if ( click_y0 < current_y ) {
-                top_left_x = click_x0;
-                top_left_y = click_y0;
-            } else {
-                top_left_x = click_x0;
-                top_left_y = current_y;
-            }
-        } else {
-            if ( click_y0 < current_y ) {
-                top_left_x = current_x;
-                top_left_y = click_y0;
-            } else {
-                top_left_x = current_x;
-                top_left_y = current_y;
-            }
-        }
-
-	draw_region(top_left_x, top_left_y, w, h,
-			  BBOX_BOUNDARY_FILL_COLOR_NEW);
-        image_canvas.focus();
-    }
-    
-    if ( is_user_resizing_region ) {
-	// user has clicked mouse on bounding box edge and is now moving it
-        redraw_image_canvas(); // clear old intermediate rectangle
-
-        var top_left_x, top_left_y, w, h;
-	var sel_box_id = region_edge[0];
-	switch(region_edge[1]) {
-	case 1: // top-left
-	    top_left_x = current_x;
-	    top_left_y = current_y;
-	    w = Math.abs(current_x - canvas_x1[current_image_id][sel_box_id]);
-	    h = Math.abs(current_y - canvas_y1[current_image_id][sel_box_id]);
-	    break;
-	case 3: // bottom-right
-	    top_left_x = canvas_x0[current_image_id][sel_box_id];
-	    top_left_y = canvas_y0[current_image_id][sel_box_id];
-	    w = Math.abs(top_left_x - current_x);
-	    h = Math.abs(top_left_y - current_y);
-	    break;
-	case 2: // top-right
-	    top_left_x = canvas_x0[current_image_id][sel_box_id];
-	    top_left_y = current_y;
-	    w = Math.abs(top_left_x - current_x);
-	    h = Math.abs(canvas_y1[current_image_id][sel_box_id] - current_y);
-	    break;
-	case 4: // bottom-left
-	    top_left_x = current_x;
-	    top_left_y = canvas_y0[current_image_id][sel_box_id];
-	    w = Math.abs(canvas_x1[current_image_id][sel_box_id] - current_x);
-	    h = Math.abs(current_y - canvas_y0[current_image_id][sel_box_id]);
-	    break;
-	}
-	draw_region(top_left_x, top_left_y, w, h,
-			  BBOX_BOUNDARY_FILL_COLOR_NEW);
-        image_canvas.focus();
-    }
-
-    if ( region_being_moved ) {
-	redraw_image_canvas();
-	var move_x = (box_click_x - current_x);
-	var move_y = (box_click_y - current_y);
-
-	var moved_x0 = canvas_x0[current_image_id][current_selected_region_id] - move_x;
-	var moved_y0 = canvas_y0[current_image_id][current_selected_region_id] - move_y;
-	var moved_x1 = canvas_x1[current_image_id][current_selected_region_id] - move_x;
-	var moved_y1 = canvas_y1[current_image_id][current_selected_region_id] - move_y;
-
-	draw_region(moved_x0, moved_y0,
-			  Math.abs(moved_x1 - moved_x0),
-			  Math.abs(moved_y1 - moved_y0),
-			  BBOX_BOUNDARY_FILL_COLOR_NEW);
-        image_canvas.focus();	
-    }
-    
-    if ( zoom_active &&
-	 !region_being_moved &&
-	 !is_user_resizing_region ) {
-
-	var sf = canvas_scale[current_image_id];
-	var original_image_x = current_x * sf;
-	var original_image_y = current_y * sf;
-
-	//console.log("zoom_size_pixel=" + zoom_size_pixel + ", sf=" + sf);
-	//console.log("original_image_x=" + original_image_x + ", original_image_y=" + original_image_y);
-	
-	redraw_image_canvas();
-	image_context.drawImage(current_image,
-				original_image_x - 100,
-				original_image_y - 100,
-				2*100,
-				2*100,
-				current_x - 200,
-				current_y - 200,
-				2*200,
-				2*200
-			       );
-	
-	draw_region(current_x - 200,
-			  current_y - 200,
-			  2*200,
-			  2*200,
-			  ZOOM_BOUNDARY_COLOR);
-    }
-    
-    //console.log("user_drawing_region=" + user_drawing_region + ", is_user_resizing_region=" + is_user_resizing_region + ", region_edge=" + region_edge[0] + "," + region_edge[1]);
-    
-    /* @todo: implement settings -> show guide
-       else {
-       redraw_image_canvas();
-       current_x = e.offsetX; current_y = e.offsetY;
-       image_context.strokeStyle="#ffffff";
-       image_context.setLineDash([0]);
-       image_context.strokeRect(0, current_y, canvas_width, 1);
-       image_context.strokeRect(current_x, 0, 1, canvas_height);
-       image_canvas.focus();
-       }
-    */
-});
-
-function draw_all_region() {
-    image_context.shadowBlur = 0;
-    var bbox_boundary_fill_color = "";
-    region_count = annotation_list[current_image_id].regions.length;
-    for (var i=0; i<region_count; ++i) {
-        if ( annotation_list[current_image_id].regions[i].description == "" ) {
-	    bbox_boundary_fill_color = BBOX_BOUNDARY_FILL_COLOR_NEW;
-        } else {
-	    bbox_boundary_fill_color = BBOX_BOUNDARY_FILL_COLOR_ANNOTATED;
-        }
-	
-	draw_region(canvas_x0[current_image_id][i],
-			  canvas_y0[current_image_id][i],
-			  canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i],
-			  canvas_y1[current_image_id][i] - canvas_y0[current_image_id][i],
-			  bbox_boundary_fill_color);
-	
-	if ( current_selected_region_id == i ) {
-	    image_context.fillStyle=BBOX_SELECTED_FILL_COLOR;
-	    image_context.globalAlpha = BBOX_SELECTED_OPACITY;
-	    image_context.fillRect(canvas_x0[current_image_id][i] + BBOX_LINE_WIDTH/2,
-                                   canvas_y0[current_image_id][i] + BBOX_LINE_WIDTH/2,
-                                   canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i] - BBOX_LINE_WIDTH,
-                                   canvas_y1[current_image_id][i] - canvas_y0[current_image_id][i] - BBOX_LINE_WIDTH);
-	    image_context.globalAlpha = 1.0;
-	}
-    }
-}
-
-function draw_region(x0, y0, w, h, boundary_fill_color) {
-    image_context.strokeStyle = boundary_fill_color;
-    image_context.lineWidth = BBOX_LINE_WIDTH/2;    
-    image_context.strokeRect(x0 - BBOX_LINE_WIDTH/4,
-                             y0 - BBOX_LINE_WIDTH/4,
-                             w + BBOX_LINE_WIDTH/4,
-                             h + BBOX_LINE_WIDTH/4);
-    image_context.lineWidth = BBOX_LINE_WIDTH/4;
-    image_context.strokeStyle = BBOX_BOUNDARY_LINE_COLOR;
-    image_context.strokeRect(x0 - BBOX_LINE_WIDTH/2 - 0.5,
-                             y0 - BBOX_LINE_WIDTH/2 - 0.5,
-                             w + BBOX_LINE_WIDTH,
-                             h + BBOX_LINE_WIDTH);
-    image_context.strokeRect(x0 + BBOX_LINE_WIDTH/4 - 0.5,
-                             y0 + BBOX_LINE_WIDTH/4 - 0.5,
-                             w - BBOX_LINE_WIDTH/2,
-                             h - BBOX_LINE_WIDTH/2);
-}
-
-function draw_all_annotations() { 
-    image_context.shadowColor = "transparent";
-    for (var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
-	var ri = annotation_list[current_image_id].regions[i];
-
-	var region_annotation_count = 0;
-	for (var key in ri.annotations) {
-	    region_annotation_count += 1;
-	}
-	    
-	if ( attribute_list.size > 0 &&
-	     region_annotation_count != attribute_list.size) {
-	    var annotation_str = (attribute_list.size - region_annotation_count) + ' missing attributes';
-	    var w = Math.abs(canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i]);
-	    image_context.font = '12pt Sans';
-	    
-	    var bgnd_rect_height = 1.8 * image_context.measureText('M').width;
-	    var bgnd_rect_width = image_context.measureText(annotation_str).width;
-	    var bbox_width = Math.abs( canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i] );
-
-	    if ( bgnd_rect_width > bbox_width ) {
-		var max_str_len = Math.round(annotation_str.length * (bbox_width/bgnd_rect_width)) - 4;
-		annotation_str = annotation_str.substring(0, max_str_len) + '...';
-		bgnd_rect_width = bbox_width;
-	    } else {
-		bgnd_rect_width = bgnd_rect_width + 0.6*bgnd_rect_height;
-	    }
-
-	    // first, draw a background rectangle first
-	    image_context.fillStyle = 'black';
-	    image_context.globalAlpha=0.5;          
-	    image_context.fillRect(canvas_x0[current_image_id][i],
-                                   canvas_y0[current_image_id][i] - bgnd_rect_height,
-                                   bgnd_rect_width,
-                                   bgnd_rect_height);
-	    // then, draw text over this background rectangle
-	    image_context.globalAlpha=1.0;
-	    image_context.fillStyle = 'yellow';
-	    image_context.fillText(annotation_str,
-                                   canvas_x0[current_image_id][i] + bgnd_rect_height/4,
-                                   canvas_y0[current_image_id][i] - bgnd_rect_height/3);
-	}
-    }
-}
-
-function redraw_image_canvas() {
-    if (current_image_loaded) {
-        image_context.drawImage(current_image, 0, 0, canvas_width, canvas_height);
-        draw_all_region();
-        draw_all_annotations();
-    }
-}
-
-function load_local_file(file_id) {
-    current_image_index = file_id;
-    current_image_id = image_id_list[file_id];
-    var img_file = user_uploaded_images[current_image_index];
-
-    if (!img_file) {
-        return;
-    } else {       
-        current_image_filename = annotation_list[current_image_id].filename;
-        img_reader = new FileReader();
-
-        img_reader.addEventListener( "progress", function(e) {
-            show_message("Loading image " + current_image_filename + " ... ");
-        }, false);
-
-        img_reader.addEventListener( "error", function() {
-            show_message("Error loading image " + current_image_filename + " !");
-        }, false);
-        
-        img_reader.addEventListener( "load", function() {
-            current_image = new Image();
-            current_image.addEventListener( "load", function() {
-                // retrive image panel dim. to stretch image_canvas to fit panel
-                //main_content_width = 0.9*image_panel.offsetWidth;
-		main_content_width = document.documentElement.clientWidth - 250;
-		main_content_height = document.documentElement.clientHeight - 2.2*navbar_panel.offsetHeight;
-                 
-                canvas_width = current_image.naturalWidth;
-                canvas_height = current_image.naturalHeight;
-
-                var scale_width, scale_height;
-                if ( canvas_width > main_content_width ) {
-                    // resize image to match the panel width
-                    scale_width = main_content_width / current_image.naturalWidth;
-                    canvas_width = main_content_width;
-                    canvas_height = current_image.naturalHeight * scale_width;
-                }
-                // resize image if its height is larger than the image panel
-                if ( canvas_height > main_content_height ) {
-                    scale_height = main_content_height / canvas_height;
-                    canvas_height = main_content_height;
-                    canvas_width = canvas_width * scale_height;
-                }
-
-                canvas_width = Math.round(canvas_width);
-                canvas_height = Math.round(canvas_height);
-                
-                canvas_scale[current_image_id] = current_image.naturalWidth / canvas_width;
-                
-                // set the canvas size to match that of the image
-                image_canvas.height = canvas_height;
-                image_canvas.width = canvas_width;
-
-		// let the info_panel use the empty horizontal space (if available)
-		info_panel_width = (document.documentElement.clientWidth - canvas_width - 80) + "px";
-		document.getElementById("image_info_table").style.width = info_panel_width;
-		document.getElementById("region_info_table").style.width = info_panel_width;
-		
-		zoom_size_pixel = Math.round(ZOOM_SIZE_PERCENT * Math.min(canvas_width, canvas_height));
-
-                current_image_loaded = true;
-		show_region_info();
-		show_annotation_info();
-                
-                click_x0 = 0; click_y0 = 0;
-                click_x1 = 0; click_y1 = 0;
-                user_drawing_region = false;
-                user_entering_annotation = false;
-                is_window_resized = false;
-
-                if ( annotation_list[current_image_id].regions.length > 0 ) {
-                    // update the canvas image space coordinates
-                    for ( var j=0; j<annotation_list[current_image_id].regions.length; ++j ) {
-			canvas_x0[current_image_id][j] = annotation_list[current_image_id].regions[j].x0 / canvas_scale[current_image_id];
-                        canvas_y0[current_image_id][j] = annotation_list[current_image_id].regions[j].y0 / canvas_scale[current_image_id];
-                        canvas_x1[current_image_id][j] = annotation_list[current_image_id].regions[j].x1 / canvas_scale[current_image_id];
-                        canvas_y1[current_image_id][j] = annotation_list[current_image_id].regions[j].y1 / canvas_scale[current_image_id];
-                    }
-
-                    redraw_image_canvas();
-                } else {
-                    image_context.drawImage(current_image, 0, 0, canvas_width, canvas_height);
-                }
-
-                image_canvas.style.display = "inline";
-                via_start_info_panel.style.display = "none";
-
-		// update the info panel
-		show_all_info();
-		show_message("");
-            });
-            current_image.src = img_reader.result;
-        }, false);
-        img_reader.readAsDataURL(img_file);
-	image_canvas.focus();
-    }
-}
-
-function is_inside_region(x, y) {
-    for (var i=0; i<region_count; ++i) {
-        if ( x > canvas_x0[current_image_id][i] &&
-             x < canvas_x1[current_image_id][i] &&
-             y > canvas_y0[current_image_id][i] &&
-             y < canvas_y1[current_image_id][i] ) {
-            return i;
-        }
-    }    
-    return -1;
-}
-
-function is_on_region_corner(x, y, tolerance) {
-    var cx0, cy0, cx1, cy1;
-    var region_edge = [-1, -1]; // region_id, corner_id [top-left=1,top-right=2,bottom-right=3,bottom-left=4]
-    
-    for (var i=0; i<region_count; ++i) {
-	dx0 = Math.abs( canvas_x0[current_image_id][i] - x );
-	dy0 = Math.abs( canvas_y0[current_image_id][i] - y );
-	dx1 = Math.abs( canvas_x1[current_image_id][i] - x );
-	dy1 = Math.abs( canvas_y1[current_image_id][i] - y );
-	
-	region_edge[0] = i;
-        if ( dx0 < tolerance && dy0 < tolerance ) {
-	    region_edge[1] = 1;
-	    return region_edge;
-	} else {
-	    if ( dx1 < tolerance && dy0 < tolerance ) {
-		region_edge[1] = 2;
-		return region_edge;
-	    } else {
-		if ( dx1 < tolerance && dy1 < tolerance ) {
-		    region_edge[1] = 3;
-		    return region_edge;
-		} else {
-		    if ( dx0 < tolerance && dy1 < tolerance ) {
-			region_edge[1] = 4;
-			return region_edge;
-		    }
-		}
-	    }
-	}
-    }
-    region_edge[0] = -1;
-    return region_edge;
-}
-
-function annotate_region(region_id) {
-    console.log('annotate_region='+region_id);
-    var region = annotation_list[current_image_id].regions[region_id];
-
-    // find the first 
-}
 
 window.addEventListener("keydown", function(e) {
 
@@ -1023,29 +1063,29 @@ window.addEventListener("keydown", function(e) {
 	console.log('user_entering_annotation='+user_entering_annotation+', region_count='+region_count);
 	// when user presses Enter key, enter bounding box annotation mode
         if ( !user_entering_annotation && region_count > 0 ) {
-            current_selected_region_id = -1;
-	    console.log('current_selected_region_id='+current_selected_region_id);
+            _via_current_sel_region_id = -1;
+	    console.log('_via_current_sel_region_id='+_via_current_sel_region_id);
 	    console.log('annotation_list[current_image_id].regions.length='+annotation_list[current_image_id].regions.length);
-    	    if ( current_selected_region_id != -1 ) {
-		current_selected_region_id = current_selected_region_id;
+    	    if ( _via_current_sel_region_id != -1 ) {
+		_via_current_sel_region_id = _via_current_sel_region_id;
 		user_entering_annotation = true;		    		
-		annotate_region(current_selected_region_id);		
+		annotate_region(_via_current_sel_region_id);		
 	    } else {
 		// find the un-annotated bounding box
 		for ( var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
                     if ( annotation_list[current_image_id].regions[i].description == "" ) {
-			current_selected_region_id = i;
+			_via_current_sel_region_id = i;
 			break;
                     }
 		}
 
-		if ( current_selected_region_id != -1 ) {
+		if ( _via_current_sel_region_id != -1 ) {
 		    // enter annotation mode only if an un annotated box is present
 		    user_entering_annotation = true;		    
-		    annotate_region(current_selected_region_id);
+		    annotate_region(_via_current_sel_region_id);
 		}
 	    }
-	    console.log('current_selected_region_id='+current_selected_region_id);
+	    console.log('_via_current_sel_region_id='+_via_current_sel_region_id);
         }
     }
     
@@ -1068,29 +1108,29 @@ window.addEventListener("keydown", function(e) {
 	    } else {
 		annotation_parsed_str = annotation_textarea.value;
 	    }
-	    add_image_region_description(current_image_id, current_selected_region_id, annotation_parsed_str);
+	    add_image_region_description(current_image_id, _via_current_sel_region_id, annotation_parsed_str);
 	    show_message("");
 	    
 	    // update the list of attributes
             annotation_textarea.value = "";
             annotation_textarea.style.visibility = "hidden";
-            redraw_image_canvas();
+            redraw__via_canvas();
 
 	    // find a unannotated bounding box to next move to
-	    current_selected_region_id = -1;
+	    _via_current_sel_region_id = -1;
 	    for ( var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
 		if ( annotation_list[current_image_id].regions[i].description == "" ) {
-		    current_selected_region_id = i;
+		    _via_current_sel_region_id = i;
 		    break;
 		}
 	    }
 
-	    if ( current_selected_region_id != -1 ) {
+	    if ( _via_current_sel_region_id != -1 ) {
                 user_entering_annotation = true;
-                annotate_region(current_selected_region_id);
+                annotate_region(_via_current_sel_region_id);
             } else {
                 // exit bounding box annotation mode
-                current_selected_region_id = -1;		    
+                _via_current_sel_region_id = -1;		    
                 user_entering_annotation = false;
                 annotation_textarea.style.visibility = "hidden";
             }		
@@ -1099,22 +1139,22 @@ window.addEventListener("keydown", function(e) {
     }
 			
     if ( (e.altKey || e.metaKey) && e.which == 68 ) { // Alt + d
-	if ( current_selected_region_id != -1 ) {
-	    annotation_list[current_image_id].regions.splice(current_selected_region_id, 1);
+	if ( _via_current_sel_region_id != -1 ) {
+	    annotation_list[current_image_id].regions.splice(_via_current_sel_region_id, 1);
 	    
-	    canvas_x0[current_image_id].splice(current_selected_region_id, 1);
-	    canvas_y0[current_image_id].splice(current_selected_region_id, 1);
-	    canvas_x1[current_image_id].splice(current_selected_region_id, 1);
-	    canvas_y1[current_image_id].splice(current_selected_region_id, 1);
+	    canvas_x0[current_image_id].splice(_via_current_sel_region_id, 1);
+	    canvas_y0[current_image_id].splice(_via_current_sel_region_id, 1);
+	    canvas_x1[current_image_id].splice(_via_current_sel_region_id, 1);
+	    canvas_y1[current_image_id].splice(_via_current_sel_region_id, 1);
 
-	    current_selected_region_id = -1;
-	    redraw_image_canvas();
+	    _via_current_sel_region_id = -1;
+	    redraw__via_canvas();
 
 	    region_count = annotation_list[current_image_id].regions.length
 
 	    show_region_info();
 	    show_annotation_info();
-	    image_canvas.focus();
+	    _via_canvas.focus();
 	}
     }
     
@@ -1122,36 +1162,37 @@ window.addEventListener("keydown", function(e) {
 	if ( user_entering_annotation ) {
             // exit bounding box annotation model
             annotation_textarea.style.visibility = "hidden";
-            current_selected_region_id = -1;
+            _via_current_sel_region_id = -1;
             user_entering_annotation = false;
 	}
 
-	if ( is_user_resizing_region ) {
+	if ( _via_is_user_resizing_region ) {
 	    // cancel bounding box resizing action
-	    is_user_resizing_region = false;
+	    _via_is_user_resizing_region = false;
 	}
 	
-	if ( current_selected_region_id != -1 ) {
+	if ( _via_current_sel_region_id != -1 ) {
 	    // clear all bounding box selection
-	    current_selected_region_id = -1;
+	    _via_current_sel_region_id = -1;
 	}
 
 	if ( zoom_active ) {
             zoom_active=false;
 	}
 	
-	redraw_image_canvas();
+	redraw__via_canvas();
     }
-    if ( (e.altKey || e.metaKey) && (e.which == 78 || e.which == 39) ) { // Alt + n or Alt + right arrow
-	if ( !user_entering_annotation ) {
-	    move_to_next_image();
-	}
+    if ( !_via_user_entering_annotation && (e.which == 78 || e.which == 39) ) { // n or right arrow
+	move_to_next_image();
     }
-    if ( (e.altKey || e.metaKey) && (e.which == 80 || e.which == 37) ) { // Alt + p or Alt + left arrow
-	if ( !user_entering_annotation ) {
-            move_to_prev_image();
-	}
+    if ( !_via_user_entering_annotation && (e.which == 80 || e.which == 37) ) { // p or left arrow
+        move_to_prev_image();
     }
+
+    if ( (e.altKey) && (e.which == 76) ) { // Alt + l
+	add_images();
+    }
+
     if ( e.which == 121 ) { // F10 key used for debugging
         print_current_annotations();
     }
@@ -1161,36 +1202,38 @@ window.addEventListener("keydown", function(e) {
 	} else {
 	    zoom_active=true;
 	}
-	redraw_image_canvas();
+	redraw__via_canvas();
     }    
 });
 
 function move_to_prev_image() {
-    if ( user_uploaded_images != null ) {
+    if (_via_images_count > 0) {
 	is_user_updating_attribute_name = false;
-        current_selected_region_id = -1;
-        image_canvas.style.display = "none";
-        image_context.clearRect(0, 0, image_canvas.width, image_canvas.height);
-        
-        if ( current_image_index == 0 ) {
-            load_local_file(user_uploaded_images.length - 1);
+        _via_current_sel_region_id = -1;
+	
+        _via_canvas.style.display = "none";
+        _via_ctx.clearRect(0, 0, _via_canvas.width, _via_canvas.height);
+
+        if ( _via_image_index == 0 ) {   
+            show_image(_via_images_count - 1);
         } else {
-            load_local_file(current_image_index - 1);
+            show_image(_via_image_index - 1);
         }
     }    
 }
 
 function move_to_next_image() {
-    if ( user_uploaded_images != null ) {
+    if (_via_images_count > 0) {
 	is_user_updating_attribute_name = false;
-        current_selected_region_id = -1;
-        image_canvas.style.display = "none";
+        _via_current_sel_region_id = -1;
+	
+        _via_canvas.style.display = "none";
+        _via_ctx.clearRect(0, 0, _via_canvas.width, _via_canvas.height);
 
-        image_context.clearRect(0, 0, image_canvas.width, image_canvas.height);
-        if ( current_image_index == (user_uploaded_images.length - 1) ) {
-            load_local_file(0);
+        if ( _via_image_index == _via_images_count ) {   
+            show_image(0);
         } else {
-            load_local_file(current_image_index + 1);
+            show_image(_via_image_index + 1);
         }
     }
 }
@@ -1220,7 +1263,7 @@ function show_all_info() {
 }
 
 function show_annotation_info() {
-    if ( current_selected_region_id != -1 ) {
+    if ( _via_current_sel_region_id != -1 ) {
 	document.getElementById("info_annotation").innerHTML = current_selected_region_annotation_count;
     } else {
 	document.getElementById("info_annotation").innerHTML = "";
@@ -1228,7 +1271,7 @@ function show_annotation_info() {
 }
 
 function show_region_info() {
-    if ( current_image_loaded ) {
+    if ( _via_current_image_loaded ) {
 	document.getElementById("info_region").innerHTML = annotation_list[current_image_id].regions.length;
     } else {
 	document.getElementById("info_region").innerHTML = "";
@@ -1236,7 +1279,7 @@ function show_region_info() {
 }
 
 function show_filename_info() {
-    if ( current_image_loaded ) {
+    if ( _via_current_image_loaded ) {
 	document.getElementById("info_current_filename").innerHTML = current_image_filename;
 	document.getElementById("info_current_fileid").innerHTML = (current_image_index+1) + " of " + user_uploaded_images.length;
     } else {
@@ -1251,9 +1294,9 @@ function show_current_attributes() {
 	for (let attribute of attribute_list) {
 	    //region_info += '<tr><td onclick="update_attribute_name(\'' + attribute + '\')">' + attribute + '</td>';
 	    region_info += '<tr><td>' + attribute + '</td>';
-	    if ( current_selected_region_id != -1 ) {
-		if ( attribute in annotation_list[current_image_id].regions[current_selected_region_id].annotations ) {
-		    var attribute_value = annotation_list[current_image_id].regions[current_selected_region_id].annotations[attribute];
+	    if ( _via_current_sel_region_id != -1 ) {
+		if ( attribute in annotation_list[current_image_id].regions[_via_current_sel_region_id].annotations ) {
+		    var attribute_value = annotation_list[current_image_id].regions[_via_current_sel_region_id].annotations[attribute];
 		    region_info += '<td onclick="update_attribute_value(\'' + attribute + '\')">' + attribute_value + '</td></tr>';
 		} else {
 		    region_info += '<td onclick="update_attribute_value(\'' + attribute + '\')">' + '<span class="action_text_link">[click to set value]</span>' + '</td></tr>';
@@ -1335,19 +1378,19 @@ function update_attribute_value(attribute) {
 
 function save_attribute_value() {
     var new_attribute_value = document.getElementById("textarea_attribute_value").value;
-    add_annotation(current_image_id, current_selected_region_id, current_update_attribute_name, new_attribute_value);
+    add_annotation(current_image_id, _via_current_sel_region_id, current_update_attribute_name, new_attribute_value);
     is_user_updating_attribute_name = false;
     current_update_attribute_name = "";
 
     update_current_region_annotation_count();
     show_current_attributes();
     show_annotation_info();
-    redraw_image_canvas();
+    redraw__via_canvas();
 }
 
 function update_current_region_annotation_count() {
     current_selected_region_annotation_count = 0;
-    for (var key in annotation_list[current_image_id].regions[current_selected_region_id].annotations) {
+    for (var key in annotation_list[current_image_id].regions[_via_current_sel_region_id].annotations) {
 	current_selected_region_annotation_count += 1;
     }   
 }
@@ -1371,35 +1414,11 @@ function print_current_annotations() {
     }
 }
 
-function ImageAnnotation(filename, size) {
-    this.filename = filename;
-    this.size = size;
-    this.description = "NA";
-    this.regions = [];
-}
 
-function ImageRegion(x0, y0, x1, y1) {
-    this.x0 = Math.round(x0);
-    this.y0 = Math.round(y0);
-    this.x1 = Math.round(x1);
-    this.y1 = Math.round(y1);
-    this.annotations = new Map();
- }
-
-function KeyValue(key, value) {
-    this.key = key;
-    this.value = value;
-}
-
-function get_image_id(filename, size) {
-    return filename + size;
-}
-
-function init_image_annotation(filename, size) {
+function init_image(filename, size) {
     var image_id = get_image_id(filename, size);
-    if ( !annotation_list.has(image_id) ) {
-	annotation_list[image_id] = new ImageAnnotation(filename, size);
-	//annotation_list.set(image_id, new ImageAnnotation(filename, size));
+    if ( !images[image_id] ) {
+	images[image_id] = new Image(filename, size);
     }
     return image_id;
 }
