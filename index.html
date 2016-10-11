@@ -238,19 +238,19 @@
         </symbol>
 	<symbol id="shape_rectangle">
 	  <title>Rectangular region shape</title>
-	  <rect width="20" height="12" x="6" y="10" transform="matrix(1,0,0,1,0,0)" />
+	  <rect width="20" height="12" x="6" y="10" />
 	</symbol>
 	<symbol id="shape_circle">
 	  <title>Circular region shape</title>
-	  <circle r="10" cx="16" cy="16" transform="matrix(1,0,0,1,0,0)" />
+	  <circle r="10" cx="16" cy="16" />
 	</symbol>
 	<symbol id="shape_ellipse">
 	  <title>Elliptical region shape</title>
-	  <ellipse rx="12" ry="8" cx="16" cy="16" transform="matrix(1,0,0,1,0,0)" />
+	  <ellipse rx="12" ry="8" cx="16" cy="16" />
 	</symbol>
-	<symbol id="shape_polyline">
+	<symbol id="shape_polygon">
 	  <title>Polyline region shape</title>
-	  <path d="m 10,4 -7,15 10,10 12,0 5,-10" transform="matrix(1,0,0,1,0,0)" />
+	  <path d="M 15.25,2.2372 3.625,11.6122 6,29.9872 l 20.75,-9.625 2.375,-14.75 z" />
 	</symbol>
 
       </defs>
@@ -293,10 +293,10 @@
 	<div class="box sidebar" id="info_panel">
 	  <div class="title">Select Region Shape</div>
 	  <div>
-	    <div class="region_shape region_shape_selected" onclick="select_region_shape('rect')" id="region_shape_rect"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></div>
-	    <div class="region_shape" onclick="select_region_shape('circle')" id="region_shape_circle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></div>
-	    <div class="region_shape" onclick="select_region_shape('ellipse')" id="region_shape_ellipse"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></div>
-	    <div class="region_shape" onclick="select_region_shape('polyline')" id="region_shape_polyline"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polyline"></use></svg></div>
+	    <div class="region_shape region_shape_selected" onclick="select_region_shape('rect')" id="region_shape_rect" title="To draw rectangular region"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></div>
+	    <div class="region_shape" onclick="select_region_shape('circle')" id="region_shape_circle" title="To draw circular region"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></div>
+	    <div class="region_shape" onclick="select_region_shape('ellipse')" id="region_shape_ellipse" title="To draw elliptical region"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></div>
+	    <div class="region_shape" onclick="select_region_shape('polygon')" id="region_shape_polygon" title="To draw polygon region"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></div>
 	  </div>
 	  
 
