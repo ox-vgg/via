@@ -184,10 +184,10 @@ function download_all_region_data(type) {
     save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
 }
 
-function import_annotations() {
+function upload_region_data_file() {
     if (invisible_file_input) {
-	invisible_file_input.accept='text/csv';
-	invisible_file_input.onchange = upload_local_annotations;
+	invisible_file_input.accept='text/csv, text/json';
+	invisible_file_input.onchange = import_region_data_from_file;
         invisible_file_input.click();
     }
 
@@ -221,25 +221,24 @@ function delete_all_attributes() {
 // Local file uploaders
 //
 function upload_local_images(event) {
-    let is_user_selected_images = event.target.files;
+    let user_selected_images = event.target.files;
     let original_image_count = _via_images_count;
-    for ( var i=0; i<is_user_selected_images.length; ++i) {
-        let filename = is_user_selected_images[i].name;
-	let size = is_user_selected_images[i].size;
+    for ( var i=0; i<user_selected_images.length; ++i) {
+        let filename = user_selected_images[i].name;
+	let size = user_selected_images[i].size;
 	let img_id = get_image_id(filename, size);
 
 	if ( _via_images[img_id] ) {
-	    show_message('Image ' + filename + ' already loaded. Skipping!');
+	    if (_via_images[img_id].fileref) {
+		show_message('Image ' + filename + ' already loaded. Skipping!');
+	    } else {
+		_via_images[img_id].fileref = user_selected_images[i];
+		show_message('Regions already exist for file ' + filename + ' !');		
+	    }
 	} else {
-	    _via_images[img_id] = new ImageAttributes(is_user_selected_images[i], filename, size);
+	    _via_images[img_id] = new ImageAttributes(user_selected_images[i], filename, size);
 	    _via_image_id_list.push(img_id);
 	    _via_images_count += 1;
-
-	    if (i==0 &&
-		_via_images_count != 1) {
-		// save the index of recently added image
-		added_image_index = _via_images_count - 1;
-	    }
 	}
     }
 
@@ -249,6 +248,7 @@ function upload_local_images(event) {
 	} else {
 	    show_image( original_image_count );
 	}
+	show_message('Added ' + (_via_images_count - original_image_count) + 'images');
     } else {
 	show_message("Please upload some image files!");
     }
@@ -294,25 +294,79 @@ function upload_local_attributes(event) {
 //
 // Data Importer
 //
-function parse_csv_file(csv_file) {
-    if (!csv_file) {
+
+function import_region_data_from_file(event) {
+    let selected_files = event.target.files;
+    for (var file of selected_files) {
+	switch(file.type) {
+	case 'text/csv':
+	    load_text_file(file, import_region_data_from_csv);
+	    break;
+	case 'text/json':
+	    load_text_file(file, import_region_data_from_json);
+	    break;
+	}
+    }
+}
+
+function import_region_data_from_csv(data) {
+    let csvdata = data.split(',');
+    console.log(csvdata);
+}
+
+function import_region_data_from_json(data) {
+    let _via_images_as_json = JSON.parse(data);
+
+    let image_imported_count = 0;
+    let skipped_file_attr_count = 0;
+    for (image_id in _via_images_as_json) {
+	if ( _via_images[image_id] ) {    
+	    // copy image attributes
+	    for (var key in _via_images_as_json[image_id].attributes) {
+		if (!_via_images[image_id].attributes.get(key)) {
+		    _via_images[image_id].attributes.set(key, _via_images_as_json[image_id].attributes[key]);
+		} else {
+		    skipped_file_attr_count += 1;
+		}
+	    }
+
+	    // copy regions
+	    let regions = _via_images_as_json[image_id].regions;
+	    for (var i in regions) {
+		let regioni = new ImageRegion();
+		for (var key in regions[i].attributes) {
+		    regioni.attributes.set(key, regions[i].attributes[key]);
+		}
+		_via_images[image_id].regions.push(regioni);
+	    }
+	    image_imported_count += 1;
+	} else {
+	    show_message('Skipping ' + image_id + ' as the corresponding image is not loaded');
+	}
+    }
+    show_message('Imported regions data for ' + image_imported_count + ' images');
+    show_image(_via_image_index);
+}
+
+
+function load_text_file(text_file, callback_function) {
+    if (!text_file) {
         return;
     } else {       
-        csv_reader = new FileReader();
-	var csvdata;
-        csv_reader.addEventListener( "progress", function(e) {
-            show_message("Loading data from csv file : " + current_image_filename + " ... ");
+        text_reader = new FileReader();
+        text_reader.addEventListener( "progress", function(e) {
+            show_message("Loading data from text file : " + text_file.name + " ... ");
         }, false);
 
-        csv_reader.addEventListener( "error", function() {
-            show_message("Error loading data from csv file :  " + current_image_filename + " !");
+        text_reader.addEventListener( "error", function() {
+            show_message("Error loading data from text file :  " + text_file.name + " !");
+	    callback_function('');
         }, false);
         
-        csv_reader.addEventListener( "load", function() {
-	    csvdata = csv_reader.result.split(",");   
+        text_reader.addEventListener( "load", function() {
+	    callback_function(text_reader.result);
         }, false);
-        csv_reader.readAsText(csv_file);
-	return csvdata;
+        text_reader.readAsText(text_file);
     }
 }
 
@@ -425,7 +479,7 @@ function show_image(image_index) {
 		_via_image_id = img_id;
 		_via_image_index = image_index;
 		_via_current_image_filename = img_filename;
-		_via__via_current_image_loaded = true;
+		_via_current_image_loaded = true;
 		
                 // retrive image panel dim. to stretch _via_canvas to fit panel
                 //main_content_width = 0.9*image_panel.offsetWidth;
@@ -460,23 +514,83 @@ function show_image(image_index) {
                
                 _via_click_x0 = 0; _via_click_y0 = 0;
                 _via_click_x1 = 0; _via_click_y1 = 0;
-                _via_is_user_drawing_region = false;
-                user_entering_annotation = false;
-                is_window_resized = false;
-		_via_canvas_regions = [];
-
-		// draw image on the canvas
-                _via_ctx.drawImage(_via_current_image, 0, 0, _via_canvas_width, _via_canvas_height);
-		_via_canvas.focus();
+		_via_user_entering_annotation = false;
+		_via_is_user_drawing_region = false;
+		is_window_resized = false;
+		_via_is_user_resizing_region = false;
+		_via_is_user_moving_region = false;
+		_via_is_user_drawing_polygon = false;
+		_via_is_region_selected = false;
 
 		clear_image_display_area();
 		_via_canvas.style.display = "inline";
 
-                _via_current_image_loaded = true;
-            });
+		_via_load_canvas_regions(); // image to canvas space transform
+		_via_redraw_canvas();
+		_via_canvas.focus();
+	    });
             _via_current_image.src = img_reader.result;
         }, false);
         img_reader.readAsDataURL( _via_images[img_id].fileref );
+    }
+}
+
+// transform regions in image space to canvas space
+function _via_load_canvas_regions() {
+    // load all existing annotations into _via_canvas_regions
+    let regions = _via_images[_via_image_id].regions;
+    _via_canvas_regions  = [];
+    for ( var i=0; i<regions.length; ++i) {
+	let regioni = new ImageRegion();
+	for ( var [key,value] of regions[i].attributes ) {
+	    regioni.attributes.set(key, value);
+	}
+	_via_canvas_regions.push(regioni);
+	
+	switch(_via_canvas_regions[i].attributes.get('name')) {
+	case VIA_REGION_SHAPE.RECT:
+	    var x = regions[i].attributes.get('x') / _via_canvas_scale;
+	    var y = regions[i].attributes.get('y') / _via_canvas_scale;
+	    var width = regions[i].attributes.get('width') / _via_canvas_scale;
+	    var height = regions[i].attributes.get('height') / _via_canvas_scale;
+	    
+	    _via_canvas_regions[i].attributes.set('x', Math.round(x));
+	    _via_canvas_regions[i].attributes.set('y', Math.round(y));
+	    _via_canvas_regions[i].attributes.set('width', Math.round(width));
+	    _via_canvas_regions[i].attributes.set('height', Math.round(height));
+	    break;
+	    
+	case VIA_REGION_SHAPE.CIRCLE:
+	    var cx = _via_canvas_regions[i].attributes.get('cx') / _via_canvas_scale;
+	    var cy = _via_canvas_regions[i].attributes.get('cy') / _via_canvas_scale;
+	    var r = _via_canvas_regions[i].attributes.get('r') / _via_canvas_scale;
+	    _via_canvas_regions[i].attributes.set('cx', Math.round(cx));
+	    _via_canvas_regions[i].attributes.set('cy', Math.round(cy));
+	    _via_canvas_regions[i].attributes.set('r', Math.round(r));
+	    break;
+	    
+	case VIA_REGION_SHAPE.ELLIPSE:
+	    var cx = _via_canvas_regions[i].attributes.get('cx') / _via_canvas_scale;
+	    var cy = _via_canvas_regions[i].attributes.get('cy') / _via_canvas_scale;
+	    var rx = _via_canvas_regions[i].attributes.get('rx') / _via_canvas_scale;
+	    var ry = _via_canvas_regions[i].attributes.get('ry') / _via_canvas_scale;
+	    _via_canvas_regions[i].attributes.set('cx', Math.round(cx));
+	    _via_canvas_regions[i].attributes.set('cy', Math.round(cy));
+	    _via_canvas_regions[i].attributes.set('rx', Math.round(rx));
+	    _via_canvas_regions[i].attributes.set('ry', Math.round(ry));
+	    break;
+	    
+	case VIA_REGION_SHAPE.POLYGON:
+	    var all_points_x = _via_canvas_regions[i].attributes.get('all_points_x').slice(0);
+	    var all_points_y = _via_canvas_regions[i].attributes.get('all_points_y').slice(0);
+	    for (var j=0; j<all_points_x.length; ++j) {
+		all_points_x[j] = Math.round(all_points_x[j] / _via_canvas_scale);
+		all_points_y[j] = Math.round(all_points_y[j] / _via_canvas_scale);
+	    }
+	    _via_canvas_regions[i].attributes.set('all_points_x', all_points_x);
+	    _via_canvas_regions[i].attributes.set('all_points_y', all_points_y);
+	    break;
+	}
     }
 }
 
@@ -1618,9 +1732,9 @@ function annotate_region(region_id) {
 
 function update_ui_components() {
     if ( !is_window_resized && _via_current_image_loaded ) {
-        show_message("Resizing window ...", false);
+        show_message("Resizing window ...");
         is_window_resized = true;
-        show_image(current_image_index);
+        show_image(_via_image_index);
     }
 }
 
@@ -1628,9 +1742,22 @@ function update_ui_components() {
 window.addEventListener("keydown", function(e) {
     // user commands
     if ( e.ctrlKey ) {
-	if ( e.which == 83 ) {
+	if ( e.which == 83 ) { // Ctrl + s
 	    download_all_region_data('csv');
 	    e.preventDefault();
+	    return;
+	}
+
+	if ( e.which == 73 ) { // Ctrl + i
+	    upload_region_data_file();
+	    e.preventDefault();
+	    return;
+	}
+
+	if ( e.which == 76 ) { // Ctrl + l
+	    add_images();
+	    e.preventDefault();
+	    return;
 	}
     }
 
@@ -1716,11 +1843,12 @@ window.addEventListener("keydown", function(e) {
     if ( (e.altKey || e.metaKey) && e.which == 68 ) { // Alt + d
 	if ( _via_is_region_selected &&
 	     _via_user_sel_region_id != -1 ) {
-	    _via_images[_via_image_id].regions.splice(_via_user_sel_region_id,1);
-	    _via_canvas_regions.splice(_via_user_sel_region_id,1);
+	    _via_images[_via_image_id].regions.splice(_via_user_sel_region_id, 1);
+	    _via_canvas_regions.splice(_via_user_sel_region_id, 1);
 
 	    _via_is_region_selected = false;    
 	    _via_user_sel_region_id = -1;
+	    _via_canvas.style.cursor = "default";
 
 	    _via_redraw_canvas();
 	    _via_canvas.focus();
@@ -1763,10 +1891,6 @@ window.addEventListener("keydown", function(e) {
         move_to_prev_image();
     }
 
-    if ( (e.altKey) && (e.which == 76) ) { // Alt + l
-	add_images();
-    }
-
     if ( e.which == 121 ) { // F10 key used for debugging
 	print_current_state_vars();
 	print_current_image_data();
@@ -1805,7 +1929,7 @@ function move_to_next_image() {
         _via_canvas.style.display = "none";
         _via_ctx.clearRect(0, 0, _via_canvas.width, _via_canvas.height);
 
-        if ( _via_image_index == _via_images_count ) {   
+        if ( _via_image_index == (_via_images_count-1) ) {   
             show_image(0);
         } else {
             show_image(_via_image_index + 1);
@@ -1995,11 +2119,11 @@ function print_current_state_vars() {
 }
 
 function print_current_image_data() {
-    for ( var image_id in _via_image_id_list) {
-        var fn = _via_images[_via_image_id].filename;
+    for ( var image_id in _via_images) {
+        var fn = _via_images[image_id].filename;
         var logstr = "[" + fn + "] : ";
 
-	var img_regions = _via_images[_via_image_id].regions;
+	var img_regions = _via_images[image_id].regions;
         for ( var i=0; i<img_regions.length; ++i) {
 	    var attr = img_regions[i].attributes;
 	    let img_region_str = '\n\t_via_images[i].regions = [';
@@ -2009,12 +2133,14 @@ function print_current_image_data() {
 	    logstr += img_region_str + ']';
 	}
 
-        for ( var i=0; i<_via_canvas_regions.length; ++i) {
-	    let canvas_region_str = '\n\t_via_canvas_regions = [';
-	    for ( var [key, value] of _via_canvas_regions[i].attributes ) {
-		canvas_region_str += key + ':' + value + ';';
+	if ( _via_image_id == image_id ) {
+	    for ( var i=0; i<_via_canvas_regions.length; ++i) {
+		let canvas_region_str = '\n\t_via_canvas_regions = [';
+		for ( var [key, value] of _via_canvas_regions[i].attributes ) {
+		    canvas_region_str += key + ':' + value + ';';
+		}
+		logstr += canvas_region_str + ']';
 	    }
-	    logstr += canvas_region_str + ']';
 	}
         console.log(logstr);
     }
