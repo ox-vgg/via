@@ -270,8 +270,8 @@
 	  </li>
           <li class="dropdown"><a title="Annotations" class="drop_menu_item">Annotation &#9662</a>
 	    <div class="dropdown-content">
-	      <a onclick="save_annotations('csv')" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
-	      <a onclick="save_annotations('json')" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
+	      <a onclick="download_all_region_data('csv')" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
+	      <a onclick="download_all_region_data('json')" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
 	      <a onclick="import_annotations()" title="Import existing annotations from a file">Import annotation</a>
 	    </div>
 	  </li>
@@ -343,6 +343,10 @@
 	      <tr>
 		<td>Alt + l</td>
 		<td>Load or add images</td>
+	      </tr>
+	      <tr>
+		<td>Ctrl + s</td>
+		<td>Download all data</td>
 	      </tr>
 	    </table>
 	  </div>

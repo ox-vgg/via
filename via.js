@@ -139,7 +139,6 @@ function ImageAttributes(fileref, filename, size) {
 
 function ImageRegion() {
     this.is_user_selected = false;
-    this.pathd = '';             // SVG path d attribute
     this.attributes = new Map(); // region attributes
 }
 
@@ -179,13 +178,12 @@ function add_images() {
         invisible_file_input.click();
     }
 }
-function save_annotations(type) {
-    console.log('save_annotations: ' + type);
-    var annotation_list_str = get_annotation_list(type);
-    console.log(annotation_list_str);
-    var annotation_list_blob = new Blob([annotation_list_str], {type: 'text/'+type+';charset=utf-8'});   
-    save_data_to_local_file(annotation_list_blob, 'annotations.'+type);   
+function download_all_region_data(type) {
+    var all_region_data = package_region_data(type);
+    var all_region_data_blob = new Blob([all_region_data], {type: 'text/'+type+';charset=utf-8'});   
+    save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
 }
+
 function import_annotations() {
     if (invisible_file_input) {
 	invisible_file_input.accept='text/csv';
@@ -326,6 +324,83 @@ function upload_local_annotations(is_user_selected_files) {
 //
 // Data Exporter
 //
+function package_region_data(return_type) {
+    if( return_type == "csv" ) {
+	csv_str = "#filename,file_size,file_attributes,region_count,region_id,region_attributes";
+
+	for ( var image_id in _via_images ) {
+	    var prefix_str = _via_images[image_id].filename;
+	    prefix_str += "," + _via_images[image_id].size;
+	    prefix_str += "," + attr_map_to_str( _via_images[image_id].attributes );
+
+	    let regions = _via_images[image_id].regions;
+	    for (var i=0; i<regions.length; ++i) {
+		let region_str = prefix_str;
+		region_str += ',' + regions.length + ',' + i + ',';
+		region_str += attr_map_to_str( regions[i].attributes );
+		csv_str += '\n' + region_str;
+	    }
+	}
+	return csv_str;
+    } else {
+	// JSON.stringify() does not work with Map()
+	// hence, we cast everything as objects
+	var _via_images_as_obj = {};
+	for (image_id in _via_images) {
+	    let image_data = {};
+	    image_data.fileref = _via_images[image_id].fileref;
+	    image_data.size = _via_images[image_id].size;
+	    image_data.filename = _via_images[image_id].filename;
+	    image_data.base64_data = _via_images[image_id].base64_data;
+	    
+	    // copy file attributes
+	    image_data.attributes = {};	
+	    for ( var [key, value] of _via_images[image_id].attributes ) {
+		image_data.attributes[key] = value;
+	    }
+
+	    // copy all region attributes
+	    image_data.regions = {};
+	    for (var i=0; i<_via_images[image_id].regions.length; ++i) {
+		image_data.regions[i] = {};
+		image_data.regions[i].attributes = {};
+		// copy region attributes
+		for ( var [key, value] of _via_images[image_id].regions[i].attributes) {
+		    image_data.regions[i].attributes[key] = value;
+		}
+	    }
+    
+	    _via_images_as_obj[image_id] = image_data;
+	}
+	return JSON.stringify(_via_images_as_obj);
+    }    
+}
+
+function attr_map_to_str(attr) {
+    var attr_map_str = '"';
+    for( var [key, value] of attr ) {
+	attr_map_str = attr_map_str + key + '=' + value + ';';
+    }
+    attr_map_str += '"';
+    return attr_map_str;
+}
+
+function save_data_to_local_file(data, filename) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(data);
+    a.target = '_blank';
+    a.download = filename;
+
+    // simulate a mouse click event
+    var event = new MouseEvent('click', {
+        view: window,
+        bubbles: true,
+        cancelable: true
+    });
+    
+    a.dispatchEvent(event);
+
+}
 
 //
 // Setup Elements in User Interface
@@ -801,36 +876,32 @@ _via_canvas.addEventListener('mousemove', function(e) {
     
     _via_current_x = e.offsetX; _via_current_y = e.offsetY;
 
-    /*
-      if ( _via_user_sel_region_id >= 0) {
-      if ( !_via_is_user_resizing_region ) {
-      _via_region_edge = is_on_region_corner(_via_current_x, _via_current_y, VIA_REGION_EDGE_TOL);
-      
-      if ( _via_region_edge[0] == _via_current_sel_region_id ) {
-      switch(_via_region_edge[1]) {
-      case 1: // top-left
-      case 3: // bottom-right
-      _via_canvas.style.cursor = "nwse-resize";
-      break;
-      case 2: // top-right
-      case 4: // bottom-left		
-      _via_canvas.style.cursor = "nesw-resize";
-      break;
-      default:
-      _via_canvas.style.cursor = "default";
-      }
-      } else {
-      // a bounding box has been selected
-      var region_id = is_inside_region(_via_current_x, _via_current_y);
-      if ( region_id == _via_current_sel_region_id ) {
-      _via_canvas.style.cursor = "move";
-      } else {
-      _via_canvas.style.cursor = "default";
-      }
-      }
-      }
-      }
-    */
+    if ( _via_is_region_selected ) {
+	if ( !_via_is_user_resizing_region ) {
+	    // check if user moved mouse cursor to region boundary
+	    // which indicates an intention to resize the reigon
+	    
+	    /*
+	    _via_region_edge = is_on_region_corner(_via_current_x, _via_current_y);
+	    console.log(_via_region_edge);
+	    
+	    if ( _via_region_edge[0] == _via_user_sel_region_id ) {
+		switch(_via_region_edge[1]) {
+		case 1: // top-left
+		case 3: // bottom-right
+		    _via_canvas.style.cursor = "nwse-resize";
+		    break;
+		case 2: // top-right
+		case 4: // bottom-left		
+		    _via_canvas.style.cursor = "nesw-resize";
+		    break;
+		default:
+		    _via_canvas.style.cursor = "default";
+		}
+	    }
+	    */
+	}
+    }
 
     if ( _via_is_region_selected ) {
 	var region_id = is_inside_region(_via_current_x, _via_current_y);
@@ -1452,6 +1523,7 @@ function is_on_region_corner(px, py) {
 				     attr.get('width'),
 				     attr.get('height'),
 				     px, py);
+	    console.log(result);
 	    break;
 	case VIA_REGION_SHAPE.CIRCLE:
 	    result = is_on_circle_edge(attr.get('cx'),
@@ -1489,6 +1561,7 @@ function is_on_rect_edge(x, y, w, h, y, px, py) {
     let dy0 = Math.abs(y - py);
     let dx1 = Math.abs(x + w - px);
     let dy1 = Math.abs(y + h - py);
+    console.log(dx0+','+dy0+','+dx1+','+dy1);
 
     //[top-left=1,top-right=2,bottom-right=3,bottom-left=4]
     if ( dx0 < VIA_REGION_EDGE_TOL &&
@@ -1543,65 +1616,6 @@ function annotate_region(region_id) {
     // find the first 
 }
 
-
-
-
-function get_annotation_list(type) {
-    if( type == "csv" ) {
-	csv_str = "#filename,size,file_description,region_id,region_count,x0,y0,x1,y1,annotation_id,annotation_count,annotation_key,annotation_value";
-
-	for ( var image_id in annotation_list ) {
-	    var image_annotation = annotation_list[image_id];
-	    var prefix_str = image_annotation.filename;
-	    prefix_str += "," + image_annotation.size;
-	    prefix_str += "," + image_annotation.description;
-
-	    var region_count = image_annotation.regions.length;
-	    for ( var i=0; i<region_count; ++i) {
-		var region_str = i + "," + region_count;
-		region_str += "," + image_annotation.regions[i].x0;
-		region_str += "," + image_annotation.regions[i].y0;
-		region_str += "," + image_annotation.regions[i].x1;
-		region_str += "," + image_annotation.regions[i].y1;
-
-		var annotations = image_annotation.regions[i].annotations;
-		var annotation_index = 0;
-		var region_annotation_count = 0;
-		for ( var key in annotations ) {
-		    region_annotation_count += 1;
-		}
-		for ( var key in annotations ) {
-		    var annotation_str = "\n" + prefix_str + "," + region_str;
-		    annotation_str += "," + annotation_index + "," + region_annotation_count;
-		    annotation_str += "," + key + "," + annotations[key];
-		    csv_str += annotation_str;
-		    annotation_index += 1;
-		}
-	    }
-	}
-	return csv_str;
-    } else {
-	return JSON.stringify(annotation_list);
-    }    
-}
-
-function save_data_to_local_file(data, filename) {
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(data);
-    a.target = '_blank';
-    a.download = filename;
-
-    // simulate a mouse click event
-    var event = new MouseEvent('click', {
-        view: window,
-        bubbles: true,
-        cancelable: true
-    });
-    
-    a.dispatchEvent(event);
-
-}
-
 function update_ui_components() {
     if ( !is_window_resized && _via_current_image_loaded ) {
         show_message("Resizing window ...", false);
@@ -1612,6 +1626,13 @@ function update_ui_components() {
 
 
 window.addEventListener("keydown", function(e) {
+    // user commands
+    if ( e.ctrlKey ) {
+	if ( e.which == 83 ) {
+	    download_all_region_data('csv');
+	    e.preventDefault();
+	}
+    }
 
     if ( (e.altKey || e.metaKey) && e.which == 88 ) { // Alt + x
 	console.log('user_entering_annotation='+user_entering_annotation+', region_count='+region_count);
