@@ -24,6 +24,9 @@ var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
 var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
 var VIA_THEME_SEL_REGION_OPACITY = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS = 5000;
+var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
+var VIA_IMPORT_CSV_KEYVAL_SEP_CHAR = ';';
+var VIA_EXPORT_CSV_ARRAY_SEP_CHAR = ':';
 
 var _via_images = {};                // everything related to an image
 var _via_images_count = 0;
@@ -142,7 +145,7 @@ function ImageRegion() {
     this.attributes = new Map(); // region attributes
 }
 
-function get_image_id(filename, size) {
+function _via_get_image_id(filename, size) {
     return filename + size;
 }
 
@@ -226,7 +229,7 @@ function upload_local_images(event) {
     for ( var i=0; i<user_selected_images.length; ++i) {
         let filename = user_selected_images[i].name;
 	let size = user_selected_images[i].size;
-	let img_id = get_image_id(filename, size);
+	let img_id = _via_get_image_id(filename, size);
 
 	if ( _via_images[img_id] ) {
 	    if (_via_images[img_id].fileref) {
@@ -310,8 +313,52 @@ function import_region_data_from_file(event) {
 }
 
 function import_region_data_from_csv(data) {
-    let csvdata = data.split(',');
+    let csvdata = data.split('\n');
+    for (var i=0; i<csvdata.length; ++i) {
+	if (csvdata[i].charAt(0) == VIA_IMPORT_CSV_COMMENT_CHAR) {
+	    // ignore comment lines
+	    continue;
+	} else {
+	    let d = csvdata[i].split(',');
+	    console.log(d);
+	    continue;
+	    
+	    let filename = d[0];
+	    let size = d[1];
+	    let image_id = _via_get_image_id(filename, size);
+	    if ( _via_images[image_id] ) {
+		// copy image attributes
+		if ( d[2] != '' ) {
+		    let attr_map = keyval_str_to_map(d[2]);
+		    for( var [key, val] of attr_map ) {
+			_via_images[image_id].attributes.set(key, val);
+		    }
+		}
+
+		// copy regions
+		if ( d[5] != '' ) {
+		    let attr_map = keyval_str_to_map(d[5]);
+		    //console.log(attr_map);
+		    // @todo : if key = 'all_points_*', then save as array
+		}
+	    } else {
+		show_message('Skipping ' + image_id + ' as the corresponding image is not loaded');
+	    }
+	}
+    }
     console.log(csvdata);
+    show_message('Region data import from CSV file not implemented yet!', 10000);
+}
+
+// key1=val1;key2=val2;...
+function keyval_str_to_map(keyval_str) {
+    let keyval_map = new Map();
+    let d = keyval_str.split(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR);    
+    for (var i=0; i<d.length; ++i) {
+	let keyval = d[i].split('=');
+	keyval_map.set(keyval[0], keyval[1]);
+    }
+    return keyval_map;
 }
 
 function import_region_data_from_json(data) {
@@ -369,11 +416,6 @@ function load_text_file(text_file, callback_function) {
         text_reader.readAsText(text_file);
     }
 }
-
-function upload_local_annotations(is_user_selected_files) {
-    console.log('upload annotations');
-}
-
 
 //
 // Data Exporter
@@ -433,7 +475,16 @@ function package_region_data(return_type) {
 function attr_map_to_str(attr) {
     var attr_map_str = '"';
     for( var [key, value] of attr ) {
-	attr_map_str = attr_map_str + key + '=' + value + ';';
+	if ( Array.isArray(value) ) {
+	    let value_str='[' + value[0];
+	    for (var i=1; i<value.length; ++i) {
+		value_str += VIA_EXPORT_CSV_ARRAY_SEP_CHAR + value[i];
+	    }
+	    value_str += ']';
+	    attr_map_str = attr_map_str + key + '=' + value_str + ';';
+	} else {
+	    attr_map_str = attr_map_str + key + '=' + value + ';';
+	}
     }
     attr_map_str += '"';
     return attr_map_str;
@@ -728,7 +779,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
 		
 		let polygon_region = new ImageRegion();
 		polygon_region.attributes.set('name', 'polygon');
-		polygon_region.attributes.set('points', points_str);
+		//polygon_region.attributes.set('points', points_str);
 		polygon_region.attributes.set('all_points_x', all_points_x);
 		polygon_region.attributes.set('all_points_y', all_points_y);
 		_via_current_polygon_region_id = _via_images[_via_image_id].regions.length;
@@ -1950,12 +2001,16 @@ function check_local_storage() {
     }
 }
 
-function show_message(msg) {
+function show_message(msg, timeout_ms) {
     message_panel.innerHTML = msg;
 
+    if ( timeout_ms == undefined ) {
+	timeout_ms = VIA_THEME_MESSAGE_TIMEOUT_MS;
+    }
+    
     setTimeout( function() {
 	message_panel.innerHTML = ' ';
-    }, VIA_THEME_MESSAGE_TIMEOUT_MS);
+    }, timeout_ms);
 }
 
 function show_all_info() {
