@@ -490,7 +490,7 @@ _via_canvas.addEventListener('mousedown', function(e) {
 }, false);
 
 // implements the following functionalities:
-//  - new region drawing
+//  - new region drawing (including polygon)
 //  - moving/resizing/select/unselect existing region
 _via_canvas.addEventListener('mouseup', function(e) {
     _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
@@ -581,6 +581,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
 			canvas_polygon_region.attributes.set('all_points_y', [Math.round(_via_click_y0)]);
 			_via_canvas_regions.push(canvas_polygon_region);
     			_via_current_polygon_region_id =_via_canvas_regions.length - 1;
+			console.log(_via_canvas_regions);
 		    }
 		}
 		
@@ -687,7 +688,9 @@ _via_canvas.addEventListener('mouseup', function(e) {
     }
 
     // indicates that user has finished drawing a new region
-    if (_via_is_user_drawing_region) {
+    if (_via_is_user_drawing_region &&
+        !_via_is_user_drawing_polygon) {
+	
 	_via_is_user_drawing_region = false;
 	
 	let region_x0, region_y0, region_x1, region_y1;
@@ -725,6 +728,10 @@ _via_canvas.addEventListener('mouseup', function(e) {
 	    canvas_img_region.attributes.set('y', Math.round(region_y0));
 	    canvas_img_region.attributes.set('width', Math.round(dx));
 	    canvas_img_region.attributes.set('height', Math.round(dy));
+
+	    _via_images[_via_image_id].regions.push(original_img_region);
+	    _via_canvas_regions.push(canvas_img_region);
+
 	    break;
 	case VIA_REGION_SHAPE.CIRCLE:
 	    let circle_radius = Math.round(Math.sqrt( dx*dx + dy*dy ));
@@ -737,6 +744,10 @@ _via_canvas.addEventListener('mouseup', function(e) {
 	    canvas_img_region.attributes.set('cx', Math.round(region_x0));
 	    canvas_img_region.attributes.set('cy', Math.round(region_y0));
 	    canvas_img_region.attributes.set('r', Math.round(circle_radius));
+
+	    _via_images[_via_image_id].regions.push(original_img_region);
+	    _via_canvas_regions.push(canvas_img_region);
+
 	    break;
 	case VIA_REGION_SHAPE.ELLIPSE:
 	    original_img_region.attributes.set('name', 'ellipse');
@@ -750,14 +761,15 @@ _via_canvas.addEventListener('mouseup', function(e) {
 	    canvas_img_region.attributes.set('cy', Math.round(region_y0));
 	    canvas_img_region.attributes.set('rx', Math.round(dx));
 	    canvas_img_region.attributes.set('ry', Math.round(dy));
+
+	    _via_images[_via_image_id].regions.push(original_img_region);
+	    _via_canvas_regions.push(canvas_img_region);
+
 	    break;
 	case VIA_REGION_SHAPE.POLYGON:
 	    // handled by _via_is_user_drawing polygon
 	    break;
-	}
-	_via_images[_via_image_id].regions.push(original_img_region);
-	_via_canvas_regions.push(canvas_img_region);
-	
+	}	
 	_via_redraw_canvas();
 	_via_canvas.focus();
     }
@@ -981,7 +993,6 @@ _via_canvas.addEventListener('mousemove', function(e) {
 
     if ( _via_is_user_drawing_polygon ) {
 	_via_redraw_canvas();
-	
 	let attr = _via_canvas_regions[_via_current_polygon_region_id].attributes;
 	let all_points_x = attr.get('all_points_x');
 	let all_points_y = attr.get('all_points_y');
@@ -1915,17 +1926,19 @@ function print_current_image_data() {
         var fn = _via_images[_via_image_id].filename;
         var logstr = "[" + fn + "] : ";
 
-	var regions = _via_images[_via_image_id].regions;
-        for ( var i=0; i<regions.length; ++i) {
-	    var attr = regions[i].attributes;
+	var img_regions = _via_images[_via_image_id].regions;
+        for ( var i=0; i<img_regions.length; ++i) {
+	    var attr = img_regions[i].attributes;
 	    let img_region_str = '\n\t_via_images[i].regions = [';
 	    for ( var [key, value] of attr ) {
 		img_region_str += key + ':' + value + ';';
 	    }
 	    logstr += img_region_str + ']';
+	}
 
+        for ( var i=0; i<_via_canvas_regions.length; ++i) {
 	    let canvas_region_str = '\n\t_via_canvas_regions = [';
-	    for ( var [key, value] of attr ) {
+	    for ( var [key, value] of _via_canvas_regions[i].attributes ) {
 		canvas_region_str += key + ':' + value + ';';
 	    }
 	    logstr += canvas_region_str + ']';
