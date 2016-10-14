@@ -282,8 +282,13 @@
 	      <a onclick="delete_all_attributes()" title="Delete all attributes">Delete attributes</a>
 	    </div>
 	  </li>
-	  <li><a onclick="show_settings_panel()" title="Change settings of VGG Image Annotator">Settings</a>
-	  <li><a onclick="show_about_panel()" title="About VGG Image Annotator">About</a>
+	  <li><a onclick="show_settings_panel()" title="Change settings of VGG Image Annotator">Settings</a></li>
+	  <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>
+	    <div class="dropdown-content">
+	      <a href="https://gitlab.com/vgg/via/issues/new" target="_new" title="Report issues about this application">Report issue</a>
+	      <a onclick="show_about_panel()" title="Import existing attributes from a file">About via</a>
+	    </div>
+	  </li>
 	</ul>
 
 	<input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">
@@ -312,13 +317,9 @@
 		<td id="info_current_filename"><span class="action_text_link" onclick="load_images()" title="Import existing attributes from a file">[click to load images]</span></td>
 	      </tr>
 	      <tr>
-		<td>Region</td>
+		<td>Regions</td>
 		<td id="info_region"></td>
 	      </tr>
-	      <tr>
-		<td>Annotation</td>
-		<td id="info_annotation"></td>
-	      </tr>	
 	      <tr>
 		<td>Attributes</td>
 		<td id="info_attribute"></td>
