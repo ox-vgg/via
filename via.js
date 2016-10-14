@@ -224,12 +224,12 @@ function delete_all_attributes() {
 // Local file uploaders
 //
 function upload_local_images(event) {
-    let user_selected_images = event.target.files;
-    let original_image_count = _via_images_count;
+    var user_selected_images = event.target.files;
+    var original_image_count = _via_images_count;
     for ( var i=0; i<user_selected_images.length; ++i) {
-        let filename = user_selected_images[i].name;
-	let size = user_selected_images[i].size;
-	let img_id = _via_get_image_id(filename, size);
+        var filename = user_selected_images[i].name;
+	var size = user_selected_images[i].size;
+	var img_id = _via_get_image_id(filename, size);
 
 	if ( _via_images[img_id] ) {
 	    if (_via_images[img_id].fileref) {
@@ -299,13 +299,14 @@ function upload_local_attributes(event) {
 //
 
 function import_region_data_from_file(event) {
-    let selected_files = event.target.files;
+    var selected_files = event.target.files;
     for (var file of selected_files) {
 	switch(file.type) {
 	case 'text/csv':
 	    load_text_file(file, import_region_data_from_csv);
 	    break;
 	case 'text/json':
+	case 'application/json':
 	    load_text_file(file, import_region_data_from_json);
 	    break;
 	}
@@ -313,23 +314,23 @@ function import_region_data_from_file(event) {
 }
 
 function import_region_data_from_csv(data) {
-    let csvdata = data.split('\n');
+    var csvdata = data.split('\n');
     for (var i=0; i<csvdata.length; ++i) {
 	if (csvdata[i].charAt(0) == VIA_IMPORT_CSV_COMMENT_CHAR) {
 	    // ignore comment lines
 	    continue;
 	} else {
-	    let d = csvdata[i].split(',');
+	    var d = csvdata[i].split(',');
 	    console.log(d);
 	    continue;
 	    
-	    let filename = d[0];
-	    let size = d[1];
-	    let image_id = _via_get_image_id(filename, size);
+	    var filename = d[0];
+	    var size = d[1];
+	    var image_id = _via_get_image_id(filename, size);
 	    if ( _via_images[image_id] ) {
 		// copy image attributes
 		if ( d[2] != '' ) {
-		    let attr_map = keyval_str_to_map(d[2]);
+		    var attr_map = keyval_str_to_map(d[2]);
 		    for( var [key, val] of attr_map ) {
 			_via_images[image_id].attributes.set(key, val);
 		    }
@@ -337,7 +338,7 @@ function import_region_data_from_csv(data) {
 
 		// copy regions
 		if ( d[5] != '' ) {
-		    let attr_map = keyval_str_to_map(d[5]);
+		    var attr_map = keyval_str_to_map(d[5]);
 		    //console.log(attr_map);
 		    // @todo : if key = 'all_points_*', then save as array
 		}
@@ -352,20 +353,20 @@ function import_region_data_from_csv(data) {
 
 // key1=val1;key2=val2;...
 function keyval_str_to_map(keyval_str) {
-    let keyval_map = new Map();
-    let d = keyval_str.split(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR);    
+    var keyval_map = new Map();
+    var d = keyval_str.split(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR);    
     for (var i=0; i<d.length; ++i) {
-	let keyval = d[i].split('=');
+	var keyval = d[i].split('=');
 	keyval_map.set(keyval[0], keyval[1]);
     }
     return keyval_map;
 }
 
 function import_region_data_from_json(data) {
-    let _via_images_as_json = JSON.parse(data);
+    var _via_images_as_json = JSON.parse(data);
 
-    let image_imported_count = 0;
-    let skipped_file_attr_count = 0;
+    var image_imported_count = 0;
+    var skipped_file_attr_count = 0;
     for (image_id in _via_images_as_json) {
 	if ( _via_images[image_id] ) {    
 	    // copy image attributes
@@ -378,9 +379,9 @@ function import_region_data_from_json(data) {
 	    }
 
 	    // copy regions
-	    let regions = _via_images_as_json[image_id].regions;
+	    var regions = _via_images_as_json[image_id].regions;
 	    for (var i in regions) {
-		let regioni = new ImageRegion();
+		var regioni = new ImageRegion();
 		for (var key in regions[i].attributes) {
 		    regioni.attributes.set(key, regions[i].attributes[key]);
 		}
@@ -399,7 +400,7 @@ function import_region_data_from_json(data) {
 function load_text_file(text_file, callback_function) {
     if (!text_file) {
         return;
-    } else {       
+    } else {
         text_reader = new FileReader();
         text_reader.addEventListener( "progress", function(e) {
             show_message("Loading data from text file : " + text_file.name + " ... ");
@@ -429,9 +430,9 @@ function package_region_data(return_type) {
 	    prefix_str += "," + _via_images[image_id].size;
 	    prefix_str += "," + attr_map_to_str( _via_images[image_id].attributes );
 
-	    let regions = _via_images[image_id].regions;
+	    var regions = _via_images[image_id].regions;
 	    for (var i=0; i<regions.length; ++i) {
-		let region_str = prefix_str;
+		var region_str = prefix_str;
 		region_str += ',' + regions.length + ',' + i + ',';
 		region_str += attr_map_to_str( regions[i].attributes );
 		csv_str += '\n' + region_str;
@@ -443,7 +444,7 @@ function package_region_data(return_type) {
 	// hence, we cast everything as objects
 	var _via_images_as_obj = {};
 	for (image_id in _via_images) {
-	    let image_data = {};
+	    var image_data = {};
 	    image_data.fileref = _via_images[image_id].fileref;
 	    image_data.size = _via_images[image_id].size;
 	    image_data.filename = _via_images[image_id].filename;
@@ -476,7 +477,7 @@ function attr_map_to_str(attr) {
     var attr_map_str = '"';
     for( var [key, value] of attr ) {
 	if ( Array.isArray(value) ) {
-	    let value_str='[' + value[0];
+	    var value_str='[' + value[0];
 	    for (var i=1; i<value.length; ++i) {
 		value_str += VIA_EXPORT_CSV_ARRAY_SEP_CHAR + value[i];
 	    }
@@ -511,10 +512,10 @@ function save_data_to_local_file(data, filename) {
 // Setup Elements in User Interface
 //
 function show_image(image_index) {
-    let img_id = _via_image_id_list[image_index]
+    var img_id = _via_image_id_list[image_index]
     if (_via_images[img_id]) {
-	let img_filename = _via_images[img_id].filename;
-        let img_reader = new FileReader();
+	var img_filename = _via_images[img_id].filename;
+        var img_reader = new FileReader();
 
         img_reader.addEventListener( "progress", function(e) {
             show_message("Loading image " + img_filename + " ... ");
@@ -543,13 +544,13 @@ function show_image(image_index) {
                 var scale_width, scale_height;
                 if ( _via_canvas_width > canvas_panel_width ) {
                     // resize image to match the panel width
-                    let scale_width = canvas_panel_width / _via_current_image.naturalWidth;
+                    var scale_width = canvas_panel_width / _via_current_image.naturalWidth;
                     _via_canvas_width = canvas_panel_width;
                     _via_canvas_height = _via_current_image.naturalHeight * scale_width;
                 }
                 // resize image if its height is larger than the image panel
                 if ( _via_canvas_height > canvas_panel_height ) {
-                    let scale_height = canvas_panel_height / _via_canvas_height;
+                    var scale_height = canvas_panel_height / _via_canvas_height;
                     _via_canvas_height = canvas_panel_height;
                     _via_canvas_width = _via_canvas_width * scale_height;
                 }
@@ -589,10 +590,10 @@ function show_image(image_index) {
 // transform regions in image space to canvas space
 function _via_load_canvas_regions() {
     // load all existing annotations into _via_canvas_regions
-    let regions = _via_images[_via_image_id].regions;
+    var regions = _via_images[_via_image_id].regions;
     _via_canvas_regions  = [];
     for ( var i=0; i<regions.length; ++i) {
-	let regioni = new ImageRegion();
+	var regioni = new ImageRegion();
 	for ( var [key,value] of regions[i].attributes ) {
 	    regioni.attributes.set(key, value);
 	}
@@ -659,12 +660,12 @@ function clear_image_display_area() {
 // updates currently selected region shape
 function select_region_shape(sel_shape_name) {
     for (var shape_name in VIA_REGION_SHAPE) {
-	let ui_element = document.getElementById('region_shape_' + VIA_REGION_SHAPE[shape_name]);
+	var ui_element = document.getElementById('region_shape_' + VIA_REGION_SHAPE[shape_name]);
 	ui_element.classList.remove('region_shape_selected');
     }
 
     _via_current_shape = sel_shape_name;
-    let ui_element = document.getElementById('region_shape_' + _via_current_shape);
+    var ui_element = document.getElementById('region_shape_' + _via_current_shape);
     ui_element.classList.add('region_shape_selected');
 
     if ( _via_current_shape != VIA_REGION_SHAPE.POLYGON ) {
@@ -706,7 +707,7 @@ _via_canvas.addEventListener('mousedown', function(e) {
 	    }
 	} else {
 	    // check if user clicked inside a region
-	    let region_id = is_inside_region(_via_click_x0, _via_click_y0);
+	    var region_id = is_inside_region(_via_click_x0, _via_click_y0);
 	    if ( region_id == _via_user_sel_region_id ) {
 		if( !_via_is_user_moving_region ) {
 		    _via_canvas_regions[region_id].is_user_selected = true;
@@ -744,23 +745,23 @@ _via_canvas.addEventListener('mouseup', function(e) {
     if ( dx < 5 || dy < 5 ) {
 	// if user is already drawing ploygon, then each click adds a new point
 	if ( _via_is_user_drawing_polygon ) {
-	    let canvas_x0 = Math.round(_via_click_x0);
-	    let canvas_y0 = Math.round(_via_click_y0);
+	    var canvas_x0 = Math.round(_via_click_x0);
+	    var canvas_y0 = Math.round(_via_click_y0);
 	    
 	    // check if the clicked point is close to the first point
-	    let fx0 = _via_canvas_regions[_via_current_polygon_region_id].attributes.get('all_points_x')[0];
-	    let fy0 = _via_canvas_regions[_via_current_polygon_region_id].attributes.get('all_points_y')[0];
-	    let dx = (fx0 - canvas_x0);
-	    let dy = (fy0 - canvas_y0);
+	    var fx0 = _via_canvas_regions[_via_current_polygon_region_id].attributes.get('all_points_x')[0];
+	    var fy0 = _via_canvas_regions[_via_current_polygon_region_id].attributes.get('all_points_y')[0];
+	    var dx = (fx0 - canvas_x0);
+	    var dy = (fy0 - canvas_y0);
 	    if ( Math.sqrt(dx*dx + dy*dy) <= VIA_POLYGON_POINT_MATCH_TOL ) {
 		// user clicked on the first polygon point to close the path
 		_via_is_user_drawing_polygon = false;
 
 		// add all polygon points stored in _via_canvas_regions[]
-		let all_points_x = _via_canvas_regions[_via_current_polygon_region_id].attributes.get('all_points_x').slice(0);
-		let all_points_y = _via_canvas_regions[_via_current_polygon_region_id].attributes.get('all_points_y').slice(0);
-		let canvas_all_points_x = _via_canvas_regions[_via_current_polygon_region_id].attributes.get('all_points_x');
-		let canvas_all_points_y = _via_canvas_regions[_via_current_polygon_region_id].attributes.get('all_points_y');
+		var all_points_x = _via_canvas_regions[_via_current_polygon_region_id].attributes.get('all_points_x').slice(0);
+		var all_points_y = _via_canvas_regions[_via_current_polygon_region_id].attributes.get('all_points_y').slice(0);
+		var canvas_all_points_x = _via_canvas_regions[_via_current_polygon_region_id].attributes.get('all_points_x');
+		var canvas_all_points_y = _via_canvas_regions[_via_current_polygon_region_id].attributes.get('all_points_y');
 
 		// close path
 		all_points_x.push(all_points_x[0]);
@@ -768,7 +769,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
 		canvas_all_points_x.push(canvas_all_points_x[0]);
 		canvas_all_points_y.push(canvas_all_points_y[0]);		
 		
-		let points_str = '';
+		var points_str = '';
 		for ( var i=0; i<all_points_x.length; ++i) {
 		    all_points_x[i] = Math.round( all_points_x[i] * _via_canvas_scale );
 		    all_points_y[i] = Math.round( all_points_y[i] * _via_canvas_scale );
@@ -777,7 +778,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
 		}
 		points_str = points_str.substring(0, points_str.length-1); // remove last comma
 		
-		let polygon_region = new ImageRegion();
+		var polygon_region = new ImageRegion();
 		polygon_region.attributes.set('name', 'polygon');
 		//polygon_region.attributes.set('points', points_str);
 		polygon_region.attributes.set('all_points_x', all_points_x);
@@ -817,7 +818,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
 			// user has clicked on the first point in a new polygon
 			_via_is_user_drawing_polygon = true;
 
-			let canvas_polygon_region = new ImageRegion();
+			var canvas_polygon_region = new ImageRegion();
 			canvas_polygon_region.attributes.set('name', 'polygon');
 			canvas_polygon_region.attributes.set('all_points_x', [Math.round(_via_click_x0)]);
 			canvas_polygon_region.attributes.set('all_points_y', [Math.round(_via_click_y0)]);
@@ -840,8 +841,8 @@ _via_canvas.addEventListener('mouseup', function(e) {
 	var move_y = Math.round(_via_click_y1 - _via_region_click_y);
 
 	// @todo: update the region data
-	let image_attr = _via_images[_via_image_id].regions[_via_user_sel_region_id].attributes;
-	let canvas_attr = _via_canvas_regions[_via_user_sel_region_id].attributes;
+	var image_attr = _via_images[_via_image_id].regions[_via_user_sel_region_id].attributes;
+	var canvas_attr = _via_canvas_regions[_via_user_sel_region_id].attributes;
 	
 	switch( canvas_attr.get('name') ) {
 	case VIA_REGION_SHAPE.RECT:
@@ -934,7 +935,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
 	
 	_via_is_user_drawing_region = false;
 	
-	let region_x0, region_y0, region_x1, region_y1;
+	var region_x0, region_y0, region_x1, region_y1;
 	// ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
         if ( _via_click_x0 < _via_click_x1 ) {
 	    region_x0 = _via_click_x0;
@@ -952,8 +953,8 @@ _via_canvas.addEventListener('mouseup', function(e) {
 	    region_y1 = _via_click_y0;
 	}
 
-	let original_img_region = new ImageRegion();
-	let canvas_img_region = new ImageRegion();
+	var original_img_region = new ImageRegion();
+	var canvas_img_region = new ImageRegion();
 	var dx = region_x1 - region_x0;
 	var dy = region_y1 - region_y0
 
@@ -978,7 +979,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
 
 		    break;
 		case VIA_REGION_SHAPE.CIRCLE:
-		    let circle_radius = Math.round(Math.sqrt( dx*dx + dy*dy ));
+		    var circle_radius = Math.round(Math.sqrt( dx*dx + dy*dy ));
 		    original_img_region.attributes.set('name', 'circle');
 		    original_img_region.attributes.set('cx', Math.round(region_x0 * _via_canvas_scale));
 		    original_img_region.attributes.set('cy', Math.round(region_y0 * _via_canvas_scale));
@@ -1081,7 +1082,7 @@ _via_canvas.addEventListener('mousemove', function(e) {
         // draw rectangle as the user drags the mouse cousor
         _via_redraw_canvas(); // clear old intermediate rectangle
 
-	let region_x0, region_y0;
+	var region_x0, region_y0;
 
         if ( _via_click_x0 < _via_current_x ) {
             if ( _via_click_y0 < _via_current_y ) {
@@ -1111,7 +1112,7 @@ _via_canvas.addEventListener('mousemove', function(e) {
 				  dy);
 	    break;
 	case VIA_REGION_SHAPE.CIRCLE:
-	    let circle_radius = Math.round(Math.sqrt( dx*dx + dy*dy ));
+	    var circle_radius = Math.round(Math.sqrt( dx*dx + dy*dy ));
 	    _via_draw_circle_region(region_x0,
 				    region_y0,
 				    circle_radius);
@@ -1170,9 +1171,9 @@ _via_canvas.addEventListener('mousemove', function(e) {
     if ( _via_is_user_moving_region ) {
 	_via_redraw_canvas();
 	
-	let move_x = (_via_current_x - _via_region_click_x);
-	let move_y = (_via_current_y - _via_region_click_y);
-	let attr = _via_canvas_regions[_via_user_sel_region_id].attributes;
+	var move_x = (_via_current_x - _via_region_click_x);
+	var move_y = (_via_current_y - _via_region_click_y);
+	var attr = _via_canvas_regions[_via_user_sel_region_id].attributes;
 
 	switch (attr.get('name')) {
 	case VIA_REGION_SHAPE.RECT:
@@ -1236,13 +1237,13 @@ _via_canvas.addEventListener('mousemove', function(e) {
 
     if ( _via_is_user_drawing_polygon ) {
 	_via_redraw_canvas();
-	let attr = _via_canvas_regions[_via_current_polygon_region_id].attributes;
-	let all_points_x = attr.get('all_points_x');
-	let all_points_y = attr.get('all_points_y');
-	let npts = all_points_x.length;
+	var attr = _via_canvas_regions[_via_current_polygon_region_id].attributes;
+	var all_points_x = attr.get('all_points_x');
+	var all_points_y = attr.get('all_points_y');
+	var npts = all_points_x.length;
 
-	let line_x = [all_points_x.slice(npts-1), _via_current_x];
-	let line_y = [all_points_y.slice(npts-1), _via_current_y];
+	var line_x = [all_points_x.slice(npts-1), _via_current_x];
+	var line_y = [all_points_y.slice(npts-1), _via_current_y];
 	_via_draw_polygon_region(line_x, line_y, false);
     }
     
@@ -1275,8 +1276,8 @@ function _via_redraw_canvas() {
 
 function draw_all_regions() {
     for (var i=0; i < _via_canvas_regions.length; ++i) {
-	let attr = _via_canvas_regions[i].attributes;
-	let is_selected = _via_canvas_regions[i].is_user_selected;
+	var attr = _via_canvas_regions[i].attributes;
+	var is_selected = _via_canvas_regions[i].is_user_selected;
 	
 	switch( attr.get('name') ) {
 	case VIA_REGION_SHAPE.RECT:
@@ -1561,8 +1562,8 @@ function draw_all_annotations() {
 //
 function is_inside_region(px, py) {
     for (var i=0; i < _via_canvas_regions.length; ++i) {
-	let attr = _via_canvas_regions[i].attributes;
-	let result = false;
+	var attr = _via_canvas_regions[i].attributes;
+	var result = false;
 	
 	switch ( attr.get('name') ) {
 	case VIA_REGION_SHAPE.RECT:
@@ -1602,8 +1603,8 @@ function is_inside_region(px, py) {
 }
 
 function is_inside_circle(cx, cy, r, px, py) {
-    let dx = px - cx;
-    let dy = py - cy;
+    var dx = px - cx;
+    var dy = py - cy;
     if ((dx*dx + dy*dy) < r*r ) {
 	return true;
     } else {
@@ -1623,8 +1624,8 @@ function is_inside_rect(x, y, w, h, px, py) {
 }
 
 function is_inside_ellipse(cx, cy, rx, ry, px, py) {
-    let dx = (cx - px);
-    let dy = (cy - py);
+    var dx = (cx - px);
+    var dy = (cy - py);
     if ( (((dx*dx)/(rx*rx)) + ((dy*dy)/(ry*ry))) < 1 ) {
 	return true;
     } else {
@@ -1635,11 +1636,11 @@ function is_inside_ellipse(cx, cy, rx, ry, px, py) {
 // returns 0 when (px,py) is outside the polygon
 // source: http://geomalgorithms.com/a03-_inclusion.html
 function is_inside_polygon(all_points_x, all_points_y, px, py) {
-    let wn = 0;    // the  winding number counter
+    var wn = 0;    // the  winding number counter
     
     // loop through all edges of the polygon
     for (var i=0; i<all_points_x.length-1; ++i) {   // edge from V[i] to  V[i+1]
-	let is_left_value = is_left( all_points_x[i], all_points_y[i],
+	var is_left_value = is_left( all_points_x[i], all_points_y[i],
 				     all_points_x[i+1], all_points_y[i+1],
 				     px, py);
 
@@ -1677,8 +1678,8 @@ function is_on_region_corner(px, py) {
     var _via_region_edge = [-1, -1]; // region_id, corner_id [top-left=1,top-right=2,bottom-right=3,bottom-left=4]
     
     for (var i=0; i < _via_canvas_regions.length; ++i) {
-	let attr = _via_canvas_regions[i].attributes;
-	let result = false;
+	var attr = _via_canvas_regions[i].attributes;
+	var result = false;
 	_via_region_edge[0] = i;
 	
 	switch ( attr.get('name') ) {
@@ -1722,10 +1723,10 @@ function is_on_region_corner(px, py) {
 }
 
 function is_on_rect_edge(x, y, w, h, y, px, py) {
-    let dx0 = Math.abs(x - px);
-    let dy0 = Math.abs(y - py);
-    let dx1 = Math.abs(x + w - px);
-    let dy1 = Math.abs(y + h - py);
+    var dx0 = Math.abs(x - px);
+    var dy0 = Math.abs(y - py);
+    var dx1 = Math.abs(x + w - px);
+    var dy1 = Math.abs(y + h - py);
     console.log(dx0+','+dy0+','+dx1+','+dy1);
 
     //[top-left=1,top-right=2,bottom-right=3,bottom-left=4]
@@ -1750,8 +1751,8 @@ function is_on_rect_edge(x, y, w, h, y, px, py) {
 }
 
 function is_on_circle_edge(cx, cy, r, px, py) {
-    let dx = cx - px;
-    let dy = cy - py;
+    var dx = cx - px;
+    var dy = cy - py;
     if ( Math.abs(Math.sqrt( dx*dx + dy*dy ) - r) < VIA_REGION_EDGE_TOL ) {
 	return 1;
     } else {
@@ -1760,8 +1761,8 @@ function is_on_circle_edge(cx, cy, r, px, py) {
 }
 
 function is_on_ellipse_edge(cx, cy, rx, ry, px, py) {
-    let dx = (cx - px)/rx;
-    let dy = (cy - py)/ry;
+    var dx = (cx - px)/rx;
+    var dy = (cy - py)/ry;
 
     if ( Math.abs(Math.sqrt( dx*dx + dy*dy ) - 1) < 0.2 ) {
 	return 1;
@@ -2049,7 +2050,7 @@ function show_filename_info() {
 function show_current_attributes() {
     if ( attribute_list.size > 0 ) {
 	var region_info = '<table class="editable_table">';
-	for (let attribute of attribute_list) {
+	for (var attribute of attribute_list) {
 	    //region_info += '<tr><td onclick="update_attribute_name(\'' + attribute + '\')">' + attribute + '</td>';
 	    region_info += '<tr><td>' + attribute + '</td>';
 	    if ( _via_current_sel_region_id != -1 ) {
@@ -2097,7 +2098,7 @@ function save_attribute_name() {
 	attribute_list.delete(current_update_attribute_name);
     } else {
 	var updated_attribute_list = new Set();
-	for (let attribute of attribute_list) {
+	for (var attribute of attribute_list) {
 	    if ( attribute == current_update_attribute_name ) {
 		updated_attribute_list.add();
 	    } else {
@@ -2181,7 +2182,7 @@ function print_current_image_data() {
 	var img_regions = _via_images[image_id].regions;
         for ( var i=0; i<img_regions.length; ++i) {
 	    var attr = img_regions[i].attributes;
-	    let img_region_str = '\n\t_via_images[i].regions = [';
+	    var img_region_str = '\n\t_via_images[i].regions = [';
 	    for ( var [key, value] of attr ) {
 		img_region_str += key + ':' + value + ';';
 	    }
@@ -2190,7 +2191,7 @@ function print_current_image_data() {
 
 	if ( _via_image_id == image_id ) {
 	    for ( var i=0; i<_via_canvas_regions.length; ++i) {
-		let canvas_region_str = '\n\t_via_canvas_regions = [';
+		var canvas_region_str = '\n\t_via_canvas_regions = [';
 		for ( var [key, value] of _via_canvas_regions[i].attributes ) {
 		    canvas_region_str += key + ':' + value + ';';
 		}
