@@ -166,7 +166,7 @@ function add_images() {
 }
 function download_all_region_data(type) {
     var all_region_data = package_region_data(type);
-    var all_region_data_blob = new Blob([all_region_data], {type: 'text/'+type+';charset=utf-8'});   
+    var all_region_data_blob = new Blob(all_region_data, {type: 'text/'+type+';charset=utf-8'});
     save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
 }
 
@@ -453,7 +453,9 @@ function load_text_file(text_file, callback_function) {
 //
 function package_region_data(return_type) {
     if( return_type == "csv" ) {
-	csv_str = "#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes";
+	var csvdata = [];
+	var csvheader = "#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes";
+	csvdata.push(csvheader);
 
 	for ( var image_id in _via_images ) {
 	    var prefix_str = _via_images[image_id].filename;
@@ -468,10 +470,10 @@ function package_region_data(return_type) {
 
 		var region_attr_str = attr_map_to_str( regions[i].region_attributes );
 		
-		csv_str += '\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str;
+		csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
 	    }
 	}
-	return csv_str;
+	return csvdata;
     } else {
 	// JSON.stringify() does not work with Map()
 	// hence, we cast everything as objects
@@ -507,7 +509,7 @@ function package_region_data(return_type) {
     
 	    _via_images_as_obj[image_id] = image_data;
 	}
-	return JSON.stringify(_via_images_as_obj);
+	return [JSON.stringify(_via_images_as_obj)];
     }    
 }
 
