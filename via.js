@@ -73,6 +73,7 @@ var _via_message_clear_timer;
 // attributes
 var _via_region_attributes = new Set();
 var _via_current_update_attribute_name = "";
+var _via_current_update_region_id = -1;
 
 // persistence to local storage
 var _via_is_local_storage_available = false;
@@ -167,7 +168,12 @@ function add_images() {
 function download_all_region_data(type) {
     var all_region_data = package_region_data(type);
     var all_region_data_blob = new Blob(all_region_data, {type: 'text/'+type+';charset=utf-8'});
-    save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
+    if ( all_region_data_blob.size > (2*1024*1024) &&
+	 type == 'csv' ) {
+	show_message('CSV file size is ' + (all_region_data_blob.size/(1024*1024)) + ' MB. We advise you to instead download as JSON');
+    } else {
+	save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
+    }
 }
 
 function upload_region_data_file() {
@@ -293,7 +299,7 @@ function import_region_data_from_csv(data) {
     for (var i=0; i<csvdata.length; ++i) {
 	if (csvdata[i].charAt(0) == VIA_IMPORT_CSV_COMMENT_CHAR) {
 	    // parse header
-	    // #filename,file_size,file_attributes,region_count,region_id,region_shape_attributes
+	    // #filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
 	    var d = csvdata[i].substring(1, csvdata[i].length); // remove #
 	    d = d.split(',');
 	    var filename_index, size_index, file_attr_index, region_shape_attr_index
@@ -310,6 +316,9 @@ function import_region_data_from_csv(data) {
 		    break;
 		case 'region_shape_attributes':
 		    region_shape_attr_index = j;
+		    break;
+		case 'region_attributes':
+		    region_attr_index = j;
 		    break;
 		}
 	    }
@@ -331,7 +340,8 @@ function import_region_data_from_csv(data) {
 		    }
 		}
 
-		// copy regions
+		var regioni = new ImageRegion();		
+		// copy regions shape attributes
 		if ( d[region_shape_attr_index] != '""' ||
 		     d[region_shape_attr_index] != '' ) {		    
 		    var region_str = d[region_shape_attr_index];
@@ -339,7 +349,6 @@ function import_region_data_from_csv(data) {
 		    
 		    var attr_map = keyval_str_to_map( region_str );
 
-		    var regioni = new ImageRegion();
 		    for ( var [key, val] of attr_map ) {
 			if ( key == 'all_points_x' ||
 			     key == 'all_points_y' ) {
@@ -354,9 +363,25 @@ function import_region_data_from_csv(data) {
 			    regioni.shape_attributes.set(key, val);
 			}
 		    }
-		    _via_images[image_id].regions.push(regioni);
-		    region_import_count += 1;
 		}
+
+		// copy region attributes
+		if ( d[region_attr_index] != '""' ||
+		     d[region_attr_index] != '' ) {		    
+		    var region_attr = d[region_attr_index];
+		    region_attr = region_attr.substring(1, region_attr.length-1); // remove prefix and suffix quotation marks
+		    var region_attr_map = keyval_str_to_map( region_attr );
+		    
+		    for ( var [key, val] of region_attr_map ) {
+			regioni.region_attributes.set(key, val);
+
+			if (!_via_region_attributes.has(key)) {
+			    _via_region_attributes.add(key);
+			}
+		    }
+		}		
+		_via_images[image_id].regions.push(regioni);
+		region_import_count += 1;
 	    } else {
 		show_message('Skipping ' + image_id + ' as the corresponding image is not loaded');
 	    }
@@ -367,6 +392,7 @@ function import_region_data_from_csv(data) {
     _via_load_canvas_regions();
     _via_redraw_canvas();
     show_region_shape_info();
+    show_current_attributes();
     save_current_data_to_browser_cache();
 }
 
@@ -396,6 +422,13 @@ function import_region_data_from_json(data) {
 		for (var key in regions[i].shape_attributes) {
 		    regioni.shape_attributes.set(key, regions[i].shape_attributes[key]);
 		}
+		for (var key in regions[i].region_attributes) {
+		    regioni.region_attributes.set(key, regions[i].region_attributes[key]);
+
+		    if (!_via_region_attributes.has(key)) {
+			_via_region_attributes.add(key);
+		    }
+		}
 		_via_images[image_id].regions.push(regioni);
 		region_import_count += 1;
 	    }
@@ -409,6 +442,7 @@ function import_region_data_from_json(data) {
     _via_load_canvas_regions();
     _via_redraw_canvas();
     show_region_shape_info();
+    show_current_attributes();
     save_current_data_to_browser_cache();
 }
 
@@ -612,7 +646,8 @@ function show_image(image_index) {
 		_via_is_user_moving_region = false;
 		_via_is_user_drawing_polygon = false;
 		_via_is_region_selected = false;
-
+		_via_user_sel_region_id = -1;
+		
 		clear_image_display_area();
 		_via_canvas.style.display = "inline";
 
@@ -620,7 +655,11 @@ function show_image(image_index) {
 		_via_redraw_canvas();
 		_via_canvas.focus();
 
+		// update the info panel
 		show_filename_info();
+		show_region_attributes_info();
+		show_region_shape_info();
+		show_current_attributes();
 		
 		show_message("Loaded image " + img_filename + " ... ", 5000);
 	    });
@@ -855,14 +894,17 @@ _via_canvas.addEventListener('mouseup', function(e) {
 		    toggle_all_regions_selection(false);
 		}
 		_via_canvas_regions[region_id].is_user_selected = true;
-		show_current_attributes();
 		show_region_attributes_info();
+		show_region_shape_info();
+		show_current_attributes();
             } else {
-		if ( _via_is_region_selected ) {
+		if ( _via_is_user_drawing_region ) {
 		    // clear all region selection
-		    _via_is_region_selected = false;
-		    _via_user_sel_region_id = -1;		    
-		    toggle_all_regions_selection(false);		    
+		    _via_is_user_drawing_region = false;
+
+		    show_region_attributes_info();
+		    show_region_shape_info();
+		    show_current_attributes();
 		} else {
 		    if (_via_current_shape == VIA_REGION_SHAPE.POLYGON) {
 			// user has clicked on the first point in a new polygon
@@ -1338,7 +1380,7 @@ function _via_redraw_canvas() {
     if (_via_current_image_loaded) {
         _via_ctx.drawImage(_via_current_image, 0, 0, _via_canvas_width, _via_canvas_height);
         draw_all_regions();
-        //draw_all_region_attributes();
+        draw_all_region_id();
     }
 }
 
@@ -1580,44 +1622,92 @@ function _via_draw_polygon_region(all_points_x, all_points_y, is_selected) {
     }
 }
 
-function draw_all_region_attributes() { 
+function draw_all_region_id() { 
     _via_ctx.shadowColor = "transparent";
     for (var i=0; i < _via_images[_via_image_id].regions.length; ++i) {
-	var ri = _via_images[_via_image_id].regions[i];
+	var annotation_str = (i+1);
 
-	if ( ri.region_attributes.size != _via_region_attributes.size ) {
-	    var annotation_str = (_via_region_attributes.size - ri.region_attributes.size);
-	    
-	    var w = Math.abs(canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i]);
-	    _via_ctx.font = '12pt Sans';
-	    
-	    var bgnd_rect_height = 1.8 * _via_ctx.measureText('M').width;
-	    var bgnd_rect_width = _via_ctx.measureText(annotation_str).width;
-	    var bbox_width = Math.abs( canvas_x1[current_image_id][i] - canvas_x0[current_image_id][i] );
+	var bbox = get_canvas_region_bounding_box(i);
 
-	    if ( bgnd_rect_width > bbox_width ) {
-		var max_str_len = Math.round(annotation_str.length * (bbox_width/bgnd_rect_width)) - 4;
-		annotation_str = annotation_str.substring(0, max_str_len) + '...';
-		bgnd_rect_width = bbox_width;
-	    } else {
-		bgnd_rect_width = bgnd_rect_width + 0.6*bgnd_rect_height;
-	    }
+	var x = bbox[0];
+	var y = bbox[1];
+	var w = Math.abs(bbox[2] - bbox[0]);
+	var h = Math.abs(bbox[3] - bbox[1]);
+	_via_ctx.font = '12pt Sans';
 
-	    // first, draw a background rectangle first
-	    _via_ctx.fillStyle = 'black';
-	    _via_ctx.globalAlpha=0.5;          
-	    _via_ctx.fillRect(canvas_x0[current_image_id][i],
-                              canvas_y0[current_image_id][i] - bgnd_rect_height,
-                              bgnd_rect_width,
-                              bgnd_rect_height);
-	    // then, draw text over this background rectangle
-	    _via_ctx.globalAlpha=1.0;
-	    _via_ctx.fillStyle = 'yellow';
-	    _via_ctx.fillText(annotation_str,
-                              canvas_x0[current_image_id][i] + bgnd_rect_height/4,
-                              canvas_y0[current_image_id][i] - bgnd_rect_height/3);
-	}
+	var spc_dot = _via_ctx.measureText('.').width
+	var bgnd_rect_height = 1.8 * _via_ctx.measureText('M').width;
+	var bgnd_rect_width = _via_ctx.measureText(annotation_str).width * 2;
+
+	// first, draw a background rectangle first
+	_via_ctx.fillStyle = 'black';
+	_via_ctx.globalAlpha=0.8;
+	_via_ctx.fillRect(x,
+			  y,
+                          bgnd_rect_width,
+			  bgnd_rect_height);
+	
+	// then, draw text over this background rectangle
+	_via_ctx.globalAlpha=1.0;
+	_via_ctx.fillStyle = 'yellow';
+	_via_ctx.fillText(annotation_str, x+spc_dot, y+3.8*spc_dot);
+
     }
+}
+
+function get_canvas_region_bounding_box(region_id) {
+    var bbox = new Array(4);
+    var d = _via_canvas_regions[region_id].shape_attributes;
+    switch( d.get('name') ) {
+    case 'rect':
+	bbox[0] = d.get('x');
+	bbox[1] = d.get('y');
+	bbox[2] = d.get('x') + d.get('width');
+	bbox[3] = d.get('y') + d.get('height');;
+	break;
+	
+    case 'circle':
+	bbox[0] = d.get('cx') - d.get('r');
+	bbox[1] = d.get('cx') - d.get('r');
+	bbox[2] = d.get('cx') + d.get('r');
+	bbox[3] = d.get('cx') + d.get('r');
+	break;
+	
+    case 'ellipse':
+	bbox[0] = d.get('cx') - d.get('rx');
+	bbox[1] = d.get('cx') - d.get('ry');
+	bbox[2] = d.get('cx') + d.get('rx');
+	bbox[3] = d.get('cx') + d.get('ry');
+	break;
+	
+    case 'polygon':
+	var all_points_x = d.get('all_points_x');
+	var all_points_y = d.get('all_points_y');
+	var minx=0;
+	var miny=0;
+	var maxx=Number.MAX_SAFE_INTEGER;
+	var maxy=Number.MAX_SAFE_INTEGER;
+	for (var i=0; i<all_points_x.length; ++i) {
+	    if (all_points_x[i] < minx) {
+		minx = all_points_x[i];
+	    }
+	    if (all_points_x[i] > maxx) {
+		maxx = all_points_x[i];
+	    }
+	    if (all_points_y[i] < miny) {
+		minx = all_points_y[i];
+	    }
+	    if (all_points_y[i] > maxy) {
+		maxy = all_points_y[i];
+	    }
+	}
+	bbox[0] = minx;
+	bbox[1] = miny;
+	bbox[2] = maxx;
+	bbox[3] = maxy;
+	break;	
+    }
+    return bbox;
 }
 
 //
@@ -1950,6 +2040,24 @@ window.addEventListener("keydown", function(e) {
 	    _via_is_user_drawing_polygon = false;
 	    _via_canvas_regions.splice(_via_current_polygon_region_id, 1);
 	}
+
+	if ( _via_is_user_drawing_region ) {
+	    _via_is_user_drawing_region = false;
+	}
+
+	if ( _via_is_user_resizing_region ) {
+	    _via_is_user_resizing_region = false
+	}
+
+	if ( _via_is_user_updating_attribute_name ||
+	     _via_is_user_updating_attribute_value) {
+	    _via_is_user_updating_attribute_name = false;
+	    _via_is_user_updating_attribute_value = false;
+	    _via_current_update_attribute_name = "";
+
+	    show_current_attributes();
+	    show_region_attributes_info();
+	}
 	
 	_via_redraw_canvas();
     }
@@ -1963,7 +2071,7 @@ window.addEventListener("keydown", function(e) {
 
     if ( e.which == 121 ) { // F10 key used for debugging
 	print_current_state_vars();
-	print_current_image_data();
+	//print_current_image_data();
     }
     if ( e.which == 90 ) { // z used to toggle zoom
 	if ( zoom_active ) {
@@ -1977,6 +2085,9 @@ window.addEventListener("keydown", function(e) {
 
 function move_to_prev_image() {
     if (_via_images_count > 0) {
+	_via_is_region_selected = false;
+	_via_user_sel_region_id = -1;
+	
 	is_user_updating_attribute_name = false;
         _via_current_sel_region_id = -1;
 	
@@ -1993,6 +2104,10 @@ function move_to_prev_image() {
 
 function move_to_next_image() {
     if (_via_images_count > 0) {
+	_via_is_region_selected = false;
+	_via_user_sel_region_id = -1;
+	
+
 	is_user_updating_attribute_name = false;
         _via_current_sel_region_id = -1;
 	
@@ -2067,23 +2182,41 @@ function show_filename_info() {
 //
 function show_current_attributes() {
     if ( _via_region_attributes.size > 0 ) {
-	var region_info = '<table class="editable_table">';
-	for (var attribute of _via_region_attributes) {
-	    //region_info += '<tr><td onclick="update_attribute_name(\'' + attribute + '\')">' + attribute + '</td>';
-	    region_info += '<tr><td>' + attribute + '</td>';
-	    if ( _via_user_sel_region_id != -1 ) {
-		if ( _via_images[_via_image_id].regions[_via_user_sel_region_id].region_attributes.has(attribute) ) {
-		    var attribute_value = _via_images[_via_image_id].regions[_via_user_sel_region_id].region_attributes.get(attribute);
-		    region_info += '<td title="' + attribute_value + '" onclick="update_attribute_value(\'' + attribute + '\')">' + attribute_value + '</td></tr>';
-		} else {
-		    region_info += '<td title="' + attribute_value + '" onclick="update_attribute_value(\'' + attribute + '\')">' + '<span class="action_text_link">[click to set value]</span>' + '</td></tr>';
+	var region_info = [];
+
+	var theader = '<tr><th></th>';
+	if (_via_is_region_selected) {
+	    var regions = _via_images[_via_image_id].regions;
+	    for (var i=0; i<regions.length; ++i) {
+		if (_via_canvas_regions[i].is_user_selected) {
+		    theader += '<th>Region [' + (i+1) + ']</th>';
 		}
-	    } else {
-		region_info += '</tr>';
 	    }
 	}
-	region_info += "</table>";
-	region_info_table.innerHTML = region_info;
+	theader += '</tr>';
+	region_info.push(theader);
+	
+	for (var attribute of _via_region_attributes) {
+	    region_info.push('<tr>');
+	    region_info.push('<td title="' + attribute + '">' + attribute + '</td>');
+
+	    if (_via_is_region_selected) {
+		var regions = _via_images[_via_image_id].regions;
+		for (var i=0; i<regions.length; ++i) {
+		    if (_via_canvas_regions[i].is_user_selected) {
+			var click_handler = 'update_attribute_value(\'' + i +'\', \'' + attribute + '\')';
+			if (regions[i].region_attributes.has(attribute)) {
+			    var attr_val = regions[i].region_attributes.get(attribute);
+			    region_info.push('<td class="clickable_tbl_entry" title="' + attr_val + '" onclick="' + click_handler + '">' + attr_val + '</td>');
+			} else {
+			    region_info.push('<td title="' + attr_val + '" onclick="' + click_handler + '">' + '<span class="action_text_link">[click to set value]</span>' + '</td>');
+			}
+		    }
+		}
+	    }
+	    region_info.push('</tr>');
+	}
+	region_info_table.innerHTML = region_info.join('');
     } else {
 	region_info_table.innerHTML = '<tr class="action_text_link" ><td onclick="import_attributes()" title="Import existing attributes from a file">[click to import attributes]</tr></td>';
     }
@@ -2094,12 +2227,10 @@ function update_attribute_name(attribute) {
     current_update_attribute_name = attribute;
     
     show_message("Press Enter to save the updated attribute name");
-    var region_info = '<table style="border: 0;">'
-    region_info += '<tr><td style="border: 0;" colspan="2"><textarea id="textarea_attribute_name" rows="8" cols="20">' + attribute + '</textarea></td></tr>';
+    var region_info = '<tr><td colspan="2"><textarea id="textarea_attribute_name" rows="8" cols="40">' + attribute + '</textarea></td></tr>';
     region_info += '<tr><td style="border: 0;"><button type="button" onclick="save_attribute_name()">Save</button></td>';
     region_info += '<td style="border: 0;"><button type="button" onclick="cancel_attribute_update()">Cancel</button></td></tr>';
 
-    region_info += '</table>';
     region_info_table.innerHTML = region_info;
     document.getElementById("textarea_attribute_name").focus();
 }
@@ -2134,18 +2265,22 @@ function cancel_attribute_update() {
     show_current_attributes();
 }
 
-function update_attribute_value(attribute) {
+function update_attribute_value(region_id, attribute) {
     _via_is_user_updating_attribute_value = true;
     _via_current_update_attribute_name = attribute;
+    _via_current_update_region_id = region_id;
 
-    var region_info = '<table>'
-    region_info += '<tr><td colspan="2">' + attribute + '</td></tr>';
-    region_info += '<tr><td colspan="2"><textarea id="textarea_attribute_value" rows="8" cols="20"></textarea></td></tr>';
-    region_info += '<tr><td><button type="button" onclick="save_attribute_value()">Save</button></td>';
-    region_info += '<td><button type="button" onclick="cancel_attribute_update()">Cancel</button></td></tr>';
-    region_info += '</table>'
+    var region = _via_images[_via_image_id].regions[_via_current_update_region_id];
+    var cur_attr_val = region.region_attributes.get(attribute);
 
-    region_info_table.innerHTML = region_info;
+    var region_info = [];    
+    region_info.push('<tr><td colspan="2">' + attribute + '</td></tr>');
+    region_info.push('<tr><td colspan="2"><textarea id="textarea_attribute_value" rows="8" cols="40">' + cur_attr_val + '</textarea></td></tr>');
+    region_info.push('<tr><td><button type="button" onclick="save_attribute_value()">Save</button></td>');
+    region_info.push('<td><button type="button" onclick="cancel_attribute_update()">Cancel</button></td></tr>');
+
+    region_info_table.innerHTML = region_info.join('');
+    
     document.getElementById("textarea_attribute_value").focus();
     document.getElementById("textarea_attribute_value").onkeypress = function(e) {
 	if ( e.key == VIA_IMPORT_CSV_COMMENT_CHAR ||
@@ -2160,20 +2295,19 @@ function update_attribute_value(attribute) {
 
 function save_attribute_value() {
     var new_attribute_value = document.getElementById("textarea_attribute_value").value;
-    var img_region_attr = _via_images[_via_image_id].regions[_via_user_sel_region_id].region_attributes;
-    var canvas_region_attr = _via_canvas_regions[_via_user_sel_region_id].region_attributes;
+    var img_region_attr = _via_images[_via_image_id].regions[_via_current_update_region_id].region_attributes;
     
     img_region_attr.set(_via_current_update_attribute_name, new_attribute_value);
-    canvas_region_attr.set(_via_current_update_attribute_name, new_attribute_value);
     
     _via_is_user_updating_attribute_value = false;
     _via_current_update_attribute_name = "";
+    _via_current_update_region_id = -1;
 
     show_current_attributes();
     show_region_attributes_info();
 
     setTimeout(function() {
-	save_current_data();
+	save_current_data_to_browser_cache();
     }, 1000);
 }
 
@@ -2198,16 +2332,24 @@ function save_current_data_to_browser_cache() {
     setTimeout(function() {
 	if ( _via_is_local_storage_available &&
 	     ! _via_is_save_ongoing) {
-	    _via_is_save_ongoing = true;
-	    localStorage.setItem('_via_images', package_region_data('json'));
+	    try {
+		_via_is_save_ongoing = true;
+		localStorage.setItem('_via_timestamp', Date.now());
+		localStorage.setItem('_via_images', package_region_data('json'));
 
-	    // save attributes
-	    var attr = [];
-	    for (var attribute of _via_region_attributes) {
-		attr.push(attribute);
+		// save attributes
+		var attr = [];
+		for (var attribute of _via_region_attributes) {
+		    attr.push(attribute);
+		}
+		localStorage.setItem('_via_region_attributes', JSON.stringify(attr));
+		_via_is_save_ongoing = false;
+	    } catch(err) {
+		_via_is_save_ongoing = false;
+		show_message('Failed to save data to browser cache');
+		console.log('Failed to save data to browser cache');
+		console.log(err.message);
 	    }
-	    localStorage.setItem('_via_region_attributes', JSON.stringify(attr));
-	    _via_is_save_ongoing = false;
 	}
     }, 1000);
 }
