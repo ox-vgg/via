@@ -192,6 +192,19 @@
       display: inline-block;
       margin: auto;
       }
+      #about_panel {
+      display: inline-block;
+      margin: auto;
+      width: 80%;
+      font-family: Sans;
+      font-size: default;
+      line-height: 1.5em;
+      margin: 0;
+      }
+      #about_panel li {
+      margin: 1em 0;
+      }
+      
       .editable_table tr:hover {
       background-color: #cccccc;
       color: #000000;
@@ -367,11 +380,15 @@
 	    <button onclick="discard_via_session_data()">Discard Annotations</button>
           </div>
 
-	  <div class="" id="about_panel" style="width: 50%;">
-	    <svg height="100" viewBox="0 0 64 64" style="stroke: #cccccc; fill: #ffffff; display:inline;"><use xlink:href="#via_logo"></use></svg>
-	    <div style="font-family: Sans; font-size: xx-large;">VGG Image Annotator</div>
-            <p>VGG Image Annotator (via) is an open source project released under the BSD-2 clause license. This work was supported by EPSRC programme grant <a href="http://www.seebibyte.org/index.html">Seebibyte: Visual Search for the Era of Big Data</a> (<a href="http://gow.epsrc.ac.uk/NGBOViewGrant.aspx?GrantRef=EP/M013774/1">EP/M013774/1</a>).</p>
-	    <p>This image annotation tool uses HTML, CSS and Javascript (<b>no dependencies on any javascript libraries</b>). It has been designed with portability in mind and therefore does not have any dependencies other than a modern web browser. For further information, please contact <a href="mailto:adutta-REMOVE-ME@robots.ox.ac.uk">Abhishek Dutta</a>.</p>
+	  <div class="" id="about_panel" style="">
+	    <!--<div><svg height="100" viewBox="0 0 64 64" style="stroke: #cccccc; fill: #ffffff; display:inline;"><use xlink:href="#via_logo"></use></svg></div>-->
+	    <ul>
+	      <li>VGG Image Annotator (via) is an open source project developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause license.</li>
+	      <li>This work was supported by EPSRC programme grant <a href="http://www.seebibyte.org/index.html">Seebibyte: Visual Search for the Era of Big Data</a> (<a href="http://gow.epsrc.ac.uk/NGBOViewGrant.aspx?GrantRef=EP/M013774/1">EP/M013774/1</a>).</li>
+	      <li>This image annotation tool uses HTML, CSS and Javascript (<b>no dependencies on any javascript libraries</b>) and to run requires nothing more than a modern web browser</li>
+	      <li>You are welcome to <a href="https://gitlab.com/vgg/via/issues/new">submit</a> bug reports and feature requests</li>
+	      <li>For further information, please contact <a href="mailto:adutta-REMOVE-ME@robots.ox.ac.uk">Abhishek Dutta</a>.</li>
+	    </ul>
           </div>
 	  
 	</div>

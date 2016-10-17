@@ -2073,6 +2073,10 @@ window.addEventListener("keydown", function(e) {
 	print_current_state_vars();
 	//print_current_image_data();
     }
+    if (e.which == 113) { // F2 for about
+	show_about_panel();
+    }
+    
     if ( e.which == 90 ) { // z used to toggle zoom
 	if ( zoom_active ) {
             zoom_active=false;
