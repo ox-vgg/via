@@ -74,6 +74,10 @@ var _via_message_clear_timer;
 var _via_region_attributes = new Set();
 var _via_current_update_attribute_name = "";
 
+// persistence to local storage
+var _via_is_local_storage_available = false;
+var _via_is_save_ongoing = false;
+
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
 
@@ -95,7 +99,6 @@ var ZOOM_SIZE_PERCENT = 0.2;
 var zoom_size_img = -1;
 var zoom_size_canvas = -1;
 var ZOOM_BOUNDARY_COLOR = "#ffaaaa";
-var is_local_storage_available = false;
 
 var COLOR_KEY = "#0000FF";
 var COLOR_VALUE = "#000000";
@@ -133,6 +136,8 @@ function main() {
     show_home_panel();   
     show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
     show_current_attributes();
+
+    _via_is_local_storage_available = check_local_storage();
 }
 
 //
@@ -264,6 +269,7 @@ function import_region_attributes_from_csv(data) {
     show_current_attributes();
     show_region_attributes_info();
     show_message('Imported ' + attributes_import_count + ' attributes from CSV file');
+    save_current_data_to_browser_cache();
 }
 
 function import_region_data_from_file(event) {
@@ -361,6 +367,7 @@ function import_region_data_from_csv(data) {
     _via_load_canvas_regions();
     _via_redraw_canvas();
     show_region_shape_info();
+    save_current_data_to_browser_cache();
 }
 
 function import_region_data_from_json(data) {
@@ -402,6 +409,7 @@ function import_region_data_from_json(data) {
     _via_load_canvas_regions();
     _via_redraw_canvas();
     show_region_shape_info();
+    save_current_data_to_browser_cache();
 }
 
 // key1=val1;key2=val2;...
@@ -535,7 +543,6 @@ function save_data_to_local_file(data, filename) {
     });
     
     a.dispatchEvent(event);
-
 }
 
 //
@@ -827,7 +834,8 @@ _via_canvas.addEventListener('mouseup', function(e) {
 		_via_current_polygon_region_id = _via_images[_via_image_id].regions.length;
 		_via_images[_via_image_id].regions.push(polygon_region);
 
-		_via_current_polygon_region_id = -1;	
+		_via_current_polygon_region_id = -1;
+		save_current_data_to_browser_cache();
 	    } else {
 		// user clicked on a new polygon point
 		_via_canvas_regions[_via_current_polygon_region_id].shape_attributes.get('all_points_x').push(canvas_x0);
@@ -929,6 +937,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
 	
 	_via_redraw_canvas();
 	_via_canvas.focus();
+	save_current_data_to_browser_cache();
 	return;
     }
 
@@ -971,6 +980,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
 	}
 	_via_redraw_canvas();
 	_via_canvas.focus();
+	save_current_data_to_browser_cache();
 	return;
     }
 
@@ -1064,6 +1074,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
 	}
 	_via_redraw_canvas();
 	_via_canvas.focus();
+	save_current_data_to_browser_cache();
 	return;
     }
     
@@ -1908,6 +1919,8 @@ window.addEventListener("keydown", function(e) {
 	    _via_redraw_canvas();
 	    _via_canvas.focus();
 	    e.preventDefault();
+
+	    save_current_data_to_browser_cache();
 	}
     }
     
@@ -1992,19 +2005,10 @@ function move_to_next_image() {
     }
 }
 
-function check_local_storage() {
-    // https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
-    try {
-	var x = '__storage_test__';
-	localStorage.setItem(x, x);
-	localStorage.removeItem(x);
-	return true;
-    }
-    catch(e) {
-	return false;
-    }
-}
-
+//
+// Update of user interface elements
+// Communication from javascript to UI
+//
 function show_message(msg, timeout_ms) {
     if ( _via_message_clear_timer ) {
 	clearTimeout(_via_message_clear_timer); // stop any previous timeouts
@@ -2165,15 +2169,45 @@ function save_attribute_value() {
 
     show_current_attributes();
     show_region_attributes_info();
+
+    setTimeout(function() {
+	save_current_data();
+    }, 1000);
 }
 
 //
 // Persistence of annotation data in localStorage
 //
-function save_annotation_list() {
-    if ( is_local_storage_available ) {
-	localStorage.setItem('annotation_list', JSON.stringify(annotation_list));
+
+function check_local_storage() {
+    // https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
+    try {
+	var x = '__storage_test__';
+	localStorage.setItem(x, x);
+	localStorage.removeItem(x);
+	return true;
     }
+    catch(e) {
+	return false;
+    }
+}
+
+function save_current_data_to_browser_cache() {
+    setTimeout(function() {
+	if ( _via_is_local_storage_available &&
+	     ! _via_is_save_ongoing) {
+	    _via_is_save_ongoing = true;
+	    localStorage.setItem('_via_images', package_region_data('json'));
+
+	    // save attributes
+	    var attr = [];
+	    for (var attribute of _via_region_attributes) {
+		attr.push(attribute);
+	    }
+	    localStorage.setItem('_via_region_attributes', JSON.stringify(attr));
+	    _via_is_save_ongoing = false;
+	}
+    }, 1000);
 }
 
 //
