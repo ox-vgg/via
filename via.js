@@ -613,6 +613,93 @@ function save_data_to_local_file(data, filename) {
     a.dispatchEvent(event);
 }
 
+function download_current_image_as_svg() {
+    var svgdata = [];
+    
+    var svgheader = [];
+    svgheader.push('<?xml version="1.0" encoding="UTF-8" standalone="no"?>');
+    svgheader.push('<!-- Created with VGG Image Annotator (www.robots.ox.ac.uk/~vgg/software/via/) -->');
+    svgheader.push('<svg');
+    svgheader.push('  xmlns:dc="http://purl.org/dc/elements/1.1/"');
+    svgheader.push('  xmlns:cc="http://creativecommons.org/ns#"');
+    svgheader.push('  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"');
+    svgheader.push('  xmlns:svg="http://www.w3.org/2000/svg"');
+    svgheader.push('  xmlns="http://www.w3.org/2000/svg"');
+    svgheader.push('  xmlns:xlink="http://www.w3.org/1999/xlink"');
+    svgheader.push('  xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"');
+    svgheader.push('  xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"');
+    svgheader.push('  width="564.44446mm"');
+    svgheader.push('  height="376.41388mm"');
+    svgheader.push('  viewBox="0 0 2000 1333.75"');
+    svgheader.push('  id="svg2"');
+    svgheader.push('  version="1.1"');
+    svgheader.push('  via:version="' + VIA_VERSION + '"');
+    svgheader.push('  sodipodi:docname="downloaded_svg.svg">');
+    svgheader.push('  ');
+    svgheader.push('  ');
+    svgheader.push('  ');
+
+    
+    var svg_metadata = ['<metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>VGG Image Annotator (via)</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:date>18/10/2016</dc:date>
+      </cc:Work>
+    </rdf:RDF>
+</metadata>'];
+
+    var content = ['  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(760,-45.487209)">
+    <image
+       sodipodi:absref="/home/tlm/dev/via/testdata/sample_img2.jpg"
+       xlink:href="sample_img2.jpg"
+       width="2000"
+       height="1333.75"
+       preserveAspectRatio="none"
+       id="image4223"
+       x="-760"
+       y="45.487209" />
+    <rect
+       style="fill:none;fill-opacity:1;stroke:#cdffff;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4226"
+       width="262.85715"
+       height="622.85712"
+       x="102.85712"
+       y="353.52292" />
+    <rect
+       style="fill:none;fill-opacity:1;stroke:#cdffff;stroke-width:1.80362093;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4226-3"
+       width="231.7388"
+       height="574.56616"
+       x="399.0947"
+       y="495.88086" />
+    <rect
+       style="fill:none;fill-opacity:1;stroke:#cdffff;stroke-width:0.47807384;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4226-6"
+       width="87.236214"
+       height="107.23618"
+       x="-203.61812"
+       y="821.33344" />
+  </g>
+'];
+    
+   
+}
+
 //
 // Setup Elements in User Interface
 //
