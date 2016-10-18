@@ -47,7 +47,6 @@ var _via_ctx = _via_canvas.getContext("2d");
 var _via_canvas_width, _via_canvas_height;
 
 // state of the application
-var _via_user_entering_annotation = false;
 var _via_is_user_drawing_region = false;
 var _via_current_image_loaded = false;
 var is_window_resized = false;
@@ -66,6 +65,8 @@ var _via_click_x0 = 0; var _via_click_y0 = 0;
 var _via_click_x1 = 0; var _via_click_y1 = 0;
 var _via_region_edge = [-1, -1];
 var _via_region_click_x, _via_region_click_y;
+var _via_copied_image_regions = [];
+var _via_copied_canvas_regions = [];
 
 // message
 var _via_message_clear_timer;
@@ -132,6 +133,22 @@ function ImageRegion() {
     this.is_user_selected = false;
     this.shape_attributes = new Map();  // region shape attributes
     this.region_attributes = new Map(); // region attributes
+}
+
+function clone_image_region(r0) {
+    var r1 = new ImageRegion();
+    r1.is_user_selected = r0.is_user_selected;
+
+    // copy shape attributes
+    for ( var[key,value] of r0.shape_attributes ) {
+	r1.shape_attributes.set(key, value);
+    }
+    
+    // copy region attributes
+    for ( var[key,value] of r0.region_attributes ) {
+	r1.region_attributes.set(key, value);
+    }
+    return r1;
 }
 
 function _via_get_image_id(filename, size) {
@@ -653,7 +670,6 @@ function show_image(image_index) {
 		
                 _via_click_x0 = 0; _via_click_y0 = 0;
                 _via_click_x1 = 0; _via_click_y1 = 0;
-		_via_user_entering_annotation = false;
 		_via_is_user_drawing_region = false;
 		is_window_resized = false;
 		_via_is_user_resizing_region = false;
@@ -1744,25 +1760,26 @@ function get_canvas_region_bounding_box(region_id) {
 	
     case 'circle':
 	bbox[0] = d.get('cx') - d.get('r');
-	bbox[1] = d.get('cx') - d.get('r');
+	bbox[1] = d.get('cy') - d.get('r');
 	bbox[2] = d.get('cx') + d.get('r');
-	bbox[3] = d.get('cx') + d.get('r');
+	bbox[3] = d.get('cy') + d.get('r');
 	break;
 	
     case 'ellipse':
 	bbox[0] = d.get('cx') - d.get('rx');
-	bbox[1] = d.get('cx') - d.get('ry');
+	bbox[1] = d.get('cy') - d.get('ry');
 	bbox[2] = d.get('cx') + d.get('rx');
-	bbox[3] = d.get('cx') + d.get('ry');
+	bbox[3] = d.get('cy') + d.get('ry');
 	break;
 	
     case 'polygon':
 	var all_points_x = d.get('all_points_x');
 	var all_points_y = d.get('all_points_y');
-	var minx=0;
-	var miny=0;
-	var maxx=Number.MAX_SAFE_INTEGER;
-	var maxy=Number.MAX_SAFE_INTEGER;
+
+	var minx=Number.MAX_SAFE_INTEGER;
+	var miny=Number.MAX_SAFE_INTEGER;
+	var maxx=0;
+	var maxy=0;
 	for (var i=0; i<all_points_x.length; ++i) {
 	    if (all_points_x[i] < minx) {
 		minx = all_points_x[i];
@@ -1771,7 +1788,7 @@ function get_canvas_region_bounding_box(region_id) {
 		maxx = all_points_x[i];
 	    }
 	    if (all_points_y[i] < miny) {
-		minx = all_points_y[i];
+		miny = all_points_y[i];
 	    }
 	    if (all_points_y[i] > maxy) {
 		maxy = all_points_y[i];
@@ -1781,6 +1798,10 @@ function get_canvas_region_bounding_box(region_id) {
 	bbox[1] = miny;
 	bbox[2] = maxx;
 	bbox[3] = maxy;
+
+	// place the region id box at any random vertex
+	bbox[0] = all_points_x[0];
+	bbox[1] = all_points_y[0];
 	break;	
     }
     return bbox;
@@ -2039,45 +2060,58 @@ window.addEventListener("keydown", function(e) {
 	    return;
 	}
 
+	if ( e.which == 65 ) { // Ctrl + a
+	    for (var i=0; i<_via_canvas_regions.length; ++i) {
+		_via_canvas_regions[i].is_user_selected = true;
+	    }
+	    _via_redraw_canvas();
+	    e.preventDefault();
+	    return;
+	}
+	
 	if ( e.which == 76 ) { // Ctrl + l
 	    show_img_list();
 	    e.preventDefault();
 	    return;
 	}
-    }
 
-    if ( (e.altKey || e.metaKey) && e.which == 88 ) { // Alt + x
-	console.log('user_entering_annotation='+user_entering_annotation+', region_count='+region_count);
-	// when user presses Enter key, enter bounding box annotation mode
-        if ( !user_entering_annotation && region_count > 0 ) {
-            _via_current_sel_region_id = -1;
-	    console.log('_via_current_sel_region_id='+_via_current_sel_region_id);
-	    console.log('annotation_list[current_image_id].regions.length='+annotation_list[current_image_id].regions.length);
-    	    if ( _via_current_sel_region_id != -1 ) {
-		_via_current_sel_region_id = _via_current_sel_region_id;
-		user_entering_annotation = true;		    		
-		annotate_region(_via_current_sel_region_id);		
-	    } else {
-		// find the un-annotated bounding box
-		for ( var i=0; i<annotation_list[current_image_id].regions.length; ++i) {
-                    if ( annotation_list[current_image_id].regions[i].description == "" ) {
-			_via_current_sel_region_id = i;
-			break;
-                    }
-		}
-
-		if ( _via_current_sel_region_id != -1 ) {
-		    // enter annotation mode only if an un annotated box is present
-		    user_entering_annotation = true;		    
-		    annotate_region(_via_current_sel_region_id);
+	if ( e.which == 67 ) { // Ctrl + c
+	    console.log('Ctrl + c pressed');
+	    _via_copied_image_regions.splice(0);
+	    _via_copied_canvas_regions.splice(0);
+	    for (var i=0; i<_via_images[_via_image_id].regions.length; ++i) {
+		var img_region = _via_images[_via_image_id].regions[i];
+		var canvas_region = _via_canvas_regions[i];
+		if (canvas_region.is_user_selected) {
+		    _via_copied_image_regions.push( clone_image_region(img_region) );
+		    _via_copied_canvas_regions.push( clone_image_region(canvas_region) );
 		}
 	    }
-	    console.log('_via_current_sel_region_id='+_via_current_sel_region_id);
-        }
+	    console.log(_via_copied_image_regions);
+	    show_message('Copied ' + _via_copied_image_regions.length + ' selected regions. Press Ctrl + v to paste');
+	    e.preventDefault();
+	    return;
+	}
+
+	if ( e.which == 86 ) { // Ctrl + v
+	    for (var i=0; i<_via_copied_image_regions.length; ++i) {
+		_via_images[_via_image_id].regions.push( _via_copied_image_regions[i] );
+		_via_canvas_regions.push( _via_copied_canvas_regions[i] );
+	    }
+	    show_message('Pasted ' + _via_copied_image_regions.length + ' regions');
+	    console.log(_via_images[_via_image_id].regions);
+	    e.preventDefault();
+	    _via_redraw_canvas();
+	    return;
+	}
     }
     
     if ( e.which == 13 ) { // Enter
-        //e.preventDefault();
+	if (_via_is_user_updating_attribute_value ||
+	    _via_is_user_updating_attribute_name) {
+	    save_attribute_value();
+	    e.preventDefault();
+	}
     }
 			
     if ( (e.altKey || e.metaKey) && e.which == 68 ) { // Alt + d
@@ -2095,10 +2129,18 @@ window.addEventListener("keydown", function(e) {
 	    e.preventDefault();
 
 	    save_current_data_to_browser_cache();
+	    e.preventDefault();
 	}
     }
     
     if ( e.which == 27 ) { // Esc
+	if (_via_is_user_updating_attribute_value ||
+	    _via_is_user_updating_attribute_name) {
+	    cancel_attribute_update();
+	    e.preventDefault();
+	    return;
+	}
+	
 	if ( _via_is_user_resizing_region ) {
 	    // cancel region resizing action
 	    _via_is_user_resizing_region = false;
@@ -2148,19 +2190,27 @@ window.addEventListener("keydown", function(e) {
 	_via_redraw_canvas();
     }
     
-    if ( !_via_user_entering_annotation && (e.which == 78 || e.which == 39) ) { // n or right arrow
-	move_to_next_image();
+    if ((!_via_is_user_updating_attribute_value &&
+	 !_via_is_user_updating_attribute_name) &&
+	(e.which == 78 || e.which == 39)) { // n or right arrow
+	    move_to_next_image();
+	e.preventDefault();
     }
-    if ( !_via_user_entering_annotation && (e.which == 80 || e.which == 37) ) { // p or left arrow
-        move_to_prev_image();
+    if ((!_via_is_user_updating_attribute_value &&
+	 !_via_is_user_updating_attribute_name) &&
+	(e.which == 80 || e.which == 37)) { // p or left arrow
+	    move_to_prev_image();
+	e.preventDefault();
     }
 
     if ( e.which == 121 ) { // F10 key used for debugging
 	print_current_state_vars();
+	e.preventDefault();
 	//print_current_image_data();
     }
     if (e.which == 113) { // F2 for about
 	show_about_panel();
+	e.preventDefault();
     }
     
     if ( e.which == 90 ) { // z used to toggle zoom
@@ -2178,7 +2228,6 @@ function move_to_prev_image() {
 	_via_is_region_selected = false;
 	_via_user_sel_region_id = -1;
 	
-	is_user_updating_attribute_name = false;
         _via_current_sel_region_id = -1;
 	
         _via_canvas.style.display = "none";
@@ -2196,9 +2245,7 @@ function move_to_next_image() {
     if (_via_images_count > 0) {
 	_via_is_region_selected = false;
 	_via_user_sel_region_id = -1;
-	
 
-	is_user_updating_attribute_name = false;
         _via_current_sel_region_id = -1;
 	
         _via_canvas.style.display = "none";
@@ -2362,12 +2409,15 @@ function update_attribute_value(region_id, attribute) {
 
     var region = _via_images[_via_image_id].regions[_via_current_update_region_id];
     var cur_attr_val = region.region_attributes.get(attribute);
-
+    if ( !cur_attr_val ) {
+	cur_attr_val = '';
+    }
+    
     var region_info = [];    
     region_info.push('<tr><td colspan="2">' + attribute + '</td></tr>');
     region_info.push('<tr><td colspan="2"><textarea id="textarea_attribute_value" rows="8" cols="40">' + cur_attr_val + '</textarea></td></tr>');
-    region_info.push('<tr><td><button type="button" onclick="save_attribute_value()">Save</button></td>');
-    region_info.push('<td><button type="button" onclick="cancel_attribute_update()">Cancel</button></td></tr>');
+    region_info.push('<tr><td><button type="button" onclick="save_attribute_value()">Save</button> (or Enter)</td>');
+    region_info.push('<td><button type="button" onclick="cancel_attribute_update()">Cancel</button> (or Esc)</td></tr>');
 
     region_info_table.innerHTML = region_info.join('');
     
@@ -2376,7 +2426,8 @@ function update_attribute_value(region_id, attribute) {
 	if ( e.key == VIA_IMPORT_CSV_COMMENT_CHAR ||
 	     e.key == VIA_IMPORT_CSV_KEYVAL_SEP_CHAR ||
 	     e.key == VIA_EXPORT_CSV_ARRAY_SEP_CHAR ||
-	     e.key == VIA_CSV_SEP_CHAR ) {
+	     e.key == VIA_CSV_SEP_CHAR ||
+	     e.key == '~') {
 	    show_message('Some special characters (, : ; #) are not allowed', VIA_THEME_MESSAGE_TIMEOUT_MS);
 	    e.preventDefault();
 	}
@@ -2448,8 +2499,7 @@ function save_current_data_to_browser_cache() {
 // used for debugging
 //
 function print_current_state_vars() {
-    console.log('_via_user_entering_annotation'+_via_user_entering_annotation+
-		'\n_via_is_user_drawing_region'+_via_is_user_drawing_region+
+    console.log('\n_via_is_user_drawing_region'+_via_is_user_drawing_region+
 		'\n_via_current_image_loaded'+_via_current_image_loaded+
 		'\nis_window_resized'+is_window_resized+
 		'\n_via_is_user_resizing_region'+_via_is_user_resizing_region+
