@@ -197,17 +197,12 @@
       margin: auto;
       width: 80%;
       font-family: Sans;
-      font-size: default;
+      font-size: 1em;
       line-height: 1.5em;
       margin: 0;
       }
       #about_panel li {
       margin: 1em 0;
-      }
-      
-      .editable_table tr:hover {
-      background-color: #cccccc;
-      color: #000000;
       }
       
       .action_text_link {
@@ -218,11 +213,30 @@
       cursor: pointer;
       }
 
+      /* for updating attribute values */
       .clickable_tbl_entry {
       background-color: #ffffff;
       color: #000000;
       }
       .clickable_tbl_entry:hover {
+      background-color: #cccccc;
+      color: #000000;
+      cursor: pointer;
+      }
+
+      /* image list */
+      #img_list_panel {
+      font-family: Mono;
+      font-size: 0.9em;
+      }
+      #img_list_panel ul {
+      float: left;
+      line-height: 1.2em;
+      }
+      #img_list_panel li {
+      
+      }
+      #img_list_panel li:hover {
       background-color: #cccccc;
       color: #000000;
       cursor: pointer;
@@ -264,12 +278,13 @@
     <div class="wrapper">
       <div id="navbar">
 	<ul>
-	  <li><svg style="stroke: #cccccc; fill: #000000;" height="40" viewBox="0 0 64 64"><use xlink:href="#via_logo"></use></svg></li>
+<div style="display: inline; float: left;"><a href="http://www.robots.ox.ac.uk/~vgg/" target="_new"><svg style="stroke: #cccccc; fill: #000000; margin-top: 0.4em; margin-left: 1em; margin-right: 0.5em;" width="40" viewBox="0 0 64 64"><use xlink:href="#via_logo"></use></svg></a></div>	  
           <li><a onclick="show_home_panel()" title="Home">Home</a></li>
           <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662</a>
 	    <div class="dropdown-content">
-	      <a onclick="load_images()" title="Load a set of images from local disk">Load Images</a>
-	      <a onclick="add_images()" title="Add new images to the current set of images being annotated">Add Images</a>
+	      <a onclick="load_images()" title="Load (or add) a set of images from local disk">Load or Add Images</a>
+	      <a onclick="show_img_list()" title="Browse currently loaded images">Show Loaded Image List</a>
+	      <a onclick="" title="Save current image and its regions as a SVG">Save as SVG</a>
 	    </div>
 	  </li>
           <li class="dropdown"><a title="Annotations" class="drop_menu_item">Annotation &#9662</a>
@@ -346,7 +361,7 @@
 		<td>Next/Previous image</td>
 	      </tr>
 	      <tr>
-		<td>Ctrl + l</td>
+		<td>Ctrl + o</td>
 		<td>Load or add images</td>
 	      </tr>
 	      <tr>
@@ -356,6 +371,10 @@
 	      <tr>
 		<td>Ctrl + i</td>
 		<td>Import region data</td>
+	      </tr>
+	      <tr>
+		<td>Ctrl + l</td>
+		<td>Browse loaded image</td>
 	      </tr>
 	      <tr>
 		<td>Esc</td>
@@ -380,13 +399,15 @@
 	    <button onclick="discard_via_session_data()">Discard Annotations</button>
           </div>
 
+	  <div id="img_list_panel"></div>
+
 	  <div class="" id="about_panel" style="">
 	    <!--<div><svg height="100" viewBox="0 0 64 64" style="stroke: #cccccc; fill: #ffffff; display:inline;"><use xlink:href="#via_logo"></use></svg></div>-->
 	    <ul>
 	      <li>VGG Image Annotator (via) is an open source project developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause license.</li>
-	      <li>This work was supported by EPSRC programme grant <a href="http://www.seebibyte.org/index.html">Seebibyte: Visual Search for the Era of Big Data</a> (<a href="http://gow.epsrc.ac.uk/NGBOViewGrant.aspx?GrantRef=EP/M013774/1">EP/M013774/1</a>).</li>
-	      <li>This image annotation tool uses HTML, CSS and Javascript (<b>no dependencies on any javascript libraries</b>) and to run requires nothing more than a modern web browser</li>
-	      <li>You are welcome to <a href="https://gitlab.com/vgg/via/issues/new">submit</a> bug reports and feature requests</li>
+	      <li>This work is supported by EPSRC programme grant <a href="http://www.seebibyte.org/index.html">Seebibyte: Visual Search for the Era of Big Data</a> (<a href="http://gow.epsrc.ac.uk/NGBOViewGrant.aspx?GrantRef=EP/M013774/1">EP/M013774/1</a>).</li>
+	      <li>This image annotation tool uses HTML, CSS and Javascript (<b>no dependencies on any javascript libraries</b>) and to run requires nothing more than a modern web browser.</li>
+	      <li>You are welcome to <a href="https://gitlab.com/vgg/via/issues/new">submit</a> bug reports and feature requests.</li>
 	      <li>For further information, please contact <a href="mailto:adutta-REMOVE-ME@robots.ox.ac.uk">Abhishek Dutta</a>.</li>
 	    </ul>
           </div>

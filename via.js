@@ -79,6 +79,12 @@ var _via_current_update_region_id = -1;
 var _via_is_local_storage_available = false;
 var _via_is_save_ongoing = false;
 
+// image list
+var _via_reload_img_table = true;
+var _via_loaded_img_table = [];
+var _via_loaded_img_table_html = [];
+
+
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
 
@@ -89,6 +95,7 @@ var message_panel = document.getElementById("message_panel");
 var image_panel = document.getElementById("image_panel");
 var navbar_panel = document.getElementById("navbar");
 var info_panel = document.getElementById("info_panel");
+var img_list_panel = document.getElementById("img_list_panel");
 
 var annotation_list_snippet = document.getElementById("annotation_list_snippet");
 var annotation_textarea = document.getElementById("annotation_textarea");    
@@ -131,7 +138,6 @@ function _via_get_image_id(filename, size) {
     return filename + size;
 }
 
-
 function main() {
     console.log("via");
     show_home_panel();   
@@ -145,20 +151,23 @@ function main() {
 // Handlers for top navigation bar
 //
 function show_home_panel() {
-    via_start_info_panel.style.display = "block";
-    about_panel.style.display = "none";
-    _via_canvas.style.display = "none";
-    session_data_panel.style.display = "none";
+    if (_via_current_image_loaded) {
+	_via_canvas.style.display = "block";	
+	via_start_info_panel.style.display = "none";
+	about_panel.style.display = "none";
+	session_data_panel.style.display = "none";
+	img_list_panel.style.display = "none";
+
+    } else {
+	via_start_info_panel.style.display = "block";
+	about_panel.style.display = "none";
+	_via_canvas.style.display = "none";
+	session_data_panel.style.display = "none";
+	img_list_panel.style.display = "none";
+    }
 }
 function load_images() {
     // source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
-    if (invisible_file_input) {
-	invisible_file_input.accept='image/*';
-	invisible_file_input.onchange = upload_local_images;
-        invisible_file_input.click();
-    }
-}
-function add_images() {
     if (invisible_file_input) {
 	invisible_file_input.accept='image/*';
 	invisible_file_input.onchange = upload_local_images;
@@ -231,6 +240,7 @@ function upload_local_images(event) {
 	    _via_images[img_id] = new ImageAttributes(user_selected_images[i], filename, size);
 	    _via_image_id_list.push(img_id);
 	    _via_images_count += 1;
+	    _via_reload_img_table = true;
 	}
     }
 
@@ -272,6 +282,8 @@ function import_region_attributes_from_csv(data) {
 	    attributes_import_count += 1;
 	}
     }
+
+    _via_reload_img_table = true;
     show_current_attributes();
     show_region_attributes_info();
     show_message('Imported ' + attributes_import_count + ' attributes from CSV file');
@@ -389,6 +401,7 @@ function import_region_data_from_csv(data) {
     }
     show_message('Imported ' + region_import_count + ' regions for ' + image_count + ' images from CSV file');
 
+    _via_reload_img_table = true;
     _via_load_canvas_regions();
     _via_redraw_canvas();
     show_region_shape_info();
@@ -438,7 +451,8 @@ function import_region_data_from_json(data) {
     }
 
     show_message('Imported ' + region_import_count + ' regions for ' + image_count + ' images from JSON file');
-    
+
+    _via_reload_img_table = true;
     _via_load_canvas_regions();
     _via_redraw_canvas();
     show_region_shape_info();
@@ -540,7 +554,7 @@ function package_region_data(return_type) {
 		    image_data.regions[i].region_attributes[key] = value;
 		}
 	    }
-    
+	    
 	    _via_images_as_obj[image_id] = image_data;
 	}
 	return [JSON.stringify(_via_images_as_obj)];
@@ -610,7 +624,7 @@ function show_image(image_index) {
                 //main_content_width = 0.9*image_panel.offsetWidth;
 		canvas_panel_width = document.documentElement.clientWidth - 250;
 		canvas_panel_height = document.documentElement.clientHeight - 2.2*navbar_panel.offsetHeight;
-                 
+                
                 _via_canvas_width = _via_current_image.naturalWidth;
                 _via_canvas_height = _via_current_image.naturalHeight;
 
@@ -636,7 +650,7 @@ function show_image(image_index) {
                 _via_canvas.height = _via_canvas_height;
                 _via_canvas.width = _via_canvas_width;
 		//console.log("Canvas = " + _via_canvas.width + "," + _via_canvas.height);
-               
+		
                 _via_click_x0 = 0; _via_click_y0 = 0;
                 _via_click_x1 = 0; _via_click_y1 = 0;
 		_via_user_entering_annotation = false;
@@ -733,6 +747,7 @@ function clear_image_display_area() {
     about_panel.style.display = 'none';
     via_start_info_panel.style.display = 'none';
     session_data_panel.style.display = 'none';
+    img_list_panel.style.display = 'none';
 }
 
 //
@@ -799,13 +814,13 @@ _via_canvas.addEventListener('mousedown', function(e) {
 	/*
 	// check if user clicked on the region boundary
 	if ( _via_region_edge[1] > 0 ) {
-	    if ( !_via_is_user_resizing_region ) {
-		// resize region
-		if ( _via_region_edge[0] != _via_user_sel_region_id ) {
-		    _via_current_sel_region_id = _via_region_edge[0];
-		}
-		via_is_user_resizing_region = true;
-	    }
+	if ( !_via_is_user_resizing_region ) {
+	// resize region
+	if ( _via_region_edge[0] != _via_user_sel_region_id ) {
+	_via_current_sel_region_id = _via_region_edge[0];
+	}
+	via_is_user_resizing_region = true;
+	}
 	}
 	*/
     } else {
@@ -888,12 +903,15 @@ _via_canvas.addEventListener('mouseup', function(e) {
 		// first click selects region
 		_via_user_sel_region_id = region_id;
 		_via_is_region_selected = true;
+		_via_is_user_moving_region = false;
 		
 		// de-select all other regions if the user has not pressed Shift
 		if ( !e.shiftKey ) {
 		    toggle_all_regions_selection(false);
 		}
 		_via_canvas_regions[region_id].is_user_selected = true;
+
+		show_message('Region selected. Click and drag to move the region');
 		show_region_attributes_info();
 		show_region_shape_info();
 		show_current_attributes();
@@ -1149,23 +1167,23 @@ _via_canvas.addEventListener('mousemove', function(e) {
 	    // which indicates an intention to resize the reigon
 	    
 	    /*
-	    _via_region_edge = is_on_region_corner(_via_current_x, _via_current_y);
-	    console.log(_via_region_edge);
-	    
-	    if ( _via_region_edge[0] == _via_user_sel_region_id ) {
-		switch(_via_region_edge[1]) {
-		case 1: // top-left
-		case 3: // bottom-right
-		    _via_canvas.style.cursor = "nwse-resize";
-		    break;
-		case 2: // top-right
-		case 4: // bottom-left		
-		    _via_canvas.style.cursor = "nesw-resize";
-		    break;
-		default:
-		    _via_canvas.style.cursor = "default";
-		}
-	    }
+	      _via_region_edge = is_on_region_corner(_via_current_x, _via_current_y);
+	      console.log(_via_region_edge);
+	      
+	      if ( _via_region_edge[0] == _via_user_sel_region_id ) {
+	      switch(_via_region_edge[1]) {
+	      case 1: // top-left
+	      case 3: // bottom-right
+	      _via_canvas.style.cursor = "nwse-resize";
+	      break;
+	      case 2: // top-right
+	      case 4: // bottom-left		
+	      _via_canvas.style.cursor = "nesw-resize";
+	      break;
+	      default:
+	      _via_canvas.style.cursor = "default";
+	      }
+	      }
 	    */
 	}
     }
@@ -1371,6 +1389,64 @@ _via_canvas.addEventListener('mousemove', function(e) {
        }
     */
 });
+
+// @todo: implement hierarchial clustering to better visualize file list
+function show_img_list() {
+    img_list_panel.style.display = 'block';
+    via_start_info_panel.style.display = "none";
+    about_panel.style.display = "none";
+    _via_canvas.style.display = "none";
+    session_data_panel.style.display = "none";
+
+    _via_user_sel_region_id = -1;
+    _via_is_region_selected = false;
+    
+    show_region_attributes_info();
+    show_region_shape_info();
+    show_current_attributes();
+
+    if ( _via_reload_img_table ) {
+	_via_loaded_img_table = [];
+	
+	for (var i=0; i<_via_images_count; ++i) {
+	    img_id = _via_image_id_list[i];
+	    var file_entry = {};
+	    file_entry.image_index = i;
+	    file_entry.filename = _via_images[img_id].filename;
+	    file_entry.missing_attr_val_count = count_missing_attribute_value(img_id);
+	    _via_loaded_img_table.push(file_entry);
+	}
+	
+	_via_loaded_img_table.sort( function (a, b) {
+	    return a.filename.localeCompare(b.filename);
+	});
+	
+	_via_loaded_img_table_html = [];
+	var fni = '';
+	_via_loaded_img_table_html.push('<p>Showing list of currently loaded images. Click on an entry to open the file</p>');
+	_via_loaded_img_table_html.push('<ul>');
+	for (var i=0; i<_via_loaded_img_table.length; ++i) {
+	    fni = '<li onclick="show_image(' + _via_loaded_img_table[i].image_index + ')">';
+	    //fni += '[' + _via_loaded_img_table[i].image_index + '] ';
+	    fni += _via_loaded_img_table[i].filename;
+	    if (_via_loaded_img_table[i].missing_attr_val_count) {
+		fni += '<span style="color: red;"> (missing ' + _via_loaded_img_table[i].missing_attr_val_count + ' attributes value)</span>';
+	    }
+	    _via_loaded_img_table_html.push(fni);
+	}
+	_via_loaded_img_table_html.push('</ul>');
+	_via_reload_img_table = false;
+    }
+    img_list_panel.innerHTML = _via_loaded_img_table_html.join('');
+}
+
+function count_missing_attribute_value(img_id) {
+    var missing_attribute_count = 0;
+    for( var i=0; i<_via_images[img_id].regions.length; ++i) {
+	missing_attribute_count += _via_region_attributes.size - _via_images[img_id].regions[i].region_attributes.size;
+    }
+    return missing_attribute_count;
+}
 
 //
 // Canvas update routines
@@ -1957,8 +2033,14 @@ window.addEventListener("keydown", function(e) {
 	    return;
 	}
 
+	if ( e.which == 79 ) { // Ctrl + o
+	    load_images();
+	    e.preventDefault();
+	    return;
+	}
+
 	if ( e.which == 76 ) { // Ctrl + l
-	    add_images();
+	    show_img_list();
 	    e.preventDefault();
 	    return;
 	}
@@ -2057,6 +2139,10 @@ window.addEventListener("keydown", function(e) {
 
 	    show_current_attributes();
 	    show_region_attributes_info();
+	}
+
+	if ( _via_is_user_moving_region ) {
+	    _via_is_user_moving_region = false
 	}
 	
 	_via_redraw_canvas();
