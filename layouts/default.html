@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>via - <%= @item[:title] %></title>
+    <link rel="stylesheet" href="stylesheet.css">
+  </head>
+  <body>
+    <div id="main">
+      <%= yield %>
+    </div>
+    <div id="sidebar">
+      <ul>
+        <li><a href="">Download (for offline use)</a></li>
+        <li><a href="">Try it online</a></li>
+        <li><a href="">Live Demo</a></li>
+      </ul>
+      <h2>Source code</h2>
+      <ul>
+        <li><a href="">source git repo.</a></li>
+        <li><a href="">code documentation</a></li>
+      </ul>
+
+    </div>
+  </body>
+</html>
