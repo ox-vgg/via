@@ -1,3 +1,4 @@
+![Build Status](https://gitlab.com/pages/nanoc/badges/master/build.svg)
 # VGG Image Annotator
 
 This is a light weight image annotation based solely on HTML and Javascript. A demo of this tool is running at https://vggdemo.gitlab.io/via_website/via/ .
