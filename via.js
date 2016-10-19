@@ -1121,7 +1121,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
 		}
 		_via_canvas_regions[region_id].is_user_selected = true;
 
-		show_message('Region selected. Click and drag to move the region');
+		show_message('Region selected. Click and drag to move or resize the region', VIA_THEME_MESSAGE_TIMEOUT_MS);
 		show_region_attributes_info();
 		show_region_shape_info();
 		show_current_attributes();
@@ -2298,6 +2298,7 @@ window.addEventListener("keydown", function(e) {
             for (var i=0; i<_via_canvas_regions.length; ++i) {
                 _via_canvas_regions[i].is_user_selected = true;
             }
+	    _via_is_region_selected = true;
             _via_redraw_canvas();
 	    show_current_attributes();
             e.preventDefault();
@@ -2580,7 +2581,7 @@ function show_current_attributes() {
         
         for (var attribute of _via_region_attributes) {
             region_info.push('<tr>');
-            region_info.push('<td title="' + attribute + '">' + attribute + '</td>');
+            region_info.push('<td class="header_cell" title="' + attribute + '">' + attribute + '</td>');
 
             var regions = _via_images[_via_image_id].regions;
             for (var i=0; i<regions.length; ++i) {
@@ -2600,7 +2601,7 @@ function show_current_attributes() {
         region_info_table.innerHTML = region_info.join('');
     } else {
         //region_info_table.innerHTML = '<tr class="action_text_link" ><td onclick="import_attributes()" title="Import existing attributes from a file">[click to import attributes]</td></tr>';
-	region_info_table.innerHTML = '<tr><td><span class="action_text_link">[Add]</span> attributes or <span class="action_text_link">[Import]</span> from a file</td></tr>';
+	region_info_table.innerHTML = '<tr><td><span class="action_text_link" onclick="add_attribute_name()">[Add]</span> attributes or <span class="action_text_link" onclick="import_attributes()">[Import]</span> from a file</td></tr>';
     }
 }
 
