@@ -773,7 +773,7 @@ function clear_image_display_area() {
 function delete_selected_regions() {
     var del_region_count = 0;
     for (var i=0; i<_via_canvas_regions.length; ++i) {
-	if (_via_canvas_regions.is_user_selected) {
+	if (_via_canvas_regions[i].is_user_selected) {
 	    _via_canvas_regions.splice(i, 1);
 	    _via_images[_via_image_id].regions.splice(i, 1);
 	    del_region_count += 1;
