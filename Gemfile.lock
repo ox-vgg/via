@@ -9,7 +9,7 @@ GEM
     kramdown (1.10.0)
     nanoc (4.1.5)
       cri (~> 2.3)
-    rack (1.6.4)
+    rack (>=1.6.4)
 
 PLATFORMS
   ruby
