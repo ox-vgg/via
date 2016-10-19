@@ -1,12 +1,9 @@
-image: ruby:2.1
-
 pages:
+  stage: deploy
   script:
-  - gem install jekyll
-  - jekyll build -d public/
+  - echo 'Nothing to do...'
   artifacts:
     paths:
     - public
   only:
   - website
-  
