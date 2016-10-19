@@ -2342,7 +2342,7 @@ window.addEventListener("keydown", function(e) {
     if ( (e.altKey || e.metaKey) ) {
 	if( e.which == 68 ) { // Alt + d
 	    console.log('deleting sel. regions');
-	    deleted_selected_regions();
+	    delete_selected_regions();
             e.preventDefault();
 	}
     }
