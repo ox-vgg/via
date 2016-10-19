@@ -1,0 +1,5 @@
+## [0.1b] - 2016-10-24
+ * first release of VGG image annotator
+ * supports following region shape: rectangle, circle, ellipse, polygon
+ * contains basic image region operations such as move, resize, delete, copy/paste
+ * 
