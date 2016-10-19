@@ -1,14 +1,18 @@
 ![Build Status](https://gitlab.com/pages/nanoc/badges/master/build.svg)
 # VGG Image Annotator
 
-This is a light weight image annotation based solely on HTML and Javascript. A demo of this tool is running at https://vggdemo.gitlab.io/via_website/via/ .
-## Attribution
- * The SVG icons used in the html page were created using : https://icomoon.io/app/#/select
+VGG Image Annotator (via) is an open source project developed at the 
+[Visual Geometry Group](http://www.robots.ox.ac.uk/~vgg/) and released under 
+the BSD-2 clause license. This work is supported by EPSRC programme grant 
+Seebibyte: Visual Search for the Era of Big Data ([EP/M013774/1](http://www.seebibyte.org/index.html)).
 
-## Tests
-This web application has been tested in the following web browsers:
- * Firefox 48.0 (64 bit) on Ubuntu 16.04
- * Google Chrome 52.0.2743.116 (64-bit) on Ubuntu 16.04
-
-For further details, contact [Abhishek Dutta](adutta@robots.ox.ac.uk)
-Aug. 31, 2016
+### Features:
+  * open source project
+  * based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)
+  * can be used offline (you can carry your image annotator with you)
+  * easy to distribute and share as the full application is contained in single html file < 200KB
+  * running this application requires nothing more than a modern web browser (tested on firefox and chrome)
+  * rectangular, circular, elliptical and polygon regions can be defined in an image
+  * multiple attribute (key,value) pair data can be associated with each region
+  * the regions data can be exported as a text file in CSV or JSON format
+  * hundreds of images can be loaded and annotated in a single session with any performance degradation
