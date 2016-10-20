@@ -1,0 +1,8 @@
+## [0.1b] - 2016-10-24
+ * first release of VGG image annotator
+ * supports following region shape: rectangle, circle, ellipse, polygon
+ * contains basic image region operations such as move, resize, delete
+ * Ctrl a/c/v to select all, copy and paste image regions
+ * import/export of region data from/to text file in csv,json format
+ * display list of loaded images
+ * everything is saved in browser cache to recover from unexpected browser exit
