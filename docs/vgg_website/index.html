@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>
+VGG Image Annotator - Visual Geometry Group
+</title>
+<link rel="stylesheet" type="text/css" href="http://www.robots.ox.ac.uk/~vgg/css/vggcss.css" media="all">
+<link rel="stylesheet" type="text/css" href="http://www.robots.ox.ac.uk/~vgg/css/vggdata.css" media="all">
+<link rel="stylesheet" type="text/css" href="http://www.robots.ox.ac.uk/~vgg/css/vggdatawide.css" media="all">
+<link rel="stylesheet" type="text/css" href="http://www.robots.ox.ac.uk/~vgg/publications/css/listpubli.css" media="all" />
+
+<style type="text/css">
+.slidingDiv {
+    display:none;
+    background-color: #BDBDBD;
+    padding:5px;
+    margin-top:1px;
+    border-bottom:5px solid #1C1C1C;
+    border-top:5px solid #1C1C1C; 
+    zoom: 1;
+}
+</style>
+
+<script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
+<script type="text/javascript" src="/~vgg/include/usecookies.js"></script>
+</head>
+<body>
+<div class="slidingDiv">
+    <table style="vertical-align:middle">
+    <tr>
+        <td>
+        <p align="center">
+        <b>Cookies</b>
+        </p>
+        <p align="left">This website uses Google Analytics to help us
+        improve the website content.  This requires the use of
+        standard Google Analytics cookies, as well as a cookie to
+        record your response to this confirmation request. If this is
+        OK with you, please click 'Accept cookies', otherwise you will
+        see this notice on every page. For more information, please <a
+        href="http://www.admin.ox.ac.uk/dataprotection/cookies/">click
+        here</a>.</p>
+        </td>
+        <td>
+        <button id="hide">Accept cookies</button>
+        </td>
+    </tr>
+    </table>
+</div>
+
+<div id="vgg_header">
+<table style="width:100%;">
+<tr>
+<td>
+<div style="font-size:30px; font-weight: bold; letter-spacing: 0.2em;">
+<a href="/~vgg/">Visual Geometry Group</a>
+</div>
+<div style="font-size:15px; font-weight:bold; color:white;">
+Department of Engineering Science, University of Oxford
+</div>
+</td>
+<td style="width: 50%">
+<!-- <img src="http://www.ox.ac.uk/images/hi_res/2241_ox_brand3_pos_rect.gif" style="float:right;" /> -->
+<img style="float:right;width:225px;" src="http://www.robots.ox.ac.uk/~vgg/css/oxlogo_transparent.png"/>
+</td>
+</tr>
+</table>
+</div>
+<h2>VGG Image Annotator (via)</h2>
+
+<div id="main" style="width: 70%;">
+<h4>
+    <a href="http://www.robots.ox.ac.uk/~adutta/">Abhishek Dutta</a>,
+    <a href="http://www.robots.ox.ac.uk/~ankush/">Ankush Gupta</a>,
+    and
+    <a href="http://www.robots.ox.ac.uk/~az/">Andrew Zisserman</a>    
+<BR>
+<BR>
+</h4>
+
+<h3>Overview</h3>
+<p>
+VGG Image Annotator (via) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
+developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
+and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
+With this software, you can define regions in an image and create a textual description of those regions.
+Such image regions and descriptions are useful for supervised training of learning algorithms.
+</p>
+<p>
+Features:
+<ul>
+<li>based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)</li>
+<li>can be used offline (complete application packaged in a single html file of size &#126; 100KB)</li>
+<li>requires nothing more than a modern web browser (tested on firefox and chrome)</li>
+<li>supports following region shapes: rectangle, circle, ellipse, polygon</li>
+<li>supports multiple attributes for each image region</li>
+<li>import (and export) of region data from (to) text file in csv and json format</li>
+<li>hundreds of images can be loaded and annotated with any performance degradation</li>
+</ul>
+</p>
+
+<h3>Downloads</h3>
+<p>
+<table style="margin: 0pt 0pt 2em; text-align: left;" border="0" cellpadding="5">
+    <tr>
+        <th>Filename</th>
+        <th>Version</th>
+        <th>Description</th>
+        <th>Size</th>
+    </tr>
+    <tr>
+        <td><a href="v2/desc_src.tar.gz">desc_src.tar.gz</a></td>
+        <td>Descriptor learning, computation, and evaluation source code</td>
+        <td>14.3&nbsp;KB</td>
+        <td>a7fd7dc49a0866f1ff3e1148d7fed49c</td>
+    </tr>    
+</table>
+</p>
+
+<h3>Screenshots</h3>
+<p>
+<img src="images/big_ben_annotation.jpg" alt="via screenshot">
+</p>
+
+<h3>Contact</h3>
+<p>Software bug reports and feature requests should be <a href="https://gitlab.com/vgg/via/issues/new">submitted here</a>.
+For all other queries, please contact <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a></p>
+
+<h3>Acknowledgements</h3>
+<p>This work is supported by EPSRC programme grant Seebibyte: Visual Search for the Era of Big Data (<a href="http://www.seebibyte.org/index.html">EP/M013774/1</a>).</p>
+
+<img style="height: 210px;" alt="EPSRC logo" src="images/epsrc_logo.jpg" />
+<img style="height: 210px;" hspace = "20" alt="Seebibyte Logo" src="images/seebibyte_logo.jpg" />
+
+</div>
+
+<div id="footbar">
+Page maintained by <a href="mailto:vgg-webmasters@robots.ox.ac.takethisout.uk"><tt>vgg-webmasters</tt></a> at the <tt>robots.ox.ac.uk</tt> domain.
+<br>
+Last updated 31 January, 2014.
+</div>
+
+</body>
+</html>
+
+
+
+
+
+
+
