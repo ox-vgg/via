@@ -3,12 +3,10 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>
-VGG Image Annotator - Visual Geometry Group
+VGG Image Annotator : Visual Geometry Group
 </title>
 <link rel="stylesheet" type="text/css" href="http://www.robots.ox.ac.uk/~vgg/css/vggcss.css" media="all">
-<link rel="stylesheet" type="text/css" href="http://www.robots.ox.ac.uk/~vgg/css/vggdata.css" media="all">
-<link rel="stylesheet" type="text/css" href="http://www.robots.ox.ac.uk/~vgg/css/vggdatawide.css" media="all">
-<link rel="stylesheet" type="text/css" href="http://www.robots.ox.ac.uk/~vgg/publications/css/listpubli.css" media="all" />
+
 
 <style type="text/css">
 .slidingDiv {
@@ -22,7 +20,6 @@ VGG Image Annotator - Visual Geometry Group
 }
 </style>
 
-<script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
 <script type="text/javascript" src="/~vgg/include/usecookies.js"></script>
 </head>
 <body>
@@ -84,14 +81,14 @@ Department of Engineering Science, University of Oxford
 VGG Image Annotator (via) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
 developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
 and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
-With this software, you can define regions in an image and create a textual description of those regions.
+With this standalone application, you can define regions in an image and create a textual description of those regions.
 Such image regions and descriptions are useful for supervised training of learning algorithms.
 </p>
 <p>
 Features:
 <ul>
 <li>based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)</li>
-<li>can be used offline (complete application packaged in a single html file of size &#126; 100KB)</li>
+<li>can be used offline (complete application packaged in a single html file of size &lt; 200KB)</li>
 <li>requires nothing more than a modern web browser (tested on firefox and chrome)</li>
 <li>supports following region shapes: rectangle, circle, ellipse, polygon</li>
 <li>supports multiple attributes for each image region</li>
@@ -104,17 +101,26 @@ Features:
 <p>
 <table style="margin: 0pt 0pt 2em; text-align: left;" border="0" cellpadding="5">
     <tr>
-        <th>Filename</th>
-        <th>Version</th>
+        <th>Link</th>
         <th>Description</th>
-        <th>Size</th>
     </tr>
     <tr>
-        <td><a href="v2/desc_src.tar.gz">desc_src.tar.gz</a></td>
-        <td>Descriptor learning, computation, and evaluation source code</td>
-        <td>14.3&nbsp;KB</td>
-        <td>a7fd7dc49a0866f1ff3e1148d7fed49c</td>
+        <td><a href="./downloads/via.html.zip">via.html.zip</a></td>
+        <td>the VGG Image Annotator application (&lt; 200KB)</td>
+    </tr>
+    <tr>
+        <td><a href="./downloads/via.html">via.html</a></td>
+        <td>online version of the application</td>
+    </tr>
+    <tr>
+        <td><a href="./demo/via_demo.html">via_demo</a></td>
+        <td>live demo (with preloaded images and regions)</td>
+    </tr>
+    <tr>
+        <td><a href="https://gitlab.com/vgg/via/">https://gitlab.com/vgg/via/</a></td>
+        <td>source code repository</td>
     </tr>    
+
 </table>
 </p>
 
@@ -138,7 +144,7 @@ For all other queries, please contact <a href="mailto:adutta@robots.ox.ac.uk">Ab
 <div id="footbar">
 Page maintained by <a href="mailto:vgg-webmasters@robots.ox.ac.takethisout.uk"><tt>vgg-webmasters</tt></a> at the <tt>robots.ox.ac.uk</tt> domain.
 <br>
-Last updated 31 January, 2014.
+Last updated: October 2016.
 </div>
 
 </body>

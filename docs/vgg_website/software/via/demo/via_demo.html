@@ -491,7 +491,7 @@
     </div> <!-- end of wrapper -->
     <div id="message_panel"></div>
 
-    <!--<script type="text/javascript" src="via_demo.js"></script>-->
+    <script type="text/javascript" src="via_demo.js"></script>
     <script type="text/javascript">
       <!--AUTO_INSERT_VIA_JS_HERE-->
 /*
@@ -676,12 +676,12 @@ function _via_get_image_id(filename, size) {
 function main() {
     console.log("VGG Image Annotator (via)");
     show_home_panel();   
-    show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
+    show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". (Running in demo mode)");
     show_current_attributes();
 
     _via_is_local_storage_available = check_local_storage();
 
-    //start_demo_session(); // defined in via_demo.js
+    start_demo_session();
 }
 
 //
