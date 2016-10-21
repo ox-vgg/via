@@ -34,6 +34,18 @@
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VGG Image Annotator (via) is a light-weight image annotation tool built solely using HTML, CSS and pure Javascript (not using any javascript libraries).">
 
+    <!-- Google analytics : used in Seebibyte project to measure impact -->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-20555581-2', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+
     <!-- CSS style definition -->
     <style type="text/css">     
       body {
@@ -675,7 +687,7 @@ function _via_get_image_id(filename, size) {
 
 function main() {
     console.log("VGG Image Annotator (via)");
-    show_home_panel();   
+    //show_home_panel();   
     show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". (Running in demo mode)");
     show_current_attributes();
 
