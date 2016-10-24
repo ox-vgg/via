@@ -166,13 +166,13 @@ function clone_image_region(r0) {
 
     // copy shape attributes
     for ( var key of r0.shape_attributes.keys() ) {
-	var value = r0.shape_attributes.get(key);
+        var value = r0.shape_attributes.get(key);
         r1.shape_attributes.set(key, value);
     }
     
     // copy region attributes
     for ( var key of r0.region_attributes.keys() ) {
-	var value = r0.region_attributes.get(key);
+        var value = r0.region_attributes.get(key);
         r1.region_attributes.set(key, value);
     }
     return r1;
@@ -191,8 +191,8 @@ function main() {
     //_via_is_local_storage_available = check_local_storage();
     _via_is_local_storage_available = false;
 
-    //show_home_panel();    
-    start_demo_session(); // defined in via_demo.js
+    show_home_panel();    
+    //start_demo_session(); // defined in via_demo.js
 }
 
 //
@@ -243,25 +243,25 @@ function upload_region_data_file() {
 }
 function save_attributes() {
     if ( _via_region_attributes.size > 0 ) {
-	var attr_csvdata = [];
-	for (var attribute of _via_region_attributes) {
-	    attr_csvdata.push(attribute);
-	}
-	var attr_blob = new Blob([attr_csvdata.join(',')], {type: 'text/csv;charset=utf-8'});
-	save_data_to_local_file(attr_blob, 'via_attributes_data.csv');
+        var attr_csvdata = [];
+        for (var attribute of _via_region_attributes) {
+            attr_csvdata.push(attribute);
+        }
+        var attr_blob = new Blob([attr_csvdata.join(',')], {type: 'text/csv;charset=utf-8'});
+        save_data_to_local_file(attr_blob, 'via_attributes_data.csv');
     } else {
-	show_message("Attributes not defined yet!");
+        show_message("Attributes not defined yet!");
     }
 }
 function import_attributes() {
     if (_via_current_image_loaded) {
-	if (invisible_file_input) {
+        if (invisible_file_input) {
             invisible_file_input.accept='.csv,.json';
             invisible_file_input.onchange = import_region_attributes_from_file;
             invisible_file_input.click();
-	}
+        }
     } else {
-	show_message("Please load some images first");
+        show_message("Please load some images first");
     }
 }
 function show_settings_panel() {
@@ -324,7 +324,7 @@ function upload_local_images(event) {
 function import_region_attributes_from_file(event) {
     var selected_files = event.target.files;
     for (var i=0; i<selected_files.length; ++i) {
-	var file = selected_files[i];
+        var file = selected_files[i];
         switch(file.type) {
         case 'text/csv':
             load_text_file(file, import_region_attributes_from_csv);
@@ -408,7 +408,8 @@ function import_region_data_from_csv(data) {
                 // copy image attributes
                 if ( d[file_attr_index] != '' ) {
                     var attr_map = keyval_str_to_map( d[file_attr_index] );
-                    for( var [key, val] of attr_map ) {
+                    for( var key of attr_map.keys() ) {
+                        var val = attr_map.get(key);
                         _via_images[image_id].file_attributes.set(key, val);
                     }
                 }
@@ -423,7 +424,7 @@ function import_region_data_from_csv(data) {
                     var attr_map = keyval_str_to_map( region_str );
 
                     for ( var key of attr_map.keys() ) {
-			var val = attr_map.get(key);
+                        var val = attr_map.get(key);
                         if ( key == 'all_points_x' ||
                              key == 'all_points_y' ) {
                             val = val.substring(1, val.length-1); // discard the square brackets []
@@ -447,7 +448,7 @@ function import_region_data_from_csv(data) {
                     var region_attr_map = keyval_str_to_map( region_attr );
                     
                     for ( var key of region_attr_map.keys() ) {
-			var val = region_attr_map.get(key);
+                        var val = region_attr_map.get(key);
                         regioni.region_attributes.set(key, val);
 
                         if (!_via_region_attributes.has(key)) {
@@ -483,7 +484,7 @@ function import_region_data_from_json(data) {
             for (var key in d[image_id].file_attributes) {
                 if (!_via_images[image_id].file_attributes.get(key)) {
                     _via_images[image_id].file_attributes.set(key,
-							      d[image_id].file_attributes[key]);
+                                                              d[image_id].file_attributes[key]);
                 } else {
                     skipped_file_attr_count += 1;
                 }
@@ -586,16 +587,16 @@ function package_region_data(return_type) {
         for (image_id in _via_images) {
             var image_data = {};
             //image_data.fileref = _via_images[image_id].fileref;
-	    image_data.fileref = '';
+            image_data.fileref = '';
             image_data.size = _via_images[image_id].size;
             image_data.filename = _via_images[image_id].filename;
-	    image_data.base64_img_data = '';
+            image_data.base64_img_data = '';
             //image_data.base64_img_data = _via_images[image_id].base64_img_data;
             
             // copy file attributes
             image_data.file_attributes = {};    
             for ( var key of _via_images[image_id].file_attributes.keys() ) {
-		var value = _via_images[image_id].file_attributes.get(key);
+                var value = _via_images[image_id].file_attributes.get(key);
                 image_data.file_attributes[key] = value;
             }
 
@@ -607,12 +608,12 @@ function package_region_data(return_type) {
                 image_data.regions[i].region_attributes = {};
                 // copy region shape_attributes
                 for ( var key of _via_images[image_id].regions[i].shape_attributes.keys()) {
-		    var value = _via_images[image_id].regions[i].shape_attributes.get(key);
+                    var value = _via_images[image_id].regions[i].shape_attributes.get(key);
                     image_data.regions[i].shape_attributes[key] = value;
                 }
                 // copy region_attributes
                 for ( var key of _via_images[image_id].regions[i].region_attributes) {
-		    var value = _via_images[image_id].regions[i].region_attributes.get(key);
+                    var value = _via_images[image_id].regions[i].region_attributes.get(key);
                     image_data.regions[i].region_attributes[key] = value;
                 }
             }
@@ -626,7 +627,7 @@ function package_region_data(return_type) {
 function attr_map_to_str(attr) {
     var attr_map_str = [];
     for( var key of attr.keys() ) {
-	var value = attr.get(key);
+        var value = attr.get(key);
         if ( Array.isArray(value) ) {
             var value_str='[' + value[0];
             for (var i=1; i<value.length; ++i) {
@@ -634,7 +635,7 @@ function attr_map_to_str(attr) {
             }
             value_str += ']';
             attr_map_str.push(key + '=' + value_str);
-	} else {
+        } else {
             attr_map_str.push(key + '=' + value);
         }
     }
@@ -668,16 +669,16 @@ function show_image(image_index) {
         var img_reader = new FileReader();
 
         img_reader.addEventListener( "progress", function(e) {
-	    show_message("Loading image " + img_filename + " ... ");
+            show_message("Loading image " + img_filename + " ... ");
         }, false);
 
         img_reader.addEventListener( "error", function() {
-	    show_message("Error loading image " + img_filename + " !");
+            show_message("Error loading image " + img_filename + " !");
         }, false);
         
         img_reader.addEventListener( "load", function() {
-	    _via_current_image = new Image();
-	    _via_current_image.addEventListener( "load", function() {
+            _via_current_image = new Image();
+            _via_current_image.addEventListener( "load", function() {
                 _via_image_id = img_id;
                 _via_image_index = image_index;
                 _via_current_image_filename = img_filename;
@@ -693,16 +694,16 @@ function show_image(image_index) {
 
                 var scale_width, scale_height;
                 if ( _via_canvas_width > canvas_panel_width ) {
-		    // resize image to match the panel width
-		    var scale_width = canvas_panel_width / _via_current_image.naturalWidth;
-		    _via_canvas_width = canvas_panel_width;
-		    _via_canvas_height = _via_current_image.naturalHeight * scale_width;
+                    // resize image to match the panel width
+                    var scale_width = canvas_panel_width / _via_current_image.naturalWidth;
+                    _via_canvas_width = canvas_panel_width;
+                    _via_canvas_height = _via_current_image.naturalHeight * scale_width;
                 }
                 // resize image if its height is larger than the image panel
                 if ( _via_canvas_height > canvas_panel_height ) {
-		    var scale_height = canvas_panel_height / _via_canvas_height;
-		    _via_canvas_height = canvas_panel_height;
-		    _via_canvas_width = _via_canvas_width * scale_height;
+                    var scale_height = canvas_panel_height / _via_canvas_height;
+                    _via_canvas_height = canvas_panel_height;
+                    _via_canvas_width = _via_canvas_width * scale_height;
                 }
 
                 _via_canvas_width = Math.round(_via_canvas_width);
@@ -738,17 +739,17 @@ function show_image(image_index) {
                 show_current_attributes();
                 
                 show_message("Loaded image " + img_filename + " ... ", 5000);
-	    });
-	    _via_current_image.src = img_reader.result;
+            });
+            _via_current_image.src = img_reader.result;
         }, false);
-	
-	if (_via_images[img_id].base64_img_data == '') {
-	    // load image from file
+        
+        if (_via_images[img_id].base64_img_data == '') {
+            // load image from file
             img_reader.readAsDataURL( _via_images[img_id].fileref );
-	} else {
-	    // load image from bae64 data
-	    img_reader.readAsText( new Blob([_via_images[img_id].base64_img_data]) );
-	}
+        } else {
+            // load image from bae64 data
+            img_reader.readAsText( new Blob([_via_images[img_id].base64_img_data]) );
+        }
     }
 }
 
@@ -760,7 +761,7 @@ function _via_load_canvas_regions() {
     for ( var i=0; i<regions.length; ++i) {
         var regioni = new ImageRegion();
         for ( var key of regions[i].shape_attributes.keys() ) {
-	    var value = regions[i].shape_attributes.get(key);
+            var value = regions[i].shape_attributes.get(key);
             regioni.shape_attributes.set(key, value);
         }
         _via_canvas_regions.push(regioni);
@@ -823,24 +824,24 @@ function clear_image_display_area() {
 function delete_selected_regions() {
     var del_region_count = 0;
     if (_via_is_all_region_selected) {
-	del_region_count = _via_canvas_regions.length;	
-	_via_canvas_regions.splice(0);
-	_via_images[_via_image_id].regions.splice(0);
+        del_region_count = _via_canvas_regions.length;  
+        _via_canvas_regions.splice(0);
+        _via_images[_via_image_id].regions.splice(0);
     } else {
-	var sorted_sel_reg_id = [];
-	for (var i=0; i<_via_canvas_regions.length; ++i) {
+        var sorted_sel_reg_id = [];
+        for (var i=0; i<_via_canvas_regions.length; ++i) {
             if (_via_canvas_regions[i].is_user_selected) {
-		sorted_sel_reg_id.push(i);
+                sorted_sel_reg_id.push(i);
             }
-	}	
-	sorted_sel_reg_id.sort( function(a,b) {
-	    return (b-a);
-	});
-	for (var i=0; i<sorted_sel_reg_id.length; ++i) {
-	    _via_canvas_regions.splice( sorted_sel_reg_id[i], 1);
-	    _via_images[_via_image_id].regions.splice( sorted_sel_reg_id[i], 1);
-	    del_region_count += 1;
-	}
+        }       
+        sorted_sel_reg_id.sort( function(a,b) {
+            return (b-a);
+        });
+        for (var i=0; i<sorted_sel_reg_id.length; ++i) {
+            _via_canvas_regions.splice( sorted_sel_reg_id[i], 1);
+            _via_images[_via_image_id].regions.splice( sorted_sel_reg_id[i], 1);
+            del_region_count += 1;
+        }
     }
 
     _via_is_all_region_selected = false;
@@ -875,9 +876,9 @@ function select_region_shape(sel_shape_name) {
     if ( _via_current_shape != VIA_REGION_SHAPE.POLYGON ) {
         _via_is_user_drawing_polygon = false;
         _via_current_polygon_region_id = -1;
-	show_message('Press single click and drag mouse to draw ' + _via_current_shape + ' region', VIA_THEME_MESSAGE_TIMEOUT_MS);
+        show_message('Press single click and drag mouse to draw ' + _via_current_shape + ' region', VIA_THEME_MESSAGE_TIMEOUT_MS);
     } else {
-	show_message('Press single click to define polygon vertices. Note: in Polygon drawing mode, single click cannot be used to un-select regions');
+        show_message('Press single click to define polygon vertices. Note: in Polygon drawing mode, single click cannot be used to un-select regions');
     }
 }
 
@@ -1662,11 +1663,11 @@ function count_missing_attribute_value(img_id) {
 function _via_redraw_canvas() {
     if (_via_current_image_loaded) {
         _via_ctx.drawImage(_via_current_image, 0, 0, _via_canvas_width, _via_canvas_height);
-	
-	if ( _via_canvas_regions.length > 0 ) {
+        
+        if ( _via_canvas_regions.length > 0 ) {
             draw_all_regions();
             draw_all_region_id();
-	}
+        }
     }
 }
 
@@ -2317,8 +2318,8 @@ window.addEventListener("keydown", function(e) {
         }
 
         if ( e.which == 65 ) { // Ctrl + a
-	    toggle_all_regions_selection(true);
-	    _via_is_all_region_selected = true;
+            toggle_all_regions_selection(true);
+            _via_is_all_region_selected = true;
             _via_redraw_canvas();
 
             show_current_attributes();
@@ -2626,29 +2627,29 @@ function show_current_attributes() {
 
 function add_attribute_name() {
     if ( _via_current_image_loaded ) {
-	_via_is_user_adding_attribute_name = true;
-	
-	var region_info = [];    
-	region_info.push('<tr><td colspan="2">New attribute name</td></tr>');
-	region_info.push('<tr><td colspan="2"><textarea id="textarea_attribute_name" rows="8" cols="40"></textarea></td></tr>');
-	region_info.push('<tr><td><button type="button" onclick="save_new_attribute_name()">Save</button> (or Enter)</td>');
-	region_info.push('<td><button type="button" onclick="cancel_attribute_add()">Cancel</button> (or Esc)</td></tr>');
+        _via_is_user_adding_attribute_name = true;
+        
+        var region_info = [];    
+        region_info.push('<tr><td colspan="2">New attribute name</td></tr>');
+        region_info.push('<tr><td colspan="2"><textarea id="textarea_attribute_name" rows="8" cols="40"></textarea></td></tr>');
+        region_info.push('<tr><td><button type="button" onclick="save_new_attribute_name()">Save</button> (or Enter)</td>');
+        region_info.push('<td><button type="button" onclick="cancel_attribute_add()">Cancel</button> (or Esc)</td></tr>');
 
-	region_info_table.innerHTML = region_info.join('');
-	
-	document.getElementById("textarea_attribute_name").focus();
-	document.getElementById("textarea_attribute_name").onkeypress = function(e) {
+        region_info_table.innerHTML = region_info.join('');
+        
+        document.getElementById("textarea_attribute_name").focus();
+        document.getElementById("textarea_attribute_name").onkeypress = function(e) {
             if ( e.key == VIA_IMPORT_CSV_COMMENT_CHAR ||
-		 e.key == VIA_IMPORT_CSV_KEYVAL_SEP_CHAR ||
-		 e.key == VIA_EXPORT_CSV_ARRAY_SEP_CHAR ||
-		 e.key == VIA_CSV_SEP_CHAR ||
-		 e.key == '~') {
-		show_message('Some special characters (, : ; #) are not allowed', VIA_THEME_MESSAGE_TIMEOUT_MS);
-		e.preventDefault();
+                 e.key == VIA_IMPORT_CSV_KEYVAL_SEP_CHAR ||
+                 e.key == VIA_EXPORT_CSV_ARRAY_SEP_CHAR ||
+                 e.key == VIA_CSV_SEP_CHAR ||
+                 e.key == '~') {
+                show_message('Some special characters (, : ; #) are not allowed', VIA_THEME_MESSAGE_TIMEOUT_MS);
+                e.preventDefault();
             }
-	};
+        };
     } else {
-	show_message("Please load some images first", VIA_THEME_MESSAGE_TIMEOUT_MS);
+        show_message("Please load some images first", VIA_THEME_MESSAGE_TIMEOUT_MS);
     }
 }
 function save_new_attribute_name() {
@@ -2794,14 +2795,16 @@ function print_current_image_data() {
         for ( var i=0; i<img_regions.length; ++i) {
             var attr = img_regions[i].shape_attributes;
             var img_region_str = '\n\t_via_images[i].regions.shape_attributes = [';
-            for ( var [key, value] of attr ) {
+            for ( var key of attr.keys() ) {
+                var value = attr.get(key);
                 img_region_str += key + ':' + value + ';';
             }
             logstr += img_region_str + ']';
 
             var attr = img_regions[i].region_attributes;
             var img_region_str = '\n\t_via_images[i].regions.region_attributes = [';
-            for ( var [key, value] of attr ) {
+            for ( var key of attr.keys() ) {
+                var value = attr.get(key);
                 img_region_str += key + ':' + value + ';';
             }
             logstr += img_region_str + ']';         
@@ -2810,7 +2813,8 @@ function print_current_image_data() {
         if ( _via_image_id == image_id ) {
             for ( var i=0; i<_via_canvas_regions.length; ++i) {
                 var canvas_region_str = '\n\t_via_canvas_regions = [';
-                for ( var [key, value] of _via_canvas_regions[i].shape_attributes ) {
+                for ( var key of _via_canvas_regions[i].shape_attributes.keys() ) {
+                    var value = _via_canvas_regions[i].shape_attributes.get(key);
                     canvas_region_str += key + ':' + value + ';';
                 }
                 logstr += canvas_region_str + ']';
