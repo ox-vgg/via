@@ -45,6 +45,8 @@ var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
 var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
 var VIA_THEME_SEL_REGION_OPACITY = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS = 5000;
+var VIA_THEME_ATTRIBUTE_IMG_WIDTH = 64;
+var VIA_THEME_ATTRIBUTE_VALUE_FONT = '10pt Sans';
 var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
 var VIA_IMPORT_CSV_KEYVAL_SEP_CHAR = ';';
 var VIA_EXPORT_CSV_ARRAY_SEP_CHAR = ':';
@@ -162,12 +164,14 @@ function clone_image_region(r0) {
     r1.is_user_selected = r0.is_user_selected;
 
     // copy shape attributes
-    for ( var[key,value] of r0.shape_attributes ) {
+    for ( var key of r0.shape_attributes.keys() ) {
+	var value = r0.shape_attributes.get(key);
         r1.shape_attributes.set(key, value);
     }
     
     // copy region attributes
-    for ( var[key,value] of r0.region_attributes ) {
+    for ( var key of r0.region_attributes.keys() ) {
+	var value = r0.region_attributes.get(key);
         r1.region_attributes.set(key, value);
     }
     return r1;
@@ -183,7 +187,9 @@ function main() {
     show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
     show_current_attributes();
 
-    _via_is_local_storage_available = check_local_storage();
+    // @todo: localStorage planned for version 0.1
+    //_via_is_local_storage_available = check_local_storage();
+    _via_is_local_storage_available = false;
 
     //start_demo_session(); // defined in via_demo.js
 }
@@ -210,7 +216,7 @@ function show_home_panel() {
 function load_images() {
     // source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
     if (invisible_file_input) {
-        invisible_file_input.accept='image/*';
+        invisible_file_input.accept='.jpg,.jpeg,.png,.bmp';
         invisible_file_input.onchange = upload_local_images;
         invisible_file_input.click();
     }
@@ -228,7 +234,7 @@ function download_all_region_data(type) {
 
 function upload_region_data_file() {
     if (invisible_file_input) {
-        invisible_file_input.accept='text/csv, text/json';
+        invisible_file_input.accept='.csv,.json';
         invisible_file_input.onchange = import_region_data_from_file;
         invisible_file_input.click();
     }
@@ -249,7 +255,7 @@ function save_attributes() {
 function import_attributes() {
     if (_via_current_image_loaded) {
 	if (invisible_file_input) {
-            invisible_file_input.accept='text/csv';
+            invisible_file_input.accept='.csv,.json';
             invisible_file_input.onchange = import_region_attributes_from_file;
             invisible_file_input.click();
 	}
@@ -316,7 +322,8 @@ function upload_local_images(event) {
 
 function import_region_attributes_from_file(event) {
     var selected_files = event.target.files;
-    for (var file of selected_files) {
+    for (var i=0; i<selected_files.length; ++i) {
+	var file = selected_files[i];
         switch(file.type) {
         case 'text/csv':
             load_text_file(file, import_region_attributes_from_csv);
@@ -414,7 +421,8 @@ function import_region_data_from_csv(data) {
                     
                     var attr_map = keyval_str_to_map( region_str );
 
-                    for ( var [key, val] of attr_map ) {
+                    for ( var key of attr_map.keys() ) {
+			var val = attr_map.get(key);
                         if ( key == 'all_points_x' ||
                              key == 'all_points_y' ) {
                             val = val.substring(1, val.length-1); // discard the square brackets []
@@ -437,7 +445,8 @@ function import_region_data_from_csv(data) {
                     region_attr = region_attr.substring(1, region_attr.length-1); // remove prefix and suffix quotation marks
                     var region_attr_map = keyval_str_to_map( region_attr );
                     
-                    for ( var [key, val] of region_attr_map ) {
+                    for ( var key of region_attr_map.keys() ) {
+			var val = region_attr_map.get(key);
                         regioni.region_attributes.set(key, val);
 
                         if (!_via_region_attributes.has(key)) {
@@ -461,7 +470,7 @@ function import_region_data_from_csv(data) {
 }
 
 function import_region_data_from_json(data) {
-    var _via_images_as_json = JSON.parse(data);
+    var d = JSON.parse(data);
 
     var image_count = 0;
     var region_import_count = 0;
@@ -471,22 +480,23 @@ function import_region_data_from_json(data) {
             image_count += 1;
             
             // copy image attributes
-            for (var key in _via_images_as_json[image_id].file_attributes) {
+            for (var key in d[image_id].file_attributes.keys()) {
                 if (!_via_images[image_id].file_attributes.get(key)) {
-                    _via_images[image_id].file_attributes.set(key, _via_images_as_json[image_id].file_attributes[key]);
+                    _via_images[image_id].file_attributes.set(key,
+							      d[image_id].file_attributes[key]);
                 } else {
                     skipped_file_attr_count += 1;
                 }
             }
 
             // copy regions
-            var regions = _via_images_as_json[image_id].regions;
+            var regions = d[image_id].regions;
             for (var i in regions) {
                 var regioni = new ImageRegion();
-                for (var key in regions[i].shape_attributes) {
+                for (var key in regions[i].shape_attributes.keys()) {
                     regioni.shape_attributes.set(key, regions[i].shape_attributes[key]);
                 }
-                for (var key in regions[i].region_attributes) {
+                for (var key in regions[i].region_attributes.keys()) {
                     regioni.region_attributes.set(key, regions[i].region_attributes[key]);
 
                     if (!_via_region_attributes.has(key)) {
@@ -576,14 +586,17 @@ function package_region_data(return_type) {
         var _via_images_as_obj = {};
         for (image_id in _via_images) {
             var image_data = {};
-            image_data.fileref = _via_images[image_id].fileref;
+            //image_data.fileref = _via_images[image_id].fileref;
+	    image_data.fileref = '';
             image_data.size = _via_images[image_id].size;
             image_data.filename = _via_images[image_id].filename;
-            image_data.base64_img_data = _via_images[image_id].base64_img_data;
+	    image_data.base64_img_data = '';
+            //image_data.base64_img_data = _via_images[image_id].base64_img_data;
             
             // copy file attributes
             image_data.file_attributes = {};    
-            for ( var [key, value] of _via_images[image_id].file_attributes ) {
+            for ( var key of _via_images[image_id].file_attributes.keys() ) {
+		var value = _via_images[image_id].file_attributes.get(key);
                 image_data.file_attributes[key] = value;
             }
 
@@ -594,11 +607,13 @@ function package_region_data(return_type) {
                 image_data.regions[i].shape_attributes = {};
                 image_data.regions[i].region_attributes = {};
                 // copy region shape_attributes
-                for ( var [key, value] of _via_images[image_id].regions[i].shape_attributes) {
+                for ( var key of _via_images[image_id].regions[i].shape_attributes.keys()) {
+		    var value = _via_images[image_id].regions[i].shape_attributes.get(key);
                     image_data.regions[i].shape_attributes[key] = value;
                 }
                 // copy region_attributes
-                for ( var [key, value] of _via_images[image_id].regions[i].region_attributes) {
+                for ( var key of _via_images[image_id].regions[i].region_attributes) {
+		    var value = _via_images[image_id].regions[i].region_attributes.get(key);
                     image_data.regions[i].region_attributes[key] = value;
                 }
             }
@@ -610,21 +625,22 @@ function package_region_data(return_type) {
 }
 
 function attr_map_to_str(attr) {
-    var attr_map_str = '"';
-    for( var [key, value] of attr ) {
+    var attr_map_str = [];
+    for( var key of attr.keys() ) {
+	var value = attr.get(key);
         if ( Array.isArray(value) ) {
             var value_str='[' + value[0];
             for (var i=1; i<value.length; ++i) {
                 value_str += VIA_EXPORT_CSV_ARRAY_SEP_CHAR + value[i];
             }
             value_str += ']';
-            attr_map_str = attr_map_str + key + '=' + value_str + ';';
-        } else {
-            attr_map_str = attr_map_str + key + '=' + value + ';';
+            attr_map_str.push(key + '=' + value_str);
+	} else {
+            attr_map_str.push(key + '=' + value);
         }
     }
-    attr_map_str += '"';
-    return attr_map_str;
+    var str_val = '"' + attr_map_str.join(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR) + '"';
+    return str_val;
 }
 
 function save_data_to_local_file(data, filename) {
@@ -744,7 +760,8 @@ function _via_load_canvas_regions() {
     _via_canvas_regions  = [];
     for ( var i=0; i<regions.length; ++i) {
         var regioni = new ImageRegion();
-        for ( var [key,value] of regions[i].shape_attributes ) {
+        for ( var key of regions[i].shape_attributes.keys() ) {
+	    var value = regions[i].shape_attributes.get(key);
             regioni.shape_attributes.set(key, value);
         }
         _via_canvas_regions.push(regioni);
@@ -1276,7 +1293,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
     
 });
 
-function toggle_all_regions_selection(is_selected=false) {
+function toggle_all_regions_selection(is_selected) {
     for (var i=0; i<_via_canvas_regions.length; ++i) {
         _via_canvas_regions[i].is_user_selected = is_selected;
     }

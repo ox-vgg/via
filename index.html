@@ -30,9 +30,9 @@
         POSSIBILITY OF SUCH DAMAGE.
 
       -->
-    <title>VGG Image Annotator</title>
+    <title>VGG Image Annotator (VIA)</title>
     <meta name="author" content="Abhishek Dutta">
-    <meta name="description" content="VGG Image Annotator (via) is a light-weight image annotation tool built solely using HTML, CSS and pure Javascript (not using any javascript libraries).">
+    <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 200 KB) that runs on most modern web browsers.">
 
     <!-- Google analytics : used in Seebibyte project to measure impact -->
     <script>
@@ -355,7 +355,6 @@
               <a onclick="delete_all_attributes()" title="Delete all attributes">Delete attributes</a>
             </div>
           </li>
-          <li><a onclick="show_settings_panel()" title="Change settings of VGG Image Annotator">Settings</a></li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>
             <div class="dropdown-content">
               <a href="https://gitlab.com/vgg/via/issues/new" target="_new" title="Report issues about this application">Report issue</a>
@@ -466,11 +465,6 @@
           </div>
           
           <div id="session_data_panel">
-            <span style="color: red">Annotations from previous session exists</span>
-            <div id="image_annotation_list_snippet"></div>
-            <button onclick="save_image_annotation_data('csv')">Download CSV</button>
-            <button onclick="save_image_annotation_data('json')">Download JSON</button>
-            <button onclick="discard_via_session_data()">Discard Annotations</button>
           </div>
 
           <div id="img_list_panel"></div>
