@@ -5,4 +5,4 @@
  * Ctrl a/c/v to select all, copy and paste image regions
  * import/export of region data from/to text file in csv,json format
  * display list of loaded images
- * everything is saved in browser cache to recover from unexpected browser exit
+
