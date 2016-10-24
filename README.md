@@ -21,6 +21,9 @@ Visit the [VGG software page](http://www.robots.ox.ac.uk/~vgg/software/via/) for
  * [via demo](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html) : live demo (with preloaded images and regions)
  * [https://gitlab.com/vgg/via/](https://gitlab.com/vgg/via/) : source code repository
 
-## Help:
+## Help
 Software bug reports and feature requests should be [submitted here](https://gitlab.com/vgg/via/issues/new).
 For all other queries, please contact [Abhishek Dutta](mailto:adutta@robots.ox.ac.uk).
+
+## License
+VIA is an open source project released under the [BSD-2 clause license](https://gitlab.com/vgg/via/blob/master/LICENSE).
