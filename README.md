@@ -17,8 +17,8 @@ Visit the [VGG software page](http://www.robots.ox.ac.uk/~vgg/software/via/) for
 
 ## Downloads
  * [via.html.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via.html.zip) : the VGG Image Annotator application (< 200KB)
- * [via.html](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via.html) : online version of the application
- * [via demo](http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_demo.html) : live demo (with preloaded images and regions)
+ * [via.html](http://www.robots.ox.ac.uk/~vgg/software/via/via.html) : online version of the application
+ * [via demo](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html) : live demo (with preloaded images and regions)
  * [https://gitlab.com/vgg/via/](https://gitlab.com/vgg/via/) : source code repository
 
 ## Help:
