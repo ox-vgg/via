@@ -3,36 +3,36 @@
   <head>
     <meta charset="UTF-8"> 
     <!--
-	VGG Image Annotator (via)
-	www.robots.ox.ac.uk/~vgg/software/via/
+        VGG Image Annotator (via)
+        www.robots.ox.ac.uk/~vgg/software/via/
 
-	Copyright (c) 2016, Abhishek Dutta.
-	All rights reserved.
+        Copyright (c) 2016, Abhishek Dutta.
+        All rights reserved.
 
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions are met:
+        Redistribution and use in source and binary forms, with or without
+        modification, are permitted provided that the following conditions are met:
 
-	Redistributions of source code must retain the above copyright notice, this
-	list of conditions and the following disclaimer.
-	Redistributions in binary form must reproduce the above copyright notice,
-	this list of conditions and the following disclaimer in the documentation
-	and/or other materials provided with the distribution.
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-	AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-	ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-	LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-	CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-	SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-	CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-	POSSIBILITY OF SUCH DAMAGE.
+        Redistributions of source code must retain the above copyright notice, this
+        list of conditions and the following disclaimer.
+        Redistributions in binary form must reproduce the above copyright notice,
+        this list of conditions and the following disclaimer in the documentation
+        and/or other materials provided with the distribution.
+        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+        AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+        IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+        ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+        LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+        CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+        SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+        INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+        CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+        ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+        POSSIBILITY OF SUCH DAMAGE.
 
       -->
-    <title>VGG Image Annotator</title>
+    <title>VGG Image Annotator (VIA)</title>
     <meta name="author" content="Abhishek Dutta">
-    <meta name="description" content="VGG Image Annotator (via) is a light-weight image annotation tool built solely using HTML, CSS and pure Javascript (not using any javascript libraries).">
+    <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 200 KB) that runs on most modern web browsers.">
 
     <!-- Google analytics : used in Seebibyte project to measure impact -->
     <script>
@@ -45,7 +45,7 @@
       ga('send', 'pageview');
 
     </script>
-
+    
     <!-- CSS style definition -->
     <style type="text/css">     
       body {
@@ -332,8 +332,7 @@
 
     <div class="wrapper">
       <div id="navbar">
-        <ul>
-          <div style="display: inline; float: left;"><a href="http://www.robots.ox.ac.uk/~vgg/software/via/" target="_new"><svg style="stroke: #cccccc; fill: #000000; margin-top: 0.4em; margin-left: 1em; margin-right: 0.5em;" width="40" viewBox="0 0 64 64"><use xlink:href="#via_logo"></use></svg></a></div>    
+        <ul> 
           <li><a onclick="show_home_panel()" title="Home">Home</a></li>
           <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662</a>
             <div class="dropdown-content">
@@ -355,7 +354,6 @@
               <a onclick="delete_all_attributes()" title="Delete all attributes">Delete attributes</a>
             </div>
           </li>
-          <li><a onclick="show_settings_panel()" title="Change settings of VGG Image Annotator">Settings</a></li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>
             <div class="dropdown-content">
               <a href="https://gitlab.com/vgg/via/issues/new" target="_new" title="Report issues about this application">Report issue</a>
@@ -466,36 +464,31 @@
           </div>
           
           <div id="session_data_panel">
-            <span style="color: red">Annotations from previous session exists</span>
-            <div id="image_annotation_list_snippet"></div>
-            <button onclick="save_image_annotation_data('csv')">Download CSV</button>
-            <button onclick="save_image_annotation_data('json')">Download JSON</button>
-            <button onclick="discard_via_session_data()">Discard Annotations</button>
           </div>
 
           <div id="img_list_panel"></div>
 
           <div class="" id="about_panel" style="">
-	    <p>
-	      VGG Image Annotator (via) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
-	      developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
-	      and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
-	      With this standalone application, you can define regions in an image and create a textual description of those regions.
-	      Such image regions and descriptions are useful for supervised training of learning algorithms.
-	    </p>
-	    <p>
-	      Features:
-	    <ul>
-	      <li>based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)</li>
-	      <li>can be used offline (complete application packaged in a single html file of size &lt; 200KB)</li>
-	      <li>requires nothing more than a modern web browser (tested on firefox and chrome)</li>
-	      <li>supports following region shapes: rectangle, circle, ellipse, polygon</li>
-	      <li>supports multiple attributes for each image region</li>
-	      <li>import (and export) of region data from (to) text file in csv and json format</li>
-	      <li>hundreds of images can be loaded and annotated with any performance degradation</li>
-	    </ul>
-	    </p>
-	    <p>For more details, visit <a href="www.robots.ox.ac.uk/~vgg/software/via/">www.robots.ox.ac.uk/~vgg/software/via/</a></p>
+            <p>
+              VGG Image Annotator (via) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
+              developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
+              and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
+              With this standalone application, you can define regions in an image and create a textual description of those regions.
+              Such image regions and descriptions are useful for supervised training of learning algorithms.
+            </p>
+            <p>
+              Features:
+            <ul>
+              <li>based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)</li>
+              <li>can be used offline (complete application packaged in a single html file of size &lt; 200KB)</li>
+              <li>requires nothing more than a modern web browser (tested on firefox and chrome)</li>
+              <li>supports following region shapes: rectangle, circle, ellipse, polygon</li>
+              <li>supports multiple attributes for each image region</li>
+              <li>import (and export) of region data from (to) text file in csv and json format</li>
+              <li>hundreds of images can be loaded and annotated with any performance degradation</li>
+            </ul>
+            </p>
+            <p>For more details, visit <a href="www.robots.ox.ac.uk/~vgg/software/via/">www.robots.ox.ac.uk/~vgg/software/via/</a></p>
           </div>
           
         </div>
@@ -503,7 +496,9 @@
     </div> <!-- end of wrapper -->
     <div id="message_panel"></div>
 
-    <script type="text/javascript" src="via_demo.js"></script>
+    <script type="text/javascript" src="via_demo.js">
+      <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
+    </script>
     <script type="text/javascript">
       <!--AUTO_INSERT_VIA_JS_HERE-->
 /*
@@ -553,6 +548,8 @@ var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
 var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
 var VIA_THEME_SEL_REGION_OPACITY = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS = 5000;
+var VIA_THEME_ATTRIBUTE_IMG_WIDTH = 64;
+var VIA_THEME_ATTRIBUTE_VALUE_FONT = '10pt Sans';
 var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
 var VIA_IMPORT_CSV_KEYVAL_SEP_CHAR = ';';
 var VIA_EXPORT_CSV_ARRAY_SEP_CHAR = ':';
@@ -583,6 +580,7 @@ var _via_is_user_resizing_region = false;
 var _via_is_user_moving_region = false;
 var _via_is_user_drawing_polygon = false;
 var _via_is_region_selected = false;
+var _via_is_all_region_selected = false;
 var _via_is_user_updating_attribute_name = false;
 var _via_is_user_updating_attribute_value = false;
 var _via_is_user_adding_attribute_name = false;
@@ -670,12 +668,14 @@ function clone_image_region(r0) {
     r1.is_user_selected = r0.is_user_selected;
 
     // copy shape attributes
-    for ( var[key,value] of r0.shape_attributes ) {
+    for ( var key of r0.shape_attributes.keys() ) {
+	var value = r0.shape_attributes.get(key);
         r1.shape_attributes.set(key, value);
     }
     
     // copy region attributes
-    for ( var[key,value] of r0.region_attributes ) {
+    for ( var key of r0.region_attributes.keys() ) {
+	var value = r0.region_attributes.get(key);
         r1.region_attributes.set(key, value);
     }
     return r1;
@@ -687,13 +687,15 @@ function _via_get_image_id(filename, size) {
 
 function main() {
     console.log("VGG Image Annotator (via)");
-    //show_home_panel();   
-    show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". (Running in demo mode)");
+    show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
     show_current_attributes();
 
-    _via_is_local_storage_available = check_local_storage();
+    // @todo: localStorage planned for version 0.1
+    //_via_is_local_storage_available = check_local_storage();
+    _via_is_local_storage_available = false;
 
-    start_demo_session();
+    show_home_panel();    
+    //start_demo_session(); // defined in via_demo.js
 }
 
 //
@@ -718,7 +720,7 @@ function show_home_panel() {
 function load_images() {
     // source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
     if (invisible_file_input) {
-        invisible_file_input.accept='image/*';
+        invisible_file_input.accept='.jpg,.jpeg,.png,.bmp';
         invisible_file_input.onchange = upload_local_images;
         invisible_file_input.click();
     }
@@ -736,7 +738,7 @@ function download_all_region_data(type) {
 
 function upload_region_data_file() {
     if (invisible_file_input) {
-        invisible_file_input.accept='text/csv, text/json';
+        invisible_file_input.accept='.csv,.json';
         invisible_file_input.onchange = import_region_data_from_file;
         invisible_file_input.click();
     }
@@ -757,7 +759,7 @@ function save_attributes() {
 function import_attributes() {
     if (_via_current_image_loaded) {
 	if (invisible_file_input) {
-            invisible_file_input.accept='text/csv';
+            invisible_file_input.accept='.csv,.json';
             invisible_file_input.onchange = import_region_attributes_from_file;
             invisible_file_input.click();
 	}
@@ -824,7 +826,8 @@ function upload_local_images(event) {
 
 function import_region_attributes_from_file(event) {
     var selected_files = event.target.files;
-    for (var file of selected_files) {
+    for (var i=0; i<selected_files.length; ++i) {
+	var file = selected_files[i];
         switch(file.type) {
         case 'text/csv':
             load_text_file(file, import_region_attributes_from_csv);
@@ -922,7 +925,8 @@ function import_region_data_from_csv(data) {
                     
                     var attr_map = keyval_str_to_map( region_str );
 
-                    for ( var [key, val] of attr_map ) {
+                    for ( var key of attr_map.keys() ) {
+			var val = attr_map.get(key);
                         if ( key == 'all_points_x' ||
                              key == 'all_points_y' ) {
                             val = val.substring(1, val.length-1); // discard the square brackets []
@@ -945,7 +949,8 @@ function import_region_data_from_csv(data) {
                     region_attr = region_attr.substring(1, region_attr.length-1); // remove prefix and suffix quotation marks
                     var region_attr_map = keyval_str_to_map( region_attr );
                     
-                    for ( var [key, val] of region_attr_map ) {
+                    for ( var key of region_attr_map.keys() ) {
+			var val = region_attr_map.get(key);
                         regioni.region_attributes.set(key, val);
 
                         if (!_via_region_attributes.has(key)) {
@@ -963,32 +968,32 @@ function import_region_data_from_csv(data) {
     show_message('Imported ' + region_import_count + ' regions for ' + image_count + ' images from CSV file');
 
     _via_reload_img_table = true;
-    //_via_load_canvas_regions();
     show_image(_via_image_index);
     save_current_data_to_browser_cache();
 }
 
 function import_region_data_from_json(data) {
-    var _via_images_as_json = JSON.parse(data);
+    var d = JSON.parse(data);
 
     var image_count = 0;
     var region_import_count = 0;
     var skipped_file_attr_count = 0;
-    for (image_id in _via_images_as_json) {
+    for (image_id in d) {
         if ( _via_images.hasOwnProperty(image_id) ) {
             image_count += 1;
             
             // copy image attributes
-            for (var key in _via_images_as_json[image_id].file_attributes) {
+            for (var key in d[image_id].file_attributes) {
                 if (!_via_images[image_id].file_attributes.get(key)) {
-                    _via_images[image_id].file_attributes.set(key, _via_images_as_json[image_id].file_attributes[key]);
+                    _via_images[image_id].file_attributes.set(key,
+							      d[image_id].file_attributes[key]);
                 } else {
                     skipped_file_attr_count += 1;
                 }
             }
 
             // copy regions
-            var regions = _via_images_as_json[image_id].regions;
+            var regions = d[image_id].regions;
             for (var i in regions) {
                 var regioni = new ImageRegion();
                 for (var key in regions[i].shape_attributes) {
@@ -1012,7 +1017,6 @@ function import_region_data_from_json(data) {
     show_message('Imported ' + region_import_count + ' regions for ' + image_count + ' images from JSON file');
 
     _via_reload_img_table = true;
-    //_via_load_canvas_regions();
     show_image(_via_image_index);
 }
 
@@ -1084,14 +1088,17 @@ function package_region_data(return_type) {
         var _via_images_as_obj = {};
         for (image_id in _via_images) {
             var image_data = {};
-            image_data.fileref = _via_images[image_id].fileref;
+            //image_data.fileref = _via_images[image_id].fileref;
+	    image_data.fileref = '';
             image_data.size = _via_images[image_id].size;
             image_data.filename = _via_images[image_id].filename;
-            image_data.base64_img_data = _via_images[image_id].base64_img_data;
+	    image_data.base64_img_data = '';
+            //image_data.base64_img_data = _via_images[image_id].base64_img_data;
             
             // copy file attributes
             image_data.file_attributes = {};    
-            for ( var [key, value] of _via_images[image_id].file_attributes ) {
+            for ( var key of _via_images[image_id].file_attributes.keys() ) {
+		var value = _via_images[image_id].file_attributes.get(key);
                 image_data.file_attributes[key] = value;
             }
 
@@ -1102,11 +1109,13 @@ function package_region_data(return_type) {
                 image_data.regions[i].shape_attributes = {};
                 image_data.regions[i].region_attributes = {};
                 // copy region shape_attributes
-                for ( var [key, value] of _via_images[image_id].regions[i].shape_attributes) {
+                for ( var key of _via_images[image_id].regions[i].shape_attributes.keys()) {
+		    var value = _via_images[image_id].regions[i].shape_attributes.get(key);
                     image_data.regions[i].shape_attributes[key] = value;
                 }
                 // copy region_attributes
-                for ( var [key, value] of _via_images[image_id].regions[i].region_attributes) {
+                for ( var key of _via_images[image_id].regions[i].region_attributes) {
+		    var value = _via_images[image_id].regions[i].region_attributes.get(key);
                     image_data.regions[i].region_attributes[key] = value;
                 }
             }
@@ -1118,21 +1127,22 @@ function package_region_data(return_type) {
 }
 
 function attr_map_to_str(attr) {
-    var attr_map_str = '"';
-    for( var [key, value] of attr ) {
+    var attr_map_str = [];
+    for( var key of attr.keys() ) {
+	var value = attr.get(key);
         if ( Array.isArray(value) ) {
             var value_str='[' + value[0];
             for (var i=1; i<value.length; ++i) {
                 value_str += VIA_EXPORT_CSV_ARRAY_SEP_CHAR + value[i];
             }
             value_str += ']';
-            attr_map_str = attr_map_str + key + '=' + value_str + ';';
-        } else {
-            attr_map_str = attr_map_str + key + '=' + value + ';';
+            attr_map_str.push(key + '=' + value_str);
+	} else {
+            attr_map_str.push(key + '=' + value);
         }
     }
-    attr_map_str += '"';
-    return attr_map_str;
+    var str_val = '"' + attr_map_str.join(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR) + '"';
+    return str_val;
 }
 
 function save_data_to_local_file(data, filename) {
@@ -1252,7 +1262,8 @@ function _via_load_canvas_regions() {
     _via_canvas_regions  = [];
     for ( var i=0; i<regions.length; ++i) {
         var regioni = new ImageRegion();
-        for ( var [key,value] of regions[i].shape_attributes ) {
+        for ( var key of regions[i].shape_attributes.keys() ) {
+	    var value = regions[i].shape_attributes.get(key);
             regioni.shape_attributes.set(key, value);
         }
         _via_canvas_regions.push(regioni);
@@ -1314,16 +1325,31 @@ function clear_image_display_area() {
 
 function delete_selected_regions() {
     var del_region_count = 0;
-    for (var i=0; i<_via_canvas_regions.length; ++i) {
-        if (_via_canvas_regions[i].is_user_selected) {
-            _via_canvas_regions.splice(i, 1);
-            _via_images[_via_image_id].regions.splice(i, 1);
-            del_region_count += 1;
-        }
+    if (_via_is_all_region_selected) {
+	del_region_count = _via_canvas_regions.length;	
+	_via_canvas_regions.splice(0);
+	_via_images[_via_image_id].regions.splice(0);
+    } else {
+	var sorted_sel_reg_id = [];
+	for (var i=0; i<_via_canvas_regions.length; ++i) {
+            if (_via_canvas_regions[i].is_user_selected) {
+		sorted_sel_reg_id.push(i);
+            }
+	}	
+	sorted_sel_reg_id.sort( function(a,b) {
+	    return (b-a);
+	});
+	for (var i=0; i<sorted_sel_reg_id.length; ++i) {
+	    _via_canvas_regions.splice( sorted_sel_reg_id[i], 1);
+	    _via_images[_via_image_id].regions.splice( sorted_sel_reg_id[i], 1);
+	    del_region_count += 1;
+	}
     }
 
-    _via_is_region_selected = false;    
+    _via_is_all_region_selected = false;
+    _via_is_region_selected = false;
     _via_user_sel_region_id = -1;
+    
     _via_redraw_canvas();
     _via_canvas.focus();
     show_region_shape_info();
@@ -1784,7 +1810,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
     
 });
 
-function toggle_all_regions_selection(is_selected=false) {
+function toggle_all_regions_selection(is_selected) {
     for (var i=0; i<_via_canvas_regions.length; ++i) {
         _via_canvas_regions[i].is_user_selected = is_selected;
     }
@@ -2139,8 +2165,11 @@ function count_missing_attribute_value(img_id) {
 function _via_redraw_canvas() {
     if (_via_current_image_loaded) {
         _via_ctx.drawImage(_via_current_image, 0, 0, _via_canvas_width, _via_canvas_height);
-        draw_all_regions();
-        draw_all_region_id();
+	
+	if ( _via_canvas_regions.length > 0 ) {
+            draw_all_regions();
+            draw_all_region_id();
+	}
     }
 }
 
@@ -2791,11 +2820,10 @@ window.addEventListener("keydown", function(e) {
         }
 
         if ( e.which == 65 ) { // Ctrl + a
-            for (var i=0; i<_via_canvas_regions.length; ++i) {
-                _via_canvas_regions[i].is_user_selected = true;
-            }
-            _via_is_region_selected = true;
+	    toggle_all_regions_selection(true);
+	    _via_is_all_region_selected = true;
             _via_redraw_canvas();
+
             show_current_attributes();
             e.preventDefault();
             return;
@@ -3151,6 +3179,7 @@ function cancel_attribute_update() {
     current_update_attribute_name = "";
     show_current_attributes();
     show_region_attributes_info();
+    _via_redraw_canvas();
 }
 
 function update_attribute_value(region_id, attribute) {
