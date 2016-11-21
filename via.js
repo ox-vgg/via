@@ -116,7 +116,6 @@ var invisible_file_input = document.getElementById("invisible_file_input");
 
 var about_panel = document.getElementById("about_panel");
 var via_start_info_panel = document.getElementById("via_start_info_panel");
-var session_data_panel = document.getElementById("session_data_panel");
 var message_panel = document.getElementById("message_panel");
 var image_panel = document.getElementById("image_panel");
 var navbar_panel = document.getElementById("navbar");
@@ -186,14 +185,16 @@ function main() {
     console.log("VGG Image Annotator (via)");
     show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
     show_current_attributes();
-
+    show_home_panel();
+    //start_demo_session(); // defined in via_demo.js
+    
     _via_is_local_storage_available = check_local_storage();
     if (_via_is_local_storage_available) {
-	if (is_via_data_in_localStorage) {
-	    show_localStorage_recovery_panel();
+	if (is_via_data_in_localStorage()) {
+	    console.log('showing localStorage recovery options');
+	    show_localStorage_recovery_options();
 	}
     }
-    show_home_panel();
 }
 
 //
@@ -204,14 +205,13 @@ function show_home_panel() {
         _via_canvas.style.display = "block";    
         via_start_info_panel.style.display = "none";
         about_panel.style.display = "none";
-        session_data_panel.style.display = "none";
         img_list_panel.style.display = "none";
 
     } else {
+	via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <span class="action_text_link" onclick="load_images()" title="Load Images">[Load Images]</span> in the Image menu.';
         via_start_info_panel.style.display = "block";
         about_panel.style.display = "none";
         _via_canvas.style.display = "none";
-        session_data_panel.style.display = "none";
         img_list_panel.style.display = "none";
     }
 }
@@ -272,7 +272,6 @@ function show_about_panel() {
     about_panel.style.display = "block";
     _via_canvas.style.display = "none";
     via_start_info_panel.style.display = "none";
-    session_data_panel.style.display = "none";
 }
 function delete_all_attributes() {
     _via_region_attributes.clear();
@@ -286,6 +285,12 @@ function delete_all_attributes() {
 function upload_local_images(event) {
     var user_selected_images = event.target.files;
     var original_image_count = _via_images_count;
+
+    // clear browser cache if user chooses to load new images
+    if (original_image_count == 0) {
+	localStorage.clear();
+    }
+    
     for ( var i=0; i<user_selected_images.length; ++i) {
         var filename = user_selected_images[i].name;
         var size = user_selected_images[i].size;
@@ -612,12 +617,11 @@ function package_region_data(return_type) {
                     image_data.regions[i].shape_attributes[key] = value;
                 }
                 // copy region_attributes
-                for ( var key of _via_images[image_id].regions[i].region_attributes) {
+                for ( var key of _via_images[image_id].regions[i].region_attributes.keys()) {
 		    var value = _via_images[image_id].regions[i].region_attributes.get(key);
                     image_data.regions[i].region_attributes[key] = value;
                 }
-            }
-            
+            }           
             _via_images_as_obj[image_id] = image_data;
         }
         return [JSON.stringify(_via_images_as_obj)];
@@ -817,7 +821,6 @@ function clear_image_display_area() {
     _via_canvas.style.display = "none";
     about_panel.style.display = 'none';
     via_start_info_panel.style.display = 'none';
-    session_data_panel.style.display = 'none';
     img_list_panel.style.display = 'none';
 }
 
@@ -1240,6 +1243,10 @@ _via_canvas.addEventListener('mouseup', function(e) {
         var region_dx = Math.abs(region_x1 - region_x0);
         var region_dy = Math.abs(region_y1 - region_y0);
 
+	// newly drawn region is automatically selected
+	toggle_all_regions_selection(false);
+	canvas_img_region.is_user_selected = true;
+	
         if ( region_dx > VIA_REGION_MIN_DIM ||
              region_dy > VIA_REGION_MIN_DIM ) { // avoid regions with 0 dim
                 switch(_via_current_shape) {
@@ -1302,6 +1309,10 @@ _via_canvas.addEventListener('mouseup', function(e) {
         }
         _via_redraw_canvas();
         _via_canvas.focus();
+	show_region_attributes_info();
+        show_region_shape_info();
+        show_current_attributes();
+
         save_current_data_to_browser_cache();
         return;
     }
@@ -1601,7 +1612,6 @@ function show_img_list() {
         via_start_info_panel.style.display = "none";
         about_panel.style.display = "none";
         _via_canvas.style.display = "none";
-        session_data_panel.style.display = "none";
 
         _via_user_sel_region_id = -1;
         _via_is_region_selected = false;
@@ -2489,9 +2499,6 @@ function move_to_prev_image() {
         _via_user_sel_region_id = -1;
         
         _via_current_sel_region_id = -1;
-        
-        _via_canvas.style.display = "none";
-        _via_ctx.clearRect(0, 0, _via_canvas.width, _via_canvas.height);
 
         if ( _via_image_index == 0 ) {   
             show_image(_via_images_count - 1);
@@ -2508,9 +2515,6 @@ function move_to_next_image() {
 
         _via_current_sel_region_id = -1;
         
-        _via_canvas.style.display = "none";
-        _via_ctx.clearRect(0, 0, _via_canvas.width, _via_canvas.height);
-
         if ( _via_image_index == (_via_images_count-1) ) {   
             show_image(0);
         } else {
@@ -2573,7 +2577,7 @@ function show_region_shape_info() {
 function show_filename_info() {
     if ( _via_current_image_loaded ) {
         document.getElementById("info_current_filename").innerHTML = _via_current_image_filename;
-        document.getElementById("info_current_fileid").innerHTML = (_via_image_index+1) + " of " + _via_images_count;
+        document.getElementById("info_current_fileid").innerHTML = "(" + (_via_image_index+1) + " of " + _via_images_count + ")";
     } else {
         document.getElementById("info_current_filename").innerHTML = "";
         document.getElementById("info_current_fileid").innerHTML = "";
@@ -2763,6 +2767,7 @@ function save_current_data_to_browser_cache() {
                 }
                 localStorage.setItem('_via_region_attributes', JSON.stringify(attr));
                 _via_is_save_ongoing = false;
+		console.log('saved data to browser cache');
             } catch(err) {
                 _via_is_save_ongoing = false;
                 show_message('Failed to save data to browser cache');
@@ -2783,16 +2788,93 @@ function is_via_data_in_localStorage() {
 
 function clear_localStorage() {
     localStorage.clear();
+    show_home_panel();
 }
 
-function show_local_storage_recovery_panel() {
+function show_localStorage_recovery_options() {
+    var hstr = [];
+    var date_of_saved_data = new Date( parseInt(localStorage.getItem('_via_timestamp')) );
+    
+    hstr.push('<div style="padding: 1em; border: 1px solid #cccccc;">');
+    hstr.push('<h3 style="border-bottom: 1px solid #5599FF">Data Recovery from Browser Cache</h3>');
+    hstr.push('<ul><li>Data saved on : ' + date_of_saved_data);
+    hstr.push('<br/><span class="action_text_link" onclick="download_localStorage_data(\'csv\')" title="Recover annotation data">[Save as CSV]</span>');
+    hstr.push(' | ');
+    hstr.push('<span class="action_text_link" onclick="download_localStorage_data(\'json\')" title="Recover annotation data">[Save as JSON]</span>');
+    hstr.push(' | ');
+    hstr.push('<span class="action_text_link" onclick="clear_localStorage()" title="Discard annotation data">[Discard Data]</span>');
+    hstr.push('</li></ul>');
+    
+    hstr.push('</div>');
+    via_start_info_panel.innerHTML += hstr.join('');
+}
 
+function download_localStorage_data(type) {
+    switch(type) {
+    case 'csv':
+	var d = JSON.parse( localStorage.getItem('_via_images') );
+
+	var csvdata = [];
+        var csvheader = "#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes";
+        csvdata.push(csvheader);
+
+	for (var image_id in d) {
+	    console.log(image_id);
+	    // copy file attributes
+	    var file_attr_map = new Map();
+	    for (var key in d[image_id].file_attributes) {
+		file_attr_map.set(key, d[image_id].file_attributes[key]);
+	    }
+
+	    var prefix_str = d[image_id].filename;
+            prefix_str += "," + d[image_id].size;
+            prefix_str += "," + attr_map_to_str( file_attr_map );
+
+	    // copy regions
+	    var regions = d[image_id].regions;
+	    var region_count = 0;
+	    for (var i in regions) {
+		region_count += 1;
+	    }
+	    
+	    for (var i in regions) {
+		var region_shape_attr_str = region_count + ',' + i + ',';
+		
+                var regioni = new ImageRegion();
+                for (var key in regions[i].shape_attributes) {
+		    regioni.shape_attributes.set(key, regions[i].shape_attributes[key]);
+                }
+                for (var key in regions[i].region_attributes) {
+		    regioni.region_attributes.set(key, regions[i].region_attributes[key]);
+                }
+		region_shape_attr_str += attr_map_to_str( regioni.shape_attributes );
+		var region_attr_str = attr_map_to_str( regioni.region_attributes );
+		console.log('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
+		csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
+	    }
+	}
+
+	var localStorage_data_blob = new Blob( csvdata,
+					       {type: 'text/csv;charset=utf-8'});
+
+	save_data_to_local_file(localStorage_data_blob, 'via_region_data.csv');
+
+	break;
+    case 'json':
+	var localStorage_data_blob = new Blob( [localStorage.getItem('_via_images')],
+					       {type: 'text/json;charset=utf-8'});
+
+	save_data_to_local_file(localStorage_data_blob, 'via_region_data.json');
+	break;
+    }
+    
 }
 
 //
 // used for debugging
 //
 function print_current_state_vars() {
+    console.log(localStorage);
     console.log('\n_via_is_user_drawing_region'+_via_is_user_drawing_region+
                 '\n_via_current_image_loaded'+_via_current_image_loaded+
                 '\nis_window_resized'+is_window_resized+
