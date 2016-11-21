@@ -2488,9 +2488,6 @@ function move_to_prev_image() {
         _via_user_sel_region_id = -1;
         
         _via_current_sel_region_id = -1;
-        
-        _via_canvas.style.display = "none";
-        _via_ctx.clearRect(0, 0, _via_canvas.width, _via_canvas.height);
 
         if ( _via_image_index == 0 ) {   
             show_image(_via_images_count - 1);
@@ -2507,9 +2504,6 @@ function move_to_next_image() {
 
         _via_current_sel_region_id = -1;
         
-        _via_canvas.style.display = "none";
-        _via_ctx.clearRect(0, 0, _via_canvas.width, _via_canvas.height);
-
         if ( _via_image_index == (_via_images_count-1) ) {   
             show_image(0);
         } else {
