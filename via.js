@@ -187,12 +187,13 @@ function main() {
     show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
     show_current_attributes();
 
-    // @todo: localStorage planned for version 0.1
-    //_via_is_local_storage_available = check_local_storage();
-    _via_is_local_storage_available = false;
-
-    //show_home_panel();    
-    start_demo_session(); // defined in via_demo.js
+    _via_is_local_storage_available = check_local_storage();
+    if (_via_is_local_storage_available) {
+	if (is_via_data_in_localStorage) {
+	    show_localStorage_recovery_panel();
+	}
+    }
+    show_home_panel();
 }
 
 //
@@ -2770,6 +2771,22 @@ function save_current_data_to_browser_cache() {
             }
         }
     }, 1000);
+}
+
+function is_via_data_in_localStorage() {
+    if (localStorage.getItem('_via_timestamp')) {
+	return true;
+    } else {
+	return false;
+    }
+}
+
+function clear_localStorage() {
+    localStorage.clear();
+}
+
+function show_local_storage_recovery_panel() {
+
 }
 
 //
