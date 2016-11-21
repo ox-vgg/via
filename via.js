@@ -1239,6 +1239,10 @@ _via_canvas.addEventListener('mouseup', function(e) {
         var region_dx = Math.abs(region_x1 - region_x0);
         var region_dy = Math.abs(region_y1 - region_y0);
 
+	// newly drawn region is automatically selected
+	toggle_all_regions_selection(false);
+	canvas_img_region.is_user_selected = true;
+	
         if ( region_dx > VIA_REGION_MIN_DIM ||
              region_dy > VIA_REGION_MIN_DIM ) { // avoid regions with 0 dim
                 switch(_via_current_shape) {
@@ -1301,6 +1305,10 @@ _via_canvas.addEventListener('mouseup', function(e) {
         }
         _via_redraw_canvas();
         _via_canvas.focus();
+	show_region_attributes_info();
+        show_region_shape_info();
+        show_current_attributes();
+
         save_current_data_to_browser_cache();
         return;
     }
