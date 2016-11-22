@@ -191,7 +191,6 @@ function main() {
     _via_is_local_storage_available = check_local_storage();
     if (_via_is_local_storage_available) {
 	if (is_via_data_in_localStorage()) {
-	    console.log('showing localStorage recovery options');
 	    show_localStorage_recovery_options();
 	}
     }
@@ -226,10 +225,12 @@ function load_images() {
 function download_all_region_data(type) {
     var all_region_data = package_region_data(type);
     var all_region_data_blob = new Blob(all_region_data, {type: 'text/'+type+';charset=utf-8'});
+
     if ( all_region_data_blob.size > (2*1024*1024) &&
          type == 'csv' ) {
         show_message('CSV file size is ' + (all_region_data_blob.size/(1024*1024)) + ' MB. We advise you to instead download as JSON');
     } else {
+	console.log(all_region_data_blob);
         save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
     }
 }
@@ -361,6 +362,7 @@ function import_region_data_from_file(event) {
     var selected_files = event.target.files;
     for (var file of selected_files) {
         switch(file.type) {
+	case 'text/plain':
         case 'text/csv':
             load_text_file(file, import_region_data_from_csv);
             break;
@@ -2771,7 +2773,6 @@ function save_current_data_to_browser_cache() {
                 }
                 localStorage.setItem('_via_region_attributes', JSON.stringify(attr));
                 _via_is_save_ongoing = false;
-		console.log('saved data to browser cache');
             } catch(err) {
                 _via_is_save_ongoing = false;
                 show_message('Failed to save data to browser cache');
