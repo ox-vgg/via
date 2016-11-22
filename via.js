@@ -189,12 +189,21 @@ function main() {
     show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
     show_current_attributes();
     show_home_panel();
-    start_demo_session(); // defined in via_demo.js
+    //start_demo_session(); // defined in via_demo.js
     
     _via_is_local_storage_available = check_local_storage();
     if (_via_is_local_storage_available) {
 	if (is_via_data_in_localStorage()) {
 	    show_localStorage_recovery_options();
+	}
+    }
+
+    // DEBUGGING: populate some sample data
+    for (var i=0; i<4; i++) {
+	var row = document.getElementById('user_input_table').insertRow(-1);
+	for (var j=0; j<5; j++) {
+            var letter = String.fromCharCode("A".charCodeAt(0)+j-1);
+            row.insertCell(-1).innerHTML = i&&j ? "<input id='"+ letter+i +"'/>" : i||letter;
 	}
     }
 }

@@ -305,7 +305,37 @@
       cursor: pointer;
       }
 
-      
+      /*
+      user input panel (input spreadsheet like)
+      inspired from: Ondrej Zara (http://jsfiddle.net/ondras/hYfN3/)
+      */
+      #user_input_panel table {
+      border-collapse: collapse;  
+      }
+      #user_input_panel td {
+      border: 1px solid #000000;
+      padding: 0;
+      }
+      #user_input_panel tr:first-child td, #user_input_panel td:first-child {
+      background-color: #ccc;
+      font-weight: bold;
+      text-align: center;
+      }
+      #user_input_panel input {
+      border: none;
+      font-family: Mono;
+      font-size: small;
+      padding: 0;
+      }
+      #user_input_panel input:hover {
+      background-color: #cccccc;
+      }
+      #user_input_panel input:focus {
+      background-color: #5599ff;
+      }
+      #user_input_panel input:not(:focus) {
+      text-align: right;
+      }
     </style>
   </head>
 
@@ -500,6 +530,9 @@
       </div> <!-- end of main -->
     </div> <!-- end of wrapper -->
     <div id="message_panel"></div>
+    <div id="user_input_panel">
+      <table id="user_input_table"></table>
+    </div>
     
     <script type="text/javascript" src="via_demo.js">
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
