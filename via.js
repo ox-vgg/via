@@ -228,10 +228,12 @@ function load_images() {
 function download_all_region_data(type) {
     var all_region_data = package_region_data(type);
     var all_region_data_blob = new Blob(all_region_data, {type: 'text/'+type+';charset=utf-8'});
+
     if ( all_region_data_blob.size > (2*1024*1024) &&
          type == 'csv' ) {
         show_message('CSV file size is ' + (all_region_data_blob.size/(1024*1024)) + ' MB. We advise you to instead download as JSON');
     } else {
+	console.log(all_region_data_blob);
         save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
     }
 }
@@ -363,6 +365,7 @@ function import_region_data_from_file(event) {
     var selected_files = event.target.files;
     for (var file of selected_files) {
         switch(file.type) {
+	case 'text/plain':
         case 'text/csv':
             load_text_file(file, import_region_data_from_csv);
             break;
@@ -416,8 +419,8 @@ function import_region_data_from_csv(data) {
                 // copy image attributes
                 if ( d[file_attr_index] != '' ) {
                     var attr_map = keyval_str_to_map( d[file_attr_index] );
-                    for( var [key, val] of attr_map ) {
-                        _via_images[image_id].file_attributes.set(key, val);
+                    for( var key of attr_map.keys() ) {
+                        _via_images[image_id].file_attributes.set(key, attr_map.get(key));
                     }
                 }
 
@@ -1167,6 +1170,10 @@ _via_canvas.addEventListener('mouseup', function(e) {
                 polygon_region.shape_attributes.set('all_points_y', all_points_y);
                 _via_current_polygon_region_id = _via_images[_via_image_id].regions.length;
                 _via_images[_via_image_id].regions.push(polygon_region);
+
+		// newly drawn region is automatically selected
+		toggle_all_regions_selection(false);
+		_via_canvas_regions[_via_current_polygon_region_id].is_user_selected = true;
 
                 _via_current_polygon_region_id = -1;
                 save_current_data_to_browser_cache();
@@ -2910,15 +2917,15 @@ function print_current_image_data() {
         for ( var i=0; i<img_regions.length; ++i) {
             var attr = img_regions[i].shape_attributes;
             var img_region_str = '\n\t_via_images[i].regions.shape_attributes = [';
-            for ( var [key, value] of attr ) {
-                img_region_str += key + ':' + value + ';';
+            for ( var key of attr.keys() ) {
+                img_region_str += key + ':' + attr.get(key) + ';';
             }
             logstr += img_region_str + ']';
 
             var attr = img_regions[i].region_attributes;
             var img_region_str = '\n\t_via_images[i].regions.region_attributes = [';
-            for ( var [key, value] of attr ) {
-                img_region_str += key + ':' + value + ';';
+            for ( var key of attr.keys() ) {
+                img_region_str += key + ':' + attr.get(key) + ';';
             }
             logstr += img_region_str + ']';         
         }
@@ -2926,7 +2933,8 @@ function print_current_image_data() {
         if ( _via_image_id == image_id ) {
             for ( var i=0; i<_via_canvas_regions.length; ++i) {
                 var canvas_region_str = '\n\t_via_canvas_regions = [';
-                for ( var [key, value] of _via_canvas_regions[i].shape_attributes ) {
+                for ( var key of _via_canvas_regions[i].shape_attributes.keys() ) {
+		    var value = _via_canvas_regions[i].shape_attributes.get(key);
                     canvas_region_str += key + ':' + value + ';';
                 }
                 logstr += canvas_region_str + ']';
