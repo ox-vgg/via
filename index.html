@@ -259,23 +259,6 @@
       cursor: pointer;
       }
 
-      /* image list */
-      #img_list_panel {
-      font-family: Mono;
-      font-size: 0.9em;
-      }
-      #img_list_panel ul {
-      float: left;
-      line-height: 1.2em;
-      }
-      #img_list_panel li {
-      
-      }
-      #img_list_panel li:hover {
-      background-color: #cccccc;
-      color: #000000;
-      cursor: pointer;
-      }
       .svg_button:hover {
       cursor: pointer;
       }
@@ -293,6 +276,35 @@
       top: 1em;
       left: 6em;
       }
+
+      /* loaded image list */
+      #loaded_img_list_panel {
+      height: 100%;
+      width: 0;
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      right: 0;
+      background-color: #e6e6e6;
+      overflow: auto;
+      /*transition: 0.5s;*/
+      font-family: Mono;
+      font-size: small;
+      padding-top: 4em;
+      padding-left: 0.4em;
+      }
+      #loaded_img_list_panel ul {
+      float: left;
+      line-height: 1.2em;
+      padding-left: 0;
+      list-style-type: none;
+      }
+      #loaded_img_list_panel li:hover {
+      background-color: #cccccc;
+      color: #000000;
+      cursor: pointer;
+      }
+
       
     </style>
   </head>
@@ -377,7 +389,7 @@
         </ul>
 
 	<div id="image_info">
-	  <div style="display: inline-block; fill: white; stroke: white;" ><a onclick="show_img_list()" title="Browse currently loaded images" class="svg_button"><svg width="18" viewBox="0 0 32 32"><use xlink:href="#icon_img_list"></use></svg></a></div>
+	  <div style="display: inline-block; fill: white; stroke: white;" ><a onclick="toggle_img_list()" title="Browse currently loaded images" class="svg_button"><svg width="18" viewBox="0 0 32 32"><use xlink:href="#icon_img_list"></use></svg></a></div>
 	  <span id="info_current_fileid"></span> <span id="info_current_filename"><span class="action_text_link" onclick="load_images()" title="Import existing attributes from a file">[click to load images]</span></span>
 
 	  <span id="info_region" style="display: none;"></span>
@@ -408,11 +420,11 @@
           <div class="info">
             <table>
               <tr>
-                <td style="width: 5.8em;">Alt + d</td>
+                <td style="width: 6em;">Alt + d</td>
                 <td>Delete image region</td>
               </tr>
               <tr>
-                <td>n/p (&larr;, &rarr;)</td>
+                <td>n/p (&larr;/&rarr;)</td>
                 <td>Next/Previous image</td>
               </tr>
               <tr>
@@ -484,10 +496,11 @@
           </div>
           
         </div>
+	<div id="loaded_img_list_panel"></div>
       </div> <!-- end of main -->
     </div> <!-- end of wrapper -->
     <div id="message_panel"></div>
-
+    
     <script type="text/javascript" src="via_demo.js">
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
     </script>

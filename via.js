@@ -81,6 +81,7 @@ var _via_is_all_region_selected = false;
 var _via_is_user_updating_attribute_name = false;
 var _via_is_user_updating_attribute_value = false;
 var _via_is_user_adding_attribute_name = false;
+var _via_is_loaded_img_list_visible = false;
 
 // region
 var _via_current_shape = VIA_REGION_SHAPE.RECT;
@@ -107,7 +108,8 @@ var _via_is_save_ongoing = false;
 
 // image list
 var _via_reload_img_table = true;
-var _via_loaded_img_table = [];
+var _via_loaded_img_fn_list = [];
+var _via_loaded_img_miss_count = [];
 var _via_loaded_img_table_html = [];
 
 
@@ -126,6 +128,7 @@ var annotation_list_snippet = document.getElementById("annotation_list_snippet")
 var annotation_textarea = document.getElementById("annotation_textarea");    
 var region_info_table = document.getElementById("region_info_table");
 
+var loaded_img_list_panel = document.getElementById('loaded_img_list_panel');
 
 var zoom_active = false;
 var ZOOM_SIZE_PERCENT = 0.2;
@@ -186,12 +189,11 @@ function main() {
     show_message("VGG Image Annotator (via) version " + VIA_VERSION + ". Ready !");
     show_current_attributes();
     show_home_panel();
-    //start_demo_session(); // defined in via_demo.js
+    start_demo_session(); // defined in via_demo.js
     
     _via_is_local_storage_available = check_local_storage();
     if (_via_is_local_storage_available) {
 	if (is_via_data_in_localStorage()) {
-	    console.log('showing localStorage recovery options');
 	    show_localStorage_recovery_options();
 	}
     }
@@ -731,6 +733,12 @@ function show_image(image_index) {
                 
                 clear_image_display_area();
                 _via_canvas.style.display = "inline";
+
+		// refresh the image list
+		_via_reload_img_table = true;
+		if (_via_is_loaded_img_list_visible) {
+		    show_img_list();
+		}
 
                 _via_load_canvas_regions(); // image to canvas space transform
                 _via_redraw_canvas();
@@ -1605,56 +1613,66 @@ _via_canvas.addEventListener('mousemove', function(e) {
     */
 });
 
+function toggle_img_list() {
+    if (_via_is_loaded_img_list_visible) {
+	loaded_img_list_panel.style.width = "0";
+	_via_is_loaded_img_list_visible = false;
+	return;
+    } else {
+	show_img_list();
+    }
+
+}
+
 // @todo: implement hierarchial clustering to better visualize file list
 function show_img_list() {
     if (_via_images_count > 0) {
-        img_list_panel.style.display = 'block';
-        via_start_info_panel.style.display = "none";
-        about_panel.style.display = "none";
-        _via_canvas.style.display = "none";
-
-        _via_user_sel_region_id = -1;
-        _via_is_region_selected = false;
         
-        show_region_attributes_info();
-        show_region_shape_info();
-        show_current_attributes();
-
         if ( _via_reload_img_table ) {
-            _via_loaded_img_table = [];
+            _via_loaded_img_fn_list = [];
+	    _via_loaded_img_miss_count = [];
             
             for (var i=0; i<_via_images_count; ++i) {
                 img_id = _via_image_id_list[i];
-                var file_entry = {};
-                file_entry.image_index = i;
-                file_entry.filename = _via_images[img_id].filename;
-                file_entry.missing_attr_val_count = count_missing_attribute_value(img_id);
-                _via_loaded_img_table.push(file_entry);
+		_via_loaded_img_fn_list[i] = _via_images[img_id].filename;
+		_via_loaded_img_miss_count[i] = count_missing_attribute_value(img_id);
             }
-            
-            _via_loaded_img_table.sort( function (a, b) {
-                return a.filename.localeCompare(b.filename);
-            });
-            
+                       
             _via_loaded_img_table_html = [];
-            var fni = '';
-            _via_loaded_img_table_html.push('<p>Showing list of currently loaded images. Click on an entry to open the file</p>');
+            //_via_loaded_img_table_html.push('<span style="display: block; border-bottom: 1px solid #5599ff;">Image List</span>');
+	    _via_loaded_img_table_html.push('<h3>Image List</h3>');
             _via_loaded_img_table_html.push('<ul>');
-            for (var i=0; i<_via_loaded_img_table.length; ++i) {
-                fni = '<li onclick="show_image(' + _via_loaded_img_table[i].image_index + ')">';
-                //fni += '[' + _via_loaded_img_table[i].image_index + '] ';
-                fni += _via_loaded_img_table[i].filename;
-                if (_via_loaded_img_table[i].missing_attr_val_count) {
-                    fni += '<span style="color: red;"> (missing ' + _via_loaded_img_table[i].missing_attr_val_count + ' attributes value)</span>';
+            for (var i=0; i<_via_images_count; ++i) {
+                var fni = '';
+		if (i == _via_image_index) {
+		    // highlight the current entry
+		    fni += '<li style="cursor: default;"><b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
+		} else {
+		    fni += '<li onclick="jump_to_image(' + (i) + ')">[' + (i+1) + '] ' + _via_loaded_img_fn_list[i];
+		}
+
+                if (_via_loaded_img_miss_count[i]) {
+                    fni += '<span style="color: red;"> (' + _via_loaded_img_miss_count[i] + ')</span>';
                 }
+		fni += '</li>';
                 _via_loaded_img_table_html.push(fni);
             }
             _via_loaded_img_table_html.push('</ul>');
             _via_reload_img_table = false;
         }
-        img_list_panel.innerHTML = _via_loaded_img_table_html.join('');
+
+        loaded_img_list_panel.innerHTML = _via_loaded_img_table_html.join('');
+	loaded_img_list_panel.style.width = "300px";
+	_via_is_loaded_img_list_visible = true;
     } else {
         show_message("Please load some images first!", VIA_THEME_MESSAGE_TIMEOUT_MS);
+    }
+}
+
+function jump_to_image(image_index) {
+    if ( image_index >=0 &&
+	 image_index < _via_images_count) {
+	show_image(image_index);
     }
 }
 
@@ -2767,7 +2785,6 @@ function save_current_data_to_browser_cache() {
                 }
                 localStorage.setItem('_via_region_attributes', JSON.stringify(attr));
                 _via_is_save_ongoing = false;
-		console.log('saved data to browser cache');
             } catch(err) {
                 _via_is_save_ongoing = false;
                 show_message('Failed to save data to browser cache');
