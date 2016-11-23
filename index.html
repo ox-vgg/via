@@ -70,7 +70,7 @@
       height: 1px;
       background: #000000;
       width: 100%;
-      z-index: 1000;
+      z-index: 1;
       }
       
       #navbar ul {
@@ -305,37 +305,82 @@
       cursor: pointer;
       }
 
-      /*
-      user input panel (input spreadsheet like)
-      inspired from: Ondrej Zara (http://jsfiddle.net/ondras/hYfN3/)
-      */
-      #user_input_panel table {
-      border-collapse: collapse;  
+      /* region and file attributes input panel (spreadsheet like) */
+      #attributes_input_panel {
+      display: none;
+      position: fixed;
+      z-index: 2;
+      bottom: 3em;
+      width: 100%;
+      overflow: auto;
+      background-color: #e6e6e6;
       }
-      #user_input_panel td {
+      #attributes_input_panel .title {
+      font-family: Sans;
+      font-size: large;
+      padding-top: 1em;
+      padding-bottom: 0.2em;
+      padding-left: 0.8em;
+      padding-right: 1em;
+      }
+
+      #attributes_input_panel table {
+      border-collapse: collapse;
+      table-layout: fixed;
+      width: 100%;
+      font-size: small;
+      margin: 1em;
+      color: #ffffff;
+      background-color: #333333;
+      }
+
+      #attributes_input_panel td {
       border: 1px solid #000000;
-      padding: 0;
+      padding: 0 0.1em;
+      margin: 0;
+      height: 1em;
       }
-      #user_input_panel tr:first-child td, #user_input_panel td:first-child {
-      background-color: #ccc;
-      font-weight: bold;
+      #attributes_input_panel tr:first-child td, #attributes_input_panel td:first-child {
+      color: #ffffff;
+      background-color: #666666;
+      padding: 0 1em;
       text-align: center;
       }
-      #user_input_panel input {
+      #attributes_input_panel input {
+      color: #ffffff;
+      background-color: #333333;
       border: none;
+      padding: 0;
+      margin: 0;
+      display: table-cell;
+      width: 100%;
+      height: 1.4em;
       font-family: Mono;
       font-size: small;
-      padding: 0;
       }
-      #user_input_panel input:hover {
-      background-color: #cccccc;
+      #attributes_input_panel input:hover {
+      background-color: #000000;
       }
-      #user_input_panel input:focus {
+      #attributes_input_panel input:focus {
       background-color: #5599ff;
       }
-      #user_input_panel input:not(:focus) {
+      #attributes_input_panel input:not(:focus) {
       text-align: right;
       }
+      #attributes_input_panel_close_button {
+      display: inline-block;
+      color: black;
+      float: right;
+      font-size: 2em;
+      font-weight: bold;
+      padding-right: 0.5em;
+      }
+      #attributes_input_panel_close_button:hover {
+      color: red;
+      text-decoration: none;
+      cursor: pointer;
+      }
+
     </style>
   </head>
 
@@ -381,6 +426,14 @@
           <title>Polyline region shape</title>
           <path d="M 15.25,2.2372 3.625,11.6122 6,29.9872 l 20.75,-9.625 2.375,-14.75 z" />
         </symbol>
+
+	<symbol id="icon_resize" viewBox="0 0 32 32">
+	  <title>Expand/Contract</title>
+	  <path class="path1" d="M30 0h2v16h-2v-16z"></path>
+	  <path class="path2" d="M0 16h2v16h-2v-16z"></path>
+	  <path class="path3" d="M10 22h22v4h-22v5l-7-7 7-7v5z"></path>
+	  <path class="path4" d="M22 10h-22v-4h22v-5l7 7-7 7z"></path>
+	</symbol>
 
       </defs>
     </svg>
@@ -438,14 +491,11 @@
             <div class="region_shape" onclick="select_region_shape('ellipse')" id="region_shape_ellipse" title="To draw elliptical region"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></div>
             <div class="region_shape" onclick="select_region_shape('polygon')" id="region_shape_polygon" title="To draw polygon region"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></div>
           </div>
-                    
-          <div>
-            <div style="display: inline-block;" class="title">Region Attributes</div>
-            <div style="display: inline-block;" ><a onclick="add_attribute_name()" title="Add a new attribute" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_plus"></use></svg></a></div>
-            <div style="display: inline-block;" ><a onclick="import_attributes()" title="Import existing attributes from a file" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_import"></use></svg></a></div>
-          </div>
-          <table id="region_info_table"></table>
-          
+
+	  <!-- Show Region and File attributes panel -->
+	  <div class="title">File/Region Attributes</div>
+	  <span class="action_text_link" onclick="toggle_attributes_input_panel()" title="Show/Hide attributes">[click to show/hide attributes]</span>
+	  
           <div class="title">Keyboard Shortcuts</div>
           <div class="info">
             <table>
@@ -530,8 +580,23 @@
       </div> <!-- end of main -->
     </div> <!-- end of wrapper -->
     <div id="message_panel"></div>
-    <div id="user_input_panel">
-      <table id="user_input_table"></table>
+    
+    <div id="attributes_input_panel">
+      <span id="attributes_input_panel_close_button" onclick="toggle_attributes_input_panel()">&times</span>
+
+      <!-- Region Attributes -->
+      <div>
+	<div style="display: inline-block;" class="title">Regions Attributes</div>
+	<div style="display: inline-block;" ><a onclick="toggle_table_layout('region_attr_table')" title="Change table Layout" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
+      </div>
+      <table id="region_attr_table"></table>
+
+      <!-- File Attributes -->
+      <div>
+	<div style="display: inline-block;" class="title">File Attributes</div>
+	<div style="display: inline-block;" ><a onclick="toggle_table_layout('file_attr_table')" title="Change table Layout" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
+      </div>
+      <table id="file_attr_table"></table>
     </div>
     
     <script type="text/javascript" src="via_demo.js">
