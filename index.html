@@ -209,6 +209,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      z-index: 1000;
       }
       
       #annotation_textarea {
@@ -306,14 +307,27 @@
       }
 
       /* region and file attributes input panel (spreadsheet like) */
+      #small_attributes_input_panel {
+      width: 300px;
+      overflow: scroll;
+      }
+      #small_attributes_input_panel table {
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: small;
+      margin: 1em;
+      }
+
       #attributes_input_panel {
       display: none;
       position: fixed;
       z-index: 2;
-      bottom: 3em;
+      bottom: 0;
       width: 100%;
       overflow: auto;
-      background-color: #e6e6e6;
+      background-color: #ffffff;
+      border-top: 4px solid #000000;
+      padding-bottom: 2em;
       }
       #attributes_input_panel .title {
       font-family: Sans;
@@ -327,28 +341,22 @@
       #attributes_input_panel table {
       border-collapse: collapse;
       table-layout: fixed;
-      width: 100%;
+      /*width: 100%;*/
       font-size: small;
       margin: 1em;
-      color: #ffffff;
-      background-color: #333333;
       }
 
       #attributes_input_panel td {
-      border: 1px solid #000000;
+      border: 1px solid #e6e6e6;
       padding: 0 0.1em;
       margin: 0;
       height: 1em;
       }
       #attributes_input_panel tr:first-child td, #attributes_input_panel td:first-child {
-      color: #ffffff;
-      background-color: #666666;
       padding: 0 1em;
       text-align: center;
       }
       #attributes_input_panel input {
-      color: #ffffff;
-      background-color: #333333;
       border: none;
       padding: 0;
       margin: 0;
@@ -359,23 +367,23 @@
       font-size: small;
       }
       #attributes_input_panel input:hover {
-      background-color: #000000;
+      background-color: #e6e6e6;
       }
       #attributes_input_panel input:focus {
-      background-color: #5599ff;
+      background-color: #e6e6e6;
       }
       #attributes_input_panel input:not(:focus) {
-      text-align: right;
+      text-align: center;
       }
-      #attributes_input_panel_close_button {
+      #panel_close_button {
       display: inline-block;
-      color: black;
+      color: #808080;
       float: right;
       font-size: 2em;
       font-weight: bold;
       padding-right: 0.5em;
       }
-      #attributes_input_panel_close_button:hover {
+      #panel_close_button:hover {
       color: red;
       text-decoration: none;
       cursor: pointer;
@@ -434,7 +442,11 @@
 	  <path class="path3" d="M10 22h22v4h-22v5l-7-7 7-7v5z"></path>
 	  <path class="path4" d="M22 10h-22v-4h22v-5l7 7-7 7z"></path>
 	</symbol>
-
+	<symbol id="icon_table" viewBox="0 0 32 32">
+	  <title>Table</title>
+	  <path class="path1" d="M0 2v28h32v-28h-32zM12 20v-6h8v6h-8zM20 22v6h-8v-6h8zM20 6v6h-8v-6h8zM10 6v6h-8v-6h8zM2 14h8v6h-8v-6zM22 14h8v6h-8v-6zM22 12v-6h8v6h-8zM2 22h8v6h-8v-6zM22 28v-6h8v6h-8z"></path>
+	</symbol>
+	
       </defs>
     </svg>
     <!-- End: Define SVG for icons -->
@@ -582,19 +594,21 @@
     <div id="message_panel"></div>
     
     <div id="attributes_input_panel">
-      <span id="attributes_input_panel_close_button" onclick="toggle_attributes_input_panel()">&times</span>
+      <span id="panel_close_button" onclick="toggle_attributes_input_panel()">&times</span>
 
       <!-- Region Attributes -->
       <div>
 	<div style="display: inline-block;" class="title">Regions Attributes</div>
-	<div style="display: inline-block;" ><a onclick="toggle_table_layout('region_attr_table')" title="Change table Layout" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
+	<div style="display: inline-block;" ><a onclick="toggle_table_width('region_attr_table')" title="Change table width (100% or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
+	<div style="display: inline-block;" ><a onclick="toggle_table_layout('region_attr_table')" title="Change table layout (fixed or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_table"></use></svg></a></div>
       </div>
       <table id="region_attr_table"></table>
 
       <!-- File Attributes -->
       <div>
 	<div style="display: inline-block;" class="title">File Attributes</div>
-	<div style="display: inline-block;" ><a onclick="toggle_table_layout('file_attr_table')" title="Change table Layout" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
+	<div style="display: inline-block;" ><a onclick="toggle_table_width('file_attr_table')" title="Change table width (100% or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
+	<div style="display: inline-block;" ><a onclick="toggle_table_layout('file_attr_table')" title="Change table layout (fixed or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_table"></use></svg></a></div>
       </div>
       <table id="file_attr_table"></table>
     </div>
