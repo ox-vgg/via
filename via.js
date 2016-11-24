@@ -111,7 +111,8 @@ var _via_is_save_ongoing = false;
 // image list
 var _via_reload_img_table = true;
 var _via_loaded_img_fn_list = [];
-var _via_loaded_img_miss_count = [];
+var _via_loaded_img_region_attr_miss_count = [];
+var _via_loaded_img_file_attr_miss_count = [];
 var _via_loaded_img_table_html = [];
 
 
@@ -170,13 +171,13 @@ function clone_image_region(r0) {
 
     // copy shape attributes
     for ( var key of r0.shape_attributes.keys() ) {
-	var value = r0.shape_attributes.get(key);
+        var value = r0.shape_attributes.get(key);
         r1.shape_attributes.set(key, value);
     }
     
     // copy region attributes
     for ( var key of r0.region_attributes.keys() ) {
-	var value = r0.region_attributes.get(key);
+        var value = r0.region_attributes.get(key);
         r1.region_attributes.set(key, value);
     }
     return r1;
@@ -194,9 +195,9 @@ function main() {
     
     _via_is_local_storage_available = check_local_storage();
     if (_via_is_local_storage_available) {
-	if (is_via_data_in_localStorage()) {
-	    show_localStorage_recovery_options();
-	}
+        if (is_via_data_in_localStorage()) {
+            show_localStorage_recovery_options();
+        }
     }
 }
 
@@ -211,7 +212,7 @@ function show_home_panel() {
         img_list_panel.style.display = "none";
 
     } else {
-	via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <span class="action_text_link" onclick="load_images()" title="Load Images">[Load Images]</span> in the Image menu.';
+        via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <span class="action_text_link" onclick="load_images()" title="Load Images">[Load Images]</span> in the Image menu.';
         via_start_info_panel.style.display = "block";
         about_panel.style.display = "none";
         _via_canvas.style.display = "none";
@@ -234,7 +235,7 @@ function download_all_region_data(type) {
          type == 'csv' ) {
         show_message('CSV file size is ' + (all_region_data_blob.size/(1024*1024)) + ' MB. We advise you to instead download as JSON');
     } else {
-	console.log(all_region_data_blob);
+        console.log(all_region_data_blob);
         save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
     }
 }
@@ -249,25 +250,25 @@ function upload_region_data_file() {
 }
 function save_attributes() {
     if ( _via_region_attributes.size > 0 ) {
-	var attr_csvdata = [];
-	for (var attribute of _via_region_attributes) {
-	    attr_csvdata.push(attribute);
-	}
-	var attr_blob = new Blob([attr_csvdata.join(',')], {type: 'text/csv;charset=utf-8'});
-	save_data_to_local_file(attr_blob, 'via_attributes_data.csv');
+        var attr_csvdata = [];
+        for (var attribute of _via_region_attributes) {
+            attr_csvdata.push(attribute);
+        }
+        var attr_blob = new Blob([attr_csvdata.join(',')], {type: 'text/csv;charset=utf-8'});
+        save_data_to_local_file(attr_blob, 'via_attributes_data.csv');
     } else {
-	show_message("Attributes not defined yet!");
+        show_message("Attributes not defined yet!");
     }
 }
 function import_attributes() {
     if (_via_current_image_loaded) {
-	if (invisible_file_input) {
+        if (invisible_file_input) {
             invisible_file_input.accept='.csv,.json';
             invisible_file_input.onchange = import_region_attributes_from_file;
             invisible_file_input.click();
-	}
+        }
     } else {
-	show_message("Please load some images first");
+        show_message("Please load some images first");
     }
 }
 function show_settings_panel() {
@@ -288,41 +289,41 @@ function upload_local_images(event) {
 
     // clear browser cache if user chooses to load new images
     if (original_image_count == 0) {
-	localStorage.clear();
+        localStorage.clear();
     }
 
     var discarded_file_count = 0;
     for ( var i=0; i<user_selected_images.length; ++i) {
-	if (user_selected_images[i].type.includes('image/')) {
+        if (user_selected_images[i].type.includes('image/')) {
             var filename = user_selected_images[i].name;
             var size = user_selected_images[i].size;
             var img_id = _via_get_image_id(filename, size);
 
             if ( _via_images.hasOwnProperty(img_id) ) {
-		if (_via_images[img_id].fileref) {
+                if (_via_images[img_id].fileref) {
                     show_message('Image ' + filename + ' already loaded. Skipping!');
-		} else {
+                } else {
                     _via_images[img_id].fileref = user_selected_images[i];
                     show_message('Regions already exist for file ' + filename + ' !');              
-		}
+                }
             } else {
-		_via_images[img_id] = new ImageAttributes(user_selected_images[i], filename, size);
-		_via_image_id_list.push(img_id);
-		_via_images_count += 1;
-		_via_reload_img_table = true;
+                _via_images[img_id] = new ImageAttributes(user_selected_images[i], filename, size);
+                _via_image_id_list.push(img_id);
+                _via_images_count += 1;
+                _via_reload_img_table = true;
             }
-	} else {
-	    discarded_file_count += 1;
-	}
+        } else {
+            discarded_file_count += 1;
+        }
     }
 
     if ( _via_images ) {
-	var status_msg = 'Loaded ' + (_via_images_count - original_image_count) + ' images.';
-	if (discarded_file_count) {
-	    status_msg += ' ( Discarded ' + discarded_file_count + ' non-image files! )';
-	}
+        var status_msg = 'Loaded ' + (_via_images_count - original_image_count) + ' images.';
+        if (discarded_file_count) {
+            status_msg += ' ( Discarded ' + discarded_file_count + ' non-image files! )';
+        }
         show_message( status_msg, VIA_THEME_MESSAGE_TIMEOUT_MS);
-	
+        
         if (_via_image_index == -1) {
             show_image(0);
         } else {
@@ -340,7 +341,7 @@ function upload_local_images(event) {
 function import_region_attributes_from_file(event) {
     var selected_files = event.target.files;
     for (var i=0; i<selected_files.length; ++i) {
-	var file = selected_files[i];
+        var file = selected_files[i];
         switch(file.type) {
         case 'text/csv':
             load_text_file(file, import_region_attributes_from_csv);
@@ -370,7 +371,7 @@ function import_region_data_from_file(event) {
     var selected_files = event.target.files;
     for (var file of selected_files) {
         switch(file.type) {
-	case 'text/plain':
+        case 'text/plain':
         case 'text/csv':
             load_text_file(file, import_region_data_from_csv);
             break;
@@ -424,18 +425,18 @@ function import_region_data_from_csv(data) {
                 
                 // copy image attributes
                 if ( d[file_attr_index] != '' ||
-		     d[file_attr_index] != '""') {
-		    var file_attr_str = d[file_attr_index];
+                     d[file_attr_index] != '""') {
+                    var file_attr_str = d[file_attr_index];
                     file_attr_str = file_attr_str.substring(1, file_attr_str.length-1); // remove prefix and suffix quotation marks
 
                     var attr_map = keyval_str_to_map( file_attr_str );
                     for( var key of attr_map.keys() ) {
                         _via_images[image_id].file_attributes.set(key, attr_map.get(key));
 
-			if (!_via_file_attributes.has(key)) {
-			    _via_file_attributes.add(key);
-			}
-			file_attr_count += 1;
+                        if (!_via_file_attributes.has(key)) {
+                            _via_file_attributes.add(key);
+                        }
+                        file_attr_count += 1;
                     }
                 }
 
@@ -449,7 +450,7 @@ function import_region_data_from_csv(data) {
                     var attr_map = keyval_str_to_map( region_str );
 
                     for ( var key of attr_map.keys() ) {
-			var val = attr_map.get(key);
+                        var val = attr_map.get(key);
                         if ( key == 'all_points_x' ||
                              key == 'all_points_y' ) {
                             val = val.substring(1, val.length-1); // discard the square brackets []
@@ -473,7 +474,7 @@ function import_region_data_from_csv(data) {
                     var region_attr_map = keyval_str_to_map( region_attr );
                     
                     for ( var key of region_attr_map.keys() ) {
-			var val = region_attr_map.get(key);
+                        var val = region_attr_map.get(key);
                         regioni.region_attributes.set(key, val);
 
                         if (!_via_region_attributes.has(key)) {
@@ -482,12 +483,12 @@ function import_region_data_from_csv(data) {
                     }
                 }
 
-		// add regions only if they are present		
-		if (regioni.shape_attributes.size > 0 ||
-		    regioni.region_attributes.size >0 ) {
+                // add regions only if they are present         
+                if (regioni.shape_attributes.size > 0 ||
+                    regioni.region_attributes.size >0 ) {
                     _via_images[image_id].regions.push(regioni);
-		    region_import_count += 1;
-		}
+                    region_import_count += 1;
+                }
             }
         }
     }
@@ -513,12 +514,12 @@ function import_region_data_from_json(data) {
             for (var key in d[image_id].file_attributes) {
                 if (!_via_images[image_id].file_attributes.get(key)) {
                     _via_images[image_id].file_attributes.set(key,
-							      d[image_id].file_attributes[key]);
-		    file_attr_count += 1;
+                                                              d[image_id].file_attributes[key]);
+                    file_attr_count += 1;
                 }
-		if (!_via_file_attributes.has(key)) {
-		    _via_file_attributes.add(key);
-		}
+                if (!_via_file_attributes.has(key)) {
+                    _via_file_attributes.add(key);
+                }
             }
 
             // copy regions
@@ -536,12 +537,12 @@ function import_region_data_from_json(data) {
                     }
                 }
 
-		// add regions only if they are present
-		if (regioni.shape_attributes.size > 0 ||
-		    regioni.region_attributes.size > 0 ) {
-		    _via_images[image_id].regions.push(regioni);
-		    region_import_count += 1;
-		}
+                // add regions only if they are present
+                if (regioni.shape_attributes.size > 0 ||
+                    regioni.region_attributes.size > 0 ) {
+                    _via_images[image_id].regions.push(regioni);
+                    region_import_count += 1;
+                }
             }
         }
     }
@@ -604,18 +605,18 @@ function package_region_data(return_type) {
 
             var regions = _via_images[image_id].regions;
 
-	    if (regions.length !=0) {
-		for (var i=0; i<regions.length; ++i) {
+            if (regions.length !=0) {
+                for (var i=0; i<regions.length; ++i) {
                     var region_shape_attr_str = regions.length + ',' + i + ',';
                     region_shape_attr_str += attr_map_to_str( regions[i].shape_attributes );
 
                     var region_attr_str = attr_map_to_str( regions[i].region_attributes );
                     
                     csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
-		}
-	    } else {
-		csvdata.push('\n' + prefix_str + ',0,,"",""');
-	    }
+                }
+            } else {
+                csvdata.push('\n' + prefix_str + ',0,,"",""');
+            }
         }
         return csvdata;
     } else {
@@ -625,16 +626,16 @@ function package_region_data(return_type) {
         for (image_id in _via_images) {
             var image_data = {};
             //image_data.fileref = _via_images[image_id].fileref;
-	    image_data.fileref = '';
+            image_data.fileref = '';
             image_data.size = _via_images[image_id].size;
             image_data.filename = _via_images[image_id].filename;
-	    image_data.base64_img_data = '';
+            image_data.base64_img_data = '';
             //image_data.base64_img_data = _via_images[image_id].base64_img_data;
             
             // copy file attributes
             image_data.file_attributes = {};    
             for ( var key of _via_images[image_id].file_attributes.keys() ) {
-		var value = _via_images[image_id].file_attributes.get(key);
+                var value = _via_images[image_id].file_attributes.get(key);
                 image_data.file_attributes[key] = value;
             }
 
@@ -646,12 +647,12 @@ function package_region_data(return_type) {
                 image_data.regions[i].region_attributes = {};
                 // copy region shape_attributes
                 for ( var key of _via_images[image_id].regions[i].shape_attributes.keys()) {
-		    var value = _via_images[image_id].regions[i].shape_attributes.get(key);
+                    var value = _via_images[image_id].regions[i].shape_attributes.get(key);
                     image_data.regions[i].shape_attributes[key] = value;
                 }
                 // copy region_attributes
                 for ( var key of _via_images[image_id].regions[i].region_attributes.keys()) {
-		    var value = _via_images[image_id].regions[i].region_attributes.get(key);
+                    var value = _via_images[image_id].regions[i].region_attributes.get(key);
                     image_data.regions[i].region_attributes[key] = value;
                 }
             }           
@@ -664,7 +665,7 @@ function package_region_data(return_type) {
 function attr_map_to_str(attr) {
     var attr_map_str = [];
     for( var key of attr.keys() ) {
-	var value = attr.get(key);
+        var value = attr.get(key);
         if ( Array.isArray(value) ) {
             var value_str='[' + value[0];
             for (var i=1; i<value.length; ++i) {
@@ -672,7 +673,7 @@ function attr_map_to_str(attr) {
             }
             value_str += ']';
             attr_map_str.push(key + '=' + value_str);
-	} else {
+        } else {
             attr_map_str.push(key + '=' + value);
         }
     }
@@ -706,16 +707,16 @@ function show_image(image_index) {
         var img_reader = new FileReader();
 
         img_reader.addEventListener( "progress", function(e) {
-	    //show_message("Loading image " + img_filename + " ... ", 1000);
+            //show_message("Loading image " + img_filename + " ... ", 1000);
         }, false);
 
         img_reader.addEventListener( "error", function() {
-	    show_message("Error loading image " + img_filename + " !");
+            show_message("Error loading image " + img_filename + " !");
         }, false);
         
         img_reader.addEventListener( "load", function() {
-	    _via_current_image = new Image();
-	    _via_current_image.addEventListener( "load", function() {
+            _via_current_image = new Image();
+            _via_current_image.addEventListener( "load", function() {
                 _via_image_id = img_id;
                 _via_image_index = image_index;
                 _via_current_image_filename = img_filename;
@@ -731,16 +732,16 @@ function show_image(image_index) {
 
                 var scale_width, scale_height;
                 if ( _via_canvas_width > canvas_panel_width ) {
-		    // resize image to match the panel width
-		    var scale_width = canvas_panel_width / _via_current_image.naturalWidth;
-		    _via_canvas_width = canvas_panel_width;
-		    _via_canvas_height = _via_current_image.naturalHeight * scale_width;
+                    // resize image to match the panel width
+                    var scale_width = canvas_panel_width / _via_current_image.naturalWidth;
+                    _via_canvas_width = canvas_panel_width;
+                    _via_canvas_height = _via_current_image.naturalHeight * scale_width;
                 }
                 // resize image if its height is larger than the image panel
                 if ( _via_canvas_height > canvas_panel_height ) {
-		    var scale_height = canvas_panel_height / _via_canvas_height;
-		    _via_canvas_height = canvas_panel_height;
-		    _via_canvas_width = _via_canvas_width * scale_height;
+                    var scale_height = canvas_panel_height / _via_canvas_height;
+                    _via_canvas_height = canvas_panel_height;
+                    _via_canvas_width = _via_canvas_width * scale_height;
                 }
 
                 _via_canvas_width = Math.round(_via_canvas_width);
@@ -765,14 +766,14 @@ function show_image(image_index) {
                 clear_image_display_area();
                 _via_canvas.style.display = "inline";
 
-		// refresh the image list
-		_via_reload_img_table = true;
-		if (_via_is_loaded_img_list_visible) {
-		    show_img_list();
-		}
+                // refresh the image list
+                _via_reload_img_table = true;
+                if (_via_is_loaded_img_list_visible) {
+                    show_img_list();
+                }
 
-		// refresh the attributes panel
-		update_attributes_input_panel();
+                // refresh the attributes panel
+                update_attributes_input_panel();
 
                 _via_load_canvas_regions(); // image to canvas space transform
                 _via_redraw_canvas();
@@ -784,17 +785,17 @@ function show_image(image_index) {
                 show_region_shape_info();
                 
                 //show_message("Loaded image " + img_filename + " ... ", 5000);
-	    });
-	    _via_current_image.src = img_reader.result;
+            });
+            _via_current_image.src = img_reader.result;
         }, false);
-	
-	if (_via_images[img_id].base64_img_data == '') {
-	    // load image from file
+        
+        if (_via_images[img_id].base64_img_data == '') {
+            // load image from file
             img_reader.readAsDataURL( _via_images[img_id].fileref );
-	} else {
-	    // load image from bae64 data
-	    img_reader.readAsText( new Blob([_via_images[img_id].base64_img_data]) );
-	}
+        } else {
+            // load image from bae64 data
+            img_reader.readAsText( new Blob([_via_images[img_id].base64_img_data]) );
+        }
     }
 }
 
@@ -806,7 +807,7 @@ function _via_load_canvas_regions() {
     for ( var i=0; i<regions.length; ++i) {
         var regioni = new ImageRegion();
         for ( var key of regions[i].shape_attributes.keys() ) {
-	    var value = regions[i].shape_attributes.get(key);
+            var value = regions[i].shape_attributes.get(key);
             regioni.shape_attributes.set(key, value);
         }
         _via_canvas_regions.push(regioni);
@@ -868,24 +869,24 @@ function clear_image_display_area() {
 function delete_selected_regions() {
     var del_region_count = 0;
     if (_via_is_all_region_selected) {
-	del_region_count = _via_canvas_regions.length;	
-	_via_canvas_regions.splice(0);
-	_via_images[_via_image_id].regions.splice(0);
+        del_region_count = _via_canvas_regions.length;  
+        _via_canvas_regions.splice(0);
+        _via_images[_via_image_id].regions.splice(0);
     } else {
-	var sorted_sel_reg_id = [];
-	for (var i=0; i<_via_canvas_regions.length; ++i) {
+        var sorted_sel_reg_id = [];
+        for (var i=0; i<_via_canvas_regions.length; ++i) {
             if (_via_canvas_regions[i].is_user_selected) {
-		sorted_sel_reg_id.push(i);
+                sorted_sel_reg_id.push(i);
             }
-	}	
-	sorted_sel_reg_id.sort( function(a,b) {
-	    return (b-a);
-	});
-	for (var i=0; i<sorted_sel_reg_id.length; ++i) {
-	    _via_canvas_regions.splice( sorted_sel_reg_id[i], 1);
-	    _via_images[_via_image_id].regions.splice( sorted_sel_reg_id[i], 1);
-	    del_region_count += 1;
-	}
+        }       
+        sorted_sel_reg_id.sort( function(a,b) {
+            return (b-a);
+        });
+        for (var i=0; i<sorted_sel_reg_id.length; ++i) {
+            _via_canvas_regions.splice( sorted_sel_reg_id[i], 1);
+            _via_images[_via_image_id].regions.splice( sorted_sel_reg_id[i], 1);
+            del_region_count += 1;
+        }
     }
 
     _via_is_all_region_selected = false;
@@ -919,9 +920,9 @@ function select_region_shape(sel_shape_name) {
     if ( _via_current_shape != VIA_REGION_SHAPE.POLYGON ) {
         _via_is_user_drawing_polygon = false;
         _via_current_polygon_region_id = -1;
-	show_message('Press single click and drag mouse to draw ' + _via_current_shape + ' region', VIA_THEME_MESSAGE_TIMEOUT_MS);
+        show_message('Press single click and drag mouse to draw ' + _via_current_shape + ' region', VIA_THEME_MESSAGE_TIMEOUT_MS);
     } else {
-	show_message('Press single click to define polygon vertices. Note: in Polygon drawing mode, single click cannot be used to un-select regions');
+        show_message('Press single click to define polygon vertices. Note: in Polygon drawing mode, single click cannot be used to un-select regions');
     }
 }
 
@@ -1200,12 +1201,12 @@ _via_canvas.addEventListener('mouseup', function(e) {
                 _via_current_polygon_region_id = _via_images[_via_image_id].regions.length;
                 _via_images[_via_image_id].regions.push(polygon_region);
 
-		// newly drawn region is automatically selected
-		toggle_all_regions_selection(false);
-		_via_canvas_regions[_via_current_polygon_region_id].is_user_selected = true;
+                // newly drawn region is automatically selected
+                toggle_all_regions_selection(false);
+                _via_canvas_regions[_via_current_polygon_region_id].is_user_selected = true;
 
                 _via_current_polygon_region_id = -1;
-		update_attributes_input_panel();
+                update_attributes_input_panel();
                 save_current_data_to_browser_cache();
             } else {
                 // user clicked on a new polygon point
@@ -1286,10 +1287,10 @@ _via_canvas.addEventListener('mouseup', function(e) {
         var region_dx = Math.abs(region_x1 - region_x0);
         var region_dy = Math.abs(region_y1 - region_y0);
 
-	// newly drawn region is automatically selected
-	toggle_all_regions_selection(false);
-	canvas_img_region.is_user_selected = true;
-	
+        // newly drawn region is automatically selected
+        toggle_all_regions_selection(false);
+        canvas_img_region.is_user_selected = true;
+        
         if ( region_dx > VIA_REGION_MIN_DIM ||
              region_dy > VIA_REGION_MIN_DIM ) { // avoid regions with 0 dim
                 switch(_via_current_shape) {
@@ -1350,10 +1351,10 @@ _via_canvas.addEventListener('mouseup', function(e) {
         } else {
             show_message('Skipped adding a ' + _via_current_shape + ' of nearly 0 dimension', VIA_THEME_MESSAGE_TIMEOUT_MS);
         }
-	update_attributes_input_panel();
+        update_attributes_input_panel();
         _via_redraw_canvas();
         _via_canvas.focus();
-	show_region_attributes_info();
+        show_region_attributes_info();
         show_region_shape_info();
 
         save_current_data_to_browser_cache();
@@ -1655,11 +1656,11 @@ _via_canvas.addEventListener('mousemove', function(e) {
 
 function toggle_img_list() {
     if (_via_is_loaded_img_list_visible) {
-	loaded_img_list_panel.style.width = "0";
-	_via_is_loaded_img_list_visible = false;
-	return;
+        loaded_img_list_panel.style.width = "0";
+        _via_is_loaded_img_list_visible = false;
+        return;
     } else {
-	show_img_list();
+        show_img_list();
     }
 
 }
@@ -1670,31 +1671,45 @@ function show_img_list() {
         
         if ( _via_reload_img_table ) {
             _via_loaded_img_fn_list = [];
-	    _via_loaded_img_miss_count = [];
+            _via_loaded_img_region_attr_miss_count = [];
+	    _via_loaded_img_file_attr_miss_count = [];
             
             for (var i=0; i<_via_images_count; ++i) {
                 img_id = _via_image_id_list[i];
-		_via_loaded_img_fn_list[i] = _via_images[img_id].filename;
-		_via_loaded_img_miss_count[i] = count_missing_attribute_value(img_id);
+                _via_loaded_img_fn_list[i] = _via_images[img_id].filename;
+                _via_loaded_img_region_attr_miss_count[i] = count_missing_region_attr(img_id);
+		_via_loaded_img_file_attr_miss_count[i] = count_missing_file_attr(img_id);
             }
+	    console.log(_via_loaded_img_region_attr_miss_count);
+	    console.log(_via_loaded_img_file_attr_miss_count);
                        
             _via_loaded_img_table_html = [];
             //_via_loaded_img_table_html.push('<span style="display: block; border-bottom: 1px solid #5599ff;">Image List</span>');
-	    _via_loaded_img_table_html.push('<h3>Image List</h3>');
+	    _via_loaded_img_table_html.push('<span id="panel_close_button" onclick="toggle_img_list()">&times</span>');
+            _via_loaded_img_table_html.push('<h3>Image List</h3>');
             _via_loaded_img_table_html.push('<ul>');
             for (var i=0; i<_via_images_count; ++i) {
                 var fni = '';
-		if (i == _via_image_index) {
-		    // highlight the current entry
-		    fni += '<li style="cursor: default;"><b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
-		} else {
-		    fni += '<li onclick="jump_to_image(' + (i) + ')">[' + (i+1) + '] ' + _via_loaded_img_fn_list[i];
-		}
-
-                if (_via_loaded_img_miss_count[i]) {
-                    fni += '<span style="color: red;"> (' + _via_loaded_img_miss_count[i] + ')</span>';
+                if (i == _via_image_index) {
+                    // highlight the current entry
+                    fni += '<li style="cursor: default;"><b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
+                } else {
+                    fni += '<li onclick="jump_to_image(' + (i) + ')">[' + (i+1) + '] ' + _via_loaded_img_fn_list[i];
                 }
-		fni += '</li>';
+
+		// show number of missing region and file attributes
+		missing_attr = [];
+		if (_via_loaded_img_region_attr_miss_count[i]) {
+		    missing_attr.push('<span style="color: red;">' + _via_loaded_img_region_attr_miss_count[i] + '</span>');
+		}
+		if (_via_loaded_img_file_attr_miss_count[i]) {
+		    missing_attr.push('<span style="color: blue;">' + _via_loaded_img_file_attr_miss_count[i] + '</span>');
+		}
+		if (missing_attr.length) {
+		    fni += ' [' + missing_attr.join(',') + ']'
+		}
+		
+                fni += '</li>';
                 _via_loaded_img_table_html.push(fni);
             }
             _via_loaded_img_table_html.push('</ul>');
@@ -1702,8 +1717,8 @@ function show_img_list() {
         }
 
         loaded_img_list_panel.innerHTML = _via_loaded_img_table_html.join('');
-	loaded_img_list_panel.style.width = "300px";
-	_via_is_loaded_img_list_visible = true;
+        loaded_img_list_panel.style.width = "300px";
+        _via_is_loaded_img_list_visible = true;
     } else {
         show_message("Please load some images first!", VIA_THEME_MESSAGE_TIMEOUT_MS);
     }
@@ -1711,17 +1726,21 @@ function show_img_list() {
 
 function jump_to_image(image_index) {
     if ( image_index >=0 &&
-	 image_index < _via_images_count) {
-	show_image(image_index);
+         image_index < _via_images_count) {
+        show_image(image_index);
     }
 }
 
-function count_missing_attribute_value(img_id) {
-    var missing_attribute_count = 0;
+function count_missing_region_attr(img_id) {
+    var miss_region_attr_count = 0;
     for( var i=0; i<_via_images[img_id].regions.length; ++i) {
-        missing_attribute_count += _via_region_attributes.size - _via_images[img_id].regions[i].region_attributes.size;
+        miss_region_attr_count += _via_region_attributes.size - _via_images[img_id].regions[i].region_attributes.size;
     }
-    return missing_attribute_count;
+    return miss_region_attr_count;
+}
+
+function count_missing_file_attr(img_id) {
+    return _via_file_attributes.size - _via_images[img_id].file_attributes.size;
 }
 
 //
@@ -1731,11 +1750,11 @@ function count_missing_attribute_value(img_id) {
 function _via_redraw_canvas() {
     if (_via_current_image_loaded) {
         _via_ctx.drawImage(_via_current_image, 0, 0, _via_canvas_width, _via_canvas_height);
-	
-	if ( _via_canvas_regions.length > 0 ) {
+        
+        if ( _via_canvas_regions.length > 0 ) {
             draw_all_regions();
             draw_all_region_id();
-	}
+        }
     }
 }
 
@@ -2386,8 +2405,8 @@ window.addEventListener("keydown", function(e) {
         }
 
         if ( e.which == 65 ) { // Ctrl + a
-	    toggle_all_regions_selection(true);
-	    _via_is_all_region_selected = true;
+            toggle_all_regions_selection(true);
+            _via_is_all_region_selected = true;
             _via_redraw_canvas();
 
             e.preventDefault();
@@ -2438,12 +2457,12 @@ window.addEventListener("keydown", function(e) {
     if ( e.which == 27 ) { // Esc
         if (_via_is_user_updating_attribute_value ||
             _via_is_user_updating_attribute_name ||
-	    _via_is_user_adding_attribute_name) {
-	    
-	    _via_is_user_updating_attribute_value = false;
-	    _via_is_user_updating_attribute_name = false;
-	    _via_is_user_adding_attribute_name = false;
-	    update_attributes_input_panel();
+            _via_is_user_adding_attribute_name) {
+            
+            _via_is_user_updating_attribute_value = false;
+            _via_is_user_updating_attribute_name = false;
+            _via_is_user_adding_attribute_name = false;
+            update_attributes_input_panel();
         }
         
         if ( _via_is_user_resizing_region ) {
@@ -2516,7 +2535,7 @@ window.addEventListener("keydown", function(e) {
     if ( e.which == 121 ) { // F10 key used for debugging
         print_current_state_vars();
         print_current_image_data();
-	e.preventDefault();
+        e.preventDefault();
     }
     if (e.which == 113) { // F2 for about
         show_about_panel();
@@ -2529,7 +2548,7 @@ window.addEventListener("keydown", function(e) {
         } else {
             zoom_active=true;
         }
-	_via_redraw_canvas();
+        _via_redraw_canvas();
     }    
 });
 
@@ -2587,12 +2606,12 @@ function toggle_message_panel() {
     switch(message_panel.style.display) {
     default:
     case 'block':
-	message_panel.style.display = 'none';
-	break;
-	
+        message_panel.style.display = 'none';
+        break;
+        
     case 'none':
-	message_panel.style.display = 'block';
-	break;
+        message_panel.style.display = 'block';
+        break;
     }
 }
 
@@ -2681,9 +2700,9 @@ function save_current_data_to_browser_cache() {
 
 function is_via_data_in_localStorage() {
     if (localStorage.getItem('_via_timestamp')) {
-	return true;
+        return true;
     } else {
-	return false;
+        return false;
     }
 }
 
@@ -2713,59 +2732,59 @@ function show_localStorage_recovery_options() {
 function download_localStorage_data(type) {
     switch(type) {
     case 'csv':
-	var d = JSON.parse( localStorage.getItem('_via_images') );
+        var d = JSON.parse( localStorage.getItem('_via_images') );
 
-	var csvdata = [];
+        var csvdata = [];
         var csvheader = "#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes";
         csvdata.push(csvheader);
 
-	for (var image_id in d) {
-	    // copy file attributes
-	    var file_attr_map = new Map();
-	    for (var key in d[image_id].file_attributes) {
-		file_attr_map.set(key, d[image_id].file_attributes[key]);
-	    }
+        for (var image_id in d) {
+            // copy file attributes
+            var file_attr_map = new Map();
+            for (var key in d[image_id].file_attributes) {
+                file_attr_map.set(key, d[image_id].file_attributes[key]);
+            }
 
-	    var prefix_str = d[image_id].filename;
+            var prefix_str = d[image_id].filename;
             prefix_str += "," + d[image_id].size;
             prefix_str += "," + attr_map_to_str( file_attr_map );
 
-	    // copy regions
-	    var regions = d[image_id].regions;
-	    var region_count = 0;
-	    for (var i in regions) {
-		region_count += 1;
-	    }
-	    
-	    for (var i in regions) {
-		var region_shape_attr_str = region_count + ',' + i + ',';
-		
+            // copy regions
+            var regions = d[image_id].regions;
+            var region_count = 0;
+            for (var i in regions) {
+                region_count += 1;
+            }
+            
+            for (var i in regions) {
+                var region_shape_attr_str = region_count + ',' + i + ',';
+                
                 var regioni = new ImageRegion();
                 for (var key in regions[i].shape_attributes) {
-		    regioni.shape_attributes.set(key, regions[i].shape_attributes[key]);
+                    regioni.shape_attributes.set(key, regions[i].shape_attributes[key]);
                 }
                 for (var key in regions[i].region_attributes) {
-		    regioni.region_attributes.set(key, regions[i].region_attributes[key]);
+                    regioni.region_attributes.set(key, regions[i].region_attributes[key]);
                 }
-		region_shape_attr_str += attr_map_to_str( regioni.shape_attributes );
-		var region_attr_str = attr_map_to_str( regioni.region_attributes );
-		console.log('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
-		csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
-	    }
-	}
+                region_shape_attr_str += attr_map_to_str( regioni.shape_attributes );
+                var region_attr_str = attr_map_to_str( regioni.region_attributes );
+                console.log('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
+                csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
+            }
+        }
 
-	var localStorage_data_blob = new Blob( csvdata,
-					       {type: 'text/csv;charset=utf-8'});
+        var localStorage_data_blob = new Blob( csvdata,
+                                               {type: 'text/csv;charset=utf-8'});
 
-	save_data_to_local_file(localStorage_data_blob, 'via_region_data.csv');
+        save_data_to_local_file(localStorage_data_blob, 'via_region_data.csv');
 
-	break;
+        break;
     case 'json':
-	var localStorage_data_blob = new Blob( [localStorage.getItem('_via_images')],
-					       {type: 'text/json;charset=utf-8'});
+        var localStorage_data_blob = new Blob( [localStorage.getItem('_via_images')],
+                                               {type: 'text/json;charset=utf-8'});
 
-	save_data_to_local_file(localStorage_data_blob, 'via_region_data.json');
-	break;
+        save_data_to_local_file(localStorage_data_blob, 'via_region_data.json');
+        break;
     }
     
 }
@@ -2779,10 +2798,10 @@ function download_localStorage_data(type) {
 function init_spreadsheet_input(table_name, col_headers, data, row_names) {
     
     if (typeof row_names === 'undefined') {
-	var row_names = [];
-	for (var i=0; i<data.length; ++i) {
-	    row_names[i] = i+1;
-	}
+        var row_names = [];
+        for (var i=0; i<data.length; ++i) {
+            row_names[i] = i+1;
+        }
     }
 
     document.getElementById(table_name).innerHTML = '';
@@ -2794,105 +2813,105 @@ function init_spreadsheet_input(table_name, col_headers, data, row_names) {
     topleft_cell.style.border = 'none';
 
     for (var col_header of col_headers) {
-	firstrow.insertCell(-1).innerHTML = '<b>' + col_header + '</b>';
+        firstrow.insertCell(-1).innerHTML = '<b>' + col_header + '</b>';
     }
     // additional column to let user add new attributes
     var new_attr_cell = firstrow.insertCell(-1);
     new_attr_cell.innerHTML = '<input type="text"' +
-	' onchange="add_new_attribute(\'' + table_name[0] + '\', this.value)"' +
-	' value = "+"' +
-	' onfocus="_via_is_user_adding_attribute_name=true; this.value = \'\';" />';
+        ' onchange="add_new_attribute(\'' + table_name[0] + '\', this.value)"' +
+        ' value = "+"' +
+        ' onfocus="_via_is_user_adding_attribute_name=true; this.value = \'\';" />';
 
     for (var rowi=0; rowi<data.length; rowi++) {
-	var row = document.getElementById(table_name).insertRow(-1);
-	var region_id_cell = row.insertCell(0);
-	region_id_cell.innerHTML = '' + row_names[rowi] + '';
-	region_id_cell.style.fontWeight = 'bold';
-	region_id_cell.style.width = '2em';
+        var row = document.getElementById(table_name).insertRow(-1);
+        var region_id_cell = row.insertCell(0);
+        region_id_cell.innerHTML = '' + row_names[rowi] + '';
+        region_id_cell.style.fontWeight = 'bold';
+        region_id_cell.style.width = '2em';
 
-	var di = data[rowi];
-	var data_rowi = data[rowi];
-	if (table_name[0] == 'r') {
-	    di = data[rowi].region_attributes;
-	}
-	for (var key of col_headers) {
-	    var input_id = table_name[0] + '#' + key + '#' + rowi;
+        var di = data[rowi];
+        var data_rowi = data[rowi];
+        if (table_name[0] == 'r') {
+            di = data[rowi].region_attributes;
+        }
+        for (var key of col_headers) {
+            var input_id = table_name[0] + '#' + key + '#' + rowi;
 
-	    if ( di.has(key) ) {
-		var ip_val = di.get(key);
-		row.insertCell(-1).innerHTML = '<input type="text"' +
-		    ' id="' +   input_id + '"' +
-		    ' value="' + ip_val + '"' +
-		    ' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
-		    ' onblur="_via_is_user_updating_attribute_value=false;"' +
-		    ' onfocus="select_only_region(' + rowi + '); _via_redraw_canvas(); _via_is_user_updating_attribute_value=true;" />';
-	    } else {
-		row.insertCell(-1).innerHTML = '<input type="text"' +
-		    ' id="' + input_id + '"' +
-		    ' onchange="update_attribute_value(\'' + input_id + '\', this.value)" ' +
-		    ' onblur="_via_is_user_updating_attribute_value=false;"' +		    
-		    ' onfocus="select_only_region(' + rowi + '); _via_redraw_canvas(); _via_is_user_updating_attribute_value=true;" />';
-	    }
-	}
+            if ( di.has(key) ) {
+                var ip_val = di.get(key);
+                row.insertCell(-1).innerHTML = '<input type="text"' +
+                    ' id="' +   input_id + '"' +
+                    ' value="' + ip_val + '"' +
+                    ' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
+                    ' onblur="_via_is_user_updating_attribute_value=false;"' +
+                    ' onfocus="select_only_region(' + rowi + '); _via_redraw_canvas(); _via_is_user_updating_attribute_value=true;" />';
+            } else {
+                row.insertCell(-1).innerHTML = '<input type="text"' +
+                    ' id="' + input_id + '"' +
+                    ' onchange="update_attribute_value(\'' + input_id + '\', this.value)" ' +
+                    ' onblur="_via_is_user_updating_attribute_value=false;"' +              
+                    ' onfocus="select_only_region(' + rowi + '); _via_redraw_canvas(); _via_is_user_updating_attribute_value=true;" />';
+            }
+        }
     }
 }
 
 function update_attributes_input_panel() {
     if (_via_current_image_loaded) {
-	if (_via_is_attributes_input_panel_visible) {
-	    update_region_attributes_input_panel();
-	    update_file_attributes_input_panel();
-	}
+        if (_via_is_attributes_input_panel_visible) {
+            update_region_attributes_input_panel();
+            update_file_attributes_input_panel();
+        }
     }
 }
 
 function update_region_attributes_input_panel() {
     init_spreadsheet_input('region_attr_table',
-			   _via_region_attributes,
-			   _via_images[_via_image_id].regions);
+                           _via_region_attributes,
+                           _via_images[_via_image_id].regions);
 
 }
 
 function update_file_attributes_input_panel() {
     init_spreadsheet_input('file_attr_table',
-			   _via_file_attributes,
-			   [_via_images[_via_image_id].file_attributes],
-			  [_via_current_image_filename]);
+                           _via_file_attributes,
+                           [_via_images[_via_image_id].file_attributes],
+                          [_via_current_image_filename]);
 }
 
 function toggle_attributes_input_panel() {
     if (_via_current_image_loaded) {
-	if (_via_is_attributes_input_panel_visible) {
-	    attributes_input_panel.style.display = 'none';
-	    _via_is_attributes_input_panel_visible = false;
-	} else {
-	    _via_is_attributes_input_panel_visible = true;
-	    update_attributes_input_panel();	    
-	    attributes_input_panel.style.display = 'block';
-	}
+        if (_via_is_attributes_input_panel_visible) {
+            attributes_input_panel.style.display = 'none';
+            _via_is_attributes_input_panel_visible = false;
+        } else {
+            _via_is_attributes_input_panel_visible = true;
+            update_attributes_input_panel();        
+            attributes_input_panel.style.display = 'block';
+        }
     }
 }
 
 function toggle_table_layout(table_name) {
     switch(document.getElementById(table_name).style.tableLayout) {
     case 'auto':
-	document.getElementById(table_name).style.tableLayout = 'fixed';
-	break;
+        document.getElementById(table_name).style.tableLayout = 'fixed';
+        break;
     case 'fixed':
     default:
-	document.getElementById(table_name).style.tableLayout = 'auto';
-	break;
+        document.getElementById(table_name).style.tableLayout = 'auto';
+        break;
     }
 }
 
 function toggle_table_width(table_name) {
     switch(document.getElementById(table_name).style.width) {
     case '100%':
-	document.getElementById(table_name).style.width = '';
-	break;
+        document.getElementById(table_name).style.width = '';
+        break;
     default:
-	document.getElementById(table_name).style.width = '100%';
-	break;
+        document.getElementById(table_name).style.width = '100%';
+        break;
     }
 }
 
@@ -2904,14 +2923,14 @@ function update_attribute_value(attr_id, value) {
 
     switch(type) {
     case 'r':
-	var region = _via_images[_via_image_id].regions[region_id];
-	region.region_attributes.set(attribute_name, value);
-	update_region_attributes_input_panel();
-	break;
+        var region = _via_images[_via_image_id].regions[region_id];
+        region.region_attributes.set(attribute_name, value);
+        update_region_attributes_input_panel();
+        break;
     case 'f':
-	_via_images[_via_image_id].file_attributes.set(attribute_name, value);
-	update_file_attributes_input_panel();
-	break;
+        _via_images[_via_image_id].file_attributes.set(attribute_name, value);
+        update_file_attributes_input_panel();
+        break;
     }
     _via_is_user_updating_attribute_value = false;
 }
@@ -2919,21 +2938,23 @@ function update_attribute_value(attr_id, value) {
 function add_new_attribute(type, attribute_name) {
     switch(type) {
     case 'r':
-	if (!_via_region_attributes.has(attribute_name)) {
-	    _via_region_attributes.add(attribute_name);
-	}
-	update_region_attributes_input_panel();	
-	break;
+        if (!_via_region_attributes.has(attribute_name)) {
+            _via_region_attributes.add(attribute_name);
+        }
+        update_region_attributes_input_panel(); 
+        break;
     case 'f':
-	if (!_via_file_attributes.has(attribute_name)) {
-	    _via_file_attributes.add(attribute_name);
-	    // add this attribute to all images
-	    for (image_id in _via_images) {
-		_via_images[image_id].file_attributes.set(attribute_name, '');
-	    }
-	}
-	update_file_attributes_input_panel();
-	break;
+        if (!_via_file_attributes.has(attribute_name)) {
+            _via_file_attributes.add(attribute_name);
+	    /*
+            // add this attribute to all images
+            for (image_id in _via_images) {
+                _via_images[image_id].file_attributes.set(attribute_name, '');
+            }
+*/
+        }
+        update_file_attributes_input_panel();
+        break;
     }
     _via_is_user_adding_attribute_name = false;
 }
@@ -2950,17 +2971,17 @@ function print_current_state_vars() {
                 '\n_via_is_user_moving_region'+_via_is_user_moving_region+
                 '\n_via_is_user_drawing_polygon'+_via_is_user_drawing_polygon+
                 '\n_via_is_region_selected'+_via_is_region_selected+
-		'\n_via_is_user_updating_attribute_name'+_via_is_user_updating_attribute_name+
-		'\n_via_is_user_updating_attribute_value'+_via_is_user_updating_attribute_value+
-	       '\n_via_is_user_adding_attribute_name'+_via_is_user_adding_attribute_name);
+                '\n_via_is_user_updating_attribute_name'+_via_is_user_updating_attribute_name+
+                '\n_via_is_user_updating_attribute_value'+_via_is_user_updating_attribute_value+
+               '\n_via_is_user_adding_attribute_name'+_via_is_user_adding_attribute_name);
 }
 
 function print_current_image_data() {
     console.log(_via_images);
     for ( var image_id in _via_images) {
-	console.log(fn);
+        console.log(fn);
         var fn = _via_images[image_id].filename;
-	var logstr = [];
+        var logstr = [];
         logstr.push("[" + fn + "] : ");
 
         var img_regions = _via_images[image_id].regions;
@@ -2984,7 +3005,7 @@ function print_current_image_data() {
             for ( var i=0; i<_via_canvas_regions.length; ++i) {
                 var canvas_region_str = '\n\t_via_canvas_regions = [';
                 for ( var key of _via_canvas_regions[i].shape_attributes.keys() ) {
-		    var value = _via_canvas_regions[i].shape_attributes.get(key);
+                    var value = _via_canvas_regions[i].shape_attributes.get(key);
                     canvas_region_str += key + ':' + value + ';';
                 }
                 logstr.push(canvas_region_str + ']');
