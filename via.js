@@ -779,7 +779,6 @@ function show_image(image_index) {
 
 		// refresh the attributes panel
 		update_attributes_input_panel();
-		toggle_attributes_input_panel();
 
                 _via_load_canvas_regions(); // image to canvas space transform
                 _via_redraw_canvas();
@@ -1212,6 +1211,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
 		_via_canvas_regions[_via_current_polygon_region_id].is_user_selected = true;
 
                 _via_current_polygon_region_id = -1;
+		update_attributes_input_panel();
                 save_current_data_to_browser_cache();
             } else {
                 // user clicked on a new polygon point
@@ -1356,6 +1356,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
         } else {
             show_message('Skipped adding a ' + _via_current_shape + ' of nearly 0 dimension', VIA_THEME_MESSAGE_TIMEOUT_MS);
         }
+	update_attributes_input_panel();
         _via_redraw_canvas();
         _via_canvas.focus();
 	show_region_attributes_info();
@@ -1371,6 +1372,11 @@ function toggle_all_regions_selection(is_selected) {
     for (var i=0; i<_via_canvas_regions.length; ++i) {
         _via_canvas_regions[i].is_user_selected = is_selected;
     }
+}
+
+function select_only_region(region_id) {
+    toggle_all_regions_selection(false);
+    _via_canvas_regions[region_id].is_user_selected = true;
 }
 
 _via_canvas.addEventListener("mouseover", function(e) {
@@ -2778,6 +2784,11 @@ function download_localStorage_data(type) {
 // header is a Set()
 // data is an array of Map() objects
 function init_spreadsheet_input(table_name, col_headers, data, row_names) {
+    console.log(table_name);
+    console.log(col_headers);
+    console.log(data);
+    console.log(row_names);
+    
     if (typeof row_names === 'undefined') {
 	var row_names = [];
 	for (var i=0; i<data.length; ++i) {
@@ -2824,12 +2835,14 @@ function init_spreadsheet_input(table_name, col_headers, data, row_names) {
 		    ' id="' +   input_id + '"' +
 		    ' value="' + ip_val + '"' +
 		    ' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
-		    ' onfocus="_via_is_user_updating_attribute_value=true;" />';
+		    ' onblur="_via_is_user_updating_attribute_value=false;"' +
+		    ' onfocus="select_only_region(' + rowi + '); _via_redraw_canvas(); _via_is_user_updating_attribute_value=true;" />';
 	    } else {
 		row.insertCell(-1).innerHTML = '<input type="text"' +
 		    ' id="' + input_id + '"' +
 		    ' onchange="update_attribute_value(\'' + input_id + '\', this.value)" ' +
-		    ' onfocus="_via_is_user_updating_attribute_value=true;/>';
+		    ' onblur="_via_is_user_updating_attribute_value=false;"' +		    
+		    ' onfocus="select_only_region(' + rowi + '); _via_redraw_canvas(); _via_is_user_updating_attribute_value=true;" />';
 	    }
 	}
     }
@@ -2864,15 +2877,9 @@ function toggle_attributes_input_panel() {
 	    attributes_input_panel.style.display = 'none';
 	    _via_is_attributes_input_panel_visible = false;
 	} else {
-	    init_spreadsheet_input('region_attr_table',
-				   _via_region_attributes,
-				   _via_images[_via_image_id].regions);
-	    init_spreadsheet_input('file_attr_table',
-				   _via_file_attributes,
-				   _via_images[_via_image_id].file_attributes);
-	    
-	    attributes_input_panel.style.display = 'block';
 	    _via_is_attributes_input_panel_visible = true;
+	    update_attributes_input_panel();	    
+	    attributes_input_panel.style.display = 'block';
 	}
     }
 }
