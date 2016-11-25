@@ -33,6 +33,11 @@ var VIA_REGION_SHAPE = { RECT:'rect',
                          CIRCLE:'circle',
                          ELLIPSE:'ellipse',
                          POLYGON:'polygon'};
+var VIA_SPECIAL_CHAR_SUBS = {',':'[comma]',
+			     ':':'[colon]',
+			     ';':'[scolon]',
+			     '=':'[equal]'};
+
 var VIA_REGION_EDGE_TOL = 5;
 var VIA_POLYGON_VERTEX_MATCH_TOL = 5;
 var VIA_REGION_MIN_DIM = 5;
@@ -189,9 +194,9 @@ function _via_get_image_id(filename, size) {
 function main() {
     console.log(VIA_NAME);
     show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !',
-                2*VIA_THEME_MESSAGE_TIMEOUT_MS);
+                 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
     show_home_panel();
-    //start_demo_session(); // defined in via_demo.js
+    start_demo_session(); // defined in via_demo.js
     
     _via_is_local_storage_available = check_local_storage();
     if (_via_is_local_storage_available) {
@@ -235,7 +240,6 @@ function download_all_region_data(type) {
          type == 'csv' ) {
         show_message('CSV file size is ' + (all_region_data_blob.size/(1024*1024)) + ' MB. We advise you to instead download as JSON');
     } else {
-        console.log(all_region_data_blob);
         save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
     }
 }
@@ -431,7 +435,9 @@ function import_region_data_from_csv(data) {
 
                     var attr_map = keyval_str_to_map( file_attr_str );
                     for( var key of attr_map.keys() ) {
-                        _via_images[image_id].file_attributes.set(key, attr_map.get(key));
+			var val = attr_map.get(key);
+			val = substitute_special_chars(val);
+                        _via_images[image_id].file_attributes.set(key, val);
 
                         if (!_via_file_attributes.has(key)) {
                             _via_file_attributes.add(key);
@@ -475,6 +481,7 @@ function import_region_data_from_csv(data) {
                     
                     for ( var key of region_attr_map.keys() ) {
                         var val = region_attr_map.get(key);
+			val = substitute_special_chars(val);
                         regioni.region_attributes.set(key, val);
 
                         if (!_via_region_attributes.has(key)) {
@@ -674,11 +681,29 @@ function attr_map_to_str(attr) {
             value_str += ']';
             attr_map_str.push(key + '=' + value_str);
         } else {
+	    value = remove_special_chars(value);
             attr_map_str.push(key + '=' + value);
         }
     }
     var str_val = '"' + attr_map_str.join(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR) + '"';
     return str_val;
+}
+
+function remove_special_chars(str) {
+    str1 = str;
+    for (var key in VIA_SPECIAL_CHAR_SUBS) {
+	str1 = str1.replace(key, VIA_SPECIAL_CHAR_SUBS[key]);
+    }
+    return str1;
+}
+
+function substitute_special_chars(str) {
+    str1 = str;
+    for (var key in VIA_SPECIAL_CHAR_SUBS) {
+	var value = VIA_SPECIAL_CHAR_SUBS[key];
+	str1 = str1.replace(value, key);
+    }
+    return str1;
 }
 
 function save_data_to_local_file(data, filename) {
@@ -2390,114 +2415,6 @@ function update_ui_components() {
 
 
 window.addEventListener("keydown", function(e) {
-    if (e.which == 78 || e.which == 39) { // n or right arrow
-        if (!_via_is_user_updating_attribute_value &&
-            !_via_is_user_updating_attribute_name &&
-            !_via_is_user_adding_attribute_name) {
-            move_to_next_image();
-            e.preventDefault();
-        }
-        return;
-    }
-    if (e.which == 80 || e.which == 37) { // n or right arrow
-        if (!_via_is_user_updating_attribute_value &&
-            !_via_is_user_updating_attribute_name &&
-            !_via_is_user_adding_attribute_name) {
-            move_to_prev_image();
-            e.preventDefault();
-        }
-        return;
-    }
-
-    if (e.which == 65) { // a
-        if (!_via_is_user_updating_attribute_value &&
-            !_via_is_user_updating_attribute_name &&
-            !_via_is_user_adding_attribute_name) {
-            toggle_attributes_input_panel();
-        }       
-    }
-    
-    if ( e.which == 76 ) { // l
-        if (!_via_is_user_updating_attribute_value &&
-            !_via_is_user_updating_attribute_name &&
-            !_via_is_user_adding_attribute_name) {
-            toggle_img_list();
-            e.preventDefault();
-            return;
-        }    
-    }
-
-    if ( e.which == 48 ) { // 0
-        // reset the zoom level
-        if (!_via_is_user_updating_attribute_value &&
-            !_via_is_user_updating_attribute_name &&
-            !_via_is_user_adding_attribute_name) {
-
-            reset_zoom_level();
-            show_message('Zoom reset', VIA_THEME_MESSAGE_TIMEOUT_MS);
-            return;
-        }
-    }
-
-    // zoom in/out functionality
-    if (e.shiftKey) {
-        if ( e.keyCode == 90 ) { // Shift + Z
-            // zoom out
-            if (!_via_is_user_updating_attribute_value &&
-                !_via_is_user_updating_attribute_name &&
-                !_via_is_user_adding_attribute_name) {
-
-                if (_via_canvas_zoom_level_index == 0) {
-                    show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
-                } else {
-                    _via_canvas_zoom_level_index -= 1;
-                    
-                    _via_is_canvas_zoomed = true;
-                    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-                    _via_ctx.scale(zoom_scale, zoom_scale);
-                    
-                    _via_canvas.height = _via_canvas_height * zoom_scale;
-                    _via_canvas.width = _via_canvas_width * zoom_scale;
-                    _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
-
-                    _via_load_canvas_regions(); // image to canvas space transform
-                    _via_redraw_canvas();
-                    _via_canvas.focus();
-                    show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
-                }
-                return;
-            }
-        }
-    }
-
-    if ( e.which == 90 ) { // z
-        // zoom in
-        if (!_via_is_user_updating_attribute_value &&
-            !_via_is_user_updating_attribute_name &&
-            !_via_is_user_adding_attribute_name) {
-
-            if (_via_canvas_zoom_level_index == (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
-                show_message('Further zoom-in not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
-            } else {
-                _via_canvas_zoom_level_index += 1;
-                
-                _via_is_canvas_zoomed = true;
-                var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-                _via_ctx.scale(zoom_scale, zoom_scale);
-                
-                _via_canvas.height = _via_canvas_height * zoom_scale;
-                _via_canvas.width = _via_canvas_width * zoom_scale;
-                _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
-
-                _via_load_canvas_regions(); // image to canvas space transform
-                _via_redraw_canvas();
-                _via_canvas.focus();
-                show_message('Zoomed in to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
-            }
-            return;         
-        }
-    }
-
     // user commands
     if ( e.ctrlKey ) {
         if ( e.which == 83 ) { // Ctrl + s
@@ -2562,6 +2479,115 @@ window.addEventListener("keydown", function(e) {
         }
     }
     
+    // zoom in/out functionality
+    if (e.shiftKey) {
+        if ( e.keyCode == 90 ) { // Shift + Z
+            // zoom out
+            if (!_via_is_user_updating_attribute_value &&
+                !_via_is_user_updating_attribute_name &&
+                !_via_is_user_adding_attribute_name) {
+
+                if (_via_canvas_zoom_level_index == 0) {
+                    show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
+                } else {
+                    _via_canvas_zoom_level_index -= 1;
+                    
+                    _via_is_canvas_zoomed = true;
+                    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+                    _via_ctx.scale(zoom_scale, zoom_scale);
+                    
+                    _via_canvas.height = _via_canvas_height * zoom_scale;
+                    _via_canvas.width = _via_canvas_width * zoom_scale;
+                    _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
+
+                    _via_load_canvas_regions(); // image to canvas space transform
+                    _via_redraw_canvas();
+                    _via_canvas.focus();
+                    show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
+                }
+                return;
+            }
+        }
+    }
+
+    if (e.which == 78 || e.which == 39) { // n or right arrow
+        if (!_via_is_user_updating_attribute_value &&
+            !_via_is_user_updating_attribute_name &&
+            !_via_is_user_adding_attribute_name) {
+            move_to_next_image();
+            e.preventDefault();
+        }
+        return;
+    }
+    if (e.which == 80 || e.which == 37) { // n or right arrow
+        if (!_via_is_user_updating_attribute_value &&
+            !_via_is_user_updating_attribute_name &&
+            !_via_is_user_adding_attribute_name) {
+            move_to_prev_image();
+            e.preventDefault();
+        }
+        return;
+    }
+
+    if (e.which == 65) { // a
+        if (!_via_is_user_updating_attribute_value &&
+            !_via_is_user_updating_attribute_name &&
+            !_via_is_user_adding_attribute_name) {
+            toggle_attributes_input_panel();
+	    return;
+        }       
+    }
+    
+    if ( e.which == 76 ) { // l
+        if (!_via_is_user_updating_attribute_value &&
+            !_via_is_user_updating_attribute_name &&
+            !_via_is_user_adding_attribute_name) {
+            toggle_img_list();
+            e.preventDefault();
+            return;
+        }    
+    }
+
+    if ( e.which == 48 ) { // 0
+        // reset the zoom level
+        if (!_via_is_user_updating_attribute_value &&
+            !_via_is_user_updating_attribute_name &&
+            !_via_is_user_adding_attribute_name) {
+
+            reset_zoom_level();
+            show_message('Zoom reset', VIA_THEME_MESSAGE_TIMEOUT_MS);
+            return;
+        }
+    }
+
+    if ( e.which == 90 ) { // z
+        // zoom in
+        if (!_via_is_user_updating_attribute_value &&
+            !_via_is_user_updating_attribute_name &&
+            !_via_is_user_adding_attribute_name) {
+
+            if (_via_canvas_zoom_level_index == (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
+                show_message('Further zoom-in not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
+            } else {
+                _via_canvas_zoom_level_index += 1;
+                
+                _via_is_canvas_zoomed = true;
+                var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+                _via_ctx.scale(zoom_scale, zoom_scale);
+                
+                _via_canvas.height = _via_canvas_height * zoom_scale;
+                _via_canvas.width = _via_canvas_width * zoom_scale;
+                _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
+
+                _via_load_canvas_regions(); // image to canvas space transform
+                _via_redraw_canvas();
+                _via_canvas.focus();
+                show_message('Zoomed in to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
+            }
+            return;         
+        }
+    }
+
     if ( e.which == 27 ) { // Esc
         if (_via_is_user_updating_attribute_value ||
             _via_is_user_updating_attribute_name ||
