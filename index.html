@@ -451,17 +451,9 @@
               <a onclick="upload_region_data_file()" title="Import existing region data from CSV or JSON file">Import</a>
             </div>
           </li>
-          <li class="dropdown"><a title="Attributes" class="drop_menu_item">Attributes &#9662</a>
-            <div class="dropdown-content">
-              <a onclick="save_attributes()" title="Save image region attributes to a local file">Save attributes</a>
-              <a onclick="import_attributes()" title="Import existing attributes from a file">Import attributes</a>
-              <a onclick="delete_all_attributes()" title="Delete all attributes">Delete attributes</a>
-            </div>
-          </li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>
             <div class="dropdown-content">
-              <a href="https://gitlab.com/vgg/via/issues/new" target="_new" title="Report issues about this application">Report issue</a>
-              <a onclick="show_about_panel()" title="Import existing attributes from a file">About via</a>
+              <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About VIA</a>
             </div>
           </li>
         </ul>
@@ -507,7 +499,7 @@
                 <td>Show/hide image list</td>
               </tr>
               <tr>
-                <td>+/-/0</td>
+                <td>z/Z/0</td>
                 <td>Zoom in/out/reset</td>
               </tr>
               <tr>
@@ -541,7 +533,7 @@
               <tr>
                 <td style="width: 6em;">Alt + d</td>
                 <td>Delete image region</td>
-              </tr>	      
+              </tr>           
             </table>
           </div>
         </div>
@@ -604,10 +596,12 @@
       <table id="file_attr_table"></table>
     </div>
     
-    <script type="text/javascript" src="via_demo.js">
+    <!--<script type="text/javascript" src="via_demo.js">-->
+    <script type="text/javascript">
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
     </script>
-    <script type="text/javascript" src="via.js">
+    <!--<script type="text/javascript" src="via.js">-->
+      <script type="text/javascript"
       <!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
   </body>
