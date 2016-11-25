@@ -135,6 +135,7 @@
       .main {
       display: table;
       width: 100%;
+      table-layout: fixed;
       }
 
       .box {
@@ -151,9 +152,9 @@
       .sidebar {
       font-family: Mono;
       font-size: small;
-      /*width: 250px;*/
       padding: 1em 1em;
       vertical-align: top;
+      width: 280px;
       }
       .sidebar .title {
       font-family: Sans;
@@ -164,8 +165,6 @@
       .sidebar .info table {
       border-collapse: collapse;
       table-layout: fixed;
-      min-width: 250px;
-      max-width: 400px;
       }
       .sidebar .info table, td {
       border: 1px solid #cccccc;
@@ -212,10 +211,6 @@
       z-index: 1000;
       }
       
-      #annotation_textarea {
-      display: none;
-      }
-
       #invisible_file_input {
       width: 0.1px;
       height: 0.1px;
@@ -224,6 +219,7 @@
       position: absolute;
       z-index: -1;
       }
+      /* panel that contains the canvas */
       #image_panel {
       display: inline-block;
       margin: auto;
@@ -249,22 +245,8 @@
       cursor: pointer;
       }
 
-      /* for updating attribute values */
-      .clickable_tbl_entry {
-      background-color: #ffffff;
-      color: #000000;
-      }
-      .clickable_tbl_entry:hover {
-      background-color: #cccccc;
-      color: #000000;
-      cursor: pointer;
-      }
-
       .svg_button:hover {
       cursor: pointer;
-      }
-      .header_cell {
-      background-color: #e6e6e6;
       }
 
       /* image info (on top right corner) */
@@ -283,12 +265,12 @@
       height: 92%;
       width: 0;
       position: fixed;
-      z-index: 10000;
+      z-index: 1;
       top: 51px;
       right: 0;
       background-color: #e6e6e6;
       overflow: scroll;
-      transition: 0.5s;
+      /*transition: 0.5s;*/
       font-family: Mono;
       font-size: small;
       padding-top: 1em;
@@ -513,12 +495,20 @@
           <div class="info">
             <table>
               <tr>
-                <td style="width: 6em;">Alt + d</td>
-                <td>Delete image region</td>
-              </tr>
-              <tr>
                 <td>n/p (&larr;/&rarr;)</td>
                 <td>Next/Previous image</td>
+              </tr>
+              <tr>
+                <td>a</td>
+                <td>Show/hide attributes</td>
+              </tr>
+              <tr>
+                <td>l</td>
+                <td>Show/hide image list</td>
+              </tr>
+              <tr>
+                <td>+/-/0</td>
+                <td>Zoom in/out/reset</td>
               </tr>
               <tr>
                 <td>Ctrl + o</td>
@@ -531,10 +521,6 @@
               <tr>
                 <td>Ctrl + i</td>
                 <td>Import region data</td>
-              </tr>
-              <tr>
-                <td>Ctrl + l</td>
-                <td>Browse loaded image</td>
               </tr>
               <tr>
                 <td>Ctrl + a</td>
@@ -552,6 +538,10 @@
                 <td>Esc</td>
                 <td>Cancel operation</td>
               </tr>
+              <tr>
+                <td style="width: 6em;">Alt + d</td>
+                <td>Delete image region</td>
+              </tr>	      
             </table>
           </div>
         </div>
