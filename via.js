@@ -139,7 +139,6 @@ var message_panel = document.getElementById("message_panel");
 var image_panel = document.getElementById("image_panel");
 var navbar_panel = document.getElementById("navbar");
 var info_panel = document.getElementById("info_panel");
-var img_list_panel = document.getElementById("img_list_panel");
 
 var annotation_list_snippet = document.getElementById("annotation_list_snippet");
 var annotation_textarea = document.getElementById("annotation_textarea");    
@@ -196,9 +195,10 @@ function main() {
     show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !',
                  2*VIA_THEME_MESSAGE_TIMEOUT_MS);
     show_home_panel();
-    start_demo_session(); // defined in via_demo.js
+    //start_demo_session(); // defined in via_demo.js
     
     _via_is_local_storage_available = check_local_storage();
+    //_via_is_local_storage_available = false;
     if (_via_is_local_storage_available) {
         if (is_via_data_in_localStorage()) {
             show_localStorage_recovery_options();
@@ -214,14 +214,14 @@ function show_home_panel() {
         _via_canvas.style.display = "block";    
         via_start_info_panel.style.display = "none";
         about_panel.style.display = "none";
-        img_list_panel.style.display = "none";
+        loaded_img_list_panel.style.display = "none";
 
     } else {
         via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <span class="action_text_link" onclick="load_images()" title="Load Images">[Load Images]</span> in the Image menu.';
         via_start_info_panel.style.display = "block";
         about_panel.style.display = "none";
         _via_canvas.style.display = "none";
-        img_list_panel.style.display = "none";
+        loaded_img_list_panel.style.display = "none";
     }
 }
 function load_images() {
@@ -889,7 +889,7 @@ function clear_image_display_area() {
     _via_canvas.style.display = "none";
     about_panel.style.display = 'none';
     via_start_info_panel.style.display = 'none';
-    img_list_panel.style.display = 'none';
+    loaded_img_list_panel.style.display = 'none';
 }
 
 function delete_selected_regions() {
@@ -2825,7 +2825,9 @@ function save_current_data_to_browser_cache() {
                 _via_is_save_ongoing = false;
             } catch(err) {
                 _via_is_save_ongoing = false;
-                show_message('Failed to save data to browser cache');
+		_via_is_local_storage_available = false;
+                show_message('Failed to save data to browser cache. Please download the annotation data.');
+		alert('Failed to save data to browser cache. Please download the annotation data.');
                 console.log('Failed to save data to browser cache');
                 console.log(err.message);
             }

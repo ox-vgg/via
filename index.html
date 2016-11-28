@@ -225,7 +225,7 @@
       margin: auto;
       }
       #about_panel {
-      display: inline-block;
+      display: none;
       margin: auto;
       width: 80%;
       font-family: Sans;
@@ -290,23 +290,13 @@
       }
 
       /* region and file attributes input panel (spreadsheet like) */
-      #small_attributes_input_panel {
-      width: 300px;
-      overflow: scroll;
-      }
-      #small_attributes_input_panel table {
-      border-collapse: collapse;
-      table-layout: fixed;
-      font-size: small;
-      margin: 1em;
-      }
-
       #attributes_input_panel {
       display: none;
       position: fixed;
       z-index: 2;
       bottom: 0;
       width: 100%;
+      max-height: 40%;
       overflow: auto;
       background-color: #ffffff;
       border-top: 4px solid #000000;
@@ -596,10 +586,10 @@
       <table id="file_attr_table"></table>
     </div>
     
-    <script type="text/javascript" src="via_demo.js">
+    <!--<script type="text/javascript" src="via_demo.js">-->
     <!--<script type="text/javascript">-->
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
-    </script>
+    <!--</script>-->
     <script type="text/javascript" src="via.js">
     <!--<script type="text/javascript">-->
       <!--AUTO_INSERT_VIA_JS_HERE-->
