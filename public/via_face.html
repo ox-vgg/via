@@ -347,7 +347,7 @@
           <li><a onclick="load_images('face_label')" title="Import Face Labels">Import Face Labels</a></li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>
             <div class="dropdown-content">
-              <a onclick="show_getting_started_panel()" title="Getting started guide">Getting ostarted</a>
+              <a onclick="show_getting_started_panel()" title="Getting started guide">Getting started</a>
               <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About VIA</a>
             </div>
           </li>
@@ -451,7 +451,7 @@
             <p>VGG Face Annotator lets you mark and tag rectangular facial regions in an image.</p>
             <h3>Getting started</h3>
             <ol>
-              <li>Import a list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>]. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
+              <li>Import a list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>]. Note that these images should have filename in the format: <span style="font-family: Mono;">1_Firstname_Lastname.jpg</span>. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
               <li>Now [<span class="js_button" title="Load images" onclick="load_images('image')">load the images</span>] that you wish to tag with rectangular facial regions.</li>
               <li>Press the key <b>n</b> (or <b>p</b>) to move to next (or previous image) and <b>l</b> to show the list of all images.</li>
               <li>Click mouse right button and drag to draw a rectangular region around a face in the loaded image. This newly created region is automatically selected. If you have more facial regions, you can continue to draw them.</li>
@@ -503,7 +503,7 @@
     <script type="text/javascript">
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
     </script>
-    <!--<script type="text/javascript" src="via.js">-->
+    <!--<script type="text/javascript" src="via_face.js">-->
     <script type="text/javascript">
       <!--AUTO_INSERT_VIA_JS_HERE-->
 /*
@@ -830,9 +830,19 @@ function load_face_label_images(event) {
 function set_face_label_image(file, callback_function) {
     var filename = file.name.split('.');
     var filename = filename[0]; // remove extension
-    var fileparts = filename.split('_');
-    var file_id = parseInt(fileparts[0]);
-    fileparts.splice(0, 1); // remove file id
+    var filename_split = filename.split('_');
+    
+    var fileparts = [];
+    var file_id = -1;
+    
+    if (filename_split.length == 3) {
+	file_id = parseInt(filename_split[0]);
+	filename_split.splice(0, 1); // remove file id
+	fileparts = filename_split.slice();
+    } else {
+	file_id = _via_face_label_list.length;
+	fileparts.push(filename);
+    }
     var img_reader = new FileReader();
 
     img_reader.addEventListener( "load", function() {
