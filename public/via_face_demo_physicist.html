@@ -271,26 +271,19 @@
       bottom: 0;
       width: 100%;
       height: 180px;
-      overflow: auto;
+      overflow-x: auto;
+      overflow-y: auto;
+      white-space: nowrap;
       background-color: #ffffff;
       border-top: 4px solid #000000;
       padding-bottom: 2em;
       }
-      #panel_close_button {
-      display: inline-block;
-      color: #808080;
-      float: right;
-      font-size: 2em;
-      font-weight: bold;
-      padding-right: 0.5em;
-      }
-      #panel_close_button:hover {
-      color: red;
-      text-decoration: none;
-      cursor: pointer;
-      }
 
       /* face label */
+      #face_label_panel {
+      display: block;
+      float: left;
+      }
       .face_label, .active_face_label {
       display: inline-block;
       padding: 1em 1em;
@@ -298,8 +291,7 @@
       font-family: Sans;
       font-size: xx-small;
       text-align: center;
-      }
-      
+      }     
       .active_face_label:hover {
       background-color: #e6e6e6;
       color: #ff0000;
@@ -308,6 +300,24 @@
       .active_face_label.selected {
       background-color: #0066ff;
       color: #ffffff;
+      }
+      .control_panel {
+      display: block;
+      float: left;
+      font-size: 1em;
+      height: 20px;
+      padding-left: 1em;
+      padding-top: 0.2em;
+      }
+      .control_panel, .button {
+      display: inline-block;
+      color: #808080;
+      padding-right: 0.4em;
+      }
+      .control_panel, .button:hover {
+      color: red;
+      text-decoration: none;
+      cursor: pointer;
       }
     </style>
   </head>
@@ -440,7 +450,7 @@
             <p>Quick start guide for face annotator:</p>
             <p>
               <ol>
-                <li>Import the list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>]</li>
+                <li>Import the list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>] (See <span class="js_button" title="Getting Started Guide" onclick="show_getting_started_panel()">Getting Started</span>] guide for more details)</li>
                 <li><span class="js_button" title="Load images" onclick="load_images('image')">[Load the images]</span> that you wish to annotate, draw rectangular regions by clicking and dragging the mouse cursor and select a face from the list of representative faces.</li>
               </ol>
             </p>
@@ -451,7 +461,14 @@
             <p>VGG Face Annotator lets you mark and tag rectangular facial regions in an image.</p>
             <h3>Getting started</h3>
             <ol>
-              <li>Import a list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>]. Note that these images should have filename in the format: <span style="font-family: Mono;">1_Firstname_Lastname.jpg</span>. Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
+              <li>Import a list of representative face images using [<span class="js_button" title="Load face label images" onclick="load_images('face_label')">Import Face Labels</span>].
+		<ul>
+		  <li>Representative images correspond to facial image of individuals that you wish to locate and  annotate in several images.</li>
+		  <li>Select all the image files that correspond to face labels (less than 512 KB)</li>
+		  <li>If filename format is <span style="font-family: Mono;">1_Firstname_Lastname.jpg</span>, then 1 denotes the face label's display order and "Firstname Lastname" is the face region label.</li>
+		  <li>For any other filename format, the display order is automatically determined and the full filename (excluding extension) is used as face region label.
+		</ul>
+		</li>
               <li>Now [<span class="js_button" title="Load images" onclick="load_images('image')">load the images</span>] that you wish to tag with rectangular facial regions.</li>
               <li>Press the key <b>n</b> (or <b>p</b>) to move to next (or previous image) and <b>l</b> to show the list of all images.</li>
               <li>Click mouse right button and drag to draw a rectangular region around a face in the loaded image. This newly created region is automatically selected. If you have more facial regions, you can continue to draw them.</li>
@@ -495,11 +512,15 @@
 
     <!-- A panel containing list of face labels -->
     <div id="attributes_input_panel">
-      <span id="panel_close_button" onclick="toggle_attributes_input_panel()">&times</span>
+      <div class="control_panel">
+	<span class="button" onclick="increase_face_label_height()">&plus;</span>
+	<span class="button" onclick="decrease_face_label_height()">&minus;</span>
+	<span class="button" onclick="toggle_attributes_input_panel()">&times;</span>
+      </div>
       <div id="face_label_panel"></div>
     </div>
     
-    <!--<script type="text/javascript" src="via_face_demo.js">-->
+    <!--<script type="text/javascript" src="via_face_demo_sherlock.js">-->
     <script type="text/javascript">
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
 /*
@@ -533,24 +554,24 @@
 function start_demo_session() {
     var demo_img_base64_data = [];
     demo_img_base64_data[0] = new ImageAttributes('',
-						  'Solvay_conference_1927_by_Benjamin Couprie@Wikimedia.jpg',
-						  444241);
+                                                  'Solvay_conference_1927_by_Benjamin Couprie@Wikimedia.jpg',
+                                                  444241);
     demo_img_base64_data[1] = new ImageAttributes('',
-						  'Nernst_Einstein_Planck_Millikan_Laue_in_1931@Wikimedia.jpg',
-						  633642);
+                                                  'Nernst_Einstein_Planck_Millikan_Laue_in_1931@Wikimedia.jpg',
+                                                  633642);
 
     for (var i=0; i<demo_img_base64_data.length; ++i) {
-	demo_img_base64_data[i].base64_img_data = demo_images[i];
-	
-	var filename = demo_img_base64_data[i].filename;
-	var size = demo_img_base64_data[i].size;
-	
-	var img_id = _via_get_image_id(filename, size);	
+        demo_img_base64_data[i].base64_img_data = demo_images[i];
+        
+        var filename = demo_img_base64_data[i].filename;
+        var size = demo_img_base64_data[i].size;
+        
+        var img_id = _via_get_image_id(filename, size); 
 
-	_via_images[img_id] = demo_img_base64_data[i];
-	_via_image_id_list.push(img_id);
-	_via_images_count += 1;
-	_via_reload_img_table = true;
+        _via_images[img_id] = demo_img_base64_data[i];
+        _via_image_id_list.push(img_id);
+        _via_images_count += 1;
+        _via_reload_img_table = true;
     }
 
     // import region data from string containing csv data
@@ -558,9 +579,9 @@ function start_demo_session() {
 
     // set face label images
     for (var i=0; i<face_label_file_id.length; ++i) {
-	var face_id = face_label_file_id[i];
-	_via_face_label_list[face_id] = face_label_name[face_id];
-	_via_face_label_img_list[face_id] = face_label_images[face_id];
+        var face_id = face_label_file_id[i];
+        _via_face_label_list[face_id] = face_label_name[face_id];
+        _via_face_label_img_list[face_id] = face_label_images[face_id];
     }
     
 
@@ -571,15 +592,15 @@ function start_demo_session() {
 // face labels
 var face_label_file_id = [0,1,2,3,4,5,6,7,8,9];
 var face_label_name = ['',
-		       'Niels Bohr',
-		       'Louis Broglie',
-		       'Albert Einstein',
-		       'Paul Dirac',
-		       'Marie Curie',
-		       'Max Planck',
-		       'Erwin Schrödinger',
-		       'Wolfgang Pauli',
-		       'Werner_Heisenberg'];
+                       'Niels Bohr',
+                       'Louis Broglie',
+                       'Albert Einstein',
+                       'Paul Dirac',
+                       'Marie Curie',
+                       'Max Planck',
+                       'Erwin Schrödinger',
+                       'Wolfgang Pauli',
+                       'Werner_Heisenberg'];
 var face_label_images = [];
 
 // demo images
@@ -731,6 +752,11 @@ var _via_loaded_img_fn_list = [];
 var _via_loaded_img_region_attr_miss_count = [];
 var _via_loaded_img_table_html = [];
 
+// face label
+var _via_face_label_height_list = [80, 100, 120, 140, 160, 180, 200, 260, 300, 360];
+var VIA_FACE_LABEL_DEFAULT_HEIGHT_ID = 4;
+var _via_face_label_height_id = 4;
+
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
 
@@ -755,6 +781,7 @@ function main() {
         }
     }
     _via_region_attributes.add(VIA_FACE_LABEL_ATTR_NAME);
+    show_attributes_input_panel();
 }
 
 //
@@ -936,23 +963,31 @@ function load_face_label_images(event) {
 function set_face_label_image(file, callback_function) {
     var filename = file.name.split('.');
     var filename = filename[0]; // remove extension
-    var filename_split = filename.split('_');
-    
-    var fileparts = [];
+
+    var label = '';
     var file_id = -1;
     
-    if (filename_split.length == 3) {
-	file_id = parseInt(filename_split[0]);
-	filename_split.splice(0, 1); // remove file id
-	fileparts = filename_split.slice();
-    } else {
-	file_id = _via_face_label_list.length;
-	fileparts.push(filename);
-    }
-    var img_reader = new FileReader();
+    if (filename.includes('_')) {
+        // filename named according to convention
+        var filename_split = filename.split('_');
+        var file_id = parseInt(filename_split[0]);
+        filename_split.splice(0, 1); // remove file id
+        label = filename_split.join('_');
 
+        if (isNaN(file_id)) {
+            file_id = _via_face_label_list.push(label);
+            file_id -= 1; // push() returns length, 0 based index
+        } else {
+            _via_face_label_list[file_id] = label;
+        }
+    } else {
+        label = filename;
+        file_id = _via_face_label_list.push(label);
+        file_id -= 1; // push() returns length, 0 based index
+    }
+    
+    var img_reader = new FileReader();    
     img_reader.addEventListener( "load", function() {
-        _via_face_label_list[file_id] = fileparts.join(' ');
         _via_face_label_img_list[file_id] = img_reader.result;
         callback_function();
     });
@@ -1843,8 +1878,9 @@ function reload_img_table() {
     }
     
     _via_loaded_img_table_html = [];
-    _via_loaded_img_table_html.push('<span id="panel_close_button" ' +
-                                    'onclick="toggle_img_list()">&times</span>');
+    _via_loaded_img_table_html.push('<span class="button"' +
+                                    ' style="font-size: 2em; float: right;"' + 
+                                    ' onclick="toggle_img_list()">&times</span>');
     _via_loaded_img_table_html.push('<h3>Image List</h3>');
     _via_loaded_img_table_html.push('<ul>');
     for (var i=0; i<_via_images_count; ++i) {
@@ -2513,7 +2549,7 @@ function update_attributes_input_panel() {
         var htmlmsg = '<div style="margin: auto; text-align: center; width: 40%;padding: 2em 0;">' +
             'Import a list of representative face images using ' +
             '[<span class="js_button" title="Load face label images" ' +
-	    'onclick="load_images(\'face_label\')">Import Face Labels</span>]. ' +
+            'onclick="load_images(\'face_label\')">Import Face Labels</span>]. ' +
             'Representative images correspond to facial image of individuals that ' +
             'you wish to locate and  annotate in several images.</div>';
         face_label_panel.innerHTML = htmlmsg;
@@ -2531,31 +2567,49 @@ function update_attributes_input_panel() {
                 selregion_id = _via_face_label_list.indexOf(selregion_label);
             }
         }    
-        
+
+        var fl_height = _via_face_label_height_list[_via_face_label_height_id];
         for (var i=0; i<_via_face_label_list.length; ++i) {
-            if ( typeof(_via_face_label_list[i]) !== 'undefined') {
+            if ( typeof(_via_face_label_list[i]) !== 'undefined' &&
+                 typeof(_via_face_label_img_list[i]) !== 'undefined') {
+                var fid = 'fl' + i;
                 if ( selregion_id == i) {
-                    face_label_html.push('<div class="active_face_label selected">');
+                    // if this element is hidden, auto-scroll to show this element
+                    face_label_html.push('<div id="' + fid + '"' + 
+                                         ' class="active_face_label selected">');
                 } else {
                     if (_via_is_region_selected) {
-                        face_label_html.push('<div class="active_face_label">');
+                        face_label_html.push('<div id="' + fid + '" class="active_face_label">');
                     } else {
-                        face_label_html.push('<div class="face_label">');
+                        face_label_html.push('<div id="' + fid + '" class="face_label">');
                     }
                 }
+                face_label_html.push(_via_face_label_list[i] + '<br/>');
                 face_label_html.push('<img title="' + _via_face_label_list[i] + '"');
                 face_label_html.push(' src="' + _via_face_label_img_list[i] + '"');
-                face_label_html.push(' height="160px"');
+                face_label_html.push(' height="' + fl_height + 'px"');
                 if (_via_is_region_selected) {
                     face_label_html.push(' onclick="set_face_label(\'' + _via_face_label_list[i] + '\')"');
                 }
                 face_label_html.push(' alt="' + _via_face_label_list[i] + '" />');
                 //face_label_html.push('<br/>' + _via_face_label_list[i].split(' ').join('<br/>'));
-                face_label_html.push('<br/>' + _via_face_label_list[i]);
                 face_label_html.push('</div>');
             }
         }
         face_label_panel.innerHTML = face_label_html.join('');
+
+        // move the scrollbar automatically show that selected label is visible
+        if (selregion_id != -1) {
+            var sel_label = document.getElementById('fl' + selregion_id);
+            var panelwidth = attributes_input_panel.offsetWidth;
+            var seloffset = sel_label.offsetLeft;
+            
+            if (seloffset > panelwidth ) {
+                attributes_input_panel.scrollLeft = sel_label.offsetLeft - panelwidth/2;
+            } else {
+                attributes_input_panel.scrollLeft = '0';
+            }
+        }
     }
 }
 
@@ -2583,6 +2637,46 @@ function set_face_label(value) {
         _via_canvas.focus();
     }
 }
+
+function set_attr_panel_height(label_height) {
+    if (label_height >= 80 && label_height <140) {
+        document.getElementById('attributes_input_panel').style.height = '120px';
+    }
+    if (label_height >= 140 && label_height <=200) {
+        document.getElementById('attributes_input_panel').style.height = '180px';
+    }
+    if (label_height > 200) {
+        document.getElementById('attributes_input_panel').style.height = '300px';
+    }
+}
+
+function increase_face_label_height() {
+    if (_via_face_label_height_id < (_via_face_label_height_list.length-1)) {
+        _via_face_label_height_id += 1;
+        var label_height = _via_face_label_height_list[_via_face_label_height_id];
+        set_attr_panel_height(label_height);
+        update_attributes_input_panel();
+    } else {
+        show_message('Face labels cannot be zoomed-in any further!', 1000);
+    }
+}
+
+function decrease_face_label_height() {
+    if (_via_face_label_height_id > 0) {
+        _via_face_label_height_id -= 1;
+        var label_height = _via_face_label_height_list[_via_face_label_height_id];
+        set_attr_panel_height(label_height);
+        update_attributes_input_panel();
+    } else {
+        show_message('Face labels cannot be zoomed-out any further!', 1000);
+    }
+}
+
+function reset_face_label_height() {
+    _via_face_label_height = VIA_FACE_LABEL_DEFAULT_HEIGHT_ID;
+    update_attributes_input_panel();
+}
+
     </script>
   </body>
 </html>
