@@ -9,7 +9,7 @@ Visit the [VGG software page](http://www.robots.ox.ac.uk/~vgg/software/via/) for
 VGG Face Annotator (VFA) is a fork of VIA adapated for marking and tagging 
 facial regions.
 
-### Features:
+## Features:
   * based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)
   * can be used offline (complete application packaged in a single html file of size < 200KB)
   * requires nothing more than a modern web browser (tested on firefox and chrome)
@@ -23,11 +23,20 @@ facial regions.
   * [via.html.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via.html.zip) : the VGG Image Annotator application (< 200KB)
   * [via.html](http://www.robots.ox.ac.uk/~vgg/software/via/via.html) : online version of the application
   * [via demo](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html) : live demo (with preloaded images and regions)
-  * [https://gitlab.com/vgg/via/](https://gitlab.com/vgg/via/) : source code repository
  * VGG Face Annotator (VFA)
-  * [via_face.html](http://vgg.gitlab.io/via/via_face.html) : the face annotator
+  * [via_face.html](http://vgg.gitlab.io/via/via_face.html) : online version of the face annotator 
+ 
+  
+## Demo
+ * VGG Image Annotator (VIA)
+  * [via demo](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html) : live demo (with preloaded images and regions)
+ * VGG Face Annotator (VFA)
   * [via_face_demo_physicist.html](http://vgg.gitlab.io/via/via_face_demo_physicist.html) : live demo with preloaded regions and face images of renowned Physicists
   * [via_face_demo_sherlock.html](http://vgg.gitlab.io/via/via_face_demo_sherlock.html) : live demo with preloaded regions and face images from BBC [Sherlock Series](https://en.wikipedia.org/wiki/Sherlock_(TV_series))
+
+## Source Code
+ * VGG Image Annotator (VIA) : [git develop branch](https://gitlab.com/vgg/via/tree/develop)
+ * VGG Face Annotator (VFA) : [git face_annotator branch](https://gitlab.com/vgg/via/tree/face_annotator)
 
 ## Help
 Software bug reports and feature requests should be [submitted here](https://gitlab.com/vgg/via/issues/new) (requires an account at [gitlab](https://gitlab.com)).
