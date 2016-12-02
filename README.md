@@ -22,10 +22,8 @@ facial regions.
  * VGG Image Annotator (VIA)
   * [via.html.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via.html.zip) : the VGG Image Annotator application (< 200KB)
   * [via.html](http://www.robots.ox.ac.uk/~vgg/software/via/via.html) : online version of the application
-  * [via demo](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html) : live demo (with preloaded images and regions)
  * VGG Face Annotator (VFA)
   * [via_face.html](http://vgg.gitlab.io/via/via_face.html) : online version of the face annotator 
- 
   
 ## Demo
  * VGG Image Annotator (VIA)
