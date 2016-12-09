@@ -34,7 +34,7 @@
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 200 KB) that runs on most modern web browsers.">
 
-    <!-- Google analytics : used in Seebibyte project to measure impact    -->
+    <!-- Google analytics : used in Seebibyte project to measure impact-->
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -45,6 +45,7 @@
       ga('send', 'pageview');
 
     </script>
+    
     
     <!-- CSS style definition -->
     <style type="text/css">     
@@ -224,7 +225,7 @@
       margin: auto;
       }
       #about_panel {
-      display: inline-block;
+      display: none;
       margin: auto;
       width: 80%;
       font-family: Sans;
@@ -289,23 +290,13 @@
       }
 
       /* region and file attributes input panel (spreadsheet like) */
-      #small_attributes_input_panel {
-      width: 300px;
-      overflow: scroll;
-      }
-      #small_attributes_input_panel table {
-      border-collapse: collapse;
-      table-layout: fixed;
-      font-size: small;
-      margin: 1em;
-      }
-
       #attributes_input_panel {
       display: none;
       position: fixed;
       z-index: 2;
       bottom: 0;
       width: 100%;
+      max-height: 40%;
       overflow: auto;
       background-color: #ffffff;
       border-top: 4px solid #000000;
@@ -600,7 +591,7 @@
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
     </script>
     <!--<script type="text/javascript" src="via.js">-->
-      <script type="text/javascript"
+    <script type="text/javascript">
       <!--AUTO_INSERT_VIA_JS_HERE-->
 /*
   VGG Image Annotator (via)
@@ -637,6 +628,11 @@ var VIA_REGION_SHAPE = { RECT:'rect',
                          CIRCLE:'circle',
                          ELLIPSE:'ellipse',
                          POLYGON:'polygon'};
+var VIA_SPECIAL_CHAR_SUBS = {',':'[comma]',
+			     ':':'[colon]',
+			     ';':'[scolon]',
+			     '=':'[equal]'};
+
 var VIA_REGION_EDGE_TOL = 5;
 var VIA_POLYGON_VERTEX_MATCH_TOL = 5;
 var VIA_REGION_MIN_DIM = 5;
@@ -738,7 +734,6 @@ var message_panel = document.getElementById("message_panel");
 var image_panel = document.getElementById("image_panel");
 var navbar_panel = document.getElementById("navbar");
 var info_panel = document.getElementById("info_panel");
-var img_list_panel = document.getElementById("img_list_panel");
 
 var annotation_list_snippet = document.getElementById("annotation_list_snippet");
 var annotation_textarea = document.getElementById("annotation_textarea");    
@@ -793,11 +788,12 @@ function _via_get_image_id(filename, size) {
 function main() {
     console.log(VIA_NAME);
     show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !',
-                2*VIA_THEME_MESSAGE_TIMEOUT_MS);
+                 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
     show_home_panel();
-    start_demo_session(); // defined in via_demo.js
+    //start_demo_session(); // defined in via_demo.js
     
     _via_is_local_storage_available = check_local_storage();
+    //_via_is_local_storage_available = false;
     if (_via_is_local_storage_available) {
         if (is_via_data_in_localStorage()) {
             show_localStorage_recovery_options();
@@ -813,14 +809,14 @@ function show_home_panel() {
         _via_canvas.style.display = "block";    
         via_start_info_panel.style.display = "none";
         about_panel.style.display = "none";
-        img_list_panel.style.display = "none";
+        loaded_img_list_panel.style.display = "none";
 
     } else {
         via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <span class="action_text_link" onclick="load_images()" title="Load Images">[Load Images]</span> in the Image menu.';
         via_start_info_panel.style.display = "block";
         about_panel.style.display = "none";
         _via_canvas.style.display = "none";
-        img_list_panel.style.display = "none";
+        loaded_img_list_panel.style.display = "none";
     }
 }
 function load_images() {
@@ -839,7 +835,6 @@ function download_all_region_data(type) {
          type == 'csv' ) {
         show_message('CSV file size is ' + (all_region_data_blob.size/(1024*1024)) + ' MB. We advise you to instead download as JSON');
     } else {
-        console.log(all_region_data_blob);
         save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
     }
 }
@@ -1035,7 +1030,9 @@ function import_region_data_from_csv(data) {
 
                     var attr_map = keyval_str_to_map( file_attr_str );
                     for( var key of attr_map.keys() ) {
-                        _via_images[image_id].file_attributes.set(key, attr_map.get(key));
+			var val = attr_map.get(key);
+			val = substitute_special_chars(val);
+                        _via_images[image_id].file_attributes.set(key, val);
 
                         if (!_via_file_attributes.has(key)) {
                             _via_file_attributes.add(key);
@@ -1079,6 +1076,7 @@ function import_region_data_from_csv(data) {
                     
                     for ( var key of region_attr_map.keys() ) {
                         var val = region_attr_map.get(key);
+			val = substitute_special_chars(val);
                         regioni.region_attributes.set(key, val);
 
                         if (!_via_region_attributes.has(key)) {
@@ -1278,11 +1276,29 @@ function attr_map_to_str(attr) {
             value_str += ']';
             attr_map_str.push(key + '=' + value_str);
         } else {
+	    value = remove_special_chars(value);
             attr_map_str.push(key + '=' + value);
         }
     }
     var str_val = '"' + attr_map_str.join(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR) + '"';
     return str_val;
+}
+
+function remove_special_chars(str) {
+    str1 = str;
+    for (var key in VIA_SPECIAL_CHAR_SUBS) {
+	str1 = str1.replace(key, VIA_SPECIAL_CHAR_SUBS[key]);
+    }
+    return str1;
+}
+
+function substitute_special_chars(str) {
+    str1 = str;
+    for (var key in VIA_SPECIAL_CHAR_SUBS) {
+	var value = VIA_SPECIAL_CHAR_SUBS[key];
+	str1 = str1.replace(value, key);
+    }
+    return str1;
 }
 
 function save_data_to_local_file(data, filename) {
@@ -1468,7 +1484,7 @@ function clear_image_display_area() {
     _via_canvas.style.display = "none";
     about_panel.style.display = 'none';
     via_start_info_panel.style.display = 'none';
-    img_list_panel.style.display = 'none';
+    loaded_img_list_panel.style.display = 'none';
 }
 
 function delete_selected_regions() {
@@ -2994,114 +3010,6 @@ function update_ui_components() {
 
 
 window.addEventListener("keydown", function(e) {
-    if (e.which == 78 || e.which == 39) { // n or right arrow
-        if (!_via_is_user_updating_attribute_value &&
-            !_via_is_user_updating_attribute_name &&
-            !_via_is_user_adding_attribute_name) {
-            move_to_next_image();
-            e.preventDefault();
-        }
-        return;
-    }
-    if (e.which == 80 || e.which == 37) { // n or right arrow
-        if (!_via_is_user_updating_attribute_value &&
-            !_via_is_user_updating_attribute_name &&
-            !_via_is_user_adding_attribute_name) {
-            move_to_prev_image();
-            e.preventDefault();
-        }
-        return;
-    }
-
-    if (e.which == 65) { // a
-        if (!_via_is_user_updating_attribute_value &&
-            !_via_is_user_updating_attribute_name &&
-            !_via_is_user_adding_attribute_name) {
-            toggle_attributes_input_panel();
-        }       
-    }
-    
-    if ( e.which == 76 ) { // l
-        if (!_via_is_user_updating_attribute_value &&
-            !_via_is_user_updating_attribute_name &&
-            !_via_is_user_adding_attribute_name) {
-            toggle_img_list();
-            e.preventDefault();
-            return;
-        }    
-    }
-
-    if ( e.which == 48 ) { // 0
-        // reset the zoom level
-        if (!_via_is_user_updating_attribute_value &&
-            !_via_is_user_updating_attribute_name &&
-            !_via_is_user_adding_attribute_name) {
-
-            reset_zoom_level();
-            show_message('Zoom reset', VIA_THEME_MESSAGE_TIMEOUT_MS);
-            return;
-        }
-    }
-
-    // zoom in/out functionality
-    if (e.shiftKey) {
-        if ( e.keyCode == 90 ) { // Shift + Z
-            // zoom out
-            if (!_via_is_user_updating_attribute_value &&
-                !_via_is_user_updating_attribute_name &&
-                !_via_is_user_adding_attribute_name) {
-
-                if (_via_canvas_zoom_level_index == 0) {
-                    show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
-                } else {
-                    _via_canvas_zoom_level_index -= 1;
-                    
-                    _via_is_canvas_zoomed = true;
-                    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-                    _via_ctx.scale(zoom_scale, zoom_scale);
-                    
-                    _via_canvas.height = _via_canvas_height * zoom_scale;
-                    _via_canvas.width = _via_canvas_width * zoom_scale;
-                    _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
-
-                    _via_load_canvas_regions(); // image to canvas space transform
-                    _via_redraw_canvas();
-                    _via_canvas.focus();
-                    show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
-                }
-                return;
-            }
-        }
-    }
-
-    if ( e.which == 90 ) { // z
-        // zoom in
-        if (!_via_is_user_updating_attribute_value &&
-            !_via_is_user_updating_attribute_name &&
-            !_via_is_user_adding_attribute_name) {
-
-            if (_via_canvas_zoom_level_index == (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
-                show_message('Further zoom-in not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
-            } else {
-                _via_canvas_zoom_level_index += 1;
-                
-                _via_is_canvas_zoomed = true;
-                var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-                _via_ctx.scale(zoom_scale, zoom_scale);
-                
-                _via_canvas.height = _via_canvas_height * zoom_scale;
-                _via_canvas.width = _via_canvas_width * zoom_scale;
-                _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
-
-                _via_load_canvas_regions(); // image to canvas space transform
-                _via_redraw_canvas();
-                _via_canvas.focus();
-                show_message('Zoomed in to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
-            }
-            return;         
-        }
-    }
-
     // user commands
     if ( e.ctrlKey ) {
         if ( e.which == 83 ) { // Ctrl + s
@@ -3166,6 +3074,115 @@ window.addEventListener("keydown", function(e) {
         }
     }
     
+    // zoom in/out functionality
+    if (e.shiftKey) {
+        if ( e.keyCode == 90 ) { // Shift + Z
+            // zoom out
+            if (!_via_is_user_updating_attribute_value &&
+                !_via_is_user_updating_attribute_name &&
+                !_via_is_user_adding_attribute_name) {
+
+                if (_via_canvas_zoom_level_index == 0) {
+                    show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
+                } else {
+                    _via_canvas_zoom_level_index -= 1;
+                    
+                    _via_is_canvas_zoomed = true;
+                    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+                    _via_ctx.scale(zoom_scale, zoom_scale);
+                    
+                    _via_canvas.height = _via_canvas_height * zoom_scale;
+                    _via_canvas.width = _via_canvas_width * zoom_scale;
+                    _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
+
+                    _via_load_canvas_regions(); // image to canvas space transform
+                    _via_redraw_canvas();
+                    _via_canvas.focus();
+                    show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
+                }
+                return;
+            }
+        }
+    }
+
+    if (e.which == 78 || e.which == 39) { // n or right arrow
+        if (!_via_is_user_updating_attribute_value &&
+            !_via_is_user_updating_attribute_name &&
+            !_via_is_user_adding_attribute_name) {
+            move_to_next_image();
+            e.preventDefault();
+        }
+        return;
+    }
+    if (e.which == 80 || e.which == 37) { // n or right arrow
+        if (!_via_is_user_updating_attribute_value &&
+            !_via_is_user_updating_attribute_name &&
+            !_via_is_user_adding_attribute_name) {
+            move_to_prev_image();
+            e.preventDefault();
+        }
+        return;
+    }
+
+    if (e.which == 65) { // a
+        if (!_via_is_user_updating_attribute_value &&
+            !_via_is_user_updating_attribute_name &&
+            !_via_is_user_adding_attribute_name) {
+            toggle_attributes_input_panel();
+	    return;
+        }       
+    }
+    
+    if ( e.which == 76 ) { // l
+        if (!_via_is_user_updating_attribute_value &&
+            !_via_is_user_updating_attribute_name &&
+            !_via_is_user_adding_attribute_name) {
+            toggle_img_list();
+            e.preventDefault();
+            return;
+        }    
+    }
+
+    if ( e.which == 48 ) { // 0
+        // reset the zoom level
+        if (!_via_is_user_updating_attribute_value &&
+            !_via_is_user_updating_attribute_name &&
+            !_via_is_user_adding_attribute_name) {
+
+            reset_zoom_level();
+            show_message('Zoom reset', VIA_THEME_MESSAGE_TIMEOUT_MS);
+            return;
+        }
+    }
+
+    if ( e.which == 90 ) { // z
+        // zoom in
+        if (!_via_is_user_updating_attribute_value &&
+            !_via_is_user_updating_attribute_name &&
+            !_via_is_user_adding_attribute_name) {
+
+            if (_via_canvas_zoom_level_index == (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
+                show_message('Further zoom-in not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
+            } else {
+                _via_canvas_zoom_level_index += 1;
+                
+                _via_is_canvas_zoomed = true;
+                var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+                _via_ctx.scale(zoom_scale, zoom_scale);
+                
+                _via_canvas.height = _via_canvas_height * zoom_scale;
+                _via_canvas.width = _via_canvas_width * zoom_scale;
+                _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
+
+                _via_load_canvas_regions(); // image to canvas space transform
+                _via_redraw_canvas();
+                _via_canvas.focus();
+                show_message('Zoomed in to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
+            }
+            return;         
+        }
+    }
+
     if ( e.which == 27 ) { // Esc
         if (_via_is_user_updating_attribute_value ||
             _via_is_user_updating_attribute_name ||
@@ -3403,7 +3420,9 @@ function save_current_data_to_browser_cache() {
                 _via_is_save_ongoing = false;
             } catch(err) {
                 _via_is_save_ongoing = false;
-                show_message('Failed to save data to browser cache');
+		_via_is_local_storage_available = false;
+                show_message('Failed to save data to browser cache. Please download the annotation data.');
+		alert('Failed to save data to browser cache. Please download the annotation data.');
                 console.log('Failed to save data to browser cache');
                 console.log(err.message);
             }
