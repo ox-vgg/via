@@ -214,14 +214,11 @@ function show_home_panel() {
         _via_canvas.style.display = "block";    
         via_start_info_panel.style.display = "none";
         about_panel.style.display = "none";
-        loaded_img_list_panel.style.display = "none";
-
     } else {
         via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <span class="action_text_link" onclick="load_images()" title="Load Images">[Load Images]</span> in the Image menu.';
         via_start_info_panel.style.display = "block";
         about_panel.style.display = "none";
         _via_canvas.style.display = "none";
-        loaded_img_list_panel.style.display = "none";
     }
 }
 function load_images() {
@@ -1685,71 +1682,72 @@ _via_canvas.addEventListener('mousemove', function(e) {
 });
 
 function toggle_img_list() {
+    console.log('toggle img list');
     if (_via_is_loaded_img_list_visible) {
-        loaded_img_list_panel.style.width = "0";
+	loaded_img_list_panel.style.display = 'none';
         _via_is_loaded_img_list_visible = false;
         return;
     } else {
+	_via_is_loaded_img_list_visible = true;
         show_img_list();
     }
 
 }
 
-// @todo: implement hierarchial clustering to better visualize file list
 function show_img_list() {
-    if (_via_images_count > 0) {
-        
-        if ( _via_reload_img_table ) {
-            _via_loaded_img_fn_list = [];
-            _via_loaded_img_region_attr_miss_count = [];
-            _via_loaded_img_file_attr_miss_count = [];
-            
-            for (var i=0; i<_via_images_count; ++i) {
-                img_id = _via_image_id_list[i];
-                _via_loaded_img_fn_list[i] = _via_images[img_id].filename;
-                _via_loaded_img_region_attr_miss_count[i] = count_missing_region_attr(img_id);
-                _via_loaded_img_file_attr_miss_count[i] = count_missing_file_attr(img_id);
-            }
-                       
-            _via_loaded_img_table_html = [];
-            //_via_loaded_img_table_html.push('<span style="display: block; border-bottom: 1px solid #5599ff;">Image List</span>');
-            _via_loaded_img_table_html.push('<span id="panel_close_button" onclick="toggle_img_list()">&times</span>');
-            _via_loaded_img_table_html.push('<h3>Image List</h3>');
-            _via_loaded_img_table_html.push('<ul>');
-            for (var i=0; i<_via_images_count; ++i) {
-                var fni = '';
-                if (i == _via_image_index) {
-                    // highlight the current entry
-                    fni += '<li style="cursor: default;"><b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
-                } else {
-                    fni += '<li onclick="jump_to_image(' + (i) + ')">[' + (i+1) + '] ' + _via_loaded_img_fn_list[i];
-                }
+    if (_via_images_count == 0) {
+        show_message("Please load some images first!", VIA_THEME_MESSAGE_TIMEOUT_MS);
+        return;
+    }
 
-                // show number of missing region and file attributes
-                missing_attr = [];
-                if (_via_loaded_img_region_attr_miss_count[i]) {
-                    missing_attr.push('<span style="color: red;">' + _via_loaded_img_region_attr_miss_count[i] + '</span>');
-                }
-                if (_via_loaded_img_file_attr_miss_count[i]) {
-                    missing_attr.push('<span style="color: blue;">' + _via_loaded_img_file_attr_miss_count[i] + '</span>');
-                }
-                if (missing_attr.length) {
-                    fni += ' [' + missing_attr.join(',') + ']'
-                }
-                
-                fni += '</li>';
-                _via_loaded_img_table_html.push(fni);
-            }
-            _via_loaded_img_table_html.push('</ul>');
+    if(_via_is_loaded_img_list_visible) {
+        if ( _via_reload_img_table ) {
+            reload_img_table();
             _via_reload_img_table = false;
+	    console.log('reloading img table');
+        }
+        loaded_img_list_panel.innerHTML = _via_loaded_img_table_html.join('');
+	loaded_img_list_panel.style.display = 'inline';
+	console.log(_via_loaded_img_table_html.join(''));
+    }
+}
+
+function reload_img_table() {
+    _via_loaded_img_fn_list = [];
+    _via_loaded_img_region_attr_miss_count = [];
+    
+    for (var i=0; i<_via_images_count; ++i) {
+        img_id = _via_image_id_list[i];
+        _via_loaded_img_fn_list[i] = _via_images[img_id].filename;
+        _via_loaded_img_region_attr_miss_count[i] = count_missing_region_attr(img_id);
+    }
+    
+    _via_loaded_img_table_html = [];
+    _via_loaded_img_table_html.push('<span class="button"' +
+                                    ' style="font-size: 2em; float: right;"' + 
+                                    ' onclick="toggle_img_list()">&times</span>');
+    _via_loaded_img_table_html.push('<h3>Image List</h3>');
+    _via_loaded_img_table_html.push('<ul>');
+    for (var i=0; i<_via_images_count; ++i) {
+        var fni = '';
+        if (i == _via_image_index) {
+            // highlight the current entry
+            fni += '<li style="cursor: default;">';
+            fni += '<b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
+        } else {
+            fni += '<li onclick="jump_to_image(' + (i) + ')">';
+            fni += '[' + (i+1) + '] ' + _via_loaded_img_fn_list[i];
         }
 
-        loaded_img_list_panel.innerHTML = _via_loaded_img_table_html.join('');
-        loaded_img_list_panel.style.width = "300px";
-        _via_is_loaded_img_list_visible = true;
-    } else {
-        show_message("Please load some images first!", VIA_THEME_MESSAGE_TIMEOUT_MS);
+        if (_via_loaded_img_region_attr_miss_count[i]) {
+            fni += ' (' + '<span style="color: red;">';
+            fni += _via_loaded_img_region_attr_miss_count[i] + '</span>' + ')'
+        }
+        
+        fni += '</li>';
+        _via_loaded_img_table_html.push(fni);
     }
+    _via_loaded_img_table_html.push('</ul>');
 }
 
 function jump_to_image(image_index) {
