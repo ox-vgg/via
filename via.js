@@ -97,6 +97,7 @@ var _via_is_user_adding_attribute_name = false;
 var _via_is_loaded_img_list_visible = false;
 var _via_is_attributes_input_panel_visible = false;
 var _via_is_canvas_zoomed = false;
+var _via_is_loading_current_image = false;
 
 // region
 var _via_current_shape = VIA_REGION_SHAPE.RECT;
@@ -723,11 +724,20 @@ function save_data_to_local_file(data, filename) {
 // Setup Elements in User Interface
 //
 function show_image(image_index) {
+    if (_via_is_loading_current_image) {
+        return;
+    }
+    
     var img_id = _via_image_id_list[image_index]
     if (_via_images.hasOwnProperty(img_id)) {
         var img_filename = _via_images[img_id].filename;
         var img_reader = new FileReader();
+	_via_is_loading_current_image = true;
 
+	img_reader.addEventListener( "loadstart", function(e) {
+            document.getElementById("info_current_filename").innerHTML = "Loading image ...";
+        }, false);
+	
         img_reader.addEventListener( "progress", function(e) {
             //show_message("Loading image " + img_filename + " ... ", 1000);
         }, false);
@@ -743,11 +753,11 @@ function show_image(image_index) {
                 _via_image_index = image_index;
                 _via_current_image_filename = img_filename;
                 _via_current_image_loaded = true;
+		_via_is_loading_current_image = false;
                 
                 // retrive image panel dim. to stretch _via_canvas to fit panel
-                //main_content_width = 0.9*image_panel.offsetWidth;
                 canvas_panel_width = document.documentElement.clientWidth - 320;
-                canvas_panel_height = document.documentElement.clientHeight - 2.2*navbar_panel.offsetHeight;
+                canvas_panel_height = document.documentElement.clientHeight - 2.8*navbar_panel.offsetHeight;
                 
                 _via_canvas_width = _via_current_image.naturalWidth;
                 _via_canvas_height = _via_current_image.naturalHeight;
