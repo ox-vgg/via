@@ -28,9 +28,9 @@
 
 function start_demo_session() {
     var demo_img_base64_data = [];
-    demo_img_base64_data[0] = new ImageAttributes('', 'swan_in_geneve.jpg', 62201);
-    demo_img_base64_data[1] = new ImageAttributes('', 'death_of_socrates_by_david.jpg', 71862);
-    demo_img_base64_data[2] = new ImageAttributes('', 'various_shapes.jpg', 21513);
+    demo_img_base64_data[0] = new ImageMetadata('', 'swan_in_geneve.jpg', 62201);
+    demo_img_base64_data[1] = new ImageMetadata('', 'death_of_socrates_by_david.jpg', 71862);
+    demo_img_base64_data[2] = new ImageMetadata('', 'various_shapes.jpg', 21513);
 
     for (var i=0; i<demo_img_base64_data.length; ++i) {
 	demo_img_base64_data[i].base64_img_data = demo_images[i];
@@ -40,9 +40,9 @@ function start_demo_session() {
 	
 	var img_id = _via_get_image_id(filename, size);	
 
-	_via_images[img_id] = demo_img_base64_data[i];
+	_via_img_metadata[img_id] = demo_img_base64_data[i];
 	_via_image_id_list.push(img_id);
-	_via_images_count += 1;
+	_via_img_count += 1;
 	_via_reload_img_table = true;
     }
 
