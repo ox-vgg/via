@@ -74,8 +74,11 @@ var _via_current_image_filename;
 var _via_current_image;
 
 // image canvas
-var _via_canvas = document.getElementById("image_canvas");
-var _via_ctx = _via_canvas.getContext("2d");
+var _via_img_canvas = document.getElementById("image_canvas");
+var _via_img_ctx = _via_img_canvas.getContext("2d");
+var _via_reg_canvas = document.getElementById("region_canvas");
+var _via_reg_ctx = _via_reg_canvas.getContext("2d");
+
 var _via_canvas_width, _via_canvas_height;
 
 // canvas zoom
@@ -195,9 +198,11 @@ function main() {
     console.log(VIA_NAME);
     show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !',
                  2*VIA_THEME_MESSAGE_TIMEOUT_MS);
+
     show_home_panel();
     start_demo_session(); // defined in via_demo.js
-    
+
+    /*
     _via_is_local_storage_available = check_local_storage();
     //_via_is_local_storage_available = false;
     if (_via_is_local_storage_available) {
@@ -205,6 +210,7 @@ function main() {
             show_localStorage_recovery_options();
         }
     }
+    */
 }
 
 //
@@ -212,14 +218,16 @@ function main() {
 //
 function show_home_panel() {
     if (_via_current_image_loaded) {
-        _via_canvas.style.display = "block";    
+	_via_img_canvas.style.display = "block";
+	_via_reg_canvas.style.display = "block";
         via_start_info_panel.style.display = "none";
         about_panel.style.display = "none";
     } else {
         via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <span class="action_text_link" onclick="load_images()" title="Load Images">[Load Images]</span> in the Image menu.';
         via_start_info_panel.style.display = "block";
         about_panel.style.display = "none";
-        _via_canvas.style.display = "none";
+	_via_img_canvas.style.display = "none";
+	_via_reg_canvas.style.display = "none";
     }
 }
 function load_images() {
@@ -278,7 +286,7 @@ function show_settings_panel() {
 }
 function show_about_panel() {
     about_panel.style.display = "block";
-    _via_canvas.style.display = "none";
+    _via_reg_canvas.style.display = "none";
     via_start_info_panel.style.display = "none";
 }
 
@@ -751,43 +759,12 @@ function show_image(image_index) {
         img_reader.addEventListener( "load", function() {
             _via_current_image = new Image();
             _via_current_image.addEventListener( "load", function() {
+		// update the current state of application
                 _via_image_id = img_id;
                 _via_image_index = image_index;
                 _via_current_image_filename = img_filename;
                 _via_current_image_loaded = true;
-		_via_is_loading_current_image = false;
-                
-                // retrive image panel dim. to stretch _via_canvas to fit panel
-                canvas_panel_width = document.documentElement.clientWidth - 320;
-                canvas_panel_height = document.documentElement.clientHeight - 2.8*navbar_panel.offsetHeight;
-                
-                _via_canvas_width = _via_current_image.naturalWidth;
-                _via_canvas_height = _via_current_image.naturalHeight;
-
-                var scale_width, scale_height;
-                if ( _via_canvas_width > canvas_panel_width ) {
-                    // resize image to match the panel width
-                    var scale_width = canvas_panel_width / _via_current_image.naturalWidth;
-                    _via_canvas_width = canvas_panel_width;
-                    _via_canvas_height = _via_current_image.naturalHeight * scale_width;
-                }
-                // resize image if its height is larger than the image panel
-                if ( _via_canvas_height > canvas_panel_height ) {
-                    var scale_height = canvas_panel_height / _via_canvas_height;
-                    _via_canvas_height = canvas_panel_height;
-                    _via_canvas_width = _via_canvas_width * scale_height;
-                }
-
-                _via_canvas_width = Math.round(_via_canvas_width);
-                _via_canvas_height = Math.round(_via_canvas_height);
-                _via_canvas_scale = _via_current_image.naturalWidth / _via_canvas_width;
-                _via_canvas_scale_without_zoom = _via_canvas_scale;
-                
-                // set the canvas size to match that of the image
-                _via_canvas.height = _via_canvas_height;
-                _via_canvas.width = _via_canvas_width;
-                //console.log("Canvas = " + _via_canvas.width + "," + _via_canvas.height);
-                
+		_via_is_loading_current_image = false;                
                 _via_click_x0 = 0; _via_click_y0 = 0;
                 _via_click_x1 = 0; _via_click_y1 = 0;
                 _via_is_user_drawing_region = false;
@@ -797,10 +774,43 @@ function show_image(image_index) {
                 _via_is_user_drawing_polygon = false;
                 _via_is_region_selected = false;
                 _via_user_sel_region_id = -1;
-                
-                clear_image_display_area();
-                _via_canvas.style.display = "inline";
 
+		// set the size of canvas
+		// based on the current dimension of browser window
+                canvas_panel_width = document.documentElement.clientWidth - 320;
+                canvas_panel_height = document.documentElement.clientHeight - 2.8*navbar_panel.offsetHeight;               
+                _via_canvas_width = _via_current_image.naturalWidth;
+                _via_canvas_height = _via_current_image.naturalHeight;
+                var scale_width, scale_height;
+                if ( _via_canvas_width > canvas_panel_width ) {
+                    // resize image to match the panel width
+                    var scale_width = canvas_panel_width / _via_current_image.naturalWidth;
+                    _via_canvas_width = canvas_panel_width;
+                    _via_canvas_height = _via_current_image.naturalHeight * scale_width;
+                }
+                if ( _via_canvas_height > canvas_panel_height ) {
+		    // resize further image if its height is larger than the image panel
+                    var scale_height = canvas_panel_height / _via_canvas_height;
+                    _via_canvas_height = canvas_panel_height;
+                    _via_canvas_width = _via_canvas_width * scale_height;
+                }
+                _via_canvas_width = Math.round(_via_canvas_width);
+                _via_canvas_height = Math.round(_via_canvas_height);
+                _via_canvas_scale = _via_current_image.naturalWidth / _via_canvas_width;
+                _via_canvas_scale_without_zoom = _via_canvas_scale;
+		set_all_canvas_size(_via_canvas_width, _via_canvas_height);
+		//set_all_canvas_scale(_via_canvas_scale_without_zoom);
+
+		// ensure that all the canvas are visible
+		clear_image_display_area();
+		show_all_canvas();
+		
+		// we only need to draw the image once in the image_canvas
+		_via_img_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
+		_via_img_ctx.drawImage(_via_current_image, 0, 0,
+				       _via_canvas_width, _via_canvas_height);
+
+		// update the UI components to reflect newly loaded image
                 // refresh the image list
                 _via_reload_img_table = true;
                 if (_via_is_loaded_img_list_visible) {
@@ -811,14 +821,13 @@ function show_image(image_index) {
                 update_attributes_input_panel();
 
                 _via_load_canvas_regions(); // image to canvas space transform
-                _via_redraw_canvas();
-                _via_canvas.focus();
+                _via_redraw_reg_canvas();
+                _via_reg_canvas.focus();
 
                 // update the info panel
                 show_filename_info();
                 show_region_attributes_info();
                 show_region_shape_info();
-                
                 //show_message("Loaded image " + img_filename + " ... ", 5000);
             });
             _via_current_image.src = img_reader.result;
@@ -895,10 +904,9 @@ function _via_load_canvas_regions() {
 }
 
 function clear_image_display_area() {
-    _via_canvas.style.display = "none";
+    hide_all_canvas();
     about_panel.style.display = 'none';
     via_start_info_panel.style.display = 'none';
-    loaded_img_list_panel.style.display = 'none';
 }
 
 function delete_selected_regions() {
@@ -928,8 +936,8 @@ function delete_selected_regions() {
     _via_is_region_selected = false;
     _via_user_sel_region_id = -1;
     
-    _via_redraw_canvas();
-    _via_canvas.focus();
+    _via_redraw_reg_canvas();
+    _via_reg_canvas.focus();
     show_region_shape_info();
 
     show_message('Deleted ' + del_region_count + ' selected regions');
@@ -961,13 +969,40 @@ function select_region_shape(sel_shape_name) {
     }
 }
 
+//
+// Canvas (image + region)
+//
+
+function set_all_canvas_size(w, h) {
+    _via_img_canvas.height = h;
+    _via_img_canvas.width = w;
+
+    _via_reg_canvas.height = h;
+    _via_reg_canvas.width = w;
+}
+
+function set_all_canvas_scale(s) {
+    _via_img_ctx.scale(s, s);
+    _via_reg_ctx.scale(s, s);
+}
+
+function show_all_canvas() {
+    _via_img_canvas.style.display = 'inline';
+    _via_reg_canvas.style.display = 'inline';
+}
+
+function hide_all_canvas() {
+    _via_img_canvas.style.display = 'none';
+    _via_reg_canvas.style.display = 'none';
+}
+
 // enter annotation mode on double click
-_via_canvas.addEventListener('dblclick', function(e) {
+_via_reg_canvas.addEventListener('dblclick', function(e) {
     show_message('Double clicks are not used in this application', VIA_THEME_MESSAGE_TIMEOUT_MS);
 }, false);
 
 // user clicks on the canvas
-_via_canvas.addEventListener('mousedown', function(e) {
+_via_reg_canvas.addEventListener('mousedown', function(e) {
     _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
     _via_region_edge = is_on_region_corner(_via_click_x0, _via_click_y0);
     var region_id = is_inside_region(_via_click_x0, _via_click_y0);
@@ -1016,7 +1051,7 @@ _via_canvas.addEventListener('mousedown', function(e) {
 // implements the following functionalities:
 //  - new region drawing (including polygon)
 //  - moving/resizing/select/unselect existing region
-_via_canvas.addEventListener('mouseup', function(e) {
+_via_reg_canvas.addEventListener('mouseup', function(e) {
     _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
 
     var click_dx = Math.abs(_via_click_x1 - _via_click_x0);
@@ -1025,7 +1060,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
     // indicates that user has finished moving a region
     if ( _via_is_user_moving_region ) {
         _via_is_user_moving_region = false;
-        _via_canvas.style.cursor = "default";
+        _via_reg_canvas.style.cursor = "default";
 
         var move_x = Math.round(_via_click_x1 - _via_region_click_x);
         var move_y = Math.round(_via_click_y1 - _via_region_click_y);
@@ -1075,8 +1110,8 @@ _via_canvas.addEventListener('mouseup', function(e) {
             break;
         }
         
-        _via_redraw_canvas();
-        _via_canvas.focus();
+        _via_redraw_reg_canvas();
+        _via_reg_canvas.focus();
         save_current_data_to_browser_cache();
         return;
     }
@@ -1085,7 +1120,7 @@ _via_canvas.addEventListener('mouseup', function(e) {
     if ( _via_is_user_resizing_region ) {
         // _via_click(x0,y0) to _via_click(x1,y1)
         _via_is_user_resizing_region = false;
-        _via_canvas.style.cursor = "default";
+        _via_reg_canvas.style.cursor = "default";
         
         // update the region
         var region_id = _via_region_edge[0];
@@ -1184,8 +1219,8 @@ _via_canvas.addEventListener('mouseup', function(e) {
             break;
         }
 
-        _via_redraw_canvas();
-        _via_canvas.focus();
+        _via_redraw_reg_canvas();
+        _via_reg_canvas.focus();
         save_current_data_to_browser_cache();
         return;
     }
@@ -1291,8 +1326,8 @@ _via_canvas.addEventListener('mouseup', function(e) {
                 
             }
         }
-        _via_redraw_canvas();
-        _via_canvas.focus();
+        _via_redraw_reg_canvas();
+        _via_reg_canvas.focus();
         return;
     }
 
@@ -1391,8 +1426,8 @@ _via_canvas.addEventListener('mouseup', function(e) {
             show_message('Skipped adding a ' + _via_current_shape + ' of nearly 0 dimension', VIA_THEME_MESSAGE_TIMEOUT_MS);
         }
         update_attributes_input_panel();
-        _via_redraw_canvas();
-        _via_canvas.focus();
+        _via_redraw_reg_canvas();
+        _via_reg_canvas.focus();
         show_region_attributes_info();
         show_region_shape_info();
 
@@ -1413,13 +1448,13 @@ function select_only_region(region_id) {
     _via_canvas_regions[region_id].is_user_selected = true;
 }
 
-_via_canvas.addEventListener("mouseover", function(e) {
+_via_reg_canvas.addEventListener("mouseover", function(e) {
     // change the mouse cursor icon
-    _via_redraw_canvas();
-    _via_canvas.focus();
+    _via_redraw_reg_canvas();
+    _via_reg_canvas.focus();
 });
 
-_via_canvas.addEventListener('mousemove', function(e) {
+_via_reg_canvas.addEventListener('mousemove', function(e) {
     if ( !_via_current_image_loaded ) {
         return;
     }
@@ -1438,35 +1473,35 @@ _via_canvas.addEventListener('mousemove', function(e) {
                     // rect
                 case 1: // top-left corner of rect
                 case 3: // bottom-right corner of rect
-                    _via_canvas.style.cursor = "nwse-resize";
+                    _via_reg_canvas.style.cursor = "nwse-resize";
                     break;
                 case 2: // top-right corner of rect
                 case 4: // bottom-left corner of rect
-                    _via_canvas.style.cursor = "nesw-resize";
+                    _via_reg_canvas.style.cursor = "nesw-resize";
                     break;
                     
                     // circle and ellipse
                 case 5:
-                    _via_canvas.style.cursor = "n-resize";
+                    _via_reg_canvas.style.cursor = "n-resize";
                     break;
                 case 6:
-                    _via_canvas.style.cursor = "e-resize";
+                    _via_reg_canvas.style.cursor = "e-resize";
                     break;
 
                 default:
-                    _via_canvas.style.cursor = "default";
+                    _via_reg_canvas.style.cursor = "default";
                 }
 
                 if (_via_region_edge[1] >= POLYGON_RESIZE_VERTEX_OFFSET) {
                     // indicates mouse over polygon vertex
-                    _via_canvas.style.cursor = "crosshair";
+                    _via_reg_canvas.style.cursor = "crosshair";
                 }
             } else {
                 var region_id = is_inside_region(_via_current_x, _via_current_y);
                 if ( region_id == _via_user_sel_region_id ) {
-                    _via_canvas.style.cursor = "move";
+                    _via_reg_canvas.style.cursor = "move";
                 } else {
-                    _via_canvas.style.cursor = "default";
+                    _via_reg_canvas.style.cursor = "default";
                 }
             }
         }
@@ -1474,7 +1509,7 @@ _via_canvas.addEventListener('mousemove', function(e) {
     
     if(_via_is_user_drawing_region) {
         // draw rectangle as the user drags the mouse cousor
-        _via_redraw_canvas(); // clear old intermediate rectangle
+        _via_redraw_reg_canvas(); // clear old intermediate rectangle
 
         var region_x0, region_y0;
 
@@ -1522,12 +1557,12 @@ _via_canvas.addEventListener('mousemove', function(e) {
             // see below
             break;
         }
-        _via_canvas.focus();
+        _via_reg_canvas.focus();
     }
     
     if ( _via_is_user_resizing_region ) {
         // user has clicked mouse on bounding box edge and is now moving it
-        _via_redraw_canvas(); // clear old intermediate rectangle
+        _via_redraw_reg_canvas(); // clear old intermediate rectangle
 
         var region_id = _via_region_edge[0];
         var attr = _via_canvas_regions[region_id].shape_attributes;
@@ -1617,11 +1652,11 @@ _via_canvas.addEventListener('mousemove', function(e) {
                                      true);
             break;
         }
-        _via_canvas.focus();
+        _via_reg_canvas.focus();
     }
 
     if ( _via_is_user_moving_region ) {
-        _via_redraw_canvas();
+        _via_redraw_reg_canvas();
         
         var move_x = (_via_current_x - _via_region_click_x);
         var move_y = (_via_current_y - _via_region_click_y);
@@ -1663,11 +1698,11 @@ _via_canvas.addEventListener('mousemove', function(e) {
                                      true);
             break;
         }
-        _via_canvas.focus();    
+        _via_reg_canvas.focus();    
     }
 
     if ( _via_is_user_drawing_polygon ) {
-        _via_redraw_canvas();
+        _via_redraw_reg_canvas();
         var attr = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes;
         var all_points_x = attr.get('all_points_x');
         var all_points_y = attr.get('all_points_y');
@@ -1688,7 +1723,7 @@ _via_canvas.addEventListener('mousemove', function(e) {
        _via_ctx.setLineDash([0]);
        _via_ctx.strokeRect(0, _via_current_y, canvas_width, 1);
        _via_ctx.strokeRect(_via_current_x, 0, 1, canvas_height);
-       _via_canvas.focus();
+       _via_reg_canvas.focus();
        }
     */
 });
@@ -1716,11 +1751,9 @@ function show_img_list() {
         if ( _via_reload_img_table ) {
             reload_img_table();
             _via_reload_img_table = false;
-	    console.log('reloading img table');
         }
         loaded_img_list_panel.innerHTML = _via_loaded_img_table_html.join('');
 	loaded_img_list_panel.style.display = 'inline';
-	console.log(_via_loaded_img_table_html.join(''));
     }
 }
 
@@ -1785,12 +1818,10 @@ function count_missing_file_attr(img_id) {
 // Canvas update routines
 //
 
-function _via_redraw_canvas() {
+function _via_redraw_reg_canvas() {
     if (_via_current_image_loaded) {
-        _via_ctx.clearRect(0, 0, _via_canvas.width, _via_canvas.height);
-        _via_ctx.drawImage(_via_current_image, 0, 0, _via_canvas.width, _via_canvas.height);
-
         if ( _via_canvas_regions.length > 0 ) {
+	    _via_reg_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
             draw_all_regions();
             draw_all_region_id();
         }
@@ -1836,207 +1867,207 @@ function _via_draw_rect_region(x, y, w, h, is_selected) {
     if (is_selected) {
         _via_draw_rect(x, y, w, h);
         
-        _via_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
-        _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
-        _via_ctx.stroke();
+        _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
+        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.stroke();
 
-        _via_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
-        _via_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
-        _via_ctx.fill();
-        _via_ctx.globalAlpha = 1.0;
+        _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
+        _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
+        _via_reg_ctx.fill();
+        _via_reg_ctx.globalAlpha = 1.0;
     } else {
         // draw a fill line
-        _via_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
-        _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
+        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_draw_rect(x, y, w, h);
-        _via_ctx.stroke();
+        _via_reg_ctx.stroke();
 
         if ( w > VIA_THEME_REGION_BOUNDARY_WIDTH &&
              h > VIA_THEME_REGION_BOUNDARY_WIDTH ) {
             // draw a boundary line on both sides of the fill line
-            _via_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
-            _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
+            _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
+            _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
             _via_draw_rect(x - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
                            y - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
                            w + VIA_THEME_REGION_BOUNDARY_WIDTH,
                            h + VIA_THEME_REGION_BOUNDARY_WIDTH);
-            _via_ctx.stroke();
+            _via_reg_ctx.stroke();
 
             _via_draw_rect(x + VIA_THEME_REGION_BOUNDARY_WIDTH/2,
                            y + VIA_THEME_REGION_BOUNDARY_WIDTH/2,
                            w - VIA_THEME_REGION_BOUNDARY_WIDTH,
                            h - VIA_THEME_REGION_BOUNDARY_WIDTH);
-            _via_ctx.stroke();
+            _via_reg_ctx.stroke();
         }
     }
 }
 
 function _via_draw_rect(x, y, w, h) {
-    _via_ctx.beginPath();
-    _via_ctx.moveTo(x  , y);
-    _via_ctx.lineTo(x+w, y);
-    _via_ctx.lineTo(x+w, y+h);
-    _via_ctx.lineTo(x  , y+h);
-    _via_ctx.closePath();
+    _via_reg_ctx.beginPath();
+    _via_reg_ctx.moveTo(x  , y);
+    _via_reg_ctx.lineTo(x+w, y);
+    _via_reg_ctx.lineTo(x+w, y+h);
+    _via_reg_ctx.lineTo(x  , y+h);
+    _via_reg_ctx.closePath();
 }
 
 function _via_draw_circle_region(cx, cy, r, is_selected) {
     if (is_selected) {
         _via_draw_circle(cx, cy, r);
         
-        _via_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
-        _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
-        _via_ctx.stroke();
+        _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
+        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.stroke();
 
-        _via_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
-        _via_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
-        _via_ctx.fill();
-        _via_ctx.globalAlpha = 1.0;
+        _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
+        _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
+        _via_reg_ctx.fill();
+        _via_reg_ctx.globalAlpha = 1.0;
     } else {
         // draw a fill line
-        _via_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
-        _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
+        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_draw_circle(cx, cy, r);
-        _via_ctx.stroke();
+        _via_reg_ctx.stroke();
 
         if ( r > VIA_THEME_REGION_BOUNDARY_WIDTH ) {
             // draw a boundary line on both sides of the fill line
-            _via_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
-            _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
+            _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
+            _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
             _via_draw_circle(cx,
                              cy,
                              r - VIA_THEME_REGION_BOUNDARY_WIDTH/2);
-            _via_ctx.stroke();
+            _via_reg_ctx.stroke();
             _via_draw_circle(cx,
                              cy,
                              r + VIA_THEME_REGION_BOUNDARY_WIDTH/2);
-            _via_ctx.stroke();
+            _via_reg_ctx.stroke();
         }
     }
 }
 
 function _via_draw_circle(cx, cy, r) {
-    _via_ctx.beginPath();
-    _via_ctx.arc(cx, cy, r, 0, 2*Math.PI, false);
-    _via_ctx.closePath();
+    _via_reg_ctx.beginPath();
+    _via_reg_ctx.arc(cx, cy, r, 0, 2*Math.PI, false);
+    _via_reg_ctx.closePath();
 }
 
 function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
     if (is_selected) {
         _via_draw_ellipse(cx, cy, rx, ry);
         
-        _via_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
-        _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
-        _via_ctx.stroke();
+        _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
+        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.stroke();
 
-        _via_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
-        _via_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
-        _via_ctx.fill();
-        _via_ctx.globalAlpha = 1.0;
+        _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
+        _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
+        _via_reg_ctx.fill();
+        _via_reg_ctx.globalAlpha = 1.0;
     } else {
         // draw a fill line
-        _via_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
-        _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
+        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_draw_ellipse(cx, cy, rx, ry);
-        _via_ctx.stroke();
+        _via_reg_ctx.stroke();
 
         if ( rx > VIA_THEME_REGION_BOUNDARY_WIDTH &&
              ry > VIA_THEME_REGION_BOUNDARY_WIDTH ) {
             // draw a boundary line on both sides of the fill line
-            _via_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
-            _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
+            _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
+            _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
             _via_draw_ellipse(cx,
                               cy,
                               rx + VIA_THEME_REGION_BOUNDARY_WIDTH/2,
                               ry + VIA_THEME_REGION_BOUNDARY_WIDTH/2);
-            _via_ctx.stroke();
+            _via_reg_ctx.stroke();
             _via_draw_ellipse(cx,
                               cy,
                               rx - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
                               ry - VIA_THEME_REGION_BOUNDARY_WIDTH/2);
-            _via_ctx.stroke();  
+            _via_reg_ctx.stroke();  
         }
     }
 }
 
 function _via_draw_ellipse(cx, cy, rx, ry) {
-    _via_ctx.save();
+    _via_reg_ctx.save();
     
-    _via_ctx.beginPath();
-    _via_ctx.translate(cx-rx, cy-ry);
-    _via_ctx.scale(rx, ry);
-    _via_ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
+    _via_reg_ctx.beginPath();
+    _via_reg_ctx.translate(cx-rx, cy-ry);
+    _via_reg_ctx.scale(rx, ry);
+    _via_reg_ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
 
-    _via_ctx.restore(); // restore to original state
-    _via_ctx.closePath();
+    _via_reg_ctx.restore(); // restore to original state
+    _via_reg_ctx.closePath();
 
 }
 
 function _via_draw_polygon_region(all_points_x, all_points_y, is_selected) {
     if (is_selected) {  
-        _via_ctx.beginPath();
-        _via_ctx.moveTo(all_points_x[0], all_points_y[0]);      
+        _via_reg_ctx.beginPath();
+        _via_reg_ctx.moveTo(all_points_x[0], all_points_y[0]);      
         for (var i=1; i<all_points_x.length; ++i) {
-            _via_ctx.lineTo(all_points_x[i], all_points_y[i]);
+            _via_reg_ctx.lineTo(all_points_x[i], all_points_y[i]);
         }
-        _via_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
-        _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
-        _via_ctx.stroke();
+        _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
+        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.stroke();
 
-        _via_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
-        _via_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
-        _via_ctx.fill();
-        _via_ctx.globalAlpha = 1.0;
+        _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
+        _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
+        _via_reg_ctx.fill();
+        _via_reg_ctx.globalAlpha = 1.0;
     } else {
         for (var i=1; i<all_points_x.length; ++i) {
             // draw a fill line
-            _via_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
-            _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
-            _via_ctx.beginPath();
-            _via_ctx.moveTo(all_points_x[i-1], all_points_y[i-1]);
-            _via_ctx.lineTo(all_points_x[i], all_points_y[i]);
-            _via_ctx.stroke();
+            _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
+            _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+            _via_reg_ctx.beginPath();
+            _via_reg_ctx.moveTo(all_points_x[i-1], all_points_y[i-1]);
+            _via_reg_ctx.lineTo(all_points_x[i], all_points_y[i]);
+            _via_reg_ctx.stroke();
 
             var slope_i = (all_points_y[i] - all_points_y[i-1]) / (all_points_x[i] - all_points_x[i-1]);
             if (slope_i > 0) {
                 // draw a boundary line on both sides
-                _via_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
-                _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
-                _via_ctx.beginPath();
-                _via_ctx.moveTo(parseInt(all_points_x[i-1]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
-                                parseInt(all_points_y[i-1]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
-                _via_ctx.lineTo(parseInt(all_points_x[i]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
-                                parseInt(all_points_y[i]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
-                _via_ctx.stroke();
-                _via_ctx.beginPath();
-                _via_ctx.moveTo(parseInt(all_points_x[i-1]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
-                                parseInt(all_points_y[i-1]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
-                _via_ctx.lineTo(parseInt(all_points_x[i]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
-                                parseInt(all_points_y[i]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
-                _via_ctx.stroke();
+                _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
+                _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
+                _via_reg_ctx.beginPath();
+                _via_reg_ctx.moveTo(parseInt(all_points_x[i-1]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
+                                    parseInt(all_points_y[i-1]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
+                _via_reg_ctx.lineTo(parseInt(all_points_x[i]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
+                                    parseInt(all_points_y[i]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
+                _via_reg_ctx.stroke();
+                _via_reg_ctx.beginPath();
+                _via_reg_ctx.moveTo(parseInt(all_points_x[i-1]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
+                                    parseInt(all_points_y[i-1]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
+                _via_reg_ctx.lineTo(parseInt(all_points_x[i]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
+                                    parseInt(all_points_y[i]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
+                _via_reg_ctx.stroke();
             } else {
                 // draw a boundary line on both sides
-                _via_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
-                _via_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
-                _via_ctx.beginPath();
-                _via_ctx.moveTo(parseInt(all_points_x[i-1]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
-                                parseInt(all_points_y[i-1]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
-                _via_ctx.lineTo(parseInt(all_points_x[i]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
-                                parseInt(all_points_y[i]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
-                _via_ctx.stroke();
-                _via_ctx.beginPath();
-                _via_ctx.moveTo(parseInt(all_points_x[i-1]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
-                                parseInt(all_points_y[i-1]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
-                _via_ctx.lineTo(parseInt(all_points_x[i]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
-                                parseInt(all_points_y[i]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
-                _via_ctx.stroke();
+                _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
+                _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
+                _via_reg_ctx.beginPath();
+                _via_reg_ctx.moveTo(parseInt(all_points_x[i-1]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
+                                    parseInt(all_points_y[i-1]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
+                _via_reg_ctx.lineTo(parseInt(all_points_x[i]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
+                                    parseInt(all_points_y[i]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
+                _via_reg_ctx.stroke();
+                _via_reg_ctx.beginPath();
+                _via_reg_ctx.moveTo(parseInt(all_points_x[i-1]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
+                                    parseInt(all_points_y[i-1]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
+                _via_reg_ctx.lineTo(parseInt(all_points_x[i]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
+                                    parseInt(all_points_y[i]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
+                _via_reg_ctx.stroke();
             }
         }
     }
 }
 
 function draw_all_region_id() { 
-    _via_ctx.shadowColor = "transparent";
+    _via_reg_ctx.shadowColor = "transparent";
     for (var i=0; i < _via_img_metadata[_via_image_id].regions.length; ++i) {
         var annotation_str = (i+1);
 
@@ -2046,24 +2077,24 @@ function draw_all_region_id() {
         var y = bbox[1];
         var w = Math.abs(bbox[2] - bbox[0]);
         var h = Math.abs(bbox[3] - bbox[1]);
-        _via_ctx.font = '12pt Sans';
+        _via_reg_ctx.font = '12pt Sans';
 
-        var spc_dot = _via_ctx.measureText('.').width
-        var bgnd_rect_height = 1.8 * _via_ctx.measureText('M').width;
-        var bgnd_rect_width = _via_ctx.measureText(annotation_str).width * 2;
+        var spc_dot = _via_reg_ctx.measureText('.').width
+        var bgnd_rect_height = 1.8 * _via_reg_ctx.measureText('M').width;
+        var bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 2;
 
         // first, draw a background rectangle first
-        _via_ctx.fillStyle = 'black';
-        _via_ctx.globalAlpha=0.8;
-        _via_ctx.fillRect(x,
-                          y,
-                          bgnd_rect_width,
-                          bgnd_rect_height);
+        _via_reg_ctx.fillStyle = 'black';
+        _via_reg_ctx.globalAlpha=0.8;
+        _via_reg_ctx.fillRect(x,
+                              y,
+                              bgnd_rect_width,
+                              bgnd_rect_height);
         
         // then, draw text over this background rectangle
-        _via_ctx.globalAlpha=1.0;
-        _via_ctx.fillStyle = 'yellow';
-        _via_ctx.fillText(annotation_str, x+spc_dot, y+3.8*spc_dot);
+        _via_reg_ctx.globalAlpha=1.0;
+        _via_reg_ctx.fillStyle = 'yellow';
+        _via_reg_ctx.fillText(annotation_str, x+spc_dot, y+3.8*spc_dot);
 
     }
 }
@@ -2448,7 +2479,7 @@ window.addEventListener("keydown", function(e) {
         if ( e.which == 65 ) { // Ctrl + a
             toggle_all_regions_selection(true);
             _via_is_all_region_selected = true;
-            _via_redraw_canvas();
+            _via_redraw_reg_canvas();
 
             e.preventDefault();
             return;
@@ -2477,7 +2508,7 @@ window.addEventListener("keydown", function(e) {
             }
             show_message('Pasted ' + _via_copied_image_regions.length + ' regions', VIA_THEME_MESSAGE_TIMEOUT_MS);
             e.preventDefault();
-            _via_redraw_canvas();
+            _via_redraw_reg_canvas();
             return;
         }
     }
@@ -2511,8 +2542,8 @@ window.addEventListener("keydown", function(e) {
                     _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
 
                     _via_load_canvas_regions(); // image to canvas space transform
-                    _via_redraw_canvas();
-                    _via_canvas.focus();
+                    _via_redraw_reg_canvas();
+                    _via_reg_canvas.focus();
                     show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
                 }
                 return;
@@ -2583,15 +2614,14 @@ window.addEventListener("keydown", function(e) {
                 
                 _via_is_canvas_zoomed = true;
                 var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-                _via_ctx.scale(zoom_scale, zoom_scale);
-                
-                _via_canvas.height = _via_canvas_height * zoom_scale;
-                _via_canvas.width = _via_canvas_width * zoom_scale;
+		set_all_canvas_scale(zoom_scale);
+		set_all_canvas_size(_via_canvas_width * zoom_scale,
+				    _via_canvas_height * zoom_scale);
                 _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
 
                 _via_load_canvas_regions(); // image to canvas space transform
-                _via_redraw_canvas();
-                _via_canvas.focus();
+                _via_redraw_reg_canvas();
+                _via_reg_canvas.focus();
                 show_message('Zoomed in to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
             }
             return;         
@@ -2635,8 +2665,8 @@ window.addEventListener("keydown", function(e) {
             _via_canvas_scale = _via_canvas_scale_without_zoom;
             
             _via_load_canvas_regions(); // image to canvas space transform
-            _via_redraw_canvas();
-            _via_canvas.focus();
+            _via_redraw_reg_canvas();
+            _via_reg_canvas.focus();
             show_message('Zoom reset', VIA_THEME_MESSAGE_TIMEOUT_MS);
             return;
         }
@@ -2667,7 +2697,7 @@ window.addEventListener("keydown", function(e) {
         }
         
         e.preventDefault();
-        _via_redraw_canvas();
+        _via_redraw_reg_canvas();
     }
 
     if ( e.which == 121 ) { // F10 key used for debugging
@@ -2715,16 +2745,16 @@ function move_to_next_image() {
 function reset_zoom_level() {
     _via_is_canvas_zoomed = false;
     _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX
+
     var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-    _via_ctx.scale(zoom_scale, zoom_scale);
-    
-    _via_canvas.height = _via_canvas_height;
-    _via_canvas.width = _via_canvas_width;
+    set_all_canvas_scale(zoom_scale);
+
+    set_all_canvas_size(_via_canvas_width, _via_canvas_height);
     _via_canvas_scale = _via_canvas_scale_without_zoom;
     
     _via_load_canvas_regions(); // image to canvas space transform
-    _via_redraw_canvas();
-    _via_canvas.focus();
+    _via_redraw_reg_canvas();
+    _via_reg_canvas.focus();
 }
 
 //
@@ -2991,13 +3021,13 @@ function init_spreadsheet_input(table_name, col_headers, data, row_names) {
                     ' value="' + ip_val + '"' +
                     ' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
                     ' onblur="_via_is_user_updating_attribute_value=false;"' +
-                    ' onfocus="select_only_region(' + rowi + '); _via_redraw_canvas(); _via_is_user_updating_attribute_value=true;" />';
+                    ' onfocus="select_only_region(' + rowi + '); _via_redraw_reg_canvas(); _via_is_user_updating_attribute_value=true;" />';
             } else {
                 row.insertCell(-1).innerHTML = '<input type="text"' +
                     ' id="' + input_id + '"' +
                     ' onchange="update_attribute_value(\'' + input_id + '\', this.value)" ' +
                     ' onblur="_via_is_user_updating_attribute_value=false;"' +              
-                    ' onfocus="select_only_region(' + rowi + '); _via_redraw_canvas(); _via_is_user_updating_attribute_value=true;" />';
+                    ' onfocus="select_only_region(' + rowi + '); _via_redraw_reg_canvas(); _via_is_user_updating_attribute_value=true;" />';
             }
         }
     }

@@ -220,11 +220,7 @@
       position: absolute;
       z-index: -1;
       }
-      /* panel that contains the canvas */
-      #image_panel {
-      display: inline-block;
-      margin: auto;
-      }
+
       #about_panel {
       display: none;
       margin: auto;
@@ -368,6 +364,26 @@
       color: red;
       text-decoration: none;
       cursor: pointer;
+      }
+
+      /* layers of canvas */
+      #image_panel {
+      position: relative;
+      display: inline-block;
+      margin: auto;
+      margin-top: 1em;
+      }
+      #image_canvas {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      z-index: 1;
+      }
+      #region_canvas {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      z-index: 2;
       }
 
     </style>
@@ -538,6 +554,7 @@
         
         <div class="box" id="image_panel">
           <canvas id="image_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
+	  <canvas id="region_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
 
           <div id="via_start_info_panel">
             <p>To begin the image annotation process, click <a title="Load images" style="cursor: pointer;" onclick="load_images()">Load images</a> in the Image menu.
@@ -545,7 +562,7 @@
 
           <div id="img_list_panel"></div>
 
-          <div class="" id="about_panel" style="">
+          <div id="about_panel" style="">
             <p>
               VGG Image Annotator (via) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
               developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
