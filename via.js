@@ -745,7 +745,7 @@ function show_image(image_index) {
 	_via_is_loading_current_image = true;
 
 	img_reader.addEventListener( "loadstart", function(e) {
-            document.getElementById("info_current_filename").innerHTML = "Loading image ...";
+            document.getElementById("fileinfo").innerHTML = "Loading image ...";
         }, false);
 	
         img_reader.addEventListener( "progress", function(e) {
@@ -2822,11 +2822,11 @@ function show_region_shape_info() {
 
 function show_filename_info() {
     if ( _via_current_image_loaded ) {
-        document.getElementById("info_current_filename").innerHTML = _via_current_image_filename;
-        document.getElementById("info_current_fileid").innerHTML = "(" + (_via_image_index+1) + " of " + _via_img_count + ")";
+	var fileinfo = "(" + (_via_image_index+1) + " of " + _via_img_count + ") ";
+	fileinfo += _via_current_image_filename;
+        document.getElementById("fileinfo").innerHTML = fileinfo;
     } else {
-        document.getElementById("info_current_filename").innerHTML = "";
-        document.getElementById("info_current_fileid").innerHTML = "";
+	document.getElementById("fileinfo").innerHTML = '';
     }
 }
 

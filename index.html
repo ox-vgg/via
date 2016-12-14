@@ -54,85 +54,213 @@
       min-width: 800px;
       padding: 0;
       margin: 0;
-      margin-bottom: 3em;
       }
       
-      #wrapper {
-      display: table;
-      text-align: center;
-      }
-
-      #navbar {
+      /* Top panel : #navbar, #toolbar, #fileinfo */
+      .top_panel {
       position: relative;
       top: 0;
       left: 0;
-      font-family: Sans;
-      display: table;
-      height: 1px;
-      background: #000000;
+      display: block;
       width: 100%;
-      z-index: 1;
-      }
-      
-      #navbar ul {
-      display: inline;
-      font-size: medium;
-      list-style-type: none;
+      font-family: Sans;
+      background-color: #000000;
+      color: white;
+      z-index: 10;
       margin: 0;
       padding: 0;
-      overflow: hidden;
-      background-color: #333;
       }
 
-      #navbar li {
+      .navbar {
+      display: inline-block;
+      font-size: small;
+      }
+      .navbar ul {
+      display: inline;
+      list-style-type: none;
+      overflow: hidden;
+      }
+      .navbar li {
       float: left;
       }
-
-      #navbar li a, .drop_menu_item {
+      .navbar li a, .drop_menu_item {
       display: inline-block;
       color: white;
-      text-align: center;
-      padding: 1em 1.2em;
+      padding: 0.4em 1.2em;
       text-decoration: none;
       }
-
-      #navbar li a:hover, .dropdown:hover .drop_menu_item {
+      .navbar li a:hover, .dropdown:hover {
       background-color: #999999;
       cursor: pointer;
       }
-
-      #navbar li.dropdown {
+      .navbar li.dropdown {
       display: inline-block;
       }
-
-      #navbar .dropdown-content {
+      .navbar .dropdown-content {
       display: none;
       position: absolute;
       background-color: #333333;
-      min-width: 160px;
+      min-width: 120px;
       border: 1px solid #ffffff;
       }
-
-      #navbar .dropdown-content a {
+      .navbar .dropdown-content a {
       color: #ffffff;
       padding: 0.4em 0.6em;
       text-decoration: none;
-      font-size: small;
       display: block;
       text-align: left;
       background-color: #333333;
       float: none;
       }
-
-      #navbar .dropdown-content a:hover {
+      .navbar .dropdown-content a:hover {
       background-color: #000000;
       color: #ffff00;
       }
-
-      #navbar .dropdown:hover .dropdown-content {
+      .navbar .dropdown:hover .dropdown-content {
       display: block;
       }
 
+      .toolbar {
+      display: inline-block;
+      color: white;
+      vertical-align: top;
+      font-size: medium;
+      }
+      .toolbar ul {
+      display: inline;
+      list-style-type: none;
+      overflow: hidden;
+      }
+      .toolbar li {
+      float: left;
+      padding: 0.41em 0.3em;
+      }
+      .toolbar li a {
+      color: white;
+      text-decoration: none;
+      }   
+      .toolbar li a:hover {
+      background-color: #808080; 
+      color: black;
+      cursor: pointer;
+      }
+
+      #fileinfo {
+      display: inline-block;
+      font-family: Mono;
+      font-size: x-small;
+      color: yellow;
+      padding: 1em 0.3em;
+      vertical-align: top;
+      }
+
+      /* Middle panel: containing #image_panel, #leftsidebar */
+      .middle_panel {
+      display: table;
+      width: 100%;
+      font-family: Sans;
+      font-size: x-small;
+      z-index: 1;
+      border: 1px solid red;
+      padding-top: 2em;
+      }
+      #leftsidebar {
+      display: table-cell;
+      width: 200px;
+      z-index: 10;
+      border: 1px solid green;
+      }
+      #display_area {
+      display: table-cell;
+      width: 100%;
+      background-color: #00ff00;
+      z-index: 10;
+      border: 1px solid blue;
+      }
+
+      /* Left sidebar */
+      button.leftsidebar_accordion {
+      font-family: Sans;
+      font-size: small;
+      background-color: #f2f2f2;
+      cursor: pointer;
+      padding: 0.5em 0.5em;
+      width: 100%;
+      text-align: left;
+      border: none;
+      outline: none;
+      }
+      button.leftsidebar_accordion:after {
+      content: '\02795';
+      color: #4d4d4d;
+      float: right;
+      }
+      
+      .leftsidebar_accordion_panel {
+      display: none;
+      padding: 1em 1em;
+      padding-top: 0;
+      }
+      .leftsidebar_accordion_panel.visible {
+      display: block;
+      }
+      
+      ul.region_shape {
+      font-size: xx-large;
+      list-style-type: none;
+      overflow: hidden;
+      padding: 0;
+      margin: 0;
+      }
+      ul.region_shape li{
+      float: left;
+      padding: 0 0.3em;
+      }
+      ul.region_shape li a {
+      color: black;
+      text-decoration: none;
+      }   
+      ul.region_shape li a:hover {
+      color: red;
+      cursor: pointer;
+      }
+
+      /* Accordion panel in leftsidebar */
+      button.accordion {
+      background-color: #eee;
+      color: #444;
+      cursor: pointer;
+      padding: 18px;
+      width: 100%;
+      text-align: left;
+      border: none;
+      outline: none;
+      transition: 0.4s;
+      }
+      button.accordion.active, button.accordion:hover {
+      background-color: #ddd;
+      }
+      div.panel {
+      padding: 0 18px;
+      background-color: white;
+      display: none;
+      }
+      div.panel.show {
+      display: block;
+      }
+      
+      /* Bottom Panel : contains status messages, attributes input panel */
+      .bottom_panel {
+      display: table;
+      width: 100%;
+      font-family: Sans;
+      font-size: x-small;
+      background-color: #ff0000;
+      color: white;
+      z-index: 1;
+      }
+      
+      /* Shortcut toolbar within the top navigation bar */
       .main {
       display: table;
       width: 100%;
@@ -264,13 +392,13 @@
 
       /* loaded image list panel that pop's up on right hand side*/
       #loaded_img_list_panel {
+      position: fixed;
       display: inline;
       height: 90%;
       max-width: 20%;
-      position: fixed;
-      z-index: 1;
+      z-index: 10;
       top: 0px;
-      right: 0;
+      right: 0px;
       background-color: #e6e6e6;
       overflow: scroll;
       /*transition: 1s;*/
@@ -297,7 +425,7 @@
       #attributes_input_panel {
       display: none;
       position: fixed;
-      z-index: 2;
+      z-index: 10;
       bottom: 0;
       width: 100%;
       max-height: 40%;
@@ -390,227 +518,116 @@
   </head>
 
   <body onload="main()" onresize="update_ui_components()">
-    <!-- Start: Definition SVG for icons -->
-    <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-      <defs>
-        <symbol id="via_logo">
-          <title>VGG Image Annotator Logo</title>
-          <rect width="38" height="22" x="20" y="-50" transform="matrix(0,1,-1,0,0,0)" />
-          <rect width="38" height="22" x="12" y="-36" transform="matrix(0,1,-1,0,0,0)" />
-          <rect width="38" height="22" x="6" y="-45" transform="matrix(0,1,-1,0,0,0)" />
-        </symbol>
-
-        <symbol id="icon_img_list">
-          <title>Show image list</title>
-          <rect x="2" y="10" width="30" height="2"/>
-          <rect x="2" y="20" width="30" height="2"/>
-          <rect x="2" y="30" width="30" height="2"/>
-        </symbol>
-        <symbol id="icon_plus">
-          <title>Plus</title>
-          <path d="M31 12h-11v-11c0-0.552-0.448-1-1-1h-6c-0.552 0-1 0.448-1 1v11h-11c-0.552 0-1 0.448-1 1v6c0 0.552 0.448 1 1 1h11v11c0 0.552 0.448 1 1 1h6c0.552 0 1-0.448 1-1v-11h11c0.552 0 1-0.448 1-1v-6c0-0.552-0.448-1-1-1z"></path>
-        </symbol>
-        <symbol id="icon_import">
-          <title>Import</title>
-          <path d="M16 31l15-15h-9v-16h-12v16h-9z"></path>
-        </symbol>
-
-        <symbol id="shape_rectangle">
-          <title>Rectangular region shape</title>
-          <rect width="20" height="12" x="6" y="10" />
-        </symbol>
-        <symbol id="shape_circle">
-          <title>Circular region shape</title>
-          <circle r="10" cx="16" cy="16" />
-        </symbol>
-        <symbol id="shape_ellipse">
-          <title>Elliptical region shape</title>
-          <ellipse rx="12" ry="8" cx="16" cy="16" />
-        </symbol>
-        <symbol id="shape_polygon">
-          <title>Polyline region shape</title>
-          <path d="M 15.25,2.2372 3.625,11.6122 6,29.9872 l 20.75,-9.625 2.375,-14.75 z" />
-        </symbol>
-
-        <symbol id="icon_resize" viewBox="0 0 32 32">
-          <title>Expand/Contract</title>
-          <path class="path1" d="M30 0h2v16h-2v-16z"></path>
-          <path class="path2" d="M0 16h2v16h-2v-16z"></path>
-          <path class="path3" d="M10 22h22v4h-22v5l-7-7 7-7v5z"></path>
-          <path class="path4" d="M22 10h-22v-4h22v-5l7 7-7 7z"></path>
-        </symbol>
-        <symbol id="icon_table" viewBox="0 0 32 32">
-          <title>Table</title>
-          <path class="path1" d="M0 2v28h32v-28h-32zM12 20v-6h8v6h-8zM20 22v6h-8v-6h8zM20 6v6h-8v-6h8zM10 6v6h-8v-6h8zM2 14h8v6h-8v-6zM22 14h8v6h-8v-6zM22 12v-6h8v6h-8zM2 22h8v6h-8v-6zM22 28v-6h8v6h-8z"></path>
-        </symbol>
-        
-      </defs>
-    </svg>
-    <!-- End: Define SVG for icons -->
-
-    <div class="wrapper">
-      <div id="navbar">
+    <div class="top_panel">
+      <!-- Navigation menu -->
+      <div class="navbar">
         <ul> 
           <li><a onclick="show_home_panel()" title="Home">Home</a></li>
-          <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662</a>
+          <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662;</a>
             <div class="dropdown-content">
-              <a onclick="load_images()" title="Load (or add) a set of images from local disk">Load or Add Images</a>
-              <a onclick="show_img_list()" title="Browse currently loaded images">Show Loaded Image List</a>
+	      <a onclick="load_images()" title="Load (or add) a set of images from local disk">Load or Add Images</a>
+	      <a onclick="show_img_list()" title="Browse currently loaded images">Show Loaded Image List</a>
             </div>
           </li>
-          <li class="dropdown"><a title="Annotations" class="drop_menu_item">Annotation &#9662</a>
+          <li class="dropdown"><a title="Annotations" class="drop_menu_item">Annotation &#9662;</a>
             <div class="dropdown-content">
-              <a onclick="download_all_region_data('csv')" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
-              <a onclick="download_all_region_data('json')" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
-              <a onclick="upload_region_data_file()" title="Import existing region data from CSV or JSON file">Import</a>
+	      <a onclick="download_all_region_data('csv')" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
+	      <a onclick="download_all_region_data('json')" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
+	      <a onclick="upload_region_data_file()" title="Import existing region data from CSV or JSON file">Import</a>
             </div>
           </li>
-          <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662</a>
+          <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662;</a>
             <div class="dropdown-content">
-              <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About VIA</a>
+	      <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About VIA</a>
             </div>
           </li>
         </ul>
 
-        <div id="image_info">
-          <div style="display: inline-block; fill: white; stroke: white;" ><a onclick="toggle_img_list()" title="Browse currently loaded images" class="svg_button"><svg width="18" viewBox="0 0 32 32"><use xlink:href="#icon_img_list"></use></svg></a></div>
-          <span id="info_current_fileid"></span> <span id="info_current_filename"><span class="action_text_link" onclick="load_images()" title="Import existing attributes from a file">[click to load images]</span></span>
+      </div> <!-- end of #navbar -->
 
-          <span id="info_region" style="display: none;"></span>
-          <span id="info_attribute" style="display: none;"></span>
-        </div>
+      <!-- Shortcut toolbar -->
+      <div class="toolbar">
+	<ul>
+	  <li><a title="Load/Add Images" href="">&ctdot;</a></li>
+	  <li><a title="Import Annotations" href="">&darr;</a></li>
+	  <li><a title="Save Annotations" href="">&DownArrowBar;</a></li>
+	  <li>&nbsp;</li>
+	  <li><a title="Previous Image" href="">&larr;</a></li>
+	  <li><a title="Next Image" href="">&rarr;</a></li>
+	  <li><a title="List Images" href="">&#9776;</a></li>
+	  <li>&nbsp;</li>
+	  <li><a title="Zoom Out" href="">&minus;</a></li>
+	  <li><a title="Zoom Reset" href="">&equals;</a></li>
+	  <li><a title="Zoom In" href="">&plus;</a></li>
+	  <li>&nbsp;</li>
+	  <li><a title="Copy Region" href="">c</a></li>
+	  <li><a title="Paste Region" href="">v</a></li>
+	  <li><a title="Select All Regions" href="">a</a></li>
+	  <li><a title="Delete Region" href="">&times;</a></li>
+	</ul>
+      </div> <!-- endof #toolbar -->
 
-        <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">
-      </div> <!-- end of navbar -->
+      <div id="fileinfo">Filename info</div> <!-- endof #fileinfo -->
+    </div> <!-- endof #top_panel -->
 
-      <div class="main">
-        <div class="box sidebar" id="info_panel">
-          <div class="title">Select Region Shape</div>
-          <div>
-            <div class="region_shape region_shape_selected" onclick="select_region_shape('rect')" id="region_shape_rect" title="To draw rectangular region"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></div>
-            <div class="region_shape" onclick="select_region_shape('circle')" id="region_shape_circle" title="To draw circular region"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></div>
-            <div class="region_shape" onclick="select_region_shape('ellipse')" id="region_shape_ellipse" title="To draw elliptical region"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></div>
-            <div class="region_shape" onclick="select_region_shape('polygon')" id="region_shape_polygon" title="To draw polygon region"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></div>
-          </div>
+    <!-- Middle Panel contains a left-sidebar and image display areas -->
+    <div class="middle_panel">
+      <div id="leftsidebar">
+	<button class="leftsidebar_accordion">Region Shape</button>
+	<div class="leftsidebar_accordion_panel visible">
+	  <ul class="region_shape">
+	    <li><a title="Rectangle" href="">&EmptySmallSquare;</a></li>
+	    <li><a title="Circle" href="">&cir;</a></li>
+	    <li><a title="Ellipse" href="">0</a></li>
+	    <li><a title="Polygon" href="">&trpezium;</a></li>
+	  </ul>
+	</div>
 
-          <!-- Show Region and File attributes panel -->
-          <div class="title">File/Region Attributes</div>
-          <span class="action_text_link" onclick="toggle_attributes_input_panel()" title="Show/Hide attributes">[click to show/hide attributes]</span>
-          
-          <div class="title">Keyboard Shortcuts</div>
-          <div class="info">
-            <table>
-              <tr>
-                <td>n/p (&larr;/&rarr;)</td>
-                <td>Next/Previous image</td>
-              </tr>
-              <tr>
-                <td>a</td>
-                <td>Show/hide attributes</td>
-              </tr>
-              <tr>
-                <td>l</td>
-                <td>Show/hide image list</td>
-              </tr>
-              <tr>
-                <td>z/Z/0</td>
-                <td>Zoom in/out/reset</td>
-              </tr>
-              <tr>
-                <td>Ctrl + o</td>
-                <td>Load or add images</td>
-              </tr>
-              <tr>
-                <td>Ctrl + s</td>
-                <td>Download region data</td>
-              </tr>
-              <tr>
-                <td>Ctrl + i</td>
-                <td>Import region data</td>
-              </tr>
-              <tr>
-                <td>Ctrl + a</td>
-                <td>Select all regions</td>
-              </tr>
-              <tr>
-                <td>Ctrl + c</td>
-                <td>Copy sel. regions</td>
-              </tr>           
-              <tr>
-                <td>Ctrl + v</td>
-                <td>Paste sel. regions</td>
-              </tr>
-              <tr>
-                <td>Esc</td>
-                <td>Cancel operation</td>
-              </tr>
-              <tr>
-                <td style="width: 6em;">Alt + d</td>
-                <td>Delete image region</td>
-              </tr>           
-            </table>
-          </div>
-        </div>
-        
-        <div class="box" id="image_panel">
-          <canvas id="image_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
-	  <canvas id="region_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
+	<button onclick="toggle_region_attributes_panel()" class="leftsidebar_accordion">Region Attributes (3)</button>
+	<button onclick="toggle_file_attributes_panel()" class="leftsidebar_accordion">File Attributes (0)</button>
 
-          <div id="via_start_info_panel">
-            <p>To begin the image annotation process, click <a title="Load images" style="cursor: pointer;" onclick="load_images()">Load images</a> in the Image menu.
-          </div>
+	<button class="leftsidebar_accordion">Image List (1233)</button>
+	<div class="leftsidebar_accordion_panel">
+	  <ul class="region_shape">
+	    <li><a title="Rectangle" href="">&EmptySmallSquare;</a></li>
+	    <li><a title="Circle" href="">&cir;</a></li>
+	    <li><a title="Ellipse" href="">0</a></li>
+	    <li><a title="Polygon" href="">&trpezium;</a></li>
+	  </ul>
+	</div>
 
-          <div id="img_list_panel"></div>
-
-          <div id="about_panel" style="">
-            <p>
-              VGG Image Annotator (via) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
-              developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
-              and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
-              With this standalone application, you can define regions in an image and create a textual description of those regions.
-              Such image regions and descriptions are useful for supervised training of learning algorithms.
-            </p>
-            <p>
-              Features:
-            <ul>
-              <li>based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)</li>
-              <li>can be used offline (complete application packaged in a single html file of size &lt; 200KB)</li>
-              <li>requires nothing more than a modern web browser (tested on firefox and chrome)</li>
-              <li>supports following region shapes: rectangle, circle, ellipse, polygon</li>
-              <li>supports multiple attributes for each image region</li>
-              <li>import (and export) of region data from (to) text file in csv and json format</li>
-              <li>hundreds of images can be loaded and annotated with any performance degradation</li>
-            </ul>
-            </p>
-            <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a></p>
-          </div>
-          
-        </div>
-        <div id="loaded_img_list_panel"></div>
-      </div> <!-- end of main -->
-    </div> <!-- end of wrapper -->
-    <div id="message_panel"></div>
-    
-    <div id="attributes_input_panel">
-      <span id="panel_close_button" onclick="toggle_attributes_input_panel()">&times</span>
-
-      <!-- Region Attributes -->
-      <div>
-        <div style="display: inline-block;" class="title">Regions Attributes</div>
-        <div style="display: inline-block;" ><a onclick="toggle_table_width('region_attr_table')" title="Change table width (100% or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
-        <div style="display: inline-block;" ><a onclick="toggle_table_layout('region_attr_table')" title="Change table layout (fixed or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_table"></use></svg></a></div>
+	<button class="leftsidebar_accordion">Keyboard Shortcuts</button>
+	<div class="leftsidebar_accordion_panel">
+	  <ul class="region_shape">
+	    <li><a title="Rectangle" href="">&EmptySmallSquare;</a></li>
+	    <li><a title="Circle" href="">&cir;</a></li>
+	    <li><a title="Ellipse" href="">0</a></li>
+	    <li><a title="Polygon" href="">&trpezium;</a></li>
+	  </ul>
+	</div>
       </div>
-      <table id="region_attr_table"></table>
-
-      <!-- File Attributes -->
-      <div>
-        <div style="display: inline-block;" class="title">File Attributes</div>
-        <div style="display: inline-block;" ><a onclick="toggle_table_width('file_attr_table')" title="Change table width (100% or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
-        <div style="display: inline-block;" ><a onclick="toggle_table_layout('file_attr_table')" title="Change table layout (fixed or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_table"></use></svg></a></div>
-      </div>
-      <table id="file_attr_table"></table>
+      <div id="displayarea">display area</div>
     </div>
-    
+
+    <!-- Bottom panel is used to display attributes input panel -->    
+    <div class="bottom_panel">
+      <div id="attributes_input_panel"></div>
+    </div>
+
+    <!-- to show status messages -->
+    <div id="message_panel"></div>
+
+    <script type="text/javascript">
+      var acc = document.getElementsByClassName("accordion");
+      var i;
+
+      for (i = 0; i < acc.length; i++) {
+		    		      acc[i].onclick = function(){
+		      this.classList.toggle("active");
+		      this.nextElementSibling.classList.toggle("show");
+		      }
+		      }
+		      </script>
     <script type="text/javascript" src="via_demo.js">
     <script type="text/javascript">
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
