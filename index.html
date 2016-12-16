@@ -30,7 +30,7 @@
         POSSIBILITY OF SUCH DAMAGE.
 
       -->
-    <title>VGG Image Annotator (VIA)</title>
+    <title>VGG Image Annotator</title>
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 200 KB) that runs on most modern web browsers.">
 
@@ -62,7 +62,6 @@
       top: 0;
       left: 0;
       display: block;
-      width: 100%;
       font-family: Sans;
       background-color: #000000;
       color: white;
@@ -124,7 +123,7 @@
       display: inline-block;
       color: white;
       vertical-align: top;
-      font-size: medium;
+      font-size: small;
       }
       .toolbar ul {
       display: inline;
@@ -133,25 +132,23 @@
       }
       .toolbar li {
       float: left;
-      padding: 0.41em 0.3em;
-      }
-      .toolbar li a {
+      padding: 0.65em 0.3em;
       color: white;
-      text-decoration: none;
-      }   
-      .toolbar li a:hover {
-      background-color: #808080; 
-      color: black;
+      }
+      .toolbar li:hover {
+      background-color: #333333; 
+      color: red;
       cursor: pointer;
       }
 
       #fileinfo {
-      display: inline-block;
       font-family: Mono;
       font-size: x-small;
-      color: yellow;
-      padding: 1em 0.3em;
-      vertical-align: top;
+      padding: 1em 0.4em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      border-bottom: 1px solid #000000;
       }
 
       /* Middle panel: containing #image_panel, #leftsidebar */
@@ -161,27 +158,33 @@
       font-family: Sans;
       font-size: x-small;
       z-index: 1;
-      border: 1px solid red;
-      padding-top: 2em;
+      padding-top: 1em;
       }
       #leftsidebar {
-      display: table-cell;
+      display: inline-block;
       width: 200px;
       z-index: 10;
-      border: 1px solid green;
+      border: 1px solid #000000;
+      vertical-align: top;
       }
       #display_area {
       display: table-cell;
       width: 100%;
-      background-color: #00ff00;
-      z-index: 10;
-      border: 1px solid blue;
+      z-index: 1;
+      margin: 0;
+      padding-left: 2em;
+      vertical-align: top;
+      }
+      #canvas_panel {
+      position: relative;
+      margin: 0;
+      padding: 0;
       }
 
-      /* Left sidebar */
+      /* Left sidebar accordion */
       button.leftsidebar_accordion {
       font-family: Sans;
-      font-size: small;
+      font-size: x-small;
       background-color: #f2f2f2;
       cursor: pointer;
       padding: 0.5em 0.5em;
@@ -190,65 +193,67 @@
       border: none;
       outline: none;
       }
+      button.leftsidebar_accordion.active, button.leftsidebar_accordion:hover {
+      background-color: #e6e6e6;
+      }
       button.leftsidebar_accordion:after {
       content: '\02795';
       color: #4d4d4d;
       float: right;
       }
-      
+      button.leftsidebar_accordion.active:after {
+      content: '\2796';
+      }      
       .leftsidebar_accordion_panel {
       display: none;
-      padding: 1em 1em;
       padding-top: 0;
+      padding-left: 0.5em;
       }
-      .leftsidebar_accordion_panel.visible {
+      .leftsidebar_accordion_panel.show {
       display: block;
       }
       
+      /* Region shape selection panel inside leftsidebar */
       ul.region_shape {
       font-size: xx-large;
       list-style-type: none;
       overflow: hidden;
-      padding: 0;
+      padding: 0.4em 0;
       margin: 0;
       }
       ul.region_shape li{
       float: left;
       padding: 0 0.3em;
       }
-      ul.region_shape li a {
-      color: black;
-      text-decoration: none;
-      }   
-      ul.region_shape li a:hover {
+      ul.region_shape li:hover {
       color: red;
       cursor: pointer;
       }
-
-      /* Accordion panel in leftsidebar */
-      button.accordion {
-      background-color: #eee;
-      color: #444;
-      cursor: pointer;
-      padding: 18px;
-      width: 100%;
-      text-align: left;
-      border: none;
-      outline: none;
-      transition: 0.4s;
-      }
-      button.accordion.active, button.accordion:hover {
-      background-color: #ddd;
-      }
-      div.panel {
-      padding: 0 18px;
-      background-color: white;
-      display: none;
-      }
-      div.panel.show {
-      display: block;
+      ul.region_shape .selected {
+      color: blue;
       }
       
+      /* Loaded image list shown in leftsidebar panel */
+      #img_list_panel {
+      width: 98%;
+      }
+      #img_list_panel ul {
+      position: relative;
+      line-height: 1.2em;
+      padding-left: 0.5em;
+      list-style-type: none;
+      }
+      #img_list_panel li {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      }
+      #img_list_panel li:hover {
+      background-color: #cccccc;
+      color: #000000;
+      cursor: pointer;
+      }
+
       /* Bottom Panel : contains status messages, attributes input panel */
       .bottom_panel {
       display: table;
@@ -259,69 +264,6 @@
       color: white;
       z-index: 1;
       }
-      
-      /* Shortcut toolbar within the top navigation bar */
-      .main {
-      display: table;
-      width: 100%;
-      table-layout: fixed;
-      }
-
-      .box {
-      display: table-cell;
-      padding: 1em 0;
-      vertical-align: top;
-      }
-
-      .box canvas {
-      position: relative;
-      }
-
-      /* Panel in the left hand side of image canvas */
-      .sidebar {
-      font-family: Mono;
-      font-size: small;
-      padding: 1em 1em;
-      vertical-align: top;
-      width: 280px;
-      }
-      .sidebar .title {
-      font-family: Sans;
-      font-size: large;
-      padding-top: 1em;
-      padding-bottom: 0.5em;
-      }
-      .sidebar .info table {
-      border-collapse: collapse;
-      table-layout: fixed;
-      }
-      .sidebar .info table, td {
-      border: 1px solid #cccccc;
-      padding: 0 0.4em;
-      line-height: 2em;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      }
-
-      /* Toolbar to select region shape */
-      .region_shape {
-      display: inline-block;
-      stroke: #333333;
-      fill: #cccccc;
-      background-color: #ffffff;
-      padding: 0 0.5em;
-      }
-      .region_shape:hover {
-      fill: #ff0000;
-      cursor: pointer;
-      }
-      .region_shape_selected {
-      background-color: #e5e5e5;
-      }
-      .region_shape_selected:hover {
-      fill: #cccccc;
-      }
-      
       
       #message_panel {
       position: fixed;
@@ -388,37 +330,6 @@
       font-size: small;
       top: 1em;
       left: 6em;
-      }
-
-      /* loaded image list panel that pop's up on right hand side*/
-      #loaded_img_list_panel {
-      position: fixed;
-      display: inline;
-      height: 90%;
-      max-width: 20%;
-      z-index: 10;
-      top: 0px;
-      right: 0px;
-      background-color: #e6e6e6;
-      overflow: scroll;
-      /*transition: 1s;*/
-      font-family: Mono;
-      font-size: small;
-      white-space: nowrap;
-      padding-top: 1em;
-      padding-bottom: 1em;
-      padding-left: 0.4em;
-      }
-      #loaded_img_list_panel ul {
-      float: left;
-      line-height: 1.2em;
-      padding-left: 0;
-      list-style-type: none;
-      }
-      #loaded_img_list_panel li:hover {
-      background-color: #cccccc;
-      color: #000000;
-      cursor: pointer;
       }
 
       /* region and file attributes input panel (spreadsheet like) */
@@ -518,14 +429,14 @@
   </head>
 
   <body onload="main()" onresize="update_ui_components()">
-    <div class="top_panel">
+    <div class="top_panel" id="ui_top_panel">
       <!-- Navigation menu -->
       <div class="navbar">
         <ul> 
           <li><a onclick="show_home_panel()" title="Home">Home</a></li>
           <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662;</a>
             <div class="dropdown-content">
-	      <a onclick="load_images()" title="Load (or add) a set of images from local disk">Load or Add Images</a>
+	      <a onclick="sel_local_images()" title="Load (or add) a set of images from local disk">Load or Add Images</a>
 	      <a onclick="show_img_list()" title="Browse currently loaded images">Show Loaded Image List</a>
             </div>
           </li>
@@ -533,7 +444,7 @@
             <div class="dropdown-content">
 	      <a onclick="download_all_region_data('csv')" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
 	      <a onclick="download_all_region_data('json')" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
-	      <a onclick="upload_region_data_file()" title="Import existing region data from CSV or JSON file">Import</a>
+	      <a onclick="sel_local_data_file('annotations')" title="Import existing region data from CSV or JSON file">Import</a>
             </div>
           </li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662;</a>
@@ -548,65 +459,138 @@
       <!-- Shortcut toolbar -->
       <div class="toolbar">
 	<ul>
-	  <li><a title="Load/Add Images" href="">&ctdot;</a></li>
-	  <li><a title="Import Annotations" href="">&darr;</a></li>
-	  <li><a title="Save Annotations" href="">&DownArrowBar;</a></li>
-	  <li>&nbsp;</li>
-	  <li><a title="Previous Image" href="">&larr;</a></li>
-	  <li><a title="Next Image" href="">&rarr;</a></li>
-	  <li><a title="List Images" href="">&#9776;</a></li>
-	  <li>&nbsp;</li>
-	  <li><a title="Zoom Out" href="">&minus;</a></li>
-	  <li><a title="Zoom Reset" href="">&equals;</a></li>
-	  <li><a title="Zoom In" href="">&plus;</a></li>
-	  <li>&nbsp;</li>
-	  <li><a title="Copy Region" href="">c</a></li>
-	  <li><a title="Paste Region" href="">v</a></li>
-	  <li><a title="Select All Regions" href="">a</a></li>
-	  <li><a title="Delete Region" href="">&times;</a></li>
+	  <li onclick="sel_local_images()" title="Load/Add Images">&ctdot;</li>
+	  <li onclick="sel_local_data_file('annotations')" title="Import Annotations">&darr;</li>
+	  <li onclick="" title="Save Annotations">&DownArrowBar;</li>
+	  
+	  <li style="margin-left: 2em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
+	  <li onclick="move_to_next_image()" title="Next Image">&rarr;</li>
+	  <li onclick="toggle_img_list()" title="List Images">&#9776;</li>
+
+	  <li style="margin-left: 2em;" onclick="zoom_out()" title="Zoom Out">&minus;</li>
+	  <li onclick="zoom_in()" title="Zoom In">&plus;</li>
+	  <li onclick="reset_zoom_level()" title="Zoom Reset">&equals;</li>
+
+	  <li style="margin-left: 2em;" onclick="" title="Copy Region">c</li>
+	  <li onclick="" title="Paste Region">v</li>
+	  <li onclick="" title="Select All Regions">a</li>
+	  <li onclick="" title="Delete Region">&times;</li>
 	</ul>
       </div> <!-- endof #toolbar -->
-
-      <div id="fileinfo">Filename info</div> <!-- endof #fileinfo -->
+      <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">
     </div> <!-- endof #top_panel -->
 
     <!-- Middle Panel contains a left-sidebar and image display areas -->
     <div class="middle_panel">
       <div id="leftsidebar">
-	<button class="leftsidebar_accordion">Region Shape</button>
-	<div class="leftsidebar_accordion_panel visible">
+	<div id="fileinfo"></div> <!-- endof #fileinfo -->
+	
+	<button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Region Shape</button>
+	<div class="leftsidebar_accordion_panel show" id="accordion_region_shape_panel">
 	  <ul class="region_shape">
-	    <li><a title="Rectangle" href="">&EmptySmallSquare;</a></li>
-	    <li><a title="Circle" href="">&cir;</a></li>
-	    <li><a title="Ellipse" href="">0</a></li>
-	    <li><a title="Polygon" href="">&trpezium;</a></li>
+	    <li id="region_shape_rect" class="selected" onclick="select_region_shape('rect')" title="Rectangle">&EmptySmallSquare;</li>
+	    <li id="region_shape_circle" onclick="select_region_shape('circle')" title="Circle">&cir;</li>
+	    <li id="region_shape_ellipse" onclick="select_region_shape('ellipse')" title="Ellipse">0</li>
+	    <li id="region_shape_polygon" onclick="select_region_shape('polygon')" title="Polygon">&trpezium;</li>
 	  </ul>
 	</div>
 
 	<button onclick="toggle_region_attributes_panel()" class="leftsidebar_accordion">Region Attributes (3)</button>
+	<div class="leftsidebar_accordion_panel" id="accordion_region_attr_panel"></div>
+	
 	<button onclick="toggle_file_attributes_panel()" class="leftsidebar_accordion">File Attributes (0)</button>
+	<div class="leftsidebar_accordion_panel" id="accordion_file_attr_panel"></div>
 
-	<button class="leftsidebar_accordion">Image List (1233)</button>
+	<button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion">Keyboard Shortcuts</button>
 	<div class="leftsidebar_accordion_panel">
-	  <ul class="region_shape">
-	    <li><a title="Rectangle" href="">&EmptySmallSquare;</a></li>
-	    <li><a title="Circle" href="">&cir;</a></li>
-	    <li><a title="Ellipse" href="">0</a></li>
-	    <li><a title="Polygon" href="">&trpezium;</a></li>
-	  </ul>
+	  <table style="padding: 1em 0;">
+            <tr>
+              <td style="width: 7em;">n/p (&larr;/&rarr;)</td>
+              <td>Next/Previous image</td>
+            </tr>
+            <tr>
+              <td>Spc</td>
+              <td>Show/hide attributes</td>
+            </tr>
+            <tr>
+              <td>Ctrl + Spc</td>
+              <td>Show/hide image list</td>
+            </tr>
+            <tr>
+              <td>+/-/=</td>
+              <td>Zoom in/out/reset</td>
+            </tr>
+            <tr>
+              <td>Ctrl + s</td>
+              <td>Download annotations</td>
+            </tr>
+            <tr>
+              <td>Ctrl + a</td>
+              <td>Select all regions</td>
+            </tr>
+            <tr>
+              <td>Ctrl + c</td>
+              <td>Copy sel. regions</td>
+            </tr>           
+            <tr>
+              <td>Ctrl + v</td>
+              <td>Paste sel. regions</td>
+            </tr>
+            <tr>
+              <td>Esc</td>
+              <td>Cancel operation</td>
+            </tr>
+            <tr>
+              <td>Alt + d, Del</td>
+              <td>Delete image region</td>
+            </tr>           
+          </table>
 	</div>
 
-	<button class="leftsidebar_accordion">Keyboard Shortcuts</button>
-	<div class="leftsidebar_accordion_panel">
-	  <ul class="region_shape">
-	    <li><a title="Rectangle" href="">&EmptySmallSquare;</a></li>
-	    <li><a title="Circle" href="">&cir;</a></li>
-	    <li><a title="Ellipse" href="">0</a></li>
-	    <li><a title="Polygon" href="">&trpezium;</a></li>
-	  </ul>
+	<button onclick="toggle_img_list(this)" class="leftsidebar_accordion" id="image_list_panel_button">Image List</button>
+	<div id="img_list_panel"></div>
+      </div>
+
+      <!-- Main display area: contains image canvas, ... -->
+      <div id="display_area">
+	<div id="canvas_panel">
+          <canvas id="image_canvas"></canvas>
+	  <canvas id="region_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
+	</div>
+
+	<div id="text_panel">
+	  <div id="via_start_info_panel">
+            <p>To begin the image annotation process,
+	      click <a title="Load images" style="cursor: pointer;" onclick="load_images()">Load images</a>
+	      in the Image menu.</p>
+          </div>
+
+	  <div id="getting_started_panel">@todo</div>
+	  
+	  <div id="about_panel">
+            <p>
+              VGG Image Annotator (via) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
+              developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
+              and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
+              With this standalone application, you can define regions in an image and create a textual description of those regions.
+              Such image regions and descriptions are useful for supervised training of learning algorithms.
+            </p>
+            <p>
+              Features:
+              <ul>
+		<li>based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)</li>
+		<li>can be used offline (complete application packaged in a single html file of size &lt; 200KB)</li>
+		<li>requires nothing more than a modern web browser (tested on firefox and chrome)</li>
+		<li>supports following region shapes: rectangle, circle, ellipse, polygon</li>
+		<li>supports multiple attributes for each image region</li>
+		<li>import (and export) of region data from (to) text file in csv and json format</li>
+		<li>hundreds of images can be loaded and annotated with any performance degradation</li>
+              </ul>
+            </p>
+            <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a></p>
+          </div>  
 	</div>
       </div>
-      <div id="displayarea">display area</div>
     </div>
 
     <!-- Bottom panel is used to display attributes input panel -->    
@@ -617,17 +601,6 @@
     <!-- to show status messages -->
     <div id="message_panel"></div>
 
-    <script type="text/javascript">
-      var acc = document.getElementsByClassName("accordion");
-      var i;
-
-      for (i = 0; i < acc.length; i++) {
-		    		      acc[i].onclick = function(){
-		      this.classList.toggle("active");
-		      this.nextElementSibling.classList.toggle("show");
-		      }
-		      }
-		      </script>
     <script type="text/javascript" src="via_demo.js">
     <script type="text/javascript">
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
