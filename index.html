@@ -461,7 +461,7 @@
 	<ul>
 	  <li onclick="sel_local_images()" title="Load/Add Images">&ctdot;</li>
 	  <li onclick="sel_local_data_file('annotations')" title="Import Annotations">&darr;</li>
-	  <li onclick="" title="Save Annotations">&DownArrowBar;</li>
+	  <li onclick="download_all_region_data('csv')" title="Save Annotations">&DownArrowBar;</li>
 	  
 	  <li style="margin-left: 2em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
 	  <li onclick="move_to_next_image()" title="Next Image">&rarr;</li>
@@ -471,10 +471,10 @@
 	  <li onclick="zoom_in()" title="Zoom In">&plus;</li>
 	  <li onclick="reset_zoom_level()" title="Zoom Reset">&equals;</li>
 
-	  <li style="margin-left: 2em;" onclick="" title="Copy Region">c</li>
-	  <li onclick="" title="Paste Region">v</li>
-	  <li onclick="" title="Select All Regions">a</li>
-	  <li onclick="" title="Delete Region">&times;</li>
+	  <li style="margin-left: 2em;" onclick="copy_sel_regions()" title="Copy Region">c</li>
+	  <li onclick="paste_sel_regions()" title="Paste Region">v</li>
+	  <li onclick="sel_all_regions()" title="Select All Regions">a</li>
+	  <li onclick="del_sel_regions()" title="Delete Region">&times;</li>
 	</ul>
       </div> <!-- endof #toolbar -->
       <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">

@@ -382,7 +382,6 @@ function import_region_attributes_from_csv(data) {
     }
 
     _via_reload_img_table = true;
-    show_region_attributes_info();
     show_message('Imported ' + attributes_import_count + ' attributes from CSV file');
     save_current_data_to_browser_cache();
 }
@@ -914,42 +913,6 @@ function clear_image_display_area() {
     via_start_info_panel.style.display = 'none';
 }
 
-function delete_selected_regions() {
-    var del_region_count = 0;
-    if (_via_is_all_region_selected) {
-        del_region_count = _via_canvas_regions.length;  
-        _via_canvas_regions.splice(0);
-        _via_img_metadata[_via_image_id].regions.splice(0);
-    } else {
-        var sorted_sel_reg_id = [];
-        for (var i=0; i<_via_canvas_regions.length; ++i) {
-            if (_via_canvas_regions[i].is_user_selected) {
-                sorted_sel_reg_id.push(i);
-            }
-        }       
-        sorted_sel_reg_id.sort( function(a,b) {
-            return (b-a);
-        });
-        for (var i=0; i<sorted_sel_reg_id.length; ++i) {
-            _via_canvas_regions.splice( sorted_sel_reg_id[i], 1);
-            _via_img_metadata[_via_image_id].regions.splice( sorted_sel_reg_id[i], 1);
-            del_region_count += 1;
-        }
-    }
-
-    _via_is_all_region_selected = false;
-    _via_is_region_selected = false;
-    _via_user_sel_region_id = -1;
-    
-    _via_redraw_reg_canvas();
-    _via_reg_canvas.focus();
-    show_region_shape_info();
-
-    show_message('Deleted ' + del_region_count + ' selected regions');
-
-    save_current_data_to_browser_cache();
-}
-
 //
 // UI Control Elements (buttons, etc)
 //
@@ -1306,16 +1269,11 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                 _via_canvas_regions[region_id].is_user_selected = true;
 
                 show_message('Region selected. Click and drag to move or resize the region', VIA_THEME_MESSAGE_TIMEOUT_MS);
-                show_region_attributes_info();
-                show_region_shape_info();
             } else {
                 if ( _via_is_user_drawing_region ) {
                     // clear all region selection
                     _via_is_user_drawing_region = false;
                     toggle_all_regions_selection(false);
-                    
-                    show_region_attributes_info();
-                    show_region_shape_info();
                 } else {
                     if (_via_current_shape == VIA_REGION_SHAPE.POLYGON) {
                         // user has clicked on the first point in a new polygon
@@ -1327,9 +1285,10 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                         canvas_polygon_region.shape_attributes.set('all_points_y', [Math.round(_via_click_y0)]);
                         _via_canvas_regions.push(canvas_polygon_region);
                         _via_current_polygon_region_id =_via_canvas_regions.length - 1;
-                    }
-                }
-                
+                    } else {
+			console.log('miss');
+		    }
+                }                
             }
         }
         _via_redraw_reg_canvas();
@@ -1434,8 +1393,6 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         update_attributes_input_panel();
         _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
-        show_region_attributes_info();
-        show_region_shape_info();
 
         save_current_data_to_browser_cache();
         return;
@@ -1840,6 +1797,10 @@ function _via_redraw_reg_canvas() {
             draw_all_region_id();
         }
     }
+}
+
+function _via_clear_reg_canvas() {
+    _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
 }
 
 function draw_all_regions() {
@@ -2491,38 +2452,20 @@ window.addEventListener("keydown", function(e) {
         }
 
         if ( e.which == 65 ) { // Ctrl + a
-            toggle_all_regions_selection(true);
-            _via_is_all_region_selected = true;
-            _via_redraw_reg_canvas();
-
+	    sel_all_regions();
             e.preventDefault();
             return;
         }
 
         if ( e.which == 67 ) { // Ctrl + c
-            _via_copied_image_regions.splice(0);
-            _via_copied_canvas_regions.splice(0);
-            for (var i=0; i<_via_img_metadata[_via_image_id].regions.length; ++i) {
-                var img_region = _via_img_metadata[_via_image_id].regions[i];
-                var canvas_region = _via_canvas_regions[i];
-                if (canvas_region.is_user_selected) {
-                    _via_copied_image_regions.push( clone_image_region(img_region) );
-                    _via_copied_canvas_regions.push( clone_image_region(canvas_region) );
-                }
-            }
-            show_message('Copied ' + _via_copied_image_regions.length + ' selected regions. Press Ctrl + v to paste', VIA_THEME_MESSAGE_TIMEOUT_MS);
-            e.preventDefault();
+	    copy_sel_regions();
+	    e.preventDefault();
             return;
         }
 
         if ( e.which == 86 ) { // Ctrl + v
-            for (var i=0; i<_via_copied_image_regions.length; ++i) {
-                _via_img_metadata[_via_image_id].regions.push( _via_copied_image_regions[i] );
-                _via_canvas_regions.push( _via_copied_canvas_regions[i] );
-            }
-            show_message('Pasted ' + _via_copied_image_regions.length + ' regions', VIA_THEME_MESSAGE_TIMEOUT_MS);
+	    paste_sel_regions();
             e.preventDefault();
-            _via_redraw_reg_canvas();
             return;
         }
     }
@@ -2534,37 +2477,6 @@ window.addEventListener("keydown", function(e) {
         }
     }
     
-    // zoom in/out functionality
-    if (e.shiftKey) {
-        if ( e.keyCode == 90 ) { // Shift + Z
-            // zoom out
-            if (!_via_is_user_updating_attribute_value &&
-                !_via_is_user_updating_attribute_name &&
-                !_via_is_user_adding_attribute_name) {
-
-                if (_via_canvas_zoom_level_index == 0) {
-                    show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
-                } else {
-                    _via_canvas_zoom_level_index -= 1;
-                    
-                    _via_is_canvas_zoomed = true;
-                    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-                    _via_ctx.scale(zoom_scale, zoom_scale);
-                    
-                    _via_canvas.height = _via_canvas_height * zoom_scale;
-                    _via_canvas.width = _via_canvas_width * zoom_scale;
-                    _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
-
-                    _via_load_canvas_regions(); // image to canvas space transform
-                    _via_redraw_reg_canvas();
-                    _via_reg_canvas.focus();
-                    show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
-                }
-                return;
-            }
-        }
-    }
-
     if (e.which == 78 || e.which == 39) { // n or right arrow
         if (!_via_is_user_updating_attribute_value &&
             !_via_is_user_updating_attribute_name &&
@@ -2701,7 +2613,6 @@ window.addEventListener("keydown", function(e) {
             _via_is_user_updating_attribute_name = false;
             _via_is_user_updating_attribute_value = false;
 
-            show_region_attributes_info();
         }
 
         if ( _via_is_user_moving_region ) {
@@ -2723,6 +2634,79 @@ window.addEventListener("keydown", function(e) {
     }
     
 });
+
+//
+// Shortcut key handlers
+//
+function del_sel_regions() {
+    var del_region_count = 0;
+    if (_via_is_all_region_selected) {
+        del_region_count = _via_canvas_regions.length;  
+        _via_canvas_regions.splice(0);
+        _via_img_metadata[_via_image_id].regions.splice(0);
+    } else {
+        var sorted_sel_reg_id = [];
+        for (var i=0; i<_via_canvas_regions.length; ++i) {
+            if (_via_canvas_regions[i].is_user_selected) {
+                sorted_sel_reg_id.push(i);
+            }
+        }       
+        sorted_sel_reg_id.sort( function(a,b) {
+            return (b-a);
+        });
+        for (var i=0; i<sorted_sel_reg_id.length; ++i) {
+            _via_canvas_regions.splice( sorted_sel_reg_id[i], 1);
+            _via_img_metadata[_via_image_id].regions.splice( sorted_sel_reg_id[i], 1);
+            del_region_count += 1;
+        }
+    }
+
+    _via_is_all_region_selected = false;
+    _via_is_region_selected = false;
+    _via_user_sel_region_id = -1;
+
+    if (_via_canvas_regions.length == 0) {
+	// all regions were deleted, hence clear region canvas
+	_via_clear_reg_canvas();
+    } else {
+	_via_redraw_reg_canvas();
+    }
+    _via_reg_canvas.focus();
+    save_current_data_to_browser_cache();
+    
+    show_message('Deleted ' + del_region_count + ' selected regions');
+}
+
+function sel_all_regions() {
+    toggle_all_regions_selection(true);
+    _via_is_all_region_selected = true;
+    _via_redraw_reg_canvas();
+}
+
+function copy_sel_regions() {
+    _via_copied_image_regions.splice(0);
+    _via_copied_canvas_regions.splice(0);
+    for (var i=0; i<_via_img_metadata[_via_image_id].regions.length; ++i) {
+        var img_region = _via_img_metadata[_via_image_id].regions[i];
+        var canvas_region = _via_canvas_regions[i];
+        if (canvas_region.is_user_selected) {
+            _via_copied_image_regions.push( clone_image_region(img_region) );
+            _via_copied_canvas_regions.push( clone_image_region(canvas_region) );
+        }
+    }
+    show_message('Copied ' + _via_copied_image_regions.length +
+		 ' selected regions. Press Ctrl + v to paste');
+}
+
+function paste_sel_regions() {
+    for (var i=0; i<_via_copied_image_regions.length; ++i) {
+        _via_img_metadata[_via_image_id].regions.push( _via_copied_image_regions[i] );
+        _via_canvas_regions.push( _via_copied_canvas_regions[i] );
+    }
+    show_message('Pasted ' + _via_copied_image_regions.length + ' regions');
+    _via_redraw_reg_canvas();
+    _via_reg_canvas.focus();
+}
 
 function move_to_prev_image() {
     if (_via_img_count > 0) {
