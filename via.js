@@ -1826,16 +1826,16 @@ function count_missing_file_attr(img_id) {
 //
 function _via_redraw_img_canvas() {
     if (_via_current_image_loaded) {
-	_via_img_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
+	_via_img_ctx.clearRect(0, 0, _via_img_canvas.width, _via_img_canvas.height);
 	_via_img_ctx.drawImage(_via_current_image, 0, 0,
-			       _via_canvas_width, _via_canvas_height);
+			       _via_img_canvas.width, _via_img_canvas.height);
     }
 }
 
 function _via_redraw_reg_canvas() {
     if (_via_current_image_loaded) {
         if ( _via_canvas_regions.length > 0 ) {
-	    _via_reg_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
+	    _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
             draw_all_regions();
             draw_all_region_id();
         }
@@ -2761,11 +2761,11 @@ function reset_zoom_level() {
 
 	var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
 	set_all_canvas_scale(zoom_scale);
-
 	set_all_canvas_size(_via_canvas_width, _via_canvas_height);
 	_via_canvas_scale = _via_canvas_scale_without_zoom;
 	
 	_via_load_canvas_regions(); // image to canvas space transform
+	_via_redraw_img_canvas();	
 	_via_redraw_reg_canvas();
 	_via_reg_canvas.focus();
 	show_message('Zoom reset');
@@ -2804,16 +2804,13 @@ function zoom_out() {
         _via_is_canvas_zoomed = true;
         var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
 	set_all_canvas_scale(zoom_scale);
-        
-        _via_canvas.height = _via_canvas_height * zoom_scale;
-        _via_canvas.width = _via_canvas_width * zoom_scale;
+	set_all_canvas_size(_via_canvas_width * zoom_scale,
+			    _via_canvas_height * zoom_scale);
         _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
 
-	set_all_canvas_size(_via_canvas_width, _via_canvas.height);
-	_via_redraw_img_canvas();
 	_via_load_canvas_regions(); // image to canvas space transform
-
-        _via_redraw_reg_canvas();
+	_via_redraw_img_canvas();
+	_via_redraw_reg_canvas();
         _via_reg_canvas.focus();
         show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
     }
