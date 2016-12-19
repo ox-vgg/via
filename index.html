@@ -333,7 +333,7 @@
       }
 
       /* region and file attributes input panel (spreadsheet like) */
-      #attributes_input_panel {
+      #bottom_panel {
       display: none;
       position: fixed;
       z-index: 10;
@@ -345,7 +345,7 @@
       border-top: 4px solid #000000;
       padding-bottom: 2em;
       }
-      #attributes_input_panel .title {
+      #bottom_panel .title {
       font-family: Sans;
       font-size: large;
       padding-top: 1em;
@@ -354,7 +354,7 @@
       padding-right: 1em;
       }
 
-      #attributes_input_panel table {
+      #bottom_panel table {
       border-collapse: collapse;
       table-layout: fixed;
       /*width: 100%;*/
@@ -362,17 +362,17 @@
       margin: 1em;
       }
 
-      #attributes_input_panel td {
+      #bottom_panel td {
       border: 1px solid #e6e6e6;
       padding: 0 0.1em;
       margin: 0;
       height: 1em;
       }
-      #attributes_input_panel tr:first-child td, #attributes_input_panel td:first-child {
+      #bottom_panel tr:first-child td, #bottom_panel td:first-child {
       padding: 0 1em;
       text-align: center;
       }
-      #attributes_input_panel input {
+      #bottom_panel input {
       border: none;
       padding: 0;
       margin: 0;
@@ -382,13 +382,13 @@
       font-family: Mono;
       font-size: small;
       }
-      #attributes_input_panel input:hover {
+      #bottom_panel input:hover {
       background-color: #e6e6e6;
       }
-      #attributes_input_panel input:focus {
+      #bottom_panel input:focus {
       background-color: #e6e6e6;
       }
-      #attributes_input_panel input:not(:focus) {
+      #bottom_panel input:not(:focus) {
       text-align: center;
       }
       #panel_close_button {
@@ -495,11 +495,7 @@
 	  </ul>
 	</div>
 
-	<button onclick="toggle_region_attributes_panel()" class="leftsidebar_accordion">Region Attributes (3)</button>
-	<div class="leftsidebar_accordion_panel" id="accordion_region_attr_panel"></div>
-	
-	<button onclick="toggle_file_attributes_panel()" class="leftsidebar_accordion">File Attributes (0)</button>
-	<div class="leftsidebar_accordion_panel" id="accordion_file_attr_panel"></div>
+	<button onclick="toggle_attributes_panel()" class="leftsidebar_accordion">Region &amp; File Attributes</button>
 
 	<button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion">Keyboard Shortcuts</button>
 	<div class="leftsidebar_accordion_panel">
@@ -594,8 +590,23 @@
     </div>
 
     <!-- Bottom panel is used to display attributes input panel -->    
-    <div class="bottom_panel">
-      <div id="attributes_input_panel"></div>
+    <div id="bottom_panel">
+      <!-- Region Attributes -->
+      <div>
+        <div style="display: inline-block;" class="title">Regions Attributes</div>
+        <div style="display: inline-block;" ><a onclick="toggle_table_width('region_attr_table')" title="Change table width (100% or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
+        <div style="display: inline-block;" ><a onclick="toggle_table_layout('region_attr_table')" title="Change table layout (fixed or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_table"></use></svg></a></div>
+      </div>
+      <table id="region_attributes"></table>
+
+      <!-- File Attributes -->
+      <div>
+        <div style="display: inline-block;" class="title">File Attributes</div>
+        <div style="display: inline-block;" ><a onclick="toggle_table_width('file_attr_table')" title="Change table width (100% or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
+        <div style="display: inline-block;" ><a onclick="toggle_table_layout('file_attr_table')" title="Change table layout (fixed or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_table"></use></svg></a></div>
+      </div>
+      <table id="file_attributes"></table>
+
     </div>
 
     <!-- to show status messages -->
