@@ -190,7 +190,10 @@
       padding: 0.5em 0.5em;
       width: 100%;
       text-align: left;
-      border: none;
+      border: 0;
+      outline: none;
+      }
+      button.leftsidebar_accordion:focus {
       outline: none;
       }
       button.leftsidebar_accordion.active, button.leftsidebar_accordion:hover {
@@ -254,17 +257,6 @@
       cursor: pointer;
       }
 
-      /* Bottom Panel : contains status messages, attributes input panel */
-      .bottom_panel {
-      display: table;
-      width: 100%;
-      font-family: Sans;
-      font-size: x-small;
-      background-color: #ff0000;
-      color: white;
-      z-index: 1;
-      }
-      
       #message_panel {
       position: fixed;
       left: 0;
@@ -316,20 +308,12 @@
       cursor: pointer;
       }
 
-      .button {
+      .tool_button {
       color: blue;
       cursor: pointer;
       }
-
-      /* image info (on top right corner) */
-      #image_info {
-      display: inline;
-      position: relative;
-      color: yellow;
-      font-family: Mono;
-      font-size: small;
-      top: 1em;
-      left: 6em;
+      .tool_button:hover {
+      color: red;
       }
 
       /* region and file attributes input panel (spreadsheet like) */
@@ -344,6 +328,9 @@
       background-color: #ffffff;
       border-top: 4px solid #000000;
       padding-bottom: 2em;
+      padding: 1em 1em;
+      font-family: Sans;
+      font-size: x-small;
       }
       #bottom_panel .title {
       font-family: Sans;
@@ -356,20 +343,22 @@
 
       #bottom_panel table {
       border-collapse: collapse;
-      table-layout: fixed;
+      table-layout: auto;
       /*width: 100%;*/
-      font-size: small;
       margin: 1em;
       }
 
       #bottom_panel td {
       border: 1px solid #e6e6e6;
-      padding: 0 0.1em;
+      padding: 1em 1em;
       margin: 0;
       height: 1em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       }
       #bottom_panel tr:first-child td, #bottom_panel td:first-child {
-      padding: 0 1em;
+      padding: 1em 1em;
       text-align: center;
       }
       #bottom_panel input {
@@ -378,9 +367,7 @@
       margin: 0;
       display: table-cell;
       width: 100%;
-      height: 1.4em;
-      font-family: Mono;
-      font-size: small;
+      font-size: x-small;
       }
       #bottom_panel input:hover {
       background-color: #e6e6e6;
@@ -391,18 +378,18 @@
       #bottom_panel input:not(:focus) {
       text-align: center;
       }
-      #panel_close_button {
-      display: inline-block;
-      color: #808080;
-      float: right;
-      font-size: 2em;
-      font-weight: bold;
-      padding-right: 0.5em;
+      #bottom_panel textarea {
+      border: none;
+      padding: 0;
+      margin: 0;
+      display: table-cell;
+      font-size: x-small;
       }
-      #panel_close_button:hover {
-      color: red;
-      text-decoration: none;
-      cursor: pointer;
+      #bottom_panel textarea:hover {
+      background-color: #e6e6e6;
+      }
+      #bottom_panel textarea:focus {
+      background-color: #e6e6e6;
       }
 
       /* layers of canvas */
@@ -495,7 +482,8 @@
 	  </ul>
 	</div>
 
-	<button onclick="toggle_attributes_panel()" class="leftsidebar_accordion">Region &amp; File Attributes</button>
+	<button onclick="toggle_reg_attr_panel()" class="leftsidebar_accordion" id="reg_attr_panel_button">Region Attributes</button>
+	<button onclick="toggle_file_attr_panel()" class="leftsidebar_accordion" id="file_attr_panel_button">File Attributes</button>
 
 	<button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion">Keyboard Shortcuts</button>
 	<div class="leftsidebar_accordion_panel">
@@ -591,22 +579,11 @@
 
     <!-- Bottom panel is used to display attributes input panel -->    
     <div id="bottom_panel">
-      <!-- Region Attributes -->
-      <div>
-        <div style="display: inline-block;" class="title">Regions Attributes</div>
-        <div style="display: inline-block;" ><a onclick="toggle_table_width('region_attr_table')" title="Change table width (100% or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
-        <div style="display: inline-block;" ><a onclick="toggle_table_layout('region_attr_table')" title="Change table layout (fixed or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_table"></use></svg></a></div>
+      <div style="position: fixed; right: 0; padding: 0 1em; font-size: large;">
+	<span class="tool_button" onclick="toggle_attributes_panel()">&times;</span>
       </div>
-      <table id="region_attributes"></table>
 
-      <!-- File Attributes -->
-      <div>
-        <div style="display: inline-block;" class="title">File Attributes</div>
-        <div style="display: inline-block;" ><a onclick="toggle_table_width('file_attr_table')" title="Change table width (100% or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_resize"></use></svg></a></div>
-        <div style="display: inline-block;" ><a onclick="toggle_table_layout('file_attr_table')" title="Change table layout (fixed or auto)" class="svg_button"><svg width="12" viewBox="0 0 32 32"><use xlink:href="#icon_table"></use></svg></a></div>
-      </div>
-      <table id="file_attributes"></table>
-
+      <div id="attributes_panel"></div>
     </div>
 
     <!-- to show status messages -->
