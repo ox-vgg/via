@@ -54,6 +54,8 @@
       min-width: 800px;
       padding: 0;
       margin: 0;
+      font-family: Sans;
+      font-size: medium;
       }
       
       /* Top panel : #navbar, #toolbar, #fileinfo */
@@ -72,7 +74,6 @@
 
       .navbar {
       display: inline-block;
-      font-size: small;
       }
       .navbar ul {
       display: inline;
@@ -85,7 +86,7 @@
       .navbar li a, .drop_menu_item {
       display: inline-block;
       color: white;
-      padding: 0.4em 1.2em;
+      padding: 0.65em 1.2em;
       text-decoration: none;
       }
       .navbar li a:hover, .dropdown:hover {
@@ -101,6 +102,7 @@
       background-color: #333333;
       min-width: 120px;
       border: 1px solid #ffffff;
+      font-size: small;
       }
       .navbar .dropdown-content a {
       color: #ffffff;
@@ -123,7 +125,6 @@
       display: inline-block;
       color: white;
       vertical-align: top;
-      font-size: small;
       }
       .toolbar ul {
       display: inline;
@@ -155,14 +156,12 @@
       .middle_panel {
       display: table;
       width: 100%;
-      font-family: Sans;
-      font-size: x-small;
       z-index: 1;
       padding-top: 1em;
       }
       #leftsidebar {
       display: inline-block;
-      width: 200px;
+      width: 260px;
       z-index: 10;
       border: 1px solid #000000;
       vertical-align: top;
@@ -184,7 +183,7 @@
       /* Left sidebar accordion */
       button.leftsidebar_accordion {
       font-family: Sans;
-      font-size: x-small;
+      font-size: small;
       background-color: #f2f2f2;
       cursor: pointer;
       padding: 0.5em 0.5em;
@@ -211,6 +210,7 @@
       display: none;
       padding-top: 0;
       padding-left: 0.5em;
+      font-size: x-small;
       }
       .leftsidebar_accordion_panel.show {
       display: block;
@@ -243,6 +243,7 @@
       /* Loaded image list shown in leftsidebar panel */
       #img_list_panel {
       width: 98%;
+      font-size: small;
       }
       #img_list_panel ul {
       position: relative;
@@ -290,7 +291,7 @@
       #about_panel {
       display: none;
       margin: auto;
-      width: 80%;
+      width: 40%;
       font-family: Sans;
       font-size: 1em;
       line-height: 1.5em;
@@ -332,9 +333,9 @@
       background-color: #ffffff;
       border-top: 4px solid #000000;
       padding-bottom: 2em;
-      padding: 1em 1em;
+      padding: 1em 0em;
       font-family: Sans;
-      font-size: x-small;
+      font-size: small;
       }
       #bottom_panel .title {
       font-family: Sans;
@@ -371,7 +372,7 @@
       margin: 0;
       display: table-cell;
       width: 100%;
-      font-size: x-small;
+      font-size: small;
       }
       #bottom_panel input:hover {
       background-color: #e6e6e6;
@@ -387,7 +388,7 @@
       padding: 0;
       margin: 0;
       display: table-cell;
-      font-size: x-small;
+      font-size: small;
       }
       #bottom_panel textarea:hover {
       background-color: #e6e6e6;
@@ -512,18 +513,22 @@
 
 	<button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion">Keyboard Shortcuts</button>
 	<div class="leftsidebar_accordion_panel">
-	  <table style="padding: 1em 0;">
+	  <table style="padding: 2em 0em;">
             <tr>
               <td style="width: 7em;">n/p (&larr;/&rarr;)</td>
               <td>Next/Previous image</td>
             </tr>
             <tr>
-              <td>Spc</td>
-              <td>Show/hide attributes</td>
+              <td>r</td>
+              <td>Show/hide region attr.</td>
             </tr>
             <tr>
-              <td>Ctrl + Spc</td>
-              <td>Show/hide image list</td>
+              <td>f</td>
+              <td>Show/hide file attr.</td>
+            </tr>
+            <tr>
+              <td>Spc</td>
+              <td>Show/hide file list</td>
             </tr>
             <tr>
               <td>+/-/=</td>
@@ -550,9 +555,9 @@
               <td>Cancel operation</td>
             </tr>
             <tr>
-              <td>Alt + d, Del</td>
+              <td>Del, Bkspc</td>
               <td>Delete image region</td>
-            </tr>           
+            </tr>
           </table>
 	</div>
 
@@ -577,8 +582,10 @@
 	  <div id="getting_started_panel">@todo</div>
 	  
 	  <div id="about_panel">
+	    <h1>VGG Image Annotator (VIA)</h1>
+	    <p style="font-family: Mono; font-size: small;">version <a href="https://gitlab.com/vgg/via/raw/master/CHANGELOG">0.1<a/> (Jan. 2017)</p>
             <p>
-              VGG Image Annotator (via) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
+              VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
               developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
               and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
               With this standalone application, you can define regions in an image and create a textual description of those regions.
@@ -593,10 +600,10 @@
 		<li>supports following region shapes: rectangle, circle, ellipse, polygon</li>
 		<li>supports multiple attributes for each image region</li>
 		<li>import (and export) of region data from (to) text file in csv and json format</li>
-		<li>hundreds of images can be loaded and annotated with any performance degradation</li>
+		<li>hundreds of images can be loaded and annotated without any performance degradation</li>
               </ul>
             </p>
-            <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a></p>
+            <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
           </div>  
 	</div>
       </div>
@@ -604,10 +611,6 @@
 
     <!-- Bottom panel is used to display attributes input panel -->    
     <div id="bottom_panel">
-      <div style="position: fixed; right: 0; padding: 0 1em; font-size: large;">
-	<span class="tool_button" onclick="toggle_attributes_panel()">&times;</span>
-      </div>
-
       <div id="attributes_panel"></div>
     </div>
 
