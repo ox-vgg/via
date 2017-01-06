@@ -226,14 +226,18 @@
       }
       ul.region_shape li{
       float: left;
-      padding: 0 0.3em;
+      padding: 0 0.2em;
+      fill: #ffffff;
+      stroke: #000000;
       }
       ul.region_shape li:hover {
-      color: red;
       cursor: pointer;
+      fill: #000000;
+      stroke: #000000;
       }
       ul.region_shape .selected {
-      color: blue;
+      fill: #000000;
+      stroke: #000000;
       }
       
       /* Loaded image list shown in leftsidebar panel */
@@ -416,6 +420,27 @@
   </head>
 
   <body onload="main()" onresize="update_ui_components()">
+    <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+      <defs>
+	<symbol id="shape_rectangle">
+          <title>Rectangular region shape</title>
+          <rect width="20" height="12" x="6" y="10" />
+        </symbol>
+        <symbol id="shape_circle">
+          <title>Circular region shape</title>
+          <circle r="10" cx="16" cy="16" />
+        </symbol>
+        <symbol id="shape_ellipse">
+          <title>Elliptical region shape</title>
+          <ellipse rx="12" ry="8" cx="16" cy="16" />
+        </symbol>
+        <symbol id="shape_polygon">
+          <title>Polyline region shape</title>
+          <path d="M 15.25,2.2372 3.625,11.6122 6,29.9872 l 20.75,-9.625 2.375,-14.75 z" />
+        </symbol>
+      </defs>
+    </svg>
+	
     <div class="top_panel" id="ui_top_panel">
       <!-- Navigation menu -->
       <div class="navbar">
@@ -475,10 +500,10 @@
 	<button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Region Shape</button>
 	<div class="leftsidebar_accordion_panel show" id="accordion_region_shape_panel">
 	  <ul class="region_shape">
-	    <li id="region_shape_rect" class="selected" onclick="select_region_shape('rect')" title="Rectangle">&EmptySmallSquare;</li>
-	    <li id="region_shape_circle" onclick="select_region_shape('circle')" title="Circle">&cir;</li>
-	    <li id="region_shape_ellipse" onclick="select_region_shape('ellipse')" title="Ellipse">0</li>
-	    <li id="region_shape_polygon" onclick="select_region_shape('polygon')" title="Polygon">&trpezium;</li>
+	    <li id="region_shape_rect" class="selected" onclick="select_region_shape('rect')" title="Rectangle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></li>
+	    <li id="region_shape_circle" onclick="select_region_shape('circle')" title="Circle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></li>
+	    <li id="region_shape_ellipse" onclick="select_region_shape('ellipse')" title="Ellipse"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></li>
+	    <li id="region_shape_polygon" onclick="select_region_shape('polygon')" title="Polygon"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></li>
 	  </ul>
 	</div>
 
