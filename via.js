@@ -412,6 +412,12 @@ function import_annotations_from_csv(data) {
     var file_attr_count = 0;
     var image_count = 0;
     for (var i=0; i<csvdata.length; ++i) {
+	// ignore blank lines
+	if (csvdata[i].charAt(0) == '\n' ||
+	    csvdata[i].charAt(0) == '') {
+	    continue;
+	}
+	
         if (csvdata[i].charAt(0) == VIA_IMPORT_CSV_COMMENT_CHAR) {
             // parse header
             // #filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
@@ -439,7 +445,8 @@ function import_annotations_from_csv(data) {
             }
             continue;
         } else {
-            var d = csvdata[i].split(',');
+	    // ignore comma inside double quotations
+	    var d = csvdata[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
             
             var filename = d[filename_index];
             var size = d[size_index];
@@ -447,16 +454,14 @@ function import_annotations_from_csv(data) {
             if ( _via_img_metadata.hasOwnProperty(image_id) ) {
                 image_count += 1;
                 
-                // copy image attributes
+                // copy file attributes
                 if ( d[file_attr_index] != '' ||
                      d[file_attr_index] != '""') {
                     var file_attr_str = d[file_attr_index];
-                    file_attr_str = file_attr_str.substring(1, file_attr_str.length-1); // remove prefix and suffix quotation marks
 
                     var attr_map = keyval_str_to_map( file_attr_str );
                     for( var key of attr_map.keys() ) {
 			var val = attr_map.get(key);
-			val = substitute_code_with_special_chars(val);
                         _via_img_metadata[image_id].file_attributes.set(key, val);
 
                         if (!_via_file_attributes.has(key)) {
@@ -471,8 +476,6 @@ function import_annotations_from_csv(data) {
                 if ( d[region_shape_attr_index] != '""' ||
                      d[region_shape_attr_index] != '' ) {                   
                     var region_str = d[region_shape_attr_index];
-                    region_str = region_str.substring(1, region_str.length-1); // remove prefix and suffix quotation marks
-                    
                     var attr_map = keyval_str_to_map( region_str );
 
                     for ( var key of attr_map.keys() ) {
@@ -496,13 +499,11 @@ function import_annotations_from_csv(data) {
                 if ( d[region_attr_index] != '""' ||
                      d[region_attr_index] != '' ) {                 
                     var region_attr = d[region_attr_index];
-                    region_attr = region_attr.substring(1, region_attr.length-1); // remove prefix and suffix quotation marks
                     var region_attr_map = keyval_str_to_map( region_attr );
                     
                     for ( var key of region_attr_map.keys() ) {
                         var val = region_attr_map.get(key);
 			var v0 = val;
-			val = substitute_code_with_special_chars(val);
                         regioni.region_attributes.set(key, val);
 
                         if (!_via_region_attributes.has(key)) {
@@ -583,6 +584,9 @@ function import_annotations_from_json(data) {
 
 // key1=val1;key2=val2;...
 function keyval_str_to_map(keyval_str) {
+    // remove all quotations
+    keyval_str = keyval_str.replace(/['"]+/g, '')
+    
     var keyval_map = new Map();
     var d = keyval_str.split(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR);    
     for (var i=0; i<d.length; ++i) {
@@ -702,30 +706,11 @@ function attr_map_to_str(attr) {
             value_str += ']';
             attr_map_str.push(key + '=' + value_str);
         } else {
-	    value = substitute_code_with_special_chars(value);
             attr_map_str.push(key + '=' + value);
         }
     }
     var str_val = '"' + attr_map_str.join(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR) + '"';
     return str_val;
-}
-
-function substitute_code_with_special_chars(str) {
-    var s = String(str);
-    for (var key in VIA_SPECIAL_CHAR_SUBS) {
-	var value = VIA_SPECIAL_CHAR_SUBS[key];
-        s = s.replace(new RegExp(value, 'g'), key);
-    }
-    return s;
-}
-
-function substitute_special_chars_with_code(str) {
-    var s = String(str);
-    for (var key in VIA_SPECIAL_CHAR_SUBS) {
-        var value = VIA_SPECIAL_CHAR_SUBS[key];
-        s = s.replace(new RegExp(key, 'g'), value);
-    }
-    return s;
 }
 
 function save_data_to_local_file(data, filename) {
@@ -1708,20 +1693,6 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
         var line_y = [all_points_y.slice(npts-1), _via_current_y];
         _via_draw_polygon_region(line_x, line_y, false);
     }
-    
-    //console.log("_via_is_user_drawing_region=" + _via_is_user_drawing_region + ", _via_is_user_resizing_region=" + _via_is_user_resizing_region + ", _via_region_edge=" + _via_region_edge[0] + "," + _via_region_edge[1]);
-    
-    /* @todo: implement settings -> show guide
-       else {
-       redraw__via_canvas();
-       _via_current_x = e.offsetX; _via_current_y = e.offsetY;
-       _via_ctx.strokeStyle="#ffffff";
-       _via_ctx.setLineDash([0]);
-       _via_ctx.strokeRect(0, _via_current_y, canvas_width, 1);
-       _via_ctx.strokeRect(_via_current_x, 0, 1, canvas_height);
-       _via_reg_canvas.focus();
-       }
-    */
 });
 
 function toggle_img_list(panel) {
