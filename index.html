@@ -58,7 +58,7 @@
       font-size: medium;
       }
       
-      /* Top panel : #navbar, #toolbar, #fileinfo */
+      /* Top panel : #navbar, #toolbar */
       .top_panel {
       position: relative;
       top: 0;
@@ -155,15 +155,17 @@
       /* Middle panel: containing #image_panel, #leftsidebar */
       .middle_panel {
       display: table;
+      table-layout: fixed;
       width: 100%;
       z-index: 1;
+      padding: 0;
       padding-top: 1em;
       }
       #leftsidebar {
-      display: inline-block;
-      width: 260px;
+      display: table-cell;
+      width: 280px;
       z-index: 10;
-      border: 1px solid #000000;
+      border: 2px solid #000000;
       vertical-align: top;
       }
       #display_area {
@@ -242,8 +244,11 @@
       
       /* Loaded image list shown in leftsidebar panel */
       #img_list_panel {
-      width: 98%;
+      display: none;
+      height: 0;
       font-size: small;
+      font-family: Mono;
+      overflow: scroll;
       }
       #img_list_panel ul {
       position: relative;
@@ -574,9 +579,6 @@
 
 	<div id="text_panel">
 	  <div id="via_start_info_panel">
-            <p>To begin the image annotation process,
-	      click <a title="Load images" style="cursor: pointer;" onclick="sel_local_images()">Load images</a>
-	      in the Image menu.</p>
           </div>
 
 	  <div id="getting_started_panel">@todo</div>

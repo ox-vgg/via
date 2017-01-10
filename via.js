@@ -225,7 +225,7 @@ function show_home_panel() {
         about_panel.style.display = "none";
 	getting_started_panel.style.display = "none";
     } else {
-        via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <span class="action_text_link" onclick="load_images()" title="Load Images">[Load Images]</span> in the Image menu.';
+        via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <a title="Load images" style="cursor: pointer; color: blue;" onclick="sel_local_images()">Load or Add Images</a> in the Image menu.</p>';
         via_start_info_panel.style.display = "block";
         about_panel.style.display = "none";
 	canvas_panel.style.display = "none";
@@ -808,7 +808,10 @@ function show_image(image_index) {
 
 		// update the UI components to reflect newly loaded image
                 // refresh the image list
+		// @todo: let the height of image list match that of window
                 _via_reload_img_table = true;
+		var img_list_height = document.documentElement.clientHeight/2 + 'px';
+		img_list_panel.setAttribute('style', 'height: ' + img_list_height);
                 if (_via_is_loaded_img_list_visible) {
                     show_img_list();
                 }
