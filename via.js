@@ -2984,17 +2984,23 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
     // if multiple regions are selected, show the selected regions first
     var sel_reg_list = [];
     var remaining_reg_list = [];
+    var all_reg_list = [];
     var region_travesal_order = [];
     if (type == 'region_attributes') {
 	// count number of selected regions
 	for (var i=0; i<data.length; ++i) {
+	    all_reg_list.push(i);
 	    if (data[i].is_user_selected) {
 		sel_reg_list.push(i);
 	    } else {
 		remaining_reg_list.push(i);
 	    }		
 	}
-	region_traversal_order = sel_reg_list.concat(remaining_reg_list);
+	if (sel_reg_list.length > 1) {
+	    region_traversal_order = sel_reg_list.concat(remaining_reg_list);
+	} else {
+	    region_traversal_order = all_reg_list;
+	}
 	console.log('traversing order : ' + region_traversal_order);
     }
     
@@ -3069,7 +3075,8 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
 	var panelHeight = bottom_panel.offsetHeight;
 	var sel_row_bottom = sel_rows[0].offsetTop + sel_rows[0].clientHeight
 	if (sel_row_bottom > panelHeight) {
-	    bottom_panel.scrollTop = sel_row[0].offsetTop;
+	    console.log('scrolling');
+	    bottom_panel.scrollTop = sel_rows[0].offsetTop;
 	} else {
 	    bottom_panel.scrollTop = 0;
 	}
