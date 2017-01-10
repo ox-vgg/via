@@ -203,7 +203,7 @@ function main() {
                  2*VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     show_home_panel();
-    start_demo_session(); // defined in via_demo.js
+    //start_demo_session(); // defined in via_demo.js
     
     _via_is_local_storage_available = check_local_storage();
     //_via_is_local_storage_available = false;
