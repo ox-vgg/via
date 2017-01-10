@@ -33,14 +33,11 @@ var VIA_REGION_SHAPE = { RECT:'rect',
                          CIRCLE:'circle',
                          ELLIPSE:'ellipse',
                          POLYGON:'polygon'};
-var VIA_SPECIAL_CHAR_SUBS = {',':'{comma}',
-			     ':':'{colon}',
-			     ';':'{scolon}',
-			     '=':'{equal}'};
 
 var VIA_REGION_EDGE_TOL = 5;
 var VIA_POLYGON_VERTEX_MATCH_TOL = 5;
-var VIA_REGION_MIN_DIM = 5;
+var VIA_REGION_MIN_DIM = 3;     // in pixel
+var VIA_MOUSE_CLICK_TOL = 2;    // in pixel
 var VIA_ELLIPSE_EDGE_TOL = 0.2;
 var VIA_THETA_TOL = Math.PI/18; // 10 degrees
 var POLYGON_RESIZE_VERTEX_OFFSET = 100;
@@ -331,8 +328,8 @@ function store_local_img_ref(event) {
                 }
             } else {
                 _via_img_metadata[img_id] = new ImageMetadata(user_selected_images[i],
-                                                          filename,
-                                                          size);
+                                                              filename,
+                                                              size);
                 _via_image_id_list.push(img_id);
                 _via_img_count += 1;
                 _via_reload_img_table = true;
@@ -543,7 +540,7 @@ function import_annotations_from_json(data) {
             for (var key in d[image_id].file_attributes) {
                 if (!_via_img_metadata[image_id].file_attributes.get(key)) {
                     _via_img_metadata[image_id].file_attributes.set(key,
-                                                              d[image_id].file_attributes[key]);
+								    d[image_id].file_attributes[key]);
                     file_attr_count += 1;
                 }
                 if (!_via_file_attributes.has(key)) {
@@ -964,7 +961,7 @@ function hide_all_canvas() {
 
 // enter annotation mode on double click
 _via_reg_canvas.addEventListener('dblclick', function(e) {
-    show_message('Double clicks are not used in this application', VIA_THEME_MESSAGE_TIMEOUT_MS);
+    show_message('Double clicks are not used in this application');
 }, false);
 
 // user clicks on the canvas
@@ -984,32 +981,37 @@ _via_reg_canvas.addEventListener('mousedown', function(e) {
                 _via_is_user_resizing_region = true;
             }
         } else {
-            // check if user clicked inside a region
-            if ( region_id == _via_user_sel_region_id ) {
-                if( !_via_is_user_moving_region ) {     
+	    var yes = is_inside_this_region(_via_click_x0,
+					    _via_click_y0,
+					    _via_user_sel_region_id);
+	    if (yes) {
+		if( !_via_is_user_moving_region ) {     
                     _via_is_user_moving_region = true;
                     _via_region_click_x = _via_click_x0;
                     _via_region_click_y = _via_click_y0;
                 }
-            } else {
-                if ( region_id == -1 ) {
-                    // mousedown on outside any region
-                    _via_is_user_drawing_region = true;
-                    // unselect all regions
-                    _via_is_region_selected = false;
-                    _via_user_sel_region_id = -1;
-                    toggle_all_regions_selection(false);
-                }
+	    }
+	    if ( region_id == -1 ) {
+                // mousedown on outside any region
+                _via_is_user_drawing_region = true;
+                // unselect all regions
+                _via_is_region_selected = false;
+                _via_user_sel_region_id = -1;
+                toggle_all_regions_selection(false);
             }
         }
     } else {
         if ( region_id == -1 ) {
-            // mouse was clicked outside a region
+            // mousedown outside a region
             if (_via_current_shape != VIA_REGION_SHAPE.POLYGON) {
                 // this is a bounding box drawing event
                 _via_is_user_drawing_region = true;
             }
-        }
+        } else {
+	    // mousedown inside a region
+	    // this could lead to (1) region selection or (2) region drawing
+	    _via_is_user_drawing_region = true;
+	}
     }
     e.preventDefault();
 }, false);
@@ -1031,8 +1033,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         var move_x = Math.round(_via_click_x1 - _via_region_click_x);
         var move_y = Math.round(_via_click_y1 - _via_region_click_y);
 
-	if (move_x > VIA_REGION_MIN_DIM ||
-	    move_y > VIA_REGION_MIN_DIM) {
+	if (Math.abs(move_x) > VIA_MOUSE_CLICK_TOL ||
+	    Math.abs(move_y) > VIA_MOUSE_CLICK_TOL) {
 
             // @todo: update the region data
             var image_attr = _via_img_metadata[_via_image_id].regions[_via_user_sel_region_id].shape_attributes;
@@ -1085,8 +1087,9 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 
 	    // traverse the canvas regions in alternating ascending
 	    // and descending order to solve the issue of nested regions
-	    var nested_region_id = is_inside_region(_via_click_x0, _via_click_y0, true);
-	    if (nested_region_id >= 0) {
+	    var nested_region_id = is_inside_region(_via_click_x0, _via_click_y0, true);	    
+	    if (nested_region_id >= 0 &&
+		nested_region_id != _via_user_sel_region_id) {
 		_via_user_sel_region_id = nested_region_id;
 		_via_is_region_selected = true;
 		_via_is_user_moving_region = false;
@@ -1095,7 +1098,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 		if ( !e.shiftKey ) {
 		    toggle_all_regions_selection(false);
 		}
-		_via_canvas_regions[nested_region_id].is_user_selected = true;
+		set_region_as_selected(nested_region_id);
+		update_attributes_panel();
 	    }
 	}
         _via_redraw_reg_canvas();
@@ -1214,8 +1218,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
     }
 
     // denotes a single click (= mouse down + mouse up)
-    if ( click_dx < 5 ||
-         click_dy < 5 ) {
+    if ( click_dx < VIA_MOUSE_CLICK_TOL ||
+         click_dy < VIA_MOUSE_CLICK_TOL ) {
         // if user is already drawing ploygon, then each click adds a new point
         if ( _via_is_user_drawing_polygon ) {
             var canvas_x0 = Math.round(_via_click_x0);
@@ -1260,10 +1264,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                 _via_img_metadata[_via_image_id].regions.push(polygon_region);
 
                 // newly drawn region is automatically selected
-                toggle_all_regions_selection(false);
-                _via_canvas_regions[_via_current_polygon_region_id].is_user_selected = true;
-                _via_is_region_selected = true;
-                _via_user_sel_region_id = _via_current_polygon_region_id;
+		select_only_region(_via_current_polygon_region_id);
 
                 _via_current_polygon_region_id = -1;
                 update_attributes_panel();
@@ -1280,18 +1281,24 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                 _via_user_sel_region_id = region_id;
                 _via_is_region_selected = true;
                 _via_is_user_moving_region = false;
+		_via_is_user_drawing_region = false;
                 
                 // de-select all other regions if the user has not pressed Shift
                 if ( !e.shiftKey ) {
 		    toggle_all_regions_selection(false);
                 }
-                _via_canvas_regions[region_id].is_user_selected = true;
+		set_region_as_selected(region_id);
+		update_attributes_panel();
                 show_message('Click and drag to move or resize the selected region');
             } else {
                 if ( _via_is_user_drawing_region ) {
                     // clear all region selection
                     _via_is_user_drawing_region = false;
+		    _via_is_region_selected = false;
+		    _via_use_sel_region_id = -1;
                     toggle_all_regions_selection(false);
+		    
+		    update_attributes_panel();
                 } else {
                     if (_via_current_shape == VIA_REGION_SHAPE.POLYGON) {
                         // user has clicked on the first point in a new polygon
@@ -1344,6 +1351,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 
         // newly drawn region is automatically selected
         toggle_all_regions_selection(false);
+	original_img_region.is_user_selected = true;
         canvas_img_region.is_user_selected = true;
         _via_is_region_selected = true;
         _via_user_sel_region_id = _via_canvas_regions.length; // new region's id
@@ -1408,7 +1416,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         } else {
             show_message('Skipped adding a ' + _via_current_shape + ' of nearly 0 dimension', VIA_THEME_MESSAGE_TIMEOUT_MS);
         }
-        update_attributes_panel();
+	update_attributes_panel();
         _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
 
@@ -1421,12 +1429,19 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 function toggle_all_regions_selection(is_selected) {
     for (var i=0; i<_via_canvas_regions.length; ++i) {
         _via_canvas_regions[i].is_user_selected = is_selected;
+	_via_img_metadata[_via_image_id].regions[i].is_user_selected = is_selected;
     }
+    _via_is_all_region_selected = is_selected;
 }
-
 function select_only_region(region_id) {
     toggle_all_regions_selection(false);
+    set_region_as_selected(region_id);
+    _via_is_region_selected = true;
+    _via_user_sel_region_id = region_id;
+}
+function set_region_as_selected(region_id) {
     _via_canvas_regions[region_id].is_user_selected = true;
+    _via_img_metadata[_via_image_id].regions[region_id].is_user_selected = true;
 }
 
 _via_reg_canvas.addEventListener("mouseover", function(e) {
@@ -1478,8 +1493,10 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
                     _via_reg_canvas.style.cursor = "crosshair";
                 }
             } else {
-                var region_id = is_inside_region(_via_current_x, _via_current_y);
-                if ( region_id == _via_user_sel_region_id ) {
+                var yes = is_inside_this_region(_via_current_x,
+						_via_current_y,
+						_via_user_sel_region_id);
+		if (yes) {
                     _via_reg_canvas.style.cursor = "move";
                 } else {
                     _via_reg_canvas.style.cursor = "default";
@@ -2147,60 +2164,62 @@ function is_inside_region(px, py, descending_order) {
 	return -1;
     }
     var start, end, del;
-    if ( typeof(descending_order) === 'undefined' ||
-	 descending_order == false) {
-	start = 0;
-	end = N;
-	del = 1;
-    } else {
-	// traverse the canvas regions in alternating ascending
-	// and descending order to solve the issue of nested regions
+    // traverse the canvas regions in alternating ascending
+    // and descending order to solve the issue of nested regions
+    if (descending_order) {
 	start = N - 1;
 	end = -1;
 	del = -1;
+    } else {
+	start = 0;
+	end = N;
+	del = 1;
     }
 
     var i = start;
     while (i != end) {
-        var attr = _via_canvas_regions[i].shape_attributes;
-
-        var result = false;
-        switch ( attr.get('name') ) {
-        case VIA_REGION_SHAPE.RECT:
-            result = is_inside_rect(attr.get('x'),
-                                    attr.get('y'),
-                                    attr.get('width'),
-                                    attr.get('height'),
-                                    px, py);
-            break;
-        case VIA_REGION_SHAPE.CIRCLE:
-            result = is_inside_circle(attr.get('cx'),
-                                      attr.get('cy'),
-                                      attr.get('r'),
-                                      px, py);
-            break;
-
-        case VIA_REGION_SHAPE.ELLIPSE:
-            result = is_inside_ellipse(attr.get('cx'),
-                                       attr.get('cy'),
-                                       attr.get('rx'),
-                                       attr.get('ry'),
-                                       px, py);
-            break;
-
-        case VIA_REGION_SHAPE.POLYGON:      
-            result = is_inside_polygon(attr.get('all_points_x'),
-                                       attr.get('all_points_y'),
-                                       px, py);
-            break;
-        }
-
-        if (result) {
+	var yes = is_inside_this_region(px, py, i);
+	if (yes) {
 	    return i;
         }
 	i = i + del;
     }
     return -1;
+}
+
+function is_inside_this_region(px, py, region_id) {
+    var attr = _via_canvas_regions[region_id].shape_attributes;
+    var result = false;
+    switch ( attr.get('name') ) {
+    case VIA_REGION_SHAPE.RECT:
+        result = is_inside_rect(attr.get('x'),
+                                attr.get('y'),
+                                attr.get('width'),
+                                attr.get('height'),
+                                px, py);
+        break;
+    case VIA_REGION_SHAPE.CIRCLE:
+        result = is_inside_circle(attr.get('cx'),
+                                  attr.get('cy'),
+                                  attr.get('r'),
+                                  px, py);
+        break;
+
+    case VIA_REGION_SHAPE.ELLIPSE:
+        result = is_inside_ellipse(attr.get('cx'),
+                                   attr.get('cy'),
+                                   attr.get('rx'),
+                                   attr.get('ry'),
+                                   px, py);
+        break;
+
+    case VIA_REGION_SHAPE.POLYGON:      
+        result = is_inside_polygon(attr.get('all_points_x'),
+                                   attr.get('all_points_y'),
+                                   px, py);
+        break;
+    }
+    return result;
 }
 
 function is_inside_circle(cx, cy, r, px, py) {
@@ -2529,10 +2548,7 @@ window.addEventListener("keydown", function(e) {
             // clear all region selections
             _via_is_region_selected = false;
             _via_user_sel_region_id = -1;
-            for (var i=0; i < _via_img_metadata[_via_image_id].regions.length; ++i) {
-                _via_img_metadata[_via_image_id].regions[i].is_user_selected = false;
-                _via_canvas_regions[i].is_user_selected = false;
-            }
+	    toggle_all_regions_selection(false);
         }
 
         if ( _via_is_user_drawing_polygon ) {
@@ -2965,17 +2981,49 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
         ' value = "+"' +
         ' onfocus="_via_is_user_adding_attribute_name=true; this.value = \'\';" />';
 
-    for (var rowi=0; rowi<data.length; rowi++) {
+    // if multiple regions are selected, show the selected regions first
+    var sel_reg_list = [];
+    var remaining_reg_list = [];
+    var region_travesal_order = [];
+    if (type == 'region_attributes') {
+	// count number of selected regions
+	for (var i=0; i<data.length; ++i) {
+	    if (data[i].is_user_selected) {
+		sel_reg_list.push(i);
+	    } else {
+		remaining_reg_list.push(i);
+	    }		
+	}
+	region_traversal_order = sel_reg_list.concat(remaining_reg_list);
+	console.log('traversing order : ' + region_traversal_order);
+    }
+    
+    var sel_rows = [];
+    for (var i=0; i<data.length; ++i) {
+	var rowi = i;
+
+	// if multiple regions are selected, show the selected regions first
+	var di;
+        if (type == 'region_attributes') {
+	    if (sel_reg_list.length) {
+		rowi = region_traversal_order[rowi];
+	    }
+	    di = data[rowi].region_attributes;
+        } else {
+	    di = data[rowi];
+	}
+	
         var row = attrtable.insertRow(-1);
         var region_id_cell = row.insertCell(0);
         region_id_cell.innerHTML = '' + row_names[rowi] + '';
-        region_id_cell.style.fontWeight = 'bold';
+	region_id_cell.style.fontWeight = 'bold';	
         region_id_cell.style.width = '2em';
 
-        var di = data[rowi];
-        if (type == 'region_attributes') {
-            di = data[rowi].region_attributes;
-        }
+	if (data[rowi].is_user_selected) {
+	    region_id_cell.style.backgroundColor = '#5599FF';
+	    sel_rows.push(row);
+	}
+
         for (var key of col_headers) {
             var input_id = type[0] + '#' + key + '#' + rowi;
 
@@ -3015,6 +3063,19 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
     document.getElementById('attributes_panel').innerHTML = '';
     document.getElementById('attributes_panel').appendChild(attrtable);
     document.getElementById('attributes_panel').focus();
+
+    // move vertical scrollbar automatically to show the selected region (if any)
+    if (sel_rows.length == 1) {
+	var panelHeight = bottom_panel.offsetHeight;
+	var sel_row_bottom = sel_rows[0].offsetTop + sel_rows[0].clientHeight
+	if (sel_row_bottom > panelHeight) {
+	    bottom_panel.scrollTop = sel_row[0].offsetTop;
+	} else {
+	    bottom_panel.scrollTop = 0;
+	}
+    } else {
+	bottom_panel.scrollTop = 0;
+    }
 }
 
 function update_attributes_panel(type) {
