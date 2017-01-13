@@ -56,9 +56,10 @@ var VIA_THEME_MESSAGE_TIMEOUT_MS = 2500;
 var VIA_THEME_ATTRIBUTE_IMG_WIDTH = 64;
 var VIA_THEME_ATTRIBUTE_VALUE_FONT = '10pt Sans';
 var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
-var VIA_IMPORT_CSV_KEYVAL_SEP_CHAR = ';';
+var VIA_IMPORT_CSV_KEYVAL_SEP_CHAR = '\\;';
 var VIA_EXPORT_CSV_ARRAY_SEP_CHAR = ':';
 var VIA_CSV_SEP_CHAR = ',';
+var VIA_EXPORT_DOUBLE_QUOTE_REPLACEMENT = "\\'";
 
 var _via_img_metadata = {};   // data structure to store loaded images metadata
 var _via_img_count = 0;       // count of the loaded images
@@ -450,7 +451,7 @@ function import_annotations_from_csv(data) {
             var image_id = _via_get_image_id(filename, size);
             if ( _via_img_metadata.hasOwnProperty(image_id) ) {
                 image_count += 1;
-                
+
                 // copy file attributes
                 if ( d[file_attr_index] != '' ||
                      d[file_attr_index] != '""') {
@@ -471,7 +472,7 @@ function import_annotations_from_csv(data) {
                 var regioni = new ImageRegion();
                 // copy regions shape attributes
                 if ( d[region_shape_attr_index] != '""' ||
-                     d[region_shape_attr_index] != '' ) {                   
+                     d[region_shape_attr_index] != '' ) {
                     var region_str = d[region_shape_attr_index];
                     var attr_map = keyval_str_to_map( region_str );
 
@@ -494,7 +495,7 @@ function import_annotations_from_csv(data) {
 
                 // copy region attributes
                 if ( d[region_attr_index] != '""' ||
-                     d[region_attr_index] != '' ) {                 
+                     d[region_attr_index] != '' ) {
                     var region_attr = d[region_attr_index];
                     var region_attr_map = keyval_str_to_map( region_attr );
                     
@@ -518,7 +519,9 @@ function import_annotations_from_csv(data) {
             }
         }
     }
-    show_message('Imported [' + region_import_count + '] regions and [' + file_attr_count + '] file attributes for ' + image_count + ' images from CSV file', VIA_THEME_MESSAGE_TIMEOUT_MS);
+    show_message('Imported [' + region_import_count + '] regions ' +
+		 'and [' + file_attr_count + '] file attributes for ' +
+		 image_count + ' images from CSV file');
 
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -579,10 +582,10 @@ function import_annotations_from_json(data) {
     show_image(_via_image_index);
 }
 
-// key1=val1;key2=val2;...
+// key1=val1\;key2=val2\;...
 function keyval_str_to_map(keyval_str) {
-    // remove all quotations
-    keyval_str = keyval_str.replace(/['"]+/g, '')
+    // remove all double quotations
+    keyval_str = keyval_str.replace(/["]+/g, '')
     
     var keyval_map = new Map();
     var d = keyval_str.split(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR);    
@@ -644,7 +647,7 @@ function package_region_data(return_type) {
                     csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
                 }
             } else {
-                csvdata.push('\n' + prefix_str + ',0,,"",""');
+                csvdata.push('\n' + prefix_str + ',0,0,"",""');
             }
         }
         return csvdata;
@@ -3210,6 +3213,10 @@ function update_attribute_value(attr_id, value) {
     var attribute_name = attr_id_split[1];
     var region_id = attr_id_split[2];
 
+    // replace all double-quotation with a single quotation
+    value = value.replace(/'/g, VIA_EXPORT_DOUBLE_QUOTE_REPLACEMENT);
+    value = value.replace(/"/g, VIA_EXPORT_DOUBLE_QUOTE_REPLACEMENT);
+    
     switch(type) {
     case 'r':
         var region = _via_img_metadata[_via_image_id].regions[region_id];
