@@ -1,9 +1,12 @@
-## [0.1b] - not released yet
+## [0.1] - not released yet
  * added support for file attributes (useful for weakly supervised learning)
  * spreadsheet like editor for region and file attributes
  * improved visualization of loaded image list
  * user annotation data cached in browser's localStorage (for data recovery on browser crash)
  * zoom in/out support
+ * improved performance using multi-layered canvas for image and annotations
+ * added toolbar on top navigation panel
+ * new user interface layout
 
 ## [0.1b] - 2016-10-24
  * first release of VGG image annotator

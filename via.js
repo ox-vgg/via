@@ -26,7 +26,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-var VIA_VERSION = '0.1b';
+var VIA_VERSION = '0.1';
 var VIA_NAME = 'VGG Image Annotator';
 var VIA_SHORT_NAME = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -44,7 +44,7 @@ var POLYGON_RESIZE_VERTEX_OFFSET = 100;
 var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 2.0, 3.0, 4.0];
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
 var VIA_ATTR_PANEL_FONT_SIZE_LEVELS = ['xx-small', 'x-small', 'small',
-				       'medium', 'large', 'x-large', 'xx-large'];
+                                       'medium', 'large', 'x-large', 'xx-large'];
 
 var VIA_THEME_REGION_BOUNDARY_WIDTH = 4;
 var VIA_THEME_BOUNDARY_LINE_COLOR = "#1a1a1a";
@@ -220,16 +220,16 @@ function main() {
 //
 function show_home_panel() {
     if (_via_current_image_loaded) {
-	canvas_panel.style.display = "block";
+        canvas_panel.style.display = "block";
         via_start_info_panel.style.display = "none";
         about_panel.style.display = "none";
-	getting_started_panel.style.display = "none";
+        getting_started_panel.style.display = "none";
     } else {
         via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <a title="Load images" style="cursor: pointer; color: blue;" onclick="sel_local_images()">Load or Add Images</a> in the Image menu.</p>';
         via_start_info_panel.style.display = "block";
         about_panel.style.display = "none";
-	canvas_panel.style.display = "none";
-	getting_started_panel.style.display = "none";
+        canvas_panel.style.display = "none";
+        getting_started_panel.style.display = "none";
     }
 }
 function sel_local_images() {
@@ -255,16 +255,16 @@ function download_all_region_data(type) {
 function sel_local_data_file(type) {
     if (invisible_file_input) {
         invisible_file_input.accept='.csv,.json';
-	switch(type) {
-	case 'annotations':
-	    invisible_file_input.onchange = import_annotations_from_file;
-	    break;
-	case 'attributes':
-	    invisible_file_input.onchange = import_attributes_from_file;
-	    break;
-	default:
-	    return;
-	}
+        switch(type) {
+        case 'annotations':
+            invisible_file_input.onchange = import_annotations_from_file;
+            break;
+        case 'attributes':
+            invisible_file_input.onchange = import_attributes_from_file;
+            break;
+        default:
+            return;
+        }
         invisible_file_input.click();
     }
 }
@@ -409,12 +409,12 @@ function import_annotations_from_csv(data) {
     var file_attr_count = 0;
     var image_count = 0;
     for (var i=0; i<csvdata.length; ++i) {
-	// ignore blank lines
-	if (csvdata[i].charAt(0) == '\n' ||
-	    csvdata[i].charAt(0) == '') {
-	    continue;
-	}
-	
+        // ignore blank lines
+        if (csvdata[i].charAt(0) == '\n' ||
+            csvdata[i].charAt(0) == '') {
+            continue;
+        }
+        
         if (csvdata[i].charAt(0) == VIA_IMPORT_CSV_COMMENT_CHAR) {
             // parse header
             // #filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
@@ -442,8 +442,8 @@ function import_annotations_from_csv(data) {
             }
             continue;
         } else {
-	    // ignore comma inside double quotations
-	    var d = csvdata[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+            // ignore comma inside double quotations
+            var d = csvdata[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
             
             var filename = d[filename_index];
             var size = d[size_index];
@@ -458,7 +458,7 @@ function import_annotations_from_csv(data) {
 
                     var attr_map = keyval_str_to_map( file_attr_str );
                     for( var key of attr_map.keys() ) {
-			var val = attr_map.get(key);
+                        var val = attr_map.get(key);
                         _via_img_metadata[image_id].file_attributes.set(key, val);
 
                         if (!_via_file_attributes.has(key)) {
@@ -500,7 +500,7 @@ function import_annotations_from_csv(data) {
                     
                     for ( var key of region_attr_map.keys() ) {
                         var val = region_attr_map.get(key);
-			var v0 = val;
+                        var v0 = val;
                         regioni.region_attributes.set(key, val);
 
                         if (!_via_region_attributes.has(key)) {
@@ -540,7 +540,7 @@ function import_annotations_from_json(data) {
             for (var key in d[image_id].file_attributes) {
                 if (!_via_img_metadata[image_id].file_attributes.get(key)) {
                     _via_img_metadata[image_id].file_attributes.set(key,
-								    d[image_id].file_attributes[key]);
+                                                                    d[image_id].file_attributes[key]);
                     file_attr_count += 1;
                 }
                 if (!_via_file_attributes.has(key)) {
@@ -738,12 +738,12 @@ function show_image(image_index) {
     if (_via_img_metadata.hasOwnProperty(img_id)) {
         var img_filename = _via_img_metadata[img_id].filename;
         var img_reader = new FileReader();
-	_via_is_loading_current_image = true;
+        _via_is_loading_current_image = true;
 
-	img_reader.addEventListener( "loadstart", function(e) {
+        img_reader.addEventListener( "loadstart", function(e) {
             document.getElementById("fileinfo").innerHTML = "Loading image ...";
         }, false);
-	
+        
         img_reader.addEventListener( "progress", function(e) {
             //show_message("Loading image " + img_filename + " ... ", 1000);
         }, false);
@@ -755,12 +755,12 @@ function show_image(image_index) {
         img_reader.addEventListener( "load", function() {
             _via_current_image = new Image();
             _via_current_image.addEventListener( "load", function() {
-		// update the current state of application
+                // update the current state of application
                 _via_image_id = img_id;
                 _via_image_index = image_index;
                 _via_current_image_filename = img_filename;
                 _via_current_image_loaded = true;
-		_via_is_loading_current_image = false;                
+                _via_is_loading_current_image = false;                
                 _via_click_x0 = 0; _via_click_y0 = 0;
                 _via_click_x1 = 0; _via_click_y1 = 0;
                 _via_is_user_drawing_region = false;
@@ -771,8 +771,8 @@ function show_image(image_index) {
                 _via_is_region_selected = false;
                 _via_user_sel_region_id = -1;
 
-		// set the size of canvas
-		// based on the current dimension of browser window
+                // set the size of canvas
+                // based on the current dimension of browser window
                 canvas_panel_width = document.documentElement.clientWidth - 230;
                 canvas_panel_height = document.documentElement.clientHeight - 2*ui_top_panel.offsetHeight;               
                 _via_canvas_width = _via_current_image.naturalWidth;
@@ -785,7 +785,7 @@ function show_image(image_index) {
                     _via_canvas_height = _via_current_image.naturalHeight * scale_width;
                 }
                 if ( _via_canvas_height > canvas_panel_height ) {
-		    // resize further image if its height is larger than the image panel
+                    // resize further image if its height is larger than the image panel
                     var scale_height = canvas_panel_height / _via_canvas_height;
                     _via_canvas_height = canvas_panel_height;
                     _via_canvas_width = _via_canvas_width * scale_height;
@@ -794,26 +794,24 @@ function show_image(image_index) {
                 _via_canvas_height = Math.round(_via_canvas_height);
                 _via_canvas_scale = _via_current_image.naturalWidth / _via_canvas_width;
                 _via_canvas_scale_without_zoom = _via_canvas_scale;
-		set_all_canvas_size(_via_canvas_width, _via_canvas_height);
-		//set_all_canvas_scale(_via_canvas_scale_without_zoom);
+                set_all_canvas_size(_via_canvas_width, _via_canvas_height);
+                //set_all_canvas_scale(_via_canvas_scale_without_zoom);
 
-		// ensure that all the canvas are visible
-		clear_image_display_area();
-		show_all_canvas();
-		
-		// we only need to draw the image once in the image_canvas
-		_via_img_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
-		_via_img_ctx.drawImage(_via_current_image, 0, 0,
-				       _via_canvas_width, _via_canvas_height);
+                // ensure that all the canvas are visible
+                clear_image_display_area();
+                show_all_canvas();
+                
+                // we only need to draw the image once in the image_canvas
+                _via_img_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
+                _via_img_ctx.drawImage(_via_current_image, 0, 0,
+                                       _via_canvas_width, _via_canvas_height);
 
-		// update the UI components to reflect newly loaded image
+                // update the UI components to reflect newly loaded image
                 // refresh the image list
-		// @todo: let the height of image list match that of window
+                // @todo: let the height of image list match that of window
                 _via_reload_img_table = true;
-		var x = document.getElementById('image_list_panel_button');
-		console.log(x.clientOffset);
-		var img_list_height = document.documentElement.clientHeight/2 + 'px';
-		img_list_panel.setAttribute('style', 'height: ' + img_list_height);
+                var img_list_height = document.documentElement.clientHeight/2 + 'px';
+                img_list_panel.setAttribute('style', 'height: ' + img_list_height);
                 if (_via_is_loaded_img_list_visible) {
                     show_img_list();
                 }
@@ -828,8 +826,8 @@ function show_image(image_index) {
                 // update the info panel
                 show_filename_info();
 
-		// for DEBUG, remove
-		//toggle_reg_attr_panel();
+                // for DEBUG, remove
+                //toggle_reg_attr_panel();
             });
             _via_current_image.src = img_reader.result;
         }, false);
@@ -929,10 +927,10 @@ function select_region_shape(sel_shape_name) {
         _via_is_user_drawing_polygon = false;
         _via_current_polygon_region_id = -1;
         show_message('Press single click and drag mouse to draw '
-		     + _via_current_shape + ' region');
+                     + _via_current_shape + ' region');
     } else {
         show_message('Press single click to define polygon vertices. Note: in ' +
-		     'Polygon drawing mode, single click cannot be used to un-select regions');
+                     'Polygon drawing mode, single click cannot be used to un-select regions');
     }
 }
 
@@ -986,17 +984,17 @@ _via_reg_canvas.addEventListener('mousedown', function(e) {
                 _via_is_user_resizing_region = true;
             }
         } else {
-	    var yes = is_inside_this_region(_via_click_x0,
-					    _via_click_y0,
-					    _via_user_sel_region_id);
-	    if (yes) {
-		if( !_via_is_user_moving_region ) {     
+            var yes = is_inside_this_region(_via_click_x0,
+                                            _via_click_y0,
+                                            _via_user_sel_region_id);
+            if (yes) {
+                if( !_via_is_user_moving_region ) {     
                     _via_is_user_moving_region = true;
                     _via_region_click_x = _via_click_x0;
                     _via_region_click_y = _via_click_y0;
                 }
-	    }
-	    if ( region_id == -1 ) {
+            }
+            if ( region_id == -1 ) {
                 // mousedown on outside any region
                 _via_is_user_drawing_region = true;
                 // unselect all regions
@@ -1013,10 +1011,10 @@ _via_reg_canvas.addEventListener('mousedown', function(e) {
                 _via_is_user_drawing_region = true;
             }
         } else {
-	    // mousedown inside a region
-	    // this could lead to (1) region selection or (2) region drawing
-	    _via_is_user_drawing_region = true;
-	}
+            // mousedown inside a region
+            // this could lead to (1) region selection or (2) region drawing
+            _via_is_user_drawing_region = true;
+        }
     }
     e.preventDefault();
 }, false);
@@ -1038,8 +1036,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         var move_x = Math.round(_via_click_x1 - _via_region_click_x);
         var move_y = Math.round(_via_click_y1 - _via_region_click_y);
 
-	if (Math.abs(move_x) > VIA_MOUSE_CLICK_TOL ||
-	    Math.abs(move_y) > VIA_MOUSE_CLICK_TOL) {
+        if (Math.abs(move_x) > VIA_MOUSE_CLICK_TOL ||
+            Math.abs(move_y) > VIA_MOUSE_CLICK_TOL) {
 
             // @todo: update the region data
             var image_attr = _via_img_metadata[_via_image_id].regions[_via_user_sel_region_id].shape_attributes;
@@ -1047,66 +1045,66 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
             
             switch( canvas_attr.get('name') ) {
             case VIA_REGION_SHAPE.RECT:
-		var xnew = image_attr.get('x') + Math.round(move_x * _via_canvas_scale);
-		var ynew = image_attr.get('y') + Math.round(move_y * _via_canvas_scale);
-		image_attr.set('x', xnew);
-		image_attr.set('y', ynew);
+                var xnew = image_attr.get('x') + Math.round(move_x * _via_canvas_scale);
+                var ynew = image_attr.get('y') + Math.round(move_y * _via_canvas_scale);
+                image_attr.set('x', xnew);
+                image_attr.set('y', ynew);
 
-		var canvas_xnew = canvas_attr.get('x') + move_x;
-		var canvas_ynew = canvas_attr.get('y') + move_y;
-		canvas_attr.set('x', canvas_xnew);
-		canvas_attr.set('y', canvas_ynew);
-		break;
+                var canvas_xnew = canvas_attr.get('x') + move_x;
+                var canvas_ynew = canvas_attr.get('y') + move_y;
+                canvas_attr.set('x', canvas_xnew);
+                canvas_attr.set('y', canvas_ynew);
+                break;
             case VIA_REGION_SHAPE.CIRCLE:
             case VIA_REGION_SHAPE.ELLIPSE:
-		var cxnew = image_attr.get('cx') + Math.round(move_x * _via_canvas_scale);
-		var cynew = image_attr.get('cy') + Math.round(move_y * _via_canvas_scale);
-		image_attr.set('cx', cxnew);
-		image_attr.set('cy', cynew);
+                var cxnew = image_attr.get('cx') + Math.round(move_x * _via_canvas_scale);
+                var cynew = image_attr.get('cy') + Math.round(move_y * _via_canvas_scale);
+                image_attr.set('cx', cxnew);
+                image_attr.set('cy', cynew);
 
-		var canvas_xnew = canvas_attr.get('cx') + move_x;
-		var canvas_ynew = canvas_attr.get('cy') + move_y;
-		canvas_attr.set('cx', canvas_xnew);
-		canvas_attr.set('cy', canvas_ynew);     
-		break;
+                var canvas_xnew = canvas_attr.get('cx') + move_x;
+                var canvas_ynew = canvas_attr.get('cy') + move_y;
+                canvas_attr.set('cx', canvas_xnew);
+                canvas_attr.set('cy', canvas_ynew);     
+                break;
             case VIA_REGION_SHAPE.POLYGON:
-		var img_px = image_attr.get('all_points_x');
-		var img_py = image_attr.get('all_points_y');
-		for (var i=0; i<img_px.length; ++i) {
+                var img_px = image_attr.get('all_points_x');
+                var img_py = image_attr.get('all_points_y');
+                for (var i=0; i<img_px.length; ++i) {
                     img_px[i] = img_px[i] + Math.round(move_x * _via_canvas_scale);
                     img_py[i] = img_py[i] + Math.round(move_y * _via_canvas_scale);
-		}
+                }
 
-		var canvas_px = canvas_attr.get('all_points_x');
-		var canvas_py = canvas_attr.get('all_points_y');
-		for (var i=0; i<canvas_px.length; ++i) {
+                var canvas_px = canvas_attr.get('all_points_x');
+                var canvas_py = canvas_attr.get('all_points_y');
+                for (var i=0; i<canvas_px.length; ++i) {
                     canvas_px[i] = canvas_px[i] + move_x;
                     canvas_py[i] = canvas_py[i] + move_y;
-		}
-		break;
+                }
+                break;
             }
         } else {
-	    // indicates a user click on an already selected region
-	    // this could indicate a user's intention to select another
-	    // nested region within this region
+            // indicates a user click on an already selected region
+            // this could indicate a user's intention to select another
+            // nested region within this region
 
-	    // traverse the canvas regions in alternating ascending
-	    // and descending order to solve the issue of nested regions
-	    var nested_region_id = is_inside_region(_via_click_x0, _via_click_y0, true);	    
-	    if (nested_region_id >= 0 &&
-		nested_region_id != _via_user_sel_region_id) {
-		_via_user_sel_region_id = nested_region_id;
-		_via_is_region_selected = true;
-		_via_is_user_moving_region = false;
-		
-		// de-select all other regions if the user has not pressed Shift
-		if ( !e.shiftKey ) {
-		    toggle_all_regions_selection(false);
-		}
-		set_region_as_selected(nested_region_id);
-		update_attributes_panel();
-	    }
-	}
+            // traverse the canvas regions in alternating ascending
+            // and descending order to solve the issue of nested regions
+            var nested_region_id = is_inside_region(_via_click_x0, _via_click_y0, true);            
+            if (nested_region_id >= 0 &&
+                nested_region_id != _via_user_sel_region_id) {
+                _via_user_sel_region_id = nested_region_id;
+                _via_is_region_selected = true;
+                _via_is_user_moving_region = false;
+                
+                // de-select all other regions if the user has not pressed Shift
+                if ( !e.shiftKey ) {
+                    toggle_all_regions_selection(false);
+                }
+                set_region_as_selected(nested_region_id);
+                update_attributes_panel();
+            }
+        }
         _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
         save_current_data_to_browser_cache();
@@ -1269,7 +1267,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                 _via_img_metadata[_via_image_id].regions.push(polygon_region);
 
                 // newly drawn region is automatically selected
-		select_only_region(_via_current_polygon_region_id);
+                select_only_region(_via_current_polygon_region_id);
 
                 _via_current_polygon_region_id = -1;
                 update_attributes_panel();
@@ -1286,24 +1284,24 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                 _via_user_sel_region_id = region_id;
                 _via_is_region_selected = true;
                 _via_is_user_moving_region = false;
-		_via_is_user_drawing_region = false;
+                _via_is_user_drawing_region = false;
                 
                 // de-select all other regions if the user has not pressed Shift
                 if ( !e.shiftKey ) {
-		    toggle_all_regions_selection(false);
+                    toggle_all_regions_selection(false);
                 }
-		set_region_as_selected(region_id);
-		update_attributes_panel();
+                set_region_as_selected(region_id);
+                update_attributes_panel();
                 show_message('Click and drag to move or resize the selected region');
             } else {
                 if ( _via_is_user_drawing_region ) {
                     // clear all region selection
                     _via_is_user_drawing_region = false;
-		    _via_is_region_selected = false;
-		    _via_use_sel_region_id = -1;
+                    _via_is_region_selected = false;
+                    _via_use_sel_region_id = -1;
                     toggle_all_regions_selection(false);
-		    
-		    update_attributes_panel();
+                    
+                    update_attributes_panel();
                 } else {
                     if (_via_current_shape == VIA_REGION_SHAPE.POLYGON) {
                         // user has clicked on the first point in a new polygon
@@ -1316,8 +1314,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                         _via_canvas_regions.push(canvas_polygon_region);
                         _via_current_polygon_region_id =_via_canvas_regions.length - 1;
                     } else {
-			console.log('miss');
-		    }
+                        console.log('miss');
+                    }
                 }                
             }
         }
@@ -1356,7 +1354,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 
         // newly drawn region is automatically selected
         toggle_all_regions_selection(false);
-	original_img_region.is_user_selected = true;
+        original_img_region.is_user_selected = true;
         canvas_img_region.is_user_selected = true;
         _via_is_region_selected = true;
         _via_user_sel_region_id = _via_canvas_regions.length; // new region's id
@@ -1421,7 +1419,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         } else {
             show_message('Skipped adding a ' + _via_current_shape + ' of nearly 0 dimension', VIA_THEME_MESSAGE_TIMEOUT_MS);
         }
-	update_attributes_panel();
+        update_attributes_panel();
         _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
 
@@ -1434,7 +1432,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 function toggle_all_regions_selection(is_selected) {
     for (var i=0; i<_via_canvas_regions.length; ++i) {
         _via_canvas_regions[i].is_user_selected = is_selected;
-	_via_img_metadata[_via_image_id].regions[i].is_user_selected = is_selected;
+        _via_img_metadata[_via_image_id].regions[i].is_user_selected = is_selected;
     }
     _via_is_all_region_selected = is_selected;
 }
@@ -1499,9 +1497,9 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
                 }
             } else {
                 var yes = is_inside_this_region(_via_current_x,
-						_via_current_y,
-						_via_user_sel_region_id);
-		if (yes) {
+                                                _via_current_y,
+                                                _via_user_sel_region_id);
+                if (yes) {
                     _via_reg_canvas.style.cursor = "move";
                 } else {
                     _via_reg_canvas.style.cursor = "default";
@@ -1719,17 +1717,17 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 
 function toggle_img_list(panel) {
     if (typeof panel === 'undefined') {
-	// invoked from accordion in the top navigation toolbar
-	panel = document.getElementById('image_list_panel_button');	
+        // invoked from accordion in the top navigation toolbar
+        panel = document.getElementById('image_list_panel_button');     
     }
     panel.classList.toggle('active');
     
     if (_via_is_loaded_img_list_visible) {
-	img_list_panel.style.display = 'none';
+        img_list_panel.style.display = 'none';
         _via_is_loaded_img_list_visible = false;
         return;
     } else {
-	_via_is_loaded_img_list_visible = true;
+        _via_is_loaded_img_list_visible = true;
         show_img_list();
     }
 
@@ -1747,7 +1745,7 @@ function show_img_list() {
             _via_reload_img_table = false;
         }
         img_list_panel.innerHTML = _via_loaded_img_table_html.join('');
-	img_list_panel.style.display = 'block';
+        img_list_panel.style.display = 'block';
     }
 }
 
@@ -1809,16 +1807,16 @@ function count_missing_file_attr(img_id) {
 //
 function _via_redraw_img_canvas() {
     if (_via_current_image_loaded) {
-	_via_img_ctx.clearRect(0, 0, _via_img_canvas.width, _via_img_canvas.height);
-	_via_img_ctx.drawImage(_via_current_image, 0, 0,
-			       _via_img_canvas.width, _via_img_canvas.height);
+        _via_img_ctx.clearRect(0, 0, _via_img_canvas.width, _via_img_canvas.height);
+        _via_img_ctx.drawImage(_via_current_image, 0, 0,
+                               _via_img_canvas.width, _via_img_canvas.height);
     }
 }
 
 function _via_redraw_reg_canvas() {
     if (_via_current_image_loaded) {
         if ( _via_canvas_regions.length > 0 ) {
-	    _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+            _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
             draw_all_regions();
             draw_all_region_id();
         }
@@ -2166,28 +2164,28 @@ function get_canvas_region_bounding_box(region_id) {
 function is_inside_region(px, py, descending_order) {
     var N = _via_canvas_regions.length;
     if (N == 0) {
-	return -1;
+        return -1;
     }
     var start, end, del;
     // traverse the canvas regions in alternating ascending
     // and descending order to solve the issue of nested regions
     if (descending_order) {
-	start = N - 1;
-	end = -1;
-	del = -1;
+        start = N - 1;
+        end = -1;
+        del = -1;
     } else {
-	start = 0;
-	end = N;
-	del = 1;
+        start = 0;
+        end = N;
+        del = 1;
     }
 
     var i = start;
     while (i != end) {
-	var yes = is_inside_this_region(px, py, i);
-	if (yes) {
-	    return i;
+        var yes = is_inside_this_region(px, py, i);
+        if (yes) {
+            return i;
         }
-	i = i + del;
+        i = i + del;
     }
     return -1;
 }
@@ -2453,19 +2451,19 @@ function update_ui_components() {
         _via_is_window_resized = true;
         show_image(_via_image_index);
 
-	if (_via_is_canvas_zoomed) {
+        if (_via_is_canvas_zoomed) {
             reset_zoom_level();
-	}
+        }
     }
 }
 
 
 window.addEventListener("keydown", function(e) {
     if (_via_is_user_updating_attribute_value ||
-	_via_is_user_updating_attribute_name ||
+        _via_is_user_updating_attribute_name ||
         _via_is_user_adding_attribute_name) {
-	
-	return;
+        
+        return;
     }
     
     // user commands
@@ -2477,19 +2475,19 @@ window.addEventListener("keydown", function(e) {
         }
 
         if ( e.which == 65 ) { // Ctrl + a
-	    sel_all_regions();
+            sel_all_regions();
             e.preventDefault();
             return;
         }
 
         if ( e.which == 67 ) { // Ctrl + c
-	    copy_sel_regions();
-	    e.preventDefault();
+            copy_sel_regions();
+            e.preventDefault();
             return;
         }
 
         if ( e.which == 86 ) { // Ctrl + v
-	    paste_sel_regions();
+            paste_sel_regions();
             e.preventDefault();
             return;
         }
@@ -2510,29 +2508,29 @@ window.addEventListener("keydown", function(e) {
         return;
     }
     if (e.which == 82 && _via_current_image_loaded) { // r
-	toggle_reg_attr_panel();
-	return;
+        toggle_reg_attr_panel();
+        return;
     }
     if (e.which == 70 && _via_current_image_loaded) { // f
-	toggle_file_attr_panel();
-	return;
+        toggle_file_attr_panel();
+        return;
     }
     if (e.which == 32 && _via_current_image_loaded) { // Space
-	toggle_img_list();
-	return;
+        toggle_img_list();
+        return;
     }
 
     // zoom
     if (e.shiftKey && _via_current_image_loaded) {
-	if (e.which == 61) { // + for zoom in
-	    zoom_in();
-	}
+        if (e.which == 61) { // + for zoom in
+            zoom_in();
+        }
     }
     if (e.which == 173 && _via_current_image_loaded) { // - for zoom out
-	zoom_out();
+        zoom_out();
     }
     if (e.which == 61 && _via_current_image_loaded) { // = for zoom reset
-	reset_zoom_level();
+        reset_zoom_level();
     }
 
     if ( e.which == 27 ) { // Esc
@@ -2555,7 +2553,7 @@ window.addEventListener("keydown", function(e) {
             // clear all region selections
             _via_is_region_selected = false;
             _via_user_sel_region_id = -1;
-	    toggle_all_regions_selection(false);
+            toggle_all_regions_selection(false);
         }
 
         if ( _via_is_user_drawing_polygon ) {
@@ -2597,8 +2595,8 @@ window.addEventListener("keydown", function(e) {
 //
 function del_sel_regions() {
     if (!_via_current_image_loaded) {
-	show_message('First load some images!');
-	return;
+        show_message('First load some images!');
+        return;
     }
 
     var del_region_count = 0;
@@ -2628,10 +2626,10 @@ function del_sel_regions() {
     _via_user_sel_region_id = -1;
 
     if (_via_canvas_regions.length == 0) {
-	// all regions were deleted, hence clear region canvas
-	_via_clear_reg_canvas();
+        // all regions were deleted, hence clear region canvas
+        _via_clear_reg_canvas();
     } else {
-	_via_redraw_reg_canvas();
+        _via_redraw_reg_canvas();
     }
     _via_reg_canvas.focus();
     update_attributes_panel();
@@ -2642,8 +2640,8 @@ function del_sel_regions() {
 
 function sel_all_regions() {
     if (!_via_current_image_loaded) {
-	show_message('First load some images!');
-	return;
+        show_message('First load some images!');
+        return;
     }
 
     toggle_all_regions_selection(true);
@@ -2653,45 +2651,45 @@ function sel_all_regions() {
 
 function copy_sel_regions() {
     if (!_via_current_image_loaded) {
-	show_message('First load some images!');
-	return;
+        show_message('First load some images!');
+        return;
     }
 
     if (_via_is_region_selected ||
-	_via_is_region_selected) {
-	_via_copied_image_regions.splice(0);
-	_via_copied_canvas_regions.splice(0);
-	for (var i=0; i<_via_img_metadata[_via_image_id].regions.length; ++i) {
+        _via_is_region_selected) {
+        _via_copied_image_regions.splice(0);
+        _via_copied_canvas_regions.splice(0);
+        for (var i=0; i<_via_img_metadata[_via_image_id].regions.length; ++i) {
             var img_region = _via_img_metadata[_via_image_id].regions[i];
             var canvas_region = _via_canvas_regions[i];
             if (canvas_region.is_user_selected) {
-		_via_copied_image_regions.push( clone_image_region(img_region) );
-		_via_copied_canvas_regions.push( clone_image_region(canvas_region) );
+                _via_copied_image_regions.push( clone_image_region(img_region) );
+                _via_copied_canvas_regions.push( clone_image_region(canvas_region) );
             }
-	}
-	show_message('Copied ' + _via_copied_image_regions.length +
-		     ' selected regions. Press Ctrl + v to paste');
+        }
+        show_message('Copied ' + _via_copied_image_regions.length +
+                     ' selected regions. Press Ctrl + v to paste');
     } else {
-	show_message('Select a region first!');
+        show_message('Select a region first!');
     }
 }
 
 function paste_sel_regions() {
     if (!_via_current_image_loaded) {
-	show_message('First load some images!');
-	return;
+        show_message('First load some images!');
+        return;
     }
 
     if (_via_copied_image_regions.length) {
-	for (var i=0; i<_via_copied_image_regions.length; ++i) {
+        for (var i=0; i<_via_copied_image_regions.length; ++i) {
             _via_img_metadata[_via_image_id].regions.push( _via_copied_image_regions[i] );
             _via_canvas_regions.push( _via_copied_canvas_regions[i] );
-	}
-	show_message('Pasted ' + _via_copied_image_regions.length + ' regions');
-	_via_redraw_reg_canvas();
-	_via_reg_canvas.focus();
+        }
+        show_message('Pasted ' + _via_copied_image_regions.length + ' regions');
+        _via_redraw_reg_canvas();
+        _via_reg_canvas.focus();
     } else {
-	show_message('To paste a region, you first need to select a region and copy it!');
+        show_message('To paste a region, you first need to select a region and copy it!');
     }
 }
 
@@ -2727,32 +2725,32 @@ function move_to_next_image() {
 
 function reset_zoom_level() {
     if (!_via_current_image_loaded) {
-	show_message('First load some images!');
-	return;
+        show_message('First load some images!');
+        return;
     }
     if (_via_is_canvas_zoomed) {
-	_via_is_canvas_zoomed = false;
-	_via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX
+        _via_is_canvas_zoomed = false;
+        _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX
 
-	var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-	set_all_canvas_scale(zoom_scale);
-	set_all_canvas_size(_via_canvas_width, _via_canvas_height);
-	_via_canvas_scale = _via_canvas_scale_without_zoom;
-	
-	_via_load_canvas_regions(); // image to canvas space transform
-	_via_redraw_img_canvas();	
-	_via_redraw_reg_canvas();
-	_via_reg_canvas.focus();
-	show_message('Zoom reset');
+        var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+        set_all_canvas_scale(zoom_scale);
+        set_all_canvas_size(_via_canvas_width, _via_canvas_height);
+        _via_canvas_scale = _via_canvas_scale_without_zoom;
+        
+        _via_load_canvas_regions(); // image to canvas space transform
+        _via_redraw_img_canvas();       
+        _via_redraw_reg_canvas();
+        _via_reg_canvas.focus();
+        show_message('Zoom reset');
     } else {
-	show_message('Cannot reset zoom because image zoom has not been applied!');
+        show_message('Cannot reset zoom because image zoom has not been applied!');
     }
 }
 
 function zoom_in() {
     if (!_via_current_image_loaded) {
-	show_message('First load some images!');
-	return;
+        show_message('First load some images!');
+        return;
     }
 
     if (_via_canvas_zoom_level_index == (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
@@ -2762,13 +2760,13 @@ function zoom_in() {
         
         _via_is_canvas_zoomed = true;
         var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-	set_all_canvas_scale(zoom_scale);
-	set_all_canvas_size(_via_canvas_width * zoom_scale,
-			    _via_canvas_height * zoom_scale);
+        set_all_canvas_scale(zoom_scale);
+        set_all_canvas_size(_via_canvas_width * zoom_scale,
+                            _via_canvas_height * zoom_scale);
         _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
 
         _via_load_canvas_regions(); // image to canvas space transform
-	_via_redraw_img_canvas();
+        _via_redraw_img_canvas();
         _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
         show_message('Zoomed in to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
@@ -2777,8 +2775,8 @@ function zoom_in() {
 
 function zoom_out() {
     if (!_via_current_image_loaded) {
-	show_message('First load some images!');
-	return;
+        show_message('First load some images!');
+        return;
     }
 
     if (_via_canvas_zoom_level_index == 0) {
@@ -2788,14 +2786,14 @@ function zoom_out() {
         
         _via_is_canvas_zoomed = true;
         var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-	set_all_canvas_scale(zoom_scale);
-	set_all_canvas_size(_via_canvas_width * zoom_scale,
-			    _via_canvas_height * zoom_scale);
+        set_all_canvas_scale(zoom_scale);
+        set_all_canvas_size(_via_canvas_width * zoom_scale,
+                            _via_canvas_height * zoom_scale);
         _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
 
-	_via_load_canvas_regions(); // image to canvas space transform
-	_via_redraw_img_canvas();
-	_via_redraw_reg_canvas();
+        _via_load_canvas_regions(); // image to canvas space transform
+        _via_redraw_img_canvas();
+        _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
         show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
     }
@@ -2811,7 +2809,7 @@ function show_message(msg, t) {
     }
     var timeout = t;
     if (typeof t === 'undefined') {
-	timeout = VIA_THEME_MESSAGE_TIMEOUT_MS;
+        timeout = VIA_THEME_MESSAGE_TIMEOUT_MS;
     }
     document.getElementById('message_panel').innerHTML = msg;
     _via_message_clear_timer = setTimeout( function() {
@@ -2823,11 +2821,11 @@ function show_message(msg, t) {
 
 function show_filename_info() {
     if ( _via_current_image_loaded ) {
-	var fileinfo = "(" + (_via_image_index+1) + " of " + _via_img_count + ") ";
-	fileinfo += _via_current_image_filename;
+        var fileinfo = "(" + (_via_image_index+1) + " of " + _via_img_count + ") ";
+        fileinfo += _via_current_image_filename;
         document.getElementById("fileinfo").innerHTML = fileinfo;
     } else {
-	document.getElementById("fileinfo").innerHTML = '';
+        document.getElementById("fileinfo").innerHTML = '';
     }
 }
 
@@ -2866,9 +2864,9 @@ function save_current_data_to_browser_cache() {
                 _via_is_save_ongoing = false;
             } catch(err) {
                 _via_is_save_ongoing = false;
-		_via_is_local_storage_available = false;
+                _via_is_local_storage_available = false;
                 show_message('Failed to save data to browser cache. Please download the annotation data.');
-		alert('Failed to save data to browser cache. Please download the annotation data.');
+                alert('Failed to save data to browser cache. Please download the annotation data.');
                 console.log('Failed to save data to browser cache');
                 console.log(err.message);
             }
@@ -2993,11 +2991,11 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
     var attrname = '';
     switch(type) {
     case 'region_attributes':
-	attrname = 'Region Attributes';
-	break;
+        attrname = 'Region Attributes';
+        break;
     case 'file_attributes':
-	attrname = 'File Attributes';
-	break;
+        attrname = 'File Attributes';
+        break;
     }
     
     var hstr = '<div style="display: inline-block;" class="title">';
@@ -3015,11 +3013,10 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
     for (var col_header of col_headers) {
         firstrow.insertCell(-1).innerHTML = '<b>' + col_header + '</b>';
     }
-    // additional column to let user add new attributes
-    var new_attr_cell = firstrow.insertCell(-1);
-    new_attr_cell.innerHTML = '<input type="text"' +
+    // allow adding new attributes
+    firstrow.insertCell(-1).innerHTML = '<input type="text"' +
         ' onchange="add_new_attribute(\'' + type[0] + '\', this.value)"' +
-        ' value = "+"' +
+        ' value = "[ Add New ]"' +
         ' onfocus="_via_is_user_adding_attribute_name=true; this.value = \'\';" />';
 
     // if multiple regions are selected, show the selected regions first
@@ -3028,75 +3025,72 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
     var all_reg_list = [];
     var region_travesal_order = [];
     if (type == 'region_attributes') {
-	// count number of selected regions
-	for (var i=0; i<data.length; ++i) {
-	    all_reg_list.push(i);
-	    if (data[i].is_user_selected) {
-		sel_reg_list.push(i);
-	    } else {
-		remaining_reg_list.push(i);
-	    }		
-	}
-	if (sel_reg_list.length > 1) {
-	    region_traversal_order = sel_reg_list.concat(remaining_reg_list);
-	} else {
-	    region_traversal_order = all_reg_list;
-	}
-	console.log('traversing order : ' + region_traversal_order);
+        // count number of selected regions
+        for (var i=0; i<data.length; ++i) {
+            all_reg_list.push(i);
+            if (data[i].is_user_selected) {
+                sel_reg_list.push(i);
+            } else {
+                remaining_reg_list.push(i);
+            }           
+        }
+        if (sel_reg_list.length > 1) {
+            region_traversal_order = sel_reg_list.concat(remaining_reg_list);
+        } else {
+            region_traversal_order = all_reg_list;
+        }
     }
     
     var sel_rows = [];
     for (var i=0; i<data.length; ++i) {
-	var rowi = i;
+        var rowi = i;
 
-	// if multiple regions are selected, show the selected regions first
-	var di;
+        // if multiple regions are selected, show the selected regions first
+        var di;
         if (type == 'region_attributes') {
-	    if (sel_reg_list.length) {
-		rowi = region_traversal_order[rowi];
-	    }
-	    di = data[rowi].region_attributes;
+            if (sel_reg_list.length) {
+                rowi = region_traversal_order[rowi];
+            }
+            di = data[rowi].region_attributes;
         } else {
-	    di = data[rowi];
-	}
-	
+            di = data[rowi];
+        }
+        
         var row = attrtable.insertRow(-1);
         var region_id_cell = row.insertCell(0);
         region_id_cell.innerHTML = '' + row_names[rowi] + '';
-	region_id_cell.style.fontWeight = 'bold';	
+        region_id_cell.style.fontWeight = 'bold';       
         region_id_cell.style.width = '2em';
 
-	if (data[rowi].is_user_selected) {
-	    region_id_cell.style.backgroundColor = '#5599FF';
-	    sel_rows.push(row);
-	}
+        if (data[rowi].is_user_selected) {
+            region_id_cell.style.backgroundColor = '#5599FF';
+            sel_rows.push(row);
+        }
 
         for (var key of col_headers) {
             var input_id = type[0] + '#' + key + '#' + rowi;
 
             if ( di.has(key) ) {
                 var ip_val = di.get(key);
-		if (ip_val.length > 30) {
+                if (ip_val.length > 30) {
                     row.insertCell(-1).innerHTML = '<textarea ' +
-			' rows="' + (Math.floor(ip_val.length/30)-1) + '"' +
-			' cols="30"' +
-			' id="' +   input_id + '"' +
-			' autocomplete="on"' +
-			' size="' + ip_val.length + '"' + 
-			' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
-			' onblur="attr_input_blur(' + rowi + ')"' + 
-			' onfocus="attr_input_focus(' + rowi + ');"' +
-			' >' + ip_val + '</textarea>';
-		} else {
+                        ' rows="' + (Math.floor(ip_val.length/30)-1) + '"' +
+                        ' cols="30"' +
+                        ' id="' +   input_id + '"' +
+                        ' autocomplete="on"' +
+                        ' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
+                        ' onblur="attr_input_blur(' + rowi + ')"' + 
+                        ' onfocus="attr_input_focus(' + rowi + ');"' +
+                        ' >' + ip_val + '</textarea>';
+                } else {
                     row.insertCell(-1).innerHTML = '<input type="text"' +
-			' id="' +   input_id + '"' +
-			' value="' + ip_val + '"' +
-			' autocomplete="on"' +
-			' sizne="' + ip_val.length + '"' + 
-			' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
-			' onblur="attr_input_blur(' + rowi + ')"' + 
-			' onfocus="attr_input_focus(' + rowi + ');" />';
-		}
+                        ' id="' +   input_id + '"' +
+                        ' value="' + ip_val + '"' +
+                        ' autocomplete="on"' +
+                        ' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
+                        ' onblur="attr_input_blur(' + rowi + ')"' + 
+                        ' onfocus="attr_input_focus(' + rowi + ');" />';
+                }
             } else {
                 row.insertCell(-1).innerHTML = '<input type="text"' +
                     ' id="' + input_id + '"' +
@@ -3113,29 +3107,29 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
 
     // move vertical scrollbar automatically to show the selected region (if any)
     if (sel_rows.length == 1) {
-	var panelHeight = bottom_panel.offsetHeight;
-	var sel_row_bottom = sel_rows[0].offsetTop + sel_rows[0].clientHeight
-	if (sel_row_bottom > panelHeight) {
-	    console.log('scrolling');
-	    bottom_panel.scrollTop = sel_rows[0].offsetTop;
-	} else {
-	    bottom_panel.scrollTop = 0;
-	}
+        var panelHeight = bottom_panel.offsetHeight;
+        var sel_row_bottom = sel_rows[0].offsetTop + sel_rows[0].clientHeight
+        if (sel_row_bottom > panelHeight) {
+            console.log('scrolling');
+            bottom_panel.scrollTop = sel_rows[0].offsetTop;
+        } else {
+            bottom_panel.scrollTop = 0;
+        }
     } else {
-	bottom_panel.scrollTop = 0;
+        bottom_panel.scrollTop = 0;
     }
 }
 
 function update_attributes_panel(type) {
     if (_via_current_image_loaded &&
         _via_is_bottom_panel_visible) {
-	if (_via_is_reg_attr_panel_visible) {
-	    update_region_attributes_input_panel();
-	}
+        if (_via_is_reg_attr_panel_visible) {
+            update_region_attributes_input_panel();
+        }
 
-	if (_via_is_file_attr_panel_visible) {
-	    update_file_attributes_input_panel();
-	}
+        if (_via_is_file_attr_panel_visible) {
+            update_file_attributes_input_panel();
+        }
     }
 }
 
@@ -3155,25 +3149,25 @@ function update_file_attributes_input_panel() {
 
 function toggle_reg_attr_panel() {
     if (_via_current_image_loaded) {
-	var panel = document.getElementById('reg_attr_panel_button');
-	panel.classList.toggle('active');
+        var panel = document.getElementById('reg_attr_panel_button');
+        panel.classList.toggle('active');
         if (_via_is_bottom_panel_visible) {
-	    if(_via_is_reg_attr_panel_visible) {
-		bottom_panel.style.display = 'none';
-		_via_is_bottom_panel_visible = false;
-		_via_is_reg_attr_panel_visible = false;
-	    } else {
-		update_region_attributes_input_panel();
-		_via_is_reg_attr_panel_visible = true;
-		_via_is_file_attr_panel_visible = false;
-		// de-activate the file-attr accordion panel
-		var panel = document.getElementById('file_attr_panel_button');
-		panel.classList.toggle('active');
-	    }
+            if(_via_is_reg_attr_panel_visible) {
+                bottom_panel.style.display = 'none';
+                _via_is_bottom_panel_visible = false;
+                _via_is_reg_attr_panel_visible = false;
+            } else {
+                update_region_attributes_input_panel();
+                _via_is_reg_attr_panel_visible = true;
+                _via_is_file_attr_panel_visible = false;
+                // de-activate the file-attr accordion panel
+                var panel = document.getElementById('file_attr_panel_button');
+                panel.classList.toggle('active');
+            }
         } else {
             _via_is_bottom_panel_visible = true;
-	    update_region_attributes_input_panel();
-	    _via_is_reg_attr_panel_visible = true;
+            update_region_attributes_input_panel();
+            _via_is_reg_attr_panel_visible = true;
             bottom_panel.style.display = 'block';
         }
     } else {
@@ -3183,26 +3177,26 @@ function toggle_reg_attr_panel() {
 
 function toggle_file_attr_panel() {
     if (_via_current_image_loaded) {
-	var panel = document.getElementById('file_attr_panel_button');
-	panel.classList.toggle('active');
+        var panel = document.getElementById('file_attr_panel_button');
+        panel.classList.toggle('active');
         if (_via_is_bottom_panel_visible) {
-	    if(_via_is_file_attr_panel_visible) {
-		bottom_panel.style.display = 'none';
-		_via_is_bottom_panel_visible = false;
-		_via_is_file_attr_panel_visible = false;
-	    } else {
-		update_file_attributes_input_panel();
-		_via_is_file_attr_panel_visible = true;
-		_via_is_reg_attr_panel_visible = false;
+            if(_via_is_file_attr_panel_visible) {
+                bottom_panel.style.display = 'none';
+                _via_is_bottom_panel_visible = false;
+                _via_is_file_attr_panel_visible = false;
+            } else {
+                update_file_attributes_input_panel();
+                _via_is_file_attr_panel_visible = true;
+                _via_is_reg_attr_panel_visible = false;
 
-		// de-activate the reg-attr accordion panel
-		var panel = document.getElementById('reg_attr_panel_button');
-		panel.classList.toggle('active');
-	    }
+                // de-activate the reg-attr accordion panel
+                var panel = document.getElementById('reg_attr_panel_button');
+                panel.classList.toggle('active');
+            }
         } else {
             _via_is_bottom_panel_visible = true;
-	    update_file_attributes_input_panel();
-	    _via_is_file_attr_panel_visible = true;
+            update_file_attributes_input_panel();
+            _via_is_file_attr_panel_visible = true;
             bottom_panel.style.display = 'block';
         }
     } else {
@@ -3257,46 +3251,4 @@ function add_new_attribute(type, attribute_name) {
 function toggle_accordion_panel(e) {
     e.classList.toggle('active');
     e.nextElementSibling.classList.toggle('show');
-}
-
-//
-// used for debugging
-//
-function print_current_image_data() {
-    console.log(_via_img_metadata);
-    for ( var image_id in _via_img_metadata) {
-        console.log(fn);
-        var fn = _via_img_metadata[image_id].filename;
-        var logstr = [];
-        logstr.push("[" + fn + "] : ");
-
-        var img_regions = _via_img_metadata[image_id].regions;
-        for ( var i=0; i<img_regions.length; ++i) {
-            var attr = img_regions[i].shape_attributes;
-            var img_region_str = '\n\t_via_img_metadata[i].regions.shape_attributes = [';
-            for ( var key of attr.keys() ) {
-                img_region_str += key + ':' + attr.get(key) + ';';
-            }
-            logstr.push(img_region_str + ']');
-
-            var attr = img_regions[i].region_attributes;
-            var img_region_str = '\n\t_via_img_metadata[i].regions.region_attributes = [';
-            for ( var key of attr.keys() ) {
-                img_region_str += key + ':' + attr.get(key) + ';';
-            }
-            logstr.push(img_region_str + ']');
-        }
-
-        if ( _via_image_id == image_id ) {
-            for ( var i=0; i<_via_canvas_regions.length; ++i) {
-                var canvas_region_str = '\n\t_via_canvas_regions = [';
-                for ( var key of _via_canvas_regions[i].shape_attributes.keys() ) {
-                    var value = _via_canvas_regions[i].shape_attributes.get(key);
-                    canvas_region_str += key + ':' + value + ';';
-                }
-                logstr.push(canvas_region_str + ']');
-            }
-        }
-        //console.log(logstr.join(''));
-    }
 }

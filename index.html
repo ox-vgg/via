@@ -170,7 +170,7 @@
       width: 100%;
       z-index: 1;
       margin: 0;
-      padding-left: 2em;
+      padding-left: 1em;
       vertical-align: top;
       }
       #canvas_panel {
@@ -344,9 +344,7 @@
 
       #bottom_panel table {
       border-collapse: collapse;
-      table-layout: auto;
-      /*width: 100%;*/
-      margin: 1em;
+      table-layout: fixed;
       }
 
       #bottom_panel td {
@@ -354,8 +352,6 @@
       padding: 1em 1em;
       margin: 0;
       height: 1em;
-      overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
       }
       #bottom_panel tr:first-child td, #bottom_panel td:first-child {
@@ -367,7 +363,6 @@
       padding: 0;
       margin: 0;
       display: table-cell;
-      width: 100%;
       height: 1.3em;
       font-size: small;
       background-color: #ffffff;
@@ -422,7 +417,7 @@
   <body onload="main()" onresize="update_ui_components()">
     <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
-	<symbol id="shape_rectangle">
+        <symbol id="shape_rectangle">
           <title>Rectangular region shape</title>
           <rect width="20" height="12" x="6" y="10" />
         </symbol>
@@ -440,7 +435,7 @@
         </symbol>
       </defs>
     </svg>
-	
+        
     <div class="top_panel" id="ui_top_panel">
       <!-- Navigation menu -->
       <div class="navbar">
@@ -448,20 +443,20 @@
           <li><a onclick="show_home_panel()" title="Home">Home</a></li>
           <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662;</a>
             <div class="dropdown-content">
-	      <a onclick="sel_local_images()" title="Load (or add) a set of images from local disk">Load or Add Images</a>
-	      <a onclick="show_img_list()" title="Browse currently loaded images">Show Loaded Image List</a>
+              <a onclick="sel_local_images()" title="Load (or add) a set of images from local disk">Load or Add Images</a>
+              <a onclick="show_img_list()" title="Browse currently loaded images">Show Loaded Image List</a>
             </div>
           </li>
           <li class="dropdown"><a title="Annotations" class="drop_menu_item">Annotation &#9662;</a>
             <div class="dropdown-content">
-	      <a onclick="download_all_region_data('csv')" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
-	      <a onclick="download_all_region_data('json')" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
-	      <a onclick="sel_local_data_file('annotations')" title="Import existing region data from CSV or JSON file">Import</a>
+              <a onclick="download_all_region_data('csv')" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
+              <a onclick="download_all_region_data('json')" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
+              <a onclick="sel_local_data_file('annotations')" title="Import existing region data from CSV or JSON file">Import</a>
             </div>
           </li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662;</a>
             <div class="dropdown-content">
-	      <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About VIA</a>
+              <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About VIA</a>
             </div>
           </li>
         </ul>
@@ -470,24 +465,24 @@
 
       <!-- Shortcut toolbar -->
       <div class="toolbar">
-	<ul>
-	  <li onclick="sel_local_images()" title="Load/Add Images">&ctdot;</li>
-	  <li onclick="sel_local_data_file('annotations')" title="Import Annotations">&darr;</li>
-	  <li onclick="download_all_region_data('csv')" title="Save Annotations">&DownArrowBar;</li>
-	  
-	  <li style="margin-left: 2em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
-	  <li onclick="move_to_next_image()" title="Next Image">&rarr;</li>
-	  <li onclick="toggle_img_list()" title="List Images">&#9776;</li>
+        <ul>
+          <li onclick="sel_local_images()" title="Load/Add Images">&ctdot;</li>
+          <li onclick="sel_local_data_file('annotations')" title="Import Annotations">&darr;</li>
+          <li onclick="download_all_region_data('csv')" title="Save Annotations">&DownArrowBar;</li>
+          
+          <li style="margin-left: 2em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
+          <li onclick="move_to_next_image()" title="Next Image">&rarr;</li>
+          <li onclick="toggle_img_list()" title="List Images">&#9776;</li>
 
-	  <li style="margin-left: 2em;" onclick="zoom_out()" title="Zoom Out">&minus;</li>
-	  <li onclick="zoom_in()" title="Zoom In">&plus;</li>
-	  <li onclick="reset_zoom_level()" title="Zoom Reset">&equals;</li>
+          <li style="margin-left: 2em;" onclick="zoom_out()" title="Zoom Out">&minus;</li>
+          <li onclick="zoom_in()" title="Zoom In">&plus;</li>
+          <li onclick="reset_zoom_level()" title="Zoom Reset">&equals;</li>
 
-	  <li style="margin-left: 2em;" onclick="copy_sel_regions()" title="Copy Region">c</li>
-	  <li onclick="paste_sel_regions()" title="Paste Region">v</li>
-	  <li onclick="sel_all_regions()" title="Select All Regions">a</li>
-	  <li onclick="del_sel_regions()" title="Delete Region">&times;</li>
-	</ul>
+          <li style="margin-left: 2em;" onclick="copy_sel_regions()" title="Copy Region">c</li>
+          <li onclick="paste_sel_regions()" title="Paste Region">v</li>
+          <li onclick="sel_all_regions()" title="Select All Regions">a</li>
+          <li onclick="del_sel_regions()" title="Delete Region">&times;</li>
+        </ul>
       </div> <!-- endof #toolbar -->
       <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">
     </div> <!-- endof #top_panel -->
@@ -495,31 +490,31 @@
     <!-- Middle Panel contains a left-sidebar and image display areas -->
     <div class="middle_panel">
       <div id="leftsidebar">
-	<div id="fileinfo" title="Filename of current image">&nbsp;</div> <!-- endof #fileinfo -->
-	
-	<button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Region Shape</button>
-	<div class="leftsidebar_accordion_panel show" id="accordion_region_shape_panel">
-	  <ul class="region_shape">
-	    <li id="region_shape_rect" class="selected" onclick="select_region_shape('rect')" title="Rectangle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></li>
-	    <li id="region_shape_circle" onclick="select_region_shape('circle')" title="Circle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></li>
-	    <li id="region_shape_ellipse" onclick="select_region_shape('ellipse')" title="Ellipse"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></li>
-	    <li id="region_shape_polygon" onclick="select_region_shape('polygon')" title="Polygon"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></li>
-	  </ul>
-	</div>
+        <div id="fileinfo" title="Filename of current image">&nbsp;</div> <!-- endof #fileinfo -->
+        
+        <button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Region Shape</button>
+        <div class="leftsidebar_accordion_panel show" id="accordion_region_shape_panel">
+          <ul class="region_shape">
+            <li id="region_shape_rect" class="selected" onclick="select_region_shape('rect')" title="Rectangle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></li>
+            <li id="region_shape_circle" onclick="select_region_shape('circle')" title="Circle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></li>
+            <li id="region_shape_ellipse" onclick="select_region_shape('ellipse')" title="Ellipse"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></li>
+            <li id="region_shape_polygon" onclick="select_region_shape('polygon')" title="Polygon"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></li>
+          </ul>
+        </div>
 
-	<button onclick="toggle_reg_attr_panel()" class="leftsidebar_accordion" id="reg_attr_panel_button">Region Attributes</button>
-	<button onclick="toggle_file_attr_panel()" class="leftsidebar_accordion" id="file_attr_panel_button">File Attributes</button>
+        <button onclick="toggle_reg_attr_panel()" class="leftsidebar_accordion" id="reg_attr_panel_button">Region Attributes</button>
+        <button onclick="toggle_file_attr_panel()" class="leftsidebar_accordion" id="file_attr_panel_button">File Attributes</button>
 
-	<button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion">Keyboard Shortcuts</button>
-	<div class="leftsidebar_accordion_panel">
-	  <table style="padding: 2em 0em;">
+        <button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion">Keyboard Shortcuts</button>
+        <div class="leftsidebar_accordion_panel">
+          <table style="padding: 2em 0em;">
             <tr>
-              <td style="width: 7em;">n/p (&larr;/&rarr;)</td>
+              <td style="width: 6em;">n/p (&larr;/&rarr;)</td>
               <td>Next/Previous image</td>
             </tr>
             <tr>
               <td>r</td>
-              <td>Show/hide reg. attr.</td>
+              <td>Show/hide region attr.</td>
             </tr>
             <tr>
               <td>f</td>
@@ -558,28 +553,28 @@
               <td>Delete image region</td>
             </tr>
           </table>
-	</div>
+        </div>
 
-	<button onclick="toggle_img_list(this)" class="leftsidebar_accordion" id="image_list_panel_button">Image List</button>
-	<div id="img_list_panel"></div>
+        <button onclick="toggle_img_list(this)" class="leftsidebar_accordion" id="image_list_panel_button">Image List</button>
+        <div id="img_list_panel"></div>
       </div>
 
       <!-- Main display area: contains image canvas, ... -->
       <div id="display_area">
-	<div id="canvas_panel">
+        <div id="canvas_panel">
           <canvas id="image_canvas"></canvas>
-	  <canvas id="region_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
-	</div>
+          <canvas id="region_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
+        </div>
 
-	<div id="text_panel">
-	  <div id="via_start_info_panel">
+        <div id="text_panel">
+          <div id="via_start_info_panel">
           </div>
 
-	  <div id="getting_started_panel">@todo</div>
-	  
-	  <div id="about_panel">
-	    <h1>VGG Image Annotator (VIA)</h1>
-	    <p style="font-family: Mono; font-size: small;">version <a href="https://gitlab.com/vgg/via/raw/master/CHANGELOG">0.1<a/> (Jan. 2017)</p>
+          <div id="getting_started_panel">@todo</div>
+          
+          <div id="about_panel">
+            <h1>VGG Image Annotator (VIA)</h1>
+            <p style="font-family: Mono; font-size: small;">version <a href="https://gitlab.com/vgg/via/raw/master/CHANGELOG">0.1<a/> (Jan. 2017)</p>
             <p>
               VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
               developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
@@ -590,18 +585,18 @@
             <p>
               Features:
               <ul>
-		<li>based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)</li>
-		<li>can be used offline (complete application packaged in a single html file of size &lt; 200KB)</li>
-		<li>requires nothing more than a modern web browser (tested on firefox and chrome)</li>
-		<li>supports following region shapes: rectangle, circle, ellipse, polygon</li>
-		<li>supports multiple attributes for each image region</li>
-		<li>import (and export) of region data from (to) text file in csv and json format</li>
-		<li>hundreds of images can be loaded and annotated without any performance degradation</li>
+                <li>based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)</li>
+                <li>can be used offline (complete application packaged in a single html file of size &lt; 200KB)</li>
+                <li>requires nothing more than a modern web browser (tested on firefox and chrome)</li>
+                <li>supports following region shapes: rectangle, circle, ellipse, polygon</li>
+                <li>supports multiple attributes for each image region</li>
+                <li>import (and export) of region data from (to) text file in csv and json format</li>
+                <li>hundreds of images can be loaded and annotated without any performance degradation</li>
               </ul>
             </p>
             <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
           </div>  
-	</div>
+        </div>
       </div>
     </div>
 
@@ -613,13 +608,16 @@
     <!-- to show status messages -->
     <div id="message_panel"></div>
 
-    <script type="text/javascript" src="via_demo.js">
     <script type="text/javascript">
       <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
     </script>
-    <script type="text/javascript" src="via.js">
     <script type="text/javascript">
       <!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
+
+    <!--
+    <script type="text/javascript" src="via.js"></script>
+    <script type="text/javascript" src="via_demo.js"></script>
+    -->
   </body>
 </html>
