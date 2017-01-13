@@ -143,7 +143,6 @@ var invisible_file_input = document.getElementById("invisible_file_input");
 
 var about_panel = document.getElementById("about_panel");
 var via_start_info_panel = document.getElementById("via_start_info_panel");
-var getting_started_panel = document.getElementById("getting_started_panel");
 var image_panel = document.getElementById("image_panel");
 var ui_top_panel = document.getElementById("ui_top_panel");
 var canvas_panel = document.getElementById("canvas_panel");
@@ -224,13 +223,11 @@ function show_home_panel() {
         canvas_panel.style.display = "block";
         via_start_info_panel.style.display = "none";
         about_panel.style.display = "none";
-        getting_started_panel.style.display = "none";
     } else {
         via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <a title="Load images" style="cursor: pointer; color: blue;" onclick="sel_local_images()">Load or Add Images</a> in the Image menu.</p>';
         via_start_info_panel.style.display = "block";
         about_panel.style.display = "none";
         canvas_panel.style.display = "none";
-        getting_started_panel.style.display = "none";
     }
 }
 function sel_local_images() {
@@ -1457,7 +1454,6 @@ _via_reg_canvas.addEventListener("mouseover", function(e) {
 });
 
 _via_reg_canvas.addEventListener('mousemove', function(e) {
-    show_debug_msg();
     if ( !_via_current_image_loaded ) {
         return;
     }
@@ -2591,11 +2587,6 @@ window.addEventListener("keydown", function(e) {
         show_about_panel();
         e.preventDefault();
     }
-
-    if (e.which == 121) { // F2 for about
-	show_debug_msg();
-        e.preventDefault();
-    }
 });
 
 //
@@ -3271,13 +3262,4 @@ function add_new_attribute(type, attribute_name) {
 function toggle_accordion_panel(e) {
     e.classList.toggle('active');
     e.nextElementSibling.classList.toggle('show');
-}
-
-//
-// debug
-//
-function show_debug_msg() {
-    console.log('_via_is_user_updating_attribute_value = ' + _via_is_user_updating_attribute_value);
-    console.log('_via_is_user_updating_attribute_name = ' + _via_is_user_updating_attribute_name);
-    console.log('_via_is_user_adding_attribute_name = ' + _via_is_user_adding_attribute_name);
 }

@@ -144,11 +144,10 @@
 
       #fileinfo {
       font-size: small;
-      padding: 1em 0.4em;
+      padding: 1.2em 0.8em;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      color: #6c5d53;
       }
 
       /* Middle panel: containing #image_panel, #leftsidebar */
@@ -158,7 +157,7 @@
       width: 100%;
       z-index: 1;
       padding: 0;
-      padding-top: 1em;
+      padding-top: 2em;
       }
       #leftsidebar {
       display: table-cell;
@@ -491,8 +490,9 @@
     <!-- Middle Panel contains a left-sidebar and image display areas -->
     <div class="middle_panel">
       <div id="leftsidebar">
-        <div id="fileinfo">&nbsp;</div> <!-- endof #fileinfo -->
-        
+	<button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Image</button>
+	<div class="leftsidebar_accordion_panel show" id="fileinfo">Images not loaded yet!</div>
+	
         <button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Region Shape</button>
         <div class="leftsidebar_accordion_panel show" id="accordion_region_shape_panel">
           <ul class="region_shape">
@@ -568,11 +568,8 @@
         </div>
 
         <div id="text_panel">
-          <div id="via_start_info_panel">
-          </div>
+          <div id="via_start_info_panel"></div>
 
-          <div id="getting_started_panel">@todo</div>
-          
           <div id="about_panel">
             <h1>VGG Image Annotator (VIA)</h1>
             <p style="font-family: Mono; font-size: small;">version <a href="https://gitlab.com/vgg/via/raw/master/CHANGELOG">0.1<a/> (Jan. 2017)</p>
@@ -616,9 +613,9 @@
       <!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
 
-    <!---->
+    <!--
     <script type="text/javascript" src="via.js"></script>
     <script type="text/javascript" src="via_demo.js"></script>
-    
+    -->
   </body>
 </html>
