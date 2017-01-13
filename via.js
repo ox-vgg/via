@@ -810,6 +810,8 @@ function show_image(image_index) {
                 // refresh the image list
 		// @todo: let the height of image list match that of window
                 _via_reload_img_table = true;
+		var x = document.getElementById('image_list_panel_button');
+		console.log(x.clientOffset);
 		var img_list_height = document.documentElement.clientHeight/2 + 'px';
 		img_list_panel.setAttribute('style', 'height: ' + img_list_height);
                 if (_via_is_loaded_img_list_visible) {
@@ -2451,7 +2453,9 @@ function update_ui_components() {
         _via_is_window_resized = true;
         show_image(_via_image_index);
 
-        reset_zoom_level();
+	if (_via_is_canvas_zoomed) {
+            reset_zoom_level();
+	}
     }
 }
 
@@ -2592,6 +2596,11 @@ window.addEventListener("keydown", function(e) {
 // Shortcut key handlers
 //
 function del_sel_regions() {
+    if (!_via_current_image_loaded) {
+	show_message('First load some images!');
+	return;
+    }
+
     var del_region_count = 0;
     if (_via_is_all_region_selected) {
         del_region_count = _via_canvas_regions.length;  
@@ -2632,12 +2641,22 @@ function del_sel_regions() {
 }
 
 function sel_all_regions() {
+    if (!_via_current_image_loaded) {
+	show_message('First load some images!');
+	return;
+    }
+
     toggle_all_regions_selection(true);
     _via_is_all_region_selected = true;
     _via_redraw_reg_canvas();
 }
 
 function copy_sel_regions() {
+    if (!_via_current_image_loaded) {
+	show_message('First load some images!');
+	return;
+    }
+
     if (_via_is_region_selected ||
 	_via_is_region_selected) {
 	_via_copied_image_regions.splice(0);
@@ -2658,6 +2677,11 @@ function copy_sel_regions() {
 }
 
 function paste_sel_regions() {
+    if (!_via_current_image_loaded) {
+	show_message('First load some images!');
+	return;
+    }
+
     if (_via_copied_image_regions.length) {
 	for (var i=0; i<_via_copied_image_regions.length; ++i) {
             _via_img_metadata[_via_image_id].regions.push( _via_copied_image_regions[i] );
@@ -2702,6 +2726,10 @@ function move_to_next_image() {
 }
 
 function reset_zoom_level() {
+    if (!_via_current_image_loaded) {
+	show_message('First load some images!');
+	return;
+    }
     if (_via_is_canvas_zoomed) {
 	_via_is_canvas_zoomed = false;
 	_via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX
@@ -2722,6 +2750,11 @@ function reset_zoom_level() {
 }
 
 function zoom_in() {
+    if (!_via_current_image_loaded) {
+	show_message('First load some images!');
+	return;
+    }
+
     if (_via_canvas_zoom_level_index == (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
         show_message('Further zoom-in not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
     } else {
@@ -2743,6 +2776,11 @@ function zoom_in() {
 }
 
 function zoom_out() {
+    if (!_via_current_image_loaded) {
+	show_message('First load some images!');
+	return;
+    }
+
     if (_via_canvas_zoom_level_index == 0) {
         show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
     } else {

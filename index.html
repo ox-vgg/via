@@ -54,8 +54,7 @@
       min-width: 800px;
       padding: 0;
       margin: 0;
-      font-family: Sans;
-      font-size: medium;
+      font-family: Sans;      
       }
       
       /* Top panel : #navbar, #toolbar */
@@ -64,7 +63,7 @@
       top: 0;
       left: 0;
       display: block;
-      font-family: Sans;
+      font-size: medium;
       background-color: #000000;
       color: white;
       z-index: 10;
@@ -132,6 +131,7 @@
       overflow: hidden;
       }
       .toolbar li {
+      font-size: medium;
       float: left;
       padding: 0.65em 0.3em;
       color: white;
@@ -143,13 +143,11 @@
       }
 
       #fileinfo {
-      font-family: Mono;
       font-size: x-small;
       padding: 1em 0.4em;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      border-bottom: 1px solid #000000;
       }
 
       /* Middle panel: containing #image_panel, #leftsidebar */
@@ -163,9 +161,8 @@
       }
       #leftsidebar {
       display: table-cell;
-      width: 280px;
+      width: 250px;
       z-index: 10;
-      border: 2px solid #000000;
       vertical-align: top;
       }
       #display_area {
@@ -184,8 +181,7 @@
 
       /* Left sidebar accordion */
       button.leftsidebar_accordion {
-      font-family: Sans;
-      font-size: small;
+      font-size: large;
       background-color: #f2f2f2;
       cursor: pointer;
       padding: 0.5em 0.5em;
@@ -212,7 +208,8 @@
       display: none;
       padding-top: 0;
       padding-left: 0.5em;
-      font-size: x-small;
+      font-size: small;
+      border-right: 2px solid #f2f2f2;
       }
       .leftsidebar_accordion_panel.show {
       display: block;
@@ -247,7 +244,6 @@
       display: none;
       height: 0;
       font-size: small;
-      font-family: Mono;
       overflow: scroll;
       }
       #img_list_panel ul {
@@ -257,8 +253,6 @@
       list-style-type: none;
       }
       #img_list_panel li {
-      overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
       }
       #img_list_panel li:hover {
@@ -273,10 +267,9 @@
       bottom: 0px;
       line-height: 3em;
       width: 100%;
-      background-color: #333333;
+      background-color: #000000;
       color: #ffff00;
       font-size: small;
-      font-family: Mono;
       text-align: center;
       white-space: nowrap;
       overflow: hidden;
@@ -297,7 +290,6 @@
       display: none;
       margin: auto;
       width: 40%;
-      font-family: Sans;
       font-size: 1em;
       line-height: 1.5em;
       margin: 0;
@@ -333,13 +325,12 @@
       z-index: 10;
       bottom: 0;
       width: 100%;
-      max-height: 40%;
+      max-height: 30%;
       overflow: auto;
       background-color: #ffffff;
       border-top: 4px solid #000000;
       padding-bottom: 2em;
       padding: 1em 0em;
-      font-family: Sans;
       font-size: small;
       }
       #bottom_panel .title {
@@ -377,7 +368,9 @@
       margin: 0;
       display: table-cell;
       width: 100%;
+      height: 1.3em;
       font-size: small;
+      background-color: #ffffff;
       }
       #bottom_panel input:hover {
       background-color: #e6e6e6;
@@ -394,6 +387,7 @@
       margin: 0;
       display: table-cell;
       font-size: small;
+      background-color: #ffffff;
       }
       #bottom_panel textarea:hover {
       background-color: #e6e6e6;
@@ -501,7 +495,7 @@
     <!-- Middle Panel contains a left-sidebar and image display areas -->
     <div class="middle_panel">
       <div id="leftsidebar">
-	<div id="fileinfo"></div> <!-- endof #fileinfo -->
+	<div id="fileinfo" title="Filename of current image">&nbsp;</div> <!-- endof #fileinfo -->
 	
 	<button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Region Shape</button>
 	<div class="leftsidebar_accordion_panel show" id="accordion_region_shape_panel">
@@ -525,7 +519,7 @@
             </tr>
             <tr>
               <td>r</td>
-              <td>Show/hide region attr.</td>
+              <td>Show/hide reg. attr.</td>
             </tr>
             <tr>
               <td>f</td>
