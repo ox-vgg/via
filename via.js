@@ -203,7 +203,7 @@ function main() {
                  2*VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     show_home_panel();
-    //start_demo_session(); // defined in via_demo.js
+    start_demo_session(); // defined in via_demo.js
     
     _via_is_local_storage_available = check_local_storage();
     //_via_is_local_storage_available = false;
@@ -1509,8 +1509,13 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
     }
     
     if(_via_is_user_drawing_region) {
-        // draw rectangle as the user drags the mouse cousor
-        _via_redraw_reg_canvas(); // clear old intermediate rectangle
+        // draw region as the user drags the mouse cousor
+	if (_via_canvas_regions.length) {
+	    _via_redraw_reg_canvas(); // clear old intermediate rectangle
+	} else {
+	    // first region being drawn, just clear the full region canvas
+	    _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+	}
 
         var region_x0, region_y0;
 
@@ -1536,22 +1541,17 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 
         switch (_via_current_shape ) {
         case VIA_REGION_SHAPE.RECT:
-            _via_draw_rect_region(region_x0,
-                                  region_y0,
-                                  dx,
-                                  dy);
+            _via_draw_rect_region(region_x0, region_y0,
+                                  dx, dy, false);
             break;
         case VIA_REGION_SHAPE.CIRCLE:
             var circle_radius = Math.round(Math.sqrt( dx*dx + dy*dy ));
-            _via_draw_circle_region(region_x0,
-                                    region_y0,
-                                    circle_radius);
+            _via_draw_circle_region(region_x0, region_y0,
+                                    circle_radius, false);
             break;
         case VIA_REGION_SHAPE.ELLIPSE:
-            _via_draw_ellipse_region(region_x0,
-                                     region_y0,
-                                     dx,
-                                     dy);
+            _via_draw_ellipse_region(region_x0, region_y0,
+                                     dx, dy, false);
             break;
         case VIA_REGION_SHAPE.POLYGON:
             // this is handled by the if ( _via_is_user_drawing_polygon ) { ... }
