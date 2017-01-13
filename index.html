@@ -143,11 +143,12 @@
       }
 
       #fileinfo {
-      font-size: x-small;
+      font-size: small;
       padding: 1em 0.4em;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      color: #6c5d53;
       }
 
       /* Middle panel: containing #image_panel, #leftsidebar */
@@ -323,7 +324,7 @@
       display: none;
       position: fixed;
       z-index: 10;
-      bottom: 0;
+      bottom: 5em;
       width: 100%;
       max-height: 30%;
       overflow: auto;
@@ -490,7 +491,7 @@
     <!-- Middle Panel contains a left-sidebar and image display areas -->
     <div class="middle_panel">
       <div id="leftsidebar">
-        <div id="fileinfo" title="Filename of current image">&nbsp;</div> <!-- endof #fileinfo -->
+        <div id="fileinfo">&nbsp;</div> <!-- endof #fileinfo -->
         
         <button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Region Shape</button>
         <div class="leftsidebar_accordion_panel show" id="accordion_region_shape_panel">
