@@ -286,15 +286,15 @@
       z-index: -1;
       }
 
-      #about_panel {
+      .text_panel {
       display: none;
       margin: auto;
       width: 40%;
-      font-size: 1em;
+      font-size: medium;
       line-height: 1.5em;
       margin: 0;
       }
-      #about_panel li {
+      .text_panel li {
       margin: 1em 0;
       }
       
@@ -322,14 +322,13 @@
       #bottom_panel {
       display: none;
       position: fixed;
+      bottom: 0;
       z-index: 10;
-      bottom: 5em;
       width: 100%;
       max-height: 30%;
       overflow: auto;
       background-color: #ffffff;
       border-top: 4px solid #000000;
-      padding-bottom: 2em;
       padding: 1em 0em;
       font-size: small;
       }
@@ -345,10 +344,12 @@
       #bottom_panel table {
       border-collapse: collapse;
       table-layout: fixed;
+      margin: 1em;
+      margin-bottom: 2em;
       }
 
       #bottom_panel td {
-      border: 1px solid #e6e6e6;
+      border: 1px solid #999999;
       padding: 1em 1em;
       margin: 0;
       height: 1em;
@@ -410,6 +411,10 @@
       left: 0px;
       z-index: 2;
       }
+      #getting_started_panel {
+      display: none;
+      }
+
 
     </style>
   </head>
@@ -444,7 +449,7 @@
           <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662;</a>
             <div class="dropdown-content">
               <a onclick="sel_local_images()" title="Load (or add) a set of images from local disk">Load or Add Images</a>
-              <a onclick="show_img_list()" title="Browse currently loaded images">Show Loaded Image List</a>
+              <a onclick="show_img_list()" title="Browse currently loaded images">List Images</a>
             </div>
           </li>
           <li class="dropdown"><a title="Annotations" class="drop_menu_item">Annotation &#9662;</a>
@@ -456,7 +461,8 @@
           </li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662;</a>
             <div class="dropdown-content">
-              <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About VIA</a>
+	      <a onclick="show_getting_started_panel()" title="Getting started with VGG Image Annotator (VIA)">Getting Started</a>
+              <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About</a>
             </div>
           </li>
         </ul>
@@ -466,9 +472,9 @@
       <!-- Shortcut toolbar -->
       <div class="toolbar">
         <ul>
-          <li onclick="sel_local_images()" title="Load/Add Images">&ctdot;</li>
-          <li onclick="sel_local_data_file('annotations')" title="Import Annotations">&darr;</li>
-          <li onclick="download_all_region_data('csv')" title="Save Annotations">&DownArrowBar;</li>
+          <li onclick="sel_local_images()" title="Load or Add Images">&ctdot;</li>
+          <li onclick="sel_local_data_file('annotations')" title="Import Annotations">&uarr;</li>
+          <li onclick="download_all_region_data('csv')" title="Save Annotations (as CSV)">&DownArrowBar;</li>
           
           <li style="margin-left: 2em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
           <li onclick="move_to_next_image()" title="Next Image">&rarr;</li>
@@ -514,28 +520,8 @@
               <td>Next/Previous image</td>
             </tr>
             <tr>
-              <td>r</td>
-              <td>Show/hide region attr.</td>
-            </tr>
-            <tr>
-              <td>f</td>
-              <td>Show/hide file attr.</td>
-            </tr>
-            <tr>
-              <td>Spc</td>
-              <td>Show/hide file list</td>
-            </tr>
-            <tr>
               <td>+/-/=</td>
               <td>Zoom in/out/reset</td>
-            </tr>
-            <tr>
-              <td>Ctrl + s</td>
-              <td>Download annotations</td>
-            </tr>
-            <tr>
-              <td>Ctrl + a</td>
-              <td>Select all regions</td>
             </tr>
             <tr>
               <td>Ctrl + c</td>
@@ -546,12 +532,28 @@
               <td>Paste sel. regions</td>
             </tr>
             <tr>
-              <td>Esc</td>
-              <td>Cancel operation</td>
+              <td>Ctrl + a</td>
+              <td>Select all regions</td>
             </tr>
             <tr>
               <td>Del, Bkspc</td>
               <td>Delete image region</td>
+            </tr>
+            <tr>
+              <td>Esc</td>
+              <td>Cancel operation</td>
+            </tr>
+            <tr>
+              <td>r</td>
+              <td>Show/hide region attr.</td>
+            </tr>
+            <tr>
+              <td>f</td>
+              <td>Show/hide file attr.</td>
+            </tr>
+            <tr>
+              <td>Ctrl + s</td>
+              <td>Download annotations</td>
             </tr>
           </table>
         </div>
@@ -568,9 +570,9 @@
         </div>
 
         <div id="text_panel">
-          <div id="via_start_info_panel"></div>
+          <div id="via_start_info_panel">Starting VGG Image Annotator ...</div>
 
-          <div id="about_panel">
+          <div class="text_panel" id="about_panel">
             <h1>VGG Image Annotator (VIA)</h1>
             <p style="font-family: Mono; font-size: small;">version <a href="https://gitlab.com/vgg/via/raw/master/CHANGELOG">0.1<a/> (Jan. 2017)</p>
             <p>
@@ -593,7 +595,33 @@
               </ul>
             </p>
             <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
-          </div>  
+          </div>
+
+	  <div class="text_panel" id="getting_started_panel">
+            <h1>Getting Started</h1>
+	    <ol>
+	      <li>Click [Image > Load or Add Images] in the top menu bar to load a set of images that you wish to annotate.</li>
+	      <li>Press n (or p) to navigate through the loaded images. You can also use the &larr; and &rarr; icons in the top panel toolbar for navigation.</li>
+	      <li>Click <b>Region Attributes</b> in the left panel to reveal a panel in the bottom. Click <b>[Add New]</b> tp add a new attribute. For example:
+		<pre>
+		  object_name
+		  object_color
+		</pre>
+		You can add more region attributes according to you needs.
+	      <li>In the <b>Region Shape</b> section in the left panel, click the rectangular shape</li>
+	      <li>On the image area, keep pressing the right click button as you drag the mouse cursor. This will draw a rectangular region on the image.</li>
+	      <li>This newly created region is automatically selected. Now you can enter the attribute value for this region in the bottom panel. For example:
+		<pre>
+		  object_name = dog
+		  object_color = white
+		</pre>
+		You can annotate multiple regions in this image or other images and assign a value to each pre-defined attribute.</li>
+	      <li>To download the annotated region data, click <b>[Annotation > Save as CSV]</b> in the top menu bar. This will download a text file containing region shape and attribute data.</li>
+	      <li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 7) by clicking <b>[Annotation > Import]</b>.
+	    </li></ol>
+
+	  </div>
+	  
         </div>
       </div>
     </div>

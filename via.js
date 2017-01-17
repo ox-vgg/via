@@ -143,6 +143,7 @@ var invisible_file_input = document.getElementById("invisible_file_input");
 
 var about_panel = document.getElementById("about_panel");
 var via_start_info_panel = document.getElementById("via_start_info_panel");
+var getting_started_panel = document.getElementById("getting_started_panel");
 var image_panel = document.getElementById("image_panel");
 var ui_top_panel = document.getElementById("ui_top_panel");
 var canvas_panel = document.getElementById("canvas_panel");
@@ -208,7 +209,7 @@ function main() {
 		 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     show_home_panel();
-    //start_demo_session(); // defined in via_demo.js
+    start_demo_session(); // defined in via_demo.js
 
     _via_is_local_storage_available = check_local_storage();
     //_via_is_local_storage_available = false;
@@ -227,11 +228,13 @@ function show_home_panel() {
 	canvas_panel.style.display = "block";
 	via_start_info_panel.style.display = "none";
 	about_panel.style.display = "none";
+	getting_started_panel.style.display = "none";	
     } else {
 	via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <a title="Load images" style="cursor: pointer; color: blue;" onclick="sel_local_images()">Load or Add Images</a> in the Image menu.</p>';
 	via_start_info_panel.style.display = "block";
 	about_panel.style.display = "none";
 	canvas_panel.style.display = "none";
+	getting_started_panel.style.display = "none";	
     }
 }
 function sel_local_images() {
@@ -293,11 +296,15 @@ function import_attributes() {
 	show_message("Please load some images first");
     }
 }
-function show_settings_panel() {
-    show_message("Not implemented yet!");
-}
 function show_about_panel() {
     about_panel.style.display = "block";
+    canvas_panel.style.display = "none";
+    via_start_info_panel.style.display = "none";
+    getting_started_panel.style.display = "none";
+}
+function show_getting_started_panel() {
+    getting_started_panel.style.display = "block";
+    about_panel.style.display = "none";    
     canvas_panel.style.display = "none";
     via_start_info_panel.style.display = "none";
 }
@@ -2461,6 +2468,11 @@ function is_on_polygon_vertex(all_points_x, all_points_y, px, py) {
 function update_ui_components() {
     if ( !_via_is_window_resized && _via_current_image_loaded ) {
         show_message("Resizing window ...", VIA_THEME_MESSAGE_TIMEOUT_MS);
+	canvas_panel.style.display = "block";
+	via_start_info_panel.style.display = "none";
+	about_panel.style.display = "none";
+	getting_started_panel.style.display = "none";	
+	
         _via_is_window_resized = true;
         show_image(_via_image_index);
 
@@ -2537,13 +2549,16 @@ window.addEventListener("keydown", function(e) {
     if (e.shiftKey && _via_current_image_loaded) {
         if (e.which == 61) { // + for zoom in
             zoom_in();
+	    return;
         }
     }
     if (e.which == 173 && _via_current_image_loaded) { // - for zoom out
         zoom_out();
+	return;
     }
     if (e.which == 61 && _via_current_image_loaded) { // = for zoom reset
         reset_zoom_level();
+	return;
     }
 
     if ( e.which == 27 ) { // Esc
@@ -2595,13 +2610,21 @@ window.addEventListener("keydown", function(e) {
         
         e.preventDefault();
         _via_redraw_reg_canvas();
+	return;
+    }
+    if (e.which == 112) { // F1 for help
+	show_getting_started_panel();
+	e.preventDefault();
+	return;
     }
     if (e.which == 113) { // F2 for about
         show_about_panel();
         e.preventDefault();
+	return;
     }
     if (e.which == 121) { // F10 for debugging
 	toggle_debug_window();
+	return;
     }
 });
 
