@@ -231,12 +231,12 @@
       }
       ul.region_shape li:hover {
       cursor: pointer;
-      fill: #000000;
-      stroke: #000000;
+      fill: #ffffff;
+      stroke: #ff0000;
       }
       ul.region_shape .selected {
-      fill: #000000;
-      stroke: #000000;
+      fill: #ffffff;
+      stroke: #ff0000;
       }
       
       /* Loaded image list shown in leftsidebar panel */
@@ -438,6 +438,10 @@
           <title>Polyline region shape</title>
           <path d="M 15.25,2.2372 3.625,11.6122 6,29.9872 l 20.75,-9.625 2.375,-14.75 z" />
         </symbol>
+        <symbol id="shape_point">
+          <title>Point region shape</title>
+          <circle r="4" cx="16" cy="16" style="fill: #000000"/>
+        </symbol>
       </defs>
     </svg>
         
@@ -506,6 +510,7 @@
             <li id="region_shape_circle" onclick="select_region_shape('circle')" title="Circle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></li>
             <li id="region_shape_ellipse" onclick="select_region_shape('ellipse')" title="Ellipse"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></li>
             <li id="region_shape_polygon" onclick="select_region_shape('polygon')" title="Polygon"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></li>
+            <li id="region_shape_point" onclick="select_region_shape('point')" title="Point"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_point"></use></svg></li>
           </ul>
         </div>
 
@@ -545,11 +550,11 @@
             </tr>
             <tr>
               <td>r</td>
-              <td>Show/hide region attr.</td>
+              <td>Show/hide regions</td>
             </tr>
             <tr>
-              <td>f</td>
-              <td>Show/hide file attr.</td>
+              <td>i</td>
+              <td>Show/hide regions id</td>
             </tr>
             <tr>
               <td>Ctrl + s</td>
