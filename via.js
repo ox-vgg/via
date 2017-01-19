@@ -55,8 +55,9 @@ var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
 var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
 var VIA_THEME_SEL_REGION_OPACITY = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS = 2500;
-var VIA_THEME_ATTRIBUTE_IMG_WIDTH = 64;
+var VIA_THEME_ATTRIBUTE_DISP_MIN_CHARS = 'ABCDEF'; // 6 characters
 var VIA_THEME_ATTRIBUTE_VALUE_FONT = '10pt Sans';
+
 var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
 var VIA_IMPORT_CSV_KEYVAL_SEP_CHAR = '\\;';
 var VIA_EXPORT_CSV_ARRAY_SEP_CHAR = ':';
@@ -2168,32 +2169,49 @@ function _via_draw_point(cx, cy, r) {
 function draw_all_region_id() { 
     _via_reg_ctx.shadowColor = "transparent";
     for (var i=0; i < _via_img_metadata[_via_image_id].regions.length; ++i) {
-        var annotation_str = (i+1);
-
         var bbox = get_canvas_region_bounding_box(i);
-
         var x = bbox[0];
         var y = bbox[1];
         var w = Math.abs(bbox[2] - bbox[0]);
         var h = Math.abs(bbox[3] - bbox[1]);
-        _via_reg_ctx.font = '10pt Sans';
+        _via_reg_ctx.font = VIA_THEME_ATTRIBUTE_VALUE_FONT;
 
         var spc_dot = _via_reg_ctx.measureText('.').width
         var bgnd_rect_height = 1.8 * _via_reg_ctx.measureText('M').width;
-        var bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 2;
 
+	var annotation_str = (i+1);
+	var bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 2;
+	
+	var r = _via_img_metadata[_via_image_id].regions[i].region_attributes;
+	if (r.size == 1) {
+	    // if there is a single attribute, display the attribute instead of region-id
+	    for (var key of r.keys()) {
+		annotation_str = r.get(key);
+	    }
+	    var strw = _via_reg_ctx.measureText(annotation_str).width;
+	    if (strw > w) {
+		// if text overflows, crop it
+		var str_max = Math.floor((w * annotation_str.length) / strw);
+		annotation_str = annotation_str.substr(0, str_max-1) + '.';
+		bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 1.1;
+	    }
+	    
+	}
+	// center the label
+	x = x - (bgnd_rect_width/2 - w/2);
+	
         // first, draw a background rectangle first
         _via_reg_ctx.fillStyle = 'black';
         _via_reg_ctx.globalAlpha=0.8;
         _via_reg_ctx.fillRect(x,
-                              y,
+                              y - 1.1*bgnd_rect_height,
                               bgnd_rect_width,
                               bgnd_rect_height);
         
         // then, draw text over this background rectangle
         _via_reg_ctx.globalAlpha=1.0;
         _via_reg_ctx.fillStyle = 'yellow';
-        _via_reg_ctx.fillText(annotation_str, x+spc_dot, y+3.8*spc_dot);
+        _via_reg_ctx.fillText(annotation_str, x+spc_dot, y-1.8*spc_dot);
 
     }
 }
