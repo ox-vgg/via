@@ -463,6 +463,12 @@
               <a onclick="sel_local_data_file('annotations')" title="Import existing region data from CSV or JSON file">Import</a>
             </div>
           </li>
+          <li class="dropdown"><a title="View" class="drop_menu_item">View &#9662;</a>
+            <div class="dropdown-content">
+              <a onclick="toggle_region_boundary_visibility()" title="Show or hide region boundaries">Show/hide region boundaries</a>
+	      <a onclick="toggle_region_id_visibility()" title="Show or hide region label">Show/hide region label</a>
+	    </div>
+	  </li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662;</a>
             <div class="dropdown-content">
 	      <a onclick="show_getting_started_panel()" title="Getting started with VGG Image Annotator (VIA)">Getting Started</a>
@@ -554,7 +560,7 @@
             </tr>
             <tr>
               <td>i</td>
-              <td>Show/hide regions id</td>
+              <td>Show/hide reg. label</td>
             </tr>
             <tr>
               <td>Ctrl + s</td>
