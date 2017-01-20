@@ -1,0 +1,2 @@
+var PERSONAL_ACCESS_TOKEN = '';
+var CLIENT_ID = '';
