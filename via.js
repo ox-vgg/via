@@ -2193,9 +2193,8 @@ function draw_all_region_id() {
 		// if text overflows, crop it
 		var str_max = Math.floor((w * annotation_str.length) / strw);
 		annotation_str = annotation_str.substr(0, str_max-1) + '.';
-		bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 1.1;
 	    }
-	    
+	    bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 1.1;	    
 	}
 	// center the label
 	x = x - (bgnd_rect_width/2 - w/2);
@@ -2274,8 +2273,8 @@ function get_canvas_region_bounding_box(region_id) {
         break;  
 
     case 'point':
-        bbox[0] = d.get('cx') + VIA_REGION_POINT_RADIUS;
-        bbox[1] = d.get('cy') + VIA_REGION_POINT_RADIUS;
+        bbox[0] = d.get('cx') - VIA_REGION_POINT_RADIUS;
+        bbox[1] = d.get('cy') - VIA_REGION_POINT_RADIUS;
         bbox[2] = d.get('cx') + VIA_REGION_POINT_RADIUS;
         bbox[3] = d.get('cy') + VIA_REGION_POINT_RADIUS;
         break;    
@@ -2993,9 +2992,7 @@ function show_message(msg, t) {
     document.getElementById('message_panel').innerHTML = msg;
     _via_message_clear_timer = setTimeout( function() {
         document.getElementById('message_panel').innerHTML = ' ';
-    }, timeout);
-    
-    
+    }, timeout);    
 }
 
 function show_filename_info() {
@@ -3413,6 +3410,10 @@ function update_attribute_value(attr_id, value) {
     }
     set_region_select_state(region_id, false);
     _via_is_user_updating_attribute_value = false;
+    
+    if (_via_is_region_id_visible) {
+	draw_all_region_id();
+    }
 }
 
 function add_new_attribute(type, attribute_name) {
