@@ -214,10 +214,10 @@ function main() {
 		 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     show_home_panel();
-    start_demo_session(); // defined in via_demo.js
+    init_payload();
 
     _via_is_local_storage_available = check_local_storage();
-    //_via_is_local_storage_available = false;
+    _via_is_local_storage_available = true;
     if (_via_is_local_storage_available) {
 	if (is_via_data_in_localStorage()) {
 	    show_localStorage_recovery_options();
@@ -3026,15 +3026,32 @@ function check_local_storage() {
     }
 }
 
+function responseListener() {
+    console.log(this.responseText);
+}
+
 function save_current_data_to_browser_cache() {
     setTimeout(function() {
         if ( _via_is_local_storage_available &&
              ! _via_is_save_ongoing) {
             try {
                 _via_is_save_ongoing = true;
-                localStorage.setItem('_via_timestamp', Date.now());
-                localStorage.setItem('_via_img_metadata', package_region_data('json'));
+		var img_metadata = package_region_data('json');
+		var timenow = new Date().toUTCString();
+                localStorage.setItem('_via_timestamp', timenow);
+                localStorage.setItem('_via_img_metadata', img_metadata);
 
+		/* 
+		// @todo: write code to push changes to github gistfile
+
+		// push to web
+		var d = new XMLHttpRequest();
+		var str = '{"description": "' + timenow + '","files": {"via_region.txt": {"content":"' + JSON.stringify(img_metadata) +'"}}}';
+		d.addEventListener('load', responseListener);
+		d.open('PATCH', 'https://api.github.com/gists/d4220f5eaaf16bcb40a3e019ae6add8d?access_token=' + PERSONAL_ACCESS_TOKEN);
+		d.send(str);
+		console.log(str);
+		*/
                 // save attributes
                 var attr = [];
                 for (var attribute of _via_region_attributes) {
