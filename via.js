@@ -208,32 +208,23 @@ function _via_get_image_id(filename, size) {
     return filename + size;
 }
 
-function main() {
-    _via_init();
-    _via_load_submodiles();
-}
-
 function _via_init() {
     console.log(VIA_NAME);
-    show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !',
-		 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
+    show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !', 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     show_home_panel();
-    init_payload();
 
     _via_is_local_storage_available = check_local_storage();
-    _via_is_local_storage_available = true;
     if (_via_is_local_storage_available) {
 	if (is_via_data_in_localStorage()) {
 	    show_localStorage_recovery_options();
 	}
     }
+    _via_load_submodules();
 }
 
 // to be implemented by submodules
-function _via_load_submodules() {
-    return;
-}
+function _via_load_submodules() {}
 
 //
 // Handlers for top navigation bar
@@ -2599,7 +2590,7 @@ function is_on_polygon_vertex(all_points_x, all_points_y, px, py) {
     return 0;
 }
 
-function update_ui_components() {
+function _via_update_ui_components() {
     if ( !_via_is_window_resized && _via_current_image_loaded ) {
         show_message("Resizing window ...", VIA_THEME_MESSAGE_TIMEOUT_MS);
 	canvas_panel.style.display = "block";
@@ -2881,6 +2872,7 @@ function move_to_prev_image() {
         } else {
             show_image(_via_image_index - 1);
         }
+	_via_hook_prev_image();
     }    
 }
 
@@ -2896,6 +2888,7 @@ function move_to_next_image() {
         } else {
             show_image(_via_image_index + 1);
         }
+	_via_hook_next_image();
     }
 }
 
@@ -3471,6 +3464,14 @@ function toggle_accordion_panel(e) {
     e.classList.toggle('active');
     e.nextElementSibling.classList.toggle('show');
 }
+
+//
+// hooks for sub-modules
+// implemented by sub-modules
+//
+function _via_hook_next_image() {}
+function _via_hook_prev_image() {}
+function _via_hook_before_unload() {}
 
 //
 // debug
