@@ -1,5 +1,5 @@
 /*
-  VGG Image Annotator (via)
+  Distributed Manual Image Annotation Tool (DMIAT)
   www.robots.ox.ac.uk/~vgg/software/via/
   
   Copyright (c) 2016, Abhishek Dutta.
@@ -71,4 +71,8 @@ function get_random_int(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function _via_load_submodules() {
+    init_payload();
 }
