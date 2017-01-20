@@ -209,6 +209,11 @@ function _via_get_image_id(filename, size) {
 }
 
 function main() {
+    _via_init();
+    _via_load_submodiles();
+}
+
+function _via_init() {
     console.log(VIA_NAME);
     show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !',
 		 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
@@ -223,6 +228,11 @@ function main() {
 	    show_localStorage_recovery_options();
 	}
     }
+}
+
+// to be implemented by submodules
+function _via_load_submodules() {
+    return;
 }
 
 //
