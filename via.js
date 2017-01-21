@@ -1354,7 +1354,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 		}
 		set_region_select_state(region_id, true);
 		update_attributes_panel();
-		show_message('Click and drag to move or resize the selected region');
+		//show_message('Click and drag to move or resize the selected region');
             } else {
 		if ( _via_is_user_drawing_region ) {
                     // clear all region selection
