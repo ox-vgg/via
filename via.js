@@ -2229,7 +2229,7 @@ function draw_all_region_id() {
 		var str_max = Math.floor((w * annotation_str.length) / strw);
 		annotation_str = annotation_str.substr(0, str_max-1) + '.';
 	    }
-	    bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 1.1;	    
+	    bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 1.25;	    
 	}
 	// center the label
 	x = x - (bgnd_rect_width/2 - w/2);
