@@ -772,11 +772,11 @@ function show_image(image_index) {
 	_via_is_loading_current_image = true;
 
 	img_reader.addEventListener( "loadstart", function(e) {
-	    document.getElementById("fileinfo").innerHTML = "Loading image ...";
+	    document.getElementById("fileinfo").innerHTML = '<b>Loading image </b>';
 	}, false);
 
 	img_reader.addEventListener( "progress", function(e) {
-	    //show_message("Loading image " + img_filename + " ... ", 1000);
+	    document.getElementById("fileinfo").innerHTML += '<b>.</b>';
 	}, false);
 
 	img_reader.addEventListener( "error", function() {
