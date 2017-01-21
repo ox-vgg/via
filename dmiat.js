@@ -166,6 +166,9 @@ function responseListener() {
 	var r = this.responseText;
 	var d = JSON.parse(r);
 	var jsonstr = d['files'][gistfn]['content'];
+	gist_rawurl = d['files'][gistfn]['raw_url'];
+	gist_rawsize = d['files'][gistfn]['size'];
+
 	import_annotations_from_json( JSON.parse(jsonstr) );
 	return;
     }
@@ -248,7 +251,7 @@ function _dmiat_is_remote_metadata_updated() {
     if (gist_rawsize != -1) {
 	var img_metadata = package_region_data('json');
 	var img_metadata_str = JSON.stringify(img_metadata[0]);
-	console.log('gist_rawsize = ' + gist_rawsize + ', metadata size = ' + img_metadata_str.length);
+
 	if (img_metadata_str.length == gist_rawsize) {
 	    return false;
 	} else {
