@@ -93,7 +93,21 @@ var img_url_list = [
     "https://upload.wikimedia.org/wikipedia/commons/e/ed/2034537_cow.JPG",
     "https://upload.wikimedia.org/wikipedia/commons/4/43/Suitsu_j%C3%B5gi_Matsalus.jpg",
     "https://upload.wikimedia.org/wikipedia/commons/4/41/Silos%2C_Acatl%C3%A1n%2C_Hidalgo%2C_M%C3%A9xico%2C_2013-10-11%2C_DD_02.JPG",
-    "https://upload.wikimedia.org/wikipedia/commons/1/1d/Penguin_in_Antarctica_jumping_out_of_the_water.jpg"
+    "https://upload.wikimedia.org/wikipedia/commons/1/1d/Penguin_in_Antarctica_jumping_out_of_the_water.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/2/26/Common_moorhen_in_Suita%2C_Osaka%2C_December_2016_-_689.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/b/bb/Pigeon_Point_Lighthouse_%282016%29.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/9/93/Peeping.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/c/c9/Broad_Street_with_NYSE.JPG",
+    "https://upload.wikimedia.org/wikipedia/commons/0/07/Taiwanese_Monk_at_the_Salar_of_Uyuni%2C_Bolivia.jpg",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+
+    ""
 ];
 
 // state of dmiat
