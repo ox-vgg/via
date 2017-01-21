@@ -2890,13 +2890,13 @@ function move_to_prev_image() {
         _via_user_sel_region_id = -1;
         
         _via_current_sel_region_id = -1;
-
+        var current_img_index = _via_image_index;
         if ( _via_image_index == 0 ) {   
             show_image(_via_img_count - 1);
         } else {
             show_image(_via_image_index - 1);
         }
-	_via_hook_prev_image();
+	_via_hook_prev_image(current_img_index);
     }    
 }
 
@@ -2906,13 +2906,13 @@ function move_to_next_image() {
         _via_user_sel_region_id = -1;
 
         _via_current_sel_region_id = -1;
-        
+        var current_img_index = _via_image_index;
         if ( _via_image_index == (_via_img_count-1) ) {   
             show_image(0);
         } else {
             show_image(_via_image_index + 1);
         }
-	_via_hook_next_image();
+	_via_hook_next_image(current_img_index);
     }
 }
 
