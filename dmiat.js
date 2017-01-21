@@ -99,6 +99,7 @@ var img_url_list = [
 */
 // state of dmiat
 var _dmiat_is_deposit_ongoing = false;
+var _dmiat_is_pull_ongoing = false;
 var _dmiat_last_deposit_failed = false;
 
 var gh = new XMLHttpRequest();
@@ -107,6 +108,9 @@ gh.addEventListener('load', responseListener);
 var ghurl = 'https://api.github.com/';
 var gistid = 'b5174884f056ef54e1c344c226541a77'
 var gistfn = 'via_image_metadata.json';
+
+var gist_rawurl = '';
+var gist_rawsize = -1;
 
 function init_payload() {
     for (var i=0; i<img_url_list.length; ++i) {
@@ -130,6 +134,7 @@ function init_payload() {
 
     _via_image_index = get_random_int(0, img_url_list.length);
     show_image(_via_image_index);
+    _dmiat_pull_metadata();
 }
 
 // returns random interger between [min,max)
@@ -148,20 +153,63 @@ function _via_load_submodules() {
 //
 
 function _via_hook_prev_image(img_index) {
-    _dmiat_deposit_metadata_changes(img_index);
+    _dmiat_deposit_metadata();
 }
 
 function _via_hook_next_image(img_index) {
-    _dmiat_deposit_metadata_changes(img_index);
+    _dmiat_deposit_metadata();
 }
 
 function responseListener() {
-    console.log(this.responseText);
+    if (_dmiat_is_pull_ongoing) {
+	_dmiat_is_pull_ongoing = false;
+	var r = this.responseText;
+	var d = JSON.parse(r);
+	var jsonstr = d['files'][gistfn]['content'];
+	import_annotations_from_json( JSON.parse(jsonstr) );
+	return;
+    }
+
+    if (_dmiat_is_deposit_ongoing) {
+	_dmiat_is_deposit_ongoing = false;
+	var r = this.responseText;
+	var d = JSON.parse(r);
+
+	gist_rawurl = d['files'][gistfn]['raw_url'];
+	gist_rawsize = d['files'][gistfn]['size'];
+	return;
+    }
+    console.log('Response processed');
 }
 
-function _dmiat_deposit_metadata_changes(img_index) {
+function _dmiat_pull_metadata() {
     setTimeout(function() {
-        if (!_dmiat_is_deposit_ongoing) {
+        if (!_dmiat_is_pull_ongoing) {
+            try {
+                _dmiat_is_pull_ongoing = true;
+		var img_metadata = package_region_data('json');
+		var img_metadata_str = JSON.stringify(img_metadata[0]);
+		var timenow = new Date().toUTCString();
+
+		var url = ghurl + 'gists/' + gistid + '?access_token=' + PERSONAL_ACCESS_TOKEN;
+		
+		gh.open('GET', url);
+		gh.send();
+            } catch(err) {
+		_dmiat_is_pull_ongoing = false;
+                show_message('Failed to pull metadata.');
+                alert('Failed to pull metadata.');
+                console.log('Failed to pull metadata.');
+                console.log(err.message);
+            }
+        }
+    }, 10);
+}
+
+function _dmiat_deposit_metadata() {
+    setTimeout(function() {
+        if (!_dmiat_is_deposit_ongoing &&
+	    _dmiat_is_remote_metadata_updated()) {
             try {
                 _dmiat_is_deposit_ongoing = true;
 		var img_metadata = package_region_data('json');
@@ -184,8 +232,6 @@ function _dmiat_deposit_metadata_changes(img_index) {
 		
 		gh.open('PATCH', url);
 		gh.send(JSON.stringify(payload));
-		
-		_dmiat_is_deposit_ongoing = false;
             } catch(err) {
 		_dmiat_is_deposit_ongoing = false;
                 show_message('Failed to deposit metadata changes.');
@@ -195,5 +241,20 @@ function _dmiat_deposit_metadata_changes(img_index) {
             }
         }
     }, 100);
+}
 
+// compare the size of local img_metadata size with that of remote
+function _dmiat_is_remote_metadata_updated() {
+    if (gist_rawsize != -1) {
+	var img_metadata = package_region_data('json');
+	var img_metadata_str = JSON.stringify(img_metadata[0]);
+	console.log('gist_rawsize = ' + gist_rawsize + ', metadata size = ' + img_metadata_str.length);
+	if (img_metadata_str.length == gist_rawsize) {
+	    return false;
+	} else {
+	    return true;
+	}
+    } else {
+	return true;
+    }
 }
