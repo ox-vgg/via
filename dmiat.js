@@ -98,16 +98,7 @@ var img_url_list = [
     "https://upload.wikimedia.org/wikipedia/commons/b/bb/Pigeon_Point_Lighthouse_%282016%29.jpg",
     "https://upload.wikimedia.org/wikipedia/commons/9/93/Peeping.jpg",
     "https://upload.wikimedia.org/wikipedia/commons/c/c9/Broad_Street_with_NYSE.JPG",
-    "https://upload.wikimedia.org/wikipedia/commons/0/07/Taiwanese_Monk_at_the_Salar_of_Uyuni%2C_Bolivia.jpg",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-
-    ""
+    "https://upload.wikimedia.org/wikipedia/commons/0/07/Taiwanese_Monk_at_the_Salar_of_Uyuni%2C_Bolivia.jpg"
 ];
 
 // state of dmiat
