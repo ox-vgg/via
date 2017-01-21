@@ -225,6 +225,7 @@ function _via_init() {
 	    show_localStorage_recovery_options();
 	}
     }
+    //start_demo_session();
     _via_load_submodules();
 }
 
@@ -1015,7 +1016,16 @@ function hide_all_canvas() {
 
 // enter annotation mode on double click
 _via_reg_canvas.addEventListener('dblclick', function(e) {
-    show_message('Double clicks are not used in this application');
+    _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
+    var region_id = is_inside_region(_via_click_x0, _via_click_y0);
+
+    if (region_id != -1) {
+	// user clicked inside a region, show attribute panel
+	if(!_via_is_reg_attr_panel_visible) {
+	    toggle_reg_attr_panel();
+	}
+    }
+
 }, false);
 
 // user clicks on the canvas
