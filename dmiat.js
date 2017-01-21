@@ -32,8 +32,7 @@ var attributes_list = ['name'];
 var img_url_list = [
     "https://upload.wikimedia.org/wikipedia/commons/6/62/Farmer_in_Tamil_Nadu_1993.JPG",
     "https://upload.wikimedia.org/wikipedia/commons/c/cb/Rescue_exercise_RCA_2012.jpg",
-    "https://upload.wikimedia.org/wikipedia/commons/9/99/Four_pears.jpg"];
-/*,
+    "https://upload.wikimedia.org/wikipedia/commons/9/99/Four_pears.jpg",
     "https://upload.wikimedia.org/wikipedia/commons/d/df/Mycteria_leucocephala_-_Pak_Thale.jpg",
     "https://upload.wikimedia.org/wikipedia/commons/4/4d/Rock_Pigeon_Columba_livia.jpg",
     "https://upload.wikimedia.org/wikipedia/commons/9/96/Pair_of_Merops_apiaster_feeding.jpg",
@@ -96,7 +95,7 @@ var img_url_list = [
     "https://upload.wikimedia.org/wikipedia/commons/4/41/Silos%2C_Acatl%C3%A1n%2C_Hidalgo%2C_M%C3%A9xico%2C_2013-10-11%2C_DD_02.JPG",
     "https://upload.wikimedia.org/wikipedia/commons/1/1d/Penguin_in_Antarctica_jumping_out_of_the_water.jpg"
 ];
-*/
+
 // state of dmiat
 var _dmiat_is_deposit_ongoing = false;
 var _dmiat_is_pull_ongoing = false;
