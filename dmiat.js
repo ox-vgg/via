@@ -26,6 +26,8 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+var attributes_list = ['name'];
+
 // source: https://commons.wikimedia.org/wiki/Commons:Quality_images
 var img_url_list = [
     "https://upload.wikimedia.org/wikipedia/commons/6/62/Farmer_in_Tamil_Nadu_1993.JPG",
@@ -103,18 +105,19 @@ function init_payload() {
 	img.base64_img_data = url;
 	
 	var img_id = _via_get_image_id(url);
-	console.log(img_id);
+
 	_via_img_metadata[img_id] = img;
 	_via_image_id_list.push(img_id);
 	_via_img_count += 1;
 	_via_reload_img_table = true;
     }
 
-    add_new_attribute('r', "name");
-    
-    _via_image_index = 0;
-    var img_index = get_random_int(0, img_url_list.length);
-    show_image(img_index);
+    for (var i=0; i<attributes_list.length; ++i) {
+	_via_region_attributes.add('name');
+    }
+
+    _via_image_index = get_random_int(0, img_url_list.length);
+    show_image(_via_image_index);
 }
 
 // returns random interger between [min,max)
