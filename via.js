@@ -771,14 +771,14 @@ function show_image(image_index) {
 	_via_is_loading_current_image = true;
 
 	img_reader.addEventListener( "loadstart", function(e) {
-	    document.getElementById("fileinfo").innerHTML = '<b>Loading image </b>';
+	    document.getElementById("fileinfo").innerHTML = '<strong>Loading image ...</strong>';
 	}, false);
 
 	img_reader.addEventListener( "progress", function(e) {
-	    document.getElementById("fileinfo").innerHTML += '<b>.</b>';
 	}, false);
 
 	img_reader.addEventListener( "error", function() {
+	    document.getElementById("fileinfo").innerHTML = '<strong>Error loading image !</strong>';
 	    show_message("Error loading image " + img_filename + " !");
 	}, false);
 
