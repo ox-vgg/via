@@ -205,7 +205,11 @@ function clone_image_region(r0) {
 }
 
 function _via_get_image_id(filename, size) {
-    return filename + size;
+    if (typeof(size) === 'undefined') {
+	return filename;
+    } else {
+	return filename + size;
+    }
 }
 
 function _via_init() {
