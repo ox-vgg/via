@@ -779,12 +779,32 @@ function show_image(image_index) {
 	}, false);
 
 	img_reader.addEventListener( "error", function() {
+	    _via_is_loading_current_image = false;
 	    document.getElementById("fileinfo").innerHTML = '<strong>Error loading image !</strong>';
 	    show_message("Error loading image " + img_filename + " !");
 	}, false);
 
+	img_reader.addEventListener( "abort", function() {
+	    _via_is_loading_current_image = false;
+	    document.getElementById("fileinfo").innerHTML = '<strong>Image loading aborted !</strong>';
+	    show_message("Aborted loading image " + img_filename + " !");
+	}, false);
+
 	img_reader.addEventListener( "load", function() {
 	    _via_current_image = new Image();
+
+	    _via_current_image.addEventListener( "error", function() {
+		_via_is_loading_current_image = false;
+		document.getElementById("fileinfo").innerHTML = '<strong>Error loading image !</strong>';
+		show_message("Error loading image " + img_filename + " !");
+	    }, false);
+
+	    _via_current_image.addEventListener( "abort", function() {
+		_via_is_loading_current_image = false;
+		document.getElementById("fileinfo").innerHTML = '<strong>Image loading aborted !</strong>';
+		show_message("Aborted loading image " + img_filename + " !");
+	    }, false);
+
 	    _via_current_image.addEventListener( "load", function() {
 		// update the current state of application
 		_via_image_id = img_id;
