@@ -43,7 +43,7 @@ var VIA_MOUSE_CLICK_TOL = 2;    // in pixel
 var VIA_ELLIPSE_EDGE_TOL = 0.2;
 var VIA_THETA_TOL = Math.PI/18; // 10 degrees
 var POLYGON_RESIZE_VERTEX_OFFSET = 100;
-var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 2.0, 3.0, 4.0];
+var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5];
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
 var VIA_ATTR_PANEL_FONT_SIZE_LEVELS = ['xx-small', 'x-small', 'small',
                                        'medium', 'large', 'x-large', 'xx-large'];
@@ -2905,6 +2905,11 @@ function move_to_prev_image() {
         _via_user_sel_region_id = -1;
         
         _via_current_sel_region_id = -1;
+
+	if (_via_is_canvas_zoomed) {
+	    reset_zoom_level();
+	}
+	
         var current_img_index = _via_image_index;
         if ( _via_image_index == 0 ) {   
             show_image(_via_img_count - 1);
@@ -2924,6 +2929,11 @@ function move_to_next_image() {
         _via_user_sel_region_id = -1;
 
         _via_current_sel_region_id = -1;
+
+	if (_via_is_canvas_zoomed) {
+	    reset_zoom_level();
+	}
+	
         var current_img_index = _via_image_index;
         if ( _via_image_index == (_via_img_count-1) ) {   
             show_image(0);
@@ -2983,7 +2993,7 @@ function zoom_in() {
         _via_redraw_img_canvas();
         _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
-        show_message('Zoomed in to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
+        show_message('Zoomed in to level ' + zoom_scale + 'X', VIA_THEME_MESSAGE_TIMEOUT_MS);
     }
 }
 
@@ -3009,7 +3019,7 @@ function zoom_out() {
         _via_redraw_img_canvas();
         _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
-        show_message('Zoomed out to level ' + zoom_scale, VIA_THEME_MESSAGE_TIMEOUT_MS);
+        show_message('Zoomed out to level ' + zoom_scale + 'X', VIA_THEME_MESSAGE_TIMEOUT_MS);
     }
 }
 
