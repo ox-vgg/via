@@ -26,6 +26,10 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+function _via_load_submodules() {
+    start_demo_session();
+}
+
 function start_demo_session() {
     var demo_img_base64_data = [];
     demo_img_base64_data[0] = new ImageMetadata('', 'swan_in_geneve.jpg', 62201);
