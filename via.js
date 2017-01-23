@@ -205,31 +205,25 @@ function clone_image_region(r0) {
 }
 
 function _via_get_image_id(filename, size) {
-    if (typeof(size) === 'undefined') {
-	return filename;
-    } else {
-	return filename + size;
-    }
+    return filename + size;
 }
 
-function _via_init() {
+function main() {
     console.log(VIA_NAME);
-    show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !', 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
+    show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !',
+		 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     show_home_panel();
+    start_demo_session(); // defined in via_demo.js
 
     _via_is_local_storage_available = check_local_storage();
+    //_via_is_local_storage_available = false;
     if (_via_is_local_storage_available) {
 	if (is_via_data_in_localStorage()) {
 	    show_localStorage_recovery_options();
 	}
     }
-    //start_demo_session();
-    _via_load_submodules();
 }
-
-// to be implemented by submodules
-function _via_load_submodules() {}
 
 //
 // Handlers for top navigation bar
@@ -772,39 +766,19 @@ function show_image(image_index) {
 	_via_is_loading_current_image = true;
 
 	img_reader.addEventListener( "loadstart", function(e) {
-	    document.getElementById("fileinfo").innerHTML = '<strong>Loading image ...</strong>';
+	    document.getElementById("fileinfo").innerHTML = "Loading image ...";
 	}, false);
 
 	img_reader.addEventListener( "progress", function(e) {
+	    //show_message("Loading image " + img_filename + " ... ", 1000);
 	}, false);
 
 	img_reader.addEventListener( "error", function() {
-	    _via_is_loading_current_image = false;
-	    document.getElementById("fileinfo").innerHTML = '<strong>Error loading image !</strong>';
 	    show_message("Error loading image " + img_filename + " !");
-	}, false);
-
-	img_reader.addEventListener( "abort", function() {
-	    _via_is_loading_current_image = false;
-	    document.getElementById("fileinfo").innerHTML = '<strong>Image loading aborted !</strong>';
-	    show_message("Aborted loading image " + img_filename + " !");
 	}, false);
 
 	img_reader.addEventListener( "load", function() {
 	    _via_current_image = new Image();
-
-	    _via_current_image.addEventListener( "error", function() {
-		_via_is_loading_current_image = false;
-		document.getElementById("fileinfo").innerHTML = '<strong>Error loading image !</strong>';
-		show_message("Error loading image " + img_filename + " !");
-	    }, false);
-
-	    _via_current_image.addEventListener( "abort", function() {
-		_via_is_loading_current_image = false;
-		document.getElementById("fileinfo").innerHTML = '<strong>Image loading aborted !</strong>';
-		show_message("Aborted loading image " + img_filename + " !");
-	    }, false);
-
 	    _via_current_image.addEventListener( "load", function() {
 		// update the current state of application
 		_via_image_id = img_id;
@@ -1015,16 +989,7 @@ function hide_all_canvas() {
 
 // enter annotation mode on double click
 _via_reg_canvas.addEventListener('dblclick', function(e) {
-    _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
-    var region_id = is_inside_region(_via_click_x0, _via_click_y0);
-
-    if (region_id != -1) {
-	// user clicked inside a region, show attribute panel
-	if(!_via_is_reg_attr_panel_visible) {
-	    toggle_reg_attr_panel();
-	}
-    }
-
+    show_message('Double clicks are not used in this application');
 }, false);
 
 // user clicks on the canvas
@@ -1354,7 +1319,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 		}
 		set_region_select_state(region_id, true);
 		update_attributes_panel();
-		//show_message('Click and drag to move or resize the selected region');
+		show_message('Click and drag to move or resize the selected region');
             } else {
 		if ( _via_is_user_drawing_region ) {
                     // clear all region selection
@@ -2228,8 +2193,9 @@ function draw_all_region_id() {
 		// if text overflows, crop it
 		var str_max = Math.floor((w * annotation_str.length) / strw);
 		annotation_str = annotation_str.substr(0, str_max-1) + '.';
+		bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 1.1;
 	    }
-	    bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 1.25;	    
+	    
 	}
 	// center the label
 	x = x - (bgnd_rect_width/2 - w/2);
@@ -2308,8 +2274,8 @@ function get_canvas_region_bounding_box(region_id) {
         break;  
 
     case 'point':
-        bbox[0] = d.get('cx') - VIA_REGION_POINT_RADIUS;
-        bbox[1] = d.get('cy') - VIA_REGION_POINT_RADIUS;
+        bbox[0] = d.get('cx') + VIA_REGION_POINT_RADIUS;
+        bbox[1] = d.get('cy') + VIA_REGION_POINT_RADIUS;
         bbox[2] = d.get('cx') + VIA_REGION_POINT_RADIUS;
         bbox[3] = d.get('cy') + VIA_REGION_POINT_RADIUS;
         break;    
@@ -2624,7 +2590,7 @@ function is_on_polygon_vertex(all_points_x, all_points_y, px, py) {
     return 0;
 }
 
-function _via_update_ui_components() {
+function update_ui_components() {
     if ( !_via_is_window_resized && _via_current_image_loaded ) {
         show_message("Resizing window ...", VIA_THEME_MESSAGE_TIMEOUT_MS);
 	canvas_panel.style.display = "block";
@@ -2900,13 +2866,12 @@ function move_to_prev_image() {
         _via_user_sel_region_id = -1;
         
         _via_current_sel_region_id = -1;
-        var current_img_index = _via_image_index;
+
         if ( _via_image_index == 0 ) {   
             show_image(_via_img_count - 1);
         } else {
             show_image(_via_image_index - 1);
         }
-	_via_hook_prev_image(current_img_index);
     }    
 }
 
@@ -2916,13 +2881,12 @@ function move_to_next_image() {
         _via_user_sel_region_id = -1;
 
         _via_current_sel_region_id = -1;
-        var current_img_index = _via_image_index;
+        
         if ( _via_image_index == (_via_img_count-1) ) {   
             show_image(0);
         } else {
             show_image(_via_image_index + 1);
         }
-	_via_hook_next_image(current_img_index);
     }
 }
 
@@ -3029,7 +2993,9 @@ function show_message(msg, t) {
     document.getElementById('message_panel').innerHTML = msg;
     _via_message_clear_timer = setTimeout( function() {
         document.getElementById('message_panel').innerHTML = ' ';
-    }, timeout);    
+    }, timeout);
+    
+    
 }
 
 function show_filename_info() {
@@ -3060,32 +3026,15 @@ function check_local_storage() {
     }
 }
 
-function responseListener() {
-    console.log(this.responseText);
-}
-
 function save_current_data_to_browser_cache() {
     setTimeout(function() {
         if ( _via_is_local_storage_available &&
              ! _via_is_save_ongoing) {
             try {
                 _via_is_save_ongoing = true;
-		var img_metadata = package_region_data('json');
-		var timenow = new Date().toUTCString();
-                localStorage.setItem('_via_timestamp', timenow);
-                localStorage.setItem('_via_img_metadata', img_metadata);
+                localStorage.setItem('_via_timestamp', Date.now());
+                localStorage.setItem('_via_img_metadata', package_region_data('json'));
 
-		/* 
-		// @todo: write code to push changes to github gistfile
-
-		// push to web
-		var d = new XMLHttpRequest();
-		var str = '{"description": "' + timenow + '","files": {"via_region.txt": {"content":"' + JSON.stringify(img_metadata) +'"}}}';
-		d.addEventListener('load', responseListener);
-		d.open('PATCH', 'https://api.github.com/gists/d4220f5eaaf16bcb40a3e019ae6add8d?access_token=' + PERSONAL_ACCESS_TOKEN);
-		d.send(str);
-		console.log(str);
-		*/
                 // save attributes
                 var attr = [];
                 for (var attribute of _via_region_attributes) {
@@ -3464,10 +3413,6 @@ function update_attribute_value(attr_id, value) {
     }
     set_region_select_state(region_id, false);
     _via_is_user_updating_attribute_value = false;
-    
-    if (_via_is_region_id_visible) {
-	draw_all_region_id();
-    }
 }
 
 function add_new_attribute(type, attribute_name) {
@@ -3498,14 +3443,6 @@ function toggle_accordion_panel(e) {
     e.classList.toggle('active');
     e.nextElementSibling.classList.toggle('show');
 }
-
-//
-// hooks for sub-modules
-// implemented by sub-modules
-//
-function _via_hook_next_image() {}
-function _via_hook_prev_image() {}
-function _via_hook_before_unload() {}
 
 //
 // debug

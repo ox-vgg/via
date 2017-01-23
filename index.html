@@ -34,10 +34,19 @@
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 200 KB) that runs on most modern web browsers.">
 
-    <!-- Google analytics : used in Seebibyte project to measure impact -->
-    <script type="text/javascript">
-      //<!--AUTO_INSERT_GOOGLE_ANALYTICS_JS_HERE-->
-    </script>    
+    <!-- Google analytics : used in Seebibyte project to measure impact
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-20555581-2', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+    -->
+    
     
     <!-- CSS style definition -->
     <style type="text/css">     
@@ -410,7 +419,7 @@
     </style>
   </head>
 
-  <body onload="_via_init()" onresize="_via_update_ui_components()">
+  <body onload="main()" onresize="update_ui_components()">
     <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
         <symbol id="shape_rectangle">
@@ -454,12 +463,6 @@
               <a onclick="sel_local_data_file('annotations')" title="Import existing region data from CSV or JSON file">Import</a>
             </div>
           </li>
-          <li class="dropdown"><a title="View" class="drop_menu_item">View &#9662;</a>
-            <div class="dropdown-content">
-              <a onclick="toggle_region_boundary_visibility()" title="Show or hide region boundaries">Show/hide region boundaries</a>
-	      <a onclick="toggle_region_id_visibility()" title="Show or hide region label">Show/hide region label</a>
-	    </div>
-	  </li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662;</a>
             <div class="dropdown-content">
 	      <a onclick="show_getting_started_panel()" title="Getting started with VGG Image Annotator (VIA)">Getting Started</a>
@@ -551,7 +554,7 @@
             </tr>
             <tr>
               <td>i</td>
-              <td>Show/hide reg. label</td>
+              <td>Show/hide regions id</td>
             </tr>
             <tr>
               <td>Ctrl + s</td>
@@ -637,18 +640,14 @@
     <div id="message_panel"></div>
 
     <script type="text/javascript">
-      //<!--AUTO_INSERT_DMIAT_JS_HERE-->
+      <!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
     </script>
     <script type="text/javascript">
-      //<!--AUTO_INSERT_GITHUB_AUTH_JS_HERE-->
-    </script>
-    <script type="text/javascript">
-      //<!--AUTO_INSERT_VIA_JS_HERE-->
+      <!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
 
     <!---->
     <script type="text/javascript" src="via.js"></script>
-    <script type="text/javascript" src="dmiat.js"></script>
-    <script type="text/javascript" src="github_auth.js"></script>
+    <script type="text/javascript" src="via_demo.js"></script>
   </body>
 </html>
