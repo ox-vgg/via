@@ -1,229 +1,264 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <title>VIA Code Documentation</title>
+    <meta charset="UTF-8">
+    <!--
+        VGG Image Annotator Code Documentation
+        www.robots.ox.ac.uk/~vgg/software/via/
+
+        Copyright (c) 2016, Abhishek Dutta.
+        All rights reserved.
+
+        Redistribution and use in source and binary forms, with or without
+        modification, are permitted provided that the following conditions are met:
+
+        Redistributions of source code must retain the above copyright notice, this
+        list of conditions and the following disclaimer.
+        Redistributions in binary form must reproduce the above copyright notice,
+        this list of conditions and the following disclaimer in the documentation
+        and/or other materials provided with the distribution.
+        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+        AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+        IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+        ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+        LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+        CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+        SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+        INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+        CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+        ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+        POSSIBILITY OF SUCH DAMAGE.
+
+      -->    
+    <title>VIA 1.0 Code Documentation</title>
+    <meta name="author" content="Abhishek Dutta">
+    <meta name="description" content="Code documentation for VGG Image Annotator (VIA)">
   </head>
 
   <style type="text/css">
     body {
     font-family: Verdana, Helvetica, Sans;
-    font-size: default;
+    font-size: medium;
     width: 60em;
+    margin-left: 1em;
+    }
+    h1 {
+    font-size: xx-large;
     }
     h2 {
-    font-size: xx-large;
-    color: #0066ff;
+    font-size: x-large;
     }
     h3 {
-    font-size: large;
+    font-size: medium;
     }
+    code {
+    font-family: Mono;
+    color: #d40000;
+    }
+    data {
+    display: block;
+    font-family: Mono;
+    color: #000000;
+    border-left: 2px solid #cccccc;
+    padding: 1em 0;
+    margin: 0.5em 0;
+    padding-left: 1em;
+    }
+    datai {
+    font-family: Mono;
+    color: #000000;
+    }
+
     /* a block of code (html, css or javascript) */
     .code_block {
     font-family: Mono;
-    font-size: default;
+    font-size: medium;
     width: 60em;
     border: 1px solid #e6e6e6;
-    padding: 0;
+    padding: 0 1em;
     margin: 1em 0;
     overflow: auto;
+    white-space: pre;
     }
 
     a:link, a:visited {
     color: blue;
     }
     
-    .code_block pre, code {
-    font-family: Mono;
-    font-size: default;
-    margin: 0;
-    }
-
-    .code_block .title {
-    display: block;    
-    padding: 1em 1em;
-    border-bottom: 1px solid #cccccc;
-    }
-    .code_block .title .backref {
-    float: right;
-    font-size: large;
-    }
-    .code_block .content {
-    padding: 1em 2em;
-    }
-    .code_block .line {
-    display: block;
-    }
-    .code_block .link {
-    display: block;
-    }
-    .code_block .indent1 {
-    padding-left: 1em;
-    }
-    .code_block .indent2 {
-    padding-left: 2em;
-    }
-
     /* figures for illustration */
     .figure {
     padding: 1em 2em;
     }
 
+    /* table of contents */
+    #table_of_contents {
+    margin: 2em 0;
+    margin-left: 4em;
+    width: 20em;
+    }
   </style>
+  <script type="text/javascript">
+    function _via_init_code_doc() {
+      generate_toc();
+    }
+    
+    //
+    // generate Table of Contents
+    //
+    function generate_toc() {
+      var h = document.getElementsByTagName('h2');
+      var toc = document.getElementById('table_of_contents');
+      toc.innerHTML = '<ul>';
+      for (var i=0; i < h.length; ++i) {
+        toc.innerHTML += '<li><a href="#' + h[i].id + '">' + h[i].innerHTML + '</a></li>';
+        console.log(h[i].id);
+      }
+      toc.innerHTML += '</ul>';
+			
+    }			
+  </script>
   
-  <body>
-    <h1>VGG Image Annotator Code Documentation</h1>
+  <body onload="_via_init_code_doc()">
+    <h1>Code Documentation for VGG Image Annotator 1.0</h1>
+    
+    <div id="table_of_contents"></div>
+
     <p>VGG Image Annotator (VIA) application is contained in a single html file with definitions of
       CSS style and Javascript code blocks.</p>
     <p>The VIA application code has the following structure:</p>
 
     <div class="code_block">
-      <div class="title">&lt;&lt;via.html&gt;&gt;=</div>
-      <div class="content">
-        <span class="link">[<a name="scld0" href="#scld1">source code license declaration</a>]</span>
-        <span class="line">&nbsp;</span>
-        
-        <span class="line">&lt;html lang=&quot;en&quot;&gt;</span>
-        <span class="line">&lt;head&gt;</span>
-        
-        <span class="link indent1">[<a name="hmtd0" href="#hmtd1">html meta tags definition</a>]</span>
-        <span class="line">&nbsp;</span>
-        
-        <span class="line indent1">&lt;style type=&quot;text/css&quot;&gt;</span>
-        <span class="link indent1">[<a name="csde0" href="">css definition</a>]</span>
-        <span class="line indent1">&lt;/style&gt;</span>
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  [source code license declaration]
+  [html meta tags definition]
+  [css definition]
+&lt;/head&gt;
 
-        <span class="line">&lt;/head&gt;</span>
-        <span class="line">&nbsp;</span>
+&lt;body onload=&quot;_via_init()&quot; onresize=&quot;_via_update_ui_components()&quot; &gt;
+  [html content definition]
+  [javascript definition]
 
-        <span class="line">&lt;body onload=&quot;main()&quot; onresize=&quot;update_ui_components()&quot; &gt;</span>
-        <span class="link indent1">[<a name="hcd0" href="#hcd1">html content definition</a>]</span>
-        <span class="line">&nbsp;</span>
-        
-        <span class="line indent1">&lt;script type=&quot;text/javascript&quot;&gt;</span>
-        <span class="link indent1">[<a name="vijd0" href="#vijd1">VIA javascript definition</a>]</span>
-        <span class="line indent1">&lt;/script&gt;</span>
-
-        <span class="line">&lt;/body&gt;</span>
-        <span class="line">&lt;/html&gt;</span>
-      </div>
+&lt;/body&gt;
+&lt;/html&gt;
     </div>
     
-    <p>The <code>onload()</code> and <code>update_ui_components()</code> are defined
-      in the <span class="link indent1">[<a name="csde0" href="">VIA javascript definition</a>]</span>
-      code block and will be further described later.</p>
+    <p>The <code>_via_init()</code> function is the main entry point to the javascript code. When the browser window is resized, we have to recompute the image canvas dimensions. Therefore, the function <code>_via_update_ui_components()</code> is tied to <code>onresize</code> event which is fired when browser window is resized.</p>
 
-    <p>We define the standard html meta tags for this application as follows:</p>
-    <div class="code_block" id="hmtd1">
-      <div class="title">&lt;&lt;html meta tags definition&gt;&gt;= <span class="backref"><a href="#hmtd0">&uarr;</a></span></div>
-      <div class="content">
-        <span class="line">&lt;meta charset=&quot;UTF-8&quot;&gt;</span>
-        <span class="line">&lt;title&gt;VGG Image Annotator&lt;/title&gt;</span>
-        <span class="line">&lt;meta name=&quot;author&quot; content=&quot;Abhishek Dutta&quot;&gt;</span>
-        <span class="line">&lt;meta name=&quot;description&quot; content=&quot;VGG Image Annotator (via) is a light-weight image annotation tool built solely using HTML, CSS and pure Javascript (not using any javascript libraries).&quot;&gt;</span>
-      </div>
-    </div>
+    <p>Nearly 3000 lines of javascript source code is required to support all the functionalities provided by the VIA image annotator. A majority of this javascript is needed to support an interactive user interface. Only a small portion of this javascript code is needed to support the drawing, selection, resizing, deletion, etc. of image regions of varying shapes -- rectangle, circle, ellipse and polygon.</p>
+    <p>Now we describe how some of the core actions (like loading images, drawing regions, etc) are facilitated by the javascript codebase.</p>
 
-    <div class="figure"><img src="./images/via_screenshot1.png" alt="VIA screenshot 1" /></div>
-    <p>As shown in the above screenshot, there are many components of the
-      VIA application. For example, the <code>#navbar</code> element provides
-      the functionality of menu based navigation bar for this application.
-      Similarly, the <code>#image_info</code> element shows information about
-      the image currently being annotated. In this code documentation, we
-      will focus on the HTML <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas" target="_new">canvas</a>
-      element <code>#image_canvas</code> which displays the image being
-      annotated and provides user interactions needed for image annotation.
 
-    <div class="code_block" id="hcd1">
-      <div class="title">&lt;&lt;html content definition&gt;&gt;= <span class="backref"><a href="#hcd0">&uarr;</a></span></div>
-      <div class="content">
-        <span class="line">...</span>
-        <span class="line">&lt;div class=&quot;box&quot; id=&quot;image_panel&quot;&gt;</span>
-        <span class="line indent1">&lt;canvas id=&quot;image_canvas&quot;&gt;Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.&lt;/canvas&gt;</span>
-        <span class="line">...</span>
-      </div>
-    </div>
-This canvas' CSS definition is:
-    <div class="code_block" id="csde1">
-      <div class="title">&lt;&lt;css definition&gt;&gt;= <span class="backref"><a href="#csde0">&uarr;</a></span></div>
-      <div class="content">
-        <span class="line">...</span>
-        <span class="line">#image_panel {</span>
-        <span class="line indent1">display: inline-block;</span>
-        <span class="line indent1">margin: auto;</span>
-        <span class="line">}</span>
-        <span class="line">...</span>
-      </div>
-    </div>
+    <h2 id="core_data_structures">Core Data Structures</h2>
+    <blockquote cite="https://lwn.net/Articles/193245/">"Bad programmers worry about the code. Good programmers worry about data structures and their relationships." -- <a href="https://lwn.net/Articles/193245/">Torvalds</a></blockquote>
+    <p>The function <code>_via_get_image_id()</code> generates a unique <code>image_id</code> for each image by combining the image filename and image size in bytes. For example, the file <datai>photo.jpg</datai> of size <datai>16454</datai> bytes will get assigned an image-id <datai>photo.jpg16454</datai>.</p>
+    <p>The annotation data corresponding to each image is stored in the object <code>_via_img_metadata</code> indexed by its unqiue <code>image_id</code>. Each such entry in <code>_via_img_metadata</code> is another object of type <code>ImageMetadata()</code> having the following properties:
+      <ul>
+	<li><code>fileref</code> : a reference to the local file uploaded by user</li>
+	<li><code>base64_img_data</code> : contains either the image URL or image data represented in base64 format</li>
+	<li><code>file_attributes</code> : a <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map">Map()</a> of image file's attributes. For example, image captions can be represented by file attributes as <data>Map { 'caption': 'a white football flying over a red car' }</li>
+	<li><code>regions</code> : an array of <code>ImageRegion()</code> objects containing the following properties corresponding to each region (rectangular, circular, polygon, etc) defined in the image
+	  <ul>
+	    <li><code>shape_attributes</code> : a <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map">Map()</a> of attributes defining the shape of the region. For example, a rectangular region has the following shape attributes <data>Map { 'name': 'rect', 'x': '115', 'y': '210', 'width': '100', 'height': '200' }</data></li>
+	    <li><code>region_attributes</code> : a <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map">Map()</a> of attributes corresponding to the region. For example, an image region containing a red car can have the following attributes <data>Map { 'object_name': 'car', 'object_color': 'red' }</data></li>
+	    <li><code>is_user_selected</code> : a state variable indicating if this region has been selected by the user</li>
+	  </ul>
+	</li>
 
-    <p>In the <a href="#via_js_def">Javascript Definition</a>, we describe the Javascript source code that handles user interactions with the canvas element.</p>
-
-    <h2 id="via_js_def">Javascript Definition</h2>
-    <p>Nearly 3000 lines of javascript source code is required to support
-      all the functionalities provided by the VIA image annotator. A
-      majority of this javascript is needed to support an interactive user
-      interface. Only a small portion of this javascript code is needed to
-      support the drawing, selection, resizing, deletion, etc. of image
-      regions of varying shapes -- rectangle, circle, ellipse and polygon.</p>
-    <p>We dissect and explain this javascript code in the following natural order of user interaction:</p>
-    <div class="code_block" id="csde1">
-      <div class="title">&lt;&lt;VIA javascript definition&gt;&gt;= <span class="backref"><a href="#vijd0">&uarr;</a></span></div>
-      <div class="content">
-        <span class="line">[<a name="glvd0" href="glvd1">global variables definition</a>]</span>
-        <span class="line">&nbsp;</span>
-        <span class="line">[<a name="lilf0" href="lilf1">loading images from local filesystem</a>]</span>
-        <span class="line">[<a name="diic0" href="diic1">Displaying Image in Canvas</a>]</span>
-        <span class="line">[<a name="drri0" href="drri1">Drawing Rectangular Regions on Image</a>]</span>
-        <span class="line">[<a name="dara0" href="dara1">Defining and Adding Region Attributes</a>]</span>
-        <span class="line">[<a name="exad0" href="exad1">Exporting the Annotation Data</a>]</span>
-      </div>
-    </div>
-
-    <h3>1. Loading Images from Local Filesystem</h3>
-    <div class="code_block" id="vijd1">
-      <div class="title">&lt;&lt;&gt;&gt;= <span class="backref"><a href="#vijd0">&uarr;</a></span></div>
-      <div class="content">
-      </div>
-    </div>
-
-    <h3>2. Displaying Image in Canvas</h3>
-    <h3>3. Drawing Rectangular Regions on Image</h3>
-    <h3>4. Defining and Adding Region Attributes</h3>
-    <h3>5. Exporting the Annotation Data</h3>
+      </ul>
+    </p>
     
-    
-<h2>Source Code License</h2>
-VIA is an open source project actively maintained by
-the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group (VGG)</a> at
-Oxford University. Its source code is a distributed under the <a href="https://en.wikipedia.org/wiki/BSD_licenses#2-clause_license_.28.22Simplified_BSD_License.22_or_.22FreeBSD_License.22.29">BSD-2 clause license</a>
-which means that you are free to not only use it or modify
-it but also to contribute to this project.
+    <p>Here is an example of how VIA would store file attribute and two region annotations for a file <datai>photo.jpg</datai> in <code>_via_img_metadata</code> object:
+      <div class="code_block">
+	var img_id = _via_get_image_id('photo.jpg', 16454);
+	var _via_img_metadata = {};
+	_via_img_metadata[img_id] = new ImageMetadata('', 'photo.jpg', 16454);
 
-<div class="code_block" id="scld1">
+	_via_img_metadata[img_id].file_attributes.set('caption', 'a white football flying over a red car');
+
+	_via_img_metadata[img_id].regions[0] = new ImageRegion();
+	_via_img_metadata[img_id].regions[0].shape_attributes.set('name', 'rect');
+	_via_img_metadata[img_id].regions[0].shape_attributes.set('x', '115');
+	_via_img_metadata[img_id].regions[0].shape_attributes.set('y', '210');
+	_via_img_metadata[img_id].regions[0].shape_attributes.set('width', '100');
+	_via_img_metadata[img_id].regions[0].shape_attributes.set('height', '200');
+	_via_img_metadata[img_id].regions[0].region_attributes.set('object_name, 'car');
+	_via_img_metadata[img_id].regions[0].region_attributes.set('object_color, 'red');      
+
+	_via_img_metadata[img_id].regions[1] = new ImageRegion();
+	_via_img_metadata[img_id].regions[1].shape_attributes.set('name', 'circle');
+	_via_img_metadata[img_id].regions[1].shape_attributes.set('cx', '50');
+	_via_img_metadata[img_id].regions[1].shape_attributes.set('cy', '90');
+	_via_img_metadata[img_id].regions[1].shape_attributes.set('r, '20');
+	_via_img_metadata[img_id].regions[1].region_attributes.set('object_name, 'football);
+	_via_img_metadata[img_id].regions[1].region_attributes.set('object_color, 'white);            
+      </div>
+    </p>
+
+    <p>VIA uses the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API">canvas</a> to render image, region boundaries and region labels. The image currently being displayed is rendered by <code>_via_img_canvas</code> while the region boundaries and region labels are rendered by the canvas <code>_via_reg_canvas</code>. These two canvas are overlaid with <code>_via_reg_canvas</code> being on the top.</p>
+
+    <p>The <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Set">Set()</a> of image region attributes is stored in the  variable <code>_via_region_attributes</code>. These attributes form the keys of the map <code>_via_img_metadata[img_id].regions[i].region_attributes</code>.</p>
+
+    <p>A set of variables are used to maintain the state of the VIA application. These state variable form a crucial component of user interactions. For example, <code>_via_is_user_drawing_region</code> is <code>true</code> when the user is drawing a region.</p>
+    
+    <h2 id="loading_images">Loading Images</h2>
+    <p>@todo</p>
+    
+    <h2 id="move_next_prev_image">Moving to Next/Previous Images</h2>
+    <p>@todo</p>
+    
+    <h2 id="capture_user_mouse_interactions">Capturing User's Mouse Interactions</h2>
+    <p>@todo</p>
+
+    <h2 id="draw_region">Drawing a Region</h2>
+    <p>@todo</p>
+
+    <h2 id="move_resize_regions">Moving/Resizing Regions</h2>
+    <p>@todo</p>
+
+    <h2 id="add_new_attribute">Adding New Attributes</h2>
+    <p>@todo</p>
+
+    <h2 id="download_annotations">Download Annotations</h2>
+    <p>@todo</p>
+
+    <h2 id="import_annotations">Importing Annotations</h2>
+    <p>@todo</p>
+    
+    <h2 id="source_code_license">Source Code License</h2>
+    VIA is an open source project actively maintained by
+    the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group (VGG)</a>.
+    Its source code is a distributed under the <a href="https://en.wikipedia.org/wiki/BSD_licenses#2-clause_license_.28.22Simplified_BSD_License.22_or_.22FreeBSD_License.22.29">BSD-2 clause license</a>
+    which means that you are free to not only use it or modify it but also to contribute to this project.
+
+    <div class="code_block" id="scld1">
       <div class="title">&lt;&lt;source code license declaration&gt;&gt;= <span class="backref"><a href="#scld0">&uarr;</a></span></div>
       <div class="content">
-<pre>
-Copyright (c) 2016, Abhishek Dutta.
-All rights reserved.
+	<pre>
+	  Copyright (c) 2016, Abhishek Dutta.
+	  All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+	  Redistribution and use in source and binary forms, with or without
+	  modification, are permitted provided that the following conditions are met:
 
-Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
-</pre>
+	  Redistributions of source code must retain the above copyright notice, this
+	  list of conditions and the following disclaimer.
+	  Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation
+	  and/or other materials provided with the distribution.
+	  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+	  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+	  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+	  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+	  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+	  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+	  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+	  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+	  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+	  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+	  POSSIBILITY OF SUCH DAMAGE.
+	</pre>
       </div>
     </div>
 
