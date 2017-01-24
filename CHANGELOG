@@ -1,4 +1,4 @@
-## [0.1] - not released yet
+## [1.0] - not released yet
  * added support for file attributes (useful for weakly supervised learning)
  * spreadsheet like editor for region and file attributes
  * improved visualization of loaded image list
