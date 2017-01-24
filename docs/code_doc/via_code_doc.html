@@ -203,7 +203,13 @@
     <p>A set of variables are used to maintain the state of the VIA application. These state variable form a crucial component of user interactions. For example, <code>_via_is_user_drawing_region</code> is <code>true</code> when the user is drawing a region.</p>
     
     <h2 id="loading_images">Loading Images</h2>
-    <p>@todo</p>
+    <p>When the user clicks "Load or Add Images" item in the top menu bar, it invokes the function <code>sel_local_images()</code> which in turn invokes the local file selector called <code>invisible_file_input</code>. When the user selects on or more local files, it triggers the function <code>store_local_img_ref()</code> which
+      <ol>
+	<li>computes the <code>image_id</code>,</li>
+	<li>allocates entry in the <code>_via_img_metadata[img_id]</code>, and</li>
+	<li>stores a reference to the local file in <code>_via_img_metadata[img_id].fileref</code></li>
+      </ol>
+    </p>
     
     <h2 id="move_next_prev_image">Moving to Next/Previous Images</h2>
     <p>@todo</p>
