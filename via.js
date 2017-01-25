@@ -146,9 +146,6 @@ var _via_loaded_img_table_html = [];
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
 
-var about_panel = document.getElementById("about_panel");
-var via_start_info_panel = document.getElementById("via_start_info_panel");
-var getting_started_panel = document.getElementById("getting_started_panel");
 var image_panel = document.getElementById("image_panel");
 var ui_top_panel = document.getElementById("ui_top_panel");
 var canvas_panel = document.getElementById("canvas_panel");
@@ -211,7 +208,8 @@ function _via_init() {
     console.log(VIA_NAME);
     show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !', 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
 
-    show_home_panel();
+    show_about_panel();
+    //show_home_panel();
 
     _via_is_local_storage_available = check_local_storage();
     if (_via_is_local_storage_available) {
@@ -236,16 +234,13 @@ function _via_init() {
 //
 function show_home_panel() {
     if (_via_current_image_loaded) {
-        canvas_panel.style.display = "block";
-        via_start_info_panel.style.display = "none";
-        about_panel.style.display = "none";
-        getting_started_panel.style.display = "none";   
+	show_all_canvas();
+	set_all_text_panel_display('none');
     } else {
-        via_start_info_panel.innerHTML = '<p>To begin the image annotation process, click <a title="Load images" style="cursor: pointer; color: blue;" onclick="sel_local_images()">Load or Add Images</a> in the Image menu.</p>';
-        via_start_info_panel.style.display = "block";
-        about_panel.style.display = "none";
-        canvas_panel.style.display = "none";
-        getting_started_panel.style.display = "none";   
+        var start_info = '<p><a title="Load or Add Images" style="cursor: pointer; color: blue;" onclick="sel_local_images()">Load images</a> to start annotation or, see <a title="Getting started with VGG Image Annotator" style="cursor: pointer; color: blue;" onclick="show_getting_started_panel()">Getting Started</a>.</p>';
+	clear_image_display_area();
+	document.getElementById('via_start_info_panel').innerHTML = start_info;
+	document.getElementById('via_start_info_panel').style.display = 'block';
     }
 }
 function sel_local_images() {
@@ -308,16 +303,29 @@ function import_attributes() {
     }
 }
 function show_about_panel() {
-    about_panel.style.display = "block";
+    set_all_text_panel_display('none');
+    document.getElementById("about_panel").style.display = "block";
     canvas_panel.style.display = "none";
-    via_start_info_panel.style.display = "none";
-    getting_started_panel.style.display = "none";
 }
 function show_getting_started_panel() {
-    getting_started_panel.style.display = "block";
-    about_panel.style.display = "none";    
+    set_all_text_panel_display('none');
+    document.getElementById("getting_started_panel").style.display = "block";
     canvas_panel.style.display = "none";
-    via_start_info_panel.style.display = "none";
+}
+function show_license_panel() {
+    set_all_text_panel_display('none');
+    document.getElementById("license_panel").style.display = 'block';
+    canvas_panel.style.display = "none";
+}
+function set_all_text_panel_display(style_display) {
+    var tp = document.getElementsByClassName('text_panel');
+    for (var i=0; i<tp.length; ++i) {
+	tp[i].style.display = style_display;
+    }
+}
+function clear_image_display_area() {
+    hide_all_canvas();
+    set_all_text_panel_display('none');
 }
 
 //
@@ -944,12 +952,6 @@ function _via_load_canvas_regions() {
             break;
         }
     }
-}
-
-function clear_image_display_area() {
-    hide_all_canvas();
-    about_panel.style.display = 'none';
-    via_start_info_panel.style.display = 'none';
 }
 
 //
@@ -2620,11 +2622,9 @@ function is_on_polygon_vertex(all_points_x, all_points_y, px, py) {
 function _via_update_ui_components() {
     if ( !_via_is_window_resized && _via_current_image_loaded ) {
         show_message("Resizing window ...", VIA_THEME_MESSAGE_TIMEOUT_MS);
-        canvas_panel.style.display = "block";
-        via_start_info_panel.style.display = "none";
-        about_panel.style.display = "none";
-        getting_started_panel.style.display = "none";   
-        
+	set_all_text_panel_display('none');
+	show_all_canvas();
+
         _via_is_window_resized = true;
         show_image(_via_image_index);
 

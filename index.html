@@ -280,13 +280,17 @@
       .text_panel {
       display: none;
       margin: auto;
-      width: 40%;
       font-size: medium;
-      line-height: 1.5em;
+      line-height: 1.3em;
       margin: 0;
+      max-width: 700px;
       }
       .text_panel li {
       margin: 1em 0;
+      text-align: left;
+      }
+      .text_panel p {
+      text-align: left;
       }
       
       .action_text_link {
@@ -402,11 +406,6 @@
       left: 0px;
       z-index: 2;
       }
-      #getting_started_panel {
-      display: none;
-      }
-
-
     </style>
   </head>
 
@@ -463,6 +462,7 @@
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662;</a>
             <div class="dropdown-content">
 	      <a onclick="show_getting_started_panel()" title="Getting started with VGG Image Annotator (VIA)">Getting Started</a>
+	      <a onclick="show_license_panel()" title="VIA License">License</a>
               <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About</a>
             </div>
           </li>
@@ -473,11 +473,13 @@
       <!-- Shortcut toolbar -->
       <div class="toolbar">
         <ul>
+	  <!--
           <li onclick="sel_local_images()" title="Load or Add Images">&ctdot;</li>
           <li onclick="sel_local_data_file('annotations')" title="Import Annotations">&uarr;</li>
           <li onclick="download_all_region_data('csv')" title="Save Annotations (as CSV)">&DownArrowBar;</li>
+	  -->
           
-          <li style="margin-left: 2em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
+          <li style="margin-left: 1em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
           <li onclick="move_to_next_image()" title="Next Image">&rarr;</li>
           <li onclick="toggle_img_list()" title="List Images">&#9776;</li>
 
@@ -571,15 +573,15 @@
           <canvas id="region_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
         </div>
 
-        <div id="text_panel">
-          <div id="via_start_info_panel">Starting VGG Image Annotator ...</div>
+        <div>
+          <div class="text_panel" id="via_start_info_panel">Starting VGG Image Annotator ...</div>
 
           <div class="text_panel" id="about_panel">
-            <h1>VGG Image Annotator (VIA)</h1>
-            <p style="font-family: Mono; font-size: small;">version <a href="https://gitlab.com/vgg/via/raw/master/CHANGELOG">1.0<a/> (Jan. 2017)</p>
+            <p style="font-size: 2em;">VGG Image Annotator</p>
+            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0</a></p>
             <p>
-              VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
-              developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
+              VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
+	      developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
               and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
               With this standalone application, you can define regions in an image and create a textual description of those regions.
               Such image regions and descriptions are useful for supervised training of learning algorithms.
@@ -587,16 +589,16 @@
             <p>
               Features:
               <ul>
-                <li>based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)</li>
-                <li>can be used offline (complete application packaged in a single html file of size &lt; 200KB)</li>
-                <li>requires nothing more than a modern web browser (tested on firefox and chrome)</li>
-                <li>supports following region shapes: rectangle, circle, ellipse, polygon and point</li>
-                <li>supports multiple attributes for each image region</li>
-                <li>import (and export) of region data from (to) text file in csv and json format</li>
-                <li>hundreds of images can be loaded and annotated without any performance degradation</li>
+                <li>based solely on HTML, CSS and Javascript (no external javascript libraries)</li>
+                <li>can be used offline (full application in a single html file of size &lt; 200KB)</li>
+                <li>requires nothing more than a modern web browser</li>
+                <li>supported region shapes: rectangle, circle, ellipse, polygon and point</li>
+                <li>import/export of region data in csv and json file format</li>
               </ul>
             </p>
-            <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
+	    <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
+	    <p>&nbsp;</p>
+	    <p>Copyright &copy; 2016-2017, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a></p>
           </div>
 
 	  <div class="text_panel" id="getting_started_panel">
@@ -621,7 +623,33 @@
 	      <li>To download the annotated region data, click <b>[Annotation > Save as CSV]</b> in the top menu bar. This will download a text file containing region shape and attribute data.</li>
 	      <li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 7) by clicking <b>[Annotation > Import]</b>.
 	    </li></ol>
+	  </div>
 
+	  <div class="text_panel" id="license_panel">
+	    <pre>
+  Copyright (c) 2016-2017, Abhishek Dutta.
+  All rights reserved.
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+  Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  POSSIBILITY OF SUCH DAMAGE.
+	    </pre>
 	  </div>
 	  
         </div>
@@ -645,8 +673,8 @@
 
     <!---->
     <script type="text/javascript" src="via.js"></script>
-    <!---->
+    <!--
     <script type="text/javascript" src="via_demo.js"></script>
-    
+    -->
   </body>
 </html>
