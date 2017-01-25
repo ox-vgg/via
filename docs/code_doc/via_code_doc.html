@@ -67,6 +67,7 @@
       }
       h2 {
       font-size: x-large;
+      border-bottom: 1px solid black;
       }
       h3 {
       font-size: medium;
@@ -93,7 +94,7 @@
       .code_block {
       font-family: Mono;
       font-size: medium;
-      width: 800px;
+      width: 750px;
       border: 1px solid #e6e6e6;
       padding: 0 1em;
       margin: 1em 0;
@@ -131,7 +132,7 @@
 
     <p>VGG Image Annotator (VIA) application is contained in a single html file with definitions of
       CSS style and Javascript code blocks.</p>
-    <p>The VIA application code has the following structure:</p>
+    <p>The VIA application code <code>via.html</code> has the following structure:</p>
 
     <div class="code_block">
 &lt;!DOCTYPE html&gt;
@@ -434,10 +435,10 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
     <p>This is handled by the function <code>add_new_attribute()</code>.</p>
 
     <h2 id="download_annotations">Download Annotations</h2>
-    <p>@todo</p>
+    <p>This action is initiated by the function <code>download_all_region_data()</code>. The conversion from <code>_via_img_metadata</code> object to a user requested format (<a href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> or <a href="https://en.wikipedia.org/wiki/JSON">JSON</a>) is done by the function <code>package_region_data()</code> while the function <code>save_data_to_local_file()</code> triggers the browser action to download this file to local disk.</p>
 
     <h2 id="import_annotations">Importing Annotations</h2>
-    <p>@todo</p>
+    <p>Importing existing annotation data (in CSV or JSON format) to VIA application is initiated by the function <code>sel_local_data_file()</code> which allows the user to select a local file. Once a local file has been selected, the function <code>import_annotations_from_file()</code> is triggered to import annotation and insert the valid ones into the <code>_via_img_metadata</code> object.</p>
     
     <h2 id="source_code_license">Source Code License</h2>
     VIA is an open source project actively maintained by
