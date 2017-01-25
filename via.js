@@ -1094,7 +1094,6 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         if (Math.abs(move_x) > VIA_MOUSE_CLICK_TOL ||
             Math.abs(move_y) > VIA_MOUSE_CLICK_TOL) {
 
-            // @todo: update the region data
             var image_attr = _via_img_metadata[_via_image_id].regions[_via_user_sel_region_id].shape_attributes;
             var canvas_attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
 
