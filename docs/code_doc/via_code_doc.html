@@ -120,7 +120,7 @@
   
   <body onload="_via_init_code_doc()">
     <h1>Code Documentation for VGG Image Annotator 1.0</h1>
-    
+    <p>Author: <a href="mailto: adutta_REMOVE_@robots.ox.ac.uk">Abhishek Dutta</a></p>
     <div id="table_of_contents"></div>
 
     <p>VGG Image Annotator (VIA) application is contained in a single html file with definitions of
@@ -203,21 +203,55 @@
     <p>A set of variables are used to maintain the state of the VIA application. These state variable form a crucial component of user interactions. For example, <code>_via_is_user_drawing_region</code> is <code>true</code> when the user is drawing a region.</p>
     
     <h2 id="loading_images">Loading Images</h2>
-    <p>When the user clicks "Load or Add Images" item in the top menu bar, it invokes the function <code>sel_local_images()</code> which in turn invokes the local file selector called <code>invisible_file_input</code>. When the user selects on or more local files, it triggers the function <code>store_local_img_ref()</code> which
+    <p>Loading (or adding) an image into VIA is initiated by <code>sel_local_images()</code>. Therefore, this function is attached to the <code>onclick</code> event of the menu entry <datai>"Load or Add Images"</datai>. The function <code>sel_local_images()</code> invokes <a href="https://developer.mozilla.org/en/docs/Using_files_from_web_applications">local file selector</a> called <code>invisible_file_input</code> which is configured to triggers the function <code>store_local_img_ref()</code> when the user finishes selecting local files.</p>
+    <p>The function <code>store_local_img_ref()</code> performs the following tasks:
       <ol>
-	<li>computes the <code>image_id</code>,</li>
-	<li>allocates entry in the <code>_via_img_metadata[img_id]</code>, and</li>
-	<li>stores a reference to the local file in <code>_via_img_metadata[img_id].fileref</code></li>
+	<li>Computes the <code>img_id</code> using the function <code>_via_get_image_id()</code>.</li>
+	<li>Inserts an object of type <code>ImageMetadata()</code> in <code>_via_img_metadata[img_id]</code>. The <code>_via_img_metadata[img_id].fileref</code> property of this object containts a reference to the local file selected by the user.</li>
+	<li>Triggers <code>show_image()</code> (further discussed in <a href="#display_image">Displaying Image</a> section) to display the newly loaded image.
       </ol>
     </p>
+
+    <h2 id="display_image">Displaying Image</h2>
+    <p>The VIA application displays one of the pre-loaded images using <code>show_image()</code>. This function uses <a href="https://developer.mozilla.org/en/docs/Web/API/FileReader">FileReader()</a> to load a local image using the file reference stored in <code>_via_img_metadata[img_id].fileref</code> (see <a href="#loading_images">Loading Images</a> section).</p>
+    <p>When image loading is complete, the image is scaled by <code>_via_canvas_scale</code>to fit the canvas display area in browser window. A reference to current <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/Image">Image()</a> is stored in <code>_via_current_image</code>. The 2D drawing context of the canvas <code>_via_image_canvas</code> is stored in <code>_via_img_ctx</code>. Rendering of the <code>_via_current_image</code> is handled by <code>drawImage()</code> method of this 2D context.</p>
+    <p>The <code>base64_img_data</code> property of object <code>ImageMetadata()</code> can store: (a) raw image data represented in <a href="https://www.base64-image.de/">base64</a> format, (b) URL of the image. The <code>base64_img_data</code> property is used when the images to be annotated are hosted in a publicly accessible server or the image data is embedded in the VIA application code. If <code>_via_img_metadata[img_id].base64_img_data</code> is available, the image is loaded from this resource, otherwise the image is loaded from <code>_via_img_metadata[img_id].fileref</code>.
     
     <h2 id="move_next_prev_image">Moving to Next/Previous Images</h2>
-    <p>@todo</p>
+    <p>The methods <code>move_to_next_image()</code> and <code>move_to_prev_image()</code> handle the user requests to switch display to next or previous image. This boils down to invoking <code>show_image()</code> (see <a href="#display_image">Displaying Image</a> section) with appropriate <code>image_index</code>.</p>
     
     <h2 id="capture_user_mouse_interactions">Capturing User's Mouse Interactions</h2>
-    <p>@todo</p>
+    <p>The following event listeners attached to <code>via_reg_canvas</code> handles user interactions using a mouse:
+      <dl>
+	<dt><code>_via_reg_canvas.addEventListener('dblclick', function(e) { ... }</code></dt>
+	<dd>A double click on an image region displays the region attribute panel at the bottom to allow the user to add or update region attribute values.</dd>
 
-    <h2 id="draw_region">Drawing a Region</h2>
+	<dt><code>_via_reg_canvas.addEventListener('mousedown', function(e) { ... }</code></dt>
+	<dd>Handles user interactions involving the following mouse gesture: mouse cursor is dragged while pressing the mouse button. This corresponds to actions such as drawing a region boundary (except polygon), resizing or moving regions. Furthermore, a <datai>mousedown</datai> may also indicate a prelude to other events like a region select/unselect.</dd>
+
+	<dt><code>_via_reg_canvas.addEventListener('mouseup', function(e) { ... }</code></dt>
+	<dd>
+	  <ul>
+	    <li>The <datai>mouseup</datai> event may indicate that the user has finished : drawing a region, moving a region, resizing a region, etc.</li>
+	    <li>A combination of <datai>mousedown</datai> and <datai>mouseup</datai> events within a small region indicates a single mouse click which indicates the user's intention to select/unselect a region, define a vertex of polygon, or define a point.</li>
+	  </ul>
+	</dd>
+
+	<dt><code>_via_reg_canvas.addEventListener('mouseover, function(e) { ... }</code></dt>
+	<dd>Forces re-rendering of region boundaries and labels.</dd>
+
+	<dt><code>_via_reg_canvas.addEventListener('mousemove', function(e) { ... }</code></dt>
+	<dd>
+	  <ul>
+	    <li>When user is drawing, moving or resizing a region, a <datai>mousemove</datai> event renders the region at new positions as the mouse cursor moves to give interactive feedback to the user.</li>
+	    <li>When mouse cursor is moved over the region edge, this methods changes the mouse cursor style to indicate region resize mode.</li>
+	    <li>In the polygon region shape mode, this function draws a temporary edge from last defined polygon vertex to current user position.</li>
+	  </ul>
+	</dd>
+    </p>
+    <p>Each region draw, resize, move or select/unselect triggers re-rendering of region boundaries and labels using <code>_via_redraw_reg_canvas()</code> (see <a href="draw_region">Drawing Regions</a> section).</p>
+
+    <h2 id="draw_region">Drawing Regions</h2>
     <p>@todo</p>
 
     <h2 id="move_resize_regions">Moving/Resizing Regions</h2>
@@ -235,39 +269,35 @@
     <h2 id="source_code_license">Source Code License</h2>
     VIA is an open source project actively maintained by
     the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group (VGG)</a>.
-    Its source code is a distributed under the <a href="https://en.wikipedia.org/wiki/BSD_licenses#2-clause_license_.28.22Simplified_BSD_License.22_or_.22FreeBSD_License.22.29">BSD-2 clause license</a>
-    which means that you are free to not only use it or modify it but also to contribute to this project.
+    Its source code is a distributed under the <a href="https://en.wikipedia.org/wiki/BSD_licenses#2-clause_license_.28.22Simplified_BSD_License.22_or_.22FreeBSD_License.22.29">BSD-2 clause license</a>.
 
     <div class="code_block" id="scld1">
-      <div class="title">&lt;&lt;source code license declaration&gt;&gt;= <span class="backref"><a href="#scld0">&uarr;</a></span></div>
-      <div class="content">
-	<pre>
-	  Copyright (c) 2016, Abhishek Dutta.
-	  All rights reserved.
+Copyright (c) 2016-2017, Abhishek Dutta.
+All rights reserved.
 
-	  Redistribution and use in source and binary forms, with or without
-	  modification, are permitted provided that the following conditions are met:
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-	  Redistributions of source code must retain the above copyright notice, this
-	  list of conditions and the following disclaimer.
-	  Redistributions in binary form must reproduce the above copyright notice,
-	  this list of conditions and the following disclaimer in the documentation
-	  and/or other materials provided with the distribution.
-	  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
-	  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-	  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-	  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-	  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-	  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-	  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-	  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-	  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-	  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-	  POSSIBILITY OF SUCH DAMAGE.
-	</pre>
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
       </div>
     </div>
 
+    <p>Last Updated: Jan. 2017</p>
   </body>
 </html>
 
