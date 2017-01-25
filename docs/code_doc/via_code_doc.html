@@ -33,94 +33,100 @@
     <title>VIA 1.0 Code Documentation</title>
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="Code documentation for VGG Image Annotator (VIA)">
+
+    <script type="text/javascript">
+      function _via_init_code_doc() {
+        generate_toc();
+      }
+      
+      //
+      // generate Table of Contents
+      //
+      function generate_toc() {
+        var h = document.getElementsByTagName('h2');
+        var toc = document.getElementById('table_of_contents');
+        toc.innerHTML = '<ul>';
+        for (var i=0; i < h.length; ++i) {
+          toc.innerHTML += '<li><a href="#' + h[i].id + '">' + h[i].innerHTML + '</a></li>';
+          console.log(h[i].id);
+        }
+        toc.innerHTML += '</ul>';
+			
+      }			
+    </script>
+
+    <style type="text/css">
+      body {
+      font-family: Verdana, Helvetica, Sans;
+      font-size: medium;
+      max-width: 800px;
+      margin-left: 1em;
+      }
+      h1 {
+      font-size: xx-large;
+      }
+      h2 {
+      font-size: x-large;
+      }
+      h3 {
+      font-size: medium;
+      }
+      code {
+      font-family: Mono;
+      color: #d40000;
+      }
+      .data {
+      display: block;
+      font-family: Mono;
+      color: #000000;
+      border-left: 2px solid #cccccc;
+      padding: 1em 0;
+      margin: 0.5em 0;
+      padding-left: 1em;
+      }
+      .datai {
+      font-family: Mono;
+      color: #000000;
+      }
+
+      /* a block of code (html, css or javascript) */
+      .code_block {
+      font-family: Mono;
+      font-size: medium;
+      width: 800px;
+      border: 1px solid #e6e6e6;
+      padding: 0 1em;
+      margin: 1em 0;
+      overflow: auto;
+      white-space: pre;
+      }
+
+      a:link, a:visited {
+      color: blue;
+      }
+      
+      /* figures for illustration */
+      .figure {
+      padding: 1em 2em;
+      }
+
+      /* table of contents */
+      #table_of_contents {
+      margin: 2em 0;
+      margin-left: 4em;
+      width: 20em;
+      }
+      p {
+      text-indent: 0;
+      text-align: justify;
+      }
+    </style>
+
   </head>
 
-  <style type="text/css">
-    body {
-    font-family: Verdana, Helvetica, Sans;
-    font-size: medium;
-    width: 60em;
-    margin-left: 1em;
-    }
-    h1 {
-    font-size: xx-large;
-    }
-    h2 {
-    font-size: x-large;
-    }
-    h3 {
-    font-size: medium;
-    }
-    code {
-    font-family: Mono;
-    color: #d40000;
-    }
-    data {
-    display: block;
-    font-family: Mono;
-    color: #000000;
-    border-left: 2px solid #cccccc;
-    padding: 1em 0;
-    margin: 0.5em 0;
-    padding-left: 1em;
-    }
-    datai {
-    font-family: Mono;
-    color: #000000;
-    }
-
-    /* a block of code (html, css or javascript) */
-    .code_block {
-    font-family: Mono;
-    font-size: medium;
-    width: 60em;
-    border: 1px solid #e6e6e6;
-    padding: 0 1em;
-    margin: 1em 0;
-    overflow: auto;
-    white-space: pre;
-    }
-
-    a:link, a:visited {
-    color: blue;
-    }
-    
-    /* figures for illustration */
-    .figure {
-    padding: 1em 2em;
-    }
-
-    /* table of contents */
-    #table_of_contents {
-    margin: 2em 0;
-    margin-left: 4em;
-    width: 20em;
-    }
-  </style>
-  <script type="text/javascript">
-    function _via_init_code_doc() {
-      generate_toc();
-    }
-    
-    //
-    // generate Table of Contents
-    //
-    function generate_toc() {
-      var h = document.getElementsByTagName('h2');
-      var toc = document.getElementById('table_of_contents');
-      toc.innerHTML = '<ul>';
-      for (var i=0; i < h.length; ++i) {
-        toc.innerHTML += '<li><a href="#' + h[i].id + '">' + h[i].innerHTML + '</a></li>';
-        console.log(h[i].id);
-      }
-      toc.innerHTML += '</ul>';
-			
-    }			
-  </script>
-  
   <body onload="_via_init_code_doc()">
     <h1>Code Documentation for VGG Image Annotator 1.0</h1>
-    <p>Author: <a href="mailto: adutta_REMOVE_@robots.ox.ac.uk">Abhishek Dutta</a></p>
+    <p>Author: <a href="mailto:adutta_REMOVE_@robots.ox.ac.uk">Abhishek Dutta</a></p>
     <div id="table_of_contents"></div>
 
     <p>VGG Image Annotator (VIA) application is contained in a single html file with definitions of
@@ -152,49 +158,48 @@
 
     <h2 id="core_data_structures">Core Data Structures</h2>
     <blockquote cite="https://lwn.net/Articles/193245/">"Bad programmers worry about the code. Good programmers worry about data structures and their relationships." -- <a href="https://lwn.net/Articles/193245/">Torvalds</a></blockquote>
-    <p>The function <code>_via_get_image_id()</code> generates a unique <code>image_id</code> for each image by combining the image filename and image size in bytes. For example, the file <datai>photo.jpg</datai> of size <datai>16454</datai> bytes will get assigned an image-id <datai>photo.jpg16454</datai>.</p>
-    <p>The annotation data corresponding to each image is stored in the object <code>_via_img_metadata</code> indexed by its unqiue <code>image_id</code>. Each such entry in <code>_via_img_metadata</code> is another object of type <code>ImageMetadata()</code> having the following properties:
+    <p>The function <code>_via_get_image_id()</code> generates a unique <code>image_id</code> for each image by combining the image filename and image size in bytes. For example, the file <span class="datai">photo.jpg</span> of size <span class="datai">16454</span> bytes will get assigned an image-id <span class="datai">photo.jpg16454</span>.</p>
+    <p>The annotation data corresponding to each image is stored in the object <code>_via_img_metadata</code> indexed by its unqiue <code>image_id</code>. Each such entry in <code>_via_img_metadata</code> is another object of type <code>ImageMetadata()</code> having the following properties:</p>
       <ul>
 	<li><code>fileref</code> : a reference to the local file uploaded by user</li>
 	<li><code>base64_img_data</code> : contains either the image URL or image data represented in base64 format</li>
-	<li><code>file_attributes</code> : a <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map">Map()</a> of image file's attributes. For example, image captions can be represented by file attributes as <data>Map { 'caption': 'a white football flying over a red car' }</li>
+	<li><code>file_attributes</code> : a <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map">Map()</a> of image file's attributes. For example, image captions can be represented by file attributes as <span class="data">Map { 'caption': 'a white football flying over a red car' }</span></li>
 	<li><code>regions</code> : an array of <code>ImageRegion()</code> objects containing the following properties corresponding to each region (rectangular, circular, polygon, etc) defined in the image
 	  <ul>
-	    <li><code>shape_attributes</code> : a <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map">Map()</a> of attributes defining the shape of the region. For example, a rectangular region has the following shape attributes <data>Map { 'name': 'rect', 'x': '115', 'y': '210', 'width': '100', 'height': '200' }</data></li>
-	    <li><code>region_attributes</code> : a <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map">Map()</a> of attributes corresponding to the region. For example, an image region containing a red car can have the following attributes <data>Map { 'object_name': 'car', 'object_color': 'red' }</data></li>
+	    <li><code>shape_attributes</code> : a <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map">Map()</a> of attributes defining the shape of the region. For example, a rectangular region has the following shape attributes <span class="data">Map { 'name': 'rect', 'x': '115', 'y': '210', 'width': '100', 'height': '200' }</span></li>
+	    <li><code>region_attributes</code> : a <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map">Map()</a> of attributes corresponding to the region. For example, an image region containing a red car can have the following attributes <span class="data">Map { 'object_name': 'car', 'object_color': 'red' }</span></li>
 	    <li><code>is_user_selected</code> : a state variable indicating if this region has been selected by the user</li>
 	  </ul>
 	</li>
-
       </ul>
-    </p>
-    
-    <p>Here is an example of how VIA would store file attribute and two region annotations for a file <datai>photo.jpg</datai> in <code>_via_img_metadata</code> object:
+    <p>Here is an example of how VIA would store file attribute and two region annotations for a file <span class="datai">photo.jpg</span> in <code>_via_img_metadata</code> object:</p>
       <div class="code_block">
-	var img_id = _via_get_image_id('photo.jpg', 16454);
-	var _via_img_metadata = {};
-	_via_img_metadata[img_id] = new ImageMetadata('', 'photo.jpg', 16454);
+var img_id = _via_get_image_id('photo.jpg', 16454);
+var _via_img_metadata = {};
+_via_img_metadata[img_id] = new ImageMetadata('', 'photo.jpg', 16454);
 
-	_via_img_metadata[img_id].file_attributes.set('caption', 'a white football flying over a red car');
+_via_img_metadata[img_id].file_attributes.set('caption', 'a white football flying over a red car');
 
-	_via_img_metadata[img_id].regions[0] = new ImageRegion();
-	_via_img_metadata[img_id].regions[0].shape_attributes.set('name', 'rect');
-	_via_img_metadata[img_id].regions[0].shape_attributes.set('x', '115');
-	_via_img_metadata[img_id].regions[0].shape_attributes.set('y', '210');
-	_via_img_metadata[img_id].regions[0].shape_attributes.set('width', '100');
-	_via_img_metadata[img_id].regions[0].shape_attributes.set('height', '200');
-	_via_img_metadata[img_id].regions[0].region_attributes.set('object_name, 'car');
-	_via_img_metadata[img_id].regions[0].region_attributes.set('object_color, 'red');      
+_via_img_metadata[img_id].regions[0] = new ImageRegion();
+_via_img_metadata[img_id].regions[0].shape_attributes.set('name', 'rect');
+_via_img_metadata[img_id].regions[0].shape_attributes.set('x', '115');
+_via_img_metadata[img_id].regions[0].shape_attributes.set('y', '210');
+_via_img_metadata[img_id].regions[0].shape_attributes.set('width', '100');
+_via_img_metadata[img_id].regions[0].shape_attributes.set('height', '200');
+_via_img_metadata[img_id].regions[0].region_attributes.set('object_name, 'car');
+_via_img_metadata[img_id].regions[0].region_attributes.set('object_color, 'red');      
 
-	_via_img_metadata[img_id].regions[1] = new ImageRegion();
-	_via_img_metadata[img_id].regions[1].shape_attributes.set('name', 'circle');
-	_via_img_metadata[img_id].regions[1].shape_attributes.set('cx', '50');
-	_via_img_metadata[img_id].regions[1].shape_attributes.set('cy', '90');
-	_via_img_metadata[img_id].regions[1].shape_attributes.set('r, '20');
-	_via_img_metadata[img_id].regions[1].region_attributes.set('object_name, 'football);
-	_via_img_metadata[img_id].regions[1].region_attributes.set('object_color, 'white);            
+_via_img_metadata[img_id].regions[1] = new ImageRegion();
+_via_img_metadata[img_id].regions[1].shape_attributes.set('name', 'circle');
+_via_img_metadata[img_id].regions[1].shape_attributes.set('cx', '50');
+_via_img_metadata[img_id].regions[1].shape_attributes.set('cy', '90');
+_via_img_metadata[img_id].regions[1].shape_attributes.set('r, '20');
+_via_img_metadata[img_id].regions[1].region_attributes.set('object_name, 'football);
+_via_img_metadata[img_id].regions[1].region_attributes.set('object_color, 'white);            
       </div>
-    </p>
+
+    <p>For the current image, we keep a copy of all region's coordinates in the canvas space inside the object <code>_via_canvas_regions</code>. Recall that the canvas space is related to the original image space by <code>_via_canvas_scale</code> (which is a scaling factor determined by the current browser window size and zoom level). In other words, <span class="data">x_image_space = x_canvas_space * _via_canvas_scale.</span>
+Maintaining such a data structure avoids unnecessary re-computation of region coordinates in canvas space. Therefore, you will notice that <code>_via_canvas_regions[i].shape_attributes</code> is used when rendering region boundaries.</p>
 
     <p>VIA uses the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API">canvas</a> to render image, region boundaries and region labels. The image currently being displayed is rendered by <code>_via_img_canvas</code> while the region boundaries and region labels are rendered by the canvas <code>_via_reg_canvas</code>. These two canvas are overlaid with <code>_via_reg_canvas</code> being on the top.</p>
 
@@ -203,62 +208,230 @@
     <p>A set of variables are used to maintain the state of the VIA application. These state variable form a crucial component of user interactions. For example, <code>_via_is_user_drawing_region</code> is <code>true</code> when the user is drawing a region.</p>
     
     <h2 id="loading_images">Loading Images</h2>
-    <p>Loading (or adding) an image into VIA is initiated by <code>sel_local_images()</code>. Therefore, this function is attached to the <code>onclick</code> event of the menu entry <datai>"Load or Add Images"</datai>. The function <code>sel_local_images()</code> invokes <a href="https://developer.mozilla.org/en/docs/Using_files_from_web_applications">local file selector</a> called <code>invisible_file_input</code> which is configured to triggers the function <code>store_local_img_ref()</code> when the user finishes selecting local files.</p>
-    <p>The function <code>store_local_img_ref()</code> performs the following tasks:
-      <ol>
-	<li>Computes the <code>img_id</code> using the function <code>_via_get_image_id()</code>.</li>
-	<li>Inserts an object of type <code>ImageMetadata()</code> in <code>_via_img_metadata[img_id]</code>. The <code>_via_img_metadata[img_id].fileref</code> property of this object containts a reference to the local file selected by the user.</li>
-	<li>Triggers <code>show_image()</code> (further discussed in <a href="#display_image">Displaying Image</a> section) to display the newly loaded image.
-      </ol>
-    </p>
+    <p>Loading (or adding) an image into VIA is initiated by <code>sel_local_images()</code>. Therefore, this function is attached to the <code>onclick</code> event of the menu entry <span class="datai">"Load or Add Images"</span>. The function <code>sel_local_images()</code> invokes <a href="https://developer.mozilla.org/en/docs/Using_files_from_web_applications">local file selector</a> called <code>invisible_file_input</code> which is configured to triggers the function <code>store_local_img_ref()</code> when the user finishes selecting local files. The function <code>store_local_img_ref()</code> performs the following tasks:</p>
+    <ol>
+      <li>Computes the <code>img_id</code> using the function <code>_via_get_image_id()</code>.</li>
+      <li>Inserts an object of type <code>ImageMetadata()</code> in <code>_via_img_metadata[img_id]</code>. The <code>_via_img_metadata[img_id].fileref</code> property of this object containts a reference to the local file selected by the user.</li>
+      <li>Triggers <code>show_image()</code> (further discussed in <a href="#display_image">Displaying Image</a> section) to display the newly loaded image.
+    </ol>
 
     <h2 id="display_image">Displaying Image</h2>
     <p>The VIA application displays one of the pre-loaded images using <code>show_image()</code>. This function uses <a href="https://developer.mozilla.org/en/docs/Web/API/FileReader">FileReader()</a> to load a local image using the file reference stored in <code>_via_img_metadata[img_id].fileref</code> (see <a href="#loading_images">Loading Images</a> section).</p>
-    <p>When image loading is complete, the image is scaled by <code>_via_canvas_scale</code>to fit the canvas display area in browser window. A reference to current <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/Image">Image()</a> is stored in <code>_via_current_image</code>. The 2D drawing context of the canvas <code>_via_image_canvas</code> is stored in <code>_via_img_ctx</code>. Rendering of the <code>_via_current_image</code> is handled by <code>drawImage()</code> method of this 2D context.</p>
-    <p>The <code>base64_img_data</code> property of object <code>ImageMetadata()</code> can store: (a) raw image data represented in <a href="https://www.base64-image.de/">base64</a> format, (b) URL of the image. The <code>base64_img_data</code> property is used when the images to be annotated are hosted in a publicly accessible server or the image data is embedded in the VIA application code. If <code>_via_img_metadata[img_id].base64_img_data</code> is available, the image is loaded from this resource, otherwise the image is loaded from <code>_via_img_metadata[img_id].fileref</code>.
+    <p>When image loading is complete, the image is scaled by <code>_via_canvas_scale</code> to fit the canvas display area in browser window. A reference to current <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/Image">Image()</a> is stored in <code>_via_current_image</code>. The 2D drawing context of the canvas <code>_via_image_canvas</code> is stored in <code>_via_img_ctx</code>. Rendering of the <code>_via_current_image</code> is handled by <code>drawImage()</code> method of this 2D context.</p>
+    <p>The <code>base64_img_data</code> property of object <code>ImageMetadata()</code> can store: (a) raw image data represented in <a href="https://www.base64-image.de/">base64</a> format, (b) URL of the image. The <code>base64_img_data</code> property is used when the images to be annotated are hosted in a publicly accessible server or the image data is embedded in the VIA application code. If <code>_via_img_metadata[img_id].base64_img_data</code> is available, the image is loaded from this resource, otherwise the image is loaded from <code>_via_img_metadata[img_id].fileref</code>.</p>
     
     <h2 id="move_next_prev_image">Moving to Next/Previous Images</h2>
     <p>The methods <code>move_to_next_image()</code> and <code>move_to_prev_image()</code> handle the user requests to switch display to next or previous image. This boils down to invoking <code>show_image()</code> (see <a href="#display_image">Displaying Image</a> section) with appropriate <code>image_index</code>.</p>
     
     <h2 id="capture_user_mouse_interactions">Capturing User's Mouse Interactions</h2>
-    <p>The following event listeners attached to <code>via_reg_canvas</code> handles user interactions using a mouse:
-      <dl>
-	<dt><code>_via_reg_canvas.addEventListener('dblclick', function(e) { ... }</code></dt>
-	<dd>A double click on an image region displays the region attribute panel at the bottom to allow the user to add or update region attribute values.</dd>
+    <p>The following event listeners attached to <code>via_reg_canvas</code> handles user interactions using a mouse:    </p>
+    <dl>
+      <dt><code>_via_reg_canvas.addEventListener('dblclick', function(e) { ... }</code></dt>
+      <dd>A double click on an image region displays the region attribute panel at the bottom to allow the user to add or update region attribute values.</dd>
 
-	<dt><code>_via_reg_canvas.addEventListener('mousedown', function(e) { ... }</code></dt>
-	<dd>Handles user interactions involving the following mouse gesture: mouse cursor is dragged while pressing the mouse button. This corresponds to actions such as drawing a region boundary (except polygon), resizing or moving regions. Furthermore, a <datai>mousedown</datai> may also indicate a prelude to other events like a region select/unselect.</dd>
+      <dt><code>_via_reg_canvas.addEventListener('mousedown', function(e) { ... }</code></dt>
+      <dd>Handles user interactions involving the following mouse gesture: mouse cursor is dragged while pressing the mouse button. This corresponds to actions such as drawing a region boundary (except polygon), resizing or moving regions. Furthermore, a <span class="datai">mousedown</span> may also indicate a prelude to other events like a region select/unselect.</dd>
 
-	<dt><code>_via_reg_canvas.addEventListener('mouseup', function(e) { ... }</code></dt>
-	<dd>
-	  <ul>
-	    <li>The <datai>mouseup</datai> event may indicate that the user has finished : drawing a region, moving a region, resizing a region, etc.</li>
-	    <li>A combination of <datai>mousedown</datai> and <datai>mouseup</datai> events within a small region indicates a single mouse click which indicates the user's intention to select/unselect a region, define a vertex of polygon, or define a point.</li>
-	  </ul>
-	</dd>
+      <dt><code>_via_reg_canvas.addEventListener('mouseup', function(e) { ... }</code></dt>
+      <dd>
+	<ul>
+	  <li>The <span class="datai">mouseup</span> event may indicate that the user has finished : drawing a region, moving a region, resizing a region, etc.</li>
+	  <li>A combination of <span class="datai">mousedown</span> and <span class="datai">mouseup</span> events within a small region indicates a single mouse click which indicates the user's intention to select/unselect a region, define a vertex of polygon, or define a point.</li>
+	</ul>
+      </dd>
 
-	<dt><code>_via_reg_canvas.addEventListener('mouseover, function(e) { ... }</code></dt>
-	<dd>Forces re-rendering of region boundaries and labels.</dd>
+      <dt><code>_via_reg_canvas.addEventListener('mouseover, function(e) { ... }</code></dt>
+      <dd>Forces re-rendering of region boundaries and labels.</dd>
 
-	<dt><code>_via_reg_canvas.addEventListener('mousemove', function(e) { ... }</code></dt>
-	<dd>
-	  <ul>
-	    <li>When user is drawing, moving or resizing a region, a <datai>mousemove</datai> event renders the region at new positions as the mouse cursor moves to give interactive feedback to the user.</li>
-	    <li>When mouse cursor is moved over the region edge, this methods changes the mouse cursor style to indicate region resize mode.</li>
-	    <li>In the polygon region shape mode, this function draws a temporary edge from last defined polygon vertex to current user position.</li>
-	  </ul>
-	</dd>
-    </p>
-    <p>Each region draw, resize, move or select/unselect triggers re-rendering of region boundaries and labels using <code>_via_redraw_reg_canvas()</code> (see <a href="draw_region">Drawing Regions</a> section).</p>
+      <dt><code>_via_reg_canvas.addEventListener('mousemove', function(e) { ... }</code></dt>
+      <dd>
+	<ul>
+	  <li>When user is drawing, moving or resizing a region, a <span class="datai">mousemove</span> event renders the region at new positions as the mouse cursor moves to give interactive feedback to the user.</li>
+	  <li>When mouse cursor is moved over the region edge, this methods changes the mouse cursor style to indicate region resize mode.</li>
+	  <li>In the polygon region shape mode, this function draws a temporary edge from last defined polygon vertex to current user position.</li>
+	</ul>
+      </dd>
+    </dl>
+    <p>Each region draw, resize, move or select/unselect triggers re-rendering of region boundaries and labels using <code>_via_redraw_reg_canvas()</code> (see <a href="render_region">Rendering Regions</a> section).</p>
 
-    <h2 id="draw_region">Drawing Regions</h2>
-    <p>@todo</p>
+    <h2 id="render_region">Rendering Regions</h2>
+    <p><code>_via_redraw_img_canvas()</code> renders images onto the canvas <code>_via_img_canvas</code> using <a href="https://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D/drawImage">drawImage()</a>. Image is re-rendered only when the user zoom's in/out.</p>
+    <p>Rendering of region boundaries is performed by <code>_via_redraw_reg_canvas</code>. For example, rectangular and circular regions are drawn using the 2D context <code>_via_reg_ctx</code> as follows:</p>
+    <div class="code_block">
+function _via_draw_rect(x, y, w, h) {
+    _via_reg_ctx.beginPath();
+    _via_reg_ctx.moveTo(x  , y);
+    _via_reg_ctx.lineTo(x+w, y);
+    _via_reg_ctx.lineTo(x+w, y+h);
+    _via_reg_ctx.lineTo(x  , y+h);
+    _via_reg_ctx.closePath();
+}
 
-    <h2 id="move_resize_regions">Moving/Resizing Regions</h2>
-    <p>@todo</p>
+function _via_draw_circle(cx, cy, r) {
+    _via_reg_ctx.beginPath();
+    _via_reg_ctx.arc(cx, cy, r, 0, 2*Math.PI, false);
+    _via_reg_ctx.closePath();
+}
+    </div>
+
+    <h2 id="move_resize_regions">Moving and Resizing Regions</h2>
+    <p>A region has to be selected before it can be moved or resized. A single click inside a region sets the state variable <code>_via_is_region_selected = true;</code> as follows:</p>
+    <div class="code_block">
+_via_reg_canvas.addEventListener('mousedown', function(e) {
+    _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
+    ...
+}
+_via_reg_canvas.addEventListener('mouseup', function(e) {
+    _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
+
+    var click_dx = Math.abs(_via_click_x1 - _via_click_x0);
+    var click_dy = Math.abs(_via_click_y1 - _via_click_y0);
+    ...
+
+    // denotes a single click (= mouse down + mouse up)
+    if ( click_dx &lt; VIA_MOUSE_CLICK_TOL ||
+         click_dy &lt; VIA_MOUSE_CLICK_TOL ) {
+	...
+        var region_id = is_inside_region(_via_click_x0, _via_click_y0);
+        if ( region_id >= 0 ) {
+            // first click selects region
+            _via_user_sel_region_id = region_id;
+            _via_is_region_selected = true;
+           ...
+        }
+    }
+}
+    </div>
+    <p>Recall that a click event is detected by checking if the mouse cursor position during the <span class="datai">mousedown</span> and <span class="datai">mouseup</span> events are close to each other. Furthermore, the function <code>is_inside_region()</code> checks if the mouse cursor position is inside a pre-defined region.</p>
+    <p>Once a region has been selected, it can be moved around by clicking the mouse button, dragging the cursor around and finally releasing the mouse click when desired new location is reached. This mouse gesture is captured by <span class="datai">mousedown</span>, <span class="datai">mousemove</span> and <span class="datai">mouseup</span> events. First, the <span class="datai">mousedown</span> event sets the state variable <code>_via_is_user_moving_region = true;</code> as follows:</p>
+      <div class="code_block">
+_via_reg_canvas.addEventListener('mousedown', function(e) {
+    _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
+    _via_region_edge = is_on_region_corner(_via_click_x0, _via_click_y0);
+    var region_id = is_inside_region(_via_click_x0, _via_click_y0);
+
+    if ( _via_is_region_selected ) {
+        // check if user clicked on the region boundary
+        if ( _via_region_edge[1] > 0 ) {
+            ...
+        } else {
+            var yes = is_inside_this_region(_via_click_x0,
+                                            _via_click_y0,
+                                            _via_user_sel_region_id);
+            if (yes) {
+                if( !_via_is_user_moving_region ) {     
+                    _via_is_user_moving_region = true;
+                    _via_region_click_x = _via_click_x0;
+                    _via_region_click_y = _via_click_y0;
+                }
+            }
+            ...
+    }
+}
+      </div>
+    <p>Next, the <span class="datai">mousemove</span> event draws intermediate regions -- to aid with visualization -- as the user moves the mouse cursor towards the final destination as shown by the code snippet below:</p>
+    <div class="code_block">
+_via_reg_canvas.addEventListener('mousemove', function(e) {
+    _via_current_x = e.offsetX; _via_current_y = e.offsetY;
+    ...
+
+    if ( _via_is_user_moving_region ) {
+        _via_redraw_reg_canvas();
+        
+        var move_x = (_via_current_x - _via_region_click_x);
+        var move_y = (_via_current_y - _via_region_click_y);
+        var attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
+
+        switch (attr.get('name')) {
+        case VIA_REGION_SHAPE.RECT:
+            _via_draw_rect_region(attr.get('x') + move_x,
+                                  attr.get('y') + move_y,
+                                  attr.get('width'),
+                                  attr.get('height'),
+                                  true);
+            break;
+
+        case VIA_REGION_SHAPE.CIRCLE:
+            ...
+        case VIA_REGION_SHAPE.POLYGON:
+            ...
+
+        case VIA_REGION_SHAPE.POINT:
+            ...
+        }
+        _via_reg_canvas.focus();    
+    }
+    ...
+}
+    </div>
+    <p>Finally, the <span class="datai">mouseup</span> event moves the selected region to a new location as follows:</p>
+    <div class="code_block">
+_via_reg_canvas.addEventListener('mouseup', function(e) {
+    _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
+
+    var click_dx = Math.abs(_via_click_x1 - _via_click_x0);
+    var click_dy = Math.abs(_via_click_y1 - _via_click_y0);
+
+    // indicates that user has finished moving a region
+    if ( _via_is_user_moving_region ) {
+        _via_is_user_moving_region = false;
+        _via_reg_canvas.style.cursor = 'default';
+
+        var move_x = Math.round(_via_click_x1 - _via_region_click_x);
+        var move_y = Math.round(_via_click_y1 - _via_region_click_y);
+
+        if (Math.abs(move_x) > VIA_MOUSE_CLICK_TOL ||
+            Math.abs(move_y) > VIA_MOUSE_CLICK_TOL) {
+
+            var image_attr = _via_img_metadata[_via_image_id].regions[_via_user_sel_region_id].shape_attributes;
+            var canvas_attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
+
+            switch( canvas_attr.get('name') ) {
+            case VIA_REGION_SHAPE.RECT:
+                var xnew = image_attr.get('x') + Math.round(move_x * _via_canvas_scale);
+                var ynew = image_attr.get('y') + Math.round(move_y * _via_canvas_scale);
+                image_attr.set('x', xnew);
+                image_attr.set('y', ynew);
+
+                var canvas_xnew = canvas_attr.get('x') + move_x;
+                var canvas_ynew = canvas_attr.get('y') + move_y;
+                canvas_attr.set('x', canvas_xnew);
+                canvas_attr.set('y', canvas_ynew);
+                break;
+            case VIA_REGION_SHAPE.CIRCLE:
+            case VIA_REGION_SHAPE.ELLIPSE:
+            case VIA_REGION_SHAPE.POINT:
+                ...
+            case VIA_REGION_SHAPE.POLYGON:
+                ...
+            }
+        } else {
+            // indicates a user click on an already selected region
+            // this could indicate a user's intention to select another
+            // nested region within this region
+            ...
+        }
+        _via_redraw_reg_canvas();
+        ...
+        return;
+    }
+    ...
+}
+</div>
+
+    <p>Some notes:</p>
+    <ul>
+      <li><code>_via_canvas_regions</code> contains the region coordinates in the canvas space and therefore needs scaling by <code>_via_canvas_scale</code> to convert it to the original image space coordinates stored in <code>_via_img_metadata</code> (see <a href="#core_data_structures">Core Data Structures</a> section).</li>
+      <li>Moving circular, elliptical and point regions is conceptually similar -- move their center coordinates -- and hence are handled by a single code.</li>
+      <li>The same user mouse interactions occur for nested regions -- one smaller region placed inside a larger region. Therefore, before moving regions, we check if the movement of user cursor is beyond certain tolerance. If it is below that level, we consider this as a gesture to select other nested region.</li>
+    </ul>
+
+    <h2 id="update_attribute_value">Updating Attribute Value</h2>
+<p>The update of region attributes is triggered by the function <code>toggle_reg_attr_panel()</code> toggles the region attribute panel in the bottom of the browser window. The spreashsheet like input environment for each region (along the rows) and each attribute (along the columns) is generated by <code>update_region_attributes_input_panel()</code>. In a similar way, the update of file attributes are handled by <code>toggle_file_attr_panel()</code> and <code>update_file_attributes_input_panel()</code>.</p>
+<p>The spreadsheet like editing environment is setup and handled by the function <code>init_spreadsheet_input()</code>.</p>
 
     <h2 id="add_new_attribute">Adding New Attributes</h2>
-    <p>@todo</p>
+    <p>This is handled by the function <code>add_new_attribute()</code>.</p>
 
     <h2 id="download_annotations">Download Annotations</h2>
     <p>@todo</p>
@@ -295,9 +468,8 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
       </div>
-    </div>
 
     <p>Last Updated: Jan. 2017</p>
-  </body>
+  </body>  
 </html>
 
