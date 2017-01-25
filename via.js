@@ -208,8 +208,7 @@ function _via_init() {
     console.log(VIA_NAME);
     show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !', 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
 
-    show_about_panel();
-    //show_home_panel();
+    show_home_panel();
 
     _via_is_local_storage_available = check_local_storage();
     if (_via_is_local_storage_available) {
