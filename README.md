@@ -21,6 +21,10 @@ Visit the [VGG software page](http://www.robots.ox.ac.uk/~vgg/software/via/) for
  * [via demo](http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_demo.html) : live demo (with preloaded images and regions)
  * [https://gitlab.com/vgg/via/](https://gitlab.com/vgg/via/) : source code repository
 
+## Docs
+ * [VIA Wikipedia page](https://en.wikipedia.org/wiki/VGG_Image_Annotator)
+ * [VIA Source code documentation](https://gitlab.com/vgg/via/blob/develop/docs/code_doc/via_code_doc.html) (ongoing work)
+
 ## Help:
 Software bug reports and feature requests should be [submitted here](https://gitlab.com/vgg/via/issues/new).
 For all other queries, please contact [Abhishek Dutta](mailto:adutta@robots.ox.ac.uk).
