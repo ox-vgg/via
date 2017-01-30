@@ -3,20 +3,6 @@ Code Documentation for VGG Image Annotator 1.0
 
 Author: [Abhishek Dutta](mailto:adutta_REMOVE_@robots.ox.ac.uk)
 
-## Table of Contents
- * [Core Data Structures](#core-data-structures)
- * [Loading Images](#loading-images)
- * [Displaying Image](#displaying-image)
- * [Moving to Next/Previous Images](#moving-to-nextprevious-images)
- * [Capturing User's Mouse Interactions](#capturing-users-mouse-interactions)
- * [Rendering Regions](#rendering-regions)
- * [Moving and Resizing Regions](#moving-and-resizing-regions)
- * [Updating Attribute Value](#updating-attribute-value)
- * [Adding New Attributes](#adding-new-attributes)
- * [Download Annotations](#download-annotations)
- * [Importing Annotations](#importing-annotations)
- * [Source Code License](#source-code-license)
-
 VGG Image Annotator (VIA) application is contained in a single html file
 with definitions of CSS style and Javascript code blocks.
 
@@ -52,6 +38,21 @@ shapes -- rectangle, circle, ellipse and polygon.
 
 Now we describe how some of the core actions (like loading images,
 drawing regions, etc) are facilitated by the javascript codebase.
+
+## Table of Contents
+ * [Core Data Structures](#core-data-structures)
+ * [Loading Images](#loading-images)
+ * [Displaying Image](#displaying-image)
+ * [Moving to Next/Previous Images](#moving-to-nextprevious-images)
+ * [Capturing User's Mouse Interactions](#capturing-users-mouse-interactions)
+ * [Rendering Regions](#rendering-regions)
+ * [Moving and Resizing Regions](#moving-and-resizing-regions)
+ * [Updating Attribute Value](#updating-attribute-value)
+ * [Adding New Attributes](#adding-new-attributes)
+ * [Download Annotations](#download-annotations)
+ * [Importing Annotations](#importing-annotations)
+ * [Source Code License](#source-code-license)
+
 
 Core Data Structures
 --------------------
