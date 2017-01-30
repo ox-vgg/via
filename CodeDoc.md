@@ -4,7 +4,7 @@ Code Documentation for VGG Image Annotator 1.0
 Author: [Abhishek Dutta](mailto:adutta_REMOVE_@robots.ox.ac.uk)
 
 ## Table of Contents
- * [Core Data Structures](#core_data_structures)
+ * [Core Data Structures](#core-data-structures)
  * Loading Images
  * Displaying Image
  * Moving to Next/Previous Images
@@ -22,7 +22,7 @@ with definitions of CSS style and Javascript code blocks.
 
 The VIA application code `via.html` has the following structure:
 
-```
+```html
 <!DOCTYPE html> 
 <html lang="en"> 
 <head> 
@@ -53,7 +53,7 @@ shapes -- rectangle, circle, ellipse and polygon.
 Now we describe how some of the core actions (like loading images,
 drawing regions, etc) are facilitated by the javascript codebase.
 
-Core Data Structures {#core_data_structures}
+Core Data Structures
 --------------------
 
 > "Bad programmers worry about the code. Good programmers worry about
@@ -97,7 +97,7 @@ selected by the user
 Here is an example of how VIA would store file attribute and two region
 annotations for a file `photo.jpg` in `_via_img_metadata` object:
 
-```
+```javascript
 var img_id = _via_get_image_id('photo.jpg', 16454);
 var _via_img_metadata = {};
 _via_img_metadata[img_id] = new ImageMetadata('', 'photo.jpg', 16454);
@@ -151,7 +151,7 @@ A set of variables are used to maintain the state of the VIA application. These
 state variable form a crucial component of user interactions. For 
 example, `_via_is_user_drawing_region` is `true` when the user is drawing a region.
 
-Loading Images {#loading_images}
+Loading Images
 --------------
 
 Loading (or adding) an image into VIA is initiated by
@@ -170,9 +170,9 @@ tasks:
    property of this object containts a reference to the local file
    selected by the user.
 3. Triggers `show_image()` (further discussed in [Displaying
-    Image](#display_image) section) to display the newly loaded image.
+    Image](#displaying-image) section) to display the newly loaded image.
 
-Displaying Image {#display_image}
+Displaying Image
 ----------------
 
 The VIA application displays one of the pre-loaded images using
@@ -200,15 +200,15 @@ server or the image data is embedded in the VIA application code. If
 loaded from this resource, otherwise the image is loaded from
 `_via_img_metadata[img_id].fileref`.
 
-Moving to Next/Previous Images {#move_next_prev_image}
+Moving to Next/Previous Images
 ------------------------------
 
 The methods `move_to_next_image()` and `move_to_prev_image()` handle the
 user requests to switch display to next or previous image. This boils
-down to invoking `show_image()` (see [Displaying Image](#display_image)
+down to invoking `show_image()` (see [Displaying Image](#displaying-image)
 section) with appropriate `image_index`.
 
-Capturing User's Mouse Interactions {#capture_user_mouse_interactions}
+Capturing User's Mouse Interactions
 -----------------------------------
 
 The following event listeners attached to `via_reg_canvas` handles user
@@ -232,7 +232,7 @@ drawing a region, moving a region, resizing a region, etc.
 indicates a single mouse click which indicates the user's intention to 
 select/unselect a region, define a vertex of polygon, or define a point.
 
- * `_via_reg_canvas.addEventListener('mouseover, function(e) { ... }` :   Forces 
+ * `_via_reg_canvas.addEventListener('mouseover, function(e) { ... }` : Forces 
 re-rendering of region boundaries and labels.
 
  * `_via_reg_canvas.addEventListener('mousemove', function(e) { ... }` :
@@ -246,9 +246,9 @@ from last defined polygon vertex to current user position.
 
 Each region draw, resize, move or select/unselect triggers re-rendering
 of region boundaries and labels using `_via_redraw_reg_canvas()` (see
-[Rendering Regions](render_region) section).
+[Rendering Regions](rendering-region) section).
 
-Rendering Regions {#render_region}
+Rendering Regions
 -----------------
 
 `_via_redraw_img_canvas()` renders images onto the canvas
@@ -258,7 +258,7 @@ Rendering of region boundaries is performed by `_via_redraw_reg_canvas`.
 For example, rectangular and circular regions are drawn using the 2D
 context `_via_reg_ctx` as follows:
 
-```
+```javascript
 function _via_draw_rect(x, y, w, h) {
     _via_reg_ctx.beginPath();
     _via_reg_ctx.moveTo(x  , y);
@@ -275,14 +275,14 @@ function _via_draw_circle(cx, cy, r) {
 }
 ```
 
-Moving and Resizing Regions {#move_resize_regions}
+Moving and Resizing Regions
 ---------------------------
 
 A region has to be selected before it can be moved or resized. A single
 click inside a region sets the state variable
 `_via_is_region_selected = true;` as follows:
 
-```
+```javascript
 _via_reg_canvas.addEventListener('mousedown', function(e) {
     _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
     ...
@@ -321,7 +321,7 @@ captured by `mousedown`, `mousemove` and `mouseup` events. First, the
 `mousedown` event sets the state variable `_via_is_user_moving_region = true;` 
 as follows:
 
-```
+```javascript
 _via_reg_canvas.addEventListener('mousedown', function(e) {
     _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
     _via_region_edge = is_on_region_corner(_via_click_x0, _via_click_y0);
@@ -351,7 +351,7 @@ Next, the `mousemove` event draws intermediate regions -- to aid
 with visualization -- as the user moves the mouse cursor towards the
 final destination as shown by the code snippet below:
 
-```
+```javascript
 _via_reg_canvas.addEventListener('mousemove', function(e) {
     _via_current_x = e.offsetX; _via_current_y = e.offsetY;
     ...
@@ -386,10 +386,10 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 }
 ```
 
-Finally, the [mouseup]{.datai} event moves the selected region to a new
+Finally, the `mouseup` event moves the selected region to a new
 location as follows:
 
-```
+```javascript
 _via_reg_canvas.addEventListener('mouseup', function(e) {
     _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
 
@@ -459,7 +459,7 @@ Some notes:
     certain tolerance. If it is below that level, we consider this as a
     gesture to select other nested region.
 
-Updating Attribute Value {#update_attribute_value}
+Updating Attribute Value
 ------------------------
 
 The update of region attributes is triggered by the function
@@ -473,12 +473,12 @@ way, the update of file attributes are handled by
 The spreadsheet like editing environment is setup and handled by the
 function `init_spreadsheet_input()`.
 
-Adding New Attributes {#add_new_attribute}
+Adding New Attributes
 ---------------------
 
 This is handled by the function `add_new_attribute()`.
 
-Download Annotations {#download_annotations}
+Download Annotations
 --------------------
 
 This action is initiated by the function `download_all_region_data()`.
@@ -488,7 +488,7 @@ format ([CSV](https://en.wikipedia.org/wiki/Comma-separated_values) or
 `package_region_data()` while the function `save_data_to_local_file()`
 triggers the browser action to download this file to local disk.
 
-Importing Annotations {#import_annotations}
+Importing Annotations
 ---------------------
 
 Importing existing annotation data (in CSV or JSON format) to VIA
@@ -498,7 +498,7 @@ selected, the function `import_annotations_from_file()` is triggered to
 import annotation and insert the valid ones into the `_via_img_metadata`
 object.
 
-Source Code License {#source_code_license}
+Source Code License
 -------------------
 
 VIA is an open source project actively maintained by the [Visual
