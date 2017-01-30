@@ -5,17 +5,17 @@ Author: [Abhishek Dutta](mailto:adutta_REMOVE_@robots.ox.ac.uk)
 
 ## Table of Contents
  * [Core Data Structures](#core-data-structures)
- * Loading Images
- * Displaying Image
- * Moving to Next/Previous Images
- * Capturing User's Mouse Interactions
- * Rendering Regions
- * Moving and Resizing Regions
- * Updating Attribute Value
- * Adding New Attributes
- * Download Annotations
- * Importing Annotations
- * Source Code License
+ * [Loading Images](#loading-images)
+ * [Displaying Image](#displaying-image)
+ * [Moving to Next/Previous Images](#moving-to-nextprevious-images)
+ * [Capturing User's Mouse Interactions](#capturing-users-mouse-interactions)
+ * [Rendering Regions](#rendering-regions)
+ * [Moving and Resizing Regions](#moving-and-resizing-regions)
+ * [Updating Attribute Value](#updating-attribute-value)
+ * [Adding New Attributes](#adding-new-attributes)
+ * [Download Annotations](#download-annotations)
+ * [Importing Annotations](#importing-annotations)
+ * [Source Code License](#source-code-license)
 
 VGG Image Annotator (VIA) application is contained in a single html file
 with definitions of CSS style and Javascript code blocks.
@@ -73,24 +73,33 @@ the following properties:
  * `fileref` : a reference to the local file uploaded by user
  * `base64_img_data` : contains either the image URL or image data represented 
 in base64 format
- * `file_attributes` : a [Map()](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map) of image file's attributes. For example, image captions can be represented by 
+ * `file_attributes` : a [Map()](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map) 
+of image file's attributes. For example, image captions can be represented by 
 file attributes as 
+
 ```
 Map { 'caption': 'a white football flying over a red car' }
 ```
+
  * `regions` : an array of `ImageRegion()` objects containing the following 
 properties corresponding to each region (rectangular, circular, polygon, etc) 
 defined in the image
- * `shape_attributes` : a [Map()](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map) of attributes defining the shape of the region. For example, a rectangular 
+ * `shape_attributes` : a [Map()](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map) 
+of attributes defining the shape of the region. For example, a rectangular 
 region has the following shape attributes 
+
 ```
 Map {'name': 'rect', 'x': '115', 'y': '210', 'width': '100', 'height': '200' }
 ```
- * `region_attributes` : a [Map()](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map) of attributes corresponding to the region. For example, an image region 
+
+ * `region_attributes` : a [Map()](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map) 
+of attributes corresponding to the region. For example, an image region 
 containing a red car can have the following attributes
+
 ```
 Map { 'object\_name': 'car', 'object\_color': 'red' }
 ```
+
  * `is_user_selected` : a state variable indicating if this region has been 
 selected by the user
 
@@ -246,13 +255,14 @@ from last defined polygon vertex to current user position.
 
 Each region draw, resize, move or select/unselect triggers re-rendering
 of region boundaries and labels using `_via_redraw_reg_canvas()` (see
-[Rendering Regions](rendering-region) section).
+[Rendering Regions](#rendering-regions) section).
 
 Rendering Regions
 -----------------
 
 `_via_redraw_img_canvas()` renders images onto the canvas
-`_via_img_canvas` using [drawImage()](https://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D/drawImage). Image is re-rendered only when the user zoom's in/out.
+`_via_img_canvas` using [drawImage()](https://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D/drawImage). 
+Image is re-rendered only when the user zoom's in/out.
 
 Rendering of region boundaries is performed by `_via_redraw_reg_canvas`.
 For example, rectangular and circular regions are drawn using the 2D
