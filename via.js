@@ -58,6 +58,10 @@ var VIA_THEME_MESSAGE_TIMEOUT_MS = 2500;
 var VIA_THEME_ATTRIBUTE_DISP_MIN_CHARS = 'ABCDEF'; // 6 characters
 var VIA_THEME_ATTRIBUTE_VALUE_FONT = '10pt Sans';
 
+var VIA_CSV_SEP = ',';
+var VIA_CSV_QUOTE_CHAR = '"';
+var VIA_CSV_KEYVAL_SEP = ':';
+
 var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
 var VIA_IMPORT_CSV_KEYVAL_SEP_CHAR = '\\;';
 var VIA_EXPORT_CSV_ARRAY_SEP_CHAR = ':';
@@ -178,6 +182,32 @@ function ImageRegion() {
     this.region_attributes = new Map(); // region attributes
 }
 
+ImageRegion.prototype.toString = function region_to_string() {
+    return 'test';
+}
+
+// see : https://developers.google.com/analytics/solutions/articles/gdataAnalyticsCsv#sanitizing
+// ensure compatibility with csv downloaded from google sheets
+function map_to_string(m) {
+    var s = [];
+    for (var key of m.keys() ) {
+	var v = m.get(key);
+	// escape double quotes with a double quote
+	// RFC 4180 : https://tools.ietf.org/html/rfc4180
+	var si = '"' + JSON.stringify(key) + '"';
+	si += VIA_CSV_KEYVAL_SEP;
+
+	if (typeof(v) === 'string') {
+	    si += '"' + JSON.stringify(v) + '"';
+	} else {
+	    si += JSON.stringify(v);
+	}
+	
+	s.push( si );
+    }
+    return s.join(VIA_CSV_SEP);
+}
+
 function clone_image_region(r0) {
     var r1 = new ImageRegion();
     r1.is_user_selected = r0.is_user_selected;
@@ -216,17 +246,11 @@ function _via_init() {
             show_localStorage_recovery_options();
         }
     }
-    if (typeof start_demo_session === 'function') {
-        start_demo_session();
-    }
-    
+
     if (typeof _via_load_submodules === 'function') {
         _via_load_submodules();
     }
 }
-
-// to be implemented by submodules
-//function _via_load_submodules() {}
 
 //
 // Handlers for top navigation bar
@@ -438,6 +462,7 @@ function import_annotations_from_csv(data) {
 
     var csvdata = data.split('\n');
     for (var i=0; i<csvdata.length; ++i) {
+	console.log(csvdata[i]);
         // ignore blank lines
         if (csvdata[i].charAt(0) == '\n' ||
             csvdata[i].charAt(0) == '') {
@@ -472,8 +497,9 @@ function import_annotations_from_csv(data) {
             continue;
         } else {
             // ignore comma inside double quotations
-            var d = csvdata[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-
+            //var d = csvdata[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+	    var d = parse_csv_line(csvdata[i]);
+	    console.log(d);
             var filename = d[filename_index];
             var size = d[size_index];
             var image_id = _via_get_image_id(filename, size);
@@ -610,6 +636,11 @@ function import_annotations_from_json(data) {
     show_image(_via_image_index);
 }
 
+// see http://stackoverflow.com/questions/8493195/how-can-i-parse-a-csv-string-with-javascript-which-contains-comma-in-data/41563966#41563966
+function parse_csv_rfc4180_line(s) {
+
+}
+
 // key1=val1\;key2=val2\;...
 function keyval_str_to_map(keyval_str) {
     // remove all double quotations
@@ -661,18 +692,18 @@ function package_region_data(return_type) {
         for ( var image_id in _via_img_metadata ) {
             var prefix_str = _via_img_metadata[image_id].filename;
             prefix_str += "," + _via_img_metadata[image_id].size;
-            prefix_str += "," + attr_map_to_str( _via_img_metadata[image_id].file_attributes );
+            prefix_str += "," + map_to_string(_via_img_metadata[image_id].file_attributes );
 
-            var regions = _via_img_metadata[image_id].regions;
+            var r = _via_img_metadata[image_id].regions;
 
-            if (regions.length !=0) {
-                for (var i=0; i<regions.length; ++i) {
-                    var region_shape_attr_str = regions.length + ',' + i + ',';
-                    region_shape_attr_str += attr_map_to_str( regions[i].shape_attributes );
+            if (r.length !=0) {
+                for (var i=0; i<r.length; ++i) {
+                    var sattr = r.length + ',' + i + ',';
+                    sattr += '"{' + map_to_string( r[i].shape_attributes ) + '}"';
 
-                    var region_attr_str = attr_map_to_str( regions[i].region_attributes );
+                    var rattr = '"{' + map_to_string( r[i].region_attributes ) + '}"';
 
-                    csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
+                    csvdata.push('\n' + prefix_str + ',' + sattr + ',' + rattr);
                 }
             } else {
                 csvdata.push('\n' + prefix_str + ',0,0,"",""');
@@ -732,12 +763,13 @@ function attr_map_to_str(attr) {
                 value_str += VIA_EXPORT_CSV_ARRAY_SEP_CHAR + value[i];
             }
             value_str += ']';
-            attr_map_str.push(key + '=' + value_str);
+            attr_map_str.push(key_utf8 + '=' + value_str);
         } else {
-            attr_map_str.push(key + '=' + value);
+	    var value_utf8 = encodeURI(value);
+            attr_map_str.push(key_utf8 + '=' + value_utf8);
         }
     }
-    var str_val = '"' + attr_map_str.join(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR) + '"';
+    var str_val = attr_map_str.join(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR);
     return str_val;
 }
 
@@ -967,15 +999,27 @@ function select_region_shape(sel_shape_name) {
     _via_current_shape = sel_shape_name;
     var ui_element = document.getElementById('region_shape_' + _via_current_shape);
     ui_element.classList.add('selected');
+    console.log(ui_element);
 
-    if ( _via_current_shape != VIA_REGION_SHAPE.POLYGON ) {
+    switch(_via_current_shape) {
+    case VIA_REGION_SHAPE.RECT:
+    case VIA_REGION_SHAPE.CIRCLE:
+    case VIA_REGION_SHAPE.ELLIPSE:
+	show_message('Press single click and drag mouse to draw '
+                     + _via_current_shape + ' region');
+	break;
+	
+    case VIA_REGION_SHAPE.POLYGON:
         _via_is_user_drawing_polygon = false;
         _via_current_polygon_region_id = -1;
-        show_message('Press single click and drag mouse to draw '
-                     + _via_current_shape + ' region');
-    } else {
-        show_message('Press single click to define polygon vertices. Note: in ' +
-                     'Polygon drawing mode, single click cannot be used to un-select regions');
+
+	show_message('Press single click to define polygon vertices and ' +
+		     'click first vertex to close path');
+	break;
+	
+    case VIA_REGION_SHAPE.POINT:
+	show_message('Press single click to define points (or landmarks)');
+	break;
     }
 }
 
@@ -3195,15 +3239,19 @@ function download_localStorage_data(type) {
 // Handlers for attributes input panel (spreadsheet like user input panel)
 //
 function attr_input_focus(i) {
-    select_only_region(i);
-    _via_redraw_reg_canvas();
+    if (_via_is_reg_attr_panel_visible) {
+	select_only_region(i);
+	_via_redraw_reg_canvas();
+    }
     _via_is_user_updating_attribute_value=true;
 }
 
 function attr_input_blur(i) {
-    set_region_select_state(i, false);
+    if (_via_is_reg_attr_panel_visible) {
+	set_region_select_state(i, false);
+	_via_redraw_reg_canvas();
+    }
     _via_is_user_updating_attribute_value=false;
-    _via_redraw_reg_canvas();
 }
 
 // header is a Set()
@@ -3457,12 +3505,13 @@ function update_attribute_value(attr_id, value) {
         update_file_attributes_input_panel();
         break;
     }
-    set_region_select_state(region_id, false);
-    _via_is_user_updating_attribute_value = false;
-    
+    if (_via_is_reg_attr_panel_visible) {
+	set_region_select_state(region_id, false);
+    }   
     if (_via_is_region_id_visible) {
         draw_all_region_id();
     }
+    _via_is_user_updating_attribute_value = false;
 }
 
 function add_new_attribute(type, attribute_name) {
@@ -3476,12 +3525,6 @@ function add_new_attribute(type, attribute_name) {
     case 'f':
         if (!_via_file_attributes.has(attribute_name)) {
             _via_file_attributes.add(attribute_name);
-            /*
-            // add this attribute to all images
-            for (image_id in _via_img_metadata) {
-            _via_img_metadata[image_id].file_attributes.set(attribute_name, '');
-            }
-            */
         }
         update_file_attributes_input_panel();
         break;
