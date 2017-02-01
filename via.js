@@ -26,7 +26,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-var VIA_VERSION = '0.1';
+var VIA_VERSION = '1.0';
 var VIA_NAME = 'VGG Image Annotator';
 var VIA_SHORT_NAME = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -36,6 +36,7 @@ var VIA_REGION_SHAPE = { RECT:'rect',
                          POINT:'point'};
 
 var VIA_REGION_EDGE_TOL = 5;
+var VIA_RESIZE_CONTROL_SIZE = 4;
 var VIA_REGION_POINT_RADIUS = 3;  // in pixel
 var VIA_POLYGON_VERTEX_MATCH_TOL = 5;
 var VIA_REGION_MIN_DIM = 3;     // in pixel
@@ -55,7 +56,6 @@ var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
 var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
 var VIA_THEME_SEL_REGION_OPACITY = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS = 2500;
-var VIA_THEME_ATTRIBUTE_DISP_MIN_CHARS = 'ABCDEF'; // 6 characters
 var VIA_THEME_ATTRIBUTE_VALUE_FONT = '10pt Sans';
 
 var VIA_CSV_SEP = ',';
@@ -195,8 +195,18 @@ function _via_init() {
         }
     }
 
+    // run attached sub-modules (if any)
     if (typeof _via_load_submodules === 'function') {
-        _via_load_submodules();
+	setTimeout(function() {
+	    _via_load_submodules();
+	}, 100);        
+    }
+
+    // run attached unit tests (if any)
+    if (typeof _via_init_unit_tests === 'function') {
+	setTimeout(function() {
+	    _via_init_unit_tests();
+	}, 100);
     }
 }
 
@@ -1035,7 +1045,6 @@ function select_region_shape(sel_shape_name) {
     _via_current_shape = sel_shape_name;
     var ui_element = document.getElementById('region_shape_' + _via_current_shape);
     ui_element.classList.add('selected');
-    console.log(ui_element);
 
     switch(_via_current_shape) {
     case VIA_REGION_SHAPE.RECT:
