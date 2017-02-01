@@ -529,7 +529,6 @@ function import_annotations_from_json(data) {
 
     var image_count = 0;
     var region_import_count = 0;
-    var file_attr_count = 0;
     var skipped_file_attr_count = 0;
     for (var image_id in d) {
         if ( _via_img_metadata.hasOwnProperty(image_id) ) {
@@ -540,7 +539,6 @@ function import_annotations_from_json(data) {
                 if (!_via_img_metadata[image_id].file_attributes.get(key)) {
                     _via_img_metadata[image_id].file_attributes.set(key,
                                                                     d[image_id].file_attributes[key]);
-                    file_attr_count += 1;
                 }
                 if (!_via_file_attributes.has(key)) {
                     _via_file_attributes.add(key);
@@ -572,7 +570,8 @@ function import_annotations_from_json(data) {
         }
     }
 
-    show_message('Imported [' + region_import_count + '] regions and [' + file_attr_count + '] file attributes for ' + image_count + ' images from JSON file', VIA_THEME_MESSAGE_TIMEOUT_MS);
+    show_message('Import Summary : [' + region_import_count + '] regions',
+		 4 * VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -1571,7 +1570,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                     break;
                 }
         } else {
-            show_message('Skipped adding a ' + _via_current_shape + ' of nearly 0 dimension', VIA_THEME_MESSAGE_TIMEOUT_MS);
+            show_message('Cannot add such a small region');
         }
         update_attributes_panel();
         _via_redraw_reg_canvas();
@@ -1896,7 +1895,7 @@ function toggle_img_list(panel) {
 
 function show_img_list() {
     if (_via_img_count === 0) {
-        show_message("Please load some images first!", VIA_THEME_MESSAGE_TIMEOUT_MS);
+        show_message("Please load some images first!");
         return;
     }
 
@@ -2285,41 +2284,48 @@ function draw_all_region_id() {
         var h = Math.abs(bbox[3] - bbox[1]);
         _via_reg_ctx.font = VIA_THEME_ATTRIBUTE_VALUE_FONT;
 
-        var spc_dot = _via_reg_ctx.measureText('.').width
-        var bgnd_rect_height = 1.8 * _via_reg_ctx.measureText('M').width;
-
         var annotation_str = (i+1);
         var bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 2;
-        
+	
+	var char_width = _via_reg_ctx.measureText('M').width;
+	var char_height = 1.8 * char_width;
+	
         var r = _via_img_metadata[_via_image_id].regions[i].region_attributes;
-        if (r.size === 1) {
-            // if there is a single attribute, display the attribute instead of region-id
+        if ( r.size === 1 &&
+	     w > (2*char_width) ) {
+	    // show the attribute value
             for (var key of r.keys()) {
                 annotation_str = r.get(key);
             }
             var strw = _via_reg_ctx.measureText(annotation_str).width;
+
             if (strw > w) {
                 // if text overflows, crop it
                 var str_max = Math.floor((w * annotation_str.length) / strw);
                 annotation_str = annotation_str.substr(0, str_max-1) + '.';
-            }
-            bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 1.25;        
-        }
+		bgnd_rect_width = w;
+            } else {
+		bgnd_rect_width = strw + char_width;
+	    }
+	}
+        
         // center the label
         x = x - (bgnd_rect_width/2 - w/2);
         
         // first, draw a background rectangle first
         _via_reg_ctx.fillStyle = 'black';
-        _via_reg_ctx.globalAlpha=0.8;
-        _via_reg_ctx.fillRect(x,
-                              y - 1.1*bgnd_rect_height,
-                              bgnd_rect_width,
-                              bgnd_rect_height);
+        _via_reg_ctx.globalAlpha = 0.8;
+        _via_reg_ctx.fillRect(Math.floor(x),
+                              Math.floor(y - 1.1*char_height),
+                              Math.floor(bgnd_rect_width),
+                              Math.floor(char_height));
         
         // then, draw text over this background rectangle
-        _via_reg_ctx.globalAlpha=1.0;
+        _via_reg_ctx.globalAlpha = 1.0;
         _via_reg_ctx.fillStyle = 'yellow';
-        _via_reg_ctx.fillText(annotation_str, x+spc_dot, y-1.8*spc_dot);
+        _via_reg_ctx.fillText(annotation_str,
+			      Math.floor(x + 0.4*char_width),
+			      Math.floor(y - 0.35*char_height));
 
     }
 }
@@ -2700,7 +2706,7 @@ function is_on_polygon_vertex(all_points_x, all_points_y, px, py) {
 
 function _via_update_ui_components() {
     if ( !_via_is_window_resized && _via_current_image_loaded ) {
-        show_message("Resizing window ...", VIA_THEME_MESSAGE_TIMEOUT_MS);
+        show_message("Resizing window ...");
 	set_all_text_panel_display('none');
 	show_all_canvas();
 
@@ -3045,7 +3051,7 @@ function zoom_in() {
     }
 
     if (_via_canvas_zoom_level_index === (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
-        show_message('Further zoom-in not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
+        show_message('Further zoom-in not possible');
     } else {
         _via_canvas_zoom_level_index += 1;
         
@@ -3060,7 +3066,7 @@ function zoom_in() {
         _via_redraw_img_canvas();
         _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
-        show_message('Zoomed in to level ' + zoom_scale + 'X', VIA_THEME_MESSAGE_TIMEOUT_MS);
+        show_message('Zoomed in to level ' + zoom_scale + 'X');
     }
 }
 
@@ -3071,7 +3077,7 @@ function zoom_out() {
     }
 
     if (_via_canvas_zoom_level_index === 0) {
-        show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
+        show_message('Further zoom-out not possible');
     } else {
         _via_canvas_zoom_level_index -= 1;
         
@@ -3086,7 +3092,7 @@ function zoom_out() {
         _via_redraw_img_canvas();
         _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
-        show_message('Zoomed out to level ' + zoom_scale + 'X', VIA_THEME_MESSAGE_TIMEOUT_MS);
+        show_message('Zoomed out to level ' + zoom_scale + 'X');
     }
 }
 
