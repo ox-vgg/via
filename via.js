@@ -182,58 +182,6 @@ function ImageRegion() {
     this.region_attributes = new Map(); // region attributes
 }
 
-ImageRegion.prototype.toString = function region_to_string() {
-    return 'test';
-}
-
-// see : https://developers.google.com/analytics/solutions/articles/gdataAnalyticsCsv#sanitizing
-// ensure compatibility with csv downloaded from google sheets
-function map_to_string(m) {
-    var s = [];
-    for (var key of m.keys() ) {
-	var v = m.get(key);
-	// escape double quotes with a double quote
-	// RFC 4180 : https://tools.ietf.org/html/rfc4180
-	var si = '"' + JSON.stringify(key) + '"';
-	si += VIA_CSV_KEYVAL_SEP;
-
-	if (typeof(v) === 'string') {
-	    si += '"' + JSON.stringify(v) + '"';
-	} else {
-	    si += JSON.stringify(v);
-	}
-	
-	s.push( si );
-    }
-    return s.join(VIA_CSV_SEP);
-}
-
-function clone_image_region(r0) {
-    var r1 = new ImageRegion();
-    r1.is_user_selected = r0.is_user_selected;
-
-    // copy shape attributes
-    for ( var key of r0.shape_attributes.keys() ) {
-        var value = r0.shape_attributes.get(key);
-        r1.shape_attributes.set(key, value);
-    }
-
-    // copy region attributes
-    for ( var key of r0.region_attributes.keys() ) {
-        var value = r0.region_attributes.get(key);
-        r1.region_attributes.set(key, value);
-    }
-    return r1;
-}
-
-function _via_get_image_id(filename, size) {
-    if (typeof(size) === 'undefined') {
-        return filename;
-    } else {
-        return filename + size;
-    }
-}
-
 function _via_init() {
     console.log(VIA_NAME);
     show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !', 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
@@ -275,11 +223,11 @@ function sel_local_images() {
     }
 }
 function download_all_region_data(type) {
-    var all_region_data = package_region_data(type);
+    var all_region_data = pack_via_metadata(type);
     var all_region_data_blob = new Blob(all_region_data, {type: 'text/'+type+';charset=utf-8'});
 
     if ( all_region_data_blob.size > (2*1024*1024) &&
-         type == 'csv' ) {
+         type === 'csv' ) {
         show_message('CSV file size is ' + (all_region_data_blob.size/(1024*1024)) + ' MB. We advise you to instead download as JSON');
     } else {
         save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
@@ -359,7 +307,7 @@ function store_local_img_ref(event) {
     var original_image_count = _via_img_count;
 
     // clear browser cache if user chooses to load new images
-    if (original_image_count == 0) {
+    if (original_image_count === 0) {
         localStorage.clear();
     }
 
@@ -397,7 +345,7 @@ function store_local_img_ref(event) {
         }
         show_message(status_msg);
 
-        if (_via_image_index == -1) {
+        if (_via_image_index === -1) {
             show_image(0);
         } else {
             show_image( original_image_count );
@@ -457,19 +405,19 @@ function import_annotations_from_file(event) {
 }
 function import_annotations_from_csv(data) {
     var region_import_count = 0;
-    var file_attr_count = 0;
     var image_count = 0;
-
+    var malformed_csv_lines_count = 0;
+    
     var csvdata = data.split('\n');
+    var csv_column_count = 0;
     for (var i=0; i<csvdata.length; ++i) {
-	console.log(csvdata[i]);
         // ignore blank lines
-        if (csvdata[i].charAt(0) == '\n' ||
-            csvdata[i].charAt(0) == '') {
+        if (csvdata[i].charAt(0) === '\n' ||
+            csvdata[i].charAt(0) === '') {
             continue;
         }
 
-        if (csvdata[i].charAt(0) == VIA_IMPORT_CSV_COMMENT_CHAR) {
+        if (csvdata[i].charAt(0) === VIA_IMPORT_CSV_COMMENT_CHAR) {
             // parse header
             // #filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
             var d = csvdata[i].substring(1, csvdata[i].length); // remove #
@@ -494,68 +442,62 @@ function import_annotations_from_csv(data) {
                     break;
                 }
             }
+	    csv_column_count = d.length;
             continue;
         } else {
-            // ignore comma inside double quotations
-            //var d = csvdata[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
 	    var d = parse_csv_line(csvdata[i]);
-	    console.log(d);
+
+	    // check if csv line was malformed
+	    if (d.length !== csv_column_count) {
+		malformed_csv_lines_count += 1;
+		continue;
+	    }
+
             var filename = d[filename_index];
             var size = d[size_index];
             var image_id = _via_get_image_id(filename, size);
             if ( _via_img_metadata.hasOwnProperty(image_id) ) {
-                image_count += 1;
-
                 // copy file attributes
-                if ( d[file_attr_index] != '' ||
-                     d[file_attr_index] != '""') {
-                    var file_attr_str = d[file_attr_index];
-
-                    var attr_map = keyval_str_to_map( file_attr_str );
-                    for( var key of attr_map.keys() ) {
-                        var val = attr_map.get(key);
+                if ( d[file_attr_index] !== '"{}"') {
+		    var fattr = d[file_attr_index];
+		    fattr = remove_prefix_suffix_quotes( fattr );
+		    fattr = unescape_from_csv( fattr );
+		    
+                    var m = json_str_to_map( fattr );
+                    for( var key of m.keys() ) {
+                        var val = m.get(key);
                         _via_img_metadata[image_id].file_attributes.set(key, val);
 
                         if (!_via_file_attributes.has(key)) {
                             _via_file_attributes.add(key);
                         }
-                        file_attr_count += 1;
-                    }
+                    }	    
                 }
 
                 var regioni = new ImageRegion();
                 // copy regions shape attributes
-                if ( d[region_shape_attr_index] != '""' ||
-                     d[region_shape_attr_index] != '' ) {
-                    var region_str = d[region_shape_attr_index];
-                    var attr_map = keyval_str_to_map( region_str );
-
-                    for ( var key of attr_map.keys() ) {
-                        var val = attr_map.get(key);
-                        if ( key == 'all_points_x' ||
-                             key == 'all_points_y' ) {
-                            val = val.substring(1, val.length-1); // discard the square brackets []
-                            var valdata = val.split(VIA_EXPORT_CSV_ARRAY_SEP_CHAR);
-                            var val_as_array = [];
-                            for (var j=0; j<valdata.length; ++j) {
-                                val_as_array.push( parseInt(valdata[j]) );
-                            }
-                            regioni.shape_attributes.set(key, val_as_array);
-                        } else {
-                            regioni.shape_attributes.set(key, val);
-                        }
+                if ( d[region_shape_attr_index] !== '"{}"' ) {
+		    var sattr = d[region_shape_attr_index];
+		    sattr = remove_prefix_suffix_quotes( sattr );
+		    sattr = unescape_from_csv( sattr );
+		    
+                    var m = json_str_to_map( sattr );
+                    for ( var key of m.keys() ) {
+                        var val = m.get(key);
+                        regioni.shape_attributes.set(key, val);
                     }
                 }
 
                 // copy region attributes
-                if ( d[region_attr_index] != '""' ||
-                     d[region_attr_index] != '' ) {
-                    var region_attr = d[region_attr_index];
-                    var region_attr_map = keyval_str_to_map( region_attr );
+                if ( d[region_attr_index] !== '"{}"' ) {
+		    var rattr = d[region_attr_index];
+		    rattr = remove_prefix_suffix_quotes( rattr );
+		    rattr = unescape_from_csv( rattr );
+		    
+                    var m = json_str_to_map( rattr );
 
-                    for ( var key of region_attr_map.keys() ) {
-                        var val = region_attr_map.get(key);
-                        var v0 = val;
+                    for ( var key of m.keys() ) {
+                        var val = m.get(key);
                         regioni.region_attributes.set(key, val);
 
                         if (!_via_region_attributes.has(key)) {
@@ -566,16 +508,16 @@ function import_annotations_from_csv(data) {
 
                 // add regions only if they are present         
                 if (regioni.shape_attributes.size > 0 ||
-                    regioni.region_attributes.size >0 ) {
+                    regioni.region_attributes.size > 0 ) {
                     _via_img_metadata[image_id].regions.push(regioni);
                     region_import_count += 1;
                 }
             }
         }
     }
-    show_message('Imported [' + region_import_count + '] regions ' +
-                 'and [' + file_attr_count + '] file attributes from ' +
-                 image_count + ' lines in CSV file');
+    show_message('Import Summary : [' + region_import_count + '] regions, ' +
+                 '[' + malformed_csv_lines_count  + '] malformed csv lines.',
+		 4 * VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -589,7 +531,7 @@ function import_annotations_from_json(data) {
     var region_import_count = 0;
     var file_attr_count = 0;
     var skipped_file_attr_count = 0;
-    for (image_id in d) {
+    for (var image_id in d) {
         if ( _via_img_metadata.hasOwnProperty(image_id) ) {
             image_count += 1;
 
@@ -636,27 +578,130 @@ function import_annotations_from_json(data) {
     show_image(_via_image_index);
 }
 
-// see http://stackoverflow.com/questions/8493195/how-can-i-parse-a-csv-string-with-javascript-which-contains-comma-in-data/41563966#41563966
-function parse_csv_rfc4180_line(s) {
+// assumes that csv line follows the RFC 4180 standard
+// see: https://en.wikipedia.org/wiki/Comma-separated_values
+function parse_csv_line(s, field_separator) {
+    if (typeof(s) === 'undefined' ||
+	s.length === 0 ) {
+	return [];
+    }
+    
+    if (typeof(field_separator) === 'undefined') {
+	field_separator = ',';
+    }
+    var double_quote_seen = false;
+    var prev_char = '';
+    var start = 0;
+    var d = [];
 
+    var i = 0;
+    while ( i < s.length) {
+	if (s.charAt(i) === field_separator) {
+	    if (double_quote_seen) {
+		// field separator inside double quote is ignored
+		i = i + 1;
+	    } else {
+		d.push( s.substr(start, i - start) );
+		start = i + 1;
+		i = i + 1;
+	    }
+	} else {
+	    if (s.charAt(i) === '"') {
+		if (double_quote_seen) {
+		    if (s.charAt(i+1) === '"') {
+			// ignore escaped double quotes
+			i = i + 2;
+		    } else {
+			// closing of double quote
+			double_quote_seen = false;
+			i = i + 1;
+		    }
+		} else {
+		    double_quote_seen = true;
+		    start = i;
+		    i = i + 1;
+		}
+	    } else {
+		i = i + 1
+	    }
+	}
+	
+    }
+    // extract the last field (csv rows have no trailing comma)
+    d.push( s.substr(start) );
+    return d;
 }
 
-// key1=val1\;key2=val2\;...
-function keyval_str_to_map(keyval_str) {
-    // remove all double quotations
-    keyval_str = keyval_str.replace(/["]+/g, '')
-
-    var keyval_map = new Map();
-    var d = keyval_str.split(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR);    
-    for (var i=0; i<d.length; ++i) {
-        var keyval = d[i].split('=');
-        if ( keyval.length == 2 ) {
-            keyval_map.set(keyval[0], keyval[1]);
-        } else {
-            show_message('Skipping malformed values in the imported file');
-        }
+// s = '{"name":"rect","x":188,"y":90,"width":243,"height":233}'
+function json_str_to_map(s) {
+    if (typeof(s) === 'undefined' ||
+	s.length === 0 ) {
+	return new Map();
     }
-    return keyval_map;
+    
+    var d = JSON.parse(s);
+    var m = new Map();
+    for ( var key in d ) {
+	m.set(key, d[key]);
+    }
+    return m;
+}
+
+// ensure the exported json string conforms to RFC 4180
+// see: https://en.wikipedia.org/wiki/Comma-separated_values
+function map_to_json(m) {
+    var s = [];
+    for (var key of m.keys() ) {
+	var v = m.get(key);
+	var si = JSON.stringify(key);
+	si += VIA_CSV_KEYVAL_SEP;
+	si += JSON.stringify(v);
+	s.push( si );
+    }
+    return '{' + s.join(VIA_CSV_SEP) + '}';
+}
+
+function escape_for_csv(s) {
+    return s.replace(/["]/g, '""');
+}
+
+function unescape_from_csv(s) {
+    return s.replace(/""/g, '"');
+}
+
+function remove_prefix_suffix_quotes(s) {
+    if (s.charAt(0) === '"' &&
+	s.charAt(s.length-1) === '"') {
+	return s.substr(1, s.length-2);
+    } else {
+	return s;
+    }    
+}
+
+function clone_image_region(r0) {
+    var r1 = new ImageRegion();
+    r1.is_user_selected = r0.is_user_selected;
+
+    // copy shape attributes
+    for ( var key of r0.shape_attributes.keys() ) {
+        var value = r0.shape_attributes.get(key);
+        r1.shape_attributes.set(key, value);
+    }
+
+    // copy region attributes
+    for ( var key of r0.region_attributes.keys() ) {
+        var value = r0.region_attributes.get(key);
+        r1.region_attributes.set(key, value);
+    }
+    return r1;
+}
+
+function _via_get_image_id(filename, size) {
+    if (typeof(size) === 'undefined') {
+        return filename;
+    } else {
+        return filename + size;
+    }
 }
 
 function load_text_file(text_file, callback_function) {
@@ -683,30 +728,42 @@ function load_text_file(text_file, callback_function) {
 //
 // Data Exporter
 //
-function package_region_data(return_type) {
-    if( return_type == "csv" ) {
+function pack_via_metadata(return_type) {
+    if( return_type === "csv" ) {
         var csvdata = [];
         var csvheader = "#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes";
         csvdata.push(csvheader);
 
         for ( var image_id in _via_img_metadata ) {
-            var prefix_str = _via_img_metadata[image_id].filename;
-            prefix_str += "," + _via_img_metadata[image_id].size;
-            prefix_str += "," + map_to_string(_via_img_metadata[image_id].file_attributes );
+	    var fattr = map_to_json( _via_img_metadata[image_id].file_attributes );
+	    fattr = escape_for_csv( fattr );
+
+            var prefix = '\n' + _via_img_metadata[image_id].filename;
+            prefix += ',' + _via_img_metadata[image_id].size;    
+            prefix += ',"' + fattr + '"';
 
             var r = _via_img_metadata[image_id].regions;
 
-            if (r.length !=0) {
+            if (r.length !==0) {
                 for (var i=0; i<r.length; ++i) {
-                    var sattr = r.length + ',' + i + ',';
-                    sattr += '"{' + map_to_string( r[i].shape_attributes ) + '}"';
+		    var csvline = [];
+		    csvline.push(prefix);
+		    csvline.push(r.length);
+		    csvline.push(i);
+		    
+		    var sattr = map_to_json( r[i].shape_attributes );
+		    sattr = '"' +  escape_for_csv( sattr ) + '"';
+		    csvline.push(sattr);
+		    
+		    var rattr = map_to_json( r[i].region_attributes );
+		    rattr = '"' +  escape_for_csv( rattr ) + '"';
+		    csvline.push(rattr);
 
-                    var rattr = '"{' + map_to_string( r[i].region_attributes ) + '}"';
-
-                    csvdata.push('\n' + prefix_str + ',' + sattr + ',' + rattr);
+                    csvdata.push( csvline.join(VIA_CSV_SEP) );
                 }
             } else {
-                csvdata.push('\n' + prefix_str + ',0,0,"",""');
+		// @todo: reconsider this practice of adding an empty entry
+		csvdata.push(prefix + ',0,0,"{}","{}"');
             }
         }
         return csvdata;
@@ -751,26 +808,6 @@ function package_region_data(return_type) {
         }
         return [JSON.stringify(_via_img_metadata_as_obj)];
     }    
-}
-
-function attr_map_to_str(attr) {
-    var attr_map_str = [];
-    for( var key of attr.keys() ) {
-        var value = attr.get(key);
-        if ( Array.isArray(value) ) {
-            var value_str='[' + value[0];
-            for (var i=1; i<value.length; ++i) {
-                value_str += VIA_EXPORT_CSV_ARRAY_SEP_CHAR + value[i];
-            }
-            value_str += ']';
-            attr_map_str.push(key_utf8 + '=' + value_str);
-        } else {
-	    var value_utf8 = encodeURI(value);
-            attr_map_str.push(key_utf8 + '=' + value_utf8);
-        }
-    }
-    var str_val = attr_map_str.join(VIA_IMPORT_CSV_KEYVAL_SEP_CHAR);
-    return str_val;
 }
 
 function save_data_to_local_file(data, filename) {
@@ -915,7 +952,7 @@ function show_image(image_index) {
             _via_current_image.src = img_reader.result;
         }, false);
 
-        if (_via_img_metadata[img_id].base64_img_data == '') {
+        if (_via_img_metadata[img_id].base64_img_data === '') {
             // load image from file
             img_reader.readAsDataURL( _via_img_metadata[img_id].fileref );
         } else {
@@ -1056,7 +1093,7 @@ _via_reg_canvas.addEventListener('dblclick', function(e) {
     _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
     var region_id = is_inside_region(_via_click_x0, _via_click_y0);
 
-    if (region_id != -1) {
+    if (region_id !== -1) {
         // user clicked inside a region, show attribute panel
         if(!_via_is_reg_attr_panel_visible) {
             toggle_reg_attr_panel();
@@ -1076,7 +1113,7 @@ _via_reg_canvas.addEventListener('mousedown', function(e) {
         if ( _via_region_edge[1] > 0 ) {
             if ( !_via_is_user_resizing_region ) {
                 // resize region
-                if ( _via_region_edge[0] != _via_user_sel_region_id ) {
+                if ( _via_region_edge[0] !== _via_user_sel_region_id ) {
                     _via_user_sel_region_id = _via_region_edge[0];
                 }
                 _via_is_user_resizing_region = true;
@@ -1092,7 +1129,7 @@ _via_reg_canvas.addEventListener('mousedown', function(e) {
                     _via_region_click_y = _via_click_y0;
                 }
             }
-            if ( region_id == -1 ) {
+            if ( region_id === -1 ) {
                 // mousedown on outside any region
                 _via_is_user_drawing_region = true;
                 // unselect all regions
@@ -1102,10 +1139,10 @@ _via_reg_canvas.addEventListener('mousedown', function(e) {
             }
         }
     } else {
-        if ( region_id == -1 ) {
+        if ( region_id === -1 ) {
             // mousedown outside a region
-            if (_via_current_shape != VIA_REGION_SHAPE.POLYGON &&
-                _via_current_shape != VIA_REGION_SHAPE.POINT) {
+            if (_via_current_shape !== VIA_REGION_SHAPE.POLYGON &&
+                _via_current_shape !== VIA_REGION_SHAPE.POINT) {
                 // this is a bounding box drawing event
                 _via_is_user_drawing_region = true;
             }
@@ -1191,7 +1228,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
             // and descending order to solve the issue of nested regions
             var nested_region_id = is_inside_region(_via_click_x0, _via_click_y0, true);            
             if (nested_region_id >= 0 &&
-                nested_region_id != _via_user_sel_region_id) {
+                nested_region_id !== _via_user_sel_region_id) {
                 _via_user_sel_region_id = nested_region_id;
                 _via_is_region_selected = true;
                 _via_is_user_moving_region = false;
@@ -1301,7 +1338,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
             image_attr.get('all_points_x')[moved_vertex_id] = Math.round(_via_current_x * _via_canvas_scale);
             image_attr.get('all_points_y')[moved_vertex_id] = Math.round(_via_current_y * _via_canvas_scale);
 
-            if (moved_vertex_id == 0) {
+            if (moved_vertex_id === 0) {
                 // move both first and last vertex because we
                 // the initial point at the end to close path
                 var n = canvas_attr.get('all_points_x').length;
@@ -1584,7 +1621,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
             
             _via_region_edge = is_on_region_corner(_via_current_x, _via_current_y);
 
-            if ( _via_region_edge[0] == _via_user_sel_region_id ) {
+            if ( _via_region_edge[0] === _via_user_sel_region_id ) {
                 switch(_via_region_edge[1]) {
                     // rect
                 case 1: // top-left corner of rect
@@ -1758,7 +1795,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
             moved_all_points_x[moved_vertex_id] = _via_current_x;
             moved_all_points_y[moved_vertex_id] = _via_current_y;
 
-            if (moved_vertex_id == 0) {
+            if (moved_vertex_id === 0) {
                 // move both first and last vertex because we
                 // the initial point at the end to close path
                 moved_all_points_x[moved_all_points_x.length-1] = _via_current_x;
@@ -1858,7 +1895,7 @@ function toggle_img_list(panel) {
 }
 
 function show_img_list() {
-    if (_via_img_count == 0) {
+    if (_via_img_count === 0) {
         show_message("Please load some images first!", VIA_THEME_MESSAGE_TIMEOUT_MS);
         return;
     }
@@ -1887,7 +1924,7 @@ function reload_img_table() {
     _via_loaded_img_table_html.push('<ul>');
     for (var i=0; i<_via_img_count; ++i) {
         var fni = '';
-        if (i == _via_image_index) {
+        if (i === _via_image_index) {
             // highlight the current entry
             fni += '<li style="cursor: default;">';
             fni += '<b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
@@ -2255,7 +2292,7 @@ function draw_all_region_id() {
         var bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 2;
         
         var r = _via_img_metadata[_via_image_id].regions[i].region_attributes;
-        if (r.size == 1) {
+        if (r.size === 1) {
             // if there is a single attribute, display the attribute instead of region-id
             for (var key of r.keys()) {
                 annotation_str = r.get(key);
@@ -2359,7 +2396,7 @@ function get_canvas_region_bounding_box(region_id) {
 //
 function is_inside_region(px, py, descending_order) {
     var N = _via_canvas_regions.length;
-    if (N == 0) {
+    if (N === 0) {
         return -1;
     }
     var start, end, del;
@@ -2376,7 +2413,7 @@ function is_inside_region(px, py, descending_order) {
     }
 
     var i = start;
-    while (i != end) {
+    while (i !== end) {
         var yes = is_inside_this_region(px, py, i);
         if (yes) {
             return i;
@@ -2482,7 +2519,7 @@ function is_inside_polygon(all_points_x, all_points_y, px, py) {
             }
         }
     }
-    if ( wn == 0 ) {
+    if ( wn === 0 ) {
         return 0;
     }
     else {
@@ -2687,77 +2724,77 @@ window.addEventListener("keydown", function(e) {
     
     // user commands
     if ( e.ctrlKey ) {
-        if ( e.which == 83 ) { // Ctrl + s
+        if ( e.which === 83 ) { // Ctrl + s
             download_all_region_data('csv');
             e.preventDefault();
             return;
         }
 
-        if ( e.which == 65 ) { // Ctrl + a
+        if ( e.which === 65 ) { // Ctrl + a
             sel_all_regions();
             e.preventDefault();
             return;
         }
 
-        if ( e.which == 67 ) { // Ctrl + c
+        if ( e.which === 67 ) { // Ctrl + c
             copy_sel_regions();
             e.preventDefault();
             return;
         }
 
-        if ( e.which == 86 ) { // Ctrl + v
+        if ( e.which === 86 ) { // Ctrl + v
             paste_sel_regions();
             e.preventDefault();
             return;
         }
     }
 
-    if( e.which == 46 || e.which == 8) { // Del or Backspace
+    if( e.which === 46 || e.which === 8) { // Del or Backspace
         del_sel_regions();
         e.preventDefault();
     }    
-    if (e.which == 78 || e.which == 39) { // n or right arrow
+    if (e.which === 78 || e.which === 39) { // n or right arrow
         move_to_next_image();
         e.preventDefault();
         return;
     }
-    if (e.which == 80 || e.which == 37) { // n or right arrow
+    if (e.which === 80 || e.which === 37) { // n or right arrow
         move_to_prev_image();
         e.preventDefault();
         return;
     }
-    if (e.which == 82 && _via_current_image_loaded) { // r
+    if (e.which === 82 && _via_current_image_loaded) { // r
         //toggle_reg_attr_panel();
         toggle_region_boundary_visibility();
         return;
     }
-    if (e.which == 73 && _via_current_image_loaded) { // f
+    if (e.which === 73 && _via_current_image_loaded) { // f
         //toggle_file_attr_panel();
         toggle_region_id_visibility();
         return;
     }
-    if (e.which == 32 && _via_current_image_loaded) { // Space
+    if (e.which === 32 && _via_current_image_loaded) { // Space
         toggle_img_list();
         return;
     }
 
     // zoom
     if (e.shiftKey && _via_current_image_loaded) {
-        if (e.which == 61) { // + for zoom in
+        if (e.which === 61) { // + for zoom in
             zoom_in();
             return;
         }
     }
-    if (e.which == 173 && _via_current_image_loaded) { // - for zoom out
+    if (e.which === 173 && _via_current_image_loaded) { // - for zoom out
         zoom_out();
         return;
     }
-    if (e.which == 61 && _via_current_image_loaded) { // = for zoom reset
+    if (e.which === 61 && _via_current_image_loaded) { // = for zoom reset
         reset_zoom_level();
         return;
     }
 
-    if ( e.which == 27 ) { // Esc
+    if ( e.which === 27 ) { // Esc
         if (_via_is_user_updating_attribute_value ||
             _via_is_user_updating_attribute_name ||
             _via_is_user_adding_attribute_name) {
@@ -2808,17 +2845,17 @@ window.addEventListener("keydown", function(e) {
         _via_redraw_reg_canvas();
         return;
     }
-    if (e.which == 112) { // F1 for help
+    if (e.which === 112) { // F1 for help
         show_getting_started_panel();
         e.preventDefault();
         return;
     }
-    if (e.which == 113) { // F2 for about
+    if (e.which === 113) { // F2 for about
         show_about_panel();
         e.preventDefault();
         return;
     }
-    if (e.which == 121) { // F10 for debugging
+    if (e.which === 121) { // F10 for debugging
         //toggle_debug_window();
         print_current_state_vars();
         print_current_image_data();
@@ -2861,7 +2898,7 @@ function del_sel_regions() {
     _via_is_region_selected = false;
     _via_user_sel_region_id = -1;
 
-    if (_via_canvas_regions.length == 0) {
+    if (_via_canvas_regions.length === 0) {
         // all regions were deleted, hence clear region canvas
         _via_clear_reg_canvas();
     } else {
@@ -2941,7 +2978,7 @@ function move_to_prev_image() {
         }
         
         var current_img_index = _via_image_index;
-        if ( _via_image_index == 0 ) {   
+        if ( _via_image_index === 0 ) {   
             show_image(_via_img_count - 1);
         } else {
             show_image(_via_image_index - 1);
@@ -2965,7 +3002,7 @@ function move_to_next_image() {
         }
         
         var current_img_index = _via_image_index;
-        if ( _via_image_index == (_via_img_count-1) ) {   
+        if ( _via_image_index === (_via_img_count-1) ) {   
             show_image(0);
         } else {
             show_image(_via_image_index + 1);
@@ -3007,7 +3044,7 @@ function zoom_in() {
         return;
     }
 
-    if (_via_canvas_zoom_level_index == (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
+    if (_via_canvas_zoom_level_index === (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
         show_message('Further zoom-in not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
     } else {
         _via_canvas_zoom_level_index += 1;
@@ -3033,7 +3070,7 @@ function zoom_out() {
         return;
     }
 
-    if (_via_canvas_zoom_level_index == 0) {
+    if (_via_canvas_zoom_level_index === 0) {
         show_message('Further zoom-out not possible', VIA_THEME_MESSAGE_TIMEOUT_MS);
     } else {
         _via_canvas_zoom_level_index -= 1;
@@ -3111,17 +3148,13 @@ function check_local_storage() {
     }
 }
 
-function responseListener() {
-    console.log(this.responseText);
-}
-
 function save_current_data_to_browser_cache() {
     setTimeout(function() {
         if ( _via_is_local_storage_available &&
              ! _via_is_save_ongoing) {
             try {
                 _via_is_save_ongoing = true;
-                var img_metadata = package_region_data('json');
+                var img_metadata = pack_via_metadata('json');
                 var timenow = new Date().toUTCString();
                 localStorage.setItem('_via_timestamp', timenow);
                 localStorage.setItem('_via_img_metadata', img_metadata);
@@ -3159,14 +3192,12 @@ function clear_localStorage() {
 
 function show_localStorage_recovery_options() {
     var hstr = [];
-    var date_of_saved_data = new Date( parseInt(localStorage.getItem('_via_timestamp')) );
+    var saved_date = new Date( parseInt(localStorage.getItem('_via_timestamp')) );
     
     hstr.push('<div style="padding: 1em; border: 1px solid #cccccc;">');
     hstr.push('<h3 style="border-bottom: 1px solid #5599FF">Data Recovery from Browser Cache</h3>');
-    hstr.push('<ul><li>Data saved on : ' + date_of_saved_data);
-    hstr.push('<br/><span class="action_text_link" onclick="download_localStorage_data(\'csv\')" title="Recover annotation data">[Save as CSV]</span>');
-    hstr.push(' | ');
-    hstr.push('<span class="action_text_link" onclick="download_localStorage_data(\'json\')" title="Recover annotation data">[Save as JSON]</span>');
+    hstr.push('<ul><li>Data saved on : ' + saved_date);
+    hstr.push('<br/><span class="action_text_link" onclick="download_localStorage_data(\'json\')" title="Recover annotation data">[Save as JSON]</span>');
     hstr.push(' | ');
     hstr.push('<span class="action_text_link" onclick="clear_localStorage()" title="Discard annotation data">[Discard Data]</span>');
     hstr.push('</li></ul>');
@@ -3176,63 +3207,12 @@ function show_localStorage_recovery_options() {
 }
 
 function download_localStorage_data(type) {
-    switch(type) {
-    case 'csv':
-        var d = JSON.parse( localStorage.getItem('_via_img_metadata') );
+    var saved_date = new Date( parseInt(localStorage.getItem('_via_timestamp')) );
 
-        var csvdata = [];
-        var csvheader = "#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes";
-        csvdata.push(csvheader);
+    var localStorage_data_blob = new Blob( [localStorage.getItem('_via_img_metadata')],
+                                           {type: 'text/json;charset=utf-8'});
 
-        for (var image_id in d) {
-            // copy file attributes
-            var file_attr_map = new Map();
-            for (var key in d[image_id].file_attributes) {
-                file_attr_map.set(key, d[image_id].file_attributes[key]);
-            }
-
-            var prefix_str = d[image_id].filename;
-            prefix_str += "," + d[image_id].size;
-            prefix_str += "," + attr_map_to_str( file_attr_map );
-
-            // copy regions
-            var regions = d[image_id].regions;
-            var region_count = 0;
-            for (var i in regions) {
-                region_count += 1;
-            }
-            
-            for (var i in regions) {
-                var region_shape_attr_str = region_count + ',' + i + ',';
-                
-                var regioni = new ImageRegion();
-                for (var key in regions[i].shape_attributes) {
-                    regioni.shape_attributes.set(key, regions[i].shape_attributes[key]);
-                }
-                for (var key in regions[i].region_attributes) {
-                    regioni.region_attributes.set(key, regions[i].region_attributes[key]);
-                }
-                region_shape_attr_str += attr_map_to_str( regioni.shape_attributes );
-                var region_attr_str = attr_map_to_str( regioni.region_attributes );
-                console.log('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
-                csvdata.push('\n' + prefix_str + ',' + region_shape_attr_str + ',' + region_attr_str);
-            }
-        }
-
-        var localStorage_data_blob = new Blob( csvdata,
-                                               {type: 'text/csv;charset=utf-8'});
-
-        save_data_to_local_file(localStorage_data_blob, 'via_region_data.csv');
-
-        break;
-    case 'json':
-        var localStorage_data_blob = new Blob( [localStorage.getItem('_via_img_metadata')],
-                                               {type: 'text/json;charset=utf-8'});
-
-        save_data_to_local_file(localStorage_data_blob, 'via_region_data.json');
-        break;
-    }
-    
+    save_data_to_local_file(localStorage_data_blob, 'VIA_' + saved_data + '.json');
 }
 
 //
@@ -3301,7 +3281,7 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
     var remaining_reg_list = [];
     var all_reg_list = [];
     var region_travesal_order = [];
-    if (type == 'region_attributes') {
+    if (type === 'region_attributes') {
         // count number of selected regions
         for (var i=0; i<data.length; ++i) {
             all_reg_list.push(i);
@@ -3349,6 +3329,10 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
 
             if ( di.has(key) ) {
                 var ip_val = di.get(key);
+		// escape all single and double quotes
+		ip_val = ip_val.replace(/'/g, '\'');
+		ip_val = ip_val.replace(/"/g, '&quot;');
+			
                 if (ip_val.length > 30) {
                     row.insertCell(-1).innerHTML = '<textarea ' +
                         ' rows="' + (Math.floor(ip_val.length/30)-1) + '"' +
@@ -3362,7 +3346,8 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
                 } else {
                     row.insertCell(-1).innerHTML = '<input type="text"' +
                         ' id="' +   input_id + '"' +
-                        ' value="' + ip_val + '"' +
+			' value="' + ip_val + '"' +
+//			' value="my \'name\' is &quot;adutta&quot; which is."' +
                         ' autocomplete="on"' +
                         ' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
                         ' onblur="attr_input_blur(' + rowi + ')"' + 
@@ -3383,7 +3368,7 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
     document.getElementById('attributes_panel').focus();
 
     // move vertical scrollbar automatically to show the selected region (if any)
-    if (sel_rows.length == 1) {
+    if (sel_rows.length === 1) {
         var panelHeight = bottom_panel.offsetHeight;
         var sel_row_bottom = sel_rows[0].offsetTop + sel_rows[0].clientHeight
         if (sel_row_bottom > panelHeight) {
@@ -3490,10 +3475,6 @@ function update_attribute_value(attr_id, value) {
     var attribute_name = attr_id_split[1];
     var region_id = attr_id_split[2];
 
-    // replace all double-quotation with a single quotation
-    value = value.replace(/'/g, VIA_EXPORT_DOUBLE_QUOTE_REPLACEMENT);
-    value = value.replace(/"/g, VIA_EXPORT_DOUBLE_QUOTE_REPLACEMENT);
-    
     switch(type) {
     case 'r':
         var region = _via_img_metadata[_via_image_id].regions[region_id];
@@ -3508,9 +3489,7 @@ function update_attribute_value(attr_id, value) {
     if (_via_is_reg_attr_panel_visible) {
 	set_region_select_state(region_id, false);
     }   
-    if (_via_is_region_id_visible) {
-        draw_all_region_id();
-    }
+    _via_redraw_reg_canvas();
     _via_is_user_updating_attribute_value = false;
 }
 
@@ -3583,7 +3562,7 @@ function print_current_image_data() {
             logstr.push(img_region_str + ']');
         }
 
-        if ( _via_image_id == image_id ) {
+        if ( _via_image_id === image_id ) {
             for ( var i=0; i<_via_canvas_regions.length; ++i) {
                 var canvas_region_str = '\n\t_via_canvas_regions = [';
                 for ( var key of _via_canvas_regions[i].shape_attributes.keys() ) {
