@@ -3220,9 +3220,8 @@ function show_localStorage_recovery_options() {
     hstr.push('<ul><li>Saved on : ' + saved_date + '</li>');
     hstr.push('<li>Size : ' + Math.round(saved_data_size) + ' KB</li>');
     hstr.push('</ul>');
-    hstr.push('<br/><a title="Save as JSON" style="cursor: pointer; color: blue;" onclick="download_localStorage_data(\'json\')" title="Recover annotation data">Save</a>');
+    hstr.push('<a title="Save as JSON" style="cursor: pointer; color: blue;" onclick="download_localStorage_data(\'json\')" title="Recover annotation data">Save</a>');
     hstr.push('<a style="padding-left:2em; cursor: pointer; color: blue;" onclick="clear_localStorage()" title="Discard annotation data">Discard</a>');
-    hstr.push('</li></ul>');
 
     hstr.push('<p style="clear: left;"><b>If you continue, the cached data will be discarded!</b></p></div>');
     via_start_info_panel.innerHTML += hstr.join('');
