@@ -28,6 +28,11 @@ which aspects were confusing or difficult to understand?
 the source code?
    * Do you have any advice on how the source code can be further improved?
 
+
+Quality Assessment Reports :
+ * See [this issue](https://gitlab.com/vgg/via/issues/54) for QA of VIA 1.0 by [Ernesto Coto Rios](ernesto.cotorios@eng.ox.ac.uk)
+
+ 
 Unit Tests
 ----------
 VIA [unit tests](https://gitlab.com/vgg/via/tree/develop/tests) are designed to 
