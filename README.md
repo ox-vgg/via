@@ -22,9 +22,34 @@ Visit the [VGG software page](http://www.robots.ox.ac.uk/~vgg/software/via/) for
  * [https://gitlab.com/vgg/via/](https://gitlab.com/vgg/via/) : source code repository
 
 ## Docs
+ * [VIA Software page @ VGG](http://www.robots.ox.ac.uk/~vgg/software/via/)
  * [VIA Wikipedia page](https://en.wikipedia.org/wiki/VGG_Image_Annotator)
- * [VIA Source code documentation](https://gitlab.com/vgg/via/blob/develop/docs/code_doc/via_code_doc.html) (ongoing work)
+ * Getting Started : this can be accessed by pressing F1 key in the VIA application.
 
-## Help:
-Software bug reports and feature requests should be [submitted here](https://gitlab.com/vgg/via/issues/new).
+## Developer Resources
+For development, [via.js](https://gitlab.com/vgg/via/blob/develop/via.js) 
+contains the Javascript source code and 
+[index.html](https://gitlab.com/vgg/via/blob/develop/index.html) contains the 
+HTML and CSS. The shell script [pack_via.sh](https://gitlab.com/vgg/via/blob/develop/pack_via.sh) 
+packs the VIA application into a single and standalone application file 
+[via.html](https://gitlab.com/vgg/via/blob/develop/via.html) containing the 
+Javascript, HTML and CSS.
+
+ * [Source code](https://gitlab.com/vgg/via/blob/develop/via.js)
+ * [Source code documentation](https://gitlab.com/vgg/via/blob/develop/CodeDoc.md)
+
+The [Quality Assessment](https://gitlab.com/vgg/via/blob/develop/QualityAssessment.md) 
+page describes the guidelines to ensure the quality of VIA application, source 
+code and its documentation.
+
+Software bug reports and feature requests should be 
+[submitted here](https://gitlab.com/vgg/via/issues/new) (requires gitlab account).
 For all other queries, please contact [Abhishek Dutta](mailto:adutta@robots.ox.ac.uk).
+
+## License
+VIA is an open source project released under the 
+[BSD-2 clause license](https://gitlab.com/vgg/via/blob/master/LICENSE).
+
+## Author
+[Abhishek Dutta](mailto:adutta@robots.ox.ac.uk)  
+Aug. 31, 2016
