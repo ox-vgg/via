@@ -1,7 +1,7 @@
 /*
   VGG Image Annotator (via)
   www.robots.ox.ac.uk/~vgg/software/via/
-  
+
   Copyright (c) 2016, Abhishek Dutta.
   All rights reserved.
 
@@ -75,7 +75,7 @@ var _via_canvas_scale = 1.0;  // current scale of canvas image
 
 var _via_image_id_list = [];  // array of image id (in original order)
 var _via_image_id = '';       // id={filename+length} of current image
-var _via_image_index = -1;    // index 
+var _via_image_index = -1;    // index
 
 var _via_current_image_filename;
 var _via_current_image;
@@ -149,13 +149,12 @@ var _via_loaded_img_table_html = [];
 
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
-
 var image_panel = document.getElementById("image_panel");
 var ui_top_panel = document.getElementById("ui_top_panel");
 var canvas_panel = document.getElementById("canvas_panel");
 
 var annotation_list_snippet = document.getElementById("annotation_list_snippet");
-var annotation_textarea = document.getElementById("annotation_textarea");    
+var annotation_textarea = document.getElementById("annotation_textarea");
 
 var loaded_img_list_panel = document.getElementById('loaded_img_list_panel');
 var bottom_panel = document.getElementById('bottom_panel');
@@ -184,7 +183,8 @@ function ImageRegion() {
 
 function _via_init() {
     console.log(VIA_NAME);
-    show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION + '. Ready !', 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
+    show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION +
+                 '. Ready !', 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     show_home_panel();
 
@@ -199,7 +199,7 @@ function _via_init() {
     if (typeof _via_load_submodules === 'function') {
 	setTimeout(function() {
 	    _via_load_submodules();
-	}, 100);        
+	}, 100);
     }
 
     // run attached unit tests (if any)
@@ -417,7 +417,7 @@ function import_annotations_from_csv(data) {
     var region_import_count = 0;
     var image_count = 0;
     var malformed_csv_lines_count = 0;
-    
+
     var csvdata = data.split('\n');
     var csv_column_count = 0;
     for (var i=0; i<csvdata.length; ++i) {
@@ -472,7 +472,7 @@ function import_annotations_from_csv(data) {
 		    var fattr = d[file_attr_index];
 		    fattr = remove_prefix_suffix_quotes( fattr );
 		    fattr = unescape_from_csv( fattr );
-		    
+
                     var m = json_str_to_map( fattr );
                     for( var key of m.keys() ) {
                         var val = m.get(key);
@@ -481,7 +481,7 @@ function import_annotations_from_csv(data) {
                         if (!_via_file_attributes.has(key)) {
                             _via_file_attributes.add(key);
                         }
-                    }	    
+                    }
                 }
 
                 var regioni = new ImageRegion();
@@ -490,7 +490,7 @@ function import_annotations_from_csv(data) {
 		    var sattr = d[region_shape_attr_index];
 		    sattr = remove_prefix_suffix_quotes( sattr );
 		    sattr = unescape_from_csv( sattr );
-		    
+
                     var m = json_str_to_map( sattr );
                     for ( var key of m.keys() ) {
                         var val = m.get(key);
@@ -503,7 +503,7 @@ function import_annotations_from_csv(data) {
 		    var rattr = d[region_attr_index];
 		    rattr = remove_prefix_suffix_quotes( rattr );
 		    rattr = unescape_from_csv( rattr );
-		    
+
                     var m = json_str_to_map( rattr );
 
                     for ( var key of m.keys() ) {
@@ -516,7 +516,7 @@ function import_annotations_from_csv(data) {
                     }
                 }
 
-                // add regions only if they are present         
+                // add regions only if they are present
                 if (regioni.shape_attributes.size > 0 ||
                     regioni.region_attributes.size > 0 ) {
                     _via_img_metadata[image_id].regions.push(regioni);
@@ -594,7 +594,7 @@ function parse_csv_line(s, field_separator) {
 	s.length === 0 ) {
 	return [];
     }
-    
+
     if (typeof(field_separator) === 'undefined') {
 	field_separator = ',';
     }
@@ -634,7 +634,7 @@ function parse_csv_line(s, field_separator) {
 		i = i + 1
 	    }
 	}
-	
+
     }
     // extract the last field (csv rows have no trailing comma)
     d.push( s.substr(start) );
@@ -647,7 +647,7 @@ function json_str_to_map(s) {
 	s.length === 0 ) {
 	return new Map();
     }
-    
+
     var d = JSON.parse(s);
     var m = new Map();
     for ( var key in d ) {
@@ -684,7 +684,7 @@ function remove_prefix_suffix_quotes(s) {
 	return s.substr(1, s.length-2);
     } else {
 	return s;
-    }    
+    }
 }
 
 function clone_image_region(r0) {
@@ -748,7 +748,7 @@ function pack_via_metadata(return_type) {
 	    fattr = escape_for_csv( fattr );
 
             var prefix = '\n' + _via_img_metadata[image_id].filename;
-            prefix += ',' + _via_img_metadata[image_id].size;    
+            prefix += ',' + _via_img_metadata[image_id].size;
             prefix += ',"' + fattr + '"';
 
             var r = _via_img_metadata[image_id].regions;
@@ -759,11 +759,11 @@ function pack_via_metadata(return_type) {
 		    csvline.push(prefix);
 		    csvline.push(r.length);
 		    csvline.push(i);
-		    
+
 		    var sattr = map_to_json( r[i].shape_attributes );
 		    sattr = '"' +  escape_for_csv( sattr ) + '"';
 		    csvline.push(sattr);
-		    
+
 		    var rattr = map_to_json( r[i].region_attributes );
 		    rattr = '"' +  escape_for_csv( rattr ) + '"';
 		    csvline.push(rattr);
@@ -790,7 +790,7 @@ function pack_via_metadata(return_type) {
             //image_data.base64_img_data = _via_img_metadata[image_id].base64_img_data;
 
             // copy file attributes
-            image_data.file_attributes = {};    
+            image_data.file_attributes = {};
             for ( var key of _via_img_metadata[image_id].file_attributes.keys() ) {
                 var value = _via_img_metadata[image_id].file_attributes.get(key);
                 image_data.file_attributes[key] = value;
@@ -812,11 +812,12 @@ function pack_via_metadata(return_type) {
                     var value = _via_img_metadata[image_id].regions[i].region_attributes.get(key);
                     image_data.regions[i].region_attributes[key] = value;
                 }
-            }           
+            }
+            console.log(image_data);
             _via_img_metadata_as_obj[image_id] = image_data;
         }
         return [JSON.stringify(_via_img_metadata_as_obj)];
-    }    
+    }
 }
 
 function save_data_to_local_file(data, filename) {
@@ -844,130 +845,132 @@ function show_image(image_index) {
     }
 
     var img_id = _via_image_id_list[image_index]
-    if (_via_img_metadata.hasOwnProperty(img_id)) {
-        var img_filename = _via_img_metadata[img_id].filename;
-        var img_reader = new FileReader();
-        _via_is_loading_current_image = true;
+    if ( !_via_img_metadata.hasOwnProperty(img_id)) {
+        return;
+    }
 
-        img_reader.addEventListener( "loadstart", function(e) {
-            document.getElementById("fileinfo").innerHTML = '<strong>Loading image ...</strong>';
-        }, false);
+    var img_filename = _via_img_metadata[img_id].filename;
+    var img_reader = new FileReader();
+    var fileinfo = document.getElementById('fileinfo');
+    _via_is_loading_current_image = true;
 
-        img_reader.addEventListener( "progress", function(e) {
-        }, false);
+    img_reader.addEventListener( "loadstart", function(e) {
+        fileinfo.innerHTML = '<strong>Loading image ...</strong>';
+    }, false);
 
-        img_reader.addEventListener( "error", function() {
+    img_reader.addEventListener( "progress", function(e) {
+    }, false);
+
+    img_reader.addEventListener( "error", function() {
+        _via_is_loading_current_image = false;
+        fileinfo.innerHTML = '<strong>Error loading image !</strong>';
+        show_message("Error loading image " + img_filename + " !");
+    }, false);
+
+    img_reader.addEventListener( "abort", function() {
+        _via_is_loading_current_image = false;
+        fileinfo.innerHTML = '<strong>Image loading aborted !</strong>';
+        show_message("Aborted loading image " + img_filename + " !");
+    }, false);
+
+    img_reader.addEventListener( "load", function() {
+        _via_current_image = new Image();
+
+        _via_current_image.addEventListener( "error", function() {
             _via_is_loading_current_image = false;
-            document.getElementById("fileinfo").innerHTML = '<strong>Error loading image !</strong>';
+            fileinfo.innerHTML = '<strong>Error loading image !</strong>';
             show_message("Error loading image " + img_filename + " !");
         }, false);
 
-        img_reader.addEventListener( "abort", function() {
+        _via_current_image.addEventListener( "abort", function() {
             _via_is_loading_current_image = false;
-            document.getElementById("fileinfo").innerHTML = '<strong>Image loading aborted !</strong>';
+            fileinfo.innerHTML = '<strong>Image loading aborted !</strong>';
             show_message("Aborted loading image " + img_filename + " !");
         }, false);
 
-        img_reader.addEventListener( "load", function() {
-            _via_current_image = new Image();
+        _via_current_image.addEventListener( "load", function() {
+            // update the current state of application
+            _via_image_id = img_id;
+            _via_image_index = image_index;
+            _via_current_image_filename = img_filename;
+            _via_current_image_loaded = true;
+            _via_is_loading_current_image = false;
+            _via_click_x0 = 0; _via_click_y0 = 0;
+            _via_click_x1 = 0; _via_click_y1 = 0;
+            _via_is_user_drawing_region = false;
+            _via_is_window_resized = false;
+            _via_is_user_resizing_region = false;
+            _via_is_user_moving_region = false;
+            _via_is_user_drawing_polygon = false;
+            _via_is_region_selected = false;
+            _via_user_sel_region_id = -1;
 
-            _via_current_image.addEventListener( "error", function() {
-                _via_is_loading_current_image = false;
-                document.getElementById("fileinfo").innerHTML = '<strong>Error loading image !</strong>';
-                show_message("Error loading image " + img_filename + " !");
-            }, false);
+            // set the size of canvas
+            // based on the current dimension of browser window
+            var de = document.documentElement;
+            canvas_panel_width = de.clientWidth - 230;
+            canvas_panel_height = de.clientHeight - 2*ui_top_panel.offsetHeight;
+            _via_canvas_width = _via_current_image.naturalWidth;
+            _via_canvas_height = _via_current_image.naturalHeight;
+            var scale_width, scale_height;
+            if ( _via_canvas_width > canvas_panel_width ) {
+                // resize image to match the panel width
+                var scale_width = canvas_panel_width / _via_current_image.naturalWidth;
+                _via_canvas_width = canvas_panel_width;
+                _via_canvas_height = _via_current_image.naturalHeight * scale_width;
+            }
+            if ( _via_canvas_height > canvas_panel_height ) {
+                // resize further image if its height is larger than the image panel
+                var scale_height = canvas_panel_height / _via_canvas_height;
+                _via_canvas_height = canvas_panel_height;
+                _via_canvas_width = _via_canvas_width * scale_height;
+            }
+            _via_canvas_width = Math.round(_via_canvas_width);
+            _via_canvas_height = Math.round(_via_canvas_height);
+            _via_canvas_scale = _via_current_image.naturalWidth / _via_canvas_width;
+            _via_canvas_scale_without_zoom = _via_canvas_scale;
+            set_all_canvas_size(_via_canvas_width, _via_canvas_height);
+            //set_all_canvas_scale(_via_canvas_scale_without_zoom);
 
-            _via_current_image.addEventListener( "abort", function() {
-                _via_is_loading_current_image = false;
-                document.getElementById("fileinfo").innerHTML = '<strong>Image loading aborted !</strong>';
-                show_message("Aborted loading image " + img_filename + " !");
-            }, false);
+            // ensure that all the canvas are visible
+            clear_image_display_area();
+            show_all_canvas();
 
-            _via_current_image.addEventListener( "load", function() {
-                // update the current state of application
-                _via_image_id = img_id;
-                _via_image_index = image_index;
-                _via_current_image_filename = img_filename;
-                _via_current_image_loaded = true;
-                _via_is_loading_current_image = false;                
-                _via_click_x0 = 0; _via_click_y0 = 0;
-                _via_click_x1 = 0; _via_click_y1 = 0;
-                _via_is_user_drawing_region = false;
-                _via_is_window_resized = false;
-                _via_is_user_resizing_region = false;
-                _via_is_user_moving_region = false;
-                _via_is_user_drawing_polygon = false;
-                _via_is_region_selected = false;
-                _via_user_sel_region_id = -1;
+            // we only need to draw the image once in the image_canvas
+            _via_img_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
+            _via_img_ctx.drawImage(_via_current_image, 0, 0,
+                                   _via_canvas_width, _via_canvas_height);
 
-                // set the size of canvas
-                // based on the current dimension of browser window
-                canvas_panel_width = document.documentElement.clientWidth - 230;
-                canvas_panel_height = document.documentElement.clientHeight - 2*ui_top_panel.offsetHeight;               
-                _via_canvas_width = _via_current_image.naturalWidth;
-                _via_canvas_height = _via_current_image.naturalHeight;
-                var scale_width, scale_height;
-                if ( _via_canvas_width > canvas_panel_width ) {
-                    // resize image to match the panel width
-                    var scale_width = canvas_panel_width / _via_current_image.naturalWidth;
-                    _via_canvas_width = canvas_panel_width;
-                    _via_canvas_height = _via_current_image.naturalHeight * scale_width;
-                }
-                if ( _via_canvas_height > canvas_panel_height ) {
-                    // resize further image if its height is larger than the image panel
-                    var scale_height = canvas_panel_height / _via_canvas_height;
-                    _via_canvas_height = canvas_panel_height;
-                    _via_canvas_width = _via_canvas_width * scale_height;
-                }
-                _via_canvas_width = Math.round(_via_canvas_width);
-                _via_canvas_height = Math.round(_via_canvas_height);
-                _via_canvas_scale = _via_current_image.naturalWidth / _via_canvas_width;
-                _via_canvas_scale_without_zoom = _via_canvas_scale;
-                set_all_canvas_size(_via_canvas_width, _via_canvas_height);
-                //set_all_canvas_scale(_via_canvas_scale_without_zoom);
+            // update the UI components to reflect newly loaded image
+            // refresh the image list
+            // @todo: let the height of image list match that of window
+            _via_reload_img_table = true;
+            var img_list_height = document.documentElement.clientHeight/2 + 'px';
+            img_list_panel.setAttribute('style', 'height: ' + img_list_height);
+            if (_via_is_loaded_img_list_visible) {
+                show_img_list();
+            }
 
-                // ensure that all the canvas are visible
-                clear_image_display_area();
-                show_all_canvas();
+            // refresh the attributes panel
+            update_attributes_panel();
 
-                // we only need to draw the image once in the image_canvas
-                _via_img_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
-                _via_img_ctx.drawImage(_via_current_image, 0, 0,
-                                       _via_canvas_width, _via_canvas_height);
+            _via_load_canvas_regions(); // image to canvas space transform
+            _via_redraw_reg_canvas();
+            _via_reg_canvas.focus();
 
-                // update the UI components to reflect newly loaded image
-                // refresh the image list
-                // @todo: let the height of image list match that of window
-                _via_reload_img_table = true;
-                var img_list_height = document.documentElement.clientHeight/2 + 'px';
-                img_list_panel.setAttribute('style', 'height: ' + img_list_height);
-                if (_via_is_loaded_img_list_visible) {
-                    show_img_list();
-                }
+            // update the info panel
+            show_filename_info();
 
-                // refresh the attributes panel
-                update_attributes_panel();
+        });
+        _via_current_image.src = img_reader.result;
+    }, false);
 
-                _via_load_canvas_regions(); // image to canvas space transform
-                _via_redraw_reg_canvas();
-                _via_reg_canvas.focus();
-
-                // update the info panel
-                show_filename_info();
-
-                // for DEBUG, remove
-                //toggle_reg_attr_panel();
-            });
-            _via_current_image.src = img_reader.result;
-        }, false);
-
-        if (_via_img_metadata[img_id].base64_img_data === '') {
-            // load image from file
-            img_reader.readAsDataURL( _via_img_metadata[img_id].fileref );
-        } else {
-            // load image from bae64 data
-            img_reader.readAsText( new Blob([_via_img_metadata[img_id].base64_img_data]) );
-        }
+    if (_via_img_metadata[img_id].base64_img_data === '') {
+        // load image from file
+        img_reader.readAsDataURL( _via_img_metadata[img_id].fileref );
+    } else {
+        // load image from base64 data or URL
+        img_reader.readAsText( new Blob([_via_img_metadata[img_id].base64_img_data]) );
     }
 }
 
@@ -1053,7 +1056,7 @@ function select_region_shape(sel_shape_name) {
 	show_message('Press single click and drag mouse to draw '
                      + _via_current_shape + ' region');
 	break;
-	
+
     case VIA_REGION_SHAPE.POLYGON:
         _via_is_user_drawing_polygon = false;
         _via_current_polygon_region_id = -1;
@@ -1061,7 +1064,7 @@ function select_region_shape(sel_shape_name) {
 	show_message('Press single click to define polygon vertices and ' +
 		     'click first vertex to close path');
 	break;
-	
+
     case VIA_REGION_SHAPE.POINT:
 	show_message('Press single click to define points (or landmarks)');
 	break;
@@ -1080,7 +1083,7 @@ function set_all_canvas_size(w, h) {
     _via_reg_canvas.width = w;
 
     canvas_panel.style.height = h + 'px';
-    canvas_panel.style.width = w + 'px';    
+    canvas_panel.style.width = w + 'px';
 }
 
 function set_all_canvas_scale(s) {
@@ -1131,7 +1134,7 @@ _via_reg_canvas.addEventListener('mousedown', function(e) {
                                             _via_click_y0,
                                             _via_user_sel_region_id);
             if (yes) {
-                if( !_via_is_user_moving_region ) {     
+                if( !_via_is_user_moving_region ) {
                     _via_is_user_moving_region = true;
                     _via_region_click_x = _via_click_x0;
                     _via_region_click_y = _via_click_y0;
@@ -1209,7 +1212,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                 var canvas_xnew = canvas_attr.get('cx') + move_x;
                 var canvas_ynew = canvas_attr.get('cy') + move_y;
                 canvas_attr.set('cx', canvas_xnew);
-                canvas_attr.set('cy', canvas_ynew);     
+                canvas_attr.set('cy', canvas_ynew);
                 break;
             case VIA_REGION_SHAPE.POLYGON:
                 var img_px = image_attr.get('all_points_x');
@@ -1234,13 +1237,13 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 
             // traverse the canvas regions in alternating ascending
             // and descending order to solve the issue of nested regions
-            var nested_region_id = is_inside_region(_via_click_x0, _via_click_y0, true);            
+            var nested_region_id = is_inside_region(_via_click_x0, _via_click_y0, true);
             if (nested_region_id >= 0 &&
                 nested_region_id !== _via_user_sel_region_id) {
                 _via_user_sel_region_id = nested_region_id;
                 _via_is_region_selected = true;
                 _via_is_user_moving_region = false;
-                
+
                 // de-select all other regions if the user has not pressed Shift
                 if ( !e.shiftKey ) {
                     toggle_all_regions_selection(false);
@@ -1260,12 +1263,12 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         // _via_click(x0,y0) to _via_click(x1,y1)
         _via_is_user_resizing_region = false;
         _via_reg_canvas.style.cursor = "default";
-        
+
         // update the region
         var region_id = _via_region_edge[0];
         var image_attr = _via_img_metadata[_via_image_id].regions[region_id].shape_attributes;
         var canvas_attr = _via_canvas_regions[region_id].shape_attributes;
-        
+
         switch (canvas_attr.get('name')) {
         case VIA_REGION_SHAPE.RECT:
             var x0 = canvas_attr.get('x');
@@ -1302,7 +1305,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
             canvas_attr.set('y', y0);
             canvas_attr.set('width', w);
             canvas_attr.set('height', h);
-            
+
             break;
 
         case VIA_REGION_SHAPE.CIRCLE:
@@ -1331,7 +1334,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                 new_ry = dy;
                 break;
             }
-            
+
             canvas_attr.set('rx', Math.round(new_rx));
             canvas_attr.set('ry', Math.round(new_ry));
             image_attr.set('rx', Math.round(new_rx * _via_canvas_scale));
@@ -1371,7 +1374,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         if ( _via_is_user_drawing_polygon ) {
             var canvas_x0 = Math.round(_via_click_x0);
             var canvas_y0 = Math.round(_via_click_y0);
-            
+
             // check if the clicked point is close to the first point
             var fx0 = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes.get('all_points_x')[0];
             var fy0 = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes.get('all_points_y')[0];
@@ -1391,17 +1394,17 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                 all_points_x.push(all_points_x[0]);
                 all_points_y.push(all_points_y[0]);
                 canvas_all_points_x.push(canvas_all_points_x[0]);
-                canvas_all_points_y.push(canvas_all_points_y[0]);               
-                
+                canvas_all_points_y.push(canvas_all_points_y[0]);
+
                 var points_str = '';
                 for ( var i=0; i<all_points_x.length; ++i) {
                     all_points_x[i] = Math.round( all_points_x[i] * _via_canvas_scale );
                     all_points_y[i] = Math.round( all_points_y[i] * _via_canvas_scale );
-                    
+
                     points_str += all_points_x[i] + ' ' + all_points_y[i] + ',';
                 }
                 points_str = points_str.substring(0, points_str.length-1); // remove last comma
-                
+
                 var polygon_region = new ImageRegion();
                 polygon_region.shape_attributes.set('name', 'polygon');
                 //polygon_region.shape_attributes.set('points', points_str);
@@ -1429,7 +1432,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                 _via_is_region_selected = true;
                 _via_is_user_moving_region = false;
                 _via_is_user_drawing_region = false;
-                
+
                 // de-select all other regions if the user has not pressed Shift
                 if ( !e.shiftKey ) {
                     toggle_all_regions_selection(false);
@@ -1444,7 +1447,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                     _via_is_region_selected = false;
                     _via_use_sel_region_id = -1;
                     toggle_all_regions_selection(false);
-                    
+
                     update_attributes_panel();
                 } else {
                     switch (_via_current_shape) {
@@ -1478,7 +1481,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 
                         break;
                     }
-                }                
+                }
             }
         }
         _via_redraw_reg_canvas();
@@ -1488,9 +1491,9 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 
     // indicates that user has finished drawing a new region
     if (_via_is_user_drawing_region) {
-        
+
         _via_is_user_drawing_region = false;
-        
+
         var region_x0, region_y0, region_x1, region_y1;
         // ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
         if ( _via_click_x0 < _via_click_x1 ) {
@@ -1520,7 +1523,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         canvas_img_region.is_user_selected = true;
         _via_is_region_selected = true;
         _via_user_sel_region_id = _via_canvas_regions.length; // new region's id
-        
+
         if ( region_dx > VIA_REGION_MIN_DIM ||
              region_dy > VIA_REGION_MIN_DIM ) { // avoid regions with 0 dim
                 switch(_via_current_shape) {
@@ -1619,14 +1622,14 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
     if ( !_via_current_image_loaded ) {
         return;
     }
-    
+
     _via_current_x = e.offsetX; _via_current_y = e.offsetY;
 
     if ( _via_is_region_selected ) {
         if ( !_via_is_user_resizing_region ) {
             // check if user moved mouse cursor to region boundary
             // which indicates an intention to resize the reigon
-            
+
             _via_region_edge = is_on_region_corner(_via_current_x, _via_current_y);
 
             if ( _via_region_edge[0] === _via_user_sel_region_id ) {
@@ -1640,7 +1643,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
                 case 4: // bottom-left corner of rect
                     _via_reg_canvas.style.cursor = "nesw-resize";
                     break;
-                    
+
                     // circle and ellipse
                 case 5:
                     _via_reg_canvas.style.cursor = "n-resize";
@@ -1669,7 +1672,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
             }
         }
     }
-    
+
     if(_via_is_user_drawing_region) {
         // draw region as the user drags the mouse cousor
         if (_via_canvas_regions.length) {
@@ -1722,7 +1725,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
         }
         _via_reg_canvas.focus();
     }
-    
+
     if ( _via_is_user_resizing_region ) {
         // user has clicked mouse on bounding box edge and is now moving it
         _via_redraw_reg_canvas(); // clear old intermediate rectangle
@@ -1797,7 +1800,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 
         case VIA_REGION_SHAPE.POLYGON:
             var moved_all_points_x = attr.get('all_points_x').slice(0);
-            var moved_all_points_y = attr.get('all_points_y').slice(0);     
+            var moved_all_points_y = attr.get('all_points_y').slice(0);
             var moved_vertex_id = _via_region_edge[1] - POLYGON_RESIZE_VERTEX_OFFSET;
 
             moved_all_points_x[moved_vertex_id] = _via_current_x;
@@ -1820,7 +1823,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 
     if ( _via_is_user_moving_region ) {
         _via_redraw_reg_canvas();
-        
+
         var move_x = (_via_current_x - _via_region_click_x);
         var move_y = (_via_current_y - _via_region_click_y);
         var attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
@@ -1868,7 +1871,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
             break;
 
         }
-        _via_reg_canvas.focus();    
+        _via_reg_canvas.focus();
     }
 
     if ( _via_is_user_drawing_polygon ) {
@@ -1887,10 +1890,10 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 function toggle_img_list(panel) {
     if (typeof panel === 'undefined') {
         // invoked from accordion in the top navigation toolbar
-        panel = document.getElementById('image_list_panel_button');     
+        panel = document.getElementById('image_list_panel_button');
     }
     panel.classList.toggle('active');
-    
+
     if (_via_is_loaded_img_list_visible) {
         img_list_panel.style.display = 'none';
         _via_is_loaded_img_list_visible = false;
@@ -1921,13 +1924,13 @@ function show_img_list() {
 function reload_img_table() {
     _via_loaded_img_fn_list = [];
     _via_loaded_img_region_attr_miss_count = [];
-    
+
     for (var i=0; i<_via_img_count; ++i) {
         img_id = _via_image_id_list[i];
         _via_loaded_img_fn_list[i] = _via_img_metadata[img_id].filename;
         _via_loaded_img_region_attr_miss_count[i] = count_missing_region_attr(img_id);
     }
-    
+
     _via_loaded_img_table_html = [];
     _via_loaded_img_table_html.push('<ul>');
     for (var i=0; i<_via_img_count; ++i) {
@@ -1945,7 +1948,7 @@ function reload_img_table() {
             fni += ' (' + '<span style="color: red;">';
             fni += _via_loaded_img_region_attr_miss_count[i] + '</span>' + ')'
         }
-        
+
         fni += '</li>';
         _via_loaded_img_table_html.push(fni);
     }
@@ -2005,7 +2008,7 @@ function draw_all_regions() {
     for (var i=0; i < _via_canvas_regions.length; ++i) {
         var attr = _via_canvas_regions[i].shape_attributes;
         var is_selected = _via_canvas_regions[i].is_user_selected;
-        
+
         switch( attr.get('name') ) {
         case VIA_REGION_SHAPE.RECT:
             _via_draw_rect_region(attr.get('x'),
@@ -2036,7 +2039,7 @@ function draw_all_regions() {
             _via_draw_point_region(attr.get('cx'),
                                    attr.get('cy'),
                                    is_selected);
-            break;    
+            break;
         }
     }
 }
@@ -2044,7 +2047,7 @@ function draw_all_regions() {
 function _via_draw_rect_region(x, y, w, h, is_selected) {
     if (is_selected) {
         _via_draw_rect(x, y, w, h);
-        
+
         _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
         _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_reg_ctx.stroke();
@@ -2092,7 +2095,7 @@ function _via_draw_rect(x, y, w, h) {
 function _via_draw_circle_region(cx, cy, r, is_selected) {
     if (is_selected) {
         _via_draw_circle(cx, cy, r);
-        
+
         _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
         _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_reg_ctx.stroke();
@@ -2133,7 +2136,7 @@ function _via_draw_circle(cx, cy, r) {
 function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
     if (is_selected) {
         _via_draw_ellipse(cx, cy, rx, ry);
-        
+
         _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
         _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_reg_ctx.stroke();
@@ -2163,14 +2166,14 @@ function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
                               cy,
                               rx - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
                               ry - VIA_THEME_REGION_BOUNDARY_WIDTH/2);
-            _via_reg_ctx.stroke();  
+            _via_reg_ctx.stroke();
         }
     }
 }
 
 function _via_draw_ellipse(cx, cy, rx, ry) {
     _via_reg_ctx.save();
-    
+
     _via_reg_ctx.beginPath();
     _via_reg_ctx.translate(cx-rx, cy-ry);
     _via_reg_ctx.scale(rx, ry);
@@ -2182,9 +2185,9 @@ function _via_draw_ellipse(cx, cy, rx, ry) {
 }
 
 function _via_draw_polygon_region(all_points_x, all_points_y, is_selected) {
-    if (is_selected) {  
+    if (is_selected) {
         _via_reg_ctx.beginPath();
-        _via_reg_ctx.moveTo(all_points_x[0], all_points_y[0]);      
+        _via_reg_ctx.moveTo(all_points_x[0], all_points_y[0]);
         for (var i=1; i<all_points_x.length; ++i) {
             _via_reg_ctx.lineTo(all_points_x[i], all_points_y[i]);
         }
@@ -2247,7 +2250,7 @@ function _via_draw_polygon_region(all_points_x, all_points_y, is_selected) {
 function _via_draw_point_region(cx, cy, is_selected) {
     if (is_selected) {
         _via_draw_point(cx, cy, VIA_REGION_POINT_RADIUS);
-        
+
         _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
         _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_reg_ctx.stroke();
@@ -2283,7 +2286,7 @@ function _via_draw_point(cx, cy, r) {
     _via_reg_ctx.closePath();
 }
 
-function draw_all_region_id() { 
+function draw_all_region_id() {
     _via_reg_ctx.shadowColor = "transparent";
     for (var i=0; i < _via_img_metadata[_via_image_id].regions.length; ++i) {
         var bbox = get_canvas_region_bounding_box(i);
@@ -2295,10 +2298,10 @@ function draw_all_region_id() {
 
         var annotation_str = (i+1);
         var bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 2;
-	
+
 	var char_width = _via_reg_ctx.measureText('M').width;
 	var char_height = 1.8 * char_width;
-	
+
         var r = _via_img_metadata[_via_image_id].regions[i].region_attributes;
         if ( r.size === 1 &&
 	     w > (2*char_width) ) {
@@ -2317,10 +2320,10 @@ function draw_all_region_id() {
 		bgnd_rect_width = strw + char_width;
 	    }
 	}
-        
+
         // center the label
         x = x - (bgnd_rect_width/2 - w/2);
-        
+
         // first, draw a background rectangle first
         _via_reg_ctx.fillStyle = 'black';
         _via_reg_ctx.globalAlpha = 0.8;
@@ -2328,7 +2331,7 @@ function draw_all_region_id() {
                               Math.floor(y - 1.1*char_height),
                               Math.floor(bgnd_rect_width),
                               Math.floor(char_height));
-        
+
         // then, draw text over this background rectangle
         _via_reg_ctx.globalAlpha = 1.0;
         _via_reg_ctx.fillStyle = 'yellow';
@@ -2349,21 +2352,21 @@ function get_canvas_region_bounding_box(region_id) {
         bbox[2] = d.get('x') + d.get('width');
         bbox[3] = d.get('y') + d.get('height');;
         break;
-        
+
     case 'circle':
         bbox[0] = d.get('cx') - d.get('r');
         bbox[1] = d.get('cy') - d.get('r');
         bbox[2] = d.get('cx') + d.get('r');
         bbox[3] = d.get('cy') + d.get('r');
         break;
-        
+
     case 'ellipse':
         bbox[0] = d.get('cx') - d.get('rx');
         bbox[1] = d.get('cy') - d.get('ry');
         bbox[2] = d.get('cx') + d.get('rx');
         bbox[3] = d.get('cy') + d.get('ry');
         break;
-        
+
     case 'polygon':
         var all_points_x = d.get('all_points_x');
         var all_points_y = d.get('all_points_y');
@@ -2394,14 +2397,14 @@ function get_canvas_region_bounding_box(region_id) {
         // place the region id box at any random vertex
         bbox[0] = all_points_x[0];
         bbox[1] = all_points_y[0];
-        break;  
+        break;
 
     case 'point':
         bbox[0] = d.get('cx') - VIA_REGION_POINT_RADIUS;
         bbox[1] = d.get('cy') - VIA_REGION_POINT_RADIUS;
         bbox[2] = d.get('cx') + VIA_REGION_POINT_RADIUS;
         bbox[3] = d.get('cy') + VIA_REGION_POINT_RADIUS;
-        break;    
+        break;
     }
     return bbox;
 }
@@ -2464,7 +2467,7 @@ function is_inside_this_region(px, py, region_id) {
                                    px, py);
         break;
 
-    case VIA_REGION_SHAPE.POLYGON:      
+    case VIA_REGION_SHAPE.POLYGON:
         result = is_inside_polygon(attr.get('all_points_x'),
                                    attr.get('all_points_y'),
                                    px, py);
@@ -2514,7 +2517,7 @@ function is_inside_ellipse(cx, cy, rx, ry, px, py) {
 // source: http://geomalgorithms.com/a03-_inclusion.html
 function is_inside_polygon(all_points_x, all_points_y, px, py) {
     var wn = 0;    // the  winding number counter
-    
+
     // loop through all edges of the polygon
     for (var i=0; i<all_points_x.length-1; ++i) {   // edge from V[i] to  V[i+1]
         var is_left_value = is_left( all_points_x[i], all_points_y[i],
@@ -2564,12 +2567,12 @@ function is_left(x0, y0, x1, y1, x2, y2) {
 
 function is_on_region_corner(px, py) {
     var _via_region_edge = [-1, -1]; // region_id, corner_id [top-left=1,top-right=2,bottom-right=3,bottom-left=4]
-    
+
     for (var i=0; i < _via_canvas_regions.length; ++i) {
         var attr = _via_canvas_regions[i].shape_attributes;
         var result = false;
         _via_region_edge[0] = i;
-        
+
         switch ( attr.get('name') ) {
         case VIA_REGION_SHAPE.RECT:
             result = is_on_rect_edge(attr.get('x'),
@@ -2593,7 +2596,7 @@ function is_on_region_corner(px, py) {
                                         px, py);
             break;
 
-        case VIA_REGION_SHAPE.POLYGON:      
+        case VIA_REGION_SHAPE.POLYGON:
             result = is_on_polygon_vertex(attr.get('all_points_x'),
                                           attr.get('all_points_y'),
                                           px, py);
@@ -2652,7 +2655,7 @@ function is_on_circle_edge(cx, cy, r, px, py) {
              Math.abs(Math.abs(theta) - Math.PI) < VIA_THETA_TOL) {
             return 6;
         }
-        
+
         if ( theta >0 && theta < (Math.PI/2) ) {
             return 1;
         }
@@ -2684,7 +2687,7 @@ function is_on_ellipse_edge(cx, cy, rx, ry, px, py) {
              Math.abs(Math.abs(theta) - Math.PI) < VIA_THETA_TOL) {
             return 6;
         }
-        
+
         if ( theta >0 && theta < (Math.PI/2) ) {
             return 1;
         }
@@ -2733,10 +2736,10 @@ window.addEventListener("keydown", function(e) {
     if (_via_is_user_updating_attribute_value ||
         _via_is_user_updating_attribute_name ||
         _via_is_user_adding_attribute_name) {
-        
+
         return;
     }
-    
+
     // user commands
     if ( e.ctrlKey ) {
         if ( e.which === 83 ) { // Ctrl + s
@@ -2767,7 +2770,7 @@ window.addEventListener("keydown", function(e) {
     if( e.which === 46 || e.which === 8) { // Del or Backspace
         del_sel_regions();
         e.preventDefault();
-    }    
+    }
     if (e.which === 78 || e.which === 39) { // n or right arrow
         move_to_next_image();
         e.preventDefault();
@@ -2813,18 +2816,18 @@ window.addEventListener("keydown", function(e) {
         if (_via_is_user_updating_attribute_value ||
             _via_is_user_updating_attribute_name ||
             _via_is_user_adding_attribute_name) {
-            
+
             _via_is_user_updating_attribute_value = false;
             _via_is_user_updating_attribute_name = false;
             _via_is_user_adding_attribute_name = false;
             update_attributes_panel();
         }
-        
+
         if ( _via_is_user_resizing_region ) {
             // cancel region resizing action
             _via_is_user_resizing_region = false;
         }
-        
+
         if ( _via_is_region_selected ) {
             // clear all region selections
             _via_is_region_selected = false;
@@ -2855,7 +2858,7 @@ window.addEventListener("keydown", function(e) {
         if ( _via_is_user_moving_region ) {
             _via_is_user_moving_region = false
         }
-        
+
         e.preventDefault();
         _via_redraw_reg_canvas();
         return;
@@ -2889,7 +2892,7 @@ function del_sel_regions() {
 
     var del_region_count = 0;
     if (_via_is_all_region_selected) {
-        del_region_count = _via_canvas_regions.length;  
+        del_region_count = _via_canvas_regions.length;
         _via_canvas_regions.splice(0);
         _via_img_metadata[_via_image_id].regions.splice(0);
     } else {
@@ -2898,7 +2901,7 @@ function del_sel_regions() {
             if (_via_canvas_regions[i].is_user_selected) {
                 sorted_sel_reg_id.push(i);
             }
-        }       
+        }
         sorted_sel_reg_id.sort( function(a,b) {
             return (b-a);
         });
@@ -2922,7 +2925,7 @@ function del_sel_regions() {
     _via_reg_canvas.focus();
     update_attributes_panel();
     save_current_data_to_browser_cache();
-    
+
     show_message('Deleted ' + del_region_count + ' selected regions');
 }
 
@@ -2985,15 +2988,15 @@ function move_to_prev_image() {
     if (_via_img_count > 0) {
         _via_is_region_selected = false;
         _via_user_sel_region_id = -1;
-        
+
         _via_current_sel_region_id = -1;
 
         if (_via_is_canvas_zoomed) {
             reset_zoom_level();
         }
-        
+
         var current_img_index = _via_image_index;
-        if ( _via_image_index === 0 ) {   
+        if ( _via_image_index === 0 ) {
             show_image(_via_img_count - 1);
         } else {
             show_image(_via_image_index - 1);
@@ -3002,7 +3005,7 @@ function move_to_prev_image() {
         if (typeof _via_hook_prev_image === 'function') {
             _via_hook_prev_image(current_img_index);
         }
-    }    
+    }
 }
 
 function move_to_next_image() {
@@ -3015,9 +3018,9 @@ function move_to_next_image() {
         if (_via_is_canvas_zoomed) {
             reset_zoom_level();
         }
-        
+
         var current_img_index = _via_image_index;
-        if ( _via_image_index === (_via_img_count-1) ) {   
+        if ( _via_image_index === (_via_img_count-1) ) {
             show_image(0);
         } else {
             show_image(_via_image_index + 1);
@@ -3042,9 +3045,9 @@ function reset_zoom_level() {
         set_all_canvas_scale(zoom_scale);
         set_all_canvas_size(_via_canvas_width, _via_canvas_height);
         _via_canvas_scale = _via_canvas_scale_without_zoom;
-        
+
         _via_load_canvas_regions(); // image to canvas space transform
-        _via_redraw_img_canvas();       
+        _via_redraw_img_canvas();
         _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
         show_message('Zoom reset');
@@ -3063,7 +3066,7 @@ function zoom_in() {
         show_message('Further zoom-in not possible');
     } else {
         _via_canvas_zoom_level_index += 1;
-        
+
         _via_is_canvas_zoomed = true;
         var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
         set_all_canvas_scale(zoom_scale);
@@ -3089,7 +3092,7 @@ function zoom_out() {
         show_message('Further zoom-out not possible');
     } else {
         _via_canvas_zoom_level_index -= 1;
-        
+
         _via_is_canvas_zoomed = true;
         var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
         set_all_canvas_scale(zoom_scale);
@@ -3132,7 +3135,7 @@ function show_message(msg, t) {
     document.getElementById('message_panel').innerHTML = msg;
     _via_message_clear_timer = setTimeout( function() {
         document.getElementById('message_panel').innerHTML = ' ';
-    }, timeout);    
+    }, timeout);
 }
 
 function show_filename_info() {
@@ -3172,7 +3175,7 @@ function save_current_data_to_browser_cache() {
                 var img_metadata = pack_via_metadata('json');
                 var timenow = new Date().toUTCString();
                 localStorage.setItem('_via_timestamp', timenow);
-                localStorage.setItem('_via_img_metadata', img_metadata);
+                localStorage.setItem('_via_img_metadata', img_metadata[0]);
                 // save attributes
                 var attr = [];
                 for (var attribute of _via_region_attributes) {
@@ -3183,9 +3186,9 @@ function save_current_data_to_browser_cache() {
             } catch(err) {
                 _via_is_save_ongoing = false;
                 _via_is_local_storage_available = false;
-                show_message('Failed to save data to browser cache. Please download the annotation data.');
-                alert('Failed to save data to browser cache. Please download the annotation data.');
-                console.log('Failed to save data to browser cache');
+                show_message('Failed to save annotation data to browser cache.');
+                alert('Failed to save annotation data to browser cache.');
+                console.log('Failed to save annotation data to browser cache');
                 console.log(err.message);
             }
         }
@@ -3207,27 +3210,31 @@ function clear_localStorage() {
 
 function show_localStorage_recovery_options() {
     var hstr = [];
-    var saved_date = new Date( parseInt(localStorage.getItem('_via_timestamp')) );
-    
+    var saved_date = new Date( localStorage.getItem('_via_timestamp') );
+    var saved_data_size = localStorage.getItem('_via_img_metadata').length / 1024; // in Kb
+
+
     hstr.push('<div style="padding: 1em; border: 1px solid #cccccc;">');
     hstr.push('<h3 style="border-bottom: 1px solid #5599FF">Data Recovery from Browser Cache</h3>');
-    hstr.push('<ul><li>Data saved on : ' + saved_date);
-    hstr.push('<br/><span class="action_text_link" onclick="download_localStorage_data(\'json\')" title="Recover annotation data">[Save as JSON]</span>');
-    hstr.push(' | ');
-    hstr.push('<span class="action_text_link" onclick="clear_localStorage()" title="Discard annotation data">[Discard Data]</span>');
+    hstr.push('<p>Annotation data from your previous session exists in this browser\'s cache :</h3>');
+    hstr.push('<ul><li>Saved on : ' + saved_date + '</li>');
+    hstr.push('<li>Size : ' + Math.round(saved_data_size) + ' KB</li>');
+    hstr.push('</ul>');
+    hstr.push('<br/><a title="Save as JSON" style="cursor: pointer; color: blue;" onclick="download_localStorage_data(\'json\')" title="Recover annotation data">Save</a>');
+    hstr.push('<a style="padding-left:2em; cursor: pointer; color: blue;" onclick="clear_localStorage()" title="Discard annotation data">Discard</a>');
     hstr.push('</li></ul>');
-    
-    hstr.push('<p><b>If you continue, the cached data will be discarded!</b></p></div>');
+
+    hstr.push('<p style="clear: left;"><b>If you continue, the cached data will be discarded!</b></p></div>');
     via_start_info_panel.innerHTML += hstr.join('');
 }
 
 function download_localStorage_data(type) {
-    var saved_date = new Date( parseInt(localStorage.getItem('_via_timestamp')) );
+    var saved_date = new Date( localStorage.getItem('_via_timestamp') );
 
     var localStorage_data_blob = new Blob( [localStorage.getItem('_via_img_metadata')],
                                            {type: 'text/json;charset=utf-8'});
 
-    save_data_to_local_file(localStorage_data_blob, 'VIA_' + saved_data + '.json');
+    save_data_to_local_file(localStorage_data_blob, 'VIA_' + saved_date + '.json');
 }
 
 //
@@ -3252,7 +3259,7 @@ function attr_input_blur(i) {
 // header is a Set()
 // data is an array of Map() objects
 function init_spreadsheet_input(type, col_headers, data, row_names) {
-    
+
     if (typeof row_names === 'undefined') {
         var row_names = [];
         for (var i=0; i<data.length; ++i) {
@@ -3268,12 +3275,12 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
         attrname = 'File Attributes';
         break;
     }
-    
+
     var hstr = '<div style="display: inline-block;" class="title">';
     hstr += attrname + '</div>';
-    hstr += '<table id="' + type + '"></table>';  
+    hstr += '<table id="' + type + '"></table>';
 
-    var attrtable = document.createElement('TABLE');   
+    var attrtable = document.createElement('TABLE');
     var firstrow = attrtable.insertRow(0);
 
     // top-left cell
@@ -3304,7 +3311,7 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
                 sel_reg_list.push(i);
             } else {
                 remaining_reg_list.push(i);
-            }           
+            }
         }
         if (sel_reg_list.length > 1) {
             region_traversal_order = sel_reg_list.concat(remaining_reg_list);
@@ -3312,7 +3319,7 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
             region_traversal_order = all_reg_list;
         }
     }
-    
+
     var sel_rows = [];
     for (var i=0; i<data.length; ++i) {
         var rowi = i;
@@ -3327,11 +3334,11 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
         } else {
             di = data[rowi];
         }
-        
+
         var row = attrtable.insertRow(-1);
         var region_id_cell = row.insertCell(0);
         region_id_cell.innerHTML = '' + row_names[rowi] + '';
-        region_id_cell.style.fontWeight = 'bold';       
+        region_id_cell.style.fontWeight = 'bold';
         region_id_cell.style.width = '2em';
 
         if (data[rowi].is_user_selected) {
@@ -3347,7 +3354,7 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
 		// escape all single and double quotes
 		ip_val = ip_val.replace(/'/g, '\'');
 		ip_val = ip_val.replace(/"/g, '&quot;');
-			
+
                 if (ip_val.length > 30) {
                     row.insertCell(-1).innerHTML = '<textarea ' +
                         ' rows="' + (Math.floor(ip_val.length/30)-1) + '"' +
@@ -3355,7 +3362,7 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
                         ' id="' +   input_id + '"' +
                         ' autocomplete="on"' +
                         ' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
-                        ' onblur="attr_input_blur(' + rowi + ')"' + 
+                        ' onblur="attr_input_blur(' + rowi + ')"' +
                         ' onfocus="attr_input_focus(' + rowi + ');"' +
                         ' >' + ip_val + '</textarea>';
                 } else {
@@ -3365,14 +3372,14 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
 //			' value="my \'name\' is &quot;adutta&quot; which is."' +
                         ' autocomplete="on"' +
                         ' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
-                        ' onblur="attr_input_blur(' + rowi + ')"' + 
+                        ' onblur="attr_input_blur(' + rowi + ')"' +
                         ' onfocus="attr_input_focus(' + rowi + ');" />';
                 }
             } else {
                 row.insertCell(-1).innerHTML = '<input type="text"' +
                     ' id="' + input_id + '"' +
                     ' onchange="update_attribute_value(\'' + input_id + '\', this.value)" ' +
-                    ' onblur="attr_input_blur(' + rowi + ')"' + 
+                    ' onblur="attr_input_blur(' + rowi + ')"' +
                     ' onfocus="attr_input_focus(' + rowi + ');" />';
             }
         }
@@ -3503,9 +3510,10 @@ function update_attribute_value(attr_id, value) {
     }
     if (_via_is_reg_attr_panel_visible) {
 	set_region_select_state(region_id, false);
-    }   
+    }
     _via_redraw_reg_canvas();
     _via_is_user_updating_attribute_value = false;
+    save_current_data_to_browser_cache();
 }
 
 function add_new_attribute(type, attribute_name) {
@@ -3514,7 +3522,7 @@ function add_new_attribute(type, attribute_name) {
         if (!_via_region_attributes.has(attribute_name)) {
             _via_region_attributes.add(attribute_name);
         }
-        update_region_attributes_input_panel(); 
+        update_region_attributes_input_panel();
         break;
     case 'f':
         if (!_via_file_attributes.has(attribute_name)) {
