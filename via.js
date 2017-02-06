@@ -2309,7 +2309,9 @@ function _via_draw_point(cx, cy, r) {
 function draw_all_region_id() {
     _via_reg_ctx.shadowColor = "transparent";
     for (var i=0; i < _via_img_metadata[_via_image_id].regions.length; ++i) {
-        var bbox = get_canvas_region_bounding_box(i);
+        var canvas_reg = _via_canvas_regions[i];
+
+        var bbox = get_region_bounding_box(canvas_reg);
         var x = bbox[0];
         var y = bbox[1];
         var w = Math.abs(bbox[2] - bbox[0]);
@@ -2341,8 +2343,14 @@ function draw_all_region_id() {
             }
         }
 
-        // center the label
-        x = x - (bgnd_rect_width/2 - w/2);
+        if (canvas_reg.shape_attributes.get('name') === VIA_REGION_SHAPE.POLYGON) {
+            // put label near the first vertex
+            x = canvas_reg.shape_attributes.get('all_points_x')[0];
+            y = canvas_reg.shape_attributes.get('all_points_y')[0];
+        } else {
+            // center the label
+            x = x - (bgnd_rect_width/2 - w/2);
+        }
 
         // first, draw a background rectangle first
         _via_reg_ctx.fillStyle = 'black';
@@ -2362,9 +2370,10 @@ function draw_all_region_id() {
     }
 }
 
-function get_canvas_region_bounding_box(region_id) {
+function get_region_bounding_box(region) {
+    var d = region.shape_attributes;
     var bbox = new Array(4);
-    var d = _via_canvas_regions[region_id].shape_attributes;
+
     switch( d.get('name') ) {
     case 'rect':
         bbox[0] = d.get('x');
@@ -2413,10 +2422,6 @@ function get_canvas_region_bounding_box(region_id) {
         bbox[1] = miny;
         bbox[2] = maxx;
         bbox[3] = maxy;
-
-        // place the region id box at any random vertex
-        bbox[0] = all_points_x[0];
-        bbox[1] = all_points_y[0];
         break;
 
     case 'point':
@@ -2967,7 +2972,7 @@ function copy_sel_regions() {
     }
 
     if (_via_is_region_selected ||
-        _via_is_region_selected) {
+        _via_is_all_region_selected) {
         _via_copied_image_regions.splice(0);
         _via_copied_canvas_regions.splice(0);
         for (var i=0; i<_via_img_metadata[_via_image_id].regions.length; ++i) {
@@ -2992,11 +2997,20 @@ function paste_sel_regions() {
     }
 
     if (_via_copied_image_regions.length) {
+        var pasted_reg_count = 0;
         for (var i=0; i<_via_copied_image_regions.length; ++i) {
-            _via_img_metadata[_via_image_id].regions.push( _via_copied_image_regions[i] );
-            _via_canvas_regions.push( _via_copied_canvas_regions[i] );
+            // ensure copied the regions are within this image's boundaries
+            var bbox = get_region_bounding_box( _via_copied_canvas_regions[i] );
+            if (bbox[2] < _via_canvas_width &&
+                bbox[3] < _via_canvas_height) {
+                _via_img_metadata[_via_image_id].regions.push( _via_copied_image_regions[i] );
+                _via_canvas_regions.push( _via_copied_canvas_regions[i] );
+                pasted_reg_count += 1;
+            }
         }
-        show_message('Pasted ' + _via_copied_image_regions.length + ' regions');
+        var discarded_reg_count = _via_copied_image_regions.length - pasted_reg_count;
+        show_message('Pasted ' + pasted_reg_count + ' regions. ' +
+                     'Discarded ' + discarded_reg_count + ' regions exceeding image boundary.');
         _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
     } else {
