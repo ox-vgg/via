@@ -36,7 +36,7 @@ var VIA_REGION_SHAPE = { RECT:'rect',
                          POINT:'point'};
 
 var VIA_REGION_EDGE_TOL = 5;
-var VIA_RESIZE_CONTROL_SIZE = 4;
+var VIA_REGION_CONTROL_POINT_SIZE = 2;
 var VIA_REGION_POINT_RADIUS = 3;  // in pixel
 var VIA_POLYGON_VERTEX_MATCH_TOL = 5;
 var VIA_REGION_MIN_DIM = 3;     // in pixel
@@ -57,16 +57,12 @@ var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
 var VIA_THEME_SEL_REGION_OPACITY = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS = 2500;
 var VIA_THEME_ATTRIBUTE_VALUE_FONT = '10pt Sans';
+var VIA_THEME_CONTROL_POINT_COLOR = '#ff0000';
 
 var VIA_CSV_SEP = ',';
 var VIA_CSV_QUOTE_CHAR = '"';
 var VIA_CSV_KEYVAL_SEP = ':';
-
 var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
-var VIA_IMPORT_CSV_KEYVAL_SEP_CHAR = '\\;';
-var VIA_EXPORT_CSV_ARRAY_SEP_CHAR = ':';
-var VIA_CSV_SEP_CHAR = ',';
-var VIA_EXPORT_DOUBLE_QUOTE_REPLACEMENT = "\\'";
 
 var _via_img_metadata = {};   // data structure to store loaded images metadata
 var _via_img_count = 0;       // count of the loaded images
@@ -813,7 +809,6 @@ function pack_via_metadata(return_type) {
                     image_data.regions[i].region_attributes[key] = value;
                 }
             }
-            console.log(image_data);
             _via_img_metadata_as_obj[image_id] = image_data;
         }
         return [JSON.stringify(_via_img_metadata_as_obj)];
@@ -2044,6 +2039,17 @@ function draw_all_regions() {
     }
 }
 
+// control point for resize of region boundaries
+function _via_draw_control_point(cx, cy) {
+    _via_reg_ctx.beginPath();
+    _via_reg_ctx.arc(cx, cy, VIA_REGION_POINT_RADIUS, 0, 2*Math.PI, false);
+    _via_reg_ctx.closePath();
+
+    _via_reg_ctx.fillStyle = VIA_THEME_CONTROL_POINT_COLOR;
+    _via_reg_ctx.globalAlpha = 1.0;
+    _via_reg_ctx.fill();
+}
+
 function _via_draw_rect_region(x, y, w, h, is_selected) {
     if (is_selected) {
         _via_draw_rect(x, y, w, h);
@@ -2056,6 +2062,11 @@ function _via_draw_rect_region(x, y, w, h, is_selected) {
         _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
         _via_reg_ctx.fill();
         _via_reg_ctx.globalAlpha = 1.0;
+
+        _via_draw_control_point(x  ,   y);
+        _via_draw_control_point(x+w, y+h);
+        _via_draw_control_point(x  , y+h);
+        _via_draw_control_point(x+w,   y);
     } else {
         // draw a fill line
         _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
@@ -2104,6 +2115,8 @@ function _via_draw_circle_region(cx, cy, r, is_selected) {
         _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
         _via_reg_ctx.fill();
         _via_reg_ctx.globalAlpha = 1.0;
+
+        _via_draw_control_point(cx + r, cy);
     } else {
         // draw a fill line
         _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
@@ -2145,6 +2158,9 @@ function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
         _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
         _via_reg_ctx.fill();
         _via_reg_ctx.globalAlpha = 1.0;
+
+        _via_draw_control_point(cx + rx, cy);
+        _via_draw_control_point(cx     , cy - ry);
     } else {
         // draw a fill line
         _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
@@ -2199,6 +2215,10 @@ function _via_draw_polygon_region(all_points_x, all_points_y, is_selected) {
         _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
         _via_reg_ctx.fill();
         _via_reg_ctx.globalAlpha = 1.0;
+
+        for (var i=1; i<all_points_x.length; ++i) {
+            _via_draw_control_point(all_points_x[i], all_points_y[i]);
+        }
     } else {
         for (var i=1; i<all_points_x.length; ++i) {
             // draw a fill line
