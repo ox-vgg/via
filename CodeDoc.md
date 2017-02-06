@@ -6,7 +6,8 @@ Author: [Abhishek Dutta](mailto:adutta_REMOVE_@robots.ox.ac.uk)
 VGG Image Annotator (VIA) application is contained in a single html file
 with definitions of CSS style and Javascript code blocks.
 
-The VIA application code `via.html` has the following structure:
+The VIA application code [`via.html`](https://gitlab.com/vgg/via/blob/develop/via.html) 
+has the following structure:
 
 ```html
 <!DOCTYPE html> 
