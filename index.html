@@ -458,13 +458,13 @@
           <li class="dropdown"><a title="View" class="drop_menu_item">View &#9662;</a>
             <div class="dropdown-content">
               <a onclick="toggle_region_boundary_visibility()" title="Show or hide region boundaries">Show/hide region boundaries</a>
-	      <a onclick="toggle_region_id_visibility()" title="Show or hide region label">Show/hide region label</a>
-	    </div>
-	  </li>
+              <a onclick="toggle_region_id_visibility()" title="Show or hide region label">Show/hide region label</a>
+            </div>
+          </li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662;</a>
             <div class="dropdown-content">
-	      <a onclick="show_getting_started_panel()" title="Getting started with VGG Image Annotator (VIA)">Getting Started</a>
-	      <a onclick="show_license_panel()" title="VIA License">License</a>
+              <a onclick="show_getting_started_panel()" title="Getting started with VGG Image Annotator (VIA)">Getting Started</a>
+              <a onclick="show_license_panel()" title="VIA License">License</a>
               <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About</a>
             </div>
           </li>
@@ -475,11 +475,11 @@
       <!-- Shortcut toolbar -->
       <div class="toolbar">
         <ul>
-	  <!--
+          <!--
           <li onclick="sel_local_images()" title="Load or Add Images">&ctdot;</li>
           <li onclick="sel_local_data_file('annotations')" title="Import Annotations">&uarr;</li>
           <li onclick="download_all_region_data('csv')" title="Save Annotations (as CSV)">&DownArrowBar;</li>
-	  -->
+          -->
 
           <li style="margin-left: 1em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
           <li onclick="move_to_next_image()" title="Next Image">&rarr;</li>
@@ -501,8 +501,8 @@
     <!-- Middle Panel contains a left-sidebar and image display areas -->
     <div class="middle_panel">
       <div id="leftsidebar">
-	<button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Image</button>
-	<div class="leftsidebar_accordion_panel show" id="fileinfo">Images not loaded yet!</div>
+        <button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Image</button>
+        <div class="leftsidebar_accordion_panel show" id="fileinfo">Images not loaded yet!</div>
 
         <button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Region Shape</button>
         <div class="leftsidebar_accordion_panel show" id="accordion_region_shape_panel">
@@ -583,7 +583,7 @@
             <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0</a></p>
             <p>
               VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
-	      developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
+              developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
               and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
               With this standalone application, you can define regions in an image and create a textual description of those regions.
               Such image regions and descriptions are useful for supervised training of learning algorithms.
@@ -596,37 +596,37 @@
               <li>supported region shapes: rectangle, circle, ellipse, polygon and point</li>
               <li>import/export of region data in csv and json file format</li>
             </ul>
-	    <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
-	    <p>&nbsp;</p>
-	    <p>Copyright &copy; 2016-2017, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a></p>
+            <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
+            <p>&nbsp;</p>
+            <p>Copyright &copy; 2016-2017, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a></p>
           </div>
 
-	  <div class="text_panel" id="getting_started_panel">
+          <div class="text_panel" id="getting_started_panel">
             <h1>Getting Started</h1>
-	    <ol>
-	      <li>Click [Image > Load or Add Images] in the top menu bar to load a set of images that you wish to annotate.</li>
-	      <li>Press n (or p) to navigate through the loaded images. You can also use the &larr; and &rarr; icons in the top panel toolbar for navigation.</li>
-	      <li>Click <b>Region Attributes</b> in the left panel to reveal a panel in the bottom. Click <b>[Add New]</b> tp add a new attribute. For example:
-		<pre>
-		  object_name
-		  object_color
-		</pre>
-		You can add more region attributes according to you needs.
-	      <li>In the <b>Region Shape</b> section in the left panel, click the rectangular shape</li>
-	      <li>On the image area, keep pressing the right click button as you drag the mouse cursor. This will draw a rectangular region on the image.</li>
-	      <li>This newly created region is automatically selected. Now you can enter the attribute value for this region in the bottom panel. For example:
-		<pre>
-		  object_name = dog
-		  object_color = white
-		</pre>
-		You can annotate multiple regions in this image or other images and assign a value to each pre-defined attribute.</li>
-	      <li>To download the annotated region data, click <b>[Annotation > Save as CSV]</b> in the top menu bar. This will download a text file containing region shape and attribute data.</li>
-	      <li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 7) by clicking <b>[Annotation > Import]</b>.
-	    </li></ol>
-	  </div>
+            <ol>
+              <li>Click [Image > Load or Add Images] in the top menu bar to load a set of images that you wish to annotate.</li>
+              <li>Press n (or p) to navigate through the loaded images. You can also use the &larr; and &rarr; icons in the top panel toolbar for navigation.</li>
+              <li>Click <b>Region Attributes</b> in the left panel to reveal a panel in the bottom. Click <b>[Add New]</b> tp add a new attribute. For example:
+                <pre>
+                  object_name
+                  object_color
+                </pre>
+                You can add more region attributes according to you needs.
+              <li>In the <b>Region Shape</b> section in the left panel, click the rectangular shape</li>
+              <li>On the image area, keep pressing the right click button as you drag the mouse cursor. This will draw a rectangular region on the image.</li>
+              <li>This newly created region is automatically selected. Now you can enter the attribute value for this region in the bottom panel. For example:
+                <pre>
+                  object_name = dog
+                  object_color = white
+                </pre>
+                You can annotate multiple regions in this image or other images and assign a value to each pre-defined attribute.</li>
+              <li>To download the annotated region data, click <b>[Annotation > Save as CSV]</b> in the top menu bar. This will download a text file containing region shape and attribute data.</li>
+              <li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 7) by clicking <b>[Annotation > Import]</b>.
+            </li></ol>
+          </div>
 
-	  <div class="text_panel" id="license_panel">
-	    <pre>
+          <div class="text_panel" id="license_panel">
+            <pre>
   Copyright (c) 2016-2017, Abhishek Dutta.
   All rights reserved.
 
@@ -649,8 +649,8 @@
   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
-	    </pre>
-	  </div>
+            </pre>
+          </div>
 
         </div>
       </div>
@@ -671,11 +671,9 @@
       //<!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
 
-    <!---->
-    <script type="text/javascript" src="via.js"></script>
-
     <!--
-    <script type="text/javascript" src="via_demo.js"></script>
+    <script src="via.js"></script>
+    <script src="via_demo.js"></script>
     -->
     <!-- Unit Tests
     <script src="./tests/via_test_data.js"></script>

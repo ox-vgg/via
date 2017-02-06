@@ -197,16 +197,16 @@ function _via_init() {
 
     // run attached sub-modules (if any)
     if (typeof _via_load_submodules === 'function') {
-	setTimeout(function() {
-	    _via_load_submodules();
-	}, 100);
+        setTimeout(function() {
+            _via_load_submodules();
+        }, 100);
     }
 
     // run attached unit tests (if any)
     if (typeof _via_init_unit_tests === 'function') {
-	setTimeout(function() {
-	    _via_init_unit_tests();
-	}, 100);
+        setTimeout(function() {
+            _via_init_unit_tests();
+        }, 100);
     }
 }
 
@@ -215,13 +215,13 @@ function _via_init() {
 //
 function show_home_panel() {
     if (_via_current_image_loaded) {
-	show_all_canvas();
-	set_all_text_panel_display('none');
+        show_all_canvas();
+        set_all_text_panel_display('none');
     } else {
         var start_info = '<p><a title="Load or Add Images" style="cursor: pointer; color: blue;" onclick="sel_local_images()">Load images</a> to start annotation or, see <a title="Getting started with VGG Image Annotator" style="cursor: pointer; color: blue;" onclick="show_getting_started_panel()">Getting Started</a>.</p>';
-	clear_image_display_area();
-	document.getElementById('via_start_info_panel').innerHTML = start_info;
-	document.getElementById('via_start_info_panel').style.display = 'block';
+        clear_image_display_area();
+        document.getElementById('via_start_info_panel').innerHTML = start_info;
+        document.getElementById('via_start_info_panel').style.display = 'block';
     }
 }
 function sel_local_images() {
@@ -301,7 +301,7 @@ function show_license_panel() {
 function set_all_text_panel_display(style_display) {
     var tp = document.getElementsByClassName('text_panel');
     for (var i=0; i<tp.length; ++i) {
-	tp[i].style.display = style_display;
+        tp[i].style.display = style_display;
     }
 }
 function clear_image_display_area() {
@@ -452,16 +452,16 @@ function import_annotations_from_csv(data) {
                     break;
                 }
             }
-	    csv_column_count = d.length;
+            csv_column_count = d.length;
             continue;
         } else {
-	    var d = parse_csv_line(csvdata[i]);
+            var d = parse_csv_line(csvdata[i]);
 
-	    // check if csv line was malformed
-	    if (d.length !== csv_column_count) {
-		malformed_csv_lines_count += 1;
-		continue;
-	    }
+            // check if csv line was malformed
+            if (d.length !== csv_column_count) {
+                malformed_csv_lines_count += 1;
+                continue;
+            }
 
             var filename = d[filename_index];
             var size = d[size_index];
@@ -469,9 +469,9 @@ function import_annotations_from_csv(data) {
             if ( _via_img_metadata.hasOwnProperty(image_id) ) {
                 // copy file attributes
                 if ( d[file_attr_index] !== '"{}"') {
-		    var fattr = d[file_attr_index];
-		    fattr = remove_prefix_suffix_quotes( fattr );
-		    fattr = unescape_from_csv( fattr );
+                    var fattr = d[file_attr_index];
+                    fattr = remove_prefix_suffix_quotes( fattr );
+                    fattr = unescape_from_csv( fattr );
 
                     var m = json_str_to_map( fattr );
                     for( var key of m.keys() ) {
@@ -487,9 +487,9 @@ function import_annotations_from_csv(data) {
                 var regioni = new ImageRegion();
                 // copy regions shape attributes
                 if ( d[region_shape_attr_index] !== '"{}"' ) {
-		    var sattr = d[region_shape_attr_index];
-		    sattr = remove_prefix_suffix_quotes( sattr );
-		    sattr = unescape_from_csv( sattr );
+                    var sattr = d[region_shape_attr_index];
+                    sattr = remove_prefix_suffix_quotes( sattr );
+                    sattr = unescape_from_csv( sattr );
 
                     var m = json_str_to_map( sattr );
                     for ( var key of m.keys() ) {
@@ -500,9 +500,9 @@ function import_annotations_from_csv(data) {
 
                 // copy region attributes
                 if ( d[region_attr_index] !== '"{}"' ) {
-		    var rattr = d[region_attr_index];
-		    rattr = remove_prefix_suffix_quotes( rattr );
-		    rattr = unescape_from_csv( rattr );
+                    var rattr = d[region_attr_index];
+                    rattr = remove_prefix_suffix_quotes( rattr );
+                    rattr = unescape_from_csv( rattr );
 
                     var m = json_str_to_map( rattr );
 
@@ -527,7 +527,7 @@ function import_annotations_from_csv(data) {
     }
     show_message('Import Summary : [' + region_import_count + '] regions, ' +
                  '[' + malformed_csv_lines_count  + '] malformed csv lines.',
-		 4 * VIA_THEME_MESSAGE_TIMEOUT_MS);
+                 4 * VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -581,7 +581,7 @@ function import_annotations_from_json(data) {
     }
 
     show_message('Import Summary : [' + region_import_count + '] regions',
-		 4 * VIA_THEME_MESSAGE_TIMEOUT_MS);
+                 4 * VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -591,12 +591,12 @@ function import_annotations_from_json(data) {
 // see: https://en.wikipedia.org/wiki/Comma-separated_values
 function parse_csv_line(s, field_separator) {
     if (typeof(s) === 'undefined' ||
-	s.length === 0 ) {
-	return [];
+        s.length === 0 ) {
+        return [];
     }
 
     if (typeof(field_separator) === 'undefined') {
-	field_separator = ',';
+        field_separator = ',';
     }
     var double_quote_seen = false;
     var prev_char = '';
@@ -605,35 +605,35 @@ function parse_csv_line(s, field_separator) {
 
     var i = 0;
     while ( i < s.length) {
-	if (s.charAt(i) === field_separator) {
-	    if (double_quote_seen) {
-		// field separator inside double quote is ignored
-		i = i + 1;
-	    } else {
-		d.push( s.substr(start, i - start) );
-		start = i + 1;
-		i = i + 1;
-	    }
-	} else {
-	    if (s.charAt(i) === '"') {
-		if (double_quote_seen) {
-		    if (s.charAt(i+1) === '"') {
-			// ignore escaped double quotes
-			i = i + 2;
-		    } else {
-			// closing of double quote
-			double_quote_seen = false;
-			i = i + 1;
-		    }
-		} else {
-		    double_quote_seen = true;
-		    start = i;
-		    i = i + 1;
-		}
-	    } else {
-		i = i + 1
-	    }
-	}
+        if (s.charAt(i) === field_separator) {
+            if (double_quote_seen) {
+                // field separator inside double quote is ignored
+                i = i + 1;
+            } else {
+                d.push( s.substr(start, i - start) );
+                start = i + 1;
+                i = i + 1;
+            }
+        } else {
+            if (s.charAt(i) === '"') {
+                if (double_quote_seen) {
+                    if (s.charAt(i+1) === '"') {
+                        // ignore escaped double quotes
+                        i = i + 2;
+                    } else {
+                        // closing of double quote
+                        double_quote_seen = false;
+                        i = i + 1;
+                    }
+                } else {
+                    double_quote_seen = true;
+                    start = i;
+                    i = i + 1;
+                }
+            } else {
+                i = i + 1
+            }
+        }
 
     }
     // extract the last field (csv rows have no trailing comma)
@@ -644,14 +644,14 @@ function parse_csv_line(s, field_separator) {
 // s = '{"name":"rect","x":188,"y":90,"width":243,"height":233}'
 function json_str_to_map(s) {
     if (typeof(s) === 'undefined' ||
-	s.length === 0 ) {
-	return new Map();
+        s.length === 0 ) {
+        return new Map();
     }
 
     var d = JSON.parse(s);
     var m = new Map();
     for ( var key in d ) {
-	m.set(key, d[key]);
+        m.set(key, d[key]);
     }
     return m;
 }
@@ -661,11 +661,11 @@ function json_str_to_map(s) {
 function map_to_json(m) {
     var s = [];
     for (var key of m.keys() ) {
-	var v = m.get(key);
-	var si = JSON.stringify(key);
-	si += VIA_CSV_KEYVAL_SEP;
-	si += JSON.stringify(v);
-	s.push( si );
+        var v = m.get(key);
+        var si = JSON.stringify(key);
+        si += VIA_CSV_KEYVAL_SEP;
+        si += JSON.stringify(v);
+        s.push( si );
     }
     return '{' + s.join(VIA_CSV_SEP) + '}';
 }
@@ -680,10 +680,10 @@ function unescape_from_csv(s) {
 
 function remove_prefix_suffix_quotes(s) {
     if (s.charAt(0) === '"' &&
-	s.charAt(s.length-1) === '"') {
-	return s.substr(1, s.length-2);
+        s.charAt(s.length-1) === '"') {
+        return s.substr(1, s.length-2);
     } else {
-	return s;
+        return s;
     }
 }
 
@@ -744,8 +744,8 @@ function pack_via_metadata(return_type) {
         csvdata.push(csvheader);
 
         for ( var image_id in _via_img_metadata ) {
-	    var fattr = map_to_json( _via_img_metadata[image_id].file_attributes );
-	    fattr = escape_for_csv( fattr );
+            var fattr = map_to_json( _via_img_metadata[image_id].file_attributes );
+            fattr = escape_for_csv( fattr );
 
             var prefix = '\n' + _via_img_metadata[image_id].filename;
             prefix += ',' + _via_img_metadata[image_id].size;
@@ -755,24 +755,24 @@ function pack_via_metadata(return_type) {
 
             if (r.length !==0) {
                 for (var i=0; i<r.length; ++i) {
-		    var csvline = [];
-		    csvline.push(prefix);
-		    csvline.push(r.length);
-		    csvline.push(i);
+                    var csvline = [];
+                    csvline.push(prefix);
+                    csvline.push(r.length);
+                    csvline.push(i);
 
-		    var sattr = map_to_json( r[i].shape_attributes );
-		    sattr = '"' +  escape_for_csv( sattr ) + '"';
-		    csvline.push(sattr);
+                    var sattr = map_to_json( r[i].shape_attributes );
+                    sattr = '"' +  escape_for_csv( sattr ) + '"';
+                    csvline.push(sattr);
 
-		    var rattr = map_to_json( r[i].region_attributes );
-		    rattr = '"' +  escape_for_csv( rattr ) + '"';
-		    csvline.push(rattr);
+                    var rattr = map_to_json( r[i].region_attributes );
+                    rattr = '"' +  escape_for_csv( rattr ) + '"';
+                    csvline.push(rattr);
 
                     csvdata.push( csvline.join(VIA_CSV_SEP) );
                 }
             } else {
-		// @todo: reconsider this practice of adding an empty entry
-		csvdata.push(prefix + ',0,0,"{}","{}"');
+                // @todo: reconsider this practice of adding an empty entry
+                csvdata.push(prefix + ',0,0,"{}","{}"');
             }
         }
         return csvdata;
@@ -1053,21 +1053,21 @@ function select_region_shape(sel_shape_name) {
     case VIA_REGION_SHAPE.RECT:
     case VIA_REGION_SHAPE.CIRCLE:
     case VIA_REGION_SHAPE.ELLIPSE:
-	show_message('Press single click and drag mouse to draw '
+        show_message('Press single click and drag mouse to draw '
                      + _via_current_shape + ' region');
-	break;
+        break;
 
     case VIA_REGION_SHAPE.POLYGON:
         _via_is_user_drawing_polygon = false;
         _via_current_polygon_region_id = -1;
 
-	show_message('Press single click to define polygon vertices and ' +
-		     'click first vertex to close path');
-	break;
+        show_message('Press single click to define polygon vertices and ' +
+                     'click first vertex to close path');
+        break;
 
     case VIA_REGION_SHAPE.POINT:
-	show_message('Press single click to define points (or landmarks)');
-	break;
+        show_message('Press single click to define points (or landmarks)');
+        break;
     }
 }
 
@@ -2299,13 +2299,13 @@ function draw_all_region_id() {
         var annotation_str = (i+1);
         var bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 2;
 
-	var char_width = _via_reg_ctx.measureText('M').width;
-	var char_height = 1.8 * char_width;
+        var char_width = _via_reg_ctx.measureText('M').width;
+        var char_height = 1.8 * char_width;
 
         var r = _via_img_metadata[_via_image_id].regions[i].region_attributes;
         if ( r.size === 1 &&
-	     w > (2*char_width) ) {
-	    // show the attribute value
+             w > (2*char_width) ) {
+            // show the attribute value
             for (var key of r.keys()) {
                 annotation_str = r.get(key);
             }
@@ -2315,11 +2315,11 @@ function draw_all_region_id() {
                 // if text overflows, crop it
                 var str_max = Math.floor((w * annotation_str.length) / strw);
                 annotation_str = annotation_str.substr(0, str_max-1) + '.';
-		bgnd_rect_width = w;
+                bgnd_rect_width = w;
             } else {
-		bgnd_rect_width = strw + char_width;
-	    }
-	}
+                bgnd_rect_width = strw + char_width;
+            }
+        }
 
         // center the label
         x = x - (bgnd_rect_width/2 - w/2);
@@ -2336,8 +2336,8 @@ function draw_all_region_id() {
         _via_reg_ctx.globalAlpha = 1.0;
         _via_reg_ctx.fillStyle = 'yellow';
         _via_reg_ctx.fillText(annotation_str,
-			      Math.floor(x + 0.4*char_width),
-			      Math.floor(y - 0.35*char_height));
+                              Math.floor(x + 0.4*char_width),
+                              Math.floor(y - 0.35*char_height));
 
     }
 }
@@ -2719,8 +2719,8 @@ function is_on_polygon_vertex(all_points_x, all_points_y, px, py) {
 function _via_update_ui_components() {
     if ( !_via_is_window_resized && _via_current_image_loaded ) {
         show_message("Resizing window ...");
-	set_all_text_panel_display('none');
-	show_all_canvas();
+        set_all_text_panel_display('none');
+        show_all_canvas();
 
         _via_is_window_resized = true;
         show_image(_via_image_index);
@@ -3241,16 +3241,16 @@ function download_localStorage_data(type) {
 //
 function attr_input_focus(i) {
     if (_via_is_reg_attr_panel_visible) {
-	select_only_region(i);
-	_via_redraw_reg_canvas();
+        select_only_region(i);
+        _via_redraw_reg_canvas();
     }
     _via_is_user_updating_attribute_value=true;
 }
 
 function attr_input_blur(i) {
     if (_via_is_reg_attr_panel_visible) {
-	set_region_select_state(i, false);
-	_via_redraw_reg_canvas();
+        set_region_select_state(i, false);
+        _via_redraw_reg_canvas();
     }
     _via_is_user_updating_attribute_value=false;
 }
@@ -3350,9 +3350,9 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
 
             if ( di.has(key) ) {
                 var ip_val = di.get(key);
-		// escape all single and double quotes
-		ip_val = ip_val.replace(/'/g, '\'');
-		ip_val = ip_val.replace(/"/g, '&quot;');
+                // escape all single and double quotes
+                ip_val = ip_val.replace(/'/g, '\'');
+                ip_val = ip_val.replace(/"/g, '&quot;');
 
                 if (ip_val.length > 30) {
                     row.insertCell(-1).innerHTML = '<textarea ' +
@@ -3367,8 +3367,8 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
                 } else {
                     row.insertCell(-1).innerHTML = '<input type="text"' +
                         ' id="' +   input_id + '"' +
-			' value="' + ip_val + '"' +
-//			' value="my \'name\' is &quot;adutta&quot; which is."' +
+                        ' value="' + ip_val + '"' +
+//                      ' value="my \'name\' is &quot;adutta&quot; which is."' +
                         ' autocomplete="on"' +
                         ' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
                         ' onblur="attr_input_blur(' + rowi + ')"' +
@@ -3508,7 +3508,7 @@ function update_attribute_value(attr_id, value) {
         break;
     }
     if (_via_is_reg_attr_panel_visible) {
-	set_region_select_state(region_id, false);
+        set_region_select_state(region_id, false);
     }
     _via_redraw_reg_canvas();
     _via_is_user_updating_attribute_value = false;
