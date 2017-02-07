@@ -5,8 +5,7 @@ function _via_log(log_msg) {
     document.getElementById('unit_tests_log').innerHTML += '<br>' + log_msg;
 }
 
-function _via_log_test_result(test_id, test_result) {
-    var caller_name = _via_log_test_result.caller.name
+function _via_log_test_result(test_id, test_result, caller_name) {
     if ( !document.getElementById(caller_name) ) {
         var div_block = document.createElement('div');
         div_block.id = caller_name;
@@ -39,7 +38,6 @@ function _via_run_unit_tests() {
     for (var i=0; i < _via_unit_tests.length; ++i) {
         eval(_via_unit_tests[i]);
     }
-    _via_log('Finished running all unit tests.');
 }
 
 function _via_search_unit_tests() {
@@ -58,16 +56,16 @@ function _via_load_test_img() {
     _via_test_img_metadata[0] = new ImageMetadata('', 'test_pattern_qbist.jpg', 129855);
     _via_test_img_metadata[1] = new ImageMetadata('', 'a_swan_swimming_in_geneve_lake.jpg', 62201);
     _via_test_img_metadata[2] = new ImageMetadata('', 'sinus_test_pattern.jpg', 27894);
-    
+
     var img_order = [0, 1, 2];
     for (var i=0; i<_via_test_img_metadata.length; ++i) {
         var idx = img_order[i];
         _via_test_img_metadata[idx].base64_img_data = _via_unit_test_img[idx];
-        
+
         var filename = _via_test_img_metadata[idx].filename;
         var size = _via_test_img_metadata[idx].size;
-        
-        var img_id = _via_get_image_id(filename, size); 
+
+        var img_id = _via_get_image_id(filename, size);
 
         _via_img_metadata[img_id] = _via_test_img_metadata[idx];
         _via_image_id_list.push(img_id);
@@ -79,8 +77,13 @@ function _via_load_test_img() {
     show_image(0);
 }
 
-function _via_run_test(cmd) {
-    var result = eval(cmd);
-    _via_log_test_result(cmd, result);
-}
+function _via_run_test(cmd, delay_ms) {
+    var caller_name = _via_run_test.caller.name;
 
+    setTimeout( function() {
+        for ( var i=0; i<cmd.length; ++i) {
+            var result_i = eval(cmd[i]);
+            _via_log_test_result(cmd[i], result_i, caller_name);
+        }
+    }, delay_ms);
+}

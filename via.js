@@ -575,7 +575,6 @@ function import_annotations_from_json(data) {
             }
         }
     }
-
     show_message('Import Summary : [' + region_import_count + '] regions',
                  4 * VIA_THEME_MESSAGE_TIMEOUT_MS);
 
