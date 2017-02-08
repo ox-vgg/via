@@ -481,18 +481,18 @@
           <li onclick="download_all_region_data('csv')" title="Save Annotations (as CSV)">&DownArrowBar;</li>
           -->
 
-          <li style="margin-left: 1em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
-          <li onclick="move_to_next_image()" title="Next Image">&rarr;</li>
-          <li onclick="toggle_img_list()" title="List Images">&#9776;</li>
+          <li id="toolbar_prev_img" style="margin-left: 1em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
+          <li id="toolbar_next_img" onclick="move_to_next_image()" title="Next Image">&rarr;</li>
+          <li id="toolbar_list_img" onclick="toggle_img_list()" title="List Images">&#9776;</li>
 
-          <li style="margin-left: 2em;" onclick="zoom_out()" title="Zoom Out">&minus;</li>
-          <li onclick="zoom_in()" title="Zoom In">&plus;</li>
-          <li onclick="reset_zoom_level()" title="Zoom Reset">&equals;</li>
+          <li id="toolbar_zoom_out" style="margin-left: 2em;" onclick="zoom_out()" title="Zoom Out">&minus;</li>
+          <li id="toolbar_zoom_in" onclick="zoom_in()" title="Zoom In">&plus;</li>
+          <li id="toolbar_zoom_reset" onclick="reset_zoom_level()" title="Zoom Reset">&equals;</li>
 
-          <li style="margin-left: 2em;" onclick="copy_sel_regions()" title="Copy Region">c</li>
-          <li onclick="paste_sel_regions()" title="Paste Region">v</li>
-          <li onclick="sel_all_regions()" title="Select All Regions">a</li>
-          <li onclick="del_sel_regions()" title="Delete Region">&times;</li>
+          <li id="toolbar_copy_region" style="margin-left: 2em;" onclick="copy_sel_regions()" title="Copy Region">c</li>
+          <li id="toolbar_paste_region" onclick="paste_sel_regions()" title="Paste Region">v</li>
+          <li id="toolbar_sel_all_region" onclick="sel_all_regions()" title="Select All Regions">a</li>
+          <li id="toolbar_del_region" onclick="del_sel_regions()" title="Delete Region">&times;</li>
         </ul>
       </div> <!-- endof #toolbar -->
       <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">
@@ -673,12 +673,13 @@
 
     <!---->
     <script src="via.js"></script>
-    <script src="via_demo.js"></script>
+    <!--<script src="via_demo.js"></script>-->
 
-    <!-- Unit Tests
+    <!-- Unit Tests-->
     <script src="./tests/via_test_data.js"></script>
     <script src="./tests/via_test.js"></script>
     <script src="./tests/via_test_fileio.js"></script>
-     -->
+    <script src="./tests/via_test_region.js"></script>
+
   </body>
 </html>
