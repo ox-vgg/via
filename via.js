@@ -1095,7 +1095,7 @@ function hide_all_canvas() {
     canvas_panel.style.display = 'none';
 }
 
-
+/* @todo: for future releases
 // convert touch device events into equivalent mouse events
 _via_reg_canvas.addEventListener('touchstart', function(e) {
     var t = e.touches[0];
@@ -1122,6 +1122,7 @@ function gen_mouse_event(element, mouse_event_name, x, y) {
                                      });
     element.dispatchEvent(mouse_event);
 }
+*/
 
 // enter annotation mode on double click
 _via_reg_canvas.addEventListener('dblclick', function(e) {
