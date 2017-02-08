@@ -197,13 +197,6 @@ function _via_init() {
             _via_load_submodules();
         }, 100);
     }
-
-    // run attached unit tests (if any)
-    if (typeof _via_init_unit_tests === 'function') {
-        setTimeout(function() {
-            _via_init_unit_tests();
-        }, 100);
-    }
 }
 
 //
@@ -410,6 +403,10 @@ function import_annotations_from_file(event) {
     }
 }
 function import_annotations_from_csv(data) {
+    if (data === '' ||
+        typeof(data) === 'undefined') {
+        return;
+    }
     var region_import_count = 0;
     var image_count = 0;
     var malformed_csv_lines_count = 0;
@@ -531,6 +528,11 @@ function import_annotations_from_csv(data) {
 }
 
 function import_annotations_from_json(data) {
+    if (data === '' ||
+        typeof(data) === 'undefined') {
+        return;
+    }
+
     var d = JSON.parse(data);
 
     var image_count = 0;

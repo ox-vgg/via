@@ -1,15 +1,25 @@
 var _via_unit_tests = [];
 var _via_test_prefix = '_via_test_';
+var _via_ongoing_unit_test_id = 0;
 
-function _via_log(log_msg) {
-    document.getElementById('unit_tests_log').innerHTML += '<br>' + log_msg;
+// events
+var _via_unit_test_complete_event = new Event('_via_test_done');
+
+function _via_load_submodules() {
+    _via_init_unit_tests();
+}
+
+function _via_init_unit_tests() {
+    _via_load_test_img();
+    _via_search_unit_tests();
+    setTimeout(_via_run_unit_tests, 500);
 }
 
 function _via_log_test_result(test_id, test_result, caller_name) {
     if ( !document.getElementById(caller_name) ) {
         var div_block = document.createElement('div');
         div_block.id = caller_name;
-        document.getElementById('unit_tests_log').appendChild(div_block);
+        document.getElementById('_via_test_log').appendChild(div_block);
         div_block.innerHTML = caller_name + '() : ';
     }
 
@@ -22,22 +32,18 @@ function _via_log_test_result(test_id, test_result, caller_name) {
     document.getElementById(caller_name).innerHTML += hstr;
 }
 
-function _via_init_unit_tests() {
-    _via_load_test_img();
-    _via_search_unit_tests();
-    setTimeout(_via_run_unit_tests, 500);
-}
-
 function _via_run_unit_tests() {
     var log_div = document.createElement('div');
-    log_div.id = 'unit_tests_log';
+    log_div.id = '_via_test_log';
     log_div.style.fontFamily = 'Mono';
     document.getElementById('display_area').appendChild(log_div);
 
     // execute these functions sequentially
-    for (var i=0; i < _via_unit_tests.length; ++i) {
-        eval(_via_unit_tests[i]);
-    }
+    eval(_via_unit_tests[_via_ongoing_unit_test_id]);
+    window.addEventListener('_via_test_done', function(e) {
+        _via_ongoing_unit_test_id += 1;
+        eval(_via_unit_tests[_via_ongoing_unit_test_id]);
+    }, false);
 }
 
 function _via_search_unit_tests() {
@@ -52,6 +58,12 @@ function _via_search_unit_tests() {
 }
 
 function _via_load_test_img() {
+    // initial state
+    _via_img_metadata = {};
+    _via_image_id_list = [];
+    _via_img_count = 0;
+    _via_reload_img_table = false;
+
     var _via_test_img_metadata = [];
     _via_test_img_metadata[0] = new ImageMetadata('', 'test_pattern_qbist.jpg', 129855);
     _via_test_img_metadata[1] = new ImageMetadata('', 'a_swan_swimming_in_geneve_lake.jpg', 62201);
@@ -85,5 +97,66 @@ function _via_run_test(cmd, delay_ms) {
             var result_i = eval(cmd[i]);
             _via_log_test_result(cmd[i], result_i, caller_name);
         }
+        window.dispatchEvent(_via_unit_test_complete_event);
     }, delay_ms);
+}
+
+function _via_simulate_keypress(metakey, key) {
+
+}
+
+function _via_simulate_htmlelement_click(html_elements, click_delay_ms) {
+    if (typeof(click_delay_ms) === 'undefined') {
+        click_delay_ms = 0;
+    }
+
+    var e = new MouseEvent('click', {
+        'view': window,
+        'bubbles': true,
+        'cancelable': true
+    });
+
+    for (var i=0; i<html_elements.length; ++i) {
+        var html_element_i = document.getElementById(html_elements[i])
+        setTimeout( function(html_element) {
+            html_element.dispatchEvent(e);
+        }, click_delay_ms * i, html_element_i);
+    }
+}
+
+function _via_simulate_canvas_mousedown(canvas_name, x, y) {
+    var c = document.getElementById(canvas_name);
+    var r = c.getBoundingClientRect();
+    var e = new MouseEvent('mousedown', {
+        'view': window,
+        'bubbles': true,
+        'cancelable': true,
+        'screenX': x + r.left,
+        'screenY': y + r.top,
+        'clientX': x + r.left,
+        'clientY': y + r.top,
+        'button': 0
+    });
+    c.dispatchEvent(e);
+}
+
+function _via_simulate_canvas_mouseup(canvas_name, x, y) {
+    var c = document.getElementById(canvas_name);
+    var r = c.getBoundingClientRect();
+    var e = new MouseEvent('mouseup', {
+        'view': window,
+        'bubbles': true,
+        'cancelable': true,
+        'screenX': x + r.left,
+        'screenY': y + r.top,
+        'clientX': x + r.left,
+        'clientY': y + r.top,
+        'button': 0
+    });
+    c.dispatchEvent(e);
+}
+
+function _via_simulate_canvas_click(canvas_name, x, y) {
+    _via_simulate_canvas_mousedown(canvas_name, x, y);
+    _via_simulate_canvas_mouseup(canvas_name, x, y);
 }
