@@ -1113,7 +1113,7 @@ _via_reg_canvas.addEventListener('touchend', function(e) {
 }, false);
 
 function gen_mouse_event(element, mouse_event_name, x, y) {
-    var mouse_event = new MouseEvent("mousedown",
+    var mouse_event = new MouseEvent(mouse_event_name,
                                      { clientX: x,
                                        clientY: y
                                      });
