@@ -1844,16 +1844,19 @@ function hide_all_canvas() {
 _via_reg_canvas.addEventListener('touchstart', function(e) {
     var t = e.touches[0];
     gen_mouse_event(_via_reg_canvas, 'mousedown', t.clientX, t.clientY);
+    e.preventDefault();
 }, false);
 
 _via_reg_canvas.addEventListener('touchmove', function(e) {
     var t = e.touches[0];
     gen_mouse_event(_via_reg_canvas, 'mousemove', t.clientX, t.clientY);
+    e.preventDefault();
 }, false);
 
 _via_reg_canvas.addEventListener('touchend', function(e) {
     var t = e.touches[0];
     gen_mouse_event(_via_reg_canvas, 'mouseup', t.clientX, t.clientY);
+    e.preventDefault();
 }, false);
 
 function gen_mouse_event(element, mouse_event_name, x, y) {
