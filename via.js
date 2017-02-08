@@ -1095,6 +1095,31 @@ function hide_all_canvas() {
     canvas_panel.style.display = 'none';
 }
 
+
+// convert touch device events into equivalent mouse events
+_via_reg_canvas.addEventListener('touchstart', function(e) {
+    var t = e.touches[0];
+    gen_mouse_event(_via_reg_canvas, 'mousedown', t.clientX, t.clientY);
+}, false);
+
+_via_reg_canvas.addEventListener('touchmove', function(e) {
+    var t = e.touches[0];
+    gen_mouse_event(_via_reg_canvas, 'mousemove', t.clientX, t.clientY);
+}, false);
+
+_via_reg_canvas.addEventListener('touchend', function(e) {
+    var t = e.touches[0];
+    gen_mouse_event(_via_reg_canvas, 'mouseup', t.clientX, t.clientY);
+}, false);
+
+function gen_mouse_event(element, mouse_event_name, x, y) {
+    var mouse_event = new MouseEvent("mousedown",
+                                     { clientX: x,
+                                       clientY: y
+                                     });
+    element.dispatchEvent(mouse_event);
+}
+
 // enter annotation mode on double click
 _via_reg_canvas.addEventListener('dblclick', function(e) {
     _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
