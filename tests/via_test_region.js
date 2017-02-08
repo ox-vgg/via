@@ -36,7 +36,7 @@ function _via_test_region_delete_one() {
 
     // select the ellipse centered at (300,223)
     setTimeout( function() {
-        _via_simulate_canvas_click('region_canvas', 300, 223);
+        _via_simulate_canvas_click(300, 223);
     } , 700);
 
     // delete the selected region

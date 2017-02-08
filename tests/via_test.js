@@ -92,17 +92,13 @@ function _via_load_test_img() {
 function _via_run_test(cmd, delay_ms) {
     var caller_name = _via_run_test.caller.name;
 
-    setTimeout( function() {
+    setTimeout( function(cmd, caller_name) {
         for ( var i=0; i<cmd.length; ++i) {
             var result_i = eval(cmd[i]);
             _via_log_test_result(cmd[i], result_i, caller_name);
         }
         window.dispatchEvent(_via_unit_test_complete_event);
-    }, delay_ms);
-}
-
-function _via_simulate_keypress(metakey, key) {
-
+    }, delay_ms, cmd, caller_name);
 }
 
 function _via_simulate_htmlelement_click(html_elements, click_delay_ms) {
@@ -124,10 +120,12 @@ function _via_simulate_htmlelement_click(html_elements, click_delay_ms) {
     }
 }
 
-function _via_simulate_canvas_mousedown(canvas_name, x, y) {
+
+function _via_simulate_canvas_mouseevent(eventname, x, y) {
+    var canvas_name = 'region_canvas';
     var c = document.getElementById(canvas_name);
     var r = c.getBoundingClientRect();
-    var e = new MouseEvent('mousedown', {
+    var e = new MouseEvent(eventname, {
         'view': window,
         'bubbles': true,
         'cancelable': true,
@@ -140,23 +138,19 @@ function _via_simulate_canvas_mousedown(canvas_name, x, y) {
     c.dispatchEvent(e);
 }
 
-function _via_simulate_canvas_mouseup(canvas_name, x, y) {
-    var c = document.getElementById(canvas_name);
-    var r = c.getBoundingClientRect();
-    var e = new MouseEvent('mouseup', {
-        'view': window,
-        'bubbles': true,
-        'cancelable': true,
-        'screenX': x + r.left,
-        'screenY': y + r.top,
-        'clientX': x + r.left,
-        'clientY': y + r.top,
-        'button': 0
-    });
-    c.dispatchEvent(e);
+function _via_simulate_canvas_mouseup(x, y) {
+    _via_simulate_canvas_mouseevent('mouseup', x, y);
 }
 
-function _via_simulate_canvas_click(canvas_name, x, y) {
-    _via_simulate_canvas_mousedown(canvas_name, x, y);
-    _via_simulate_canvas_mouseup(canvas_name, x, y);
+function _via_simulate_canvas_mousedown(x, y) {
+    _via_simulate_canvas_mouseevent('mousedown', x, y);
+}
+
+function _via_simulate_canvas_mousemove(x, y) {
+    _via_simulate_canvas_mouseevent('mousemove', x, y);
+}
+
+function _via_simulate_canvas_click(x, y) {
+    _via_simulate_canvas_mousedown(x, y);
+    _via_simulate_canvas_mouseup(x, y);
 }
