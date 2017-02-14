@@ -241,7 +241,7 @@ region boundary (except polygon), resizing or moving regions. Furthermore, a
 select/unselect.
 
  * `_via_reg_canvas.addEventListener('mouseup', function(e) { ... }` :
-   - The [mouseup]{.datai} event may indicate that the user has finished 
+   - The `mouseup` event may indicate that the user has finished 
 drawing a region, moving a region, resizing a region, etc.
    - A combination of `mousedown` and `mouseup` events within a small region 
 indicates a single mouse click which indicates the user's intention to 
