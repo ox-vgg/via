@@ -83,9 +83,13 @@ file attributes as
 Map { 'caption': 'a white football flying over a red car' }
 ```
 
- * `regions` : an array of `ImageRegion()` objects containing the following 
-properties corresponding to each region (rectangular, circular, polygon, etc) 
-defined in the image
+ * `regions` : an array of `ImageRegion()` objects   
+
+Each image can have multiple regions of varying shape and attributes.
+Therefore, each array entry in `ImageMetadata.regions[]` contains an object of
+type `ImageRegion()` with the following properties corresponding to each 
+region (rectangular, circular, polygon, etc) defined in the image:
+
  * `shape_attributes` : a [Map()](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map) 
 of attributes defining the shape of the region. For example, a rectangular 
 region has the following shape attributes 
