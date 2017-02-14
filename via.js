@@ -852,8 +852,8 @@ function show_image(image_index) {
     _via_is_loading_current_image = true;
 
     img_reader.addEventListener( "loadstart", function(e) {
-        fileinfo.innerHTML = '<strong>Loading image ... </strong>';
-        // <div class="loading_spinbox"></div>
+        fileinfo.innerHTML = '<div class="loading_spinbox"></div>' +
+            '<strong>&nbsp;Loading image ... </strong>';
     }, false);
 
     img_reader.addEventListener( "progress", function(e) {
