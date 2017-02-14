@@ -501,7 +501,7 @@ This action is initiated by the function `download_all_region_data()`.
 The conversion from `_via_img_metadata` object to a user requested
 format ([CSV](https://en.wikipedia.org/wiki/Comma-separated_values) or
 [JSON](https://en.wikipedia.org/wiki/JSON)) is done by the function
-`package_region_data()` while the function `save_data_to_local_file()`
+`pack_via_metadata()` while the function `save_data_to_local_file()`
 triggers the browser action to download this file to local disk.
 
 By default, the CSV export uses comma "," as the separating character.
