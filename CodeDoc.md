@@ -504,6 +504,8 @@ format ([CSV](https://en.wikipedia.org/wiki/Comma-separated_values) or
 `package_region_data()` while the function `save_data_to_local_file()`
 triggers the browser action to download this file to local disk.
 
+By default, the CSV export uses comma "," as the separating character.
+
 Importing Annotations
 ---------------------
 
@@ -513,6 +515,9 @@ allows the user to select a local file. Once a local file has been
 selected, the function `import_annotations_from_file()` is triggered to
 import annotation and insert the valid ones into the `_via_img_metadata`
 object.
+
+Note: the CSV file containing annotation data should have comma "," as the 
+separating character.
 
 Source Code License
 -------------------
