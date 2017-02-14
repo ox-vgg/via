@@ -52,6 +52,7 @@ drawing regions, etc) are facilitated by the javascript codebase.
  * [Adding New Attributes](#adding-new-attributes)
  * [Download Annotations](#download-annotations)
  * [Importing Annotations](#importing-annotations)
+ * [Building Applications using VIA as a Module](#building-applications-using-via-as-a-module)
  * [Source Code License](#source-code-license)
 
 
@@ -518,6 +519,20 @@ object.
 
 Note: the CSV file containing annotation data should have comma "," as the 
 separating character.
+
+Building Applications using VIA as a Module
+-------------------------------------------
+At the end of application initialization, VIA application invokes the function 
+`_via_load_submodules()` if it is defined in the Javascript global namespace. 
+This behaviour can be used to build a lot of interesting tools that rely on VIA 
+for the core functionality of image annotation. See the following for examples:
+ * [via_demo.js](via_demo.js) : VIA application packaged together with some 
+images and their annotations for demonstration of VIA features.
+ * [DMIAT](https://gitlab.com/vgg/via/tree/dmiat/) : Distributed Manual Image 
+Annotation Tool (DMIAT) is built on top of VIA and isolates the image annotators 
+from the technical details of loading images and saving/sending annotations. 
+   * images to be annotated are predefined in the form of http-image-url
+   * the annotations are automatically pushed to git repository
 
 Source Code License
 -------------------
