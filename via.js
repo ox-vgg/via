@@ -227,7 +227,8 @@ function download_all_region_data(type) {
 
     if ( all_region_data_blob.size > (2*1024*1024) &&
          type === 'csv' ) {
-        show_message('CSV file size is ' + (all_region_data_blob.size/(1024*1024)) + ' MB. We advise you to instead download as JSON');
+        show_message('CSV file size is ' + (all_region_data_blob.size/(1024*1024)) +
+                     ' MB. We advise you to instead download as JSON');
     } else {
         save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
     }
@@ -851,7 +852,8 @@ function show_image(image_index) {
     _via_is_loading_current_image = true;
 
     img_reader.addEventListener( "loadstart", function(e) {
-        fileinfo.innerHTML = '<strong>Loading image ...</strong>';
+        fileinfo.innerHTML = '<strong>Loading image ... </strong>';
+        // <div class="loading_spinbox"></div>
     }, false);
 
     img_reader.addEventListener( "progress", function(e) {
@@ -1095,35 +1097,6 @@ function hide_all_canvas() {
     canvas_panel.style.display = 'none';
 }
 
-/* @todo: for future releases
-// convert touch device events into equivalent mouse events
-_via_reg_canvas.addEventListener('touchstart', function(e) {
-    var t = e.touches[0];
-    gen_mouse_event(_via_reg_canvas, 'mousedown', t.clientX, t.clientY);
-    e.preventDefault();
-}, false);
-
-_via_reg_canvas.addEventListener('touchmove', function(e) {
-    var t = e.touches[0];
-    gen_mouse_event(_via_reg_canvas, 'mousemove', t.clientX, t.clientY);
-    e.preventDefault();
-}, false);
-
-_via_reg_canvas.addEventListener('touchend', function(e) {
-    var t = e.touches[0];
-    gen_mouse_event(_via_reg_canvas, 'mouseup', t.clientX, t.clientY);
-    e.preventDefault();
-}, false);
-
-function gen_mouse_event(element, mouse_event_name, x, y) {
-    var mouse_event = new MouseEvent(mouse_event_name,
-                                     { clientX: x,
-                                       clientY: y
-                                     });
-    element.dispatchEvent(mouse_event);
-}
-*/
-
 // enter annotation mode on double click
 _via_reg_canvas.addEventListener('dblclick', function(e) {
     _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
@@ -1141,6 +1114,7 @@ _via_reg_canvas.addEventListener('dblclick', function(e) {
 // user clicks on the canvas
 _via_reg_canvas.addEventListener('mousedown', function(e) {
     _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
+    console.log('mousedown at: ' + _via_click_x0 + ',' + _via_click_y0);
     _via_region_edge = is_on_region_corner(_via_click_x0, _via_click_y0);
     var region_id = is_inside_region(_via_click_x0, _via_click_y0);
 
@@ -1196,6 +1170,7 @@ _via_reg_canvas.addEventListener('mousedown', function(e) {
 //  - moving/resizing/select/unselect existing region
 _via_reg_canvas.addEventListener('mouseup', function(e) {
     _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
+    console.log('mouseup at: ' + _via_click_x1 + ',' + _via_click_y1);
 
     var click_dx = Math.abs(_via_click_x1 - _via_click_x0);
     var click_dy = Math.abs(_via_click_y1 - _via_click_y0);
@@ -3434,7 +3409,7 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
                     row.insertCell(-1).innerHTML = '<input type="text"' +
                         ' id="' +   input_id + '"' +
                         ' value="' + ip_val + '"' +
-//                      ' value="my \'name\' is &quot;adutta&quot; which is."' +
+                        //                      ' value="my \'name\' is &quot;adutta&quot; which is."' +
                         ' autocomplete="on"' +
                         ' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
                         ' onblur="attr_input_blur(' + rowi + ')"' +
@@ -3622,11 +3597,12 @@ function print_current_state_vars() {
                 '\n_via_is_region_selected'+_via_is_region_selected+
                 '\n_via_is_user_updating_attribute_name'+_via_is_user_updating_attribute_name+
                 '\n_via_is_user_updating_attribute_value'+_via_is_user_updating_attribute_value+
-               '\n_via_is_user_adding_attribute_name'+_via_is_user_adding_attribute_name);
+                '\n_via_is_user_adding_attribute_name'+_via_is_user_adding_attribute_name);
 }
 
 function print_current_image_data() {
     console.log(_via_img_metadata);
+    console.log('_via_canvas_scale = ' + _via_canvas_scale);
     for ( var image_id in _via_img_metadata) {
         console.log(fn);
         var fn = _via_img_metadata[image_id].filename;

@@ -148,7 +148,7 @@
       width: 100%;
       z-index: 1;
       padding: 0;
-      padding-top: 2em;
+      padding-top: 1.0125em; /* ensures the mouse event (x,y) coordinates are integer */
       }
       #leftsidebar {
       display: table-cell;
@@ -407,6 +407,24 @@
       top: 0px;
       left: 0px;
       z-index: 2;
+      }
+      /* Loading spinbar */
+      .loading_spinbox {
+      border: 10px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 10px solid #3498db;
+      width: 20px;
+      height: 20px;
+      -webkit-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
+      }
+      @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+      }
+      @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
       }
     </style>
   </head>
@@ -673,7 +691,9 @@
 
     <!---->
     <script src="via.js"></script>
-    <!--<script src="via_demo.js"></script>-->
+    <!--
+    <script src="via_demo.js"></script>
+    -->
 
     <!-- Unit Tests-->
     <script src="./tests/via_test_data.js"></script>
@@ -681,10 +701,6 @@
     <script src="./tests/via_test_util.js"></script>
     <script src="./tests/via_test_fileio.js"></script>
     <script src="./tests/via_test_region.js"></script>
-    <!-- fixme:
-         via_test_fileio_export() runs without any trouble
-         if ./tests/via_test_region.js is not present
-      -->
 
   </body>
 </html>
