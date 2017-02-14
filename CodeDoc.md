@@ -125,16 +125,16 @@ _via_img_metadata[img_id].regions[0].shape_attributes.set('x', '115');
 _via_img_metadata[img_id].regions[0].shape_attributes.set('y', '210');
 _via_img_metadata[img_id].regions[0].shape_attributes.set('width', '100');
 _via_img_metadata[img_id].regions[0].shape_attributes.set('height', '200');
-_via_img_metadata[img_id].regions[0].region_attributes.set('object_name, 'car');
-_via_img_metadata[img_id].regions[0].region_attributes.set('object_color, 'red');
+_via_img_metadata[img_id].regions[0].region_attributes.set('object_name', 'car');
+_via_img_metadata[img_id].regions[0].region_attributes.set('object_color', 'red');
 
 _via_img_metadata[img_id].regions[1] = new ImageRegion();
 _via_img_metadata[img_id].regions[1].shape_attributes.set('name', 'circle');
 _via_img_metadata[img_id].regions[1].shape_attributes.set('cx', '50');
 _via_img_metadata[img_id].regions[1].shape_attributes.set('cy', '90');
-_via_img_metadata[img_id].regions[1].shape_attributes.set('r, '20');
-_via_img_metadata[img_id].regions[1].region_attributes.set('object_name, 'football);
-_via_img_metadata[img_id].regions[1].region_attributes.set('object_color, 'white);
+_via_img_metadata[img_id].regions[1].shape_attributes.set('r', '20');
+_via_img_metadata[img_id].regions[1].region_attributes.set('object_name', 'football');
+_via_img_metadata[img_id].regions[1].region_attributes.set('object_color', 'white');
 ```
 
 For the current image, we keep a copy of all region's coordinates in the
