@@ -313,7 +313,8 @@ function store_local_img_ref(event) {
 
     var discarded_file_count = 0;
     for ( var i=0; i<user_selected_images.length; ++i) {
-        if (user_selected_images[i].type.includes('image/')) {
+	var filetype = user_selected_images[i].type.substr(0,5);
+        if ( filetype === 'image') {
             var filename = user_selected_images[i].name;
             var size = user_selected_images[i].size;
             var img_id = _via_get_image_id(filename, size);
@@ -389,8 +390,8 @@ function import_region_attributes_from_csv(data) {
 
 function import_annotations_from_file(event) {
     var selected_files = event.target.files;
-
-    for (var file of selected_files) {
+    for (var i=0; i < selected_files.length; ++i) {
+	var file = selected_files[i];
         switch(file.type) {
         case 'text/plain':
         case 'text/csv':
