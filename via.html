@@ -155,7 +155,7 @@ ga('send', 'pageview');
       width: 100%;
       z-index: 1;
       padding: 0;
-      padding-top: 2em;
+      padding-top: 1.0125em; /* ensures the mouse event (x,y) coordinates are integer */
       }
       #leftsidebar {
       display: table-cell;
@@ -415,6 +415,23 @@ ga('send', 'pageview');
       left: 0px;
       z-index: 2;
       }
+      /* Loading spinbar */
+      .loading_spinbox {
+      display: inline-block;
+      border: 0.5em solid #cccccc;
+      border-radius: 50%;
+      border-top: 0.5em solid #000000;
+      -webkit-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
+      }
+      @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+      }
+      @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+      }
     </style>
   </head>
 
@@ -488,18 +505,18 @@ ga('send', 'pageview');
           <li onclick="download_all_region_data('csv')" title="Save Annotations (as CSV)">&DownArrowBar;</li>
           -->
 
-          <li style="margin-left: 1em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
-          <li onclick="move_to_next_image()" title="Next Image">&rarr;</li>
-          <li onclick="toggle_img_list()" title="List Images">&#9776;</li>
+          <li id="toolbar_prev_img" style="margin-left: 1em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
+          <li id="toolbar_next_img" onclick="move_to_next_image()" title="Next Image">&rarr;</li>
+          <li id="toolbar_list_img" onclick="toggle_img_list()" title="List Images">&#9776;</li>
 
-          <li style="margin-left: 2em;" onclick="zoom_out()" title="Zoom Out">&minus;</li>
-          <li onclick="zoom_in()" title="Zoom In">&plus;</li>
-          <li onclick="reset_zoom_level()" title="Zoom Reset">&equals;</li>
+          <li id="toolbar_zoom_out" style="margin-left: 2em;" onclick="zoom_out()" title="Zoom Out">&minus;</li>
+          <li id="toolbar_zoom_in" onclick="zoom_in()" title="Zoom In">&plus;</li>
+          <li id="toolbar_zoom_reset" onclick="reset_zoom_level()" title="Zoom Reset">&equals;</li>
 
-          <li style="margin-left: 2em;" onclick="copy_sel_regions()" title="Copy Region">c</li>
-          <li onclick="paste_sel_regions()" title="Paste Region">v</li>
-          <li onclick="sel_all_regions()" title="Select All Regions">a</li>
-          <li onclick="del_sel_regions()" title="Delete Region">&times;</li>
+          <li id="toolbar_copy_region" style="margin-left: 2em;" onclick="copy_sel_regions()" title="Copy Region">c</li>
+          <li id="toolbar_paste_region" onclick="paste_sel_regions()" title="Paste Region">v</li>
+          <li id="toolbar_sel_all_region" onclick="sel_all_regions()" title="Select All Regions">a</li>
+          <li id="toolbar_del_region" onclick="del_sel_regions()" title="Delete Region">&times;</li>
         </ul>
       </div> <!-- endof #toolbar -->
       <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">
@@ -905,7 +922,8 @@ function download_all_region_data(type) {
 
     if ( all_region_data_blob.size > (2*1024*1024) &&
          type === 'csv' ) {
-        show_message('CSV file size is ' + (all_region_data_blob.size/(1024*1024)) + ' MB. We advise you to instead download as JSON');
+        show_message('CSV file size is ' + (all_region_data_blob.size/(1024*1024)) +
+                     ' MB. We advise you to instead download as JSON');
     } else {
         save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
     }
@@ -1529,7 +1547,8 @@ function show_image(image_index) {
     _via_is_loading_current_image = true;
 
     img_reader.addEventListener( "loadstart", function(e) {
-        fileinfo.innerHTML = '<strong>Loading image ...</strong>';
+        fileinfo.innerHTML = '<div class="loading_spinbox"></div>' +
+            '<strong>&nbsp;Loading image ... </strong>';
     }, false);
 
     img_reader.addEventListener( "progress", function(e) {
@@ -1773,34 +1792,6 @@ function hide_all_canvas() {
     canvas_panel.style.display = 'none';
 }
 
-
-// convert touch device events into equivalent mouse events
-_via_reg_canvas.addEventListener('touchstart', function(e) {
-    var t = e.touches[0];
-    gen_mouse_event(_via_reg_canvas, 'mousedown', t.clientX, t.clientY);
-    e.preventDefault();
-}, false);
-
-_via_reg_canvas.addEventListener('touchmove', function(e) {
-    var t = e.touches[0];
-    gen_mouse_event(_via_reg_canvas, 'mousemove', t.clientX, t.clientY);
-    e.preventDefault();
-}, false);
-
-_via_reg_canvas.addEventListener('touchend', function(e) {
-    var t = e.touches[0];
-    gen_mouse_event(_via_reg_canvas, 'mouseup', t.clientX, t.clientY);
-    e.preventDefault();
-}, false);
-
-function gen_mouse_event(element, mouse_event_name, x, y) {
-    var mouse_event = new MouseEvent(mouse_event_name,
-                                     { clientX: x,
-                                       clientY: y
-                                     });
-    element.dispatchEvent(mouse_event);
-}
-
 // enter annotation mode on double click
 _via_reg_canvas.addEventListener('dblclick', function(e) {
     _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
@@ -1818,6 +1809,7 @@ _via_reg_canvas.addEventListener('dblclick', function(e) {
 // user clicks on the canvas
 _via_reg_canvas.addEventListener('mousedown', function(e) {
     _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
+    console.log('mousedown at: ' + _via_click_x0 + ',' + _via_click_y0);
     _via_region_edge = is_on_region_corner(_via_click_x0, _via_click_y0);
     var region_id = is_inside_region(_via_click_x0, _via_click_y0);
 
@@ -1873,6 +1865,7 @@ _via_reg_canvas.addEventListener('mousedown', function(e) {
 //  - moving/resizing/select/unselect existing region
 _via_reg_canvas.addEventListener('mouseup', function(e) {
     _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
+    console.log('mouseup at: ' + _via_click_x1 + ',' + _via_click_y1);
 
     var click_dx = Math.abs(_via_click_x1 - _via_click_x0);
     var click_dy = Math.abs(_via_click_y1 - _via_click_y0);
@@ -4111,7 +4104,7 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
                     row.insertCell(-1).innerHTML = '<input type="text"' +
                         ' id="' +   input_id + '"' +
                         ' value="' + ip_val + '"' +
-//                      ' value="my \'name\' is &quot;adutta&quot; which is."' +
+                        //                      ' value="my \'name\' is &quot;adutta&quot; which is."' +
                         ' autocomplete="on"' +
                         ' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
                         ' onblur="attr_input_blur(' + rowi + ')"' +
@@ -4299,11 +4292,12 @@ function print_current_state_vars() {
                 '\n_via_is_region_selected'+_via_is_region_selected+
                 '\n_via_is_user_updating_attribute_name'+_via_is_user_updating_attribute_name+
                 '\n_via_is_user_updating_attribute_value'+_via_is_user_updating_attribute_value+
-               '\n_via_is_user_adding_attribute_name'+_via_is_user_adding_attribute_name);
+                '\n_via_is_user_adding_attribute_name'+_via_is_user_adding_attribute_name);
 }
 
 function print_current_image_data() {
     console.log(_via_img_metadata);
+    console.log('_via_canvas_scale = ' + _via_canvas_scale);
     for ( var image_id in _via_img_metadata) {
         console.log(fn);
         var fn = _via_img_metadata[image_id].filename;
@@ -4344,12 +4338,18 @@ function print_current_image_data() {
 
     <!---->
     <script src="via.js"></script>
+    <!--
     <script src="via_demo.js"></script>
+    -->
 
-    <!-- Unit Tests
+    <!-- Unit Tests-->
+    <!--
     <script src="./tests/via_test_data.js"></script>
     <script src="./tests/via_test.js"></script>
+    <script src="./tests/via_test_util.js"></script>
     <script src="./tests/via_test_fileio.js"></script>
-     -->
+    <script src="./tests/via_test_region.js"></script>
+    -->
+
   </body>
 </html>
