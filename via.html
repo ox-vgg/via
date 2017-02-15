@@ -1008,7 +1008,8 @@ function store_local_img_ref(event) {
 
     var discarded_file_count = 0;
     for ( var i=0; i<user_selected_images.length; ++i) {
-        if (user_selected_images[i].type.includes('image/')) {
+	var filetype = user_selected_images[i].type.substr(0,5);
+        if ( filetype === 'image') {
             var filename = user_selected_images[i].name;
             var size = user_selected_images[i].size;
             var img_id = _via_get_image_id(filename, size);
@@ -1084,8 +1085,8 @@ function import_region_attributes_from_csv(data) {
 
 function import_annotations_from_file(event) {
     var selected_files = event.target.files;
-
-    for (var file of selected_files) {
+    for (var i=0; i < selected_files.length; ++i) {
+	var file = selected_files[i];
         switch(file.type) {
         case 'text/plain':
         case 'text/csv':
@@ -1809,7 +1810,6 @@ _via_reg_canvas.addEventListener('dblclick', function(e) {
 // user clicks on the canvas
 _via_reg_canvas.addEventListener('mousedown', function(e) {
     _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
-    console.log('mousedown at: ' + _via_click_x0 + ',' + _via_click_y0);
     _via_region_edge = is_on_region_corner(_via_click_x0, _via_click_y0);
     var region_id = is_inside_region(_via_click_x0, _via_click_y0);
 
@@ -1865,7 +1865,6 @@ _via_reg_canvas.addEventListener('mousedown', function(e) {
 //  - moving/resizing/select/unselect existing region
 _via_reg_canvas.addEventListener('mouseup', function(e) {
     _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
-    console.log('mouseup at: ' + _via_click_x1 + ',' + _via_click_y1);
 
     var click_dx = Math.abs(_via_click_x1 - _via_click_x0);
     var click_dy = Math.abs(_via_click_y1 - _via_click_y0);
@@ -4336,8 +4335,9 @@ function print_current_image_data() {
 }
     </script>
 
-    <!---->
+    <!--
     <script src="via.js"></script>
+    -->
     <!--
     <script src="via_demo.js"></script>
     -->
