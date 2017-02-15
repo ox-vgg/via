@@ -1115,7 +1115,6 @@ _via_reg_canvas.addEventListener('dblclick', function(e) {
 // user clicks on the canvas
 _via_reg_canvas.addEventListener('mousedown', function(e) {
     _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
-    console.log('mousedown at: ' + _via_click_x0 + ',' + _via_click_y0);
     _via_region_edge = is_on_region_corner(_via_click_x0, _via_click_y0);
     var region_id = is_inside_region(_via_click_x0, _via_click_y0);
 
@@ -1171,7 +1170,6 @@ _via_reg_canvas.addEventListener('mousedown', function(e) {
 //  - moving/resizing/select/unselect existing region
 _via_reg_canvas.addEventListener('mouseup', function(e) {
     _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
-    console.log('mouseup at: ' + _via_click_x1 + ',' + _via_click_y1);
 
     var click_dx = Math.abs(_via_click_x1 - _via_click_x0);
     var click_dy = Math.abs(_via_click_y1 - _via_click_y0);
