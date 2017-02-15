@@ -43,7 +43,7 @@ var VIA_REGION_MIN_DIM = 3;     // in pixel
 var VIA_MOUSE_CLICK_TOL = 2;    // in pixel
 var VIA_ELLIPSE_EDGE_TOL = 0.2;
 var VIA_THETA_TOL = Math.PI/18; // 10 degrees
-var POLYGON_RESIZE_VERTEX_OFFSET = 100;
+var VIA_POLYGON_RESIZE_VERTEX_OFFSET = 100;
 var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5];
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
 var VIA_ATTR_PANEL_FONT_SIZE_LEVELS = ['xx-small', 'x-small', 'small',
@@ -1341,7 +1341,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
             break;
 
         case VIA_REGION_SHAPE.POLYGON:
-            var moved_vertex_id = _via_region_edge[1] - POLYGON_RESIZE_VERTEX_OFFSET;
+            var moved_vertex_id = _via_region_edge[1] - VIA_POLYGON_RESIZE_VERTEX_OFFSET;
 
             canvas_attr.get('all_points_x')[moved_vertex_id] = Math.round(_via_current_x);
             canvas_attr.get('all_points_y')[moved_vertex_id] = Math.round(_via_current_y);
@@ -1655,7 +1655,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
                     _via_reg_canvas.style.cursor = "default";
                 }
 
-                if (_via_region_edge[1] >= POLYGON_RESIZE_VERTEX_OFFSET) {
+                if (_via_region_edge[1] >= VIA_POLYGON_RESIZE_VERTEX_OFFSET) {
                     // indicates mouse over polygon vertex
                     _via_reg_canvas.style.cursor = "crosshair";
                 }
@@ -1800,7 +1800,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
         case VIA_REGION_SHAPE.POLYGON:
             var moved_all_points_x = attr.get('all_points_x').slice(0);
             var moved_all_points_y = attr.get('all_points_y').slice(0);
-            var moved_vertex_id = _via_region_edge[1] - POLYGON_RESIZE_VERTEX_OFFSET;
+            var moved_vertex_id = _via_region_edge[1] - VIA_POLYGON_RESIZE_VERTEX_OFFSET;
 
             moved_all_points_x[moved_vertex_id] = _via_current_x;
             moved_all_points_y[moved_vertex_id] = _via_current_y;
@@ -2739,7 +2739,7 @@ function is_on_polygon_vertex(all_points_x, all_points_y, px, py) {
     for (var i=0; i<n; ++i) {
         if ( Math.abs(all_points_x[i] - px) < VIA_POLYGON_VERTEX_MATCH_TOL &&
              Math.abs(all_points_y[i] - py) < VIA_POLYGON_VERTEX_MATCH_TOL ) {
-            return (POLYGON_RESIZE_VERTEX_OFFSET+i);
+            return (VIA_POLYGON_RESIZE_VERTEX_OFFSET+i);
         }
     }
     return 0;
@@ -3382,6 +3382,7 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
 
         if (data[rowi].is_user_selected) {
             region_id_cell.style.backgroundColor = '#5599FF';
+            row.style.backgroundColor = '#f2f2f2';
             sel_rows.push(row);
         }
 
@@ -3408,7 +3409,6 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
                     row.insertCell(-1).innerHTML = '<input type="text"' +
                         ' id="' +   input_id + '"' +
                         ' value="' + ip_val + '"' +
-                        //                      ' value="my \'name\' is &quot;adutta&quot; which is."' +
                         ' autocomplete="on"' +
                         ' onchange="update_attribute_value(\'' + input_id + '\', this.value)"' +
                         ' onblur="attr_input_blur(' + rowi + ')"' +
