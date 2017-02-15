@@ -24,6 +24,7 @@ function import_from_local_file(selected_files) {
             break;
         }
     }
+    console.log(filename_size_map);
 }
 
 function save_data_to_local_file(data, filename) {
@@ -48,7 +49,6 @@ function _via_get_image_id(filename, size) {
 }
 
 function process_file(data) {
-    console.log(data);
     show_message(' ', false);
     var lines = data.split('\n');
 
@@ -85,7 +85,6 @@ function process_file(data) {
                 continue;
             }
 
-            console.log('line ' + i + ' = ' + lines[i]);
             var keyval_sep_index = lines[i].indexOf(KEYVAL_SEPERATOR);
             var keyvalue = [lines[i].substring(0, keyval_sep_index),
                             lines[i].substring(keyval_sep_index+1)];
@@ -162,11 +161,13 @@ function process_file(data) {
             }
         }
     }
-    console.log(_via_images_as_obj);
-/*
+
+    if (filename_size_map.has(filename)) {
+        image_data.regions.push(regioni);
+    }
+
     var all_data_blob = new Blob([JSON.stringify(_via_images_as_obj)], {type: 'text/json;charset=utf-8'});
     save_data_to_local_file(all_data_blob, 'annotations.json');
-*/
 }
 
 function replace_special_chars(data) {

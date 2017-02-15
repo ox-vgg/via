@@ -8,7 +8,7 @@ creator_of_the_image_and_description_(owners_institution: Napoli, Bibilioteca Na
 creator_of_the_image_and_description_(scholar): Matilde Malaspina
 date_that_the_image_was_made: 12/09/2015
 folio: a10r
-iconclass: 85A(DE ACCIPITRE ET COLUMBIS)FABLESOFAESOP(WITH TITLE); 25F39(DOVE) other birds: dove; 25F33(SPARROW-HAWK) predatory birds: sparrow-hawk; 47G532 tiles, bricks ~ building material; 41A161 country-house; 48C1621 arcade ~ architecture
+iconclass: 85A(DE ACCIPITRE ET COLUMBIS)FABLESOFAESOP(WITH TITLE); 25F39(DOVE) "other birds": dove; 25F33(SPARROW-HAWK) predatory birds: sparrow-hawk; 47G532 tiles, bricks ~ building material; 41A161 country-house; 48C1621 arcade ~ architecture
 internal_number_of_object: c
 keywords: Dove; Sparrow-hawk; Tree; Brick; House; Arcade
 name: ia00123500_02013339_a10r center
