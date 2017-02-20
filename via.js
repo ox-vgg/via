@@ -3251,7 +3251,7 @@ function clear_localStorage() {
 
 function show_localStorage_recovery_options() {
     var hstr = [];
-    var saved_date = new Date( parseInt(localStorage.getItem('_via_timestamp')) );
+    var saved_date = localStorage.getItem('_via_timestamp');
     var saved_data_size = localStorage.getItem('_via_img_metadata').length / 1024; // in Kb
 
 
