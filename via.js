@@ -427,7 +427,8 @@ function import_annotations_from_csv(data) {
             // #filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
             var d = csvdata[i].substring(1, csvdata[i].length); // remove #
             d = d.split(',');
-            var filename_index, size_index, file_attr_index, region_shape_attr_index
+            var filename_index, size_index, file_attr_index;
+            var region_shape_attr_index, region_attr_index;
             for ( var j=0; j<d.length; ++j) {
                 switch ( d[j] ) {
                 case 'filename':
