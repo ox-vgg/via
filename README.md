@@ -48,6 +48,7 @@ Javascript, HTML and CSS.
    * [VGG Image Annotator @ develop branch](https://gitlab.com/vgg/via/blob/develop)
    * [VGG Face Annotator @ face_annotator branch](https://gitlab.com/vgg/via/tree/face_annotator)
  * [Source code documentation](https://gitlab.com/vgg/via/blob/develop/CodeDoc.md)
+ * [Contributing Guidelines](https://gitlab.com/vgg/via/blob/develop/CONTRIBUTING.md)
  * Unit Tests
    * [tests/via_test_fileio.js](tests/via_test_fileio.js) : tests for import/export of annotations
    * [tests/via_test_region.js](tests/via_test_region.js) : tests for region create, move, delete operations
