@@ -1,6 +1,0 @@
-#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
-sample_img5b.jpg,54044,"",5,0,"name=circle;cx=895;cy=1011;r=97;","shape=circular;size=1;"
-sample_img5b.jpg,54044,"",5,1,"name=ellipse;cx=668;cy=591;rx=77;ry=164;","shape=elliptical;size=2;"
-sample_img5b.jpg,54044,"",5,2,"name=rect;x=819;y=143;width=261;height=213;","shape=rectangle;size=3;"
-sample_img5b.jpg,54044,"",5,3,"name=polygon;all_points_x=[211:222:582:211];all_points_y=[679:1096:872:679];","shape=triangle;size=4;"
-sample_img5b.jpg,54044,"",5,4,"name=polygon;all_points_x=[246:49:143:395:462:246];all_points_y=[112:272:518:492:242:112];","shape=pentagon;size=5;"

@@ -1,3 +1,19 @@
+## [1.0.1] - not released yet
+ * double buffering of image canvas to improve image loading performance
+
+## [1.0.0] - not released yet
+ * file-attributes support added (useful for weakly supervised learning)
+ * spreadsheet like editor for region and file attributes
+ * visualization of loaded image list improved
+ * user annotation data cached in browser's localStorage (for data recovery on browser crash)
+ * zoom in/out support
+ * improved performance using multi-layered canvas for image and annotations
+ * new user interface layout (added toolbar on top navigation panel)
+ * added Getting Started guide and License to help menu
+ * CSV import/export now conforms to RFC 4180 standard
+ * added some basic unit tests
+ * added support for point regions (useful for landmark annotations)
+
 ## [0.1b] - 2016-10-24
  * first release of VGG image annotator
  * supports following region shape: rectangle, circle, ellipse, polygon
@@ -5,4 +21,3 @@
  * Ctrl a/c/v to select all, copy and paste image regions
  * import/export of region data from/to text file in csv,json format
  * display list of loaded images
-

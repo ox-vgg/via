@@ -1,0 +1,13 @@
+#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
+test_pattern_qbist.jpg,129855,"{""caption"":""+-08374*&$£*""}",8,0,"{""name"":""ellipse"",""cx"":252,""cy"":190,""rx"":27,""ry"":26}","{""name"":""ellipse \""red\""""}"
+test_pattern_qbist.jpg,129855,"{""caption"":""+-08374*&$£*""}",8,1,"{""name"":""rect"",""x"":290,""y"":208,""width"":127,""height"":113}","{""name"":""rectangle 'black'""}"
+test_pattern_qbist.jpg,129855,"{""caption"":""+-08374*&$£*""}",8,2,"{""name"":""point"",""cx"":51,""cy"":37}","{""name"":""red \""dot\""""}"
+test_pattern_qbist.jpg,129855,"{""caption"":""+-08374*&$£*""}",8,3,"{""name"":""point"",""cx"":253,""cy"":40}","{""name"":""unknown 598 fjs £$ *(&£^""}"
+test_pattern_qbist.jpg,129855,"{""caption"":""+-08374*&$£*""}",8,4,"{""name"":""point"",""cx"":453,""cy"":37}","{""name"":""1564865""}"
+test_pattern_qbist.jpg,129855,"{""caption"":""+-08374*&$£*""}",8,5,"{""name"":""circle"",""cx"":148,""cy"":268,""r"":43}","{}"
+test_pattern_qbist.jpg,129855,"{""caption"":""+-08374*&$£*""}",8,6,"{""name"":""ellipse"",""cx"":554,""cy"":255,""rx"":33,""ry"":57}","{}"
+test_pattern_qbist.jpg,129855,"{""caption"":""+-08374*&$£*""}",8,7,"{""name"":""point"",""cx"":638,""cy"":475}","{}"
+sinus_test_pattern.jpg,27894,"{""caption"":""a swan in geneve lake\""""}",1,0,"{""name"":""polygon"",""all_points_x"":[121,105,188,405,406,428,403,338,327,225,159,121],""all_points_y"":[172,212,292,299,238,219,136,135,203,184,198,172]}","{""name"":""a \""white\"" swan, good fortune""}"
+a_swan_swimming_in_geneve_lake.jpg,62201,"{""caption"":""  ""}",3,0,"{""name"":""ellipse"",""cx"":300,""cy"":223,""rx"":93,""ry"":56}","{""name"":""ellipse on \""yellow\""; background""}"
+a_swan_swimming_in_geneve_lake.jpg,62201,"{""caption"":""  ""}",3,1,"{""name"":""rect"",""x"":79,""y"":310,""width"":66,""height"":62}","{""name"":""a 'rect' in \""blue\"", background""}"
+a_swan_swimming_in_geneve_lake.jpg,62201,"{""caption"":""  ""}",3,2,"{""name"":""point"",""cx"":505,""cy"":113}","{""name"":""a point, in infinity, $, :""}"

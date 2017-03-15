@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--
+    VGG Image Annotator (via)
+
+    Copyright (C) 2016, Abhishek Dutta <adutta@robots.ox.ac.uk>
+    Aug. 31, 2016
+  -->
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8"> 
+    <title>Import Tool For @Matilde's existing annotations</title>
+    <meta name="author" content="Abhishek Dutta">
+    <meta name="description" content="Import Tool For @Matilde's existing annotations">
+
+    <!-- CSS style definition -->
+    <style type="text/css">
+      pre {
+      background-color: #cccccc;
+      }
+    </style>
+    <script type="text/javascript" src="import.js">
+    </script>   
+
+  </head>
+
+  <body>
+    <input type="file" multiple onchange="import_from_local_file(this.files)" >
+    
+    <ul>
+      <li>Select both the images (needed to determine image file size) and annotation text file together</li>
+      <li>This tool can <b>only</b> be use to import annotation data in the following format:</li>
+    </ul>
+    <div id="info">    
+      <pre id="log">
+#### NEW FILE ##########
+file: /Users/matildemalaspina/Desktop/Docs/O/O/15c BT/Aesopus/ANDREW/ia00123500 November 1476/ia00123500_02013339_a10r.jpg
+
+object: 5206
+artistic_style: French
+bbox: 376,876,804,416
+creator_of_the_image_and_description_(owners_institution: Napoli, Bibilioteca Nazionale Vittorio Emanuele III
+creator_of_the_image_and_description_(scholar): Matilde Malaspina
+date_that_the_image_was_made: 12/09/2015
+folio: a10r
+iconclass: 85A(DE ACCIPITRE ET COLUMBIS)FABLESOFAESOP(WITH TITLE); 25F39(DOVE) other birds: dove; 25F33(SPARROW-HAWK) predatory birds: sparrow-hawk; 47G532 tiles, bricks ~ building material; 41A161 country-house; 48C1621 arcade ~ architecture
+internal_number_of_object: c
+keywords: Dove; Sparrow-hawk; Tree; Brick; House; Arcade
+name: ia00123500_02013339_a10r center
+state_of_conservation: Good
+type_of_cut: Center
+
+object: 5207
+artistic_style: French
+bbox: 340,832,864,488
+creator_of_the_image_and_description_(owners_institution: Napoli, Bibilioteca Nazionale Vittorio Emanuele III
+creator_of_the_image_and_description_(scholar): Matilde Malaspina
+date_that_the_image_was_made: 12/09/2015
+folio: a10r
+iconclass: 48C5156(+3551) frame of painting, etc. (+ woodcutting, wood-engraving ~ graphic arts);
+internal_number_of_object: b
+keywords: Border; Frame; Dots; Geometry;
+name: ia00123500_02013339_a10r border
+state_of_conservation: Good
+type_of_cut: Border
+
+########## NEW FILE ##########
+file: /Users/matildemalaspina/Desktop/Docs/O/O/15c BT/Aesopus/ANDREW/ia00123500 November 1476/ia00123500_02013339_a10v.jpg
+
+...
+...
+      </pre>
+    </div>
+  </body>
+</html>

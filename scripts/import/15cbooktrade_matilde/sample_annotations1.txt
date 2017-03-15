@@ -1,0 +1,61 @@
+########## NEW FILE ##########
+file: /Users/matildemalaspina/Desktop/Docs/O/O/15c BT/Aesopus/ANDREW/ia00123500 November 1476/ia00123500_02013339_a10r.jpg
+
+object: 5206
+artistic_style: French
+bbox: 376,876,804,416
+creator_of_the_image_and_description_(owners_institution: Napoli, Bibilioteca Nazionale Vittorio Emanuele III
+creator_of_the_image_and_description_(scholar): Matilde Malaspina
+date_that_the_image_was_made: 12/09/2015
+folio: a10r
+iconclass: 85A(DE ACCIPITRE ET COLUMBIS)FABLESOFAESOP(WITH TITLE); 25F39(DOVE) "other birds": dove; 25F33(SPARROW-HAWK) predatory birds: sparrow-hawk; 47G532 tiles, bricks ~ building material; 41A161 country-house; 48C1621 arcade ~ architecture
+internal_number_of_object: c
+keywords: Dove; Sparrow-hawk; Tree; Brick; House; Arcade
+name: ia00123500_02013339_a10r center
+state_of_conservation: Good
+type_of_cut: Center
+
+object: 5207
+artistic_style: French
+bbox: 340,832,864,488
+creator_of_the_image_and_description_(owners_institution: Napoli, Bibilioteca Nazionale Vittorio Emanuele III
+creator_of_the_image_and_description_(scholar): Matilde Malaspina
+date_that_the_image_was_made: 12/09/2015
+folio: a10r
+iconclass: 48C5156(+3551) frame of painting, etc. (+ woodcutting, wood-engraving ~ graphic arts);
+internal_number_of_object: b
+keywords: Border; Frame; Dots; Geometry;
+name: ia00123500_02013339_a10r border
+state_of_conservation: Good
+type_of_cut: Border
+
+########## NEW FILE ##########
+file: /Users/matildemalaspina/Desktop/Docs/O/O/15c BT/Aesopus/ia00154000 Venice Manfredus de Bonellis, de Monteferrato, 27 June 1497/untitled folder/ia00154000_02011576 i4v.jpg
+
+object: 5199
+artistic_style: Venetian
+bbox: 446.667,1326.67,1693.34,1513.33
+creator_of_the_image_and_description_(owners_institution: Oxford Bodleian Library
+creator_of_the_image_and_description_(scholar): Matilde Malaspina
+date_that_the_image_was_made: 20/02/2015
+folio: i4v
+internal_number_of_object: b11
+name: ia00154000_02011576 i4v border
+state_of_conservation: Good
+technique_(aat): 300041405
+type_of_cut: Border
+
+object: 5712
+artistic_style: Venetian
+bbox: 796.151,1523.06,1053.85,1088.48
+creator_of_the_image_and_description_(owners_institution: Oxford Bodleian Library
+creator_of_the_image_and_description_(scholar): Matilde Malaspina
+date_that_the_image_was_made: 20/02/2015
+folio: i4v
+iconclass: 85A(DE RUSTICO ET PLUTONE) FABLESOFAESOP(WITH TITLE); 31E1 dying; 31D14(+56) adult man (+ lying); 41A761 bed;  41C321 cup; 41A7634 blanket; 11K43 devil or demons attacking mortals; 11K1 human-shaped devil; 11K3 devils in other than human or animal form; 92N18 attributes of Pluto; 31A458 fabulous beings with wings; 41A23 bedroom; 31A45 monsters of mixed human and animal shape; 'Mostri' (Ripa)
+internal_number_of_object: c66
+keywords: Dying; Man; Lying; Cup; Blanket; Demon; Devil; Pluto; Wings; House; Bedroom; Beak; Monster
+name: ia00154000_02011576 i4v center
+state_of_conservation: Good
+technique_(aat): 300041405
+type_of_cut: Center
