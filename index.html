@@ -169,6 +169,25 @@
       margin: 0;
       padding: 0;
       }
+      #leftsidebar_collapse_panel {
+      display: table-cell;
+      position: relative;
+      width: 10px;
+      z-index: 10;
+      vertical-align: top;
+      font-size: small;
+      }
+      #leftsidebar_collapse_button {
+      background-color: black;
+      width: 10px;
+      height: 20px;
+      color: white;
+      padding: 0.2em;
+      }
+      #leftsidebar_collapse_button:hover {
+      color: red;
+      cursor: pointer;
+      }
 
       /* Left sidebar accordion */
       button.leftsidebar_accordion {
@@ -477,7 +496,7 @@
             <div class="dropdown-content">
               <a onclick="toggle_leftsidebar()" title="Show/hide left sidebar">Show/hide left sidebar</a>
               <a onclick="toggle_region_boundary_visibility()" title="Show or hide region boundaries">Show/hide region boundaries</a>
-              <a onclick="toggle_region_id_visibility()" title="Show or hide region label">Show/hide region label</a>
+              <a onclick="toggle_region_id_visibility()" title="Show or hide region labels">Show/hide region labels</a>
             </div>
           </li>
           <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662;</a>
@@ -579,6 +598,10 @@
           </table>
         </div>
 
+      </div> <!-- end of leftsidebar -->
+      <div id="leftsidebar_collapse_panel">
+        <div onclick="toggle_leftsidebar()" id="leftsidebar_collapse_button" title="Show/hide left toolbar">
+          &ltrif;</div>
       </div>
 
       <!-- Main display area: contains image canvas, ... -->
@@ -593,7 +616,7 @@
 
           <div class="text_panel" id="about_panel">
             <p style="font-size: 2em;">VGG Image Annotator</p>
-            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.0</a></p>
+            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.0-beta</a></p>
             <p>
               VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
               developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
@@ -687,8 +710,9 @@
     <!---->
     <script src="via.js"></script>
 
-    <!---->
+    <!--
     <script src="via_demo.js"></script>
+    -->
 
     <!-- Unit Tests-->
     <!--

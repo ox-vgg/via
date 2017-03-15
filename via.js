@@ -50,7 +50,7 @@ for more details.
 
 */
 
-var VIA_VERSION = '1.0.0';
+var VIA_VERSION = '1.0.0-beta';
 var VIA_NAME = 'VGG Image Annotator';
 var VIA_SHORT_NAME = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -933,7 +933,6 @@ function show_image(image_index) {
         }, false);
 
         _via_current_image.addEventListener( "load", function() {
-            img_loading_spinbar(false);
 
             // update the current state of application
             _via_image_id = img_id;
@@ -982,24 +981,24 @@ function show_image(image_index) {
             clear_image_display_area();
             show_all_canvas();
 
-            // do region drawing in a separate thread
+            // we only need to draw the image once in the image_canvas
+            _via_img_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
+            _via_img_ctx.drawImage(_via_current_image, 0, 0,
+                                   _via_canvas_width, _via_canvas_height);
+
+            // refresh the attributes panel
+            update_attributes_panel();
+
+            _via_load_canvas_regions(); // image to canvas space transform
+            _via_redraw_reg_canvas();
+            _via_reg_canvas.focus();
+
+            img_loading_spinbar(false);
+/*
+            // draw image and regions in a separate thread
             setTimeout( function() {
-                // refresh the attributes panel
-                update_attributes_panel();
-
-                _via_load_canvas_regions(); // image to canvas space transform
-                _via_redraw_reg_canvas();
-                _via_reg_canvas.focus();
             }, 0);
-
-            // draw image in a separate thread
-            setTimeout( function() {
-                // we only need to draw the image once in the image_canvas
-                _via_img_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
-                _via_img_ctx.drawImage(_via_current_image, 0, 0,
-                                       _via_canvas_width, _via_canvas_height);
-            }, 0);
-
+*/
             // update the UI components to reflect newly loaded image
             // refresh the image list
             // @todo: let the height of image list match that of window
@@ -1280,8 +1279,10 @@ function toggle_leftsidebar() {
     var leftsidebar = document.getElementById('leftsidebar');
     if (leftsidebar.style.display == 'none') {
         leftsidebar.style.display = 'table-cell';
+        document.getElementById('leftsidebar_collapse_button').innerHTML ='&ltrif;';
     } else {
         leftsidebar.style.display = 'none';
+        document.getElementById('leftsidebar_collapse_button').innerHTML ='&rtrif;';
     }
 }
 
