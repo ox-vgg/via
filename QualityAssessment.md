@@ -31,6 +31,7 @@ the source code?
 
 Quality Assessment Reports :
  * See [this issue](https://gitlab.com/vgg/via/issues/54) for QA of VIA 1.0 by [Ernesto Coto Rios](ernesto.cotorios@eng.ox.ac.uk)
+ * [This issue](https://gitlab.com/vgg/via/issues/58) contains feedback from [Andrew Zissermann](az@robots.ox.ac.uk) on the VIA 1.0 [Release Candidate](https://gitlab.com/vgg/via/commit/0eda7169e7bf2a55e859c20f5c4ead35da2624da)
 
  
 Unit Tests
