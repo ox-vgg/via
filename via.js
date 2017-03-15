@@ -1135,7 +1135,7 @@ function hide_all_canvas() {
 function toggle_img_list(panel) {
     if (typeof panel === 'undefined') {
         // invoked from accordion in the top navigation toolbar
-        panel = document.getElementById('image_list_panel_button');
+        panel = document.getElementById('loaded_img_panel');
     }
     panel.classList.toggle('active');
 
@@ -2879,18 +2879,9 @@ window.addEventListener('keydown', function(e) {
         e.preventDefault();
         return;
     }
-    if (e.which === 82 && _via_current_image_loaded) { // r
-        //toggle_reg_attr_panel();
-        toggle_region_boundary_visibility();
-        return;
-    }
-    if (e.which === 73 && _via_current_image_loaded) { // f
-        //toggle_file_attr_panel();
-        toggle_region_id_visibility();
-        return;
-    }
     if (e.which === 32 && _via_current_image_loaded) { // Space
         toggle_img_list();
+        e.preventDefault();
         return;
     }
 
@@ -2971,12 +2962,6 @@ window.addEventListener('keydown', function(e) {
     if (e.which === 113) { // F2 for about
         show_about_panel();
         e.preventDefault();
-        return;
-    }
-    if (e.which === 121) { // F10 for debugging
-        //toggle_debug_window();
-        print_current_state_vars();
-        print_current_image_data();
         return;
     }
 });
