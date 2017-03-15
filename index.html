@@ -239,8 +239,8 @@
       }
       #img_list_panel ul {
       position: relative;
-      line-height: 1.2em;
-      padding-left: 0.5em;
+      line-height: 1.3em;
+      padding-left: 0;
       list-style-type: none;
       }
       #img_list_panel li {
@@ -410,9 +410,9 @@
       /* Loading spinbar */
       .loading_spinbox {
       display: inline-block;
-      border: 0.5em solid #cccccc;
+      border: 0.4em solid #cccccc;
       border-radius: 50%;
-      border-top: 0.5em solid #000000;
+      border-top: 0.4em solid #000000;
       -webkit-animation: spin 2s linear infinite;
       animation: spin 2s linear infinite;
       }
@@ -517,9 +517,6 @@
     <!-- Middle Panel contains a left-sidebar and image display areas -->
     <div class="middle_panel">
       <div id="leftsidebar">
-        <button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Image</button>
-        <div class="leftsidebar_accordion_panel show" id="fileinfo">Images not loaded yet!</div>
-
         <button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Region Shape</button>
         <div class="leftsidebar_accordion_panel show" id="accordion_region_shape_panel">
           <ul class="region_shape">
@@ -530,6 +527,9 @@
             <li id="region_shape_point" onclick="select_region_shape('point')" title="Point"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_point"></use></svg></li>
           </ul>
         </div>
+
+        <button onclick="toggle_img_list(this)" class="leftsidebar_accordion" id="loaded_img_panel">Loaded Images</button>
+        <div class="leftsidebar_accordion_panel" id="img_list_panel"></div>
 
         <button onclick="toggle_reg_attr_panel()" class="leftsidebar_accordion" id="reg_attr_panel_button">Region Attributes</button>
         <button onclick="toggle_file_attr_panel()" class="leftsidebar_accordion" id="file_attr_panel_button">File Attributes</button>
@@ -566,22 +566,16 @@
               <td>Cancel operation</td>
             </tr>
             <tr>
-              <td>r</td>
-              <td>Show/hide regions</td>
-            </tr>
-            <tr>
-              <td>i</td>
-              <td>Show/hide reg. label</td>
-            </tr>
-            <tr>
               <td>Ctrl + s</td>
               <td>Download annotations</td>
+            </tr>
+            <tr>
+              <td>Spacebar</td>
+              <td>Toggle image list</td>
             </tr>
           </table>
         </div>
 
-        <button onclick="toggle_img_list(this)" class="leftsidebar_accordion" id="image_list_panel_button">Image List</button>
-        <div id="img_list_panel"></div>
       </div>
 
       <!-- Main display area: contains image canvas, ... -->
@@ -614,7 +608,7 @@
             </ul>
             <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
             <p>&nbsp;</p>
-            <p>Copyright &copy; 2016-2017, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a></p>
+            <p>Copyright &copy; 2016-2017, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a> (Visual Geometry Group, Oxford University)</p>
           </div>
 
           <div class="text_panel" id="getting_started_panel">
@@ -643,7 +637,7 @@
 
           <div class="text_panel" id="license_panel">
             <pre>
-  Copyright (c) 2016-2017, Abhishek Dutta.
+  Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -693,7 +687,6 @@
     <!--
     <script src="via_demo.js"></script>
     -->
-
     <!-- Unit Tests-->
     <!--
     <script src="./tests/via_test_data.js"></script>
