@@ -981,24 +981,23 @@ function show_image(image_index) {
             clear_image_display_area();
             show_all_canvas();
 
-            // we only need to draw the image once in the image_canvas
-            _via_img_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
-            _via_img_ctx.drawImage(_via_current_image, 0, 0,
-                                   _via_canvas_width, _via_canvas_height);
-
-            // refresh the attributes panel
-            update_attributes_panel();
-
-            _via_load_canvas_regions(); // image to canvas space transform
-            _via_redraw_reg_canvas();
-            _via_reg_canvas.focus();
-
-            img_loading_spinbar(false);
-/*
             // draw image and regions in a separate thread
             setTimeout( function() {
+                // we only need to draw the image once in the image_canvas
+                _via_img_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
+                _via_img_ctx.drawImage(_via_current_image, 0, 0,
+                                       _via_canvas_width, _via_canvas_height);
+
+                // refresh the attributes panel
+                update_attributes_panel();
+
+                _via_load_canvas_regions(); // image to canvas space transform
+                _via_redraw_reg_canvas();
+                _via_reg_canvas.focus();
+
+                img_loading_spinbar(false);
             }, 0);
-*/
+
             // update the UI components to reflect newly loaded image
             // refresh the image list
             // @todo: let the height of image list match that of window
@@ -2076,23 +2075,27 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 //
 function _via_redraw_img_canvas() {
     if (_via_current_image_loaded) {
-        _via_img_ctx.clearRect(0, 0, _via_img_canvas.width, _via_img_canvas.height);
-        _via_img_ctx.drawImage(_via_current_image, 0, 0,
-                               _via_img_canvas.width, _via_img_canvas.height);
+        setTimeout( function() {
+            _via_img_ctx.clearRect(0, 0, _via_img_canvas.width, _via_img_canvas.height);
+            _via_img_ctx.drawImage(_via_current_image, 0, 0,
+                                   _via_img_canvas.width, _via_img_canvas.height);
+        }, 0);
     }
 }
 
 function _via_redraw_reg_canvas() {
     if (_via_current_image_loaded) {
         if ( _via_canvas_regions.length > 0 ) {
-            _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
-            if (_via_is_region_boundary_visible) {
-                draw_all_regions();
-            }
+            setTimeout( function() {
+                _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+                if (_via_is_region_boundary_visible) {
+                    draw_all_regions();
+                }
 
-            if (_via_is_region_id_visible) {
-                draw_all_region_id();
-            }
+                if (_via_is_region_id_visible) {
+                    draw_all_region_id();
+                }
+            }, 0);
         }
     }
 }
@@ -3010,7 +3013,7 @@ window.addEventListener('wheel', function(e) {
     }
 
     if (e.ctrlKey) {
-        if (e.deltaY > 0) {
+        if (e.deltaY < 0) {
             zoom_in();
         } else {
             zoom_out();
