@@ -178,6 +178,7 @@ var annotation_textarea = document.getElementById("annotation_textarea");
 
 var loaded_img_list_panel = document.getElementById('loaded_img_list_panel');
 var bottom_panel = document.getElementById('bottom_panel');
+var annotation_data_window;
 
 var BBOX_LINE_WIDTH = 4;
 var BBOX_BOUNDARY_FILL_COLOR_ANNOTATED = "#f2f2f2";
@@ -1273,6 +1274,25 @@ function img_loading_spinbar(show) {
     } else {
         panel.innerHTML = 'Loaded Images &nbsp;&nbsp;';
     }
+}
+
+function toggle_leftsidebar() {
+    var leftsidebar = document.getElementById('leftsidebar');
+    if (leftsidebar.style.display == 'none') {
+        leftsidebar.style.display = 'table-cell';
+    } else {
+        leftsidebar.style.display = 'none';
+    }
+}
+
+function show_annotation_data() {
+    var hstr = '<pre>' + pack_via_metadata('csv') + '</pre>';
+    if (typeof annotation_data_window === 'undefined') {
+        var window_features = 'toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no';
+        window_features += ',width=800,height=600';
+        annotation_data_window = window.open('', 'Image Metadata ', window_features);
+    }
+    annotation_data_window.document.body.innerHTML = hstr;
 }
 
 //

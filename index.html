@@ -6,7 +6,7 @@
         VGG Image Annotator (via)
         www.robots.ox.ac.uk/~vgg/software/via/
 
-        Copyright (c) 2016, Abhishek Dutta.
+        Copyright (c) 2016, Abhishek Dutta, Visual Geometry Group, Oxford University.
         All rights reserved.
 
         Redistribution and use in source and binary forms, with or without
@@ -201,6 +201,7 @@
       padding-left: 0.5em;
       font-size: small;
       border-right: 2px solid #f2f2f2;
+      border-bottom: 2px solid #f2f2f2;
       }
       .leftsidebar_accordion_panel.show {
       display: block;
@@ -466,6 +467,7 @@
           </li>
           <li class="dropdown"><a title="Annotations" class="drop_menu_item">Annotation &#9662;</a>
             <div class="dropdown-content">
+              <a onclick="show_annotation_data()" title="View annotations">View annotations</a>
               <a onclick="download_all_region_data('csv')" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
               <a onclick="download_all_region_data('json')" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
               <a onclick="sel_local_data_file('annotations')" title="Import existing region data from CSV or JSON file">Import</a>
@@ -473,6 +475,7 @@
           </li>
           <li class="dropdown"><a title="View" class="drop_menu_item">View &#9662;</a>
             <div class="dropdown-content">
+              <a onclick="toggle_leftsidebar()" title="Show/hide left sidebar">Show/hide left sidebar</a>
               <a onclick="toggle_region_boundary_visibility()" title="Show or hide region boundaries">Show/hide region boundaries</a>
               <a onclick="toggle_region_id_visibility()" title="Show or hide region label">Show/hide region label</a>
             </div>
@@ -681,12 +684,12 @@
       //<!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
 
-    <!--
+    <!---->
     <script src="via.js"></script>
-    -->
-    <!--
+
+    <!---->
     <script src="via_demo.js"></script>
-    -->
+
     <!-- Unit Tests-->
     <!--
     <script src="./tests/via_test_data.js"></script>
