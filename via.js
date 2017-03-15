@@ -2810,7 +2810,7 @@ function is_on_polygon_vertex(all_points_x, all_points_y, px, py) {
 
 function _via_update_ui_components() {
     if ( !_via_is_window_resized && _via_current_image_loaded ) {
-        show_message("Resizing window ...");
+        show_message('Resizing window ...');
         set_all_text_panel_display('none');
         show_all_canvas();
 
@@ -2827,7 +2827,7 @@ function _via_update_ui_components() {
 // Shortcut key handlers
 //
 
-window.addEventListener("keydown", function(e) {
+window.addEventListener('keydown', function(e) {
     if (_via_is_user_updating_attribute_value ||
         _via_is_user_updating_attribute_name ||
         _via_is_user_adding_attribute_name) {
@@ -2978,6 +2978,24 @@ window.addEventListener("keydown", function(e) {
         print_current_state_vars();
         print_current_image_data();
         return;
+    }
+});
+
+//
+// Mouse wheel event listener
+//
+window.addEventListener('wheel', function(e) {
+    if (!_via_current_image_loaded) {
+        return;
+    }
+
+    if (e.ctrlKey) {
+        if (e.deltaY > 0) {
+            zoom_in();
+        } else {
+            zoom_out();
+        }
+        e.preventDefault();
     }
 });
 
