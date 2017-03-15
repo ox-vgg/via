@@ -981,10 +981,23 @@ function show_image(image_index) {
             clear_image_display_area();
             show_all_canvas();
 
-            // we only need to draw the image once in the image_canvas
-            _via_img_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
-            _via_img_ctx.drawImage(_via_current_image, 0, 0,
-                                   _via_canvas_width, _via_canvas_height);
+            // do region drawing in a separate thread
+            setTimeout( function() {
+                // refresh the attributes panel
+                update_attributes_panel();
+
+                _via_load_canvas_regions(); // image to canvas space transform
+                _via_redraw_reg_canvas();
+                _via_reg_canvas.focus();
+            }, 0);
+
+            // draw image in a separate thread
+            setTimeout( function() {
+                // we only need to draw the image once in the image_canvas
+                _via_img_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
+                _via_img_ctx.drawImage(_via_current_image, 0, 0,
+                                       _via_canvas_width, _via_canvas_height);
+            }, 0);
 
             // update the UI components to reflect newly loaded image
             // refresh the image list
@@ -995,13 +1008,6 @@ function show_image(image_index) {
             if (_via_is_loaded_img_list_visible) {
                 show_img_list();
             }
-
-            // refresh the attributes panel
-            update_attributes_panel();
-
-            _via_load_canvas_regions(); // image to canvas space transform
-            _via_redraw_reg_canvas();
-            _via_reg_canvas.focus();
         });
         _via_current_image.src = img_reader.result;
     }, false);
