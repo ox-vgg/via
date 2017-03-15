@@ -20,7 +20,7 @@ facial regions.
 
 ## Downloads
  * VGG Image Annotator (VIA)
-   * [via-1.0.0-beta.zip](https://gitlab.com/vgg/via/blob/master/downloads/via-1.0.0-beta.zip) : the VGG Image Annotator application (< 200KB)
+   * [via-1.0.0-beta.zip](https://gitlab.com/vgg/via/blob/master/releases/via-1.0.0-beta.zip) : the VGG Image Annotator application (< 200KB)
    * [via-1.0.0-beta.html](http://vgg.gitlab.io/via/via.html) : online version of the application
  * VGG Face Annotator (VFA)
    * [via_face.html (online version)](http://vgg.gitlab.io/via/via_face.html) : online version of the face annotator 
