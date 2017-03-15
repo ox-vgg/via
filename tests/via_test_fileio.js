@@ -88,8 +88,6 @@ function _via_test_fileio_export() {
         var rd = pack_via_metadata('csv');
         var ground_truth = '#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes\ntest_pattern_qbist.jpg,129855,"{}",3,0,"{""name"":""rect"",""x"":50,""y"":50,""width"":100,""height"":100}","{}"\ntest_pattern_qbist.jpg,129855,"{}",3,1,"{""name"":""ellipse"",""cx"":300,""cy"":300,""rx"":50,""ry"":30}","{}"\ntest_pattern_qbist.jpg,129855,"{}",3,2,"{""name"":""polygon"",""all_points_x"":[425,353,552,425],""all_points_y"":[83,194,148,83]}","{}"\na_swan_swimming_in_geneve_lake.jpg,62201,"{}",0,0,"{}","{}"\nsinus_test_pattern.jpg,27894,"{}",0,0,"{}","{}"';
 
-        console.log(rd.join(''));
-        console.log(ground_truth);
         if (rd.join('') == ground_truth) {
             _via_log_test_result('pack_via_metadata(\'csv\');', true, '_via_test_fileio_export');
         } else {
