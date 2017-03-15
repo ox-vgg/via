@@ -20,15 +20,15 @@ facial regions.
 
 ## Downloads
  * VGG Image Annotator (VIA)
-   * [via.html.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via.html.zip) : the VGG Image Annotator application (< 200KB)
-   * [via.html](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via.html) : online version of the application
+   * [via-1.0.0-beta.zip](https://gitlab.com/vgg/via/blob/master/downloads/via-1.0.0-beta.zip) : the VGG Image Annotator application (< 200KB)
+   * [via-1.0.0-beta.html](http://vgg.gitlab.io/via/via.html) : online version of the application
  * VGG Face Annotator (VFA)
    * [via_face.html (online version)](http://vgg.gitlab.io/via/via_face.html) : online version of the face annotator 
    * [via_face.html (offline version)](https://gitlab.com/vgg/via/raw/face_annotator/via_face.html) : download and save as html file to run locally in a web browser
 
 ## Demo
  * VGG Image Annotator (VIA)
-   * [via_demo.html](http://vgg.gitlab.io/via/via_demo.html) : live demo of VIA application with preloaded image
+   * [via_demo-1.0.0-beta.html](http://vgg.gitlab.io/via/via_demo.html) : live demo of VIA application with preloaded image
  * VGG Face Annotator (VFA)
    * [via_face_demo_physicist.html](http://vgg.gitlab.io/via/via_face_demo_physicist.html) : live demo with preloaded regions and face images of renowned Physicists
    * [via_face_demo_sherlock.html](http://vgg.gitlab.io/via/via_face_demo_sherlock.html) : live demo with preloaded regions and face images from BBC [Sherlock Series](https://en.wikipedia.org/wiki/Sherlock_(TV_series))
