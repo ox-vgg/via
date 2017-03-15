@@ -2,7 +2,7 @@
   VGG Image Annotator (via)
   www.robots.ox.ac.uk/~vgg/software/via/
 
-  Copyright (c) 2016, Abhishek Dutta.
+  Copyright (c) 2016, Abhishek Dutta, Visual Geometry Group, Oxford University.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -1032,29 +1032,29 @@ function _via_load_canvas_regions() {
         case VIA_REGION_SHAPE.RECT:
             var x = regions[i].shape_attributes.get('x') / _via_canvas_scale;
             var y = regions[i].shape_attributes.get('y') / _via_canvas_scale;
-            var width = regions[i].shape_attributes.get('width') / _via_canvas_scale;
+            var width  = regions[i].shape_attributes.get('width')  / _via_canvas_scale;
             var height = regions[i].shape_attributes.get('height') / _via_canvas_scale;
 
             _via_canvas_regions[i].shape_attributes.set('x', Math.round(x));
             _via_canvas_regions[i].shape_attributes.set('y', Math.round(y));
-            _via_canvas_regions[i].shape_attributes.set('width', Math.round(width));
+            _via_canvas_regions[i].shape_attributes.set('width' , Math.round(width) );
             _via_canvas_regions[i].shape_attributes.set('height', Math.round(height));
             break;
 
         case VIA_REGION_SHAPE.CIRCLE:
-            var cx = _via_canvas_regions[i].shape_attributes.get('cx') / _via_canvas_scale;
-            var cy = _via_canvas_regions[i].shape_attributes.get('cy') / _via_canvas_scale;
-            var r = _via_canvas_regions[i].shape_attributes.get('r') / _via_canvas_scale;
+            var cx = regions[i].shape_attributes.get('cx') / _via_canvas_scale;
+            var cy = regions[i].shape_attributes.get('cy') / _via_canvas_scale;
+            var r  = regions[i].shape_attributes.get('r')  / _via_canvas_scale;
             _via_canvas_regions[i].shape_attributes.set('cx', Math.round(cx));
             _via_canvas_regions[i].shape_attributes.set('cy', Math.round(cy));
-            _via_canvas_regions[i].shape_attributes.set('r', Math.round(r));
+            _via_canvas_regions[i].shape_attributes.set('r' , Math.round(r));
             break;
 
         case VIA_REGION_SHAPE.ELLIPSE:
-            var cx = _via_canvas_regions[i].shape_attributes.get('cx') / _via_canvas_scale;
-            var cy = _via_canvas_regions[i].shape_attributes.get('cy') / _via_canvas_scale;
-            var rx = _via_canvas_regions[i].shape_attributes.get('rx') / _via_canvas_scale;
-            var ry = _via_canvas_regions[i].shape_attributes.get('ry') / _via_canvas_scale;
+            var cx = regions[i].shape_attributes.get('cx') / _via_canvas_scale;
+            var cy = regions[i].shape_attributes.get('cy') / _via_canvas_scale;
+            var rx = regions[i].shape_attributes.get('rx') / _via_canvas_scale;
+            var ry = regions[i].shape_attributes.get('ry') / _via_canvas_scale;
             _via_canvas_regions[i].shape_attributes.set('cx', Math.round(cx));
             _via_canvas_regions[i].shape_attributes.set('cy', Math.round(cy));
             _via_canvas_regions[i].shape_attributes.set('rx', Math.round(rx));
@@ -1062,14 +1062,22 @@ function _via_load_canvas_regions() {
             break;
 
         case VIA_REGION_SHAPE.POLYGON:
-            var all_points_x = _via_canvas_regions[i].shape_attributes.get('all_points_x').slice(0);
-            var all_points_y = _via_canvas_regions[i].shape_attributes.get('all_points_y').slice(0);
+            var all_points_x = regions[i].shape_attributes.get('all_points_x').slice(0);
+            var all_points_y = regions[i].shape_attributes.get('all_points_y').slice(0);
             for (var j=0; j<all_points_x.length; ++j) {
                 all_points_x[j] = Math.round(all_points_x[j] / _via_canvas_scale);
                 all_points_y[j] = Math.round(all_points_y[j] / _via_canvas_scale);
             }
             _via_canvas_regions[i].shape_attributes.set('all_points_x', all_points_x);
             _via_canvas_regions[i].shape_attributes.set('all_points_y', all_points_y);
+            break;
+
+        case VIA_REGION_SHAPE.POINT:
+            var cx = regions[i].shape_attributes.get('cx') / _via_canvas_scale;
+            var cy = regions[i].shape_attributes.get('cy') / _via_canvas_scale;
+
+            _via_canvas_regions[i].shape_attributes.set('cx', Math.round(cx));
+            _via_canvas_regions[i].shape_attributes.set('cy', Math.round(cy));
             break;
         }
     }
