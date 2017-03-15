@@ -1,7 +1,7 @@
 ## [1.0.0] - not released yet
- * added support for file attributes (useful for weakly supervised learning)
+ * file-attributes support added (useful for weakly supervised learning)
  * spreadsheet like editor for region and file attributes
- * improved visualization of loaded image list
+ * visualization of loaded image list improved
  * user annotation data cached in browser's localStorage (for data recovery on browser crash)
  * zoom in/out support
  * improved performance using multi-layered canvas for image and annotations

@@ -883,17 +883,6 @@ function show_message(msg, t) {
     }, timeout);
 }
 
-function show_filename_info() {
-    if ( _via_current_image_loaded ) {
-        var fileinfo = "(" + (_via_image_index+1) + " of " + _via_img_count + ") ";
-        fileinfo += _via_current_image_filename;
-        document.getElementById("fileinfo").innerHTML = fileinfo;
-        document.getElementById("fileinfo").title = _via_current_image_filename;
-    } else {
-        document.getElementById("fileinfo").innerHTML = '';
-    }
-}
-
 function show_image(image_index) {
     if (_via_is_loading_current_image) {
         return;
@@ -906,12 +895,10 @@ function show_image(image_index) {
 
     var img_filename = _via_img_metadata[img_id].filename;
     var img_reader = new FileReader();
-    var fileinfo = document.getElementById('fileinfo');
     _via_is_loading_current_image = true;
 
     img_reader.addEventListener( "loadstart", function(e) {
-        fileinfo.innerHTML = '<div class="loading_spinbox"></div>' +
-            '<strong>&nbsp;Loading image ... </strong>';
+        img_loading_spinbar(true);
     }, false);
 
     img_reader.addEventListener( "progress", function(e) {
@@ -919,13 +906,13 @@ function show_image(image_index) {
 
     img_reader.addEventListener( "error", function() {
         _via_is_loading_current_image = false;
-        fileinfo.innerHTML = '<strong>Error loading image !</strong>';
+        img_loading_spinbar(false);
         show_message("Error loading image " + img_filename + " !");
     }, false);
 
     img_reader.addEventListener( "abort", function() {
         _via_is_loading_current_image = false;
-        fileinfo.innerHTML = '<strong>Image loading aborted !</strong>';
+        img_loading_spinbar(false);
         show_message("Aborted loading image " + img_filename + " !");
     }, false);
 
@@ -934,17 +921,19 @@ function show_image(image_index) {
 
         _via_current_image.addEventListener( "error", function() {
             _via_is_loading_current_image = false;
-            fileinfo.innerHTML = '<strong>Error loading image !</strong>';
+            img_loading_spinbar(false);
             show_message("Error loading image " + img_filename + " !");
         }, false);
 
         _via_current_image.addEventListener( "abort", function() {
             _via_is_loading_current_image = false;
-            fileinfo.innerHTML = '<strong>Image loading aborted !</strong>';
+            img_loading_spinbar(false);
             show_message("Aborted loading image " + img_filename + " !");
         }, false);
 
         _via_current_image.addEventListener( "load", function() {
+            img_loading_spinbar(false);
+
             // update the current state of application
             _via_image_id = img_id;
             _via_image_index = image_index;
@@ -1001,7 +990,7 @@ function show_image(image_index) {
             // refresh the image list
             // @todo: let the height of image list match that of window
             _via_reload_img_table = true;
-            var img_list_height = document.documentElement.clientHeight/2 + 'px';
+            var img_list_height = document.documentElement.clientHeight/3 + 'px';
             img_list_panel.setAttribute('style', 'height: ' + img_list_height);
             if (_via_is_loaded_img_list_visible) {
                 show_img_list();
@@ -1013,10 +1002,6 @@ function show_image(image_index) {
             _via_load_canvas_regions(); // image to canvas space transform
             _via_redraw_reg_canvas();
             _via_reg_canvas.focus();
-
-            // update the info panel
-            show_filename_info();
-
         });
         _via_current_image.src = img_reader.result;
     }, false);
@@ -1178,6 +1163,17 @@ function show_img_list() {
         }
         img_list_panel.innerHTML = _via_loaded_img_table_html.join('');
         img_list_panel.style.display = 'block';
+
+        // scroll img_list_panel automatically to show the current image filename
+        var panel = document.getElementById('img_list_panel');
+        var sel_file = document.getElementById('flist' + _via_image_index);
+        var panel_height = panel.offsetHeight;
+        if (sel_file.offsetTop < panel.scrollTop) {
+            panel.scrollTop = sel_file.offsetTop;
+        }
+        if (sel_file.offsetTop > panel_height/2) {
+            panel.scrollTop = sel_file.offsetTop - panel_height/2;
+        }
     }
 }
 
@@ -1197,10 +1193,10 @@ function reload_img_table() {
         var fni = '';
         if (i === _via_image_index) {
             // highlight the current entry
-            fni += '<li style="cursor: default;">';
+            fni += '<li id="flist'+i+'" style="cursor: default;" title="' + _via_loaded_img_fn_list[i] + '">';
             fni += '<b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
         } else {
-            fni += '<li onclick="jump_to_image(' + (i) + ')">';
+            fni += '<li id="flist'+i+'" onclick="jump_to_image(' + (i) + ')" title="' + _via_loaded_img_fn_list[i] + '">';
             fni += '[' + (i+1) + '] ' + _via_loaded_img_fn_list[i];
         }
 
@@ -1254,6 +1250,15 @@ function set_region_select_state(region_id, is_selected) {
 function toggle_accordion_panel(e) {
     e.classList.toggle('active');
     e.nextElementSibling.classList.toggle('show');
+}
+
+function img_loading_spinbar(show) {
+    var panel = document.getElementById('loaded_img_panel');
+    if (show) {
+        panel.innerHTML = 'Loaded Images &nbsp;&nbsp;<div class="loading_spinbox"></div>';
+    } else {
+        panel.innerHTML = 'Loaded Images &nbsp;&nbsp;';
+    }
 }
 
 //
@@ -2845,8 +2850,11 @@ window.addEventListener("keydown", function(e) {
         }
 
         if ( e.which === 67 ) { // Ctrl + c
-            copy_sel_regions();
-            e.preventDefault();
+            if (_via_is_region_selected ||
+                _via_is_all_region_selected) {
+                copy_sel_regions();
+                e.preventDefault();
+            }
             return;
         }
 
@@ -3302,7 +3310,7 @@ function download_localStorage_data(type) {
     var localStorage_data_blob = new Blob( [localStorage.getItem('_via_img_metadata')],
                                            {type: 'text/json;charset=utf-8'});
 
-    save_data_to_local_file(localStorage_data_blob, 'VIA_' + saved_date + '.json');
+    save_data_to_local_file(localStorage_data_blob, 'VIA_browser_cache_' + saved_date + '.json');
 }
 
 //
