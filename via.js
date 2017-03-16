@@ -2085,16 +2085,14 @@ function _via_redraw_img_canvas() {
 function _via_redraw_reg_canvas() {
     if (_via_current_image_loaded) {
         if ( _via_canvas_regions.length > 0 ) {
-            setTimeout( function() {
-                _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
-                if (_via_is_region_boundary_visible) {
-                    draw_all_regions();
-                }
+            _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+            if (_via_is_region_boundary_visible) {
+                draw_all_regions();
+            }
 
-                if (_via_is_region_id_visible) {
-                    draw_all_region_id();
-                }
-            }, 0);
+            if (_via_is_region_id_visible) {
+                draw_all_region_id();
+            }
         }
     }
 }
