@@ -14,6 +14,9 @@
  * added some basic unit tests
  * added support for point regions (useful for landmark annotations)
 
+## [1.0.0-beta] - 2017-03-15
+ * beta release for VIA 1.0.0
+
 ## [0.1b] - 2016-10-24
  * first release of VGG image annotator
  * supports following region shape: rectangle, circle, ellipse, polygon
