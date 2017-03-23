@@ -1229,6 +1229,20 @@ function reload_img_table() {
 }
 
 function jump_to_image(image_index) {
+    if (_via_img_count <= 0) {
+        return
+    }
+
+    // reset zoom
+    if (_via_is_canvas_zoomed) {
+        _via_is_canvas_zoomed = false;
+        _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX
+        var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+        set_all_canvas_scale(zoom_scale);
+        set_all_canvas_size(_via_canvas_width, _via_canvas_height);
+        _via_canvas_scale = _via_canvas_scale_without_zoom;
+    }
+
     if ( image_index >=0 &&
          image_index < _via_img_count) {
         show_image(image_index);
@@ -3140,7 +3154,12 @@ function move_to_prev_image() {
         _via_current_sel_region_id = -1;
 
         if (_via_is_canvas_zoomed) {
-            reset_zoom_level();
+            _via_is_canvas_zoomed = false;
+            _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX
+            var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+            set_all_canvas_scale(zoom_scale);
+            set_all_canvas_size(_via_canvas_width, _via_canvas_height);
+            _via_canvas_scale = _via_canvas_scale_without_zoom;
         }
 
         var current_img_index = _via_image_index;
@@ -3164,7 +3183,12 @@ function move_to_next_image() {
         _via_current_sel_region_id = -1;
 
         if (_via_is_canvas_zoomed) {
-            reset_zoom_level();
+            _via_is_canvas_zoomed = false;
+            _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX
+            var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+            set_all_canvas_scale(zoom_scale);
+            set_all_canvas_size(_via_canvas_width, _via_canvas_height);
+            _via_canvas_scale = _via_canvas_scale_without_zoom;
         }
 
         var current_img_index = _via_image_index;
