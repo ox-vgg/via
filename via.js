@@ -99,6 +99,8 @@ var _via_image_index = -1;    // index
 
 var _via_current_image_filename;
 var _via_current_image;
+var _via_current_image_width;
+var _via_current_image_height;
 
 // image canvas
 var _via_img_canvas = document.getElementById("image_canvas");
@@ -142,7 +144,6 @@ var _via_click_x1 = 0; var _via_click_y1 = 0;
 var _via_region_edge = [-1, -1];
 var _via_region_click_x, _via_region_click_y;
 var _via_copied_image_regions = [];
-var _via_copied_canvas_regions = [];
 
 // message
 var _via_message_clear_timer;
@@ -949,14 +950,16 @@ function show_image(image_index) {
             _via_is_user_drawing_polygon = false;
             _via_is_region_selected = false;
             _via_user_sel_region_id = -1;
+            _via_current_image_width = _via_current_image.naturalWidth;
+            _via_current_image_height = _via_current_image.naturalHeight;
 
             // set the size of canvas
             // based on the current dimension of browser window
             var de = document.documentElement;
             canvas_panel_width = de.clientWidth - 230;
             canvas_panel_height = de.clientHeight - 2*ui_top_panel.offsetHeight;
-            _via_canvas_width = _via_current_image.naturalWidth;
-            _via_canvas_height = _via_current_image.naturalHeight;
+            _via_canvas_width = _via_current_image_width;
+            _via_canvas_height = _via_current_image_height;
             var scale_width, scale_height;
             if ( _via_canvas_width > canvas_panel_width ) {
                 // resize image to match the panel width
@@ -3085,13 +3088,11 @@ function copy_sel_regions() {
     if (_via_is_region_selected ||
         _via_is_all_region_selected) {
         _via_copied_image_regions.splice(0);
-        _via_copied_canvas_regions.splice(0);
         for (var i=0; i<_via_img_metadata[_via_image_id].regions.length; ++i) {
             var img_region = _via_img_metadata[_via_image_id].regions[i];
             var canvas_region = _via_canvas_regions[i];
             if (canvas_region.is_user_selected) {
                 _via_copied_image_regions.push( clone_image_region(img_region) );
-                _via_copied_canvas_regions.push( clone_image_region(canvas_region) );
             }
         }
         show_message('Copied ' + _via_copied_image_regions.length +
@@ -3111,14 +3112,15 @@ function paste_sel_regions() {
         var pasted_reg_count = 0;
         for (var i=0; i<_via_copied_image_regions.length; ++i) {
             // ensure copied the regions are within this image's boundaries
-            var bbox = get_region_bounding_box( _via_copied_canvas_regions[i] );
-            if (bbox[2] < _via_canvas_width &&
-                bbox[3] < _via_canvas_height) {
+            var bbox = get_region_bounding_box( _via_copied_image_regions[i] );
+            if (bbox[2] < _via_current_image_width &&
+                bbox[3] < _via_current_image_height) {
                 _via_img_metadata[_via_image_id].regions.push( _via_copied_image_regions[i] );
-                _via_canvas_regions.push( _via_copied_canvas_regions[i] );
+
                 pasted_reg_count += 1;
             }
         }
+        _via_load_canvas_regions();
         var discarded_reg_count = _via_copied_image_regions.length - pasted_reg_count;
         show_message('Pasted ' + pasted_reg_count + ' regions. ' +
                      'Discarded ' + discarded_reg_count + ' regions exceeding image boundary.');
