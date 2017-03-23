@@ -187,9 +187,11 @@ ga('send', 'pageview');
       #leftsidebar_collapse_button {
       background-color: black;
       width: 10px;
-      height: 20px;
+      height: 25px;
       color: white;
       padding: 0.2em;
+      border-radius: 0px 5px 5px 0px;
+      font-size: large;
       }
       #leftsidebar_collapse_button:hover {
       color: red;
@@ -341,7 +343,7 @@ ga('send', 'pageview');
       }
 
       /* region and file attributes input panel (spreadsheet like) */
-      #bottom_panel {
+      #attributes_panel {
       display: none;
       position: fixed;
       bottom: 0;
@@ -351,25 +353,18 @@ ga('send', 'pageview');
       overflow: auto;
       background-color: #ffffff;
       border-top: 4px solid #000000;
-      padding: 1em 0em;
+      padding: 0em 0em;
+      padding-bottom: 2em;
       font-size: small;
       }
-      #bottom_panel .title {
-      font-size: large;
-      padding-top: 1em;
-      padding-bottom: 0.2em;
-      padding-left: 0.8em;
-      padding-right: 1em;
-      }
-
-      #bottom_panel table {
+      #attributes_panel table {
       border-collapse: collapse;
       table-layout: fixed;
       margin: 1em;
       margin-bottom: 2em;
       }
 
-      #bottom_panel td {
+      #attributes_panel td {
       border: 1px solid #999999;
       padding: 1em 1em;
       margin: 0;
@@ -377,11 +372,11 @@ ga('send', 'pageview');
       white-space: nowrap;
       vertical-align: top;
       }
-      #bottom_panel tr:first-child td, #bottom_panel td:first-child {
+      #attributes_panel tr:first-child td, #attributes_panel td:first-child {
       padding: 1em 1em;
       text-align: center;
       }
-      #bottom_panel input {
+      #attributes_panel input {
       border: none;
       padding: 0;
       margin: 0;
@@ -391,16 +386,16 @@ ga('send', 'pageview');
       background-color: #ffffff;
       vertical-align: top;
       }
-      #bottom_panel input:hover {
+      #attributes_panel input:hover {
       background-color: #e6e6e6;
       }
-      #bottom_panel input:focus {
+      #attributes_panel input:focus {
       background-color: #e6e6e6;
       }
-      #bottom_panel input:not(:focus) {
+      #attributes_panel input:not(:focus) {
       text-align: center;
       }
-      #bottom_panel textarea {
+      #attributes_panel textarea {
       border: none;
       padding: 0;
       margin: 0;
@@ -408,11 +403,31 @@ ga('send', 'pageview');
       font-size: small;
       background-color: #ffffff;
       }
-      #bottom_panel textarea:hover {
+      #attributes_panel textarea:hover {
       background-color: #e6e6e6;
       }
-      #bottom_panel textarea:focus {
+      #attributes_panel textarea:focus {
       background-color: #e6e6e6;
+      }
+
+      #attributes_panel_toolbar {
+      display: block;
+      height: 30px;
+      width: 100%;
+      position: relative;
+      padding: 0;
+      margin: 0;
+      }
+      .attributes_panel_button {
+      width: 10px;
+      color: black;
+      font-size: x-large;
+      margin-left: 0.5em;
+      padding: 0;
+      }
+      .attributes_panel_button:hover {
+      color: red;
+      cursor: pointer;
       }
 
       /* layers of canvas */
@@ -670,28 +685,28 @@ ga('send', 'pageview');
 
           <div class="text_panel" id="license_panel">
             <pre>
-  Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
-  All rights reserved.
+              Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
+              All rights reserved.
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
+              Redistribution and use in source and binary forms, with or without
+              modification, are permitted provided that the following conditions are met:
 
-  Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-  Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE.
+              Redistributions of source code must retain the above copyright notice, this
+              list of conditions and the following disclaimer.
+              Redistributions in binary form must reproduce the above copyright notice,
+              this list of conditions and the following disclaimer in the documentation
+              and/or other materials provided with the distribution.
+              THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+              AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+              IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+              ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+              LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+              CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+              SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+              INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+              CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+              ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+              POSSIBILITY OF SUCH DAMAGE.
             </pre>
           </div>
 
@@ -699,13 +714,20 @@ ga('send', 'pageview');
       </div>
     </div>
 
-    <!-- Bottom panel is used to display attributes input panel -->
-    <div id="bottom_panel">
-      <div id="attributes_panel"></div>
+    <!-- region and file attributes input panel -->
+    <div id="attributes_panel">
+      <div id="attributes_panel_toolbar">
+        <div onclick="toggle_attributes_input_panel()" class="attributes_panel_button">&times;</div>
+      </div>
+      <table id="attributes_panel_table"></table>
     </div>
 
     <!-- to show status messages -->
     <div id="message_panel"></div>
+
+    <!-- this vertical spacer is needed to allow scrollbar to show
+         items like Keyboard Shortcut hidden under the attributes panel -->
+    <div style="width: 100%;" id="vertical_space"></div>
 
     <script type="text/javascript">
       //<!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
@@ -782,10 +804,8 @@ var VIA_MOUSE_CLICK_TOL = 2;
 var VIA_ELLIPSE_EDGE_TOL = 0.2;
 var VIA_THETA_TOL = Math.PI/18; // 10 degrees
 var VIA_POLYGON_RESIZE_VERTEX_OFFSET = 100;
-var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5];
+var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4, 5];
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
-var VIA_ATTR_PANEL_FONT_SIZE_LEVELS = ['xx-small', 'x-small', 'small',
-                                       'medium', 'large', 'x-large', 'xx-large'];
 
 var VIA_THEME_REGION_BOUNDARY_WIDTH = 4;
 var VIA_THEME_BOUNDARY_LINE_COLOR = "#1a1a1a";
@@ -813,6 +833,8 @@ var _via_image_index = -1;    // index
 
 var _via_current_image_filename;
 var _via_current_image;
+var _via_current_image_width;
+var _via_current_image_height;
 
 // image canvas
 var _via_img_canvas = document.getElementById("image_canvas");
@@ -839,7 +861,7 @@ var _via_is_user_updating_attribute_name = false;
 var _via_is_user_updating_attribute_value = false;
 var _via_is_user_adding_attribute_name = false;
 var _via_is_loaded_img_list_visible = false;
-var _via_is_bottom_panel_visible = false;
+var _via_is_attributes_panel_visible = false;
 var _via_is_reg_attr_panel_visible = false;
 var _via_is_file_attr_panel_visible = false;
 var _via_is_canvas_zoomed = false;
@@ -856,7 +878,6 @@ var _via_click_x1 = 0; var _via_click_y1 = 0;
 var _via_region_edge = [-1, -1];
 var _via_region_click_x, _via_region_click_y;
 var _via_copied_image_regions = [];
-var _via_copied_canvas_regions = [];
 
 // message
 var _via_message_clear_timer;
@@ -891,7 +912,7 @@ var annotation_list_snippet = document.getElementById("annotation_list_snippet")
 var annotation_textarea = document.getElementById("annotation_textarea");
 
 var loaded_img_list_panel = document.getElementById('loaded_img_list_panel');
-var bottom_panel = document.getElementById('bottom_panel');
+var attributes_panel = document.getElementById('attributes_panel');
 var annotation_data_window;
 
 var BBOX_LINE_WIDTH = 4;
@@ -1095,6 +1116,7 @@ function store_local_img_ref(event) {
         } else {
             show_image( original_image_count );
         }
+        toggle_img_list();
     } else {
         show_message("Please upload some image files!");
     }
@@ -1267,7 +1289,7 @@ function import_annotations_from_csv(data) {
     }
     show_message('Import Summary : [' + region_import_count + '] regions, ' +
                  '[' + malformed_csv_lines_count  + '] malformed csv lines.',
-                 4 * VIA_THEME_MESSAGE_TIMEOUT_MS);
+                 VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -1325,7 +1347,7 @@ function import_annotations_from_json(data) {
         }
     }
     show_message('Import Summary : [' + region_import_count + '] regions',
-                 4 * VIA_THEME_MESSAGE_TIMEOUT_MS);
+                 VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -1662,14 +1684,16 @@ function show_image(image_index) {
             _via_is_user_drawing_polygon = false;
             _via_is_region_selected = false;
             _via_user_sel_region_id = -1;
+            _via_current_image_width = _via_current_image.naturalWidth;
+            _via_current_image_height = _via_current_image.naturalHeight;
 
             // set the size of canvas
             // based on the current dimension of browser window
             var de = document.documentElement;
             canvas_panel_width = de.clientWidth - 230;
             canvas_panel_height = de.clientHeight - 2*ui_top_panel.offsetHeight;
-            _via_canvas_width = _via_current_image.naturalWidth;
-            _via_canvas_height = _via_current_image.naturalHeight;
+            _via_canvas_width = _via_current_image_width;
+            _via_canvas_height = _via_current_image_height;
             var scale_width, scale_height;
             if ( _via_canvas_width > canvas_panel_width ) {
                 // resize image to match the panel width
@@ -1882,7 +1906,9 @@ function show_img_list() {
         return;
     }
 
-    if(_via_is_loaded_img_list_visible) {
+    if(_via_is_loaded_img_list_visible &&
+          _via_current_image_loaded) {
+
         if ( _via_reload_img_table ) {
             reload_img_table();
             _via_reload_img_table = false;
@@ -1892,7 +1918,8 @@ function show_img_list() {
 
         // scroll img_list_panel automatically to show the current image filename
         var panel = document.getElementById('img_list_panel');
-        var sel_file = document.getElementById('flist' + _via_image_index);
+        var html_img_id = 'flist' + _via_image_index;
+        var sel_file = document.getElementById(html_img_id);
         var panel_height = panel.offsetHeight;
         if (sel_file.offsetTop < panel.scrollTop) {
             panel.scrollTop = sel_file.offsetTop;
@@ -2799,16 +2826,14 @@ function _via_redraw_img_canvas() {
 function _via_redraw_reg_canvas() {
     if (_via_current_image_loaded) {
         if ( _via_canvas_regions.length > 0 ) {
-            setTimeout( function() {
-                _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
-                if (_via_is_region_boundary_visible) {
-                    draw_all_regions();
-                }
+            _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+            if (_via_is_region_boundary_visible) {
+                draw_all_regions();
+            }
 
-                if (_via_is_region_id_visible) {
-                    draw_all_region_id();
-                }
-            }, 0);
+            if (_via_is_region_id_visible) {
+                draw_all_region_id();
+            }
         }
     }
 }
@@ -3800,13 +3825,11 @@ function copy_sel_regions() {
     if (_via_is_region_selected ||
         _via_is_all_region_selected) {
         _via_copied_image_regions.splice(0);
-        _via_copied_canvas_regions.splice(0);
         for (var i=0; i<_via_img_metadata[_via_image_id].regions.length; ++i) {
             var img_region = _via_img_metadata[_via_image_id].regions[i];
             var canvas_region = _via_canvas_regions[i];
             if (canvas_region.is_user_selected) {
                 _via_copied_image_regions.push( clone_image_region(img_region) );
-                _via_copied_canvas_regions.push( clone_image_region(canvas_region) );
             }
         }
         show_message('Copied ' + _via_copied_image_regions.length +
@@ -3826,14 +3849,15 @@ function paste_sel_regions() {
         var pasted_reg_count = 0;
         for (var i=0; i<_via_copied_image_regions.length; ++i) {
             // ensure copied the regions are within this image's boundaries
-            var bbox = get_region_bounding_box( _via_copied_canvas_regions[i] );
-            if (bbox[2] < _via_canvas_width &&
-                bbox[3] < _via_canvas_height) {
+            var bbox = get_region_bounding_box( _via_copied_image_regions[i] );
+            if (bbox[2] < _via_current_image_width &&
+                bbox[3] < _via_current_image_height) {
                 _via_img_metadata[_via_image_id].regions.push( _via_copied_image_regions[i] );
-                _via_canvas_regions.push( _via_copied_canvas_regions[i] );
+
                 pasted_reg_count += 1;
             }
         }
+        _via_load_canvas_regions();
         var discarded_reg_count = _via_copied_image_regions.length - pasted_reg_count;
         show_message('Pasted ' + pasted_reg_count + ' regions. ' +
                      'Discarded ' + discarded_reg_count + ' regions exceeding image boundary.');
@@ -4110,7 +4134,8 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
     hstr += attrname + '</div>';
     hstr += '<table id="' + type + '"></table>';
 
-    var attrtable = document.createElement('TABLE');
+    var attrtable = document.createElement('table');
+    attrtable.setAttribute('id', 'attributes_panel_table');
     var firstrow = attrtable.insertRow(0);
 
     // top-left cell
@@ -4215,27 +4240,26 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
         }
     }
 
-    document.getElementById('attributes_panel').innerHTML = '';
-    document.getElementById('attributes_panel').appendChild(attrtable);
-    document.getElementById('attributes_panel').focus();
+    attributes_panel.replaceChild(attrtable, document.getElementById('attributes_panel_table'));
+    attributes_panel.focus();
 
     // move vertical scrollbar automatically to show the selected region (if any)
     if (sel_rows.length === 1) {
-        var panelHeight = bottom_panel.offsetHeight;
+        var panelHeight = attributes_panel.offsetHeight;
         var sel_row_bottom = sel_rows[0].offsetTop + sel_rows[0].clientHeight
         if (sel_row_bottom > panelHeight) {
-            bottom_panel.scrollTop = sel_rows[0].offsetTop;
+            attributes_panel.scrollTop = sel_rows[0].offsetTop;
         } else {
-            bottom_panel.scrollTop = 0;
+            attributes_panel.scrollTop = 0;
         }
     } else {
-        bottom_panel.scrollTop = 0;
+        attributes_panel.scrollTop = 0;
     }
 }
 
 function update_attributes_panel(type) {
     if (_via_current_image_loaded &&
-        _via_is_bottom_panel_visible) {
+        _via_is_attributes_panel_visible) {
         if (_via_is_reg_attr_panel_visible) {
             update_region_attributes_input_panel();
         }
@@ -4243,6 +4267,7 @@ function update_attributes_panel(type) {
         if (_via_is_file_attr_panel_visible) {
             update_file_attributes_input_panel();
         }
+        update_vertical_space();
     }
 }
 
@@ -4260,16 +4285,29 @@ function update_file_attributes_input_panel() {
                            [_via_current_image_filename]);
 }
 
+function toggle_attributes_input_panel() {
+    if(_via_is_reg_attr_panel_visible) {
+        toggle_reg_attr_panel();
+    }
+    if(_via_is_file_attr_panel_visible) {
+        toggle_file_attr_panel();
+    }
+}
+
 function toggle_reg_attr_panel() {
     if (_via_current_image_loaded) {
         var panel = document.getElementById('reg_attr_panel_button');
         panel.classList.toggle('active');
-        if (_via_is_bottom_panel_visible) {
+        if (_via_is_attributes_panel_visible) {
             if(_via_is_reg_attr_panel_visible) {
-                bottom_panel.style.display = 'none';
-                _via_is_bottom_panel_visible = false;
+                attributes_panel.style.display = 'none';
+                _via_is_attributes_panel_visible = false;
                 _via_is_reg_attr_panel_visible = false;
                 _via_reg_canvas.focus();
+                // add horizontal spacer to allow scrollbar
+                var hs = document.getElementById('horizontal_space');
+                hs.style.height = attributes_panel.offsetHeight+'px';
+
             } else {
                 update_region_attributes_input_panel();
                 _via_is_reg_attr_panel_visible = true;
@@ -4277,16 +4315,16 @@ function toggle_reg_attr_panel() {
                 // de-activate the file-attr accordion panel
                 var panel = document.getElementById('file_attr_panel_button');
                 panel.classList.toggle('active');
-
-                bottom_panel.focus();
+                attributes_panel.focus();
             }
         } else {
-            _via_is_bottom_panel_visible = true;
+            _via_is_attributes_panel_visible = true;
             update_region_attributes_input_panel();
             _via_is_reg_attr_panel_visible = true;
-            bottom_panel.style.display = 'block';
-            bottom_panel.focus();
+            attributes_panel.style.display = 'block';
+            attributes_panel.focus();
         }
+        update_vertical_space();
     } else {
         show_message('Please load some images first');
     }
@@ -4296,10 +4334,10 @@ function toggle_file_attr_panel() {
     if (_via_current_image_loaded) {
         var panel = document.getElementById('file_attr_panel_button');
         panel.classList.toggle('active');
-        if (_via_is_bottom_panel_visible) {
+        if (_via_is_attributes_panel_visible) {
             if(_via_is_file_attr_panel_visible) {
-                bottom_panel.style.display = 'none';
-                _via_is_bottom_panel_visible = false;
+                attributes_panel.style.display = 'none';
+                _via_is_attributes_panel_visible = false;
                 _via_is_file_attr_panel_visible = false;
             } else {
                 update_file_attributes_input_panel();
@@ -4311,14 +4349,22 @@ function toggle_file_attr_panel() {
                 panel.classList.toggle('active');
             }
         } else {
-            _via_is_bottom_panel_visible = true;
+            _via_is_attributes_panel_visible = true;
             update_file_attributes_input_panel();
             _via_is_file_attr_panel_visible = true;
-            bottom_panel.style.display = 'block';
+            attributes_panel.style.display = 'block';
         }
+        update_vertical_space();
     } else {
         show_message('Please load some images first');
     }
+}
+
+// this vertical spacer is needed to allow scrollbar to show
+// items like Keyboard Shortcut hidden under the attributes panel
+function update_vertical_space() {
+    var panel = document.getElementById('vertical_space');
+    panel.style.height = attributes_panel.offsetHeight+'px';
 }
 
 function update_attribute_value(attr_id, value) {

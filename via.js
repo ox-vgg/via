@@ -68,10 +68,8 @@ var VIA_MOUSE_CLICK_TOL = 2;
 var VIA_ELLIPSE_EDGE_TOL = 0.2;
 var VIA_THETA_TOL = Math.PI/18; // 10 degrees
 var VIA_POLYGON_RESIZE_VERTEX_OFFSET = 100;
-var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5];
+var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4, 5];
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
-var VIA_ATTR_PANEL_FONT_SIZE_LEVELS = ['xx-small', 'x-small', 'small',
-                                       'medium', 'large', 'x-large', 'xx-large'];
 
 var VIA_THEME_REGION_BOUNDARY_WIDTH = 4;
 var VIA_THEME_BOUNDARY_LINE_COLOR = "#1a1a1a";
@@ -1172,7 +1170,9 @@ function show_img_list() {
         return;
     }
 
-    if(_via_is_loaded_img_list_visible) {
+    if(_via_is_loaded_img_list_visible &&
+          _via_current_image_loaded) {
+
         if ( _via_reload_img_table ) {
             reload_img_table();
             _via_reload_img_table = false;
@@ -1182,7 +1182,8 @@ function show_img_list() {
 
         // scroll img_list_panel automatically to show the current image filename
         var panel = document.getElementById('img_list_panel');
-        var sel_file = document.getElementById('flist' + _via_image_index);
+        var html_img_id = 'flist' + _via_image_index;
+        var sel_file = document.getElementById(html_img_id);
         var panel_height = panel.offsetHeight;
         if (sel_file.offsetTop < panel.scrollTop) {
             panel.scrollTop = sel_file.offsetTop;
