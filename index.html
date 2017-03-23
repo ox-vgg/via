@@ -180,9 +180,11 @@
       #leftsidebar_collapse_button {
       background-color: black;
       width: 10px;
-      height: 20px;
+      height: 25px;
       color: white;
       padding: 0.2em;
+      border-radius: 0px 5px 5px 0px;
+      font-size: large;
       }
       #leftsidebar_collapse_button:hover {
       color: red;
@@ -334,7 +336,7 @@
       }
 
       /* region and file attributes input panel (spreadsheet like) */
-      #bottom_panel {
+      #attributes_panel {
       display: none;
       position: fixed;
       bottom: 0;
@@ -344,25 +346,18 @@
       overflow: auto;
       background-color: #ffffff;
       border-top: 4px solid #000000;
-      padding: 1em 0em;
+      padding: 0em 0em;
+      padding-bottom: 2em;
       font-size: small;
       }
-      #bottom_panel .title {
-      font-size: large;
-      padding-top: 1em;
-      padding-bottom: 0.2em;
-      padding-left: 0.8em;
-      padding-right: 1em;
-      }
-
-      #bottom_panel table {
+      #attributes_panel table {
       border-collapse: collapse;
       table-layout: fixed;
       margin: 1em;
       margin-bottom: 2em;
       }
 
-      #bottom_panel td {
+      #attributes_panel td {
       border: 1px solid #999999;
       padding: 1em 1em;
       margin: 0;
@@ -370,11 +365,11 @@
       white-space: nowrap;
       vertical-align: top;
       }
-      #bottom_panel tr:first-child td, #bottom_panel td:first-child {
+      #attributes_panel tr:first-child td, #attributes_panel td:first-child {
       padding: 1em 1em;
       text-align: center;
       }
-      #bottom_panel input {
+      #attributes_panel input {
       border: none;
       padding: 0;
       margin: 0;
@@ -384,16 +379,16 @@
       background-color: #ffffff;
       vertical-align: top;
       }
-      #bottom_panel input:hover {
+      #attributes_panel input:hover {
       background-color: #e6e6e6;
       }
-      #bottom_panel input:focus {
+      #attributes_panel input:focus {
       background-color: #e6e6e6;
       }
-      #bottom_panel input:not(:focus) {
+      #attributes_panel input:not(:focus) {
       text-align: center;
       }
-      #bottom_panel textarea {
+      #attributes_panel textarea {
       border: none;
       padding: 0;
       margin: 0;
@@ -401,11 +396,31 @@
       font-size: small;
       background-color: #ffffff;
       }
-      #bottom_panel textarea:hover {
+      #attributes_panel textarea:hover {
       background-color: #e6e6e6;
       }
-      #bottom_panel textarea:focus {
+      #attributes_panel textarea:focus {
       background-color: #e6e6e6;
+      }
+
+      #attributes_panel_toolbar {
+      display: block;
+      height: 30px;
+      width: 100%;
+      position: relative;
+      padding: 0;
+      margin: 0;
+      }
+      .attributes_panel_button {
+      width: 10px;
+      color: black;
+      font-size: x-large;
+      margin-left: 0.5em;
+      padding: 0;
+      }
+      .attributes_panel_button:hover {
+      color: red;
+      cursor: pointer;
       }
 
       /* layers of canvas */
@@ -663,28 +678,28 @@
 
           <div class="text_panel" id="license_panel">
             <pre>
-  Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
-  All rights reserved.
+              Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
+              All rights reserved.
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
+              Redistribution and use in source and binary forms, with or without
+              modification, are permitted provided that the following conditions are met:
 
-  Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-  Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE.
+              Redistributions of source code must retain the above copyright notice, this
+              list of conditions and the following disclaimer.
+              Redistributions in binary form must reproduce the above copyright notice,
+              this list of conditions and the following disclaimer in the documentation
+              and/or other materials provided with the distribution.
+              THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+              AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+              IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+              ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+              LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+              CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+              SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+              INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+              CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+              ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+              POSSIBILITY OF SUCH DAMAGE.
             </pre>
           </div>
 
@@ -692,13 +707,20 @@
       </div>
     </div>
 
-    <!-- Bottom panel is used to display attributes input panel -->
-    <div id="bottom_panel">
-      <div id="attributes_panel"></div>
+    <!-- region and file attributes input panel -->
+    <div id="attributes_panel">
+      <div id="attributes_panel_toolbar">
+        <div onclick="toggle_attributes_input_panel()" class="attributes_panel_button">&times;</div>
+      </div>
+      <table id="attributes_panel_table"></table>
     </div>
 
     <!-- to show status messages -->
     <div id="message_panel"></div>
+
+    <!-- this vertical spacer is needed to allow scrollbar to show
+         items like Keyboard Shortcut hidden under the attributes panel -->
+    <div style="width: 100%;" id="vertical_space"></div>
 
     <script type="text/javascript">
       //<!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
@@ -707,12 +729,12 @@
       //<!--AUTO_INSERT_VIA_JS_HERE-->
     </script>
 
-    <!--
+    <!---->
     <script src="via.js"></script>
-    -->
+
     <!--
     <script src="via_demo.js"></script>
-    -->
+-->
 
     <!-- Unit Tests-->
     <!--

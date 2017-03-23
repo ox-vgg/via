@@ -125,7 +125,7 @@ var _via_is_user_updating_attribute_name = false;
 var _via_is_user_updating_attribute_value = false;
 var _via_is_user_adding_attribute_name = false;
 var _via_is_loaded_img_list_visible = false;
-var _via_is_bottom_panel_visible = false;
+var _via_is_attributes_panel_visible = false;
 var _via_is_reg_attr_panel_visible = false;
 var _via_is_file_attr_panel_visible = false;
 var _via_is_canvas_zoomed = false;
@@ -177,7 +177,7 @@ var annotation_list_snippet = document.getElementById("annotation_list_snippet")
 var annotation_textarea = document.getElementById("annotation_textarea");
 
 var loaded_img_list_panel = document.getElementById('loaded_img_list_panel');
-var bottom_panel = document.getElementById('bottom_panel');
+var attributes_panel = document.getElementById('attributes_panel');
 var annotation_data_window;
 
 var BBOX_LINE_WIDTH = 4;
@@ -381,6 +381,7 @@ function store_local_img_ref(event) {
         } else {
             show_image( original_image_count );
         }
+        toggle_img_list();
     } else {
         show_message("Please upload some image files!");
     }
@@ -553,7 +554,7 @@ function import_annotations_from_csv(data) {
     }
     show_message('Import Summary : [' + region_import_count + '] regions, ' +
                  '[' + malformed_csv_lines_count  + '] malformed csv lines.',
-                 4 * VIA_THEME_MESSAGE_TIMEOUT_MS);
+                 VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -611,7 +612,7 @@ function import_annotations_from_json(data) {
         }
     }
     show_message('Import Summary : [' + region_import_count + '] regions',
-                 4 * VIA_THEME_MESSAGE_TIMEOUT_MS);
+                 VIA_THEME_MESSAGE_TIMEOUT_MS);
 
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -3394,7 +3395,8 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
     hstr += attrname + '</div>';
     hstr += '<table id="' + type + '"></table>';
 
-    var attrtable = document.createElement('TABLE');
+    var attrtable = document.createElement('table');
+    attrtable.setAttribute('id', 'attributes_panel_table');
     var firstrow = attrtable.insertRow(0);
 
     // top-left cell
@@ -3499,27 +3501,26 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
         }
     }
 
-    document.getElementById('attributes_panel').innerHTML = '';
-    document.getElementById('attributes_panel').appendChild(attrtable);
-    document.getElementById('attributes_panel').focus();
+    attributes_panel.replaceChild(attrtable, document.getElementById('attributes_panel_table'));
+    attributes_panel.focus();
 
     // move vertical scrollbar automatically to show the selected region (if any)
     if (sel_rows.length === 1) {
-        var panelHeight = bottom_panel.offsetHeight;
+        var panelHeight = attributes_panel.offsetHeight;
         var sel_row_bottom = sel_rows[0].offsetTop + sel_rows[0].clientHeight
         if (sel_row_bottom > panelHeight) {
-            bottom_panel.scrollTop = sel_rows[0].offsetTop;
+            attributes_panel.scrollTop = sel_rows[0].offsetTop;
         } else {
-            bottom_panel.scrollTop = 0;
+            attributes_panel.scrollTop = 0;
         }
     } else {
-        bottom_panel.scrollTop = 0;
+        attributes_panel.scrollTop = 0;
     }
 }
 
 function update_attributes_panel(type) {
     if (_via_current_image_loaded &&
-        _via_is_bottom_panel_visible) {
+        _via_is_attributes_panel_visible) {
         if (_via_is_reg_attr_panel_visible) {
             update_region_attributes_input_panel();
         }
@@ -3527,6 +3528,7 @@ function update_attributes_panel(type) {
         if (_via_is_file_attr_panel_visible) {
             update_file_attributes_input_panel();
         }
+        update_vertical_space();
     }
 }
 
@@ -3544,16 +3546,29 @@ function update_file_attributes_input_panel() {
                            [_via_current_image_filename]);
 }
 
+function toggle_attributes_input_panel() {
+    if(_via_is_reg_attr_panel_visible) {
+        toggle_reg_attr_panel();
+    }
+    if(_via_is_file_attr_panel_visible) {
+        toggle_file_attr_panel();
+    }
+}
+
 function toggle_reg_attr_panel() {
     if (_via_current_image_loaded) {
         var panel = document.getElementById('reg_attr_panel_button');
         panel.classList.toggle('active');
-        if (_via_is_bottom_panel_visible) {
+        if (_via_is_attributes_panel_visible) {
             if(_via_is_reg_attr_panel_visible) {
-                bottom_panel.style.display = 'none';
-                _via_is_bottom_panel_visible = false;
+                attributes_panel.style.display = 'none';
+                _via_is_attributes_panel_visible = false;
                 _via_is_reg_attr_panel_visible = false;
                 _via_reg_canvas.focus();
+                // add horizontal spacer to allow scrollbar
+                var hs = document.getElementById('horizontal_space');
+                hs.style.height = attributes_panel.offsetHeight+'px';
+
             } else {
                 update_region_attributes_input_panel();
                 _via_is_reg_attr_panel_visible = true;
@@ -3561,16 +3576,16 @@ function toggle_reg_attr_panel() {
                 // de-activate the file-attr accordion panel
                 var panel = document.getElementById('file_attr_panel_button');
                 panel.classList.toggle('active');
-
-                bottom_panel.focus();
+                attributes_panel.focus();
             }
         } else {
-            _via_is_bottom_panel_visible = true;
+            _via_is_attributes_panel_visible = true;
             update_region_attributes_input_panel();
             _via_is_reg_attr_panel_visible = true;
-            bottom_panel.style.display = 'block';
-            bottom_panel.focus();
+            attributes_panel.style.display = 'block';
+            attributes_panel.focus();
         }
+        update_vertical_space();
     } else {
         show_message('Please load some images first');
     }
@@ -3580,10 +3595,10 @@ function toggle_file_attr_panel() {
     if (_via_current_image_loaded) {
         var panel = document.getElementById('file_attr_panel_button');
         panel.classList.toggle('active');
-        if (_via_is_bottom_panel_visible) {
+        if (_via_is_attributes_panel_visible) {
             if(_via_is_file_attr_panel_visible) {
-                bottom_panel.style.display = 'none';
-                _via_is_bottom_panel_visible = false;
+                attributes_panel.style.display = 'none';
+                _via_is_attributes_panel_visible = false;
                 _via_is_file_attr_panel_visible = false;
             } else {
                 update_file_attributes_input_panel();
@@ -3595,14 +3610,22 @@ function toggle_file_attr_panel() {
                 panel.classList.toggle('active');
             }
         } else {
-            _via_is_bottom_panel_visible = true;
+            _via_is_attributes_panel_visible = true;
             update_file_attributes_input_panel();
             _via_is_file_attr_panel_visible = true;
-            bottom_panel.style.display = 'block';
+            attributes_panel.style.display = 'block';
         }
+        update_vertical_space();
     } else {
         show_message('Please load some images first');
     }
+}
+
+// this vertical spacer is needed to allow scrollbar to show
+// items like Keyboard Shortcut hidden under the attributes panel
+function update_vertical_space() {
+    var panel = document.getElementById('vertical_space');
+    panel.style.height = attributes_panel.offsetHeight+'px';
 }
 
 function update_attribute_value(attr_id, value) {
