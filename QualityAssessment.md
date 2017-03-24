@@ -39,6 +39,18 @@ Unit Tests
 VIA [unit tests](https://gitlab.com/vgg/via/tree/develop/tests) are designed to 
 ensure that the underlying Javascript codebase is behaving correctly. Before 
 every release, the source code should pass all these tests.
-
+ * [tests/via_test_fileio.js](tests/via_test_fileio.js)
+   * [x] `_via_test_fileio_csv_import()`
+   * [x] `_via_test_fileio_json_import()`
+   * [x] `_via_test_fileio_export()`
+ * [tests/via_test_region.js](tests/via_test_region.js)
+   * [x] `_via_test_region_delete_all()`
+   * [x] `_via_test_region_delete_one()`
+   * [ ] `_via_test_region_draw()`
+   * [ ] `_via_test_region_move()`
+   * [ ] `_via_test_region_resize()`
+   * [ ] `_via_test_region_copy()`
+   * [ ] `_via_test_region_paste()`
+ 
 Abhishek Dutta  
 Feb. 06, 2017
