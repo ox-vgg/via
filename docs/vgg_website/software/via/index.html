@@ -18,6 +18,16 @@ VGG Image Annotator : Visual Geometry Group
     border-top:5px solid #1C1C1C; 
     zoom: 1;
 }
+.section {
+  display: table; padding: 2em;
+}
+.section_img {
+  display: table-cell;
+  border: 1px solid black;
+}
+.section_text {
+  display: table-cell; vertical-align: middle; line-height: 1.6em;
+}
 </style>
 
 <script type="text/javascript" src="/~vgg/include/usecookies.js"></script>
@@ -90,76 +100,92 @@ Department of Engineering Science, University of Oxford
 
 <h3>Overview</h3>
 <p>
-VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a> 
-developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> 
-and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
-With this standalone application, you can define regions in an image and create a textual description of those regions.
-Such image regions and descriptions are useful for supervised training of learning algorithms.
+VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
+and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>. With this standalone application, you can define regions in an image and create a textual description of those regions. Such image regions and descriptions are useful for supervised training of learning algorithms.
 </p>
+
 <p>
 Features:
 <ul>
-<li>based solely on HTML, CSS and Javascript (no dependecies on any javascript libraries)</li>
-<li>can be used offline (complete application packaged in a single html file of size &lt; 200KB)</li>
-<li>requires nothing more than a modern web browser (tested on firefox and chrome)</li>
-<li>supports following region shapes: rectangle, circle, ellipse, polygon</li>
-<li>supports multiple attributes for each image region</li>
-<li>import (and export) of region data from (to) text file in csv and json format</li>
-<li>hundreds of images can be loaded and annotated without any performance degradation</li>
+<li>based solely on HTML, CSS and Javascript (no external javascript libraries)</li>
+<li>can be used off-line (full application in a single html file of size &lt; 200KB)</li>
+<li>requires nothing more than a modern web browser (tested on Firefox, Chrome and Safari)</li>
+<li>supported region shapes: rectangle, circle, ellipse, polygon and point</li>
+<li>import/export of region data in csv and json file format</li>
 </ul>
 </p>
 
 <h3>Downloads</h3>
-<p>
-<table style="margin: 0pt 0pt 2em; text-align: left;" border="0" cellpadding="5">
-    <tr>
-        <th>Link</th>
-        <th>Description</th>
-    </tr>
-    <tr>
-        <td><a href="./downloads/via.html.zip">via.html.zip</a> (0.1b)</td>
-        <td>the VGG Image Annotator application (&lt; 200KB)</td>
-    </tr>
-    <tr>
-        <td><a href="via.html">via.html</a> (0.1b)</td>
-        <td>online version of the application</td>
-    </tr>
-    <tr>
-        <td><a href="via_demo.html">online demo of via</a></td>
-        <td>live demo (with preloaded images and regions)</td>
-    </tr>
-    <tr>
-        <td><a href="https://gitlab.com/vgg/via/">https://gitlab.com/vgg/via/</a></td>
-        <td>source code repository</td>
-    </tr>    
-</table>
-</p>
+<div class="section">
+  <div class="section_img">
+    <a href="via_demo.html"><img src="./images/via_screenshot_400x400.png" title="Online demo of VIA application" border="0"></a>
+  </div>
 
-<h3>Screenshots</h3>
-<p>
-<img src="images/big_ben_annotation.jpg" alt="via screenshot">
-</p>
+  <div class="section_text">
+  <ul>
+    <li><b>Usage</b>: for generic image annotation tasks</li>
+    <li><a href="./downloads/via-1.0.0.zip">via-1.0.0.zip</a> : includes the VIA application (&lt; 200KB) and its demo</li>
+    <li><a href="./downloads/via-source-1.0.0.zip">via-source-1.0.0.zip</a> : source code and <a href="https://gitlab.com/vgg/via/blob/master/CodeDoc.md">code documentation</a></li>
+    <li><a href="via.html">via.html</a> : online version of VIA application</li>
+    <li><a href="via_demo.html">via_demo.html</a> : live online demo (with preloadd images and regions)</li>
+    <li><a href="https://gitlab.com/vgg/via/">https://gitlab.com/vgg/via/</a> : source code repository</li>
+  </ul>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section_img">
+    <img src="./images/via_face_screenshot_400x400.png" title="Online demo of VGG Face Annotator application" border="0">
+  </div>
+
+  <div class="section_text">
+  <ul>
+    <li>Use: annotating facial regions</li>
+    <li><i>Coming soon</i></li>
+  </ul>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section_img">
+    <img src="./images/via_15c_bt_screenshot_400x400.png" title="VIA being used to annotate 15th century books" border="0"></a>
+  </div>
+
+  <div class="section_text">
+  <ul>
+    <li><b>Usage</b>: annotation of 15th century books</li>
+    <li>The VIA application is used without any modification in <a href="http://www.mod-langs.ox.ac.uk/research/15cbooktrade">this project</a>.</li>
+  </ul>
+  </div>
+</div>
 
 <h3>Getting Started</h3>
 <ol>
-<li>Visit the <a href="./downloads/via.html">application website</a> (or download <a href="./downloads/via.html.zip">a copy</a> if you wish to use it offline)</li>
-<li>Click [Image &rarr; Load or Add Image] in the top menu bar to load a set of images that you wish to annotate.</li>
-<li>Press n (or p) to navigate through the loaded images.
-<li>Define some region attributes by pressing the plus sign (+) in the Region Attributes section (left side). You should be able to see newly defined attribute.
-<li>In the Select Region Shape section (top left side), click the rectangular shape</li>
-<li>On the image area, keep pressing the right click button as you drag the mouse cursor. This will draw a rectangular region on the image.</li>
-<li>Using your mouse, press a single click inside this new rectangular area to select this newly created region.</li>
-<li>In the Region Attributes area (left side), you will see "[click to set value]" link beside the attribute name created in step 4. Click on this link.</li>
-<li>Type a value for this attribute and click 'Save' (or just press Enter). This new value will now be assigned to this rectangular region.</li>
-<li>To download the annotated region data, click [Annotation &rarr; Save as CSV] in the top menu bar. This will download a text file containing region shape and attribute data.</li>
-<li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 10) by clicking [Annotation &rarr; Import].
-<li>You can also save the attributes names as a text file by clicking [Attributes &rarr; Save attributes]
-</ol>
+  <li>Click [Image > Load or Add Images] in the top menu bar to load a set of images that you wish to annotate.</li>
+  <li>Press n (or p) to navigate through the loaded images. You can also use the &larr; and &rarr; icons in the top panel toolbar for navigation.</li>
+  <li>Click <b>Region Attributes</b> in the left panel to reveal a panel in the bottom. Click <b>[Add New]</b> tp add a new attribute. For example:
+    <pre>
+      object_name
+      object_color
+    </pre>
+    You can add more region attributes according to you needs.
+  <li>In the <b>Region Shape</b> section in the left panel, click the rectangular shape</li>
+  <li>On the image area, keep pressing the right click button as you drag the mouse cursor. This will draw a rectangular region on the image.</li>
+  <li>This newly created region is automatically selected. Now you can enter the attribute value for this region in the bottom panel. For example:
+    <pre>
+      object_name = dog
+      object_color = white
+    </pre>
+    You can annotate multiple regions in this image or other images and assign a value to each pre-defined attribute.</li>
+  <li>To download the annotated region data, click <b>[Annotation > Save as CSV]</b> in the top menu bar. This will download a text file containing region shape and attribute data.</li>
+  <li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 7) by clicking <b>[Annotation > Import]</b>.
+</li></ol>
+<p>Note: This Getting Started guide can be accessed in the VIA application by pressing the F1 Key or using the top menu bar <b>[Help &rarr; Getting Started]</b>.</p>
 
 <h3>Contact</h3>
 <p>Software bug reports and feature requests should be 
-<a href="https://gitlab.com/vgg/via/issues/new">submitted here</a> (requires an account at <a href="http://gitlab.com">gitlab.com</a>).
-For all other queries, please contact <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a></p>
+<a href="https://gitlab.com/vgg/via/issues/new">submitted here</a> (requires an account at <a href="http://gitlab.com">gitlab.com</a>).<br/>
+For all other queries, please contact <a href="mailto:REMOVE_ME_adutta@robots.ox.ac.uk">Abhishek Dutta</a></p>
 
 <h3>Acknowledgements</h3>
 <p>This work is supported by EPSRC programme grant Seebibyte: Visual Search for the Era of Big Data (<a href="http://www.seebibyte.org/index.html">EP/M013774/1</a>).</p>
@@ -172,7 +198,7 @@ For all other queries, please contact <a href="mailto:adutta@robots.ox.ac.uk">Ab
 <div id="footbar">
 Page maintained by <a href="mailto:vgg-webmasters@robots.ox.ac.takethisout.uk"><tt>vgg-webmasters</tt></a> at the <tt>robots.ox.ac.uk</tt> domain.
 <br>
-Last updated: October 2016.
+Last updated: March 2017.
 </div>
 
 </body>
