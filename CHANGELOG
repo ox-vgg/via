@@ -1,5 +1,6 @@
 ## [1.0.1] - not released yet
  * double buffering of image canvas to improve image loading performance
+ * video shot annotation
 
 ## [1.0.0] - not released yet
  * file-attributes support added (useful for weakly supervised learning)
@@ -13,6 +14,9 @@
  * CSV import/export now conforms to RFC 4180 standard
  * added some basic unit tests
  * added support for point regions (useful for landmark annotations)
+
+## [1.0.0-beta] - 2017-03-15
+ * beta release for VIA 1.0.0
 
 ## [0.1b] - 2016-10-24
  * first release of VGG image annotator
