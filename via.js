@@ -1887,17 +1887,14 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 
         switch (_via_current_shape ) {
         case VIA_REGION_SHAPE.RECT:
-            _via_draw_rect_region(region_x0, region_y0,
-                                  dx, dy, false);
+            _via_draw_rect_region(region_x0, region_y0, dx, dy, false);
             break;
         case VIA_REGION_SHAPE.CIRCLE:
             var circle_radius = Math.round(Math.sqrt( dx*dx + dy*dy ));
-            _via_draw_circle_region(region_x0, region_y0,
-                                    circle_radius, false);
+            _via_draw_circle_region(region_x0, region_y0, circle_radius, false);
             break;
         case VIA_REGION_SHAPE.ELLIPSE:
-            _via_draw_ellipse_region(region_x0, region_y0,
-                                     dx, dy, false);
+            _via_draw_ellipse_region(region_x0, region_y0, dx, dy, false);
             break;
         case VIA_REGION_SHAPE.POLYGON:
             // this is handled by the if ( _via_is_user_drawing_polygon ) { ... }
@@ -1909,7 +1906,13 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 
     if ( _via_is_user_resizing_region ) {
         // user has clicked mouse on bounding box edge and is now moving it
-        _via_redraw_reg_canvas(); // clear old intermediate rectangle
+        // draw region as the user drags the mouse cousor
+        if (_via_canvas_regions.length) {
+            _via_redraw_reg_canvas(); // clear old intermediate rectangle
+        } else {
+            // first region being drawn, just clear the full region canvas
+            _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+        }
 
         var region_id = _via_region_edge[0];
         var attr = _via_canvas_regions[region_id].shape_attributes;
@@ -2003,7 +2006,13 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
     }
 
     if ( _via_is_user_moving_region ) {
-        _via_redraw_reg_canvas();
+        // draw region as the user drags the mouse cousor
+        if (_via_canvas_regions.length) {
+            _via_redraw_reg_canvas(); // clear old intermediate rectangle
+        } else {
+            // first region being drawn, just clear the full region canvas
+            _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+        }
 
         var move_x = (_via_current_x - _via_region_click_x);
         var move_y = (_via_current_y - _via_region_click_y);
@@ -2053,6 +2062,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 
         }
         _via_reg_canvas.focus();
+        return;
     }
 
     if ( _via_is_user_drawing_polygon ) {
@@ -2074,27 +2084,23 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 //
 function _via_redraw_img_canvas() {
     if (_via_current_image_loaded) {
-        setTimeout( function() {
-            _via_img_ctx.clearRect(0, 0, _via_img_canvas.width, _via_img_canvas.height);
-            _via_img_ctx.drawImage(_via_current_image, 0, 0,
-                                   _via_img_canvas.width, _via_img_canvas.height);
-        }, 0);
+        _via_img_ctx.clearRect(0, 0, _via_img_canvas.width, _via_img_canvas.height);
+        _via_img_ctx.drawImage(_via_current_image, 0, 0,
+                               _via_img_canvas.width, _via_img_canvas.height);
     }
 }
 
 function _via_redraw_reg_canvas() {
     if (_via_current_image_loaded) {
         if ( _via_canvas_regions.length > 0 ) {
-            setTimeout( function() {
-                _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
-                if (_via_is_region_boundary_visible) {
-                    draw_all_regions();
-                }
+            _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+            if (_via_is_region_boundary_visible) {
+                draw_all_regions();
+            }
 
-                if (_via_is_region_id_visible) {
-                    draw_all_region_id();
-                }
-            }, 0);
+            if (_via_is_region_id_visible) {
+                draw_all_region_id();
+            }
         }
     }
 }
