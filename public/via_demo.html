@@ -37,13 +37,16 @@
     <!-- Google analytics : used in Seebibyte project to measure impact -->
     <script type="text/javascript">
       //<!--AUTO_INSERT_GOOGLE_ANALYTICS_JS_HERE-->
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-ga('create', 'UA-20555581-2', 'auto');
-ga('send', 'pageview');
+  ga('create', 'UA-96159556-2', 'auto');
+  ga('send', 'pageview');
+
+</script>
     </script>
 
     <!-- CSS style definition -->
@@ -187,9 +190,11 @@ ga('send', 'pageview');
       #leftsidebar_collapse_button {
       background-color: black;
       width: 10px;
-      height: 20px;
+      height: 25px;
       color: white;
       padding: 0.2em;
+      border-radius: 0px 5px 5px 0px;
+      font-size: large;
       }
       #leftsidebar_collapse_button:hover {
       color: red;
@@ -341,7 +346,7 @@ ga('send', 'pageview');
       }
 
       /* region and file attributes input panel (spreadsheet like) */
-      #bottom_panel {
+      #attributes_panel {
       display: none;
       position: fixed;
       bottom: 0;
@@ -351,25 +356,18 @@ ga('send', 'pageview');
       overflow: auto;
       background-color: #ffffff;
       border-top: 4px solid #000000;
-      padding: 1em 0em;
+      padding: 0em 0em;
+      padding-bottom: 2em;
       font-size: small;
       }
-      #bottom_panel .title {
-      font-size: large;
-      padding-top: 1em;
-      padding-bottom: 0.2em;
-      padding-left: 0.8em;
-      padding-right: 1em;
-      }
-
-      #bottom_panel table {
+      #attributes_panel table {
       border-collapse: collapse;
       table-layout: fixed;
       margin: 1em;
       margin-bottom: 2em;
       }
 
-      #bottom_panel td {
+      #attributes_panel td {
       border: 1px solid #999999;
       padding: 1em 1em;
       margin: 0;
@@ -377,11 +375,11 @@ ga('send', 'pageview');
       white-space: nowrap;
       vertical-align: top;
       }
-      #bottom_panel tr:first-child td, #bottom_panel td:first-child {
+      #attributes_panel tr:first-child td, #attributes_panel td:first-child {
       padding: 1em 1em;
       text-align: center;
       }
-      #bottom_panel input {
+      #attributes_panel input {
       border: none;
       padding: 0;
       margin: 0;
@@ -391,16 +389,16 @@ ga('send', 'pageview');
       background-color: #ffffff;
       vertical-align: top;
       }
-      #bottom_panel input:hover {
+      #attributes_panel input:hover {
       background-color: #e6e6e6;
       }
-      #bottom_panel input:focus {
+      #attributes_panel input:focus {
       background-color: #e6e6e6;
       }
-      #bottom_panel input:not(:focus) {
+      #attributes_panel input:not(:focus) {
       text-align: center;
       }
-      #bottom_panel textarea {
+      #attributes_panel textarea {
       border: none;
       padding: 0;
       margin: 0;
@@ -408,11 +406,31 @@ ga('send', 'pageview');
       font-size: small;
       background-color: #ffffff;
       }
-      #bottom_panel textarea:hover {
+      #attributes_panel textarea:hover {
       background-color: #e6e6e6;
       }
-      #bottom_panel textarea:focus {
+      #attributes_panel textarea:focus {
       background-color: #e6e6e6;
+      }
+
+      #attributes_panel_toolbar {
+      display: block;
+      height: 30px;
+      width: 100%;
+      position: relative;
+      padding: 0;
+      margin: 0;
+      }
+      .attributes_panel_button {
+      width: 10px;
+      color: black;
+      font-size: x-large;
+      margin-left: 0.5em;
+      padding: 0;
+      }
+      .attributes_panel_button:hover {
+      color: red;
+      cursor: pointer;
       }
 
       /* layers of canvas */
@@ -621,7 +639,7 @@ ga('send', 'pageview');
         <div>
           <div class="text_panel" id="via_start_info_panel">Starting VGG Image Annotator ...</div>
 
-          <div class="text_panel" id="about_panel">
+          <div class="text_panel" style="padding: 1em; border: 1px solid #cccccc;" id="about_panel">
             <p style="font-size: 2em;">VGG Image Annotator</p>
             <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.0-beta</a></p>
             <p>
@@ -670,28 +688,28 @@ ga('send', 'pageview');
 
           <div class="text_panel" id="license_panel">
             <pre>
-  Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
-  All rights reserved.
+              Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
+              All rights reserved.
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
+              Redistribution and use in source and binary forms, with or without
+              modification, are permitted provided that the following conditions are met:
 
-  Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-  Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE.
+              Redistributions of source code must retain the above copyright notice, this
+              list of conditions and the following disclaimer.
+              Redistributions in binary form must reproduce the above copyright notice,
+              this list of conditions and the following disclaimer in the documentation
+              and/or other materials provided with the distribution.
+              THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+              AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+              IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+              ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+              LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+              CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+              SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+              INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+              CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+              ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+              POSSIBILITY OF SUCH DAMAGE.
             </pre>
           </div>
 
@@ -699,13 +717,20 @@ ga('send', 'pageview');
       </div>
     </div>
 
-    <!-- Bottom panel is used to display attributes input panel -->
-    <div id="bottom_panel">
-      <div id="attributes_panel"></div>
+    <!-- region and file attributes input panel -->
+    <div id="attributes_panel">
+      <div id="attributes_panel_toolbar">
+        <div onclick="toggle_attributes_input_panel()" class="attributes_panel_button">&times;</div>
+      </div>
+      <table id="attributes_panel_table"></table>
     </div>
 
     <!-- to show status messages -->
     <div id="message_panel"></div>
+
+    <!-- this vertical spacer is needed to allow scrollbar to show
+         items like Keyboard Shortcut hidden under the attributes panel -->
+    <div style="width: 100%;" id="vertical_space"></div>
 
     <script type="text/javascript">
       //<!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
@@ -830,110 +855,107 @@ for more details.
 
 */
 
-var VIA_VERSION = '1.0.0-beta';
-var VIA_NAME = 'VGG Image Annotator';
-var VIA_SHORT_NAME = 'VIA';
+var VIA_VERSION      = '1.0.0-beta';
+var VIA_NAME         = 'VGG Image Annotator';
+var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
                          CIRCLE:'circle',
                          ELLIPSE:'ellipse',
                          POLYGON:'polygon',
                          POINT:'point'};
 
-var VIA_REGION_EDGE_TOL = 5; // pixel
+var VIA_REGION_EDGE_TOL           = 5;   // pixel
 var VIA_REGION_CONTROL_POINT_SIZE = 2;
-var VIA_REGION_POINT_RADIUS = 3;
-var VIA_POLYGON_VERTEX_MATCH_TOL = 5;
-var VIA_REGION_MIN_DIM = 3;
-var VIA_MOUSE_CLICK_TOL = 2;
-var VIA_ELLIPSE_EDGE_TOL = 0.2;
-var VIA_THETA_TOL = Math.PI/18; // 10 degrees
-var VIA_POLYGON_RESIZE_VERTEX_OFFSET = 100;
-var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5];
+var VIA_REGION_POINT_RADIUS       = 3;
+var VIA_POLYGON_VERTEX_MATCH_TOL  = 5;
+var VIA_REGION_MIN_DIM            = 3;
+var VIA_MOUSE_CLICK_TOL           = 2;
+var VIA_ELLIPSE_EDGE_TOL          = 0.2; // euclidean distance
+var VIA_THETA_TOL                 = Math.PI/18; // 10 degrees
+var VIA_POLYGON_RESIZE_VERTEX_OFFSET    = 100;
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
-var VIA_ATTR_PANEL_FONT_SIZE_LEVELS = ['xx-small', 'x-small', 'small',
-                                       'medium', 'large', 'x-large', 'xx-large'];
+var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4, 5];
 
 var VIA_THEME_REGION_BOUNDARY_WIDTH = 4;
-var VIA_THEME_BOUNDARY_LINE_COLOR = "#1a1a1a";
-var VIA_THEME_BOUNDARY_FILL_COLOR = "#aaeeff";
+var VIA_THEME_BOUNDARY_LINE_COLOR   = "#1a1a1a";
+var VIA_THEME_BOUNDARY_FILL_COLOR   = "#aaeeff";
 var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
 var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
-var VIA_THEME_SEL_REGION_OPACITY = 0.5;
-var VIA_THEME_MESSAGE_TIMEOUT_MS = 2500;
-var VIA_THEME_ATTRIBUTE_VALUE_FONT = '10pt Sans';
-var VIA_THEME_CONTROL_POINT_COLOR = '#ff0000';
+var VIA_THEME_SEL_REGION_OPACITY    = 0.5;
+var VIA_THEME_MESSAGE_TIMEOUT_MS    = 2500;
+var VIA_THEME_ATTRIBUTE_VALUE_FONT  = '10pt Sans';
+var VIA_THEME_CONTROL_POINT_COLOR   = '#ff0000';
 
-var VIA_CSV_SEP = ',';
+var VIA_CSV_SEP        = ',';
 var VIA_CSV_QUOTE_CHAR = '"';
 var VIA_CSV_KEYVAL_SEP = ':';
 var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
 
 var _via_img_metadata = {};   // data structure to store loaded images metadata
-var _via_img_count = 0;       // count of the loaded images
+var _via_img_count    = 0;    // count of the loaded images
 var _via_canvas_regions = []; // image regions spec. in canvas space
-var _via_canvas_scale = 1.0;  // current scale of canvas image
+var _via_canvas_scale   = 1.0;// current scale of canvas image
 
-var _via_image_id_list = [];  // array of image id (in original order)
-var _via_image_id = '';       // id={filename+length} of current image
-var _via_image_index = -1;    // index
+var _via_image_id_list  = []; // array of image id (in original order)
+var _via_image_id       = ''; // id={filename+length} of current image
+var _via_image_index    = -1; // index
 
 var _via_current_image_filename;
 var _via_current_image;
+var _via_current_image_width;
+var _via_current_image_height;
 
 // image canvas
 var _via_img_canvas = document.getElementById("image_canvas");
-var _via_img_ctx = _via_img_canvas.getContext("2d");
+var _via_img_ctx    = _via_img_canvas.getContext("2d");
 var _via_reg_canvas = document.getElementById("region_canvas");
-var _via_reg_ctx = _via_reg_canvas.getContext("2d");
-
+var _via_reg_ctx    = _via_reg_canvas.getContext("2d");
 var _via_canvas_width, _via_canvas_height;
 
 // canvas zoom
-var _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX; // 1.0
+var _via_canvas_zoom_level_index   = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX; // 1.0
 var _via_canvas_scale_without_zoom = 1.0;
 
 // state of the application
-var _via_is_user_drawing_region = false;
-var _via_current_image_loaded = false;
-var _via_is_window_resized = false;
+var _via_is_user_drawing_region  = false;
+var _via_current_image_loaded    = false;
+var _via_is_window_resized       = false;
 var _via_is_user_resizing_region = false;
-var _via_is_user_moving_region = false;
+var _via_is_user_moving_region   = false;
 var _via_is_user_drawing_polygon = false;
-var _via_is_region_selected = false;
-var _via_is_all_region_selected = false;
-var _via_is_user_updating_attribute_name = false;
+var _via_is_region_selected      = false;
+var _via_is_all_region_selected  = false;
+var _via_is_user_updating_attribute_name  = false;
 var _via_is_user_updating_attribute_value = false;
-var _via_is_user_adding_attribute_name = false;
-var _via_is_loaded_img_list_visible = false;
-var _via_is_bottom_panel_visible = false;
-var _via_is_reg_attr_panel_visible = false;
-var _via_is_file_attr_panel_visible = false;
-var _via_is_canvas_zoomed = false;
-var _via_is_loading_current_image = false;
-var _via_is_region_id_visible = true;
-var _via_is_region_boundary_visible = true;
+var _via_is_user_adding_attribute_name    = false;
+var _via_is_loaded_img_list_visible  = false;
+var _via_is_attributes_panel_visible = false;
+var _via_is_reg_attr_panel_visible   = false;
+var _via_is_file_attr_panel_visible  = false;
+var _via_is_canvas_zoomed            = false;
+var _via_is_loading_current_image    = false;
+var _via_is_region_id_visible        = true;
+var _via_is_region_boundary_visible  = true;
 
 // region
-var _via_current_shape = VIA_REGION_SHAPE.RECT;
+var _via_current_shape             = VIA_REGION_SHAPE.RECT;
 var _via_current_polygon_region_id = -1;
-var _via_user_sel_region_id = -1;
+var _via_user_sel_region_id        = -1;
 var _via_click_x0 = 0; var _via_click_y0 = 0;
 var _via_click_x1 = 0; var _via_click_y1 = 0;
-var _via_region_edge = [-1, -1];
 var _via_region_click_x, _via_region_click_y;
 var _via_copied_image_regions = [];
-var _via_copied_canvas_regions = [];
+var _via_region_edge          = [-1, -1];
 
 // message
 var _via_message_clear_timer;
 
 // attributes
-var _via_region_attributes = new Set();
+var _via_region_attributes             = new Set();
 var _via_current_update_attribute_name = "";
-var _via_current_update_region_id = -1;
-var _via_file_attributes = new Set();
-var _via_visible_attr_name = '';
-var _via_attr_panel_size_index = 3;
+var _via_current_update_region_id      = -1;
+var _via_file_attributes               = new Set();
+var _via_visible_attr_name             = '';
 
 // persistence to local storage
 var _via_is_local_storage_available = false;
@@ -949,39 +971,39 @@ var _via_loaded_img_table_html = [];
 
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
-var image_panel = document.getElementById("image_panel");
+var image_panel  = document.getElementById("image_panel");
 var ui_top_panel = document.getElementById("ui_top_panel");
 var canvas_panel = document.getElementById("canvas_panel");
 
 var annotation_list_snippet = document.getElementById("annotation_list_snippet");
-var annotation_textarea = document.getElementById("annotation_textarea");
+var annotation_textarea     = document.getElementById("annotation_textarea");
 
 var loaded_img_list_panel = document.getElementById('loaded_img_list_panel');
-var bottom_panel = document.getElementById('bottom_panel');
+var attributes_panel      = document.getElementById('attributes_panel');
 var annotation_data_window;
 
-var BBOX_LINE_WIDTH = 4;
-var BBOX_BOUNDARY_FILL_COLOR_ANNOTATED = "#f2f2f2";
-var BBOX_BOUNDARY_FILL_COLOR_NEW = "#aaeeff";
-var BBOX_BOUNDARY_LINE_COLOR = "#1a1a1a";
-var BBOX_SELECTED_FILL_COLOR = "#ffffff";
+var BBOX_LINE_WIDTH       = 4;
 var BBOX_SELECTED_OPACITY = 0.3;
+var BBOX_BOUNDARY_FILL_COLOR_ANNOTATED = "#f2f2f2";
+var BBOX_BOUNDARY_FILL_COLOR_NEW       = "#aaeeff";
+var BBOX_BOUNDARY_LINE_COLOR           = "#1a1a1a";
+var BBOX_SELECTED_FILL_COLOR           = "#ffffff";
 
 //
 // Data structure for annotations
 //
 function ImageMetadata(fileref, filename, size) {
     this.filename = filename;
-    this.size = size;
-    this.fileref = fileref;           // image url or local file ref.
+    this.size     = size;
+    this.fileref  = fileref;          // image url or local file ref.
+    this.regions  = [];
     this.file_attributes = new Map(); // image attributes
     this.base64_img_data = '';        // image data stored as base 64
-    this.regions = [];
 }
 
 function ImageRegion() {
-    this.is_user_selected = false;
-    this.shape_attributes = new Map();  // region shape attributes
+    this.is_user_selected  = false;
+    this.shape_attributes  = new Map(); // region shape attributes
     this.region_attributes = new Map(); // region attributes
 }
 
@@ -992,7 +1014,6 @@ function _via_init() {
     console.log(VIA_NAME);
     show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION +
                  '. Ready !', 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
-
     show_home_panel();
 
     _via_is_local_storage_available = check_local_storage();
@@ -1027,14 +1048,15 @@ function show_home_panel() {
 function sel_local_images() {
     // source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
     if (invisible_file_input) {
-        invisible_file_input.accept='.jpg,.jpeg,.png,.bmp';
+        invisible_file_input.accept   = '.jpg,.jpeg,.png,.bmp';
         invisible_file_input.onchange = store_local_img_ref;
         invisible_file_input.click();
     }
 }
 function download_all_region_data(type) {
     var all_region_data = pack_via_metadata(type);
-    var all_region_data_blob = new Blob(all_region_data, {type: 'text/'+type+';charset=utf-8'});
+    var all_region_data_blob = new Blob(all_region_data,
+                                        {type: 'text/'+type+';charset=utf-8'});
 
     if ( all_region_data_blob.size > (2*1024*1024) &&
          type === 'csv' ) {
@@ -1061,22 +1083,10 @@ function sel_local_data_file(type) {
         invisible_file_input.click();
     }
 }
-function save_attributes() {
-    if ( _via_region_attributes.size > 0 ) {
-        var attr_csvdata = [];
-        for (var attribute of _via_region_attributes) {
-            attr_csvdata.push(attribute);
-        }
-        var attr_blob = new Blob([attr_csvdata.join(',')], {type: 'text/csv;charset=utf-8'});
-        save_data_to_local_file(attr_blob, 'via_attributes_data.csv');
-    } else {
-        show_message("Attributes not defined yet!");
-    }
-}
 function import_attributes() {
     if (_via_current_image_loaded) {
         if (invisible_file_input) {
-            invisible_file_input.accept='.csv,.json';
+            invisible_file_input.accept   = '.csv,.json';
             invisible_file_input.onchange = import_region_attributes_from_file;
             invisible_file_input.click();
         }
@@ -1101,7 +1111,7 @@ function show_license_panel() {
 }
 function set_all_text_panel_display(style_display) {
     var tp = document.getElementsByClassName('text_panel');
-    for (var i=0; i<tp.length; ++i) {
+    for ( var i = 0; i < tp.length; ++i ) {
         tp[i].style.display = style_display;
     }
 }
@@ -1123,15 +1133,15 @@ function store_local_img_ref(event) {
     }
 
     var discarded_file_count = 0;
-    for ( var i=0; i<user_selected_images.length; ++i) {
-	var filetype = user_selected_images[i].type.substr(0,5);
-        if ( filetype === 'image') {
+    for ( var i = 0; i < user_selected_images.length; ++i ) {
+	var filetype = user_selected_images[i].type.substr(0, 5);
+        if ( filetype === 'image' ) {
             var filename = user_selected_images[i].name;
-            var size = user_selected_images[i].size;
-            var img_id = _via_get_image_id(filename, size);
+            var size     = user_selected_images[i].size;
+            var img_id   = _via_get_image_id(filename, size);
 
-            if (_via_img_metadata.hasOwnProperty(img_id)) {
-                if (_via_img_metadata[img_id].fileref) {
+            if ( _via_img_metadata.hasOwnProperty(img_id) ) {
+                if ( _via_img_metadata[img_id].fileref ) {
                     show_message('Image ' + filename + ' already loaded. Skipping!');
                 } else {
                     _via_img_metadata[img_id].fileref = user_selected_images[i];
@@ -1152,16 +1162,17 @@ function store_local_img_ref(event) {
 
     if ( _via_img_metadata ) {
         var status_msg = 'Loaded ' + (_via_img_count - original_image_count) + ' images.';
-        if (discarded_file_count) {
+        if ( discarded_file_count ) {
             status_msg += ' ( Discarded ' + discarded_file_count + ' non-image files! )';
         }
         show_message(status_msg);
 
-        if (_via_image_index === -1) {
+        if ( _via_image_index === -1 ) {
             show_image(0);
         } else {
             show_image( original_image_count );
         }
+        toggle_img_list();
     } else {
         show_message("Please upload some image files!");
     }
@@ -1173,12 +1184,14 @@ function store_local_img_ref(event) {
 
 function import_region_attributes_from_file(event) {
     var selected_files = event.target.files;
-    for (var i=0; i<selected_files.length; ++i) {
+    for ( var i=0 ; i < selected_files.length; ++i ) {
         var file = selected_files[i];
         switch(file.type) {
         case 'text/csv':
             load_text_file(file, import_region_attributes_from_csv);
             break;
+        default:
+            show_message('Region attributes cannot be imported from file of type ' + file.type);
         }
     }
 }
@@ -1187,7 +1200,7 @@ function import_region_attributes_from_csv(data) {
     data = data.replace(/\n/g, ''); // discard newline \n
     var csvdata = data.split(',');
     var attributes_import_count = 0;
-    for (var i=0; i<csvdata.length; ++i) {
+    for ( var i = 0; i < csvdata.length; ++i ) {
         if ( !_via_region_attributes.has(csvdata[i]) ) {
             _via_region_attributes.add(csvdata[i]);
             attributes_import_count += 1;
@@ -1201,7 +1214,7 @@ function import_region_attributes_from_csv(data) {
 
 function import_annotations_from_file(event) {
     var selected_files = event.target.files;
-    for (var i=0; i < selected_files.length; ++i) {
+    for ( var i = 0; i < selected_files.length; ++i ) {
 	var file = selected_files[i];
         switch(file.type) {
         case 'text/plain':
@@ -1212,36 +1225,41 @@ function import_annotations_from_file(event) {
         case 'application/json':
             load_text_file(file, import_annotations_from_json);
             break;
+        default:
+            show_message('Annotations cannot be imported from file of type ' + file.type);
         }
     }
 }
 function import_annotations_from_csv(data) {
-    if (data === '' ||
-        typeof(data) === 'undefined') {
+    if ( data === '' || typeof(data) === 'undefined') {
         return;
     }
+
+    // csv header format
+    // #filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
+    var filename_index = 0;
+    var size_index = 1;
+    var file_attr_index = 2;
+    var region_shape_attr_index = 5;
+    var region_attr_index = 6;
+    var csv_column_count = 7;
+
     var region_import_count = 0;
-    var image_count = 0;
     var malformed_csv_lines_count = 0;
 
     var csvdata = data.split('\n');
-    var csv_column_count = 0;
-    for (var i=0; i<csvdata.length; ++i) {
+    for ( var i=0; i < csvdata.length; ++i ) {
         // ignore blank lines
-        if (csvdata[i].charAt(0) === '\n' ||
-            csvdata[i].charAt(0) === '') {
+        if (csvdata[i].charAt(0) === '\n' || csvdata[i].charAt(0) === '') {
             continue;
         }
 
         if (csvdata[i].charAt(0) === VIA_IMPORT_CSV_COMMENT_CHAR) {
             // parse header
-            // #filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes
-            var d = csvdata[i].substring(1, csvdata[i].length); // remove #
-            d = d.split(',');
-            var filename_index, size_index, file_attr_index;
-            var region_shape_attr_index, region_attr_index;
-            for ( var j=0; j<d.length; ++j) {
-                switch ( d[j] ) {
+            var h = csvdata[i].substring(1, csvdata[i].length); // remove #
+            h = h.split(',');
+            for ( var j = 0; j < h.length; ++j ) {
+                switch ( h[j] ) {
                 case 'filename':
                     filename_index = j;
                     break;
@@ -1259,26 +1277,26 @@ function import_annotations_from_csv(data) {
                     break;
                 }
             }
-            csv_column_count = d.length;
+            csv_column_count = h.length;
             continue;
         } else {
             var d = parse_csv_line(csvdata[i]);
 
             // check if csv line was malformed
-            if (d.length !== csv_column_count) {
+            if ( d.length !== csv_column_count ) {
                 malformed_csv_lines_count += 1;
                 continue;
             }
 
             var filename = d[filename_index];
-            var size = d[size_index];
+            var size     = d[size_index];
             var image_id = _via_get_image_id(filename, size);
             if ( _via_img_metadata.hasOwnProperty(image_id) ) {
                 // copy file attributes
                 if ( d[file_attr_index] !== '"{}"') {
                     var fattr = d[file_attr_index];
-                    fattr = remove_prefix_suffix_quotes( fattr );
-                    fattr = unescape_from_csv( fattr );
+                    fattr     = remove_prefix_suffix_quotes( fattr );
+                    fattr     = unescape_from_csv( fattr );
 
                     var m = json_str_to_map( fattr );
                     for( var key of m.keys() ) {
@@ -1295,8 +1313,8 @@ function import_annotations_from_csv(data) {
                 // copy regions shape attributes
                 if ( d[region_shape_attr_index] !== '"{}"' ) {
                     var sattr = d[region_shape_attr_index];
-                    sattr = remove_prefix_suffix_quotes( sattr );
-                    sattr = unescape_from_csv( sattr );
+                    sattr     = remove_prefix_suffix_quotes( sattr );
+                    sattr     = unescape_from_csv( sattr );
 
                     var m = json_str_to_map( sattr );
                     for ( var key of m.keys() ) {
@@ -1308,11 +1326,10 @@ function import_annotations_from_csv(data) {
                 // copy region attributes
                 if ( d[region_attr_index] !== '"{}"' ) {
                     var rattr = d[region_attr_index];
-                    rattr = remove_prefix_suffix_quotes( rattr );
-                    rattr = unescape_from_csv( rattr );
+                    rattr     = remove_prefix_suffix_quotes( rattr );
+                    rattr     = unescape_from_csv( rattr );
 
                     var m = json_str_to_map( rattr );
-
                     for ( var key of m.keys() ) {
                         var val = m.get(key);
                         regioni.region_attributes.set(key, val);
@@ -1333,8 +1350,7 @@ function import_annotations_from_csv(data) {
         }
     }
     show_message('Import Summary : [' + region_import_count + '] regions, ' +
-                 '[' + malformed_csv_lines_count  + '] malformed csv lines.',
-                 4 * VIA_THEME_MESSAGE_TIMEOUT_MS);
+                 '[' + malformed_csv_lines_count  + '] malformed csv lines.');
 
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -1342,57 +1358,52 @@ function import_annotations_from_csv(data) {
 }
 
 function import_annotations_from_json(data) {
-    if (data === '' ||
-        typeof(data) === 'undefined') {
+    if (data === '' || typeof(data) === 'undefined') {
         return;
     }
 
     var d = JSON.parse(data);
 
-    var image_count = 0;
     var region_import_count = 0;
-    var skipped_file_attr_count = 0;
     for (var image_id in d) {
         if ( _via_img_metadata.hasOwnProperty(image_id) ) {
-            image_count += 1;
 
             // copy image attributes
             for (var key in d[image_id].file_attributes) {
-                if (!_via_img_metadata[image_id].file_attributes.get(key)) {
-                    _via_img_metadata[image_id].file_attributes.set(key,
-                                                                    d[image_id].file_attributes[key]);
+                if ( !_via_img_metadata[image_id].file_attributes.get(key) ) {
+                    var val = d[image_id].file_attributes[key];
+                    _via_img_metadata[image_id].file_attributes.set(key, val);
                 }
-                if (!_via_file_attributes.has(key)) {
+                if ( !_via_file_attributes.has(key) ) {
                     _via_file_attributes.add(key);
                 }
             }
 
             // copy regions
             var regions = d[image_id].regions;
-            for (var i in regions) {
+            for ( var i in regions ) {
                 var regioni = new ImageRegion();
-                for (var key in regions[i].shape_attributes) {
+                for ( var key in regions[i].shape_attributes ) {
                     regioni.shape_attributes.set(key, regions[i].shape_attributes[key]);
                 }
-                for (var key in regions[i].region_attributes) {
+                for ( var key in regions[i].region_attributes ) {
                     regioni.region_attributes.set(key, regions[i].region_attributes[key]);
 
-                    if (!_via_region_attributes.has(key)) {
+                    if ( !_via_region_attributes.has(key) ) {
                         _via_region_attributes.add(key);
                     }
                 }
 
                 // add regions only if they are present
-                if (regioni.shape_attributes.size > 0 ||
-                    regioni.region_attributes.size > 0 ) {
+                if ( regioni.shape_attributes.size > 0 ||
+                     regioni.region_attributes.size > 0 ) {
                     _via_img_metadata[image_id].regions.push(regioni);
                     region_import_count += 1;
                 }
             }
         }
     }
-    show_message('Import Summary : [' + region_import_count + '] regions',
-                 4 * VIA_THEME_MESSAGE_TIMEOUT_MS);
+    show_message('Import Summary : [' + region_import_count + '] regions');
 
     _via_reload_img_table = true;
     show_image(_via_image_index);
@@ -1401,8 +1412,7 @@ function import_annotations_from_json(data) {
 // assumes that csv line follows the RFC 4180 standard
 // see: https://en.wikipedia.org/wiki/Comma-separated_values
 function parse_csv_line(s, field_separator) {
-    if (typeof(s) === 'undefined' ||
-        s.length === 0 ) {
+    if (typeof(s) === 'undefined' || s.length === 0 ) {
         return [];
     }
 
@@ -1410,7 +1420,6 @@ function parse_csv_line(s, field_separator) {
         field_separator = ',';
     }
     var double_quote_seen = false;
-    var prev_char = '';
     var start = 0;
     var d = [];
 
@@ -1442,7 +1451,7 @@ function parse_csv_line(s, field_separator) {
                     i = i + 1;
                 }
             } else {
-                i = i + 1
+                i = i + 1;
             }
         }
 
@@ -1454,8 +1463,7 @@ function parse_csv_line(s, field_separator) {
 
 // s = '{"name":"rect","x":188,"y":90,"width":243,"height":233}'
 function json_str_to_map(s) {
-    if (typeof(s) === 'undefined' ||
-        s.length === 0 ) {
+    if (typeof(s) === 'undefined' || s.length === 0 ) {
         return new Map();
     }
 
@@ -1471,11 +1479,11 @@ function json_str_to_map(s) {
 // see: https://en.wikipedia.org/wiki/Comma-separated_values
 function map_to_json(m) {
     var s = [];
-    for (var key of m.keys() ) {
-        var v = m.get(key);
-        var si = JSON.stringify(key);
-        si += VIA_CSV_KEYVAL_SEP;
-        si += JSON.stringify(v);
+    for ( var key of m.keys() ) {
+        var v   = m.get(key);
+        var si  = JSON.stringify(key);
+            si += VIA_CSV_KEYVAL_SEP;
+            si += JSON.stringify(v);
         s.push( si );
     }
     return '{' + s.join(VIA_CSV_SEP) + '}';
@@ -1490,8 +1498,7 @@ function unescape_from_csv(s) {
 }
 
 function remove_prefix_suffix_quotes(s) {
-    if (s.charAt(0) === '"' &&
-        s.charAt(s.length-1) === '"') {
+    if ( s.charAt(0) === '"' && s.charAt(s.length-1) === '"' ) {
         return s.substr(1, s.length-2);
     } else {
         return s;
@@ -1517,7 +1524,7 @@ function clone_image_region(r0) {
 }
 
 function _via_get_image_id(filename, size) {
-    if (typeof(size) === 'undefined') {
+    if ( typeof(size) === 'undefined' ) {
         return filename;
     } else {
         return filename + size;
@@ -1528,17 +1535,17 @@ function load_text_file(text_file, callback_function) {
     if (!text_file) {
         return;
     } else {
-        text_reader = new FileReader();
-        text_reader.addEventListener( "progress", function(e) {
-            show_message("Loading data from text file : " + text_file.name + " ... ");
+        var text_reader = new FileReader();
+        text_reader.addEventListener( 'progress', function(e) {
+            show_message('Loading data from text file : ' + text_file.name + ' ... ');
         }, false);
 
-        text_reader.addEventListener( "error", function() {
-            show_message("Error loading data from text file :  " + text_file.name + " !");
+        text_reader.addEventListener( 'error', function() {
+            show_message('Error loading data from text file :  ' + text_file.name + ' !');
             callback_function('');
         }, false);
 
-        text_reader.addEventListener( "load", function() {
+        text_reader.addEventListener( 'load', function() {
             callback_function(text_reader.result);
         }, false);
         text_reader.readAsText(text_file);
@@ -1549,9 +1556,9 @@ function load_text_file(text_file, callback_function) {
 // Data Exporter
 //
 function pack_via_metadata(return_type) {
-    if( return_type === "csv" ) {
+    if( return_type === 'csv' ) {
         var csvdata = [];
-        var csvheader = "#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes";
+        var csvheader = '#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes';
         csvdata.push(csvheader);
 
         for ( var image_id in _via_img_metadata ) {
@@ -1564,8 +1571,8 @@ function pack_via_metadata(return_type) {
 
             var r = _via_img_metadata[image_id].regions;
 
-            if (r.length !==0) {
-                for (var i=0; i<r.length; ++i) {
+            if ( r.length !==0 ) {
+                for ( var i = 0; i < r.length; ++i ) {
                     var csvline = [];
                     csvline.push(prefix);
                     csvline.push(r.length);
@@ -1591,7 +1598,7 @@ function pack_via_metadata(return_type) {
         // JSON.stringify() does not work with Map()
         // hence, we cast everything as objects
         var _via_img_metadata_as_obj = {};
-        for (image_id in _via_img_metadata) {
+        for ( var image_id in _via_img_metadata ) {
             var image_data = {};
             //image_data.fileref = _via_img_metadata[image_id].fileref;
             image_data.fileref = '';
@@ -1609,7 +1616,7 @@ function pack_via_metadata(return_type) {
 
             // copy all region shape_attributes
             image_data.regions = {};
-            for (var i=0; i<_via_img_metadata[image_id].regions.length; ++i) {
+            for ( var i = 0; i < _via_img_metadata[image_id].regions.length; ++i ) {
                 image_data.regions[i] = {};
                 image_data.regions[i].shape_attributes = {};
                 image_data.regions[i].region_attributes = {};
@@ -1632,8 +1639,8 @@ function pack_via_metadata(return_type) {
 
 function save_data_to_local_file(data, filename) {
     var a = document.createElement('a');
-    a.href = URL.createObjectURL(data);
-    a.target = '_blank';
+    a.href     = URL.createObjectURL(data);
+    a.target   = '_blank';
     a.download = filename;
 
     // simulate a mouse click event
@@ -1655,7 +1662,7 @@ function show_message(msg, t) {
         clearTimeout(_via_message_clear_timer); // stop any previous timeouts
     }
     var timeout = t;
-    if (typeof t === 'undefined') {
+    if ( typeof t === 'undefined' ) {
         timeout = VIA_THEME_MESSAGE_TIMEOUT_MS;
     }
     document.getElementById('message_panel').innerHTML = msg;
@@ -1669,7 +1676,7 @@ function show_image(image_index) {
         return;
     }
 
-    var img_id = _via_image_id_list[image_index]
+    var img_id = _via_image_id_list[image_index];
     if ( !_via_img_metadata.hasOwnProperty(img_id)) {
         return;
     }
@@ -1729,14 +1736,16 @@ function show_image(image_index) {
             _via_is_user_drawing_polygon = false;
             _via_is_region_selected = false;
             _via_user_sel_region_id = -1;
+            _via_current_image_width = _via_current_image.naturalWidth;
+            _via_current_image_height = _via_current_image.naturalHeight;
 
             // set the size of canvas
             // based on the current dimension of browser window
             var de = document.documentElement;
             canvas_panel_width = de.clientWidth - 230;
             canvas_panel_height = de.clientHeight - 2*ui_top_panel.offsetHeight;
-            _via_canvas_width = _via_current_image.naturalWidth;
-            _via_canvas_height = _via_current_image.naturalHeight;
+            _via_canvas_width = _via_current_image_width;
+            _via_canvas_height = _via_current_image_height;
             var scale_width, scale_height;
             if ( _via_canvas_width > canvas_panel_width ) {
                 // resize image to match the panel width
@@ -1805,7 +1814,7 @@ function _via_load_canvas_regions() {
     // load all existing annotations into _via_canvas_regions
     var regions = _via_img_metadata[_via_image_id].regions;
     _via_canvas_regions  = [];
-    for ( var i=0; i<regions.length; ++i) {
+    for ( var i = 0; i < regions.length; ++i ) {
         var regioni = new ImageRegion();
         for ( var key of regions[i].shape_attributes.keys() ) {
             var value = regions[i].shape_attributes.get(key);
@@ -1815,8 +1824,8 @@ function _via_load_canvas_regions() {
 
         switch(_via_canvas_regions[i].shape_attributes.get('name')) {
         case VIA_REGION_SHAPE.RECT:
-            var x = regions[i].shape_attributes.get('x') / _via_canvas_scale;
-            var y = regions[i].shape_attributes.get('y') / _via_canvas_scale;
+            var x      = regions[i].shape_attributes.get('x') / _via_canvas_scale;
+            var y      = regions[i].shape_attributes.get('y') / _via_canvas_scale;
             var width  = regions[i].shape_attributes.get('width')  / _via_canvas_scale;
             var height = regions[i].shape_attributes.get('height') / _via_canvas_scale;
 
@@ -1870,7 +1879,7 @@ function _via_load_canvas_regions() {
 
 // updates currently selected region shape
 function select_region_shape(sel_shape_name) {
-    for (var shape_name in VIA_REGION_SHAPE) {
+    for ( var shape_name in VIA_REGION_SHAPE ) {
         var ui_element = document.getElementById('region_shape_' + VIA_REGION_SHAPE[shape_name]);
         ui_element.classList.remove('selected');
     }
@@ -1883,8 +1892,8 @@ function select_region_shape(sel_shape_name) {
     case VIA_REGION_SHAPE.RECT:
     case VIA_REGION_SHAPE.CIRCLE:
     case VIA_REGION_SHAPE.ELLIPSE:
-        show_message('Press single click and drag mouse to draw '
-                     + _via_current_shape + ' region');
+        show_message('Press single click and drag mouse to draw ' +
+                     _via_current_shape + ' region');
         break;
 
     case VIA_REGION_SHAPE.POLYGON:
@@ -1898,18 +1907,20 @@ function select_region_shape(sel_shape_name) {
     case VIA_REGION_SHAPE.POINT:
         show_message('Press single click to define points (or landmarks)');
         break;
+    default:
+        show_message('Unknown shape selected!');
     }
 }
 
 function set_all_canvas_size(w, h) {
     _via_img_canvas.height = h;
-    _via_img_canvas.width = w;
+    _via_img_canvas.width  = w;
 
     _via_reg_canvas.height = h;
     _via_reg_canvas.width = w;
 
     canvas_panel.style.height = h + 'px';
-    canvas_panel.style.width = w + 'px';
+    canvas_panel.style.width  = w + 'px';
 }
 
 function set_all_canvas_scale(s) {
@@ -1926,14 +1937,14 @@ function hide_all_canvas() {
 }
 
 function toggle_img_list(panel) {
-    if (typeof panel === 'undefined') {
+    if ( typeof panel === 'undefined' ) {
         // invoked from accordion in the top navigation toolbar
         panel = document.getElementById('loaded_img_panel');
     }
     panel.classList.toggle('active');
 
     if (_via_is_loaded_img_list_visible) {
-        img_list_panel.style.display = 'none';
+        img_list_panel.style.display    = 'none';
         _via_is_loaded_img_list_visible = false;
         return;
     } else {
@@ -1949,7 +1960,7 @@ function show_img_list() {
         return;
     }
 
-    if(_via_is_loaded_img_list_visible) {
+    if(_via_is_loaded_img_list_visible && _via_current_image_loaded) {
         if ( _via_reload_img_table ) {
             reload_img_table();
             _via_reload_img_table = false;
@@ -1958,13 +1969,14 @@ function show_img_list() {
         img_list_panel.style.display = 'block';
 
         // scroll img_list_panel automatically to show the current image filename
-        var panel = document.getElementById('img_list_panel');
-        var sel_file = document.getElementById('flist' + _via_image_index);
+        var panel        = document.getElementById('img_list_panel');
+        var html_img_id  = 'flist' + _via_image_index;
+        var sel_file     = document.getElementById(html_img_id);
         var panel_height = panel.offsetHeight;
-        if (sel_file.offsetTop < panel.scrollTop) {
+        if ( sel_file.offsetTop < panel.scrollTop ) {
             panel.scrollTop = sel_file.offsetTop;
         }
-        if (sel_file.offsetTop > panel_height/2) {
+        if ( sel_file.offsetTop > panel_height/2 ) {
             panel.scrollTop = sel_file.offsetTop - panel_height/2;
         }
     }
@@ -1974,7 +1986,7 @@ function reload_img_table() {
     _via_loaded_img_fn_list = [];
     _via_loaded_img_region_attr_miss_count = [];
 
-    for (var i=0; i<_via_img_count; ++i) {
+    for ( var i=0; i < _via_img_count; ++i ) {
         img_id = _via_image_id_list[i];
         _via_loaded_img_fn_list[i] = _via_img_metadata[img_id].filename;
         _via_loaded_img_region_attr_miss_count[i] = count_missing_region_attr(img_id);
@@ -1982,9 +1994,9 @@ function reload_img_table() {
 
     _via_loaded_img_table_html = [];
     _via_loaded_img_table_html.push('<ul>');
-    for (var i=0; i<_via_img_count; ++i) {
+    for ( var i=0; i < _via_img_count; ++i ) {
         var fni = '';
-        if (i === _via_image_index) {
+        if ( i === _via_image_index ) {
             // highlight the current entry
             fni += '<li id="flist'+i+'" style="cursor: default;" title="' + _via_loaded_img_fn_list[i] + '">';
             fni += '<b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
@@ -1993,9 +2005,9 @@ function reload_img_table() {
             fni += '[' + (i+1) + '] ' + _via_loaded_img_fn_list[i];
         }
 
-        if (_via_loaded_img_region_attr_miss_count[i]) {
+        if ( _via_loaded_img_region_attr_miss_count[i] ) {
             fni += ' (' + '<span style="color: red;">';
-            fni += _via_loaded_img_region_attr_miss_count[i] + '</span>' + ')'
+            fni += _via_loaded_img_region_attr_miss_count[i] + '</span>' + ')';
         }
 
         fni += '</li>';
@@ -2005,16 +2017,31 @@ function reload_img_table() {
 }
 
 function jump_to_image(image_index) {
-    if ( image_index >=0 &&
-         image_index < _via_img_count) {
+    if ( _via_img_count <= 0 ) {
+        return;
+    }
+
+    // reset zoom
+    if ( _via_is_canvas_zoomed ) {
+        _via_is_canvas_zoomed = false;
+        _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX;
+        var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+        set_all_canvas_scale(zoom_scale);
+        set_all_canvas_size(_via_canvas_width, _via_canvas_height);
+        _via_canvas_scale = _via_canvas_scale_without_zoom;
+    }
+
+    if ( image_index >= 0 && image_index < _via_img_count) {
         show_image(image_index);
     }
 }
 
 function count_missing_region_attr(img_id) {
     var miss_region_attr_count = 0;
-    for( var i=0; i<_via_img_metadata[img_id].regions.length; ++i) {
-        miss_region_attr_count += _via_region_attributes.size - _via_img_metadata[img_id].regions[i].region_attributes.size;
+    var attr_count = _via_region_attributes.size;
+    for( var i=0; i < _via_img_metadata[img_id].regions.length; ++i ) {
+        var set_attr_count = _via_img_metadata[img_id].regions[i].region_attributes.size;
+        miss_region_attr_count += ( attr_count - set_attr_count );
     }
     return miss_region_attr_count;
 }
@@ -2047,7 +2074,7 @@ function toggle_accordion_panel(e) {
 
 function img_loading_spinbar(show) {
     var panel = document.getElementById('loaded_img_panel');
-    if (show) {
+    if ( show ) {
         panel.innerHTML = 'Loaded Images &nbsp;&nbsp;<div class="loading_spinbox"></div>';
     } else {
         panel.innerHTML = 'Loaded Images &nbsp;&nbsp;';
@@ -2056,7 +2083,7 @@ function img_loading_spinbar(show) {
 
 function toggle_leftsidebar() {
     var leftsidebar = document.getElementById('leftsidebar');
-    if (leftsidebar.style.display == 'none') {
+    if ( leftsidebar.style.display == 'none' ) {
         leftsidebar.style.display = 'table-cell';
         document.getElementById('leftsidebar_collapse_button').innerHTML ='&ltrif;';
     } else {
@@ -2067,7 +2094,7 @@ function toggle_leftsidebar() {
 
 function show_annotation_data() {
     var hstr = '<pre>' + pack_via_metadata('csv') + '</pre>';
-    if (typeof annotation_data_window === 'undefined') {
+    if ( typeof annotation_data_window === 'undefined' ) {
         var window_features = 'toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no';
         window_features += ',width=800,height=600';
         annotation_data_window = window.open('', 'Image Metadata ', window_features);
@@ -2317,8 +2344,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 
             canvas_attr.set('rx', Math.round(new_rx));
             canvas_attr.set('ry', Math.round(new_ry));
-            image_attr.set('rx', Math.round(new_rx * _via_canvas_scale));
-            image_attr.set('ry', Math.round(new_ry * _via_canvas_scale));
+             image_attr.set('rx', Math.round(new_rx * _via_canvas_scale));
+             image_attr.set('ry', Math.round(new_ry * _via_canvas_scale));
             break;
 
         case VIA_REGION_SHAPE.POLYGON:
@@ -2326,8 +2353,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 
             canvas_attr.get('all_points_x')[moved_vertex_id] = Math.round(_via_current_x);
             canvas_attr.get('all_points_y')[moved_vertex_id] = Math.round(_via_current_y);
-            image_attr.get('all_points_x')[moved_vertex_id] = Math.round(_via_current_x * _via_canvas_scale);
-            image_attr.get('all_points_y')[moved_vertex_id] = Math.round(_via_current_y * _via_canvas_scale);
+             image_attr.get('all_points_x')[moved_vertex_id] = Math.round(_via_current_x * _via_canvas_scale);
+             image_attr.get('all_points_y')[moved_vertex_id] = Math.round(_via_current_y * _via_canvas_scale);
 
             if (moved_vertex_id === 0) {
                 // move both first and last vertex because we
@@ -2335,8 +2362,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                 var n = canvas_attr.get('all_points_x').length;
                 canvas_attr.get('all_points_x')[n-1] = Math.round(_via_current_x);
                 canvas_attr.get('all_points_y')[n-1] = Math.round(_via_current_y);
-                image_attr.get('all_points_x')[n-1] = Math.round(_via_current_x * _via_canvas_scale);
-                image_attr.get('all_points_y')[n-1] = Math.round(_via_current_y * _via_canvas_scale);
+                 image_attr.get('all_points_x')[n-1] = Math.round(_via_current_x * _via_canvas_scale);
+                 image_attr.get('all_points_y')[n-1] = Math.round(_via_current_y * _via_canvas_scale);
             }
             break;
         }
@@ -2358,8 +2385,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
             // check if the clicked point is close to the first point
             var fx0 = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes.get('all_points_x')[0];
             var fy0 = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes.get('all_points_y')[0];
-            var dx = (fx0 - canvas_x0);
-            var dy = (fy0 - canvas_y0);
+            var  dx = (fx0 - canvas_x0);
+            var  dy = (fy0 - canvas_y0);
             if ( Math.sqrt(dx*dx + dy*dy) <= VIA_POLYGON_VERTEX_MATCH_TOL ) {
                 // user clicked on the first polygon point to close the path
                 _via_is_user_drawing_polygon = false;
@@ -2377,7 +2404,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                 canvas_all_points_y.push(canvas_all_points_y[0]);
 
                 var points_str = '';
-                for ( var i=0; i<all_points_x.length; ++i) {
+                for ( var i=0; i<all_points_x.length; ++i ) {
                     all_points_x[i] = Math.round( all_points_x[i] * _via_canvas_scale );
                     all_points_y[i] = Math.round( all_points_y[i] * _via_canvas_scale );
 
@@ -2408,9 +2435,9 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
             var region_id = is_inside_region(_via_click_x0, _via_click_y0);
             if ( region_id >= 0 ) {
                 // first click selects region
-                _via_user_sel_region_id = region_id;
-                _via_is_region_selected = true;
-                _via_is_user_moving_region = false;
+                _via_user_sel_region_id     = region_id;
+                _via_is_region_selected     = true;
+                _via_is_user_moving_region  = false;
                 _via_is_user_drawing_region = false;
 
                 // de-select all other regions if the user has not pressed Shift
@@ -2424,8 +2451,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
                 if ( _via_is_user_drawing_region ) {
                     // clear all region selection
                     _via_is_user_drawing_region = false;
-                    _via_is_region_selected = false;
-                    _via_use_sel_region_id = -1;
+                    _via_is_region_selected     = false;
+                    _via_use_sel_region_id      = -1;
                     toggle_all_regions_selection(false);
 
                     update_attributes_panel();
@@ -2470,7 +2497,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
     }
 
     // indicates that user has finished drawing a new region
-    if (_via_is_user_drawing_region) {
+    if ( _via_is_user_drawing_region ) {
 
         _via_is_user_drawing_region = false;
 
@@ -2668,17 +2695,14 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 
         switch (_via_current_shape ) {
         case VIA_REGION_SHAPE.RECT:
-            _via_draw_rect_region(region_x0, region_y0,
-                                  dx, dy, false);
+            _via_draw_rect_region(region_x0, region_y0, dx, dy, false);
             break;
         case VIA_REGION_SHAPE.CIRCLE:
             var circle_radius = Math.round(Math.sqrt( dx*dx + dy*dy ));
-            _via_draw_circle_region(region_x0, region_y0,
-                                    circle_radius, false);
+            _via_draw_circle_region(region_x0, region_y0, circle_radius, false);
             break;
         case VIA_REGION_SHAPE.ELLIPSE:
-            _via_draw_ellipse_region(region_x0, region_y0,
-                                     dx, dy, false);
+            _via_draw_ellipse_region(region_x0, region_y0, dx, dy, false);
             break;
         case VIA_REGION_SHAPE.POLYGON:
             // this is handled by the if ( _via_is_user_drawing_polygon ) { ... }
@@ -2690,7 +2714,13 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 
     if ( _via_is_user_resizing_region ) {
         // user has clicked mouse on bounding box edge and is now moving it
-        _via_redraw_reg_canvas(); // clear old intermediate rectangle
+        // draw region as the user drags the mouse cousor
+        if (_via_canvas_regions.length) {
+            _via_redraw_reg_canvas(); // clear old intermediate rectangle
+        } else {
+            // first region being drawn, just clear the full region canvas
+            _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+        }
 
         var region_id = _via_region_edge[0];
         var attr = _via_canvas_regions[region_id].shape_attributes;
@@ -2719,8 +2749,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
                 y1 = _via_current_y;
                 break;
             }
-            _via_draw_rect_region(x0,
-                                  y0,
+            _via_draw_rect_region(x0, y0,
                                   Math.abs(x1-x0),
                                   Math.abs(y1-y0),
                                   true);
@@ -2784,7 +2813,13 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
     }
 
     if ( _via_is_user_moving_region ) {
-        _via_redraw_reg_canvas();
+        // draw region as the user drags the mouse cousor
+        if (_via_canvas_regions.length) {
+            _via_redraw_reg_canvas(); // clear old intermediate rectangle
+        } else {
+            // first region being drawn, just clear the full region canvas
+            _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+        }
 
         var move_x = (_via_current_x - _via_region_click_x);
         var move_y = (_via_current_y - _via_region_click_y);
@@ -2834,6 +2869,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 
         }
         _via_reg_canvas.focus();
+        return;
     }
 
     if ( _via_is_user_drawing_polygon ) {
@@ -2855,27 +2891,23 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 //
 function _via_redraw_img_canvas() {
     if (_via_current_image_loaded) {
-        setTimeout( function() {
-            _via_img_ctx.clearRect(0, 0, _via_img_canvas.width, _via_img_canvas.height);
-            _via_img_ctx.drawImage(_via_current_image, 0, 0,
-                                   _via_img_canvas.width, _via_img_canvas.height);
-        }, 0);
+        _via_img_ctx.clearRect(0, 0, _via_img_canvas.width, _via_img_canvas.height);
+        _via_img_ctx.drawImage(_via_current_image, 0, 0,
+                               _via_img_canvas.width, _via_img_canvas.height);
     }
 }
 
 function _via_redraw_reg_canvas() {
     if (_via_current_image_loaded) {
         if ( _via_canvas_regions.length > 0 ) {
-            setTimeout( function() {
-                _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
-                if (_via_is_region_boundary_visible) {
-                    draw_all_regions();
-                }
+            _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+            if (_via_is_region_boundary_visible) {
+                draw_all_regions();
+            }
 
-                if (_via_is_region_id_visible) {
-                    draw_all_region_id();
-                }
-            }, 0);
+            if (_via_is_region_id_visible) {
+                draw_all_region_id();
+            }
         }
     }
 }
@@ -2940,10 +2972,10 @@ function _via_draw_rect_region(x, y, w, h, is_selected) {
         _via_draw_rect(x, y, w, h);
 
         _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
-        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_reg_ctx.stroke();
 
-        _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
+        _via_reg_ctx.fillStyle   = VIA_THEME_SEL_REGION_FILL_COLOR;
         _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
         _via_reg_ctx.fill();
         _via_reg_ctx.globalAlpha = 1.0;
@@ -2955,7 +2987,7 @@ function _via_draw_rect_region(x, y, w, h, is_selected) {
     } else {
         // draw a fill line
         _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
-        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_draw_rect(x, y, w, h);
         _via_reg_ctx.stroke();
 
@@ -2963,7 +2995,7 @@ function _via_draw_rect_region(x, y, w, h, is_selected) {
              h > VIA_THEME_REGION_BOUNDARY_WIDTH ) {
             // draw a boundary line on both sides of the fill line
             _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
-            _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
+            _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
             _via_draw_rect(x - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
                            y - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
                            w + VIA_THEME_REGION_BOUNDARY_WIDTH,
@@ -2993,10 +3025,10 @@ function _via_draw_circle_region(cx, cy, r, is_selected) {
         _via_draw_circle(cx, cy, r);
 
         _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
-        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_reg_ctx.stroke();
 
-        _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
+        _via_reg_ctx.fillStyle   = VIA_THEME_SEL_REGION_FILL_COLOR;
         _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
         _via_reg_ctx.fill();
         _via_reg_ctx.globalAlpha = 1.0;
@@ -3005,20 +3037,18 @@ function _via_draw_circle_region(cx, cy, r, is_selected) {
     } else {
         // draw a fill line
         _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
-        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_draw_circle(cx, cy, r);
         _via_reg_ctx.stroke();
 
         if ( r > VIA_THEME_REGION_BOUNDARY_WIDTH ) {
             // draw a boundary line on both sides of the fill line
             _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
-            _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
-            _via_draw_circle(cx,
-                             cy,
+            _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
+            _via_draw_circle(cx, cy,
                              r - VIA_THEME_REGION_BOUNDARY_WIDTH/2);
             _via_reg_ctx.stroke();
-            _via_draw_circle(cx,
-                             cy,
+            _via_draw_circle(cx, cy,
                              r + VIA_THEME_REGION_BOUNDARY_WIDTH/2);
             _via_reg_ctx.stroke();
         }
@@ -3036,10 +3066,10 @@ function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
         _via_draw_ellipse(cx, cy, rx, ry);
 
         _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
-        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_reg_ctx.stroke();
 
-        _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
+        _via_reg_ctx.fillStyle   = VIA_THEME_SEL_REGION_FILL_COLOR;
         _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
         _via_reg_ctx.fill();
         _via_reg_ctx.globalAlpha = 1.0;
@@ -3049,7 +3079,7 @@ function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
     } else {
         // draw a fill line
         _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
-        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_draw_ellipse(cx, cy, rx, ry);
         _via_reg_ctx.stroke();
 
@@ -3057,14 +3087,12 @@ function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
              ry > VIA_THEME_REGION_BOUNDARY_WIDTH ) {
             // draw a boundary line on both sides of the fill line
             _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
-            _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
-            _via_draw_ellipse(cx,
-                              cy,
+            _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
+            _via_draw_ellipse(cx, cy,
                               rx + VIA_THEME_REGION_BOUNDARY_WIDTH/2,
                               ry + VIA_THEME_REGION_BOUNDARY_WIDTH/2);
             _via_reg_ctx.stroke();
-            _via_draw_ellipse(cx,
-                              cy,
+            _via_draw_ellipse(cx, cy,
                               rx - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
                               ry - VIA_THEME_REGION_BOUNDARY_WIDTH/2);
             _via_reg_ctx.stroke();
@@ -3086,39 +3114,39 @@ function _via_draw_ellipse(cx, cy, rx, ry) {
 }
 
 function _via_draw_polygon_region(all_points_x, all_points_y, is_selected) {
-    if (is_selected) {
+    if ( is_selected ) {
         _via_reg_ctx.beginPath();
         _via_reg_ctx.moveTo(all_points_x[0], all_points_y[0]);
-        for (var i=1; i<all_points_x.length; ++i) {
+        for ( var i=1; i < all_points_x.length; ++i ) {
             _via_reg_ctx.lineTo(all_points_x[i], all_points_y[i]);
         }
         _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
-        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_reg_ctx.stroke();
 
-        _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
+        _via_reg_ctx.fillStyle   = VIA_THEME_SEL_REGION_FILL_COLOR;
         _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
         _via_reg_ctx.fill();
         _via_reg_ctx.globalAlpha = 1.0;
 
-        for (var i=1; i<all_points_x.length; ++i) {
+        for ( var i=1; i < all_points_x.length; ++i ) {
             _via_draw_control_point(all_points_x[i], all_points_y[i]);
         }
     } else {
-        for (var i=1; i<all_points_x.length; ++i) {
+        for ( var i=1; i < all_points_x.length; ++i ) {
             // draw a fill line
             _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
-            _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+            _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
             _via_reg_ctx.beginPath();
             _via_reg_ctx.moveTo(all_points_x[i-1], all_points_y[i-1]);
-            _via_reg_ctx.lineTo(all_points_x[i], all_points_y[i]);
+            _via_reg_ctx.lineTo(all_points_x[i]  , all_points_y[i]);
             _via_reg_ctx.stroke();
 
             var slope_i = (all_points_y[i] - all_points_y[i-1]) / (all_points_x[i] - all_points_x[i-1]);
-            if (slope_i > 0) {
+            if ( slope_i > 0 ) {
                 // draw a boundary line on both sides
                 _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
-                _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
+                _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
                 _via_reg_ctx.beginPath();
                 _via_reg_ctx.moveTo(parseInt(all_points_x[i-1]) - parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
                                     parseInt(all_points_y[i-1]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
@@ -3134,7 +3162,7 @@ function _via_draw_polygon_region(all_points_x, all_points_y, is_selected) {
             } else {
                 // draw a boundary line on both sides
                 _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
-                _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
+                _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
                 _via_reg_ctx.beginPath();
                 _via_reg_ctx.moveTo(parseInt(all_points_x[i-1]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4),
                                     parseInt(all_points_y[i-1]) + parseInt(VIA_THEME_REGION_BOUNDARY_WIDTH/4));
@@ -3157,29 +3185,27 @@ function _via_draw_point_region(cx, cy, is_selected) {
         _via_draw_point(cx, cy, VIA_REGION_POINT_RADIUS);
 
         _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
-        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_reg_ctx.stroke();
 
-        _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
+        _via_reg_ctx.fillStyle   = VIA_THEME_SEL_REGION_FILL_COLOR;
         _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
         _via_reg_ctx.fill();
         _via_reg_ctx.globalAlpha = 1.0;
     } else {
         // draw a fill line
         _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
-        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
+        _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
         _via_draw_point(cx, cy, VIA_REGION_POINT_RADIUS);
         _via_reg_ctx.stroke();
 
         // draw a boundary line on both sides of the fill line
         _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_LINE_COLOR;
-        _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
-        _via_draw_point(cx,
-                        cy,
+        _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
+        _via_draw_point(cx, cy,
                         VIA_REGION_POINT_RADIUS - VIA_THEME_REGION_BOUNDARY_WIDTH/2);
         _via_reg_ctx.stroke();
-        _via_draw_point(cx,
-                        cy,
+        _via_draw_point(cx, cy,
                         VIA_REGION_POINT_RADIUS + VIA_THEME_REGION_BOUNDARY_WIDTH/2);
         _via_reg_ctx.stroke();
     }
@@ -3193,7 +3219,7 @@ function _via_draw_point(cx, cy, r) {
 
 function draw_all_region_id() {
     _via_reg_ctx.shadowColor = "transparent";
-    for (var i=0; i < _via_img_metadata[_via_image_id].regions.length; ++i) {
+    for ( var i = 0; i < _via_img_metadata[_via_image_id].regions.length; ++i ) {
         var canvas_reg = _via_canvas_regions[i];
 
         var bbox = get_region_bounding_box(canvas_reg);
@@ -3203,25 +3229,24 @@ function draw_all_region_id() {
         var h = Math.abs(bbox[3] - bbox[1]);
         _via_reg_ctx.font = VIA_THEME_ATTRIBUTE_VALUE_FONT;
 
-        var annotation_str = (i+1);
+        var annotation_str  = (i+1);
         var bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 2;
 
-        var char_width = _via_reg_ctx.measureText('M').width;
+        var char_width  = _via_reg_ctx.measureText('M').width;
         var char_height = 1.8 * char_width;
 
         var r = _via_img_metadata[_via_image_id].regions[i].region_attributes;
-        if ( r.size === 1 &&
-             w > (2*char_width) ) {
+        if ( r.size === 1 && w > (2*char_width) ) {
             // show the attribute value
             for (var key of r.keys()) {
                 annotation_str = r.get(key);
             }
             var strw = _via_reg_ctx.measureText(annotation_str).width;
 
-            if (strw > w) {
+            if ( strw > w ) {
                 // if text overflows, crop it
-                var str_max = Math.floor((w * annotation_str.length) / strw);
-                annotation_str = annotation_str.substr(0, str_max-1) + '.';
+                var str_max     = Math.floor((w * annotation_str.length) / strw);
+                annotation_str  = annotation_str.substr(0, str_max-1) + '.';
                 bgnd_rect_width = w;
             } else {
                 bgnd_rect_width = strw + char_width;
@@ -3285,21 +3310,21 @@ function get_region_bounding_box(region) {
         var all_points_x = d.get('all_points_x');
         var all_points_y = d.get('all_points_y');
 
-        var minx=Number.MAX_SAFE_INTEGER;
-        var miny=Number.MAX_SAFE_INTEGER;
-        var maxx=0;
-        var maxy=0;
-        for (var i=0; i<all_points_x.length; ++i) {
-            if (all_points_x[i] < minx) {
+        var minx = Number.MAX_SAFE_INTEGER;
+        var miny = Number.MAX_SAFE_INTEGER;
+        var maxx = 0;
+        var maxy = 0;
+        for ( var i=0; i < all_points_x.length; ++i ) {
+            if ( all_points_x[i] < minx ) {
                 minx = all_points_x[i];
             }
-            if (all_points_x[i] > maxx) {
+            if ( all_points_x[i] > maxx ) {
                 maxx = all_points_x[i];
             }
-            if (all_points_y[i] < miny) {
+            if ( all_points_y[i] < miny ) {
                 miny = all_points_y[i];
             }
-            if (all_points_y[i] > maxy) {
+            if ( all_points_y[i] > maxy ) {
                 maxy = all_points_y[i];
             }
         }
@@ -3324,24 +3349,24 @@ function get_region_bounding_box(region) {
 //
 function is_inside_region(px, py, descending_order) {
     var N = _via_canvas_regions.length;
-    if (N === 0) {
+    if ( N === 0 ) {
         return -1;
     }
     var start, end, del;
     // traverse the canvas regions in alternating ascending
     // and descending order to solve the issue of nested regions
-    if (descending_order) {
+    if ( descending_order ) {
         start = N - 1;
-        end = -1;
-        del = -1;
+        end   = -1;
+        del   = -1;
     } else {
         start = 0;
-        end = N;
-        del = 1;
+        end   = N;
+        del   = 1;
     }
 
     var i = start;
-    while (i !== end) {
+    while ( i !== end ) {
         var yes = is_inside_this_region(px, py, i);
         if (yes) {
             return i;
@@ -3352,7 +3377,7 @@ function is_inside_region(px, py, descending_order) {
 }
 
 function is_inside_this_region(px, py, region_id) {
-    var attr = _via_canvas_regions[region_id].shape_attributes;
+    var attr   = _via_canvas_regions[region_id].shape_attributes;
     var result = false;
     switch ( attr.get('name') ) {
     case VIA_REGION_SHAPE.RECT:
@@ -3403,9 +3428,9 @@ function is_inside_circle(cx, cy, r, px, py) {
 }
 
 function is_inside_rect(x, y, w, h, px, py) {
-    if ( px > x &&
+    if ( px > x     &&
          px < (x+w) &&
-         py > y &&
+         py > y     &&
          py < (y+h) ) {
         return true;
     } else {
@@ -3429,20 +3454,18 @@ function is_inside_polygon(all_points_x, all_points_y, px, py) {
     var wn = 0;    // the  winding number counter
 
     // loop through all edges of the polygon
-    for (var i=0; i<all_points_x.length-1; ++i) {   // edge from V[i] to  V[i+1]
+    for ( var i = 0; i < all_points_x.length-1; ++i ) {   // edge from V[i] to  V[i+1]
         var is_left_value = is_left( all_points_x[i], all_points_y[i],
                                      all_points_x[i+1], all_points_y[i+1],
                                      px, py);
 
         if (all_points_y[i] <= py) {
-            if (all_points_y[i+1]  > py &&
-                is_left_value > 0) {
+            if (all_points_y[i+1]  > py && is_left_value > 0) {
                 ++wn;
             }
         }
         else {
-            if (all_points_y[i+1]  <= py &&
-                is_left_value < 0) {
+            if (all_points_y[i+1]  <= py && is_left_value < 0) {
                 --wn;
             }
         }
@@ -3459,7 +3482,7 @@ function is_inside_point(cx, cy, px, py) {
     var dx = px - cx;
     var dy = py - cy;
     var r2 = VIA_POLYGON_VERTEX_MATCH_TOL * VIA_POLYGON_VERTEX_MATCH_TOL;
-    if ((dx*dx + dy*dy) < r2 ) {
+    if ( (dx*dx + dy*dy) < r2 ) {
         return true;
     } else {
         return false;
@@ -3478,7 +3501,7 @@ function is_left(x0, y0, x1, y1, x2, y2) {
 function is_on_region_corner(px, py) {
     var _via_region_edge = [-1, -1]; // region_id, corner_id [top-left=1,top-right=2,bottom-right=3,bottom-left=4]
 
-    for (var i=0; i < _via_canvas_regions.length; ++i) {
+    for ( var i = 0; i < _via_canvas_regions.length; ++i ) {
         var attr = _via_canvas_regions[i].shape_attributes;
         var result = false;
         _via_region_edge[0] = i;
@@ -3566,13 +3589,13 @@ function is_on_circle_edge(cx, cy, r, px, py) {
             return 6;
         }
 
-        if ( theta >0 && theta < (Math.PI/2) ) {
+        if ( theta > 0 && theta < (Math.PI/2) ) {
             return 1;
         }
         if ( theta > (Math.PI/2) && theta < (Math.PI) ) {
             return 4;
         }
-        if ( theta <0 && theta > -(Math.PI/2) ) {
+        if ( theta < 0 && theta > -(Math.PI/2) ) {
             return 2;
         }
         if ( theta < -(Math.PI/2) && theta > -Math.PI ) {
@@ -3647,7 +3670,7 @@ function _via_update_ui_components() {
 
 window.addEventListener('keydown', function(e) {
     if (_via_is_user_updating_attribute_value ||
-        _via_is_user_updating_attribute_name ||
+        _via_is_user_updating_attribute_name  ||
         _via_is_user_adding_attribute_name) {
 
         return;
@@ -3803,27 +3826,27 @@ window.addEventListener('wheel', function(e) {
 });
 
 function del_sel_regions() {
-    if (!_via_current_image_loaded) {
+    if ( !_via_current_image_loaded ) {
         show_message('First load some images!');
         return;
     }
 
     var del_region_count = 0;
-    if (_via_is_all_region_selected) {
+    if ( _via_is_all_region_selected ) {
         del_region_count = _via_canvas_regions.length;
         _via_canvas_regions.splice(0);
         _via_img_metadata[_via_image_id].regions.splice(0);
     } else {
         var sorted_sel_reg_id = [];
-        for (var i=0; i<_via_canvas_regions.length; ++i) {
-            if (_via_canvas_regions[i].is_user_selected) {
+        for ( var i = 0; i < _via_canvas_regions.length; ++i ) {
+            if ( _via_canvas_regions[i].is_user_selected ) {
                 sorted_sel_reg_id.push(i);
             }
         }
         sorted_sel_reg_id.sort( function(a,b) {
             return (b-a);
         });
-        for (var i=0; i<sorted_sel_reg_id.length; ++i) {
+        for ( var i = 0; i < sorted_sel_reg_id.length; ++i ) {
             _via_canvas_regions.splice( sorted_sel_reg_id[i], 1);
             _via_img_metadata[_via_image_id].regions.splice( sorted_sel_reg_id[i], 1);
             del_region_count += 1;
@@ -3831,10 +3854,10 @@ function del_sel_regions() {
     }
 
     _via_is_all_region_selected = false;
-    _via_is_region_selected = false;
-    _via_user_sel_region_id = -1;
+    _via_is_region_selected     = false;
+    _via_user_sel_region_id     = -1;
 
-    if (_via_canvas_regions.length === 0) {
+    if ( _via_canvas_regions.length === 0 ) {
         // all regions were deleted, hence clear region canvas
         _via_clear_reg_canvas();
     } else {
@@ -3867,13 +3890,11 @@ function copy_sel_regions() {
     if (_via_is_region_selected ||
         _via_is_all_region_selected) {
         _via_copied_image_regions.splice(0);
-        _via_copied_canvas_regions.splice(0);
-        for (var i=0; i<_via_img_metadata[_via_image_id].regions.length; ++i) {
+        for ( var i = 0; i < _via_img_metadata[_via_image_id].regions.length; ++i ) {
             var img_region = _via_img_metadata[_via_image_id].regions[i];
             var canvas_region = _via_canvas_regions[i];
-            if (canvas_region.is_user_selected) {
+            if ( canvas_region.is_user_selected ) {
                 _via_copied_image_regions.push( clone_image_region(img_region) );
-                _via_copied_canvas_regions.push( clone_image_region(canvas_region) );
             }
         }
         show_message('Copied ' + _via_copied_image_regions.length +
@@ -3884,23 +3905,24 @@ function copy_sel_regions() {
 }
 
 function paste_sel_regions() {
-    if (!_via_current_image_loaded) {
+    if ( !_via_current_image_loaded ) {
         show_message('First load some images!');
         return;
     }
 
-    if (_via_copied_image_regions.length) {
+    if ( _via_copied_image_regions.length ) {
         var pasted_reg_count = 0;
-        for (var i=0; i<_via_copied_image_regions.length; ++i) {
+        for ( var i = 0; i < _via_copied_image_regions.length; ++i ) {
             // ensure copied the regions are within this image's boundaries
-            var bbox = get_region_bounding_box( _via_copied_canvas_regions[i] );
-            if (bbox[2] < _via_canvas_width &&
-                bbox[3] < _via_canvas_height) {
+            var bbox = get_region_bounding_box( _via_copied_image_regions[i] );
+            if (bbox[2] < _via_current_image_width &&
+                bbox[3] < _via_current_image_height) {
                 _via_img_metadata[_via_image_id].regions.push( _via_copied_image_regions[i] );
-                _via_canvas_regions.push( _via_copied_canvas_regions[i] );
+
                 pasted_reg_count += 1;
             }
         }
+        _via_load_canvas_regions();
         var discarded_reg_count = _via_copied_image_regions.length - pasted_reg_count;
         show_message('Pasted ' + pasted_reg_count + ' regions. ' +
                      'Discarded ' + discarded_reg_count + ' regions exceeding image boundary.');
@@ -3919,7 +3941,12 @@ function move_to_prev_image() {
         _via_current_sel_region_id = -1;
 
         if (_via_is_canvas_zoomed) {
-            reset_zoom_level();
+            _via_is_canvas_zoomed = false;
+            _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX
+            var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+            set_all_canvas_scale(zoom_scale);
+            set_all_canvas_size(_via_canvas_width, _via_canvas_height);
+            _via_canvas_scale = _via_canvas_scale_without_zoom;
         }
 
         var current_img_index = _via_image_index;
@@ -3943,7 +3970,12 @@ function move_to_next_image() {
         _via_current_sel_region_id = -1;
 
         if (_via_is_canvas_zoomed) {
-            reset_zoom_level();
+            _via_is_canvas_zoomed = false;
+            _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX
+            var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+            set_all_canvas_scale(zoom_scale);
+            set_all_canvas_size(_via_canvas_width, _via_canvas_height);
+            _via_canvas_scale = _via_canvas_scale_without_zoom;
         }
 
         var current_img_index = _via_image_index;
@@ -3997,7 +4029,7 @@ function zoom_in() {
         _via_is_canvas_zoomed = true;
         var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
         set_all_canvas_scale(zoom_scale);
-        set_all_canvas_size(_via_canvas_width * zoom_scale,
+        set_all_canvas_size(_via_canvas_width  * zoom_scale,
                             _via_canvas_height * zoom_scale);
         _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
 
@@ -4023,7 +4055,7 @@ function zoom_out() {
         _via_is_canvas_zoomed = true;
         var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
         set_all_canvas_scale(zoom_scale);
-        set_all_canvas_size(_via_canvas_width * zoom_scale,
+        set_all_canvas_size(_via_canvas_width  * zoom_scale,
                             _via_canvas_height * zoom_scale);
         _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
 
@@ -4094,7 +4126,7 @@ function save_current_data_to_browser_cache() {
 }
 
 function is_via_data_in_localStorage() {
-    if (localStorage.getItem('_via_timestamp')) {
+    if ( localStorage.getItem('_via_timestamp') ) {
         return true;
     } else {
         return false;
@@ -4138,7 +4170,7 @@ function download_localStorage_data(type) {
 // Handlers for attributes input panel (spreadsheet like user input panel)
 //
 function attr_input_focus(i) {
-    if (_via_is_reg_attr_panel_visible) {
+    if ( _via_is_reg_attr_panel_visible ) {
         select_only_region(i);
         _via_redraw_reg_canvas();
     }
@@ -4146,7 +4178,7 @@ function attr_input_focus(i) {
 }
 
 function attr_input_blur(i) {
-    if (_via_is_reg_attr_panel_visible) {
+    if ( _via_is_reg_attr_panel_visible ) {
         set_region_select_state(i, false);
         _via_redraw_reg_canvas();
     }
@@ -4157,9 +4189,9 @@ function attr_input_blur(i) {
 // data is an array of Map() objects
 function init_spreadsheet_input(type, col_headers, data, row_names) {
 
-    if (typeof row_names === 'undefined') {
+    if ( typeof row_names === 'undefined' ) {
         var row_names = [];
-        for (var i=0; i<data.length; ++i) {
+        for ( var i = 0; i < data.length; ++i ) {
             row_names[i] = i+1;
         }
     }
@@ -4174,10 +4206,11 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
     }
 
     var hstr = '<div style="display: inline-block;" class="title">';
-    hstr += attrname + '</div>';
-    hstr += '<table id="' + type + '"></table>';
+       hstr += attrname + '</div>';
+       hstr += '<table id="' + type + '"></table>';
 
-    var attrtable = document.createElement('TABLE');
+    var attrtable = document.createElement('table');
+    attrtable.setAttribute('id', 'attributes_panel_table');
     var firstrow = attrtable.insertRow(0);
 
     // top-left cell
@@ -4196,21 +4229,21 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
         ' onfocus="_via_is_user_adding_attribute_name=true; this.value = \'\';" />';
 
     // if multiple regions are selected, show the selected regions first
-    var sel_reg_list = [];
+    var sel_reg_list       = [];
     var remaining_reg_list = [];
-    var all_reg_list = [];
+    var all_reg_list       = [];
     var region_travesal_order = [];
     if (type === 'region_attributes') {
         // count number of selected regions
-        for (var i=0; i<data.length; ++i) {
+        for ( var i = 0; i < data.length; ++i ) {
             all_reg_list.push(i);
-            if (data[i].is_user_selected) {
+            if ( data[i].is_user_selected ) {
                 sel_reg_list.push(i);
             } else {
                 remaining_reg_list.push(i);
             }
         }
-        if (sel_reg_list.length > 1) {
+        if ( sel_reg_list.length > 1 ) {
             region_traversal_order = sel_reg_list.concat(remaining_reg_list);
         } else {
             region_traversal_order = all_reg_list;
@@ -4218,13 +4251,13 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
     }
 
     var sel_rows = [];
-    for (var i=0; i<data.length; ++i) {
+    for ( var i=0; i < data.length; ++i ) {
         var rowi = i;
 
         // if multiple regions are selected, show the selected regions first
         var di;
-        if (type == 'region_attributes') {
-            if (sel_reg_list.length) {
+        if ( type == 'region_attributes' ) {
+            if ( sel_reg_list.length ) {
                 rowi = region_traversal_order[rowi];
             }
             di = data[rowi].region_attributes;
@@ -4233,10 +4266,10 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
         }
 
         var row = attrtable.insertRow(-1);
-        var region_id_cell = row.insertCell(0);
-        region_id_cell.innerHTML = '' + row_names[rowi] + '';
+        var region_id_cell              = row.insertCell(0);
+        region_id_cell.innerHTML        = '' + row_names[rowi] + '';
         region_id_cell.style.fontWeight = 'bold';
-        region_id_cell.style.width = '2em';
+        region_id_cell.style.width      = '2em';
 
         if (data[rowi].is_user_selected) {
             region_id_cell.style.backgroundColor = '#5599FF';
@@ -4244,7 +4277,7 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
             sel_rows.push(row);
         }
 
-        for (var key of col_headers) {
+        for ( var key of col_headers ) {
             var input_id = type[0] + '#' + key + '#' + rowi;
 
             if ( di.has(key) ) {
@@ -4253,7 +4286,7 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
                 ip_val = ip_val.replace(/'/g, '\'');
                 ip_val = ip_val.replace(/"/g, '&quot;');
 
-                if (ip_val.length > 30) {
+                if ( ip_val.length > 30 ) {
                     row.insertCell(-1).innerHTML = '<textarea ' +
                         ' rows="' + (Math.floor(ip_val.length/30)-1) + '"' +
                         ' cols="30"' +
@@ -4282,34 +4315,34 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
         }
     }
 
-    document.getElementById('attributes_panel').innerHTML = '';
-    document.getElementById('attributes_panel').appendChild(attrtable);
-    document.getElementById('attributes_panel').focus();
+    attributes_panel.replaceChild(attrtable, document.getElementById('attributes_panel_table'));
+    attributes_panel.focus();
 
     // move vertical scrollbar automatically to show the selected region (if any)
-    if (sel_rows.length === 1) {
-        var panelHeight = bottom_panel.offsetHeight;
+    if ( sel_rows.length === 1 ) {
+        var panelHeight = attributes_panel.offsetHeight;
         var sel_row_bottom = sel_rows[0].offsetTop + sel_rows[0].clientHeight
         if (sel_row_bottom > panelHeight) {
-            bottom_panel.scrollTop = sel_rows[0].offsetTop;
+            attributes_panel.scrollTop = sel_rows[0].offsetTop;
         } else {
-            bottom_panel.scrollTop = 0;
+            attributes_panel.scrollTop = 0;
         }
     } else {
-        bottom_panel.scrollTop = 0;
+        attributes_panel.scrollTop = 0;
     }
 }
 
 function update_attributes_panel(type) {
     if (_via_current_image_loaded &&
-        _via_is_bottom_panel_visible) {
+        _via_is_attributes_panel_visible) {
         if (_via_is_reg_attr_panel_visible) {
             update_region_attributes_input_panel();
         }
 
-        if (_via_is_file_attr_panel_visible) {
+        if ( _via_is_file_attr_panel_visible ) {
             update_file_attributes_input_panel();
         }
+        update_vertical_space();
     }
 }
 
@@ -4327,46 +4360,59 @@ function update_file_attributes_input_panel() {
                            [_via_current_image_filename]);
 }
 
+function toggle_attributes_input_panel() {
+    if( _via_is_reg_attr_panel_visible ) {
+        toggle_reg_attr_panel();
+    }
+    if( _via_is_file_attr_panel_visible ) {
+        toggle_file_attr_panel();
+    }
+}
+
 function toggle_reg_attr_panel() {
-    if (_via_current_image_loaded) {
+    if ( _via_current_image_loaded ) {
         var panel = document.getElementById('reg_attr_panel_button');
         panel.classList.toggle('active');
-        if (_via_is_bottom_panel_visible) {
-            if(_via_is_reg_attr_panel_visible) {
-                bottom_panel.style.display = 'none';
-                _via_is_bottom_panel_visible = false;
-                _via_is_reg_attr_panel_visible = false;
+        if ( _via_is_attributes_panel_visible ) {
+            if( _via_is_reg_attr_panel_visible ) {
+                attributes_panel.style.display   = 'none';
+                _via_is_attributes_panel_visible = false;
+                _via_is_reg_attr_panel_visible   = false;
                 _via_reg_canvas.focus();
+                // add horizontal spacer to allow scrollbar
+                var hs = document.getElementById('horizontal_space');
+                hs.style.height = attributes_panel.offsetHeight+'px';
+
             } else {
                 update_region_attributes_input_panel();
-                _via_is_reg_attr_panel_visible = true;
+                _via_is_reg_attr_panel_visible  = true;
                 _via_is_file_attr_panel_visible = false;
                 // de-activate the file-attr accordion panel
                 var panel = document.getElementById('file_attr_panel_button');
                 panel.classList.toggle('active');
-
-                bottom_panel.focus();
+                attributes_panel.focus();
             }
         } else {
-            _via_is_bottom_panel_visible = true;
+            _via_is_attributes_panel_visible = true;
             update_region_attributes_input_panel();
             _via_is_reg_attr_panel_visible = true;
-            bottom_panel.style.display = 'block';
-            bottom_panel.focus();
+            attributes_panel.style.display = 'block';
+            attributes_panel.focus();
         }
+        update_vertical_space();
     } else {
         show_message('Please load some images first');
     }
 }
 
 function toggle_file_attr_panel() {
-    if (_via_current_image_loaded) {
+    if ( _via_current_image_loaded ) {
         var panel = document.getElementById('file_attr_panel_button');
         panel.classList.toggle('active');
-        if (_via_is_bottom_panel_visible) {
-            if(_via_is_file_attr_panel_visible) {
-                bottom_panel.style.display = 'none';
-                _via_is_bottom_panel_visible = false;
+        if ( _via_is_attributes_panel_visible ) {
+            if( _via_is_file_attr_panel_visible ) {
+                attributes_panel.style.display = 'none';
+                _via_is_attributes_panel_visible = false;
                 _via_is_file_attr_panel_visible = false;
             } else {
                 update_file_attributes_input_panel();
@@ -4378,14 +4424,22 @@ function toggle_file_attr_panel() {
                 panel.classList.toggle('active');
             }
         } else {
-            _via_is_bottom_panel_visible = true;
+            _via_is_attributes_panel_visible = true;
             update_file_attributes_input_panel();
             _via_is_file_attr_panel_visible = true;
-            bottom_panel.style.display = 'block';
+            attributes_panel.style.display = 'block';
         }
+        update_vertical_space();
     } else {
         show_message('Please load some images first');
     }
+}
+
+// this vertical spacer is needed to allow scrollbar to show
+// items like Keyboard Shortcut hidden under the attributes panel
+function update_vertical_space() {
+    var panel = document.getElementById('vertical_space');
+    panel.style.height = attributes_panel.offsetHeight+'px';
 }
 
 function update_attribute_value(attr_id, value) {
@@ -4416,13 +4470,13 @@ function update_attribute_value(attr_id, value) {
 function add_new_attribute(type, attribute_name) {
     switch(type) {
     case 'r': // region attribute
-        if (!_via_region_attributes.has(attribute_name)) {
+        if ( !_via_region_attributes.has(attribute_name) ) {
             _via_region_attributes.add(attribute_name);
         }
         update_region_attributes_input_panel();
         break;
     case 'f': // file attribute
-        if (!_via_file_attributes.has(attribute_name)) {
+        if ( !_via_file_attributes.has(attribute_name) ) {
             _via_file_attributes.add(attribute_name);
         }
         update_file_attributes_input_panel();
@@ -4445,12 +4499,10 @@ function add_new_attribute(type, attribute_name) {
     <!--
     <script src="via_demo.js"></script>
     -->
-
     <!-- Unit Tests-->
     <!--
     <script src="./tests/via_test_data.js"></script>
     <script src="./tests/via_test.js"></script>
-    <script src="./tests/via_test_util.js"></script>
     <script src="./tests/via_test_fileio.js"></script>
     <script src="./tests/via_test_region.js"></script>
     -->
