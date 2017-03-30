@@ -8,4 +8,4 @@ pages:
     paths:
     - public
   only:
-  - website
+  - via_website
