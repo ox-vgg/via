@@ -3319,7 +3319,8 @@ function save_current_data_to_browser_cache() {
 }
 
 function is_via_data_in_localStorage() {
-    if ( localStorage.getItem('_via_timestamp') ) {
+    if ( localStorage.getItem('_via_timestamp') &&
+         localStorage.getItem('_via_img_metadata') ) {
         return true;
     } else {
         return false;
@@ -3351,7 +3352,6 @@ function show_localStorage_recovery_options() {
         via_start_info_panel.innerHTML += hstr.join('');
     } catch(err) {
         show_message('Failed to recover annotation data saved in browser cache.');
-        alert('Failed to recover annotation data saved in browser cache.');
         console.log('Failed to recover annotation data saved in browser cache.');
         console.log(err.message);
     }
