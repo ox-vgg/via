@@ -2,7 +2,7 @@
  * double buffering of image canvas to improve image loading performance
  * video shot annotation
 
-## [1.0.0] - not released yet
+## [1.0.0] - April 04, 2017
  * file-attributes support added (useful for weakly supervised learning)
  * spreadsheet like editor for region and file attributes
  * visualization of loaded image list improved
