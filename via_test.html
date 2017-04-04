@@ -792,7 +792,7 @@ for more details.
 
 */
 
-var VIA_VERSION      = '1.0.0-beta';
+var VIA_VERSION      = '1.0.0';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -4074,22 +4074,29 @@ function clear_localStorage() {
 }
 
 function show_localStorage_recovery_options() {
-    var hstr = [];
-    var saved_date = localStorage.getItem('_via_timestamp');
-    var saved_data_size = localStorage.getItem('_via_img_metadata').length / 1024; // in Kb
+    try {
+        var hstr = [];
+        var saved_date = localStorage.getItem('_via_timestamp');
+        var saved_data_size = localStorage.getItem('_via_img_metadata').length / 1024; // in Kb
 
 
-    hstr.push('<div style="padding: 1em; border: 1px solid #cccccc;">');
-    hstr.push('<h3 style="border-bottom: 1px solid #5599FF">Data Recovery from Browser Cache</h3>');
-    hstr.push('<p>Annotation data from your previous session exists in this browser\'s cache :</h3>');
-    hstr.push('<ul><li>Saved on : ' + saved_date + '</li>');
-    hstr.push('<li>Size : ' + Math.round(saved_data_size) + ' KB</li>');
-    hstr.push('</ul>');
-    hstr.push('<a title="Save as JSON" style="cursor: pointer; color: blue;" onclick="download_localStorage_data(\'json\')" title="Recover annotation data">Save</a>');
-    hstr.push('<a style="padding-left:2em; cursor: pointer; color: blue;" onclick="clear_localStorage()" title="Discard annotation data">Discard</a>');
+        hstr.push('<div style="padding: 1em; border: 1px solid #cccccc;">');
+        hstr.push('<h3 style="border-bottom: 1px solid #5599FF">Data Recovery from Browser Cache</h3>');
+        hstr.push('<p>Annotation data from your previous session exists in this browser\'s cache :</h3>');
+        hstr.push('<ul><li>Saved on : ' + saved_date + '</li>');
+        hstr.push('<li>Size : ' + Math.round(saved_data_size) + ' KB</li>');
+        hstr.push('</ul>');
+        hstr.push('<a title="Save as JSON" style="cursor: pointer; color: blue;" onclick="download_localStorage_data(\'json\')" title="Recover annotation data">Save</a>');
+        hstr.push('<a style="padding-left:2em; cursor: pointer; color: blue;" onclick="clear_localStorage()" title="Discard annotation data">Discard</a>');
 
-    hstr.push('<p style="clear: left;"><b>If you continue, the cached data will be discarded!</b></p></div>');
-    via_start_info_panel.innerHTML += hstr.join('');
+        hstr.push('<p style="clear: left;"><b>If you continue, the cached data will be discarded!</b></p></div>');
+        via_start_info_panel.innerHTML += hstr.join('');
+    } catch(err) {
+        show_message('Failed to recover annotation data saved in browser cache.');
+        alert('Failed to recover annotation data saved in browser cache.');
+        console.log('Failed to recover annotation data saved in browser cache.');
+        console.log(err.message);
+    }
 }
 
 function download_localStorage_data(type) {
@@ -4558,6 +4565,58 @@ function _via_test_fileio_export() {
     }, 1200);
 
 }
+// unit tests for region update
+//
+// Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
+// Feb. 08, 2017
+
+function _via_test_region_delete_all() {
+    _via_load_test_img();
+    var blob = new Blob( [region_data_json], {type: 'text/json;charset=utf-8'});
+    load_text_file(blob, import_annotations_from_json);
+
+    setTimeout( function() {
+        _via_simulate_htmlelement_click(
+            ['toolbar_sel_all_region', 'toolbar_del_region'],
+            10);
+    } , 100);
+
+    var tests = []
+    tests.push('_via_img_metadata[_via_image_id].regions.length === 0');
+
+    // run the tests after some delay
+    _via_run_test( tests, 200 );
+
+}
+
+function _via_test_region_delete_one() {
+    _via_load_test_img();
+    var blob = new Blob( [region_data_json], {type: 'text/json;charset=utf-8'});
+    load_text_file(blob, import_annotations_from_json);
+
+    // move to third test image
+    setTimeout( function() {
+        _via_simulate_htmlelement_click(
+            ['toolbar_next_img', 'toolbar_next_img'],
+            500);
+    } , 100);
+
+    // select the ellipse centered at (300,223)
+    setTimeout( function() {
+        _via_simulate_canvas_click(300, 223);
+    } , 700);
+
+    // delete the selected region
+    setTimeout( function() {
+        _via_simulate_htmlelement_click(['toolbar_del_region'], 0);
+    } , 800);
+
+    var tests = []
+    tests.push('_via_img_metadata[_via_image_id].regions.length === 2');
+
+    // run the tests after some delay
+    _via_run_test( tests, 1000 );
+}
 var _via_unit_tests = [];
 var _via_test_prefix = '_via_test_';
 var _via_ongoing_unit_test_id = 0;
@@ -4713,58 +4772,6 @@ function _via_simulate_canvas_mousemove(x, y) {
 function _via_simulate_canvas_click(x, y) {
     _via_simulate_canvas_mousedown(x, y);
     _via_simulate_canvas_mouseup(x, y);
-}
-// unit tests for region update
-//
-// Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
-// Feb. 08, 2017
-
-function _via_test_region_delete_all() {
-    _via_load_test_img();
-    var blob = new Blob( [region_data_json], {type: 'text/json;charset=utf-8'});
-    load_text_file(blob, import_annotations_from_json);
-
-    setTimeout( function() {
-        _via_simulate_htmlelement_click(
-            ['toolbar_sel_all_region', 'toolbar_del_region'],
-            10);
-    } , 100);
-
-    var tests = []
-    tests.push('_via_img_metadata[_via_image_id].regions.length === 0');
-
-    // run the tests after some delay
-    _via_run_test( tests, 200 );
-
-}
-
-function _via_test_region_delete_one() {
-    _via_load_test_img();
-    var blob = new Blob( [region_data_json], {type: 'text/json;charset=utf-8'});
-    load_text_file(blob, import_annotations_from_json);
-
-    // move to third test image
-    setTimeout( function() {
-        _via_simulate_htmlelement_click(
-            ['toolbar_next_img', 'toolbar_next_img'],
-            500);
-    } , 100);
-
-    // select the ellipse centered at (300,223)
-    setTimeout( function() {
-        _via_simulate_canvas_click(300, 223);
-    } , 700);
-
-    // delete the selected region
-    setTimeout( function() {
-        _via_simulate_htmlelement_click(['toolbar_del_region'], 0);
-    } , 800);
-
-    var tests = []
-    tests.push('_via_img_metadata[_via_image_id].regions.length === 2');
-
-    // run the tests after some delay
-    _via_run_test( tests, 1000 );
 }
     </script>
 

@@ -18,7 +18,6 @@ VIA_TEST_FILE="tmp_via_all_tests.js"
 cat $(ls -tpa | grep -v / ) > "../${VIA_TEST_FILE}"
 )
 
-echo $VIA_TEST_FILE
 # source: http://stackoverflow.com/questions/16811173/bash-inserting-one-files-content-into-another-file-after-the-pattern
 sed -e '/<!--AUTO_INSERT_VIA_JS_HERE-->/r./'$VIA_JS_FILE $TEMPLATE_HTML_FILE > $TMP_FILE1
 sed -e '/<!--AUTO_INSERT_VIA_TEST_JS_HERE-->/r./'$VIA_TEST_FILE $TMP_FILE1 > $TMP_FILE2

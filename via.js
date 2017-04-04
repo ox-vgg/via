@@ -50,7 +50,7 @@ for more details.
 
 */
 
-var VIA_VERSION      = '1.0.0-beta';
+var VIA_VERSION      = '1.0.0';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -3332,22 +3332,29 @@ function clear_localStorage() {
 }
 
 function show_localStorage_recovery_options() {
-    var hstr = [];
-    var saved_date = localStorage.getItem('_via_timestamp');
-    var saved_data_size = localStorage.getItem('_via_img_metadata').length / 1024; // in Kb
+    try {
+        var hstr = [];
+        var saved_date = localStorage.getItem('_via_timestamp');
+        var saved_data_size = localStorage.getItem('_via_img_metadata').length / 1024; // in Kb
 
 
-    hstr.push('<div style="padding: 1em; border: 1px solid #cccccc;">');
-    hstr.push('<h3 style="border-bottom: 1px solid #5599FF">Data Recovery from Browser Cache</h3>');
-    hstr.push('<p>Annotation data from your previous session exists in this browser\'s cache :</h3>');
-    hstr.push('<ul><li>Saved on : ' + saved_date + '</li>');
-    hstr.push('<li>Size : ' + Math.round(saved_data_size) + ' KB</li>');
-    hstr.push('</ul>');
-    hstr.push('<a title="Save as JSON" style="cursor: pointer; color: blue;" onclick="download_localStorage_data(\'json\')" title="Recover annotation data">Save</a>');
-    hstr.push('<a style="padding-left:2em; cursor: pointer; color: blue;" onclick="clear_localStorage()" title="Discard annotation data">Discard</a>');
+        hstr.push('<div style="padding: 1em; border: 1px solid #cccccc;">');
+        hstr.push('<h3 style="border-bottom: 1px solid #5599FF">Data Recovery from Browser Cache</h3>');
+        hstr.push('<p>Annotation data from your previous session exists in this browser\'s cache :</h3>');
+        hstr.push('<ul><li>Saved on : ' + saved_date + '</li>');
+        hstr.push('<li>Size : ' + Math.round(saved_data_size) + ' KB</li>');
+        hstr.push('</ul>');
+        hstr.push('<a title="Save as JSON" style="cursor: pointer; color: blue;" onclick="download_localStorage_data(\'json\')" title="Recover annotation data">Save</a>');
+        hstr.push('<a style="padding-left:2em; cursor: pointer; color: blue;" onclick="clear_localStorage()" title="Discard annotation data">Discard</a>');
 
-    hstr.push('<p style="clear: left;"><b>If you continue, the cached data will be discarded!</b></p></div>');
-    via_start_info_panel.innerHTML += hstr.join('');
+        hstr.push('<p style="clear: left;"><b>If you continue, the cached data will be discarded!</b></p></div>');
+        via_start_info_panel.innerHTML += hstr.join('');
+    } catch(err) {
+        show_message('Failed to recover annotation data saved in browser cache.');
+        alert('Failed to recover annotation data saved in browser cache.');
+        console.log('Failed to recover annotation data saved in browser cache.');
+        console.log(err.message);
+    }
 }
 
 function download_localStorage_data(type) {
