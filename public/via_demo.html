@@ -644,7 +644,7 @@
 
           <div class="text_panel" style="padding: 1em; border: 1px solid #cccccc;" id="about_panel">
             <p style="font-size: 2em;">VGG Image Annotator</p>
-            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.0-beta</a></p>
+            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.0</a></p>
             <p>
               VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
               developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
@@ -4127,7 +4127,8 @@ function save_current_data_to_browser_cache() {
 }
 
 function is_via_data_in_localStorage() {
-    if ( localStorage.getItem('_via_timestamp') ) {
+    if ( localStorage.getItem('_via_timestamp') &&
+         localStorage.getItem('_via_img_metadata') ) {
         return true;
     } else {
         return false;
@@ -4159,7 +4160,6 @@ function show_localStorage_recovery_options() {
         via_start_info_panel.innerHTML += hstr.join('');
     } catch(err) {
         show_message('Failed to recover annotation data saved in browser cache.');
-        alert('Failed to recover annotation data saved in browser cache.');
         console.log('Failed to recover annotation data saved in browser cache.');
         console.log(err.message);
     }
