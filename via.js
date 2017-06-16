@@ -420,6 +420,10 @@ function import_annotations_from_file(event) {
         case 'application/json':
             load_text_file(file, import_annotations_from_json);
             break;
+		case '': // Windows 10: Firefox and Chrome do not report filetype
+			show_message('File type for ' + file.name + ' cannot be determined! Assuming text/plain.');
+			load_text_file(file, import_annotations_from_csv);
+			break;
         default:
             show_message('Annotations cannot be imported from file of type ' + file.type);
         }
