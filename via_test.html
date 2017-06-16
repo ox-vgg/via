@@ -48,7 +48,7 @@
       })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
       ga('create', 'UA-20555581-2', 'auto');
-      ga('set', 'page', '/via_test-1.0.0.html');
+      ga('set', 'page', '/via-1.0.0.html');
       ga('send', 'pageview');
     </script>
 
@@ -1162,6 +1162,10 @@ function import_annotations_from_file(event) {
         case 'application/json':
             load_text_file(file, import_annotations_from_json);
             break;
+		case '': // Windows 10: Firefox and Chrome do not report filetype
+			show_message('File type for ' + file.name + ' cannot be determined! Assuming text/plain.');
+			load_text_file(file, import_annotations_from_csv);
+			break;
         default:
             show_message('Annotations cannot be imported from file of type ' + file.type);
         }
