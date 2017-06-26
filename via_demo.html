@@ -1220,18 +1220,19 @@ function import_annotations_from_file(event) {
     for ( var i = 0; i < selected_files.length; ++i ) {
 	var file = selected_files[i];
         switch(file.type) {
-        case 'text/plain':
+        case '': // Windows 10: Firefox and Chrome do not report filetype
+			show_message('File type for ' + file.name + ' cannot be determined! Assuming text/plain.');
+		case 'text/plain':
+		case 'application/vnd.ms-excel': // @todo: filetype of VIA csv annotations in Windows 10 , fix this (reported by @Eli Walker)
         case 'text/csv':
             load_text_file(file, import_annotations_from_csv);
             break;
+			
         case 'text/json':
         case 'application/json':
             load_text_file(file, import_annotations_from_json);
             break;
-		case '': // Windows 10: Firefox and Chrome do not report filetype
-			show_message('File type for ' + file.name + ' cannot be determined! Assuming text/plain.');
-			load_text_file(file, import_annotations_from_csv);
-			break;
+			
         default:
             show_message('Annotations cannot be imported from file of type ' + file.type);
         }
