@@ -1,6 +1,8 @@
 ## [1.0.1] - not released yet
  * double buffering of image canvas to improve image loading performance
  * video shot annotation
+ * bug fixes
+ * export standalone file that contains images and its annotations.
 
 ## [1.0.0] - April 04, 2017
  * file-attributes support added (useful for weakly supervised learning)
