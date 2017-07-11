@@ -1,8 +1,6 @@
-## [1.0.1] - not released yet
- * double buffering of image canvas to improve image loading performance
- * video shot annotation
- * bug fixes
- * export standalone file that contains images and its annotations.
+## [1.0.1] - June 11, 2017
+ * fixed issue 33 : Annotations cannot be imported from file of type application/vnd.ms-excel
+ * fixed issue 96 : A major bug in how canvas coordinates are computed
 
 ## [1.0.0] - April 04, 2017
  * file-attributes support added (useful for weakly supervised learning)
