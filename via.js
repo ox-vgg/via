@@ -2835,19 +2835,6 @@ function is_on_ellipse_edge(cx, cy, rx, ry, px, py) {
          Math.abs(Math.abs(theta) - Math.PI) < VIA_THETA_TOL) {
       return 6;
     }
-
-    if ( theta >0 && theta < (Math.PI/2) ) {
-      return 1;
-    }
-    if ( theta > (Math.PI/2) && theta < (Math.PI) ) {
-      return 4;
-    }
-    if ( theta <0 && theta > -(Math.PI/2) ) {
-      return 2;
-    }
-    if ( theta < -(Math.PI/2) && theta > -Math.PI ) {
-      return 3;
-    }
   } else {
     return 0;
   }
