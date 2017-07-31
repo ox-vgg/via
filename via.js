@@ -131,6 +131,7 @@ var _via_is_canvas_zoomed            = false;
 var _via_is_loading_current_image    = false;
 var _via_is_region_id_visible        = true;
 var _via_is_region_boundary_visible  = true;
+var _via_is_ctrl_pressed             = true;
 
 // region
 var _via_current_shape             = VIA_REGION_SHAPE.RECT;
@@ -1401,10 +1402,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         image_attr.set('x', xnew);
         image_attr.set('y', ynew);
 
-        var canvas_xnew = canvas_attr.get('x') + move_x;
-        var canvas_ynew = canvas_attr.get('y') + move_y;
-        canvas_attr.set('x', canvas_xnew);
-        canvas_attr.set('y', canvas_ynew);
+        canvas_attr.set('x', Math.round( image_attr.get('x') / _via_canvas_scale) );
+        canvas_attr.set('y', Math.round( image_attr.get('y') / _via_canvas_scale) );
         break;
       case VIA_REGION_SHAPE.CIRCLE:
       case VIA_REGION_SHAPE.ELLIPSE:
@@ -1414,10 +1413,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         image_attr.set('cx', cxnew);
         image_attr.set('cy', cynew);
 
-        var canvas_xnew = canvas_attr.get('cx') + move_x;
-        var canvas_ynew = canvas_attr.get('cy') + move_y;
-        canvas_attr.set('cx', canvas_xnew);
-        canvas_attr.set('cy', canvas_ynew);
+        canvas_attr.set('cx', Math.round( image_attr.get('cx') / _via_canvas_scale) );
+        canvas_attr.set('cy', Math.round( image_attr.get('cy') / _via_canvas_scale) );
         break;
       case VIA_REGION_SHAPE.POLYGON:
         var img_px = image_attr.get('all_points_x');
@@ -1430,8 +1427,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         var canvas_px = canvas_attr.get('all_points_x');
         var canvas_py = canvas_attr.get('all_points_y');
         for (var i=0; i<canvas_px.length; ++i) {
-          canvas_px[i] = canvas_px[i] + move_x;
-          canvas_py[i] = canvas_py[i] + move_y;
+          canvas_px[i] = Math.round( img_px[i] / _via_canvas_scale );
+          canvas_py[i] = Math.round( img_py[i] / _via_canvas_scale );
         }
         break;
       }
@@ -1476,41 +1473,62 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 
     switch (canvas_attr.get('name')) {
     case VIA_REGION_SHAPE.RECT:
-      var x0 = canvas_attr.get('x');
-      var y0 = canvas_attr.get('y');
-      var x1 = x0 + canvas_attr.get('width');
-      var y1 = y0 + canvas_attr.get('height');
+            // original rectangle
+      var ox0 = canvas_attr.get('x');
+      var oy0 = canvas_attr.get('y');
+      var ox1 = ox0 + canvas_attr.get('width');
+      var oy1 = oy0 + canvas_attr.get('height');
+
+      // new rectangle
+      var nx0 = ox0;
+      var ny0 = oy0;
+      var nx1 = ox1;
+      var ny1 = oy1;
 
       switch(_via_region_edge[1]) {
       case 1: // top-left
-        x0 = _via_current_x;
-        y0 = _via_current_y;
+        nx0 = _via_current_x;
+        ny0 = _via_current_y;
         break;
       case 3: // bottom-right
-        x1 = _via_current_x;
-        y1 = _via_current_y;
+        nx1 = _via_current_x;
+        ny1 = _via_current_y;
         break;
       case 2: // top-right
-        x1 = _via_current_x;
-        y0 = _via_current_y;
+        nx1 = _via_current_x;
+        ny0 = _via_current_y;
         break;
       case 4: // bottom-left
-        x0 = _via_current_x;
-        y1 = _via_current_y;
+        nx0 = _via_current_x;
+        ny1 = _via_current_y;
         break;
       }
-      var w = Math.abs(x1-x0);
-      var h = Math.abs(y1-y0);
-      image_attr.set('x', Math.round(x0 * _via_canvas_scale));
-      image_attr.set('y', Math.round(y0 * _via_canvas_scale));
-      image_attr.set('width', Math.round(w * _via_canvas_scale));
-      image_attr.set('height', Math.round(h * _via_canvas_scale));
+      var nw = Math.abs(nx1 - nx0);
+      var nh = Math.abs(ny1 - ny0);
 
-      canvas_attr.set('x', x0);
-      canvas_attr.set('y', y0);
-      canvas_attr.set('width', w);
-      canvas_attr.set('height', h);
+      // ensure that (nx0,ny0) is top-left
+      if ( nx0 > nx1 ) {
+        if ( ny0 > ny1 ) {
+          nx0 = nx1;
+          ny0 = ny1;
+        } else {
+          nx0 = nx1;
+        }
+      } else {
+        if ( ny0 > ny1 ) {
+          ny0 = ny1;
+        }
+      }
 
+      image_attr.set('x', Math.round(nx0 * _via_canvas_scale));
+      image_attr.set('y', Math.round(ny0 * _via_canvas_scale));
+      image_attr.set('width', Math.round(nw * _via_canvas_scale));
+      image_attr.set('height', Math.round(nh * _via_canvas_scale));
+
+      canvas_attr.set('x', Math.round( image_attr.get('x') / _via_canvas_scale) );
+      canvas_attr.set('y', Math.round( image_attr.get('y') / _via_canvas_scale) );
+      canvas_attr.set('width', Math.round( image_attr.get('width') / _via_canvas_scale) );
+      canvas_attr.set('height', Math.round( image_attr.get('height') / _via_canvas_scale) );
       break;
 
     case VIA_REGION_SHAPE.CIRCLE:
@@ -1518,8 +1536,9 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
       var dy = Math.abs(canvas_attr.get('cy') - _via_current_y);
       var new_r = Math.sqrt( dx*dx + dy*dy );
 
-      canvas_attr.set('r', Math.round(new_r));
       image_attr.set('r', Math.round(new_r * _via_canvas_scale));
+      canvas_attr.set('r', Math.round( image_attr.get('r') / _via_canvas_scale) );
+
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
@@ -1540,28 +1559,31 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         break;
       }
 
-      canvas_attr.set('rx', Math.round(new_rx));
-      canvas_attr.set('ry', Math.round(new_ry));
       image_attr.set('rx', Math.round(new_rx * _via_canvas_scale));
       image_attr.set('ry', Math.round(new_ry * _via_canvas_scale));
+
+      canvas_attr.set('rx', Math.round(image_attr.get('rx') / _via_canvas_scale) );
+      canvas_attr.set('ry', Math.round(image_attr.get('ry') / _via_canvas_scale) );
       break;
 
     case VIA_REGION_SHAPE.POLYGON:
       var moved_vertex_id = _via_region_edge[1] - VIA_POLYGON_RESIZE_VERTEX_OFFSET;
 
-      canvas_attr.get('all_points_x')[moved_vertex_id] = Math.round(_via_current_x);
-      canvas_attr.get('all_points_y')[moved_vertex_id] = Math.round(_via_current_y);
-      image_attr.get('all_points_x')[moved_vertex_id] = Math.round(_via_current_x * _via_canvas_scale);
-      image_attr.get('all_points_y')[moved_vertex_id] = Math.round(_via_current_y * _via_canvas_scale);
+      var imx = Math.round(_via_current_x * _via_canvas_scale);
+      var imy = Math.round(_via_current_y * _via_canvas_scale);
+      image_attr.get('all_points_x')[moved_vertex_id] = imx;
+      image_attr.get('all_points_y')[moved_vertex_id] = imy;
+      canvas_attr.get('all_points_x')[moved_vertex_id] = Math.round( imx / _via_canvas_scale );
+      canvas_attr.get('all_points_y')[moved_vertex_id] = Math.round( imy / _via_canvas_scale );
 
       if (moved_vertex_id === 0) {
         // move both first and last vertex because we
         // the initial point at the end to close path
         var n = canvas_attr.get('all_points_x').length;
-        canvas_attr.get('all_points_x')[n-1] = Math.round(_via_current_x);
-        canvas_attr.get('all_points_y')[n-1] = Math.round(_via_current_y);
-        image_attr.get('all_points_x')[n-1] = Math.round(_via_current_x * _via_canvas_scale);
-        image_attr.get('all_points_y')[n-1] = Math.round(_via_current_y * _via_canvas_scale);
+        image_attr.get('all_points_x')[n-1] = imx;
+        image_attr.get('all_points_y')[n-1] = imy;
+        canvas_attr.get('all_points_x')[n-1] = Math.round( imx / _via_canvas_scale );;
+        canvas_attr.get('all_points_y')[n-1] = Math.round( imy / _via_canvas_scale );;
       }
       break;
     }
@@ -1941,33 +1963,54 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
     var attr = _via_canvas_regions[region_id].shape_attributes;
     switch (attr.get('name')) {
     case VIA_REGION_SHAPE.RECT:
-      var x0 = _via_canvas_regions[region_id].shape_attributes.get('x');
-      var y0 = _via_canvas_regions[region_id].shape_attributes.get('y');
-      var x1 = x0 + _via_canvas_regions[region_id].shape_attributes.get('width');
-      var y1 = y0 + _via_canvas_regions[region_id].shape_attributes.get('height');
+      // original rectangle
+      var ox0 = attr.get('x');
+      var oy0 = attr.get('y');
+      var ox1 = ox0 + attr.get('width');
+      var oy1 = oy0 + attr.get('height');
+
+      // new rectangle
+      var nx0 = ox0;
+      var ny0 = oy0;
+      var nx1 = ox1;
+      var ny1 = oy1;
 
       switch(_via_region_edge[1]) {
       case 1: // top-left
-        x0 = _via_current_x;
-        y0 = _via_current_y;
+        nx0 = _via_current_x;
+        ny0 = _via_current_y;
         break;
       case 3: // bottom-right
-        x1 = _via_current_x;
-        y1 = _via_current_y;
+        nx1 = _via_current_x;
+        ny1 = _via_current_y;
         break;
       case 2: // top-right
-        x1 = _via_current_x;
-        y0 = _via_current_y;
+        nx1 = _via_current_x;
+        ny0 = _via_current_y;
         break;
       case 4: // bottom-left
-        x0 = _via_current_x;
-        y1 = _via_current_y;
+        nx0 = _via_current_x;
+        ny1 = _via_current_y;
         break;
       }
-      _via_draw_rect_region(x0, y0,
-                            Math.abs(x1-x0),
-                            Math.abs(y1-y0),
-                            true);
+      var nw = Math.abs(nx1 - nx0);
+      var nh = Math.abs(ny1 - ny0);
+
+      // ensure that (nx0,ny0) is top-left
+      if ( nx0 > nx1 ) {
+        if ( ny0 > ny1 ) {
+          nx0 = nx1;
+          ny0 = ny1;
+        } else {
+          nx0 = nx1;
+        }
+      } else {
+        if ( ny0 > ny1 ) {
+          ny0 = ny1;
+        }
+      }
+
+      _via_draw_rect_region(nx0, ny0, nw, nh, true);
       break;
 
     case VIA_REGION_SHAPE.CIRCLE:
@@ -2870,6 +2913,20 @@ function _via_update_ui_components() {
 // Shortcut key handlers
 //
 
+window.addEventListener('keyup', function(e) {
+  if (_via_is_user_updating_attribute_value ||
+      _via_is_user_updating_attribute_name  ||
+      _via_is_user_adding_attribute_name) {
+
+    return;
+  }
+
+  if ( e.which === 17 ) { // Ctrl key
+    _via_is_ctrl_pressed = false;
+    console.log('ctrl up');
+  }
+});
+
 window.addEventListener('keydown', function(e) {
   if (_via_is_user_updating_attribute_value ||
       _via_is_user_updating_attribute_name  ||
@@ -2880,6 +2937,8 @@ window.addEventListener('keydown', function(e) {
 
   // user commands
   if ( e.ctrlKey ) {
+    _via_is_ctrl_pressed = true;
+    console.log('ctrl down');
     if ( e.which === 83 ) { // Ctrl + s
       download_all_region_data('csv');
       e.preventDefault();
