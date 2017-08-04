@@ -451,7 +451,7 @@ function import_annotations_from_csv(data) {
   var region_import_count = 0;
   var malformed_csv_lines_count = 0;
 
-  var line_split_regex = new RegExp('\n|\r|\r\n', 'gu')
+  var line_split_regex = new RegExp('\n|\r|\r\n', 'g')
   var csvdata = data.split(line_split_regex);
 
   for ( var i=0; i < csvdata.length; ++i ) {
