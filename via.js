@@ -50,7 +50,7 @@
 
 */
 
-var VIA_VERSION      = '1.0.1';
+var VIA_VERSION      = '1.0.2';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -251,8 +251,10 @@ function sel_local_images() {
 }
 function download_all_region_data(type) {
   var all_region_data = pack_via_metadata(type);
-  var all_region_data_blob = new Blob(all_region_data,
-                                      {type: 'text/'+type+';charset=utf-8'});
+  // ref : https://stackoverflow.com/questions/17879198/adding-utf-8-bom-to-string-blob
+  var utf_bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+  var blob_attr = {type: 'text/'+type+';charset=utf-8'};
+  var all_region_data_blob = new Blob([ utf_bom,all_region_data ], blob_attr);
 
   if ( all_region_data_blob.size > (2*1024*1024) &&
        type === 'csv' ) {
@@ -412,6 +414,7 @@ function import_annotations_from_file(event) {
   var selected_files = event.target.files;
   for ( var i = 0; i < selected_files.length; ++i ) {
     var file = selected_files[i];
+    console.log(file);
     switch(file.type) {
     case '': // Windows 10: Firefox and Chrome do not report filetype
       show_message('File type for ' + file.name + ' cannot be determined! Assuming text/plain.');
@@ -448,7 +451,9 @@ function import_annotations_from_csv(data) {
   var region_import_count = 0;
   var malformed_csv_lines_count = 0;
 
-  var csvdata = data.split('\n');
+  var line_split_regex = new RegExp('\n|\r|\r\n', 'gu')
+  var csvdata = data.split(line_split_regex);
+
   for ( var i=0; i < csvdata.length; ++i ) {
     // ignore blank lines
     if (csvdata[i].charAt(0) === '\n' || csvdata[i].charAt(0) === '') {
@@ -749,7 +754,7 @@ function load_text_file(text_file, callback_function) {
     text_reader.addEventListener( 'load', function() {
       callback_function(text_reader.result);
     }, false);
-    text_reader.readAsText(text_file);
+    text_reader.readAsText(text_file, 'utf-8');
   }
 }
 
