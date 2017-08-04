@@ -1,3 +1,11 @@
+## [1.0.1] - not released
+ * removed free resize of ellipse from any edge (issue 100)
+ * fixed free resize of rectangle (issue 101)
+ * fixed 1-pixel bug (first set image space coordinate, then set canvas coordinate. see issue 96) for region resize and move
+ * press Ctrl while resizing to preserve the aspect ratio of rectangle (issue 98)
+ * fixed issue with CSV files containing newline character \r or \r\n (issue 102)
+ * top menu bar remains consistent event when the user scrolls the window
+
 ## [1.0.1] - June 11, 2017
  * fixed issue 33 : Annotations cannot be imported from file of type application/vnd.ms-excel
  * fixed issue 96 : A major bug in how canvas coordinates are computed

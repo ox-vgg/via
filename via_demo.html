@@ -30,7 +30,7 @@
         POSSIBILITY OF SUCH DAMAGE.
 
       -->
-    <title>VGG Image Annotator 1.0.1</title>
+    <title>VGG Image Annotator</title>
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 200 KB) that runs on most modern web browsers.">
 
@@ -63,7 +63,7 @@
 
       /* Top panel : #navbar, #toolbar */
       .top_panel {
-      position: relative;
+      position: fixed;
       top: 0;
       left: 0;
       display: block;
@@ -73,6 +73,7 @@
       z-index: 10;
       margin: 0;
       padding: 0;
+      width: 100%;
       }
 
       .navbar {
@@ -156,12 +157,14 @@
 
       /* Middle panel: containing #image_panel, #leftsidebar */
       .middle_panel {
+      position: relative;
       display: table;
       table-layout: fixed;
       width: 100%;
       z-index: 1;
       padding: 0;
-      padding-top: 1.0125em; /* ensures the mouse event (x,y) coordinates are integer */
+      top: 3.5em;
+      /*padding-top: 1.0125em;  ensures the mouse event (x,y) coordinates are integer */
       }
       #leftsidebar {
       display: table-cell;
@@ -644,7 +647,7 @@
 
           <div class="text_panel" style="padding: 1em; border: 1px solid #cccccc;" id="about_panel">
             <p style="font-size: 2em;">VGG Image Annotator</p>
-            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.1</a></p>
+            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.2</a></p>
             <p>
               VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
               developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
@@ -858,7 +861,7 @@ demo_images.push('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAWQBZAAD/2wBDAAYEBQY
 
 */
 
-var VIA_VERSION      = '1.0.1';
+var VIA_VERSION      = '1.0.2';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -939,6 +942,7 @@ var _via_is_canvas_zoomed            = false;
 var _via_is_loading_current_image    = false;
 var _via_is_region_id_visible        = true;
 var _via_is_region_boundary_visible  = true;
+var _via_is_ctrl_pressed             = false;
 
 // region
 var _via_current_shape             = VIA_REGION_SHAPE.RECT;
@@ -1058,8 +1062,15 @@ function sel_local_images() {
 }
 function download_all_region_data(type) {
   var all_region_data = pack_via_metadata(type);
+<<<<<<< HEAD
   var all_region_data_blob = new Blob(all_region_data,
                                       {type: 'text/'+type+';charset=utf-8'});
+=======
+  // ref : https://stackoverflow.com/questions/17879198/adding-utf-8-bom-to-string-blob
+  var utf_bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+  var blob_attr = {type: 'text/'+type+';charset=utf-8'};
+  var all_region_data_blob = new Blob([ utf_bom,all_region_data ], blob_attr);
+>>>>>>> develop
 
   if ( all_region_data_blob.size > (2*1024*1024) &&
        type === 'csv' ) {
@@ -1219,6 +1230,10 @@ function import_annotations_from_file(event) {
   var selected_files = event.target.files;
   for ( var i = 0; i < selected_files.length; ++i ) {
     var file = selected_files[i];
+<<<<<<< HEAD
+=======
+    console.log(file);
+>>>>>>> develop
     switch(file.type) {
     case '': // Windows 10: Firefox and Chrome do not report filetype
       show_message('File type for ' + file.name + ' cannot be determined! Assuming text/plain.');
@@ -1255,7 +1270,13 @@ function import_annotations_from_csv(data) {
   var region_import_count = 0;
   var malformed_csv_lines_count = 0;
 
+<<<<<<< HEAD
   var csvdata = data.split('\n');
+=======
+  var line_split_regex = new RegExp('\n|\r|\r\n', 'g')
+  var csvdata = data.split(line_split_regex);
+
+>>>>>>> develop
   for ( var i=0; i < csvdata.length; ++i ) {
     // ignore blank lines
     if (csvdata[i].charAt(0) === '\n' || csvdata[i].charAt(0) === '') {
@@ -1556,7 +1577,11 @@ function load_text_file(text_file, callback_function) {
     text_reader.addEventListener( 'load', function() {
       callback_function(text_reader.result);
     }, false);
+<<<<<<< HEAD
     text_reader.readAsText(text_file);
+=======
+    text_reader.readAsText(text_file, 'utf-8');
+>>>>>>> develop
   }
 }
 
@@ -2209,10 +2234,15 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         image_attr.set('x', xnew);
         image_attr.set('y', ynew);
 
+<<<<<<< HEAD
         var canvas_xnew = canvas_attr.get('x') + move_x;
         var canvas_ynew = canvas_attr.get('y') + move_y;
         canvas_attr.set('x', canvas_xnew);
         canvas_attr.set('y', canvas_ynew);
+=======
+        canvas_attr.set('x', Math.round( image_attr.get('x') / _via_canvas_scale) );
+        canvas_attr.set('y', Math.round( image_attr.get('y') / _via_canvas_scale) );
+>>>>>>> develop
         break;
       case VIA_REGION_SHAPE.CIRCLE:
       case VIA_REGION_SHAPE.ELLIPSE:
@@ -2222,10 +2252,15 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         image_attr.set('cx', cxnew);
         image_attr.set('cy', cynew);
 
+<<<<<<< HEAD
         var canvas_xnew = canvas_attr.get('cx') + move_x;
         var canvas_ynew = canvas_attr.get('cy') + move_y;
         canvas_attr.set('cx', canvas_xnew);
         canvas_attr.set('cy', canvas_ynew);
+=======
+        canvas_attr.set('cx', Math.round( image_attr.get('cx') / _via_canvas_scale) );
+        canvas_attr.set('cy', Math.round( image_attr.get('cy') / _via_canvas_scale) );
+>>>>>>> develop
         break;
       case VIA_REGION_SHAPE.POLYGON:
         var img_px = image_attr.get('all_points_x');
@@ -2238,8 +2273,13 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         var canvas_px = canvas_attr.get('all_points_x');
         var canvas_py = canvas_attr.get('all_points_y');
         for (var i=0; i<canvas_px.length; ++i) {
+<<<<<<< HEAD
           canvas_px[i] = canvas_px[i] + move_x;
           canvas_py[i] = canvas_py[i] + move_y;
+=======
+          canvas_px[i] = Math.round( img_px[i] / _via_canvas_scale );
+          canvas_py[i] = Math.round( img_py[i] / _via_canvas_scale );
+>>>>>>> develop
         }
         break;
       }
@@ -2284,6 +2324,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 
     switch (canvas_attr.get('name')) {
     case VIA_REGION_SHAPE.RECT:
+<<<<<<< HEAD
       var x0 = canvas_attr.get('x');
       var y0 = canvas_attr.get('y');
       var x1 = x0 + canvas_attr.get('width');
@@ -2407,6 +2448,128 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         var canvas_all_points_x = [];
         var canvas_all_points_y = [];
 
+=======
+      var d = [canvas_attr.get('x'), canvas_attr.get('y'), 0, 0];
+      d[2] = d[0] + canvas_attr.get('width');
+      d[3] = d[1] + canvas_attr.get('height');
+
+      var mx = _via_current_x;
+      var my = _via_current_y;
+      var preserve_aspect_ratio = false;
+
+      // constrain (mx,my) to lie on a line connecting a diagonal of rectangle
+      if ( _via_is_ctrl_pressed ) {
+        preserve_aspect_ratio = true;
+      }
+
+      rect_update_corner(_via_region_edge[1], d, mx, my, preserve_aspect_ratio);
+      rect_standarize_coordinates(d);
+
+      var w = Math.abs(d[2] - d[0]);
+      var h = Math.abs(d[3] - d[1]);
+
+      image_attr.set('x', Math.round(d[0] * _via_canvas_scale));
+      image_attr.set('y', Math.round(d[1] * _via_canvas_scale));
+      image_attr.set('width', Math.round(w * _via_canvas_scale));
+      image_attr.set('height', Math.round(h * _via_canvas_scale));
+
+      canvas_attr.set('x', Math.round( image_attr.get('x') / _via_canvas_scale) );
+      canvas_attr.set('y', Math.round( image_attr.get('y') / _via_canvas_scale) );
+      canvas_attr.set('width', Math.round( image_attr.get('width') / _via_canvas_scale) );
+      canvas_attr.set('height', Math.round( image_attr.get('height') / _via_canvas_scale) );
+      break;
+
+    case VIA_REGION_SHAPE.CIRCLE:
+      var dx = Math.abs(canvas_attr.get('cx') - _via_current_x);
+      var dy = Math.abs(canvas_attr.get('cy') - _via_current_y);
+      var new_r = Math.sqrt( dx*dx + dy*dy );
+
+      image_attr.set('r', Math.round(new_r * _via_canvas_scale));
+      canvas_attr.set('r', Math.round( image_attr.get('r') / _via_canvas_scale) );
+
+      break;
+
+    case VIA_REGION_SHAPE.ELLIPSE:
+      var new_rx = canvas_attr.get('rx');
+      var new_ry = canvas_attr.get('ry');
+      var dx = Math.abs(canvas_attr.get('cx') - _via_current_x);
+      var dy = Math.abs(canvas_attr.get('cy') - _via_current_y);
+      switch(_via_region_edge[1]) {
+      case 5:
+        new_ry = dy;
+        break;
+      case 6:
+        new_rx = dx;
+        break;
+      default:
+        new_rx = dx;
+        new_ry = dy;
+        break;
+      }
+
+      image_attr.set('rx', Math.round(new_rx * _via_canvas_scale));
+      image_attr.set('ry', Math.round(new_ry * _via_canvas_scale));
+
+      canvas_attr.set('rx', Math.round(image_attr.get('rx') / _via_canvas_scale) );
+      canvas_attr.set('ry', Math.round(image_attr.get('ry') / _via_canvas_scale) );
+      break;
+
+    case VIA_REGION_SHAPE.POLYGON:
+      var moved_vertex_id = _via_region_edge[1] - VIA_POLYGON_RESIZE_VERTEX_OFFSET;
+
+      var imx = Math.round(_via_current_x * _via_canvas_scale);
+      var imy = Math.round(_via_current_y * _via_canvas_scale);
+      image_attr.get('all_points_x')[moved_vertex_id] = imx;
+      image_attr.get('all_points_y')[moved_vertex_id] = imy;
+      canvas_attr.get('all_points_x')[moved_vertex_id] = Math.round( imx / _via_canvas_scale );
+      canvas_attr.get('all_points_y')[moved_vertex_id] = Math.round( imy / _via_canvas_scale );
+
+      if (moved_vertex_id === 0) {
+        // move both first and last vertex because we
+        // the initial point at the end to close path
+        var n = canvas_attr.get('all_points_x').length;
+        image_attr.get('all_points_x')[n-1] = imx;
+        image_attr.get('all_points_y')[n-1] = imy;
+        canvas_attr.get('all_points_x')[n-1] = Math.round( imx / _via_canvas_scale );;
+        canvas_attr.get('all_points_y')[n-1] = Math.round( imy / _via_canvas_scale );;
+      }
+      break;
+    }
+
+    _via_redraw_reg_canvas();
+    _via_reg_canvas.focus();
+    save_current_data_to_browser_cache();
+    return;
+  }
+
+  // denotes a single click (= mouse down + mouse up)
+  if ( click_dx < VIA_MOUSE_CLICK_TOL ||
+       click_dy < VIA_MOUSE_CLICK_TOL ) {
+    // if user is already drawing ploygon, then each click adds a new point
+    if ( _via_is_user_drawing_polygon ) {
+      var canvas_x0 = Math.round(_via_click_x0);
+      var canvas_y0 = Math.round(_via_click_y0);
+
+      // check if the clicked point is close to the first point
+      var fx0 = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes.get('all_points_x')[0];
+      var fy0 = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes.get('all_points_y')[0];
+      var  dx = (fx0 - canvas_x0);
+      var  dy = (fy0 - canvas_y0);
+      if ( Math.sqrt(dx*dx + dy*dy) <= VIA_POLYGON_VERTEX_MATCH_TOL ) {
+        // user clicked on the first polygon point to close the path
+        _via_is_user_drawing_polygon = false;
+
+        // add all polygon points stored in _via_canvas_regions[]
+        var all_points_x = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes.get('all_points_x').slice(0);
+        var all_points_y = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes.get('all_points_y').slice(0);
+        // close path
+        all_points_x.push(all_points_x[0]);
+        all_points_y.push(all_points_y[0]);
+
+        var canvas_all_points_x = [];
+        var canvas_all_points_y = [];
+
+>>>>>>> develop
         var points_str = '';
         for ( var i=0; i<all_points_x.length; ++i ) {
           all_points_x[i] = Math.round( all_points_x[i] * _via_canvas_scale );
@@ -2418,6 +2581,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
           points_str += all_points_x[i] + ' ' + all_points_y[i] + ',';
         }
         points_str = points_str.substring(0, points_str.length-1); // remove last comma
+<<<<<<< HEAD
 
         var polygon_region = new ImageRegion();
         polygon_region.shape_attributes.set('name', 'polygon');
@@ -2427,6 +2591,17 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         _via_current_polygon_region_id = _via_img_metadata[_via_image_id].regions.length;
         _via_img_metadata[_via_image_id].regions.push(polygon_region);
 
+=======
+
+        var polygon_region = new ImageRegion();
+        polygon_region.shape_attributes.set('name', 'polygon');
+        //polygon_region.shape_attributes.set('points', points_str);
+        polygon_region.shape_attributes.set('all_points_x', all_points_x);
+        polygon_region.shape_attributes.set('all_points_y', all_points_y);
+        _via_current_polygon_region_id = _via_img_metadata[_via_image_id].regions.length;
+        _via_img_metadata[_via_image_id].regions.push(polygon_region);
+
+>>>>>>> develop
         // update canvas
         _via_canvas_regions[_via_current_polygon_region_id].shape_attributes.set('all_points_x', canvas_all_points_x);
         _via_canvas_regions[_via_current_polygon_region_id].shape_attributes.set('all_points_y', canvas_all_points_y);
@@ -2621,6 +2796,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
     save_current_data_to_browser_cache();
     return;
   }
+<<<<<<< HEAD
 
 });
 
@@ -2831,6 +3007,222 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
                                moved_all_points_y,
                                true);
       break;
+=======
+
+});
+
+_via_reg_canvas.addEventListener("mouseover", function(e) {
+  // change the mouse cursor icon
+  _via_redraw_reg_canvas();
+  _via_reg_canvas.focus();
+});
+
+_via_reg_canvas.addEventListener('mousemove', function(e) {
+  if ( !_via_current_image_loaded ) {
+    return;
+  }
+
+  _via_current_x = e.offsetX; _via_current_y = e.offsetY;
+
+  if ( _via_is_region_selected ) {
+    if ( !_via_is_user_resizing_region ) {
+      // check if user moved mouse cursor to region boundary
+      // which indicates an intention to resize the reigon
+
+      _via_region_edge = is_on_region_corner(_via_current_x, _via_current_y);
+
+      if ( _via_region_edge[0] === _via_user_sel_region_id ) {
+        switch(_via_region_edge[1]) {
+          // rect
+        case 1: // top-left corner of rect
+        case 3: // bottom-right corner of rect
+          _via_reg_canvas.style.cursor = "nwse-resize";
+          break;
+        case 2: // top-right corner of rect
+        case 4: // bottom-left corner of rect
+          _via_reg_canvas.style.cursor = "nesw-resize";
+          break;
+
+          // circle and ellipse
+        case 5:
+          _via_reg_canvas.style.cursor = "n-resize";
+          break;
+        case 6:
+          _via_reg_canvas.style.cursor = "e-resize";
+          break;
+
+        default:
+          _via_reg_canvas.style.cursor = "default";
+        }
+
+        if (_via_region_edge[1] >= VIA_POLYGON_RESIZE_VERTEX_OFFSET) {
+          // indicates mouse over polygon vertex
+          _via_reg_canvas.style.cursor = "crosshair";
+        }
+      } else {
+        var yes = is_inside_this_region(_via_current_x,
+                                        _via_current_y,
+                                        _via_user_sel_region_id);
+        if (yes) {
+          _via_reg_canvas.style.cursor = "move";
+        } else {
+          _via_reg_canvas.style.cursor = "default";
+        }
+      }
+    }
+  }
+
+  if(_via_is_user_drawing_region) {
+    // draw region as the user drags the mouse cousor
+    if (_via_canvas_regions.length) {
+      _via_redraw_reg_canvas(); // clear old intermediate rectangle
+    } else {
+      // first region being drawn, just clear the full region canvas
+      _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+    }
+
+    var region_x0, region_y0;
+
+    if ( _via_click_x0 < _via_current_x ) {
+      if ( _via_click_y0 < _via_current_y ) {
+        region_x0 = _via_click_x0;
+        region_y0 = _via_click_y0;
+      } else {
+        region_x0 = _via_click_x0;
+        region_y0 = _via_current_y;
+      }
+    } else {
+      if ( _via_click_y0 < _via_current_y ) {
+        region_x0 = _via_current_x;
+        region_y0 = _via_click_y0;
+      } else {
+        region_x0 = _via_current_x;
+        region_y0 = _via_current_y;
+      }
+    }
+    var dx = Math.round(Math.abs(_via_current_x - _via_click_x0));
+    var dy = Math.round(Math.abs(_via_current_y - _via_click_y0));
+
+    switch (_via_current_shape ) {
+    case VIA_REGION_SHAPE.RECT:
+      _via_draw_rect_region(region_x0, region_y0, dx, dy, false);
+      break;
+    case VIA_REGION_SHAPE.CIRCLE:
+      var circle_radius = Math.round(Math.sqrt( dx*dx + dy*dy ));
+      _via_draw_circle_region(region_x0, region_y0, circle_radius, false);
+      break;
+    case VIA_REGION_SHAPE.ELLIPSE:
+      _via_draw_ellipse_region(region_x0, region_y0, dx, dy, false);
+      break;
+    case VIA_REGION_SHAPE.POLYGON:
+      // this is handled by the if ( _via_is_user_drawing_polygon ) { ... }
+      // see below
+      break;
+    }
+    _via_reg_canvas.focus();
+  }
+
+  if ( _via_is_user_resizing_region ) {
+    // user has clicked mouse on bounding box edge and is now moving it
+    // draw region as the user drags the mouse cousor
+    if (_via_canvas_regions.length) {
+      _via_redraw_reg_canvas(); // clear old intermediate rectangle
+    } else {
+      // first region being drawn, just clear the full region canvas
+      _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+    }
+
+    var region_id = _via_region_edge[0];
+    var attr = _via_canvas_regions[region_id].shape_attributes;
+    switch (attr.get('name')) {
+    case VIA_REGION_SHAPE.RECT:
+      // original rectangle
+      var d = [attr.get('x'), attr.get('y'), 0, 0];
+      d[2] = d[0] + attr.get('width');
+      d[3] = d[1] + attr.get('height');
+
+      var mx = _via_current_x;
+      var my = _via_current_y;
+      var preserve_aspect_ratio = false;
+
+      // constrain (mx,my) to lie on a line connecting a diagonal of rectangle
+      if ( _via_is_ctrl_pressed ) {
+        preserve_aspect_ratio = true;
+      }
+
+      rect_update_corner(_via_region_edge[1], d, mx, my, preserve_aspect_ratio);
+      rect_standarize_coordinates(d);
+
+      var w = Math.abs(d[2] - d[0]);
+      var h = Math.abs(d[3] - d[1]);
+      _via_draw_rect_region(d[0], d[1], w, h, true);
+      break;
+
+    case VIA_REGION_SHAPE.CIRCLE:
+      var dx = Math.abs(attr.get('cx') - _via_current_x);
+      var dy = Math.abs(attr.get('cy') - _via_current_y);
+      var new_r = Math.sqrt( dx*dx + dy*dy );
+      _via_draw_circle_region(attr.get('cx'),
+                              attr.get('cy'),
+                              new_r,
+                              true);
+      break;
+
+    case VIA_REGION_SHAPE.ELLIPSE:
+      var new_rx = attr.get('rx');
+      var new_ry = attr.get('ry');
+      var dx = Math.abs(attr.get('cx') - _via_current_x);
+      var dy = Math.abs(attr.get('cy') - _via_current_y);
+      switch(_via_region_edge[1]) {
+      case 5:
+        new_ry = dy;
+        break;
+      case 6:
+        new_rx = dx;
+        break;
+      default:
+        new_rx = dx;
+        new_ry = dy;
+        break;
+      }
+      _via_draw_ellipse_region(attr.get('cx'),
+                               attr.get('cy'),
+                               new_rx,
+                               new_ry,
+                               true);
+      break;
+
+    case VIA_REGION_SHAPE.POLYGON:
+      var moved_all_points_x = attr.get('all_points_x').slice(0);
+      var moved_all_points_y = attr.get('all_points_y').slice(0);
+      var moved_vertex_id = _via_region_edge[1] - VIA_POLYGON_RESIZE_VERTEX_OFFSET;
+
+      moved_all_points_x[moved_vertex_id] = _via_current_x;
+      moved_all_points_y[moved_vertex_id] = _via_current_y;
+
+      if (moved_vertex_id === 0) {
+        // move both first and last vertex because we
+        // the initial point at the end to close path
+        moved_all_points_x[moved_all_points_x.length-1] = _via_current_x;
+        moved_all_points_y[moved_all_points_y.length-1] = _via_current_y;
+      }
+
+      _via_draw_polygon_region(moved_all_points_x,
+                               moved_all_points_y,
+                               true);
+      break;
+    }
+    _via_reg_canvas.focus();
+  }
+
+  if ( _via_is_user_moving_region ) {
+    // draw region as the user drags the mouse cousor
+    if (_via_canvas_regions.length) {
+      _via_redraw_reg_canvas(); // clear old intermediate rectangle
+    } else {
+      // first region being drawn, just clear the full region canvas
+      _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
+>>>>>>> develop
     }
     _via_reg_canvas.focus();
   }
@@ -2890,6 +3282,55 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
                              true);
       break;
 
+<<<<<<< HEAD
+=======
+    var move_x = (_via_current_x - _via_region_click_x);
+    var move_y = (_via_current_y - _via_region_click_y);
+    var attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
+
+    switch (attr.get('name')) {
+    case VIA_REGION_SHAPE.RECT:
+      _via_draw_rect_region(attr.get('x') + move_x,
+                            attr.get('y') + move_y,
+                            attr.get('width'),
+                            attr.get('height'),
+                            true);
+      break;
+
+    case VIA_REGION_SHAPE.CIRCLE:
+      _via_draw_circle_region(attr.get('cx') + move_x,
+                              attr.get('cy') + move_y,
+                              attr.get('r'),
+                              true);
+      break;
+
+    case VIA_REGION_SHAPE.ELLIPSE:
+      _via_draw_ellipse_region(attr.get('cx') + move_x,
+                               attr.get('cy') + move_y,
+                               attr.get('rx'),
+                               attr.get('ry'),
+                               true);
+      break;
+
+    case VIA_REGION_SHAPE.POLYGON:
+      var moved_all_points_x = attr.get('all_points_x').slice(0);
+      var moved_all_points_y = attr.get('all_points_y').slice(0);
+      for (var i=0; i<moved_all_points_x.length; ++i) {
+        moved_all_points_x[i] += move_x;
+        moved_all_points_y[i] += move_y;
+      }
+      _via_draw_polygon_region(moved_all_points_x,
+                               moved_all_points_y,
+                               true);
+      break;
+
+    case VIA_REGION_SHAPE.POINT:
+      _via_draw_point_region(attr.get('cx') + move_x,
+                             attr.get('cy') + move_y,
+                             true);
+      break;
+
+>>>>>>> develop
     }
     _via_reg_canvas.focus();
     return;
@@ -3643,6 +4084,7 @@ function is_on_ellipse_edge(cx, cy, rx, ry, px, py) {
          Math.abs(Math.abs(theta) - Math.PI) < VIA_THETA_TOL) {
       return 6;
     }
+<<<<<<< HEAD
 
     if ( theta >0 && theta < (Math.PI/2) ) {
       return 1;
@@ -3661,6 +4103,13 @@ function is_on_ellipse_edge(cx, cy, rx, ry, px, py) {
   }
 }
 
+=======
+  } else {
+    return 0;
+  }
+}
+
+>>>>>>> develop
 function is_on_polygon_vertex(all_points_x, all_points_y, px, py) {
   var n = all_points_x.length;
   for (var i=0; i<n; ++i) {
@@ -3670,6 +4119,84 @@ function is_on_polygon_vertex(all_points_x, all_points_y, px, py) {
     }
   }
   return 0;
+<<<<<<< HEAD
+=======
+}
+
+function rect_standarize_coordinates(d) {
+  // d[x0,y0,x1,y1]
+  // ensures that (d[0],d[1]) is top-left corner while
+  // (d[2],d[3]) is bottom-right corner
+  if ( d[0] > d[2] ) {
+    // swap
+    var t = d[0];
+    d[0] = d[2];
+    d[2] = t;
+  }
+
+  if ( d[1] > d[3] ) {
+    // swap
+    var t = d[1];
+    d[1] = d[3];
+    d[3] = t;
+  }
+}
+
+function rect_update_corner(corner_id, d, x, y, preserve_aspect_ratio) {
+  // pre-condition : d[x0,y0,x1,y1] is standarized
+  // post-condition : corner is moved ( d may not stay standarized )
+  if (preserve_aspect_ratio) {
+    switch(corner_id) {
+    case 1: // top-left
+    case 3: // bottom-right
+      var dx = d[2] - d[0];
+      var dy = d[3] - d[1];
+      var norm = Math.sqrt( dx*dx + dy*dy );
+      var nx = dx / norm; // x component of unit vector along the diagonal of rect
+      var ny = dy / norm; // y component
+      var proj = (x - d[0]) * nx + (y - d[1]) * ny;
+      var proj_x = nx * proj;
+      var proj_y = ny * proj;
+      // constrain (mx,my) to lie on a line connecting (x0,y0) and (x1,y1)
+      x = Math.round( d[0] + proj_x );
+      y = Math.round( d[1] + proj_y );
+      break;
+    case 2: // top-right
+    case 4: // bottom-left
+      var dx = d[2] - d[0];
+      var dy = d[1] - d[3];
+      var norm = Math.sqrt( dx*dx + dy*dy );
+      var nx = dx / norm; // x component of unit vector along the diagonal of rect
+      var ny = dy / norm; // y component
+      var proj = (x - d[0]) * nx + (y - d[3]) * ny;
+      var proj_x = nx * proj;
+      var proj_y = ny * proj;
+      // constrain (mx,my) to lie on a line connecting (x0,y0) and (x1,y1)
+      x = Math.round( d[0] + proj_x );
+      y = Math.round( d[3] + proj_y );
+      break;
+    }
+  }
+
+  switch(corner_id) {
+  case 1: // top-left
+    d[0] = x;
+    d[1] = y;
+    break;
+  case 3: // bottom-right
+    d[2] = x;
+    d[3] = y;
+    break;
+  case 2: // top-right
+    d[2] = x;
+    d[1] = y;
+    break;
+  case 4: // bottom-left
+    d[0] = x;
+    d[3] = y;
+    break;
+  }
+>>>>>>> develop
 }
 
 function _via_update_ui_components() {
@@ -3691,6 +4218,22 @@ function _via_update_ui_components() {
 // Shortcut key handlers
 //
 
+<<<<<<< HEAD
+=======
+window.addEventListener('keyup', function(e) {
+  if (_via_is_user_updating_attribute_value ||
+      _via_is_user_updating_attribute_name  ||
+      _via_is_user_adding_attribute_name) {
+
+    return;
+  }
+
+  if ( e.which === 17 ) { // Ctrl key
+    _via_is_ctrl_pressed = false;
+  }
+});
+
+>>>>>>> develop
 window.addEventListener('keydown', function(e) {
   if (_via_is_user_updating_attribute_value ||
       _via_is_user_updating_attribute_name  ||
@@ -3701,6 +4244,10 @@ window.addEventListener('keydown', function(e) {
 
   // user commands
   if ( e.ctrlKey ) {
+<<<<<<< HEAD
+=======
+    _via_is_ctrl_pressed = true;
+>>>>>>> develop
     if ( e.which === 83 ) { // Ctrl + s
       download_all_region_data('csv');
       e.preventDefault();
@@ -4532,13 +5079,12 @@ function add_new_attribute(type, attribute_name) {
     <!--
     <script src="via_demo.js"></script>
     -->
-    <!-- Unit Tests-->
+    <!-- Unit Tests    -->
     <!--
     <script src="./tests/via_test_data.js"></script>
     <script src="./tests/via_test.js"></script>
     <script src="./tests/via_test_fileio.js"></script>
     <script src="./tests/via_test_region.js"></script>
-    -->
 
   </body>
 </html>
