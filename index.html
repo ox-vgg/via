@@ -30,7 +30,7 @@
         POSSIBILITY OF SUCH DAMAGE.
 
       -->
-    <title>VGG Image Annotator 1.0.1</title>
+    <title>VGG Image Annotator</title>
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 200 KB) that runs on most modern web browsers.">
 
@@ -55,7 +55,7 @@
 
       /* Top panel : #navbar, #toolbar */
       .top_panel {
-      position: relative;
+      position: fixed;
       top: 0;
       left: 0;
       display: block;
@@ -65,6 +65,7 @@
       z-index: 10;
       margin: 0;
       padding: 0;
+      width: 100%;
       }
 
       .navbar {
@@ -148,12 +149,14 @@
 
       /* Middle panel: containing #image_panel, #leftsidebar */
       .middle_panel {
+      position: relative;
       display: table;
       table-layout: fixed;
       width: 100%;
       z-index: 1;
       padding: 0;
-      padding-top: 1.0125em; /* ensures the mouse event (x,y) coordinates are integer */
+      top: 3.5em;
+      /*padding-top: 1.0125em;  ensures the mouse event (x,y) coordinates are integer */
       }
       #leftsidebar {
       display: table-cell;
@@ -636,7 +639,7 @@
 
           <div class="text_panel" style="padding: 1em; border: 1px solid #cccccc;" id="about_panel">
             <p style="font-size: 2em;">VGG Image Annotator</p>
-            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.1</a></p>
+            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.2</a></p>
             <p>
               VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
               developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
@@ -743,13 +746,12 @@
     <!--
     <script src="via_demo.js"></script>
     -->
-    <!-- Unit Tests-->
+    <!-- Unit Tests
     <!--
     <script src="./tests/via_test_data.js"></script>
     <script src="./tests/via_test.js"></script>
     <script src="./tests/via_test_fileio.js"></script>
     <script src="./tests/via_test_region.js"></script>
     -->
-
   </body>
 </html>
