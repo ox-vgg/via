@@ -19,8 +19,8 @@ facial regions.
 
 ## Downloads
  * VGG Image Annotator (VIA)
-   * [via-1.0.2.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via-1.0.2.zip) : includes the VIA application (&lt; 200KB) and its demo
-   * [via-src-1.0.2.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via-src-1.0.2.zip) : source code and [code documentation](https://gitlab.com/vgg/via/blob/master/CodeDoc.md)
+   * [via-1.0.3.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via-1.0.3.zip) : includes the VIA application (&lt; 200KB) and its demo
+   * [via-src-1.0.3.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via-src-1.0.3.zip) : source code and [code documentation](https://gitlab.com/vgg/via/blob/master/CodeDoc.md)
    * [via.html](http://www.robots.ox.ac.uk/~vgg/software/via/via.html) : online version of VIA application
    * [via_demo.html](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html) : live online demo (with preloadd images and regions)
  * VGG Face Annotator (VFA)
@@ -28,7 +28,7 @@ facial regions.
 
 ## Demo
  * VGG Image Annotator (VIA)
-   * [via_demo-1.0.2.html](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html) : live demo of VIA application with preloaded image
+   * [via_demo-1.0.3.html](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html) : live demo of VIA application with preloaded image
  * VGG Face Annotator (VFA)
    * *coming soon* (preview versions below)
    * [via_face_demo_physicist.html](http://vgg.gitlab.io/via/via_face_demo_physicist.html) : live demo with preloaded regions and face images of renowned Physicists
