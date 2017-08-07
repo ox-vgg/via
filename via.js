@@ -250,11 +250,11 @@ function sel_local_images() {
   }
 }
 function download_all_region_data(type) {
+  // Javascript strings (DOMString) is automatically converted to utf-8
+  // see: https://developer.mozilla.org/en-US/docs/Web/API/Blob/Blob
   var all_region_data = pack_via_metadata(type);
-  // ref : https://stackoverflow.com/questions/17879198/adding-utf-8-bom-to-string-blob
-  var utf_bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
   var blob_attr = {type: 'text/'+type+';charset=utf-8'};
-  var all_region_data_blob = new Blob([ utf_bom,all_region_data ], blob_attr);
+  var all_region_data_blob = new Blob(all_region_data, blob_attr);
 
   if ( all_region_data_blob.size > (2*1024*1024) &&
        type === 'csv' ) {
@@ -414,7 +414,6 @@ function import_annotations_from_file(event) {
   var selected_files = event.target.files;
   for ( var i = 0; i < selected_files.length; ++i ) {
     var file = selected_files[i];
-    console.log(file);
     switch(file.type) {
     case '': // Windows 10: Firefox and Chrome do not report filetype
       show_message('File type for ' + file.name + ' cannot be determined! Assuming text/plain.');
@@ -497,6 +496,7 @@ function import_annotations_from_csv(data) {
       var filename = d[filename_index];
       var size     = d[size_index];
       var image_id = _via_get_image_id(filename, size);
+
       if ( _via_img_metadata.hasOwnProperty(image_id) ) {
         // copy file attributes
         if ( d[file_attr_index] !== '"{}"') {
@@ -636,6 +636,7 @@ function parse_csv_line(s, field_separator) {
         // field separator inside double quote is ignored
         i = i + 1;
       } else {
+        var part = s.substr(start, i - start);
         d.push( s.substr(start, i - start) );
         start = i + 1;
         i = i + 1;
@@ -791,7 +792,6 @@ function pack_via_metadata(return_type) {
           var rattr = map_to_json( r[i].region_attributes );
           rattr = '"' +  escape_for_csv( rattr ) + '"';
           csvline.push(rattr);
-
           csvdata.push( csvline.join(VIA_CSV_SEP) );
         }
       } else {
@@ -844,7 +844,7 @@ function pack_via_metadata(return_type) {
 }
 
 function save_data_to_local_file(data, filename) {
-  var a = document.createElement('a');
+  var a      = document.createElement('a');
   a.href     = URL.createObjectURL(data);
   a.target   = '_blank';
   a.download = filename;
@@ -1297,7 +1297,7 @@ function toggle_leftsidebar() {
 }
 
 function show_annotation_data() {
-  var hstr = '<pre>' + pack_via_metadata('csv') + '</pre>';
+  var hstr = '<pre>' + pack_via_metadata('csv').join('') + '</pre>';
   if ( typeof annotation_data_window === 'undefined' ) {
     var window_features = 'toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no';
     window_features += ',width=800,height=600';
