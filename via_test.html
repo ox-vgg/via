@@ -647,7 +647,7 @@
 
           <div class="text_panel" style="padding: 1em; border: 1px solid #cccccc;" id="about_panel">
             <p style="font-size: 2em;">VGG Image Annotator</p>
-            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.3</a></p>
+            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.4</a></p>
             <p>
               VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
               developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
@@ -3945,7 +3945,8 @@ function paste_sel_regions() {
       var bbox = get_region_bounding_box( _via_copied_image_regions[i] );
       if (bbox[2] < _via_current_image_width &&
           bbox[3] < _via_current_image_height) {
-        _via_img_metadata[_via_image_id].regions.push( _via_copied_image_regions[i] );
+        var r = clone_image_region(_via_copied_image_regions[i]);
+        _via_img_metadata[_via_image_id].regions.push(r);
 
         pasted_reg_count += 1;
       }

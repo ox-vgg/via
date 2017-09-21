@@ -3200,7 +3200,8 @@ function paste_sel_regions() {
       var bbox = get_region_bounding_box( _via_copied_image_regions[i] );
       if (bbox[2] < _via_current_image_width &&
           bbox[3] < _via_current_image_height) {
-        _via_img_metadata[_via_image_id].regions.push( _via_copied_image_regions[i] );
+        var r = clone_image_region(_via_copied_image_regions[i]);
+        _via_img_metadata[_via_image_id].regions.push(r);
 
         pasted_reg_count += 1;
       }
