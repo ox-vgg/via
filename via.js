@@ -718,16 +718,36 @@ function clone_image_region(r0) {
 
   // copy shape attributes
   for ( var key of r0.shape_attributes.keys() ) {
+    //var value = r0.shape_attributes.get(key);
     var value = r0.shape_attributes.get(key);
-    r1.shape_attributes.set(key, value);
+    var copy_of_value = clone_value(value);
+    r1.shape_attributes.set(key, copy_of_value);
   }
 
   // copy region attributes
   for ( var key of r0.region_attributes.keys() ) {
     var value = r0.region_attributes.get(key);
-    r1.region_attributes.set(key, value);
+    var copy_of_value = clone_value(value);
+    r1.region_attributes.set(key, copy_of_value);
   }
   return r1;
+}
+
+function clone_value(value) {
+  if ( typeof(value) === 'object' ) {
+    if ( Array.isArray(value) ) {
+      return value.slice(0);
+    } else {
+      var copy = {};
+      for ( p in value ) {
+        if ( value.hasOwnProperty(p) ) {
+          copy[p] = clone_value(value[p]);
+        }
+      }
+      return copy;
+    }
+  }
+  return value;
 }
 
 function _via_get_image_id(filename, size) {
