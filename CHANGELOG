@@ -1,3 +1,6 @@
+## [1.0.4] - October 17, 2017
+ * fixed polygon copy/paste/resize issue (issue 107)
+
 ## [1.0.3] - August 07, 2017
  * CSV export now does not add extra comma to each line (issue 103)
 

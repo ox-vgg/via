@@ -647,7 +647,7 @@
 
           <div class="text_panel" style="padding: 1em; border: 1px solid #cccccc;" id="about_panel">
             <p style="font-size: 2em;">VGG Image Annotator</p>
-            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.3</a></p>
+            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.5</a></p>
             <p>
               VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
               developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
@@ -861,7 +861,7 @@ demo_images.push('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAWQBZAAD/2wBDAAYEBQY
 
 */
 
-var VIA_VERSION      = '1.0.3';
+var VIA_VERSION      = '1.0.5';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -1529,16 +1529,36 @@ function clone_image_region(r0) {
 
   // copy shape attributes
   for ( var key of r0.shape_attributes.keys() ) {
+    //var value = r0.shape_attributes.get(key);
     var value = r0.shape_attributes.get(key);
-    r1.shape_attributes.set(key, value);
+    var copy_of_value = clone_value(value);
+    r1.shape_attributes.set(key, copy_of_value);
   }
 
   // copy region attributes
   for ( var key of r0.region_attributes.keys() ) {
     var value = r0.region_attributes.get(key);
-    r1.region_attributes.set(key, value);
+    var copy_of_value = clone_value(value);
+    r1.region_attributes.set(key, copy_of_value);
   }
   return r1;
+}
+
+function clone_value(value) {
+  if ( typeof(value) === 'object' ) {
+    if ( Array.isArray(value) ) {
+      return value.slice(0);
+    } else {
+      var copy = {};
+      for ( p in value ) {
+        if ( value.hasOwnProperty(p) ) {
+          copy[p] = clone_value(value[p]);
+        }
+      }
+      return copy;
+    }
+  }
+  return value;
 }
 
 function _via_get_image_id(filename, size) {
