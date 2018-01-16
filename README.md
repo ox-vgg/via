@@ -6,8 +6,6 @@ the BSD-2 clause license. This work is supported by EPSRC programme grant
 Seebibyte: Visual Search for the Era of Big Data ([EP/M013774/1](http://www.seebibyte.org/index.html)).
 Visit the [VGG software page](http://www.robots.ox.ac.uk/~vgg/software/via/) for more details.
 
-VGG Face Annotator (VFA) is a fork of VIA adapated for marking and tagging 
-facial regions.
 
 ## Features:
   * based solely on HTML, CSS and Javascript (no external javascript libraries)

@@ -1,7 +1,7 @@
 ## [1.0.5] - January 16, 2017
  * (code contributions from Stefan Mihaila) via.js codebase improvement, wider web browser support (IE 10, IE 11 and Opera 12)
  * added Contributors.md file to record contributions to VIA codebase
- * fixed SecurityError for 'localStorage.clear()' operation in Safari browser (issue 85 and 108)
+ * removed 'localStorage.clear()' to avoid SecurityError in Safari browser (issue 85 and 108)
 
 ## [1.0.4] - October 17, 2017
  * fixed polygon copy/paste/resize issue (issue 107)
