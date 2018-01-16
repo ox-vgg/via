@@ -3426,9 +3426,11 @@ function is_via_data_in_localStorage() {
     localStorage.getItem('_via_img_metadata');
 }
 
-function clear_localStorage() {
-  localStorage.clear();
-  show_home_panel();
+function remove_via_data_from_localStorage() {
+  if( check_local_storage() && is_via_data_in_localStorage() ) {
+    localStorage.removeItem('_via_timestamp');
+    localStorage.removeItem('_via_img_metadata');
+  }
 }
 
 function show_localStorage_recovery_options() {
@@ -3445,7 +3447,7 @@ function show_localStorage_recovery_options() {
     hstr.push('<li>Size : ' + Math.round(saved_data_size) + ' KB</li>');
     hstr.push('</ul>');
     hstr.push('<a title="Save as JSON" style="cursor: pointer; color: blue;" onclick="download_localStorage_data(\'json\')" title="Recover annotation data">Save</a>');
-    hstr.push('<a style="padding-left:2em; cursor: pointer; color: blue;" onclick="clear_localStorage()" title="Discard annotation data">Discard</a>');
+    hstr.push('<a style="padding-left:2em; cursor: pointer; color: blue;" onclick="remove_via_data_from_localStorage(); show_home_panel();" title="Discard annotation data">Discard</a>');
 
     hstr.push('<p style="clear: left;"><b>If you continue, the cached data will be discarded!</b></p></div>');
     via_start_info_panel.innerHTML += hstr.join('');
