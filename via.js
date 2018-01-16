@@ -27,6 +27,9 @@
 */
 
 /*
+  See Contributors.md file for a list of developers who have contributed code 
+  to VIA codebase.
+/*
 
   This source code is organized in the following groups:
 
@@ -52,7 +55,7 @@
 
 "use strict";
 
-var VIA_VERSION      = '1.0.4';
+var VIA_VERSION      = '1.0.5';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -1891,7 +1894,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
   }
 
   if(_via_is_user_drawing_region) {
-    // draw region as the user drags the mouse coursor
+    // draw region as the user drags the mouse cursor
     if (_via_canvas_regions.length) {
       _via_redraw_reg_canvas(); // clear old intermediate rectangle
     } else {
@@ -2455,7 +2458,6 @@ function draw_all_region_id() {
     var x = bbox[0];
     var y = bbox[1];
     var w = Math.abs(bbox[2] - bbox[0]);
-    //var h = Math.abs(bbox[3] - bbox[1]);
     _via_reg_ctx.font = VIA_THEME_ATTRIBUTE_VALUE_FONT;
 
     var annotation_str  = (i+1).toString();
@@ -3502,10 +3504,6 @@ function init_spreadsheet_input(type, col_headers, data, row_names) {
     attrname = 'File Attributes';
     break;
   }
-
-  /*var hstr = '<div style="display: inline-block;" class="title">';
-  hstr += attrname + '</div>';
-  hstr += '<table id="' + type + '"></table>';*/
 
   var attrtable = document.createElement('table');
   attrtable.setAttribute('id', 'attributes_panel_table');
