@@ -2,7 +2,7 @@
   VGG Image Annotator (via)
   www.robots.ox.ac.uk/~vgg/software/via/
 
-  Copyright (c) 2016, Abhishek Dutta, Visual Geometry Group, Oxford University.
+  Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
