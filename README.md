@@ -19,20 +19,14 @@ facial regions.
 
 ## Downloads
  * VGG Image Annotator (VIA)
-   * [via-1.0.4.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via-1.0.4.zip) : includes the VIA application (&lt; 200KB) and its demo
-   * [via-src-1.0.4.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via-src-1.0.4.zip) : source code and [code documentation](https://gitlab.com/vgg/via/blob/master/CodeDoc.md)
+   * [via-1.0.5.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via-1.0.5.zip) : includes the VIA application (&lt; 200KB) and its demo
+   * [via-src-1.0.5.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via-src-1.0.5.zip) : source code and [code documentation](https://gitlab.com/vgg/via/blob/master/CodeDoc.md)
    * [via.html](http://www.robots.ox.ac.uk/~vgg/software/via/via.html) : online version of VIA application
    * [via_demo.html](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html) : live online demo (with preloadd images and regions)
- * VGG Face Annotator (VFA)
-   * *coming soon*
 
 ## Demo
  * VGG Image Annotator (VIA)
-   * [via_demo-1.0.4.html](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html) : live demo of VIA application with preloaded image
- * VGG Face Annotator (VFA)
-   * *coming soon* (preview versions below)
-   * [via_face_demo_physicist.html](http://vgg.gitlab.io/via/via_face_demo_physicist.html) : live demo with preloaded regions and face images of renowned Physicists
-   * [via_face_demo_sherlock.html](http://vgg.gitlab.io/via/via_face_demo_sherlock.html) : live demo with preloaded regions and face images from BBC [Sherlock Series](https://en.wikipedia.org/wiki/Sherlock_(TV_series))
+   * [via_demo-1.0.5.html](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html) : live demo of VIA application with preloaded image
 
 ## Docs
  * Getting Started : this can be accessed by pressing F1 key in the VIA application.
@@ -50,7 +44,6 @@ Javascript, HTML and CSS.
 
  * Source code
    * [VGG Image Annotator @ develop branch](https://gitlab.com/vgg/via/blob/develop)
-   * [VGG Face Annotator @ face_annotator branch](https://gitlab.com/vgg/via/tree/face_annotator)
  * [Source code documentation](https://gitlab.com/vgg/via/blob/develop/CodeDoc.md)
  * [Contributing Guidelines](https://gitlab.com/vgg/via/blob/develop/CONTRIBUTING.md)
  * Unit Tests

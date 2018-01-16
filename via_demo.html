@@ -1146,7 +1146,7 @@ function store_local_img_ref(event) {
 
   // clear browser cache if user chooses to load new images
   if (original_image_count === 0) {
-    localStorage.clear();
+    remove_via_data_from_localStorage();
   }
 
   var discarded_file_count = 0;
