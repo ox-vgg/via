@@ -1601,14 +1601,16 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
       var fy0 = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_y'][0];
       var  dx = (fx0 - canvas_x0);
       var  dy = (fy0 - canvas_y0);
-      if ( Math.sqrt(dx*dx + dy*dy) <= VIA_POLYGON_VERTEX_MATCH_TOL ) {
-        // user clicked on the first polygon point to close the path
+      // @todo: add test for the inner area delimited by the enclosed polygon to have at least a minimum given value
+      if ( Math.sqrt(dx*dx + dy*dy) <= VIA_POLYGON_VERTEX_MATCH_TOL &&
+           _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'].length >= 3 ) {
+        // user clicked on the first polygon point to close the path and the polygon has at least 3 points defined
         _via_is_user_drawing_polygon = false;
 
         // add all polygon points stored in _via_canvas_regions[]
         var all_points_x = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'].slice(0);
         var all_points_y = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_y'].slice(0);
-        // close path
+        // close path - this will make any final, polygon region to contain at least 4 points
         all_points_x.push(all_points_x[0]);
         all_points_y.push(all_points_y[0]);
 
