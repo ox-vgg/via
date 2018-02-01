@@ -1,3 +1,6 @@
+* Stefan Mihaila (@smihaila, 01 Feb. 2018, updates to via-1.0.5)
+  01. a patch from Stefan Mihaila which requires polygon shape to have at least 3 points.
+
 * Stefan Mihaila (@smihaila, 15 Jan. 2018, updates to via-1.0.4)
   01. Added "use strict";
   02. Added the "var _via_current_x = 0; var _via_current_y = 0;" global vars.

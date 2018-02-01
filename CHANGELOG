@@ -1,3 +1,6 @@
+## [1.0.6] - Not release yet!
+ * a patch from Stefan Mihaila which requires polygon shape to have at least 3 points.
+
 ## [1.0.5] - January 16, 2017
  * (code contributions from Stefan Mihaila) via.js codebase improvement, wider web browser support (IE 10, IE 11 and Opera 12)
  * added Contributors.md file to record contributions to VIA codebase
