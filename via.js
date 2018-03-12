@@ -27,7 +27,7 @@
 */
 
 /*
-  See Contributors.md file for a list of developers who have contributed code 
+  See Contributors.md file for a list of developers who have contributed code
   to VIA codebase.
 /*
 
@@ -55,7 +55,7 @@
 
 "use strict";
 
-var VIA_VERSION      = '1.0.5';
+var VIA_VERSION      = '1.0.6';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -1865,6 +1865,15 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
           _via_reg_canvas.style.cursor = "nesw-resize";
           break;
 
+        case 5: // Fall-through // top-middle point of rect
+        case 7: // bottom-middle point of rect
+          _via_reg_canvas.style.cursor = "ns-resize";
+          break;
+        case 6: // Fall-through // top-middle point of rect
+        case 8: // bottom-middle point of rect
+          _via_reg_canvas.style.cursor = "ew-resize";
+          break;
+
           // circle and ellipse
         case 5:
           _via_reg_canvas.style.cursor = "n-resize";
@@ -1970,7 +1979,6 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
       var mx = _via_current_x;
       var my = _via_current_y;
       var preserve_aspect_ratio = false;
-
       // constrain (mx,my) to lie on a line connecting a diagonal of rectangle
       if ( _via_is_ctrl_pressed ) {
         preserve_aspect_ratio = true;
@@ -2218,6 +2226,10 @@ function _via_draw_rect_region(x, y, w, h, is_selected) {
     _via_draw_control_point(x+w, y+h);
     _via_draw_control_point(x  , y+h);
     _via_draw_control_point(x+w,   y);
+    _via_draw_control_point(x+w/2,   y);
+    _via_draw_control_point(x+w/2, y+h);
+    _via_draw_control_point(x    , y+h/2);
+    _via_draw_control_point(x+w  , y+h/2);
   } else {
     // draw a fill line
     _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
@@ -2774,7 +2786,6 @@ function is_on_rect_edge(x, y, w, h, px, py) {
   var dy0 = Math.abs(y - py);
   var dx1 = Math.abs(x + w - px);
   var dy1 = Math.abs(y + h - py);
-
   //[top-left=1,top-right=2,bottom-right=3,bottom-left=4]
   if ( dx0 < VIA_REGION_EDGE_TOL &&
        dy0 < VIA_REGION_EDGE_TOL ) {
@@ -2793,6 +2804,27 @@ function is_on_rect_edge(x, y, w, h, px, py) {
        dy1 < VIA_REGION_EDGE_TOL ) {
     return 4;
   }
+
+  var mx0 = Math.abs(x + w/2 - px);
+  var my0 = Math.abs(y + h/2 - py);
+  //[top-middle=5,right-middle=6,bottom-middle=7,left-middle=8]
+  if ( mx0 < VIA_REGION_EDGE_TOL &&
+       dy0 < VIA_REGION_EDGE_TOL ) {
+    return 5;
+  }
+  if ( dx1 < VIA_REGION_EDGE_TOL &&
+       my0 < VIA_REGION_EDGE_TOL ) {
+    return 6;
+  }
+  if ( mx0 < VIA_REGION_EDGE_TOL &&
+       dy1 < VIA_REGION_EDGE_TOL ) {
+    return 7;
+  }
+  if ( dx0 < VIA_REGION_EDGE_TOL &&
+       my0 < VIA_REGION_EDGE_TOL ) {
+    return 8;
+  }
+
   return 0;
 }
 
@@ -2932,6 +2964,22 @@ function rect_update_corner(corner_id, d, x, y, preserve_aspect_ratio) {
   case 4: // bottom-left
     d[0] = x;
     d[3] = y;
+    break;
+
+  case 5: // top-middle
+    d[1] = y;
+    break;
+
+  case 6: // right-middle
+    d[2] = x;
+    break;
+
+  case 7: // bottom-middle
+    d[3] = y;
+    break;
+
+  case 8: // left-middle
+    d[0] = x;
     break;
   }
 }
