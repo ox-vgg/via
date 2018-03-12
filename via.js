@@ -62,9 +62,11 @@ var VIA_REGION_SHAPE = { RECT:'rect',
                          CIRCLE:'circle',
                          ELLIPSE:'ellipse',
                          POLYGON:'polygon',
-                         POINT:'point'};
+                         POINT:'point',
+                         POLYLINE:'polyline'
+                       };
 
-var VIA_REGION_EDGE_TOL           = 5;   // pixel
+var VIA_REGION_EDGE_TOL           = 20;   // pixel
 var VIA_REGION_CONTROL_POINT_SIZE = 2;
 var VIA_REGION_POINT_RADIUS       = 3;
 var VIA_POLYGON_VERTEX_MATCH_TOL  = 5;
@@ -82,7 +84,7 @@ var VIA_THEME_BOUNDARY_FILL_COLOR   = "#aaeeff";
 var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
 var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
 var VIA_THEME_SEL_REGION_OPACITY    = 0.5;
-var VIA_THEME_MESSAGE_TIMEOUT_MS    = 2500;
+var VIA_THEME_MESSAGE_TIMEOUT_MS    = 6000;
 var VIA_THEME_ATTRIBUTE_VALUE_FONT  = '10pt Sans';
 var VIA_THEME_CONTROL_POINT_COLOR   = '#ff0000';
 
@@ -1113,12 +1115,13 @@ function select_region_shape(sel_shape_name) {
                  _via_current_shape + ' region');
     break;
 
+  case VIA_REGION_SHAPE.POLYLINE:
   case VIA_REGION_SHAPE.POLYGON:
     _via_is_user_drawing_polygon = false;
     _via_current_polygon_region_id = -1;
 
-    show_message('Press single click to define polygon vertices and ' +
-                 'click first vertex to close path');
+    show_message('[Enter] to finish, [Esc] to cancel, ' +
+                 '[Click] to define polygon/polyline vertices')
     break;
 
   case VIA_REGION_SHAPE.POINT:
@@ -1377,6 +1380,7 @@ _via_reg_canvas.addEventListener('mousedown', function(e) {
     if ( region_id === -1 ) {
       // mousedown outside a region
       if (_via_current_shape !== VIA_REGION_SHAPE.POLYGON &&
+          _via_current_shape !== VIA_REGION_SHAPE.POLYLINE &&
           _via_current_shape !== VIA_REGION_SHAPE.POINT) {
         // this is a bounding box drawing event
         _via_is_user_drawing_region = true;
@@ -1436,6 +1440,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         canvas_attr['cy'] = Math.round( image_attr['cy'] / _via_canvas_scale);
         break;
 
+      case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
       case VIA_REGION_SHAPE.POLYGON:
         var img_px = image_attr['all_points_x'];
         var img_py = image_attr['all_points_y'];
@@ -1560,6 +1565,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
       canvas_attr['ry'] = Math.round(image_attr['ry'] / _via_canvas_scale);
       break;
 
+    case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
     case VIA_REGION_SHAPE.POLYGON:
       var moved_vertex_id = _via_region_edge[1] - VIA_POLYGON_RESIZE_VERTEX_OFFSET;
 
@@ -1570,7 +1576,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
       canvas_attr['all_points_x'][moved_vertex_id] = Math.round( imx / _via_canvas_scale );
       canvas_attr['all_points_y'][moved_vertex_id] = Math.round( imy / _via_canvas_scale );
 
-      if (moved_vertex_id === 0) {
+      if (moved_vertex_id === 0 && canvas_attr['name'] === VIA_REGION_SHAPE.POLYGON) {
         // move both first and last vertex because we
         // the initial point at the end to close path
         var n = canvas_attr['all_points_x'].length;
@@ -1678,12 +1684,13 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
           update_attributes_panel();
         } else {
           switch (_via_current_shape) {
+          case VIA_REGION_SHAPE.POLYLINE: // handled by case for POLYGON
           case VIA_REGION_SHAPE.POLYGON:
             // user has clicked on the first point in a new polygon
             _via_is_user_drawing_polygon = true;
 
             var canvas_polygon_region = new ImageRegion();
-            canvas_polygon_region.shape_attributes['name'] = VIA_REGION_SHAPE.POLYGON;
+            canvas_polygon_region.shape_attributes['name'] = _via_current_shape;
             canvas_polygon_region.shape_attributes['all_points_x'] = [Math.round(_via_click_x0)];
             canvas_polygon_region.shape_attributes['all_points_y'] = [Math.round(_via_click_y0)];
             _via_canvas_regions.push(canvas_polygon_region);
@@ -1816,12 +1823,13 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
           _via_canvas_regions.push(canvas_img_region);
           break;
 
+        case VIA_REGION_SHAPE.POLYLINE: // handled by case VIA_REGION_SHAPE.POLYGON
         case VIA_REGION_SHAPE.POLYGON:
           // handled by _via_is_user_drawing polygon
           break;
         }
     } else {
-      show_message('Cannot add such a small region');
+      show_message('Prevented accidental addition of a very small region.');
     }
     update_attributes_panel();
     _via_redraw_reg_canvas();
@@ -1969,6 +1977,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 
     var region_id = _via_region_edge[0];
     var attr = _via_canvas_regions[region_id].shape_attributes;
+    console.log(attr)
     switch (attr['name']) {
     case VIA_REGION_SHAPE.RECT:
       // original rectangle
@@ -2028,6 +2037,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
                                true);
       break;
 
+    case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
     case VIA_REGION_SHAPE.POLYGON:
       var moved_all_points_x = attr['all_points_x'].slice(0);
       var moved_all_points_y = attr['all_points_y'].slice(0);
@@ -2036,13 +2046,12 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
       moved_all_points_x[moved_vertex_id] = _via_current_x;
       moved_all_points_y[moved_vertex_id] = _via_current_y;
 
-      if (moved_vertex_id === 0) {
+      if (moved_vertex_id === 0 && attr['name'] === VIA_REGION_SHAPE.POLYGON) {
         // move both first and last vertex because we
         // the initial point at the end to close path
         moved_all_points_x[moved_all_points_x.length-1] = _via_current_x;
         moved_all_points_y[moved_all_points_y.length-1] = _via_current_y;
       }
-
       _via_draw_polygon_region(moved_all_points_x,
                                moved_all_points_y,
                                true);
@@ -2088,6 +2097,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
                                true);
       break;
 
+    case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
     case VIA_REGION_SHAPE.POLYGON:
       var moved_all_points_x = attr['all_points_x'].slice(0);
       var moved_all_points_y = attr['all_points_y'].slice(0);
@@ -2183,6 +2193,7 @@ function draw_all_regions() {
                                is_selected);
       break;
 
+    case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
     case VIA_REGION_SHAPE.POLYGON:
       _via_draw_polygon_region(attr['all_points_x'],
                                attr['all_points_y'],
@@ -2375,7 +2386,7 @@ function _via_draw_polygon_region(all_points_x, all_points_y, is_selected) {
     _via_reg_ctx.fill();
     _via_reg_ctx.globalAlpha = 1.0;
 
-    for ( var i=1; i < all_points_x.length; ++i ) {
+    for ( var i=0; i < all_points_x.length; ++i ) {
       _via_draw_control_point(all_points_x[i], all_points_y[i]);
     }
   } else {
@@ -2498,7 +2509,8 @@ function draw_all_region_id() {
       }
     }
 
-    if (canvas_reg.shape_attributes['name'] === VIA_REGION_SHAPE.POLYGON) {
+    if (canvas_reg.shape_attributes['name'] === VIA_REGION_SHAPE.POLYGON ||
+        canvas_reg.shape_attributes['name'] === VIA_REGION_SHAPE.POLYLINE) {
       // put label near the first vertex
       x = canvas_reg.shape_attributes['all_points_x'][0];
       y = canvas_reg.shape_attributes['all_points_y'][0];
@@ -2551,6 +2563,7 @@ function get_region_bounding_box(region) {
     bbox[3] = d['cy'] + d['ry'];
     break;
 
+  case 'polyline': // handled by polygon
   case 'polygon':
     var all_points_x = d['all_points_x'];
     var all_points_y = d['all_points_y'];
@@ -2648,6 +2661,7 @@ function is_inside_this_region(px, py, region_id) {
                                px, py);
     break;
 
+  case VIA_REGION_SHAPE.POLYLINE: // handled by POLYGON
   case VIA_REGION_SHAPE.POLYGON:
     result = is_inside_polygon(attr['all_points_x'],
                                attr['all_points_y'],
@@ -2760,6 +2774,7 @@ function is_on_region_corner(px, py) {
                                   px, py);
       break;
 
+    case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
     case VIA_REGION_SHAPE.POLYGON:
       result = is_on_polygon_vertex(attr['all_points_x'],
                                     attr['all_points_y'],
@@ -3140,10 +3155,12 @@ window.addEventListener('keydown', function(e) {
       _via_is_user_moving_region = false
     }
 
-    e.preventDefault();
     _via_redraw_reg_canvas();
+    _via_reg_canvas.focus();
+    e.preventDefault();
     return;
   }
+
   if (e.which === 112) { // F1 for help
     show_getting_started_panel();
     e.preventDefault();
@@ -3154,25 +3171,75 @@ window.addEventListener('keydown', function(e) {
     e.preventDefault();
     return;
   }
-});
+  if ( e.which === 13 ) { // Enter key
+    if ( _via_current_shape === VIA_REGION_SHAPE.POLYLINE ||
+         _via_current_shape === VIA_REGION_SHAPE.POLYGON) {
+      // [Enter] key is used to indicate completion of
+      // polygon or polyline drawing action
 
-//
-// Mouse wheel event listener
-//
-window.addEventListener('wheel', function(e) {
-  if (!_via_current_image_loaded) {
-    return;
-  }
+      var npts =  _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'].length;
+      if ( npts <=2 && _via_current_shape === VIA_REGION_SHAPE.POLYGON ) {
+        show_message('For a polygon, you must define at least 3 points. ' +
+                     'Press [Esc] to cancel drawing operation.!');
+        return;
+      }
+      if ( npts <=1 && _via_current_shape === VIA_REGION_SHAPE.POLYLINE ) {
+        show_message('A polyline must have at least 2 points. ' +
+                     'Press [Esc] to cancel drawing operation.!');
+        return;
+      }
 
-  if (e.ctrlKey) {
-    if (e.deltaY < 0) {
-      zoom_in();
-    } else {
-      zoom_out();
+      _via_is_user_drawing_polygon = false;
+      add_new_polygon();
+
+      // newly drawn region is automatically selected
+      select_only_region(_via_current_polygon_region_id);
+
+      _via_current_polygon_region_id = -1;
+      update_attributes_panel();
+      save_current_data_to_browser_cache();
+      _via_redraw_reg_canvas();
+      _via_reg_canvas.focus();
     }
-    e.preventDefault();
   }
 });
+
+function add_new_polygon() {
+  // add all polygon points stored in _via_canvas_regions[]
+  var all_points_x = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'].slice(0);
+  var all_points_y = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_y'].slice(0);
+
+  if ( _via_current_shape === VIA_REGION_SHAPE.POLYGON ) {
+    // close path of the polygon (the user need not connect the final vertex)
+    // hence all polygons will have at least 4 points
+    all_points_x.push(all_points_x[0]);
+    all_points_y.push(all_points_y[0]);
+  }
+
+  var canvas_all_points_x = [];
+  var canvas_all_points_y = [];
+
+  //var points_str = '';
+  for ( var i=0; i<all_points_x.length; ++i ) {
+    all_points_x[i] = Math.round( all_points_x[i] * _via_canvas_scale );
+    all_points_y[i] = Math.round( all_points_y[i] * _via_canvas_scale );
+
+    canvas_all_points_x[i] = Math.round( all_points_x[i] / _via_canvas_scale );
+    canvas_all_points_y[i] = Math.round( all_points_y[i] / _via_canvas_scale );
+  }
+
+  var polygon_region = new ImageRegion();
+  polygon_region.shape_attributes['name'] = _via_current_shape;
+  polygon_region.shape_attributes['all_points_x'] = all_points_x;
+  polygon_region.shape_attributes['all_points_y'] = all_points_y;
+  _via_current_polygon_region_id = _via_img_metadata[_via_image_id].regions.length;
+  _via_img_metadata[_via_image_id].regions.push(polygon_region);
+
+  // update canvas
+  _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['name'] = _via_current_shape;
+  _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'] = canvas_all_points_x;
+  _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_y'] = canvas_all_points_y;
+}
 
 function del_sel_regions() {
   if ( !_via_current_image_loaded ) {
@@ -3424,6 +3491,24 @@ function toggle_region_id_visibility() {
   _via_redraw_reg_canvas();
   _via_reg_canvas.focus();
 }
+
+//
+// Mouse wheel event listener
+//
+window.addEventListener('wheel', function(e) {
+  if (!_via_current_image_loaded) {
+    return;
+  }
+
+  if (e.ctrlKey) {
+    if (e.deltaY < 0) {
+      zoom_in();
+    } else {
+      zoom_out();
+    }
+    e.preventDefault();
+  }
+});
 
 //
 // Persistence of annotation data in browser cache (i.e. localStorage)
