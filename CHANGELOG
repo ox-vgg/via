@@ -1,5 +1,12 @@
 ## [1.0.6] - Not release yet!
  * a patch from Stefan Mihaila which requires polygon shape to have at least 3 points.
+ * rectangles can now be resized from edges
+ * added POLYLINE shape
+ * image file list can be filtered using regular expression
+ * renamed methods and variable
+   - _via_reload_img_table : _via_reload_img_fn_list_table
+   - reload_img_table()    : reload_img_fn_list_table()
+   - _via_loaded_img_table_html : _via_loaded_img_fn_list_table_html
 
 ## [1.0.5] - January 16, 2017
  * (code contributions from Stefan Mihaila) via.js codebase improvement, wider web browser support (IE 10, IE 11 and Opera 12)

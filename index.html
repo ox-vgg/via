@@ -177,6 +177,9 @@
       margin: 0;
       padding: 0;
       }
+      #canvas_panel canvas:focus {
+      outline: none;
+      }
       #leftsidebar_collapse_panel {
       display: table-cell;
       position: relative;
@@ -261,22 +264,29 @@
       }
 
       /* Loaded image list shown in leftsidebar panel */
-      #img_list_panel {
-      display: none;
-      height: 0;
+      #img_fn_list_panel {
       font-size: small;
       overflow: scroll;
+      min-height: 10rem;
+      max-height: 30rem;
       }
-      #img_list_panel ul {
+      #img_fn_list_panel input {
+      width: 90%;
+      border: 1px solid #ccc;
+      margin: 0.6rem 0;
+      padding: 0.2rem 0.4rem;
+      }
+      #img_fn_list_panel ul {
       position: relative;
       line-height: 1.3em;
-      padding-left: 0;
+      margin: 0;
+      padding: 0;
       list-style-type: none;
       }
-      #img_list_panel li {
+      #img_fn_list_panel li {
       white-space: nowrap;
       }
-      #img_list_panel li:hover {
+      #img_fn_list_panel li:hover {
       background-color: #cccccc;
       color: #000000;
       cursor: pointer;
@@ -486,12 +496,21 @@
           <ellipse rx="12" ry="8" cx="16" cy="16" stroke-width="2"/>
         </symbol>
         <symbol id="shape_polygon">
-          <title>Polyline region shape</title>
+          <title>Polygon region shape</title>
           <path d="M 15.25,2.2372 3.625,11.6122 6,29.9872 l 20.75,-9.625 2.375,-14.75 z" stroke-width="2"/>
         </symbol>
         <symbol id="shape_point">
           <title>Point region shape</title>
           <circle r="3" cx="16" cy="16" stroke-width="2"/>
+        </symbol>
+        <symbol id="shape_polyline">
+          <title>Polyline region shape</title>
+          <!--<path d="M 15.25,2.2372 3.625,11.6122 6,29.9872 l 20.75,-9.625" stroke-width="2"/>-->
+          <path d="M 2,12 10,24 18,12 24,18" stroke-width="2"/>
+          <circle r="1" cx="2" cy="12" stroke-width="2"/>
+          <circle r="1" cx="10" cy="24" stroke-width="2"/>
+          <circle r="1" cx="18" cy="12" stroke-width="2"/>
+          <circle r="1" cx="24" cy="18" stroke-width="2"/>
         </symbol>
       </defs>
     </svg>
@@ -562,24 +581,30 @@
     <!-- Middle Panel contains a left-sidebar and image display areas -->
     <div class="middle_panel">
       <div id="leftsidebar">
-        <button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion active">Region Shape</button>
-        <div class="leftsidebar_accordion_panel show" id="accordion_region_shape_panel">
+        <button class="leftsidebar_accordion active">Region Shape</button>
+        <div class="leftsidebar_accordion_panel show">
           <ul class="region_shape">
             <li id="region_shape_rect" class="selected" onclick="select_region_shape('rect')" title="Rectangle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></li>
             <li id="region_shape_circle" onclick="select_region_shape('circle')" title="Circle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></li>
             <li id="region_shape_ellipse" onclick="select_region_shape('ellipse')" title="Ellipse"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></li>
             <li id="region_shape_polygon" onclick="select_region_shape('polygon')" title="Polygon"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></li>
             <li id="region_shape_point" onclick="select_region_shape('point')" title="Point"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_point"></use></svg></li>
+            <li id="region_shape_polyline" onclick="select_region_shape('polyline')" title="Polyline"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polyline"></use></svg></li>
           </ul>
         </div>
 
-        <button onclick="toggle_img_list(this)" class="leftsidebar_accordion" id="loaded_img_panel">Loaded Images</button>
-        <div class="leftsidebar_accordion_panel" id="img_list_panel"></div>
+        <button class="leftsidebar_accordion active" id="loaded_img_panel_title">Loaded Images</button>
+        <div class="leftsidebar_accordion_panel show" id="img_fn_list_panel">
+          <div>
+            <input type="text" placeholder="Filter using regular expression" oninput="img_fn_list_onregex()" id="img_fn_list_regex">
+          </div>
+          <div id="img_fn_list"></div>
+        </div>
 
-        <button onclick="toggle_reg_attr_panel()" class="leftsidebar_accordion" id="reg_attr_panel_button">Region Attributes</button>
-        <button onclick="toggle_file_attr_panel()" class="leftsidebar_accordion" id="file_attr_panel_button">File Attributes</button>
+        <button class="leftsidebar_accordion">Attributes</button>
+        <div class="leftsidebar_accordion_panel" id="attributes_panel"></div>
 
-        <button onclick="toggle_accordion_panel(this)" class="leftsidebar_accordion">Keyboard Shortcuts</button>
+        <button class="leftsidebar_accordion">Keyboard Shortcuts</button>
         <div class="leftsidebar_accordion_panel">
           <table style="padding: 2em 0em;">
             <tr>
@@ -631,7 +656,7 @@
       <div id="display_area">
         <div id="canvas_panel">
           <canvas id="image_canvas"></canvas>
-          <canvas id="region_canvas">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
+          <canvas id="region_canvas" tabindex="1">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
         </div>
 
         <div>
@@ -639,7 +664,7 @@
 
           <div class="text_panel" style="padding: 1em; border: 1px solid #cccccc;" id="about_panel">
             <p style="font-size: 2em;">VGG Image Annotator</p>
-            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.5</a></p>
+            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.0.6</a></p>
             <p>
               VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
               developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
@@ -740,12 +765,12 @@
       //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
     </script>
 
-    <!--
+    <!--    -->
     <script src="via.js"></script>
-    -->
-    <!--
+
+    <!--    -->
     <script src="via_demo.js"></script>
-    -->
+
 
     <!-- Unit Tests    -->
     <!--
