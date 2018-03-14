@@ -264,29 +264,29 @@
       }
 
       /* Loaded image list shown in leftsidebar panel */
-      #img_fn_list_panel {
+      #img_fn_list {
       font-size: small;
       overflow: scroll;
       min-height: 10rem;
       max-height: 30rem;
       }
       #img_fn_list_panel input {
-      width: 90%;
+      width: 88%;
       border: 1px solid #ccc;
       margin: 0.6rem 0;
       padding: 0.2rem 0.4rem;
       }
-      #img_fn_list_panel ul {
+      #img_fn_list ul {
       position: relative;
       line-height: 1.3em;
       margin: 0;
       padding: 0;
       list-style-type: none;
       }
-      #img_fn_list_panel li {
+      #img_fn_list li {
       white-space: nowrap;
       }
-      #img_fn_list_panel li:hover {
+      #img_fn_list li:hover {
       background-color: #cccccc;
       color: #000000;
       cursor: pointer;
@@ -523,7 +523,7 @@
           <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662;</a>
             <div class="dropdown-content">
               <a onclick="sel_local_images()" title="Load (or add) a set of images from local disk">Load or Add Images</a>
-              <a onclick="show_img_list()" title="Browse currently loaded images">List Images</a>
+              <a onclick="toggle_img_fn_list_visibility()" title="Browse currently loaded images">List Images</a>
             </div>
           </li>
           <li class="dropdown"><a title="Annotations" class="drop_menu_item">Annotation &#9662;</a>

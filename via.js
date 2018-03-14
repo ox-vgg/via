@@ -168,8 +168,7 @@ var _via_is_save_ongoing = false;
 // image list
 var _via_reload_img_fn_list_table = true;
 var _via_loaded_img_fn_list = [];
-var _via_loaded_img_region_attr_miss_count = [];
-var _via_loaded_img_file_attr_miss_count = [];
+var _via_loaded_img_fn_list_file_index = [];
 var _via_loaded_img_fn_list_table_html = [];
 
 
@@ -3868,119 +3867,68 @@ function update_img_fn_list() {
   var regex = document.getElementById('img_fn_list_regex').value;
   if ( regex === '' || regex === null ) {
     _via_loaded_img_fn_list_table_html = [];
+    _via_loaded_img_fn_list_file_index = [];
     _via_loaded_img_fn_list_table_html.push('<ul>');
     for ( var i=0; i < _via_loaded_img_fn_list.length; ++i ) {
-      var fni = '';
-      if ( i === _via_image_index ) {
-        // highlight the current entry
-        fni += '<li id="flist'+i+'" style="cursor: default;" title="' + _via_loaded_img_fn_list[i] + '">';
-        fni += '<b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
-      } else {
-        fni += '<li id="flist'+i+'" onclick="jump_to_image(' + (i) + ')" title="' + _via_loaded_img_fn_list[i] + '">';
-        fni += '[' + (i+1) + '] ' + _via_loaded_img_fn_list[i];
-      }
-
-      fni += '</li>';
-      _via_loaded_img_fn_list_table_html.push(fni);
+      _via_loaded_img_fn_list_table_html.push( img_fn_list_ith_entry_html(i) );
+      _via_loaded_img_fn_list_file_index.push(i);
     }
     _via_loaded_img_fn_list_table_html.push('</ul>');
   } else {
     img_fn_list_generate_html(regex);
   }
   img_fn_list.innerHTML = _via_loaded_img_fn_list_table_html.join('');
+  img_fn_list_scroll_to_current_file();
 }
 
 function img_fn_list_onregex() {
   img_fn_list_generate_html( document.getElementById('img_fn_list_regex').value );
   img_fn_list.innerHTML = _via_loaded_img_fn_list_table_html.join('');
+  img_fn_list_scroll_to_current_file();
+}
+
+function img_fn_list_ith_entry_html(i) {
+  var htmli = '';
+  var filename = _via_loaded_img_fn_list[i];
+  if ( i === _via_image_index ) {
+    // highlight the current entry
+    htmli += '<li id="flist'+i+'" style="cursor: default;">';
+    htmli += '<b>[' + (i+1) + '] ' + filename + '</b>';
+  } else {
+    htmli += '<li id="flist'+i+'" onclick="jump_to_image(' + (i) + ')">';
+    htmli += '[' + (i+1) + '] ' + filename;
+  }
+  htmli += '</li>';
+  return htmli;
 }
 
 function img_fn_list_generate_html(regex) {
   _via_loaded_img_fn_list_table_html = [];
+  _via_loaded_img_fn_list_file_index = [];
   _via_loaded_img_fn_list_table_html.push('<ul>');
   for ( var i=0; i < _via_loaded_img_fn_list.length; ++i ) {
     var filename = _via_loaded_img_fn_list[i];
     if ( filename.match(regex) !== null ) {
-      var fni = '';
-      if ( i === _via_image_index ) {
-        // highlight the current entry
-        fni += '<li id="flist'+i+'" style="cursor: default;">';
-        fni += '<b>[' + (i+1) + '] ' + filename + '</b>';
-      } else {
-        fni += '<li id="flist'+i+'" onclick="jump_to_image(' + (i) + ')">';
-        fni += '[' + (i+1) + '] ' + filename;
-      }
-
-      fni += '</li>';
-      _via_loaded_img_fn_list_table_html.push(fni);
+      _via_loaded_img_fn_list_table_html.push( img_fn_list_ith_entry_html(i) );
+      _via_loaded_img_fn_list_file_index.push(i);
     }
   }
   _via_loaded_img_fn_list_table_html.push('</ul>');
 }
 
-function void_update_img_fn_list() {
-  if (_via_img_count === 0) {
-    //show_message("Please load some images first!");
-    return;
-  }
-
-  /*
-  if ( !is_img_fn_list_visible() ) {
-    return;
-  }
-  */
-
-  if ( _via_reload_img_fn_list_table ) {
-    reload_img_fn_list_table();
-    _via_reload_img_fn_list_table = false;
-  }
-
-  img_fn_list.innerHTML = _via_loaded_img_fn_list_table_html.join('');
-
-  // scroll img_list_panel automatically to show the current image filename
-  var html_img_id  = 'flist' + _via_image_index;
-  var sel_file     = document.getElementById(html_img_id);
-  var panel_height = img_fn_list.offsetHeight;
-  if ( sel_file.offsetTop < img_fn_list.scrollTop ) {
-    img_fn_list.scrollTop = sel_file.offsetTop;
-  }
-  if ( sel_file.offsetTop > panel_height/2 ) {
-    img_fn_list.scrollTop = sel_file.offsetTop - panel_height/2;
+function img_fn_list_scroll_to_current_file() {
+  if( _via_loaded_img_fn_list_file_index.includes(_via_image_index) ) {
+    var sel_file     = document.getElementById( 'flist' + _via_image_index );
+    var panel_height = img_fn_list.clientHeight;
+    if ( sel_file.offsetTop > ( img_fn_list.scrollTop + panel_height) ) {
+      img_fn_list.scrollTop = sel_file.offsetTop;
+    }
   }
 }
 
-function reload_img_fn_list_table() {
-  _via_loaded_img_fn_list = [];
-  _via_loaded_img_region_attr_miss_count = [];
-
-  for ( var i=0; i < _via_img_count; ++i ) {
-    var img_id = _via_image_id_list[i];
-    _via_loaded_img_fn_list[i] = _via_img_metadata[img_id].filename;
-    _via_loaded_img_region_attr_miss_count[i] = count_missing_region_attr(img_id);
-  }
-
-  _via_loaded_img_fn_list_table_html = [];
-  _via_loaded_img_fn_list_table_html.push('<ul>');
-  for ( var i=0; i < _via_img_count; ++i ) {
-    var fni = '';
-    if ( i === _via_image_index ) {
-      // highlight the current entry
-      fni += '<li id="flist'+i+'" style="cursor: default;" title="' + _via_loaded_img_fn_list[i] + '">';
-      fni += '<b>[' + (i+1) + '] ' + _via_loaded_img_fn_list[i] + '</b>';
-    } else {
-      fni += '<li id="flist'+i+'" onclick="jump_to_image(' + (i) + ')" title="' + _via_loaded_img_fn_list[i] + '">';
-      fni += '[' + (i+1) + '] ' + _via_loaded_img_fn_list[i];
-    }
-
-    if ( _via_loaded_img_region_attr_miss_count[i] ) {
-      fni += ' (' + '<span style="color: red;">';
-      fni += _via_loaded_img_region_attr_miss_count[i] + '</span>' + ')';
-    }
-
-    fni += '</li>';
-    _via_loaded_img_fn_list_table_html.push(fni);
-  }
-  _via_loaded_img_fn_list_table_html.push('</ul>');
+function toggle_img_fn_list_visibility() {
+  document.getElementById('img_fn_list_panel').classList.toggle('show');
+  document.getElementById('loaded_img_panel_title').classList.toggle('active');
 }
 
 //
