@@ -224,20 +224,36 @@
       color: #4d4d4d;
       float: right;
       }
-      button.leftsidebar_accordion.active:after {
-      content: '\2796';
-      }
+      button.leftsidebar_accordion.active:after { content: '\2796'; }
       .leftsidebar_accordion_panel {
       display: none;
-      padding-top: 0;
-      padding-left: 0.5em;
+      padding: 0 0.5em;
       font-size: small;
       border-right: 2px solid #f2f2f2;
       border-bottom: 2px solid #f2f2f2;
       }
-      .leftsidebar_accordion_panel.show {
-      display: block;
-      }
+      .leftsidebar_accordion_panel.show { display: block; }
+
+      /* buttons */
+      .button_panel { display:table; width:100%;}
+      .button_panel .button { display:table-cell; font-size:small; outline:none; cursor:pointer; padding: 0.4rem 0.4rem; text-align:center; border: 1px solid #cccccc; background-color: #f2f2f2;}
+      .button_panel .button:hover { background-color: #cccccc; }
+      .button_panel .active { background-color: #cccccc; cursor:default;}
+      .button_panel input { display:table-cell; border:1px solid #cccccc; margin: 0; padding:0.4rem 0.4rem; outline:none;}
+      .button_panel select { display:table-cell;}
+
+      /* Attributes update panel */
+      #attribute_properties { display:table; width:100%; border-collapse:collapse; margin:1rem 0; border:1px solid #cccccc; }
+      #attribute_properties .property { display:table-row;}
+      #attribute_properties .property span { display:table-cell; padding: 0.2rem 0.4rem; }
+      #attribute_properties .property span input { width: 100%; border:1px solid #cccccc; margin: 0;}
+      #attribute_properties .property span select { width: 100%; border:1px solid #cccccc; margin: 0;}
+
+      #attribute_options { display:table; width:100%; border-collapse:collapse; margin:1rem 0; border:1px solid #cccccc; table-layout:fixed; }
+      #attribute_options .property { display:table-row;}
+      #attribute_options .property span { display:table-cell; padding: 0.2rem 0.2rem; font-weight:bold; }
+      #attribute_options .property input { display:table-cell; width:94%; border:none; border-bottom:1px solid #cccccc; margin: 0; font-size: 0.8rem;}
+      #attribute_options .property input:focus { border-bottom:1px solid #000000; background-color:#f2f2f2; color:#000000; }
 
       /* Region shape selection panel inside leftsidebar */
       ul.region_shape {
@@ -270,12 +286,8 @@
       min-height: 10rem;
       max-height: 30rem;
       }
-      #img_fn_list_panel input {
-      width: 88%;
-      border: 1px solid #ccc;
-      margin: 0.6rem 0;
-      padding: 0.2rem 0.4rem;
-      }
+      #img_fn_list_panel input { width:88%; border:1px solid #ccc; margin:0.6rem 0; padding:0.2rem 0.4rem; }
+
       #img_fn_list ul {
       position: relative;
       line-height: 1.3em;
@@ -556,7 +568,7 @@
       <div class="toolbar">
         <ul>
           <!--
-          <li onclick="sel_local_images()" title="Load or Add Images">&ctdot;</li>
+              <li onclick="sel_local_images()" title="Load or Add Images">&ctdot;</li>
           <li onclick="sel_local_data_file('annotations')" title="Import Annotations">&uarr;</li>
           <li onclick="download_all_region_data('csv')" title="Save Annotations (as CSV)">&DownArrowBar;</li>
           -->
@@ -593,16 +605,39 @@
           </ul>
         </div>
 
-        <button class="leftsidebar_accordion active" id="loaded_img_panel_title">Loaded Images</button>
-        <div class="leftsidebar_accordion_panel show" id="img_fn_list_panel">
+        <button class="leftsidebar_accordion" id="loaded_img_panel_title">Loaded Images</button>
+        <div class="leftsidebar_accordion_panel" id="img_fn_list_panel">
           <div>
             <input type="text" placeholder="Filter using regular expression" oninput="img_fn_list_onregex()" id="img_fn_list_regex">
           </div>
           <div id="img_fn_list"></div>
         </div>
 
-        <button class="leftsidebar_accordion">Attributes</button>
-        <div class="leftsidebar_accordion_panel" id="attributes_panel"></div>
+        <button class="leftsidebar_accordion active" id="attr">Attributes</button>
+        <div class="leftsidebar_accordion_panel show">
+          <div class="button_panel" style="margin:1rem 0;">
+            <span class="button active" onclick="show_region_attributes_update_panel()" id="button_show_region_attributes" title="Show region attributes">Region Attributes</span>
+            <span class="button" onclick="show_file_attributes_update_panel()" id="button_show_file_attributes" title="Show file attributes">File Attributes</span>
+          </div>
+          <div id="attributes_update_panel">
+            <div class="button_panel">
+              <input style="width:90%" type="text" placeholder="Add new attribute">
+              <span class="button" title="Add new attribute">&plus;</span>
+            </div>
+            <div class="button_panel" style="margin:0.1rem 0;" >
+              <select style="width:100%" id="attributes_name_list" onchange="show_attribute_properties()"></select>
+            </div>
+            <div id="attribute_properties"></div>
+            <div id="attribute_options"></div>
+            <!--
+            <ul>
+              <li>to delete an option, delete corresponding "option id"</li>
+              <li>to add a new option, click "Add new id"</li>
+              <li>"option description" is optional</li>
+            </ul>
+            -->
+          </div>
+        </div>
 
         <button class="leftsidebar_accordion">Keyboard Shortcuts</button>
         <div class="leftsidebar_accordion_panel">

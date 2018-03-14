@@ -156,10 +156,16 @@ var _via_message_clear_timer;
 
 // attributes
 var _via_region_attributes             = {};
-var _via_current_update_attribute_name = "";
+var _via_current_update_attribute_name = '';
 var _via_current_update_region_id      = -1;
 var _via_file_attributes               = {};
 var _via_visible_attr_name             = '';
+var _via_attribute_being_updated       = 'region'; // {region, file}
+var _via_attributes                    = { 'region':{}, 'file':{} };
+var VIA_ATTRIBUTE_TYPE = { TEXT:'text',
+                           CHECKBOX:'checkbox',
+                           RADIO:'radio'
+                         };
 
 // persistence to local storage
 var _via_is_local_storage_available = false;
@@ -3815,11 +3821,6 @@ function add_new_attribute(type, attribute_name) {
 //
 // left sidebar toolbox maintainer
 //
-function toggle_accordion_panel(e) {
-  e.classList.toggle('active');
-  e.nextElementSibling.classList.toggle('show');
-}
-
 function toggle_leftsidebar() {
   var leftsidebar = document.getElementById('leftsidebar');
   if ( leftsidebar.style.display === 'none' ) {
@@ -3838,16 +3839,14 @@ function init_leftsidebar_accordion() {
   for ( i = 0; i < acc.length; ++i ) {
     acc[i].addEventListener('click', function() {
       this.classList.toggle('active');
-      var panel = this.nextElementSibling;
-      if ( panel.classList.contains('show') ) {
-        panel.classList.remove('show');
-      } else {
-        panel.classList.add('show');
-      }
+      this.nextElementSibling.classList.toggle('show');
     });
   }
 }
 
+//
+// image filename list shown in leftsidebar panel
+//
 function is_img_fn_list_visible() {
   return img_fn_list_panel.classList.contains('show');
 }
@@ -3929,6 +3928,233 @@ function img_fn_list_scroll_to_current_file() {
 function toggle_img_fn_list_visibility() {
   document.getElementById('img_fn_list_panel').classList.toggle('show');
   document.getElementById('loaded_img_panel_title').classList.toggle('active');
+}
+
+//
+// region and file attributes update panel
+//
+function show_region_attributes_update_panel() {
+  _via_attribute_being_updated = 'region';
+}
+
+function show_file_attributes_update_panel() {
+  _via_attribute_being_updated = 'file';
+}
+
+function update_attributes_name_list() {
+  var p = document.getElementById('attributes_name_list');
+  if ( p.options.length !== 0 ) {
+    // to retain the old selected attribute
+    var attribute_name0 = p.options[ p.selectedIndex ].value;
+    var attribute_desc0 = p.options[ p.selectedIndex ].innerHTML;
+    p.innerHTML = '';
+  }
+  for ( attr in _via_attributes[_via_attribute_being_updated] ) {
+    var o = document.createElement('option');
+    o.setAttribute('value', attr)
+    o.text = _via_attributes[_via_attribute_being_updated][attr].description;
+    if ( attribute_name0 === attr ||
+         attribute_desc0 === o.text ) {
+      o.setAttribute('selected', 'selected');
+    }
+    p.add(o);
+  }
+}
+
+function update_attributes_update_panel() {
+  update_attributes_name_list();
+  show_attribute_properties();
+}
+
+function show_attribute_properties() {
+  var attr = document.getElementById('attributes_name_list').value;
+  var attr_type = _via_attributes[_via_attribute_being_updated][attr].type;
+  var attr_desc = _via_attributes[_via_attribute_being_updated][attr].description;
+
+  var html = [];
+  html.push('<div class="property">' +
+            '<span title="Name of attribute (appears in exported annotations)">Name</span>' +
+            '<span><input onblur="attribute_property_on_update(this)" value="' + attr + '" id="attribute_name"></span>' +
+            '</div>');
+  html.push('<div class="property">' +
+            '<span title="Description of attribute (shown to user during annotation session)">Desc.</span>' +
+            '<span><input onblur="attribute_property_on_update(this)" value="' + attr_desc + '" id="attribute_description"></span>' +
+            '</div>');
+  html.push('<div class="property"><span>Type</span>' +
+            '<span><select onchange="attribute_property_on_update(this)" id="attribute_type">');
+  var type_id;
+  for ( type_id in VIA_ATTRIBUTE_TYPE ) {
+    var type = VIA_ATTRIBUTE_TYPE[type_id];
+    if ( attr_type == type ) {
+      html.push('<option value="' + type + '" selected="selected">' + type + '</option>');
+    } else {
+      html.push('<option value="' + type + '">' + type + '</option>');
+    }
+  }
+  html.push('</select></span></div>');
+  document.getElementById('attribute_properties').innerHTML = html.join('');
+
+  // populate additional options based on attribute type
+  html = [];
+  switch( attr_type ) {
+  case VIA_ATTRIBUTE_TYPE.TEXT:
+    // text does not have any additional properties
+    break;
+  case VIA_ATTRIBUTE_TYPE.CHECKBOX: // handled by next case
+  case VIA_ATTRIBUTE_TYPE.RADIO:
+    html.push('<div class="property" style="border-bottom: 0px solid #cccccc;">' +
+              '<span style="width:30%;" title="When selected, this is the value that appears in exported annotations">option id</span>' +
+              '<span style="width:60%;" title="This is the text that is seen by the annotator">option description</span></div>');
+
+    var options = _via_attributes[_via_attribute_being_updated][attr].options;
+    var key;
+    for ( var key in options ) {
+      var val = options[key];
+      html.push('<div class="property">' +
+                '<span><input onblur="attribute_property_on_option_update(this)" value="' + key + '" id="_via_attribute_option_id_' + key + '"></span>' +
+                '<span><input onblur="attribute_property_on_option_update(this)" value="' + val + '" id="_via_attribute_option_description_' + key + '"></span></div>');
+    }
+    html.push('<div class="property">' +
+              '<span><input onblur="attribute_property_on_option_add(this)" placeholder="Add new id" value="" id="_via_attribute_new_option_id"></span>' +
+              '<span><input onblur="attribute_property_on_option_add(this)" placeholder="Optional description" value="" id="_via_attribute_new_option_description"></span></div>');
+    break;
+  default:
+    console.log('Attribute type ' + attr_type + ' is unavailable');
+  }
+  document.getElementById('attribute_options').innerHTML = html.join('');
+}
+
+function attribute_property_on_update(p) {
+  var attr = document.getElementById('attributes_name_list').value;
+  switch(p.id) {
+  case 'attribute_name':
+    var new_attr = p.value;
+    if ( new_attr !== attr ) {
+      Object.defineProperty(_via_attributes[_via_attribute_being_updated],
+                            new_attr,
+                            Object.getOwnPropertyDescriptor(_via_attributes[_via_attribute_being_updated], attr));
+
+      delete _via_attributes[_via_attribute_being_updated][attr];
+      update_attributes_update_panel();
+    }
+    break;
+  case 'attribute_description':
+    _via_attributes[_via_attribute_being_updated][attr].description = p.value;
+    update_attributes_update_panel();
+    break;
+  case 'attribute_type':
+    _via_attributes[_via_attribute_being_updated][attr].type = p.value;
+    console.log(p.value);
+    if( p.value === VIA_ATTRIBUTE_TYPE.TEXT ) {
+      delete _via_attributes[_via_attribute_being_updated][attr].options;
+    }
+    show_attribute_properties();
+    break;
+  }
+}
+
+function attribute_property_on_option_update(p) {
+  var attr = document.getElementById('attributes_name_list').value;
+
+  if ( p.id.startsWith('_via_attribute_option_id_') ) {
+    var old_key = p.id.substr( '_via_attribute_option_id_'.length );
+    var new_key = p.value;
+    if ( old_key !== new_key ) {
+      if ( ! attribute_property_option_id_is_unique(new_key) ) {
+        show_message('Error! ' +
+                     'An option with id [' + new_key + '] already exists.');
+        show_attribute_properties();
+        return;
+      }
+
+      Object.defineProperty(_via_attributes[_via_attribute_being_updated][attr].options,
+                            new_key,
+                            Object.getOwnPropertyDescriptor(_via_attributes[_via_attribute_being_updated][attr].options, old_key));
+
+      delete _via_attributes[_via_attribute_being_updated][attr].options[old_key];
+      show_attribute_properties();
+    }
+  }
+
+  if ( p.id.startsWith('_via_attribute_option_description_') ) {
+    var key = p.id.substr( '_via_attribute_option_description_'.length );
+    var old_value = _via_attributes[_via_attribute_being_updated][attr].options[key];
+    if ( p.value !== old_value ) {
+      _via_attributes[_via_attribute_being_updated][attr].options[key] = p.value;
+      show_attribute_properties();
+      console.log('Option updated in ' + p.id);
+    }
+  }
+}
+
+function attribute_property_on_option_add(p) {
+  if ( p.value === '' || p.value === null ) {
+    return;
+  }
+  if ( p.id === '_via_attribute_new_option_id' ) {
+    var option_id = p.value;
+    if ( attribute_property_option_id_is_unique(option_id) ) {
+      _via_attributes[_via_attribute_being_updated][attr].options[option_id] = '';
+      attribute_property_show_new_entry_inputs();
+    } else {
+      show_message('Error! ' +
+                   'An option with id [' + option_id + '] already exists.');
+      attribute_property_reset_new_entry_inputs();
+    }
+  }
+}
+
+function attribute_property_reset_new_entry_inputs() {
+  var container = document.getElementById('attribute_options');
+  var p = container.lastChild;
+  p.childNodes[0].childNodes[0].value = '';
+  p.childNodes[1].childNodes[0].value = '';
+}
+
+function attribute_property_show_new_entry_inputs() {
+  var n0 = document.createElement('div');
+  n0.classList.add('property');
+  var n1a = document.createElement('span');
+  var n1b = document.createElement('input');
+  n1b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
+  n1b.setAttribute('placeholder', 'Add new id');
+  n1b.setAttribute('value', '');
+  n1b.setAttribute('id', '_via_attribute_new_option_id');
+  n1a.appendChild(n1b);
+
+  var n2a = document.createElement('span');
+  var n2b = document.createElement('input');
+  n2b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
+  n2b.setAttribute('placeholder', 'Optional description');
+  n2b.setAttribute('value', '');
+  n2b.setAttribute('id', '_via_attribute_new_option_description');
+  n2a.appendChild(n2b);
+
+  n0.appendChild(n1a);
+  n0.appendChild(n2a);
+
+  var container = document.getElementById('attribute_options');
+  container.appendChild(n0);
+}
+
+function attribute_property_option_id_is_unique(id) {
+  var option_id;
+  for ( option_id in _via_attributes[_via_attribute_being_updated][attr].options ) {
+    if ( option_id === id ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function attribute_property_id_is_unique(id) {
+  var attr_name;
+  for ( attr_name in _via_attributes[_via_attribute_being_updated] ) {
+    if ( attr_name === name ) {
+      return false;
+    }
+  }
+  return;
 }
 
 //
