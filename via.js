@@ -167,6 +167,10 @@ var VIA_ATTRIBUTE_TYPE = { TEXT:'text',
                            RADIO:'radio'
                          };
 
+// invoke a method after receiving user input
+var _via_user_input_handler = null;
+var _via_user_input_data = {};
+
 // persistence to local storage
 var _via_is_local_storage_available = false;
 var _via_is_save_ongoing = false;
@@ -3971,57 +3975,143 @@ function show_attribute_properties() {
   var attr_type = _via_attributes[_via_attribute_being_updated][attr].type;
   var attr_desc = _via_attributes[_via_attribute_being_updated][attr].description;
 
-  var html = [];
-  html.push('<div class="property">' +
-            '<span title="Name of attribute (appears in exported annotations)">Name</span>' +
-            '<span><input onblur="attribute_property_on_update(this)" value="' + attr + '" id="attribute_name"></span>' +
-            '</div>');
-  html.push('<div class="property">' +
-            '<span title="Description of attribute (shown to user during annotation session)">Desc.</span>' +
-            '<span><input onblur="attribute_property_on_update(this)" value="' + attr_desc + '" id="attribute_description"></span>' +
-            '</div>');
-  html.push('<div class="property"><span>Type</span>' +
-            '<span><select onchange="attribute_property_on_update(this)" id="attribute_type">');
+  var attribute_properties = document.getElementById('attribute_properties');
+  attribute_properties.innerHTML = '';
+
+  attribute_property_add_input_property('Name of attribute (appears in exported annotations)',
+                                        'Name',
+                                        attr,
+                                        'attribute_name');
+  attribute_property_add_input_property('Description of attribute (shown to user during annotation session)',
+                                        'Desc.',
+                                        attr_desc,
+                                        'attribute_description');
+
+  // add dropdown for type of attribute
+  var p = document.createElement('div');
+  p.setAttribute('class', 'property');
+  var c0 = document.createElement('span');
+  c0.setAttribute('title', 'Attribute type (e.g. text, checkbox, radio, etc)');
+  c0.innerHTML = 'Type';
+  var c1 = document.createElement('span');
+  var c1b = document.createElement('select');
+  c1b.setAttribute('onchange', 'attribute_property_on_update(this)');
+  c1b.setAttribute('id', 'attribute_type');
   var type_id;
   for ( type_id in VIA_ATTRIBUTE_TYPE ) {
     var type = VIA_ATTRIBUTE_TYPE[type_id];
+    var option = document.createElement('option');
+    option.setAttribute('value', type);
+    option.innerHTML = type;
     if ( attr_type == type ) {
-      html.push('<option value="' + type + '" selected="selected">' + type + '</option>');
-    } else {
-      html.push('<option value="' + type + '">' + type + '</option>');
+      option.setAttribute('selected', 'selected');
     }
+    c1b.appendChild(option);
   }
-  html.push('</select></span></div>');
-  document.getElementById('attribute_properties').innerHTML = html.join('');
+  c1.appendChild(c1b);
+  p.appendChild(c0);
+  p.appendChild(c1);
+  document.getElementById('attribute_properties').appendChild(p);
 
   // populate additional options based on attribute type
-  html = [];
+  document.getElementById('attribute_options').innerHTML = '';
   switch( attr_type ) {
   case VIA_ATTRIBUTE_TYPE.TEXT:
     // text does not have any additional properties
     break;
   case VIA_ATTRIBUTE_TYPE.CHECKBOX: // handled by next case
   case VIA_ATTRIBUTE_TYPE.RADIO:
-    html.push('<div class="property" style="border-bottom: 0px solid #cccccc;">' +
-              '<span style="width:30%;" title="When selected, this is the value that appears in exported annotations">option id</span>' +
-              '<span style="width:60%;" title="This is the text that is seen by the annotator">option description</span></div>');
+    var p = document.createElement('div');
+    p.setAttribute('class', 'property');
+    var c0 = document.createElement('span');
+    c0.setAttribute('style', 'width:30%');
+    c0.setAttribute('title', 'When selected, this is the value that appears in exported annotations');
+    c0.innerHTML = 'option id';
+    var c1 = document.createElement('span');
+    c1.setAttribute('style', 'width:60%');
+    c1.setAttribute('title', 'This is the text that is seen by the annotator');
+    c1.innerHTML = 'option description';
+    p.appendChild(c0);
+    p.appendChild(c1);
+    document.getElementById('attribute_options').appendChild(p);
 
     var options = _via_attributes[_via_attribute_being_updated][attr].options;
     var key;
-    for ( var key in options ) {
+    for ( key in options ) {
       var val = options[key];
-      html.push('<div class="property">' +
-                '<span><input onblur="attribute_property_on_option_update(this)" value="' + key + '" id="_via_attribute_option_id_' + key + '"></span>' +
-                '<span><input onblur="attribute_property_on_option_update(this)" value="' + val + '" id="_via_attribute_option_description_' + key + '"></span></div>');
+      attribute_property_add_option(key, val);
     }
-    html.push('<div class="property">' +
-              '<span><input onblur="attribute_property_on_option_add(this)" placeholder="Add new id" value="" id="_via_attribute_new_option_id"></span>' +
-              '<span><input onblur="attribute_property_on_option_add(this)" placeholder="Optional description" value="" id="_via_attribute_new_option_description"></span></div>');
+    attribute_property_add_new_entry_option();
     break;
   default:
     console.log('Attribute type ' + attr_type + ' is unavailable');
   }
-  document.getElementById('attribute_options').innerHTML = html.join('');
+}
+
+function attribute_property_add_input_property(title, name, value, id) {
+  var p = document.createElement('div');
+  p.setAttribute('class', 'property');
+  var c0 = document.createElement('span');
+  c0.setAttribute('title', title);
+  c0.innerHTML = name;
+  var c1 = document.createElement('span');
+  var c1b = document.createElement('input');
+  c1b.setAttribute('onblur', 'attribute_property_on_update(this)');
+  c1b.setAttribute('value', value);
+  c1b.setAttribute('id', id);
+  c1.appendChild(c1b);
+  p.appendChild(c0);
+  p.appendChild(c1);
+
+  document.getElementById('attribute_properties').appendChild(p);
+}
+
+function attribute_property_add_option(key, value) {
+  var p = document.createElement('div');
+  p.setAttribute('class', 'property');
+  var c0 = document.createElement('span');
+  var c0b = document.createElement('input');
+  c0b.setAttribute('value', key);
+  c0b.setAttribute('onblur', 'attribute_property_on_option_update(this)');
+  c0b.setAttribute('id', '_via_attribute_option_id_' + key);
+
+  var c1 = document.createElement('span');
+  var c1b = document.createElement('input');
+  c1b.setAttribute('value', value);
+  c1b.setAttribute('onblur', 'attribute_property_on_option_update(this)');
+  c1b.setAttribute('id', '_via_attribute_option_description_' + key);
+
+  c0.appendChild(c0b);
+  c1.appendChild(c1b)
+  p.appendChild(c0);
+  p.appendChild(c1);
+
+  document.getElementById('attribute_options').appendChild(p);
+}
+
+function attribute_property_add_new_entry_option() {
+  var p = document.createElement('div');
+  p.setAttribute('class', 'property');
+  var c0 = document.createElement('span');
+  var c0b = document.createElement('input');
+  c0b.setAttribute('value', '');
+  c0b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
+  c0b.setAttribute('id', '_via_attribute_new_option_id');
+  c0b.setAttribute('placeholder', 'Add new id');
+
+  var c1 = document.createElement('span');
+  var c1b = document.createElement('input');
+  c1b.setAttribute('value', '');
+  c1b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
+  c1b.setAttribute('id', '_via_attribute_new_option_description');
+  c1b.setAttribute('placeholder', 'Optional description');
+
+  c0.appendChild(c0b);
+  c1.appendChild(c1b)
+  p.appendChild(c0);
+  p.appendChild(c1);
+
+  document.getElementById('attribute_options').appendChild(p);
 }
 
 function attribute_property_on_update(p) {
@@ -4055,21 +4145,27 @@ function attribute_property_on_update(p) {
 
 function attribute_property_on_option_update(p) {
   var attr = document.getElementById('attributes_name_list').value;
-
+  console.log('attribute_property_on_option_update() : ' + p.id);
   if ( p.id.startsWith('_via_attribute_option_id_') ) {
     var old_key = p.id.substr( '_via_attribute_option_id_'.length );
+    console.log(old_key);
     var new_key = p.value;
+    console.log(new_key)
     if ( old_key !== new_key ) {
-      if ( ! attribute_property_option_id_is_unique(new_key) ) {
-        show_message('Error! ' +
-                     'An option with id [' + new_key + '] already exists.');
+      if ( attribute_property_option_id_exists(new_key) ) {
+        show_message('An option with id [' + new_key + '] already exists.');
         show_attribute_properties();
         return;
       }
 
-      Object.defineProperty(_via_attributes[_via_attribute_being_updated][attr].options,
-                            new_key,
-                            Object.getOwnPropertyDescriptor(_via_attributes[_via_attribute_being_updated][attr].options, old_key));
+      if ( new_key !== '' ) {
+        Object.defineProperty(_via_attributes[_via_attribute_being_updated][attr].options,
+                              new_key,
+                              Object.getOwnPropertyDescriptor(_via_attributes[_via_attribute_being_updated][attr].options, old_key));
+        show_message('Renamed option id from [' + old_key + '] to [' + new_key + '].');
+      } else {
+        show_message('Deleted option with id [' + old_key + '].');
+      }
 
       delete _via_attributes[_via_attribute_being_updated][attr].options[old_key];
       show_attribute_properties();
@@ -4093,13 +4189,12 @@ function attribute_property_on_option_add(p) {
   }
   if ( p.id === '_via_attribute_new_option_id' ) {
     var option_id = p.value;
-    if ( attribute_property_option_id_is_unique(option_id) ) {
+    if ( attribute_property_option_id_exists(option_id) ) {
+      show_message('An option with id [' + option_id + '] already exists.');
+      attribute_property_reset_new_entry_inputs();
+    } else {
       _via_attributes[_via_attribute_being_updated][attr].options[option_id] = '';
       attribute_property_show_new_entry_inputs();
-    } else {
-      show_message('Error! ' +
-                   'An option with id [' + option_id + '] already exists.');
-      attribute_property_reset_new_entry_inputs();
     }
   }
 }
@@ -4137,24 +4232,153 @@ function attribute_property_show_new_entry_inputs() {
   container.appendChild(n0);
 }
 
-function attribute_property_option_id_is_unique(id) {
+function attribute_property_option_id_exists(id) {
   var option_id;
   for ( option_id in _via_attributes[_via_attribute_being_updated][attr].options ) {
     if ( option_id === id ) {
-      return false;
+      return true;
     }
   }
-  return true;
+  return false;
 }
 
-function attribute_property_id_is_unique(id) {
+function attribute_property_id_exists(name) {
   var attr_name;
   for ( attr_name in _via_attributes[_via_attribute_being_updated] ) {
     if ( attr_name === name ) {
-      return false;
+      return true;
     }
   }
-  return;
+  return false;
+}
+
+function add_new_attribute() {
+
+}
+
+function delete_existing_attribute_get_confirmation() {
+  var attr = document.getElementById('user_input_attribute_id').value;
+  if ( attr === '' ) {
+    show_message('Enter the name of attribute that you wish to delete');
+    return;
+  }
+  if ( attribute_property_id_exists(attr) ) {
+    var config = {'title':'Delete ' + _via_attribute_being_updated + ' attribute [' + attr + ']' };
+    var input = { 'confirm':
+                  {
+                    type:'checkbox',
+                    description:'Confirm (by checking box) that you understand that deleting an attribute will delete all annotations associated with this attribute across all the files. <p style="color:red;">These deleted content cannot be recovered.</p>',
+                    attribute_type: _via_attribute_being_updated,
+                    attribute_id: attr,
+                    value:false
+                  }
+                };
+    invoke_with_user_inputs(delete_existing_attribute_confirmed, input, config);
+  } else {
+    show_message('Attribute [' + attr + '] does not exist!');
+    return;
+  }
+}
+
+function delete_existing_attribute_confirmed(input) {
+  if ( input.confirm.value ) {
+    delete_existing_attribute(input.confirm.attribute_type, input.confirm.attribute_id);
+    document.getElementById('user_input_attribute_id').value = '';
+    show_message('Deleted ' + input.confirm.attribute_type + ' attribute [' + input.confirm.attribute_id + ']');
+  } else {
+    show_message('You must tick the checkbox to confirm deletion of attribute.');
+  }
+}
+
+function delete_existing_attribute(attribute_type, attribute_id) {
+  delete _via_attributes[attribute_type][attribute_id];
+  update_attributes_update_panel();
+}
+
+//
+// invoke a method after receiving inputs from user
+//
+function invoke_with_user_inputs(handler, input, config) {
+  setup_user_input_panel(handler, input, config);
+  show_user_input_panel();
+}
+
+function setup_user_input_panel(handler, input, config) {
+  // create html page with OK and CANCEL button
+  // when OK is clicked
+  //  - setup input with all the user entered values
+  //  - invoke handler with input
+  // when CANCEL is clicked
+  //  - invoke user_input_cancel()
+  _via_user_input_handler = handler;
+  _via_user_input_data = input;
+
+  var p = document.getElementById('user_input_panel');
+  var c = document.createElement('div');
+  c.setAttribute('class', 'content');
+  var html = [];
+  html.push('<p class="title">' + config.title + '</p>');
+
+  html.push('<div class="user_inputs">');
+  var key;
+  for ( key in _via_user_input_data ) {
+    html.push('<div class="row">');
+    html.push('<span class="cell">' + _via_user_input_data[key].description + '</span>');
+    switch(_via_user_input_data[key].type) {
+    case 'checkbox':
+      html.push('<span class="cell">' +
+                '<input class="_via_user_input_variable" type="checkbox" id="' + key + '"></span>');
+      break;
+    case 'text':
+      html.push('<span class="cell">' +
+                '<input class="_via_user_input_variable" type="text" id="' + key + '"></span>');
+      break;
+    }
+    html.push('</div>'); // end of row
+  }
+  html.push('</div>'); // end of user_input div
+  html.push('<div class="user_confirm">' +
+            '<span class="ok">' +
+            '<button onclick="user_input_parse_and_invoke_handler()">&nbsp;OK&nbsp;</button></span>' +
+            '<span class="cancel">' +
+            '<button onclick="user_input_cancel()">CANCEL</button></span></div>');
+  c.innerHTML = html.join('');
+  p.appendChild(c);
+
+}
+
+function user_input_cancel() {
+  hide_user_input_panel();
+  _via_user_input_data = {};
+  _via_user_input_handler = null;
+}
+
+function user_input_parse_and_invoke_handler() {
+  var elist = document.getElementsByClassName('_via_user_input_variable');
+  var i;
+  for ( i=0; i < elist.length; ++i ) {
+    var eid = elist[i].id;
+    if ( _via_user_input_data.hasOwnProperty(eid) ) {
+      switch(_via_user_input_data[eid].type) {
+      case 'checkbox':
+        _via_user_input_data[eid].value = elist[i].checked;
+        break;
+      default:
+        _via_user_input_data[eid].value = elist[i].value;
+        break;
+      }
+    }
+  }
+  _via_user_input_handler(_via_user_input_data);
+  user_input_cancel();
+}
+
+function show_user_input_panel() {
+  document.getElementById('user_input_panel').style.display = 'block';
+}
+
+function hide_user_input_panel() {
+  document.getElementById('user_input_panel').style.display = 'none';
 }
 
 //

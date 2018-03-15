@@ -236,11 +236,11 @@
 
       /* buttons */
       .button_panel { display:table; width:100%;}
-      .button_panel .button { display:table-cell; font-size:small; outline:none; cursor:pointer; padding: 0.4rem 0.4rem; text-align:center; border: 1px solid #cccccc; background-color: #f2f2f2;}
+      .button_panel .button { display:table-cell; font-size:small; outline:none; cursor:pointer; padding: 0.4rem 0.4rem; text-align:center; border-radius: 0.5rem; margin: 1rem 1rem;}
       .button_panel .button:hover { background-color: #cccccc; }
       .button_panel .active { background-color: #cccccc; cursor:default;}
-      .button_panel input { display:table-cell; border:1px solid #cccccc; margin: 0; padding:0.4rem 0.4rem; outline:none;}
-      .button_panel select { display:table-cell;}
+      .button_panel input { display:table-cell; border:1px solid #cccccc; margin: 0; padding:0.4rem 0.4rem; }
+      .button_panel select { display:table-cell; }
 
       /* Attributes update panel */
       #attribute_properties { display:table; width:100%; border-collapse:collapse; margin:1rem 0; border:1px solid #cccccc; }
@@ -254,6 +254,17 @@
       #attribute_options .property span { display:table-cell; padding: 0.2rem 0.2rem; font-weight:bold; }
       #attribute_options .property input { display:table-cell; width:94%; border:none; border-bottom:1px solid #cccccc; margin: 0; font-size: 0.8rem;}
       #attribute_options .property input:focus { border-bottom:1px solid #000000; background-color:#f2f2f2; color:#000000; }
+
+      /* overlay panel used to gather user inputs before invoking a function using invoke_with_user_inputs() */
+      #user_input_panel { position:fixed; display:none; width:100%; height:100%; top:0; left:0; right:0; bottom:0; background-color: rgba(0,0,0,0.6); z-index:100; }
+      #user_input_panel .content { position:fixed; background-color:white; top:50%; left:50%; transform:translate(-50%,-50%);  -webkit-transform: translate(-50%, -50%); -moz-transform: translate(-50%, -50%);  -o-transform: translate(-50%, -50%); -ms-transform: translate(-50%, -50%); padding:2rem 4rem;}
+      #user_input_panel .content .title { font-size:large; font-weight:bold; }
+      #user_input_panel .content .user_inputs { display:table; width:100%; border-collapse:collapse;}
+      #user_input_panel .content .user_inputs .row { display:table-row; }
+      #user_input_panel .content .user_inputs .cell { display:table-cell; padding:1rem 0.5rem; vertical-align:middle; border:1px solid #f2f2f2; }
+      #user_input_panel .content .user_confirm { display:table; width:100%; text-align:center; margin:2rem 0;}
+      #user_input_panel .content .user_confirm .ok { display:table-cell; width:48%; }
+      #user_input_panel .content .user_confirm .cancel { display:table-cell; width:48%; }
 
       /* Region shape selection panel inside leftsidebar */
       ul.region_shape {
@@ -493,6 +504,9 @@
   </head>
 
   <body onload="_via_init()" onresize="_via_update_ui_components()">
+    <!-- used to gather user inputs before invoking a function using invoke_with_user_inputs() -->
+    <div id="user_input_panel"></div>
+
     <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
         <symbol id="shape_rectangle">
@@ -621,11 +635,12 @@
           </div>
           <div id="attributes_update_panel">
             <div class="button_panel">
-              <input style="width:90%" type="text" placeholder="Add new attribute">
+              <input style="width:90%" type="text" placeholder="attribute name" id="user_input_attribute_id" value="properties">
               <span class="button" title="Add new attribute">&plus;</span>
+              <span class="button" onclick="delete_existing_attribute_get_confirmation()" title="Delete existing attribute">&minus;</span>
             </div>
             <div class="button_panel" style="margin:0.1rem 0;" >
-              <select style="width:100%" id="attributes_name_list" onchange="show_attribute_properties()"></select>
+              <select style="width:100%" id="attributes_name_list" onchange="show_attribute_properties()" title="List of existing attributes"></select>
             </div>
             <div id="attribute_properties"></div>
             <div id="attribute_options"></div>
