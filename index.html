@@ -235,18 +235,27 @@
       .leftsidebar_accordion_panel.show { display: block; }
 
       /* buttons */
-      .button_panel { display:table; width:100%;}
-      .button_panel .button { display:table-cell; font-size:small; outline:none; cursor:pointer; padding: 0.4rem 0.4rem; text-align:center; border-radius: 0.5rem; margin: 1rem 1rem;}
+      .button_panel { display:table; width:100%; }
+      .button_panel .text_button, .text_button { color: #0000ff; padding: 0.2rem 0.2rem;}
+      .button_panel .text_button:hover, .text_button:hover { cursor:pointer; }
+      .button_panel .text_button:active, .text_button:active { color: #000000; }
+      .button_panel .active { border-bottom:1px solid black; }
+/*
+      .button_panel .button { cursor:pointer; padding: 0.4rem 0.4rem; background-color:#cccccc; border-radius: 0.2rem;}
       .button_panel .button:hover { background-color: #cccccc; }
-      .button_panel .active { background-color: #cccccc; cursor:default;}
       .button_panel input { display:table-cell; border:1px solid #cccccc; margin: 0; padding:0.4rem 0.4rem; }
       .button_panel select { display:table-cell; }
+      .button_panel span { display:table-cell; margin:0 0.2rem; }
+      */
+      .button_panel .button { padding:0.35rem 0.5rem; cursor:pointer; background-color:#cccccc; border-radius:0.2rem;}
+      .button_panel .button:hover { background-color:black; color:white}
 
       /* Attributes update panel */
       #attribute_properties { display:table; width:100%; border-collapse:collapse; margin:1rem 0; border:1px solid #cccccc; }
       #attribute_properties .property { display:table-row;}
       #attribute_properties .property span { display:table-cell; padding: 0.2rem 0.4rem; }
       #attribute_properties .property span input { width: 100%; border:1px solid #cccccc; margin: 0;}
+      #attribute_properties .property span input:focus { border:1px solid black; }
       #attribute_properties .property span select { width: 100%; border:1px solid #cccccc; margin: 0;}
 
       #attribute_options { display:table; width:100%; border-collapse:collapse; margin:1rem 0; border:1px solid #cccccc; table-layout:fixed; }
@@ -354,14 +363,6 @@
       }
       .text_panel p {
       text-align: left;
-      }
-
-      .action_text_link {
-      background-color: #aaeeff;
-      color: #000000;
-      }
-      .action_text_link:hover {
-      cursor: pointer;
       }
 
       .svg_button:hover {
@@ -630,13 +631,13 @@
         <button class="leftsidebar_accordion active" id="attr">Attributes</button>
         <div class="leftsidebar_accordion_panel show">
           <div class="button_panel" style="margin:1rem 0;">
-            <span class="button active" onclick="show_region_attributes_update_panel()" id="button_show_region_attributes" title="Show region attributes">Region Attributes</span>
-            <span class="button" onclick="show_file_attributes_update_panel()" id="button_show_file_attributes" title="Show file attributes">File Attributes</span>
+            <span class="text_button" onclick="show_region_attributes_update_panel()" id="button_show_region_attributes" title="Show region attributes">Region Attributes</span>
+            <span class="text_button" onclick="show_file_attributes_update_panel()" id="button_show_file_attributes" title="Show file attributes">File Attributes</span>
           </div>
           <div id="attributes_update_panel">
             <div class="button_panel">
-              <input style="width:90%" type="text" placeholder="attribute name" id="user_input_attribute_id" value="properties">
-              <span class="button" title="Add new attribute">&plus;</span>
+              <input style="width:65%" type="text" placeholder="attribute name" id="user_input_attribute_id" value="">
+              <span class="button" onclick="add_new_attribute_from_user_input()" title="Add new attribute">&plus;</span>
               <span class="button" onclick="delete_existing_attribute_get_confirmation()" title="Delete existing attribute">&minus;</span>
             </div>
             <div class="button_panel" style="margin:0.1rem 0;" >
@@ -644,6 +645,7 @@
             </div>
             <div id="attribute_properties"></div>
             <div id="attribute_options"></div>
+            <p style="text-align:center"><span class="text_button" title="Show a spreadsheet like editor for all attribute values">Toggle Attributes Editor</span></p>
             <!--
             <ul>
               <li>to delete an option, delete corresponding "option id"</li>

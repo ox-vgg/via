@@ -230,6 +230,7 @@ function _via_init() {
                '. Ready !', 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
   show_home_panel();
   init_leftsidebar_accordion();
+  show_region_attributes_set_active_button();
 
   _via_is_local_storage_available = check_local_storage();
   if (_via_is_local_storage_available) {
@@ -3937,12 +3938,30 @@ function toggle_img_fn_list_visibility() {
 //
 // region and file attributes update panel
 //
+function show_region_attributes_set_active_button() {
+  var attribute_type;
+  for ( attribute_type in _via_attributes ) {
+    var bid = 'button_show_' + attribute_type + '_attributes';
+    document.getElementById(bid).classList.remove('active');
+  }
+  var bid = 'button_show_' + _via_attribute_being_updated + '_attributes';
+  document.getElementById(bid).classList.add('active');
+}
+
 function show_region_attributes_update_panel() {
-  _via_attribute_being_updated = 'region';
+  if ( _via_attribute_being_updated !== 'region' ) {
+    _via_attribute_being_updated = 'region';
+    update_attributes_update_panel();
+    show_region_attributes_set_active_button();
+  }
 }
 
 function show_file_attributes_update_panel() {
-  _via_attribute_being_updated = 'file';
+  if ( _via_attribute_being_updated !== 'file' ) {
+    _via_attribute_being_updated = 'file';
+    update_attributes_update_panel();
+    show_region_attributes_set_active_button();
+  }
 }
 
 function update_attributes_name_list() {
@@ -3956,7 +3975,8 @@ function update_attributes_name_list() {
   for ( attr in _via_attributes[_via_attribute_being_updated] ) {
     var o = document.createElement('option');
     o.setAttribute('value', attr)
-    o.text = _via_attributes[_via_attribute_being_updated][attr].description;
+    //o.text = _via_attributes[_via_attribute_being_updated][attr].description;
+    o.text = attr;
     if ( attribute_name0 === attr ||
          attribute_desc0 === o.text ) {
       o.setAttribute('selected', 'selected');
@@ -3971,12 +3991,17 @@ function update_attributes_update_panel() {
 }
 
 function show_attribute_properties() {
-  var attr = document.getElementById('attributes_name_list').value;
+  var attr_list = document.getElementById('attributes_name_list');
+  document.getElementById('attribute_properties').innerHTML = '';
+  document.getElementById('attribute_options').innerHTML = '';
+
+  if ( attr_list.options.length === 0 ) {
+    return;
+  }
+
+  var attr = attr_list.value;
   var attr_type = _via_attributes[_via_attribute_being_updated][attr].type;
   var attr_desc = _via_attributes[_via_attribute_being_updated][attr].description;
-
-  var attribute_properties = document.getElementById('attribute_properties');
-  attribute_properties.innerHTML = '';
 
   attribute_property_add_input_property('Name of attribute (appears in exported annotations)',
                                         'Name',
@@ -4134,9 +4159,10 @@ function attribute_property_on_update(p) {
     break;
   case 'attribute_type':
     _via_attributes[_via_attribute_being_updated][attr].type = p.value;
-    console.log(p.value);
     if( p.value === VIA_ATTRIBUTE_TYPE.TEXT ) {
       delete _via_attributes[_via_attribute_being_updated][attr].options;
+    } else {
+      _via_attributes[_via_attribute_being_updated][attr].options = {};
     }
     show_attribute_properties();
     break;
@@ -4252,10 +4278,6 @@ function attribute_property_id_exists(name) {
   return false;
 }
 
-function add_new_attribute() {
-
-}
-
 function delete_existing_attribute_get_confirmation() {
   var attr = document.getElementById('user_input_attribute_id').value;
   if ( attr === '' ) {
@@ -4293,6 +4315,30 @@ function delete_existing_attribute_confirmed(input) {
 function delete_existing_attribute(attribute_type, attribute_id) {
   delete _via_attributes[attribute_type][attribute_id];
   update_attributes_update_panel();
+}
+
+function add_new_attribute_from_user_input() {
+  var attr = document.getElementById('user_input_attribute_id').value;
+  if ( attr === '' ) {
+    show_message('Enter the name of attribute that you wish to delete');
+    return;
+  }
+  if ( attribute_property_id_exists(attr) ) {
+    show_message('The ' + _via_attribute_being_updated + ' attribute [' + attr + '] already exists.');
+    return
+  } else {
+    add_new_attribute(attr);
+    update_attributes_update_panel();
+    document.getElementById('attributes_name_list').value = attr;
+    show_attribute_properties();
+    show_message('Added ' + _via_attribute_being_updated + ' attribute [' + attr + '].');
+  }
+}
+
+function add_new_attribute(attribute_id) {
+  _via_attributes[_via_attribute_being_updated][attribute_id] = {};
+  _via_attributes[_via_attribute_being_updated][attribute_id].type = 'text';
+  _via_attributes[_via_attribute_being_updated][attribute_id].description = '';
 }
 
 //
