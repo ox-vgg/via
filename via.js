@@ -4014,6 +4014,7 @@ function show_attribute_properties() {
   var attr_type = _via_attributes[_via_attribute_being_updated][attr].type;
   var attr_desc = _via_attributes[_via_attribute_being_updated][attr].description;
 
+
   attribute_property_add_input_property('Name of attribute (appears in exported annotations)',
                                         'Name',
                                         attr,
@@ -4022,6 +4023,14 @@ function show_attribute_properties() {
                                         'Desc.',
                                         attr_desc,
                                         'attribute_description');
+
+  if ( attr_type === 'text' ) {
+    var attr_default_value = _via_attributes[_via_attribute_being_updated][attr].default_value;
+    attribute_property_add_input_property('Default value of this attribute',
+                                          'Def.',
+                                          attr_default_value,
+                                          'attribute_default_value');
+  }
 
   // add dropdown for type of attribute
   var p = document.createElement('div');
@@ -4059,25 +4068,31 @@ function show_attribute_properties() {
   case VIA_ATTRIBUTE_TYPE.RADIO:
     var p = document.createElement('div');
     p.setAttribute('class', 'property');
+    p.setAttribute('style', 'text-align:center');
     var c0 = document.createElement('span');
-    c0.setAttribute('style', 'width:30%');
+    c0.setAttribute('style', 'width:25%');
     c0.setAttribute('title', 'When selected, this is the value that appears in exported annotations');
-    c0.innerHTML = 'option id';
+    c0.innerHTML = 'id';
     var c1 = document.createElement('span');
     c1.setAttribute('style', 'width:60%');
     c1.setAttribute('title', 'This is the text that is seen by the annotator');
-    c1.innerHTML = 'option description';
+    c1.innerHTML = 'description';
+    var c2 = document.createElement('span');
+    c2.setAttribute('title', 'The default value of this option');
+    c2.innerHTML = 'def.';
     p.appendChild(c0);
     p.appendChild(c1);
+    p.appendChild(c2);
     document.getElementById('attribute_options').appendChild(p);
 
     var options = _via_attributes[_via_attribute_being_updated][attr].options;
-    var key;
-    for ( key in options ) {
-      var val = options[key];
-      attribute_property_add_option(key, val);
+    var option_id;
+    for ( option_id in options ) {
+      var option_desc = options[option_id];
+      var option_default = _via_attributes[_via_attribute_being_updated][attr].default_options[option_id];
+      attribute_property_add_option(attr, option_id, option_desc, option_default, attr_type);
     }
-    attribute_property_add_new_entry_option();
+    attribute_property_add_new_entry_option(attr, attr_type);
     break;
   default:
     console.log('Attribute type ' + attr_type + ' is unavailable');
@@ -4102,34 +4117,53 @@ function attribute_property_add_input_property(title, name, value, id) {
   document.getElementById('attribute_properties').appendChild(p);
 }
 
-function attribute_property_add_option(key, value) {
+function attribute_property_add_option(attr_id, option_id, option_desc, option_default, attribute_type) {
   var p = document.createElement('div');
   p.setAttribute('class', 'property');
   var c0 = document.createElement('span');
   var c0b = document.createElement('input');
-  c0b.setAttribute('value', key);
+  c0b.setAttribute('value', option_id);
+  c0b.setAttribute('title', option_id);
   c0b.setAttribute('onblur', 'attribute_property_on_option_update(this)');
-  c0b.setAttribute('id', '_via_attribute_option_id_' + key);
+  c0b.setAttribute('id', '_via_attribute_option_id_' + option_id);
 
   var c1 = document.createElement('span');
   var c1b = document.createElement('input');
-  c1b.setAttribute('value', value);
+  c1b.setAttribute('value', option_desc);
+  c1b.setAttribute('title', option_desc);
   c1b.setAttribute('onblur', 'attribute_property_on_option_update(this)');
-  c1b.setAttribute('id', '_via_attribute_option_description_' + key);
+  c1b.setAttribute('id', '_via_attribute_option_description_' + option_id);
+
+  var c2 = document.createElement('span');
+  var c2b = document.createElement('input');
+  c2b.setAttribute('type', attribute_type);
+  if ( typeof option_default !== 'undefined' ) {
+    c2b.checked = option_default;
+  }
+  if ( attribute_type === 'radio' ) {
+    // ensured that use can activate only one radio button
+    c2b.setAttribute('name', attr_id);
+  }
+  c2b.setAttribute('onclick', 'attribute_property_on_option_update(this)');
+  c2b.setAttribute('id', '_via_attribute_option_default_' + option_id);
 
   c0.appendChild(c0b);
-  c1.appendChild(c1b)
+  c1.appendChild(c1b);
+  c2.appendChild(c2b);
   p.appendChild(c0);
   p.appendChild(c1);
+  p.appendChild(c2);
 
   document.getElementById('attribute_options').appendChild(p);
 }
 
-function attribute_property_add_new_entry_option() {
+function attribute_property_add_new_entry_option(attr_id, attribute_type) {
   var p = document.createElement('div');
   p.setAttribute('class', 'property');
+
   var c0 = document.createElement('span');
   var c0b = document.createElement('input');
+  c0b.setAttribute('type', 'text');
   c0b.setAttribute('value', '');
   c0b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
   c0b.setAttribute('id', '_via_attribute_new_option_id');
@@ -4137,15 +4171,27 @@ function attribute_property_add_new_entry_option() {
 
   var c1 = document.createElement('span');
   var c1b = document.createElement('input');
+  c1b.setAttribute('type', 'text');
   c1b.setAttribute('value', '');
   c1b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
   c1b.setAttribute('id', '_via_attribute_new_option_description');
   c1b.setAttribute('placeholder', 'Optional description');
 
+  var c2 = document.createElement('span');
+  var c2b = document.createElement('input');
+  c2b.setAttribute('type', attribute_type);
+  if ( attribute_type === 'radio' ) {
+    c2b.setAttribute('name', attr_id);
+  }
+  c2b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
+  c2b.setAttribute('id', '_via_attribute_new_option_default');
+
   c0.appendChild(c0b);
-  c1.appendChild(c1b)
+  c1.appendChild(c1b);
+  c2.appendChild(c2b);
   p.appendChild(c0);
   p.appendChild(c1);
+  p.appendChild(c2);
 
   document.getElementById('attribute_options').appendChild(p);
 }
@@ -4168,6 +4214,10 @@ function attribute_property_on_update(p) {
     _via_attributes[_via_attribute_being_updated][attr].description = p.value;
     update_attributes_update_panel();
     break;
+  case 'attribute_default_value':
+    _via_attributes[_via_attribute_being_updated][attr].default_value = p.value;
+    update_attributes_update_panel();
+    break;
   case 'attribute_type':
     _via_attributes[_via_attribute_being_updated][attr].type = p.value;
     if( p.value === VIA_ATTRIBUTE_TYPE.TEXT ) {
@@ -4182,12 +4232,9 @@ function attribute_property_on_update(p) {
 
 function attribute_property_on_option_update(p) {
   var attr = document.getElementById('attributes_name_list').value;
-  console.log('attribute_property_on_option_update() : ' + p.id);
   if ( p.id.startsWith('_via_attribute_option_id_') ) {
     var old_key = p.id.substr( '_via_attribute_option_id_'.length );
-    console.log(old_key);
     var new_key = p.value;
-    console.log(new_key)
     if ( old_key !== new_key ) {
       if ( attribute_property_option_id_exists(new_key) ) {
         show_message('An option with id [' + new_key + '] already exists.');
@@ -4215,7 +4262,28 @@ function attribute_property_on_option_update(p) {
     if ( p.value !== old_value ) {
       _via_attributes[_via_attribute_being_updated][attr].options[key] = p.value;
       show_attribute_properties();
-      console.log('Option updated in ' + p.id);
+    }
+  }
+
+  if ( p.id.startsWith('_via_attribute_option_default_') ) {
+    var key = p.id.substr( '_via_attribute_option_default_'.length );
+    var old_value = _via_attributes[_via_attribute_being_updated][attr].default_options[key];
+    if ( typeof old_value === 'undefined' ) {
+      _via_attributes[_via_attribute_being_updated][attr].default_options[key] = p.checked;
+      show_attribute_properties();
+    } else {
+      if ( p.value !== old_value ) {
+        switch ( _via_attributes[_via_attribute_being_updated][attr].type ) {
+        case 'radio':
+          // to ensure that only one radio button is selected at a time
+          _via_attributes[_via_attribute_being_updated][attr].default_options = {};
+          _via_attributes[_via_attribute_being_updated][attr].default_options[key] = p.checked;
+          break;
+        default:
+          _via_attributes[_via_attribute_being_updated][attr].default_options[key] = p.checked;
+        }
+        show_attribute_properties();
+      }
     }
   }
 }
@@ -4464,6 +4532,7 @@ function edit_file_metadata_in_annotation_editor() {
 
 function toggle_annotation_editor() {
   document.getElementById('annotation_editor_panel').classList.toggle('display_block');
+  update_annotation_editor();
 }
 
 function update_annotation_editor() {
@@ -4556,6 +4625,9 @@ function annotation_editor_get_metadata_row_html(row_id) {
     var attr_html_id = attr_id + row_id;
     switch(attr_type) {
     case 'text':
+      if ( attr_value === '' ) {
+        attr_value = _via_attributes[_via_metadata_being_updated][attr_id].default_value;
+      }
       col.innerHTML = '<textarea ' +
         'onchange="annotation_editor_on_metadata_update()" ' +
         'id="' + attr_html_id + '">' + attr_value + '</textarea>';
@@ -4571,9 +4643,18 @@ function annotation_editor_get_metadata_row_html(row_id) {
         option.setAttribute('value', option_id);
         option.setAttribute('id', option_html_id);
 
+        var option_value =  _via_img_metadata[_via_image_id].regions[row_id].region_attributes[option_id];
+        if ( typeof option_value === 'underfined' ) {
+          // use default value
+          option.checked = _via_attributes[_via_metadata_being_updated][attr_id].default_options[option_id];
+        } else {
+          option.checked = option_value;
+        }
+
         var label  = document.createElement('label');
         label.setAttribute('for', option_html_id);
-        label.innerHTML = option_value;
+        var option_desc = _via_attributes[_via_metadata_being_updated][attr_id].options[option_id];
+        label.innerHTML = option_desc;
 
         var container = document.createElement('span');
         container.appendChild(option);
@@ -4592,6 +4673,12 @@ function annotation_editor_get_metadata_row_html(row_id) {
         option.setAttribute('name', attr_id);
         option.setAttribute('value', option_id);
         option.setAttribute('id', option_html_id);
+
+        if ( _via_attributes[_via_metadata_being_updated][attr_id].options[option_id] ) {
+          option.checked = true;
+        } else {
+          option.checked = false;
+        }
 
         var label  = document.createElement('label');
         label.setAttribute('for', option_html_id);

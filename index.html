@@ -242,6 +242,8 @@
       #attribute_options .property span { display:table-cell; padding: 0.2rem 0.2rem; font-weight:bold; }
       #attribute_options .property input { display:table-cell; width:94%; border:none; border-bottom:1px solid #cccccc; margin: 0; font-size: 0.8rem;}
       #attribute_options .property input:focus { border-bottom:1px solid #000000; background-color:#f2f2f2; color:#000000; }
+      #attribute_options .property span input[type=checkbox] { vertical-align:middle; }
+      #attribute_options .property span input[type=radio] { vertical-align:middle; }
 
       /* overlay panel used to gather user inputs before invoking a function using invoke_with_user_inputs() */
       #user_input_panel { position:fixed; display:none; width:100%; height:100%; top:0; left:0; right:0; bottom:0; background-color: rgba(0,0,0,0.6); z-index:100; }
@@ -651,7 +653,11 @@
             </div>
             <div id="attribute_properties"></div>
             <div id="attribute_options"></div>
-            <p style="text-align:center"><span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor()">Toggle Annotation Editor</span></p>
+            <p style="text-align:center">
+              <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor()">Annotation Editor</span>|
+              <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor()">Save Attributes</span>
+            </p>
+
             <!--
             <ul>
               <li>to delete an option, delete corresponding "option id"</li>
