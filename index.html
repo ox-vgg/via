@@ -52,6 +52,7 @@
       margin: 0;
       font-family: sans-serif;
       }
+      * { box-sizing: border-box; }
 
       /* Top panel : #navbar, #toolbar */
       .top_panel {
@@ -180,27 +181,10 @@
       #canvas_panel canvas:focus {
       outline: none;
       }
-      #leftsidebar_collapse_panel {
-      display: table-cell;
-      position: relative;
-      width: 10px;
-      z-index: 1;
-      vertical-align: top;
-      font-size: small;
-      }
-      #leftsidebar_collapse_button {
-      background-color: black;
-      width: 10px;
-      height: 25px;
-      color: white;
-      padding: 0.2em;
-      border-radius: 0px 5px 5px 0px;
-      font-size: large;
-      }
-      #leftsidebar_collapse_button:hover {
-      color: red;
-      cursor: pointer;
-      }
+
+      #leftsidebar_collapse_panel { display:table-cell; position:relative; width:0.5%; z-index:10; vertical-align:top; }
+      #leftsidebar_collapse_button { font-size: large; padding-left:0.2rem; }
+      #leftsidebar_collapse_button:hover { color: red; cursor: pointer; }
 
       /* Left sidebar accordion */
       button.leftsidebar_accordion {
@@ -237,20 +221,14 @@
       /* buttons */
       .button_panel { display:table; width:100%; }
       .button_panel .text_button, .text_button { color: #0000ff; padding: 0.2rem 0.2rem;}
+      .button_panel .flush_right { float:right; }
       .button_panel .text_button:hover, .text_button:hover { cursor:pointer; }
       .button_panel .text_button:active, .text_button:active { color: #000000; }
       .button_panel .active { border-bottom:1px solid black; }
-/*
-      .button_panel .button { cursor:pointer; padding: 0.4rem 0.4rem; background-color:#cccccc; border-radius: 0.2rem;}
-      .button_panel .button:hover { background-color: #cccccc; }
-      .button_panel input { display:table-cell; border:1px solid #cccccc; margin: 0; padding:0.4rem 0.4rem; }
-      .button_panel select { display:table-cell; }
-      .button_panel span { display:table-cell; margin:0 0.2rem; }
-      */
       .button_panel .button { padding:0.35rem 0.5rem; cursor:pointer; background-color:#cccccc; border-radius:0.2rem;}
       .button_panel .button:hover { background-color:black; color:white}
 
-      /* Attributes update panel */
+      /* Attributes properties: name, description, type, ... */
       #attribute_properties { display:table; width:100%; border-collapse:collapse; margin:1rem 0; border:1px solid #cccccc; }
       #attribute_properties .property { display:table-row;}
       #attribute_properties .property span { display:table-cell; padding: 0.2rem 0.4rem; }
@@ -258,6 +236,7 @@
       #attribute_properties .property span input:focus { border:1px solid black; }
       #attribute_properties .property span select { width: 100%; border:1px solid #cccccc; margin: 0;}
 
+      /* Attributes options: options for attribute type={checkbox,radio,...} */
       #attribute_options { display:table; width:100%; border-collapse:collapse; margin:1rem 0; border:1px solid #cccccc; table-layout:fixed; }
       #attribute_options .property { display:table-row;}
       #attribute_options .property span { display:table-cell; padding: 0.2rem 0.2rem; font-weight:bold; }
@@ -274,6 +253,24 @@
       #user_input_panel .content .user_confirm { display:table; width:100%; text-align:center; margin:2rem 0;}
       #user_input_panel .content .user_confirm .ok { display:table-cell; width:48%; }
       #user_input_panel .content .user_confirm .cancel { display:table-cell; width:48%; }
+
+      /* Attribute editor */
+      .display_none { display:none; }
+      .display_block { display:block !important; }
+      #annotation_editor_panel { position:fixed; display:none; width:100%; height:20%; max-height:30%; left:0; bottom:0; background-color:white; border-top:2px solid #cccccc; padding:0.2rem 1rem; font-size:small; overflow:auto; z-index:100; box-shadow: 0 0 1rem #cccccc;}
+      #annotation_editor { display:table; margin-bottom:3rem; border-collapse:collapse; font-size:0.8rem; }
+      #annotation_editor .row { display:table-row; }
+      #annotation_editor .col { display:table-cell; padding:0.4rem 0.6rem; border:1px solid #f2f2f2; vertical-align:middle; }
+      #annotation_editor .header { font-weight:bold; }
+      #annotation_editor .id { font-weight:bold; }
+      #annotation_editor .col input[type=text] { font-size:0.8rem; width:10rem; border:none; border-bottom:1px solid #cccccc; margin: 0;}
+      #annotation_editor .col input[type=checkbox] { vertical-align:middle; font-size:0.8rem; }
+      #annotation_editor .col label { vertical-align:middle; }
+      #annotation_editor .col input[type=radio] { vertical-align:middle; }
+      #annotation_editor .col textarea { border:1px solid #cccccc; padding:0; margin:0; font-size:0.8rem; background-color:#ffffff; }
+      #annotation_editor .col textarea:focus { border:1px dashed #cccccc; }
+      #annotation_editor .col span { display:block; }
+      #annotation_editor .col horizontal_container { display:inline-block; }
 
       /* Region shape selection panel inside leftsidebar */
       ul.region_shape {
@@ -505,8 +502,17 @@
   </head>
 
   <body onload="_via_init()" onresize="_via_update_ui_components()">
-    <!-- used to gather user inputs before invoking a function using invoke_with_user_inputs() -->
+    <!-- used by invoke_with_user_inputs() to gather user inputs -->
     <div id="user_input_panel"></div>
+    <!-- spreadsheet like editor for annotations -->
+    <div id="annotation_editor_panel">
+      <div class="button_panel" style="margin:0.5rem 0;">
+        <span class="text_button" onclick="edit_region_metadata_in_annotation_editor()" id="button_edit_region_metadata" title="Manual annotations of regions">Region Annotations</span>
+        <span class="text_button" onclick="edit_file_metadata_in_annotation_editor()" id="button_edit_file_metadata" title="Manual annotations of a file">File Annotations</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="edit_file_metadata_in_annotation_editor()" id="button_edit_file_metadata" title="Close this window of annotation editor">&times;</span>
+      </div>
+      <div id="annotation_editor"></div>
+    </div>
 
     <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
@@ -590,7 +596,7 @@
 
           <li id="toolbar_prev_img" style="margin-left: 1em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
           <li id="toolbar_next_img" onclick="move_to_next_image()" title="Next Image">&rarr;</li>
-          <li id="toolbar_list_img" onclick="toggle_img_list()" title="List Images">&#9776;</li>
+          <li id="toolbar_list_img" onclick="show_leftsidebar(); toggle_img_fn_list_visibility();" title="List Images">&#9776;</li>
 
           <li id="toolbar_zoom_out" style="margin-left: 2em;" onclick="zoom_out()" title="Zoom Out">&minus;</li>
           <li id="toolbar_zoom_in" onclick="zoom_in()" title="Zoom In">&plus;</li>
@@ -630,7 +636,7 @@
 
         <button class="leftsidebar_accordion active" id="attr">Attributes</button>
         <div class="leftsidebar_accordion_panel show">
-          <div class="button_panel" style="margin:1rem 0;">
+          <div class="button_panel" style="padding:1rem 0;">
             <span class="text_button" onclick="show_region_attributes_update_panel()" id="button_show_region_attributes" title="Show region attributes">Region Attributes</span>
             <span class="text_button" onclick="show_file_attributes_update_panel()" id="button_show_file_attributes" title="Show file attributes">File Attributes</span>
           </div>
@@ -645,7 +651,7 @@
             </div>
             <div id="attribute_properties"></div>
             <div id="attribute_options"></div>
-            <p style="text-align:center"><span class="text_button" title="Show a spreadsheet like editor for all attribute values">Toggle Attributes Editor</span></p>
+            <p style="text-align:center"><span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor()">Toggle Annotation Editor</span></p>
             <!--
             <ul>
               <li>to delete an option, delete corresponding "option id"</li>
@@ -700,8 +706,7 @@
 
       </div> <!-- end of leftsidebar -->
       <div id="leftsidebar_collapse_panel">
-        <div onclick="toggle_leftsidebar()" id="leftsidebar_collapse_button" title="Show/hide left toolbar">
-          &ltrif;</div>
+        <div onclick="toggle_leftsidebar()" id="leftsidebar_collapse_button" title="Show/hide left toolbar">&ltrif;</div>
       </div>
 
       <!-- Main display area: contains image canvas, ... -->
@@ -820,9 +825,8 @@
     <!--    -->
     <script src="via.js"></script>
 
-    <!--    -->
+    <!---->
     <script src="via_demo.js"></script>
-
 
     <!-- Unit Tests    -->
     <!--

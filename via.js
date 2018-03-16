@@ -171,6 +171,9 @@ var VIA_ATTRIBUTE_TYPE = { TEXT:'text',
 var _via_user_input_handler = null;
 var _via_user_input_data = {};
 
+// annotation editor
+var _via_metadata_being_updated      = 'region'; // {region, file}
+
 // persistence to local storage
 var _via_is_local_storage_available = false;
 var _via_is_save_ongoing = false;
@@ -230,7 +233,8 @@ function _via_init() {
                '. Ready !', 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
   show_home_panel();
   init_leftsidebar_accordion();
-  show_region_attributes_set_active_button();
+  attribute_update_panel_set_active_button();
+  annotation_editor_set_active_button();
 
   _via_is_local_storage_available = check_local_storage();
   if (_via_is_local_storage_available) {
@@ -255,7 +259,7 @@ function show_home_panel() {
     show_all_canvas();
     set_all_text_panel_display('none');
   } else {
-    var start_info = '<p><a title="Load or Add Images" style="cursor: pointer; color: blue;" onclick="sel_local_images()">Load images</a> to start annotation or, see <a title="Getting started with VGG Image Annotator" style="cursor: pointer; color: blue;" onclick="show_getting_started_panel()">Getting Started</a>.</p>';
+    var start_info = '<p><span class="text_button" title="Load or Add Images" onclick="sel_local_images()">Load images</span> to start annotation or, see <span class="text_button" title="Getting started with VGG Image Annotator" onclick="show_getting_started_panel()">Getting Started</a>.</p>';
     clear_image_display_area();
     document.getElementById('via_start_info_panel').innerHTML = start_info;
     document.getElementById('via_start_info_panel').style.display = 'block';
@@ -1080,6 +1084,7 @@ function _via_load_canvas_regions() {
       _via_canvas_regions[i].shape_attributes['ry'] = Math.round(ry);
       break;
 
+    case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
     case VIA_REGION_SHAPE.POLYGON:
       var all_points_x = regions[i].shape_attributes['all_points_x'].slice(0);
       var all_points_y = regions[i].shape_attributes['all_points_y'].slice(0);
@@ -1861,6 +1866,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
       _via_draw_ellipse_region(region_x0, region_y0, dx, dy, false);
       break;
 
+    case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
     case VIA_REGION_SHAPE.POLYGON:
       // this is handled by the if ( _via_is_user_drawing_polygon ) { ... }
       // see below
@@ -3485,8 +3491,8 @@ function show_localStorage_recovery_options() {
     hstr.push('<ul><li>Saved on : ' + saved_date + '</li>');
     hstr.push('<li>Size : ' + Math.round(saved_data_size) + ' KB</li>');
     hstr.push('</ul>');
-    hstr.push('<a title="Save as JSON" style="cursor: pointer; color: blue;" onclick="download_localStorage_data(\'json\')" title="Recover annotation data">Save</a>');
-    hstr.push('<a style="padding-left:2em; cursor: pointer; color: blue;" onclick="remove_via_data_from_localStorage(); show_home_panel();" title="Discard annotation data">Discard</a>');
+    hstr.push('<span class="text_button" title="Save annotations as JSON" onclick="download_localStorage_data(\'json\')">Save</span>');
+    hstr.push('<span class="text_button" style="padding-left:2em;" onclick="remove_via_data_from_localStorage(); show_home_panel();" title="Discard annotation data">Discard</span>');
 
     hstr.push('<p style="clear: left;"><b>If you continue, the cached data will be discarded!</b></p></div>');
     via_start_info_panel.innerHTML += hstr.join('');
@@ -3836,6 +3842,11 @@ function toggle_leftsidebar() {
     document.getElementById('leftsidebar_collapse_button').innerHTML ='&rtrif;';
   }
 }
+function show_leftsidebar() {
+  var leftsidebar = document.getElementById('leftsidebar');
+  leftsidebar.style.display = 'table-cell';
+  document.getElementById('leftsidebar_collapse_button').innerHTML ='&ltrif;';
+}
 
 // source: https://www.w3schools.com/howto/howto_js_accordion.asp
 function init_leftsidebar_accordion() {
@@ -3938,7 +3949,7 @@ function toggle_img_fn_list_visibility() {
 //
 // region and file attributes update panel
 //
-function show_region_attributes_set_active_button() {
+function attribute_update_panel_set_active_button() {
   var attribute_type;
   for ( attribute_type in _via_attributes ) {
     var bid = 'button_show_' + attribute_type + '_attributes';
@@ -3952,7 +3963,7 @@ function show_region_attributes_update_panel() {
   if ( _via_attribute_being_updated !== 'region' ) {
     _via_attribute_being_updated = 'region';
     update_attributes_update_panel();
-    show_region_attributes_set_active_button();
+    attribute_update_panel_set_active_button();
   }
 }
 
@@ -3960,7 +3971,7 @@ function show_file_attributes_update_panel() {
   if ( _via_attribute_being_updated !== 'file' ) {
     _via_attribute_being_updated = 'file';
     update_attributes_update_panel();
-    show_region_attributes_set_active_button();
+    attribute_update_panel_set_active_button();
   }
 }
 
@@ -4425,6 +4436,181 @@ function show_user_input_panel() {
 
 function hide_user_input_panel() {
   document.getElementById('user_input_panel').style.display = 'none';
+}
+
+//
+// annotations editor panel
+//
+function annotation_editor_set_active_button() {
+  var attribute_type;
+  for ( attribute_type in _via_attributes ) {
+    var bid = 'button_edit_' + attribute_type + '_metadata';
+    document.getElementById(bid).classList.remove('active');
+  }
+  var bid = 'button_edit_' + _via_metadata_being_updated + '_metadata';
+  document.getElementById(bid).classList.add('active');
+}
+
+function edit_region_metadata_in_annotation_editor() {
+  _via_metadata_being_updated = 'region';
+  annotation_editor_set_active_button();
+  update_annotation_editor();
+}
+function edit_file_metadata_in_annotation_editor() {
+  _via_metadata_being_updated = 'file';
+  annotation_editor_set_active_button();
+  update_annotation_editor();
+}
+
+function toggle_annotation_editor() {
+  document.getElementById('annotation_editor_panel').classList.toggle('display_block');
+}
+
+function update_annotation_editor() {
+  var ae = document.getElementById('annotation_editor');
+  ae.innerHTML = '';
+  annotation_editor_update_header_html();
+  annotation_editor_update_metadata_html();
+}
+
+function annotation_editor_update_header_html() {
+  var head = document.createElement('div');
+  head.setAttribute('class', 'row');
+  head.setAttribute('id', 'annotation_editor_header');
+
+  if ( _via_metadata_being_updated === 'region' ) {
+    var rid_col = document.createElement('span');
+    rid_col.setAttribute('class', 'col');
+    rid_col.innerHTML = '';
+    head.appendChild(rid_col);
+  }
+
+  var attr_id;
+  for ( attr_id in _via_attributes[_via_metadata_being_updated] ) {
+    var col = document.createElement('span');
+    col.setAttribute('class', 'col header');
+    col.innerHTML = attr_id;
+    head.appendChild(col);
+  }
+
+  var ae = document.getElementById('annotation_editor');
+  if ( ae.childNodes.length === 0 ) {
+    ae.appendChild(head);
+  } else {
+    if ( ae.firstChild.id === 'annotation_editor_header') {
+      ae.replaceChild(head, ae.firstChild);
+    } else {
+      // header node is absent
+      ae.insertBefore(head, ae.firstChild);
+    }
+  }
+}
+
+function annotation_editor_update_metadata_html() {
+  var ae = document.getElementById('annotation_editor');
+  switch ( _via_metadata_being_updated ) {
+  case 'region':
+    var rindex;
+    for ( rindex = 0; rindex < _via_img_metadata[_via_image_id].regions.length; ++rindex ) {
+      ae.appendChild( annotation_editor_get_metadata_row_html(rindex) );
+    }
+    break;
+  case 'file':
+    ae.appendChild( annotation_editor_get_metadata_row_html(0) );
+    break;
+  }
+
+}
+
+function annotation_editor_get_metadata_row_html(row_id) {
+  var row = document.createElement('div');
+  row.setAttribute('class', 'row');
+  row.setAttribute('id', 'ae_' + _via_metadata_being_updated + '_' + row_id);
+
+  if ( _via_metadata_being_updated === 'region' ) {
+    var rid = document.createElement('span');
+    rid.setAttribute('class', 'col id');
+    rid.innerHTML = (row_id + 1);
+    row.appendChild(rid);
+  }
+
+  var attr_id;
+  for ( attr_id in _via_attributes[_via_metadata_being_updated] ) {
+    var col = document.createElement('span');
+    col.setAttribute('class', 'col');
+
+    var attr_value = '';
+    switch(_via_metadata_being_updated) {
+    case 'region':
+      if ( _via_img_metadata[_via_image_id].regions[row_id].region_attributes.hasOwnProperty(attr_id) ) {
+        attr_value = _via_img_metadata[_via_image_id].regions[row_id].region_attributes[attr_id];
+      }
+    case 'file':
+      if ( _via_img_metadata[_via_image_id].file_attributes.hasOwnProperty(attr_id) ) {
+        attr_value = _via_img_metadata[_via_image_id].file_attributes[attr_id];
+      }
+    }
+
+    var attr_type    = _via_attributes[_via_metadata_being_updated][attr_id].type;
+    var attr_desc    = _via_attributes[_via_metadata_being_updated][attr_id].desc;
+    var attr_html_id = attr_id + row_id;
+    switch(attr_type) {
+    case 'text':
+      col.innerHTML = '<textarea ' +
+        'onchange="annotation_editor_on_metadata_update()" ' +
+        'id="' + attr_html_id + '">' + attr_value + '</textarea>';
+      break;
+    case 'checkbox':
+      var options = _via_attributes[_via_metadata_being_updated][attr_id].options;
+      var option_id;
+      for ( option_id in options ) {
+        var option_value = options[option_id];
+        var option_html_id = attr_html_id + '_' + option_id;
+        var option = document.createElement('input');
+        option.setAttribute('type', 'checkbox');
+        option.setAttribute('value', option_id);
+        option.setAttribute('id', option_html_id);
+
+        var label  = document.createElement('label');
+        label.setAttribute('for', option_html_id);
+        label.innerHTML = option_value;
+
+        var container = document.createElement('span');
+        container.appendChild(option);
+        container.appendChild(label);
+        col.appendChild(container);
+      }
+      break;
+    case 'radio':
+      var options = _via_attributes[_via_metadata_being_updated][attr_id].options;
+      var option_id;
+      for ( option_id in options ) {
+        var option_value = options[option_id];
+        var option_html_id = attr_html_id + '_' + option_id;
+        var option = document.createElement('input');
+        option.setAttribute('type', 'radio');
+        option.setAttribute('name', attr_id);
+        option.setAttribute('value', option_id);
+        option.setAttribute('id', option_html_id);
+
+        var label  = document.createElement('label');
+        label.setAttribute('for', option_html_id);
+        label.innerHTML = option_value;
+
+        var container = document.createElement('span');
+        container.appendChild(option);
+        container.appendChild(label);
+        col.appendChild(container);
+      }
+      break;
+    }
+
+    row.appendChild(col);
+  }
+  return row;
+}
+
+function annotation_editor_on_metadata_update() {
 }
 
 //
