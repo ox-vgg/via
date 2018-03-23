@@ -55,7 +55,7 @@
 
 "use strict";
 
-var VIA_VERSION      = '1.0.6';
+var VIA_VERSION      = '1.1.0';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -235,6 +235,7 @@ function _via_init() {
   init_leftsidebar_accordion();
   attribute_update_panel_set_active_button();
   annotation_editor_set_active_button();
+  init_message_panel();
 
   _via_is_local_storage_available = check_local_storage();
   if (_via_is_local_storage_available) {
@@ -897,6 +898,16 @@ function save_data_to_local_file(data, filename) {
 // Maintainers of user interface
 //
 
+function init_message_panel() {
+  var p = document.getElementById('message_panel');
+  p.addEventListener('mousedown', function() {
+    this.style.display = 'none';
+  }, false);
+  p.addEventListener('mouseover', function() {
+    clearTimeout(_via_message_clear_timer); // stop any previous timeouts
+  }, false);
+}
+
 function show_message(msg, t) {
   if ( _via_message_clear_timer ) {
     clearTimeout(_via_message_clear_timer); // stop any previous timeouts
@@ -905,9 +916,12 @@ function show_message(msg, t) {
   if ( typeof t === 'undefined' ) {
     timeout = VIA_THEME_MESSAGE_TIMEOUT_MS;
   }
-  document.getElementById('message_panel').innerHTML = msg;
+  document.getElementById('message_panel_content').innerHTML = msg;
+  document.getElementById('message_panel').style.display = 'block';
+
   _via_message_clear_timer = setTimeout( function() {
-    document.getElementById('message_panel').innerHTML = ' ';
+    document.getElementById('message_panel_content').innerHTML = '';
+    document.getElementById('message_panel').style.display = 'none';
   }, timeout);
 }
 
@@ -1015,7 +1029,7 @@ function show_image(image_index) {
                              _via_canvas_width, _via_canvas_height);
 
       // refresh the attributes panel
-      //update_attributes_panel();
+      //update_annotation_editor();
 
       _via_load_canvas_regions(); // image to canvas space transform
       _via_redraw_reg_canvas();
@@ -1385,7 +1399,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
           toggle_all_regions_selection(false);
         }
         set_region_select_state(nested_region_id, true);
-        update_attributes_panel();
+        update_annotation_editor();
       }
     }
     _via_redraw_reg_canvas();
@@ -1560,7 +1574,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         select_only_region(_via_current_polygon_region_id);
 
         _via_current_polygon_region_id = -1;
-        update_attributes_panel();
+        update_annotation_editor();
         save_current_data_to_browser_cache();
       } else {
         // user clicked on a new polygon point
@@ -1581,7 +1595,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
           toggle_all_regions_selection(false);
         }
         set_region_select_state(region_id, true);
-        update_attributes_panel();
+        update_annotation_editor();
         //show_message('Click and drag to move or resize the selected region');
       } else {
         if ( _via_is_user_drawing_region ) {
@@ -1590,7 +1604,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
           _via_is_region_selected     = false;
           toggle_all_regions_selection(false);
 
-          update_attributes_panel();
+          update_annotation_editor();
         } else {
           switch (_via_current_shape) {
           case VIA_REGION_SHAPE.POLYLINE: // handled by case for POLYGON
@@ -1620,7 +1634,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
             canvas_point_region.shape_attributes['cy'] = Math.round(_via_click_y0);
             _via_canvas_regions.push(canvas_point_region);
 
-            update_attributes_panel();
+            update_annotation_editor();
             save_current_data_to_browser_cache();
             break;
           }
@@ -1740,7 +1754,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
     } else {
       show_message('Prevented accidental addition of a very small region.');
     }
-    update_attributes_panel();
+    set_region_annotations_to_default_value( _via_user_sel_region_id );
+    update_annotation_editor();
     _via_redraw_reg_canvas();
     _via_reg_canvas.focus();
 
@@ -2911,7 +2926,6 @@ function rect_update_corner(corner_id, d, x, y, preserve_aspect_ratio) {
 
 function _via_update_ui_components() {
   if ( !_via_is_window_resized && _via_current_image_loaded ) {
-    show_message('Resizing window ...');
     set_all_text_panel_display('none');
     show_all_canvas();
 
@@ -2921,6 +2935,7 @@ function _via_update_ui_components() {
     if (_via_is_canvas_zoomed) {
       reset_zoom_level();
     }
+    show_message('Browser window resized. Updated user interface components.');
   }
 }
 
@@ -3026,7 +3041,7 @@ _via_reg_canvas.addEventListener('keydown', function(e) {
       _via_is_user_updating_attribute_value = false;
       _via_is_user_updating_attribute_name = false;
       _via_is_user_adding_attribute_name = false;
-      update_attributes_panel();
+      update_annotation_editor();
     }
 
     if ( _via_is_user_resizing_region ) {
@@ -3106,7 +3121,7 @@ _via_reg_canvas.addEventListener('keydown', function(e) {
       select_only_region(_via_current_polygon_region_id);
 
       _via_current_polygon_region_id = -1;
-      update_attributes_panel();
+      update_annotation_editor();
       save_current_data_to_browser_cache();
       _via_redraw_reg_canvas();
       _via_reg_canvas.focus();
@@ -3190,7 +3205,7 @@ function del_sel_regions() {
     _via_redraw_reg_canvas();
   }
   _via_reg_canvas.focus();
-  update_attributes_panel();
+  update_annotation_editor();
   save_current_data_to_browser_cache();
 
   show_message('Deleted ' + del_region_count + ' selected regions');
@@ -3999,25 +4014,30 @@ function update_attributes_name_list() {
 function update_attributes_update_panel() {
   update_attributes_name_list();
   show_attribute_properties();
+  show_attribute_options();
+}
+
+function update_attribute_properties_panel() {
+  show_attribute_properties();
+  show_attribute_options();
 }
 
 function show_attribute_properties() {
   var attr_list = document.getElementById('attributes_name_list');
   document.getElementById('attribute_properties').innerHTML = '';
-  document.getElementById('attribute_options').innerHTML = '';
 
   if ( attr_list.options.length === 0 ) {
     return;
   }
 
-  var attr = attr_list.value;
-  var attr_type = _via_attributes[_via_attribute_being_updated][attr].type;
-  var attr_desc = _via_attributes[_via_attribute_being_updated][attr].description;
+  var attr_id = attr_list.value;
+  var attr_type = _via_attributes[_via_attribute_being_updated][attr_id].type;
+  var attr_desc = _via_attributes[_via_attribute_being_updated][attr_id].description;
 
 
   attribute_property_add_input_property('Name of attribute (appears in exported annotations)',
                                         'Name',
-                                        attr,
+                                        attr_id,
                                         'attribute_name');
   attribute_property_add_input_property('Description of attribute (shown to user during annotation session)',
                                         'Desc.',
@@ -4025,7 +4045,7 @@ function show_attribute_properties() {
                                         'attribute_description');
 
   if ( attr_type === 'text' ) {
-    var attr_default_value = _via_attributes[_via_attribute_being_updated][attr].default_value;
+    var attr_default_value = _via_attributes[_via_attribute_being_updated][attr_id].default_value;
     attribute_property_add_input_property('Default value of this attribute',
                                           'Def.',
                                           attr_default_value,
@@ -4057,6 +4077,16 @@ function show_attribute_properties() {
   p.appendChild(c0);
   p.appendChild(c1);
   document.getElementById('attribute_properties').appendChild(p);
+}
+
+function show_attribute_options() {
+  var attr_list = document.getElementById('attributes_name_list');
+  if ( attr_list.options.length === 0 ) {
+    return;
+  }
+
+  var attr_id = attr_list.value;
+  var attr_type = _via_attributes[_via_attribute_being_updated][attr_id].type;
 
   // populate additional options based on attribute type
   document.getElementById('attribute_options').innerHTML = '';
@@ -4085,14 +4115,15 @@ function show_attribute_properties() {
     p.appendChild(c2);
     document.getElementById('attribute_options').appendChild(p);
 
-    var options = _via_attributes[_via_attribute_being_updated][attr].options;
+    var options = _via_attributes[_via_attribute_being_updated][attr_id].options;
     var option_id;
     for ( option_id in options ) {
       var option_desc = options[option_id];
-      var option_default = _via_attributes[_via_attribute_being_updated][attr].default_options[option_id];
-      attribute_property_add_option(attr, option_id, option_desc, option_default, attr_type);
+
+      var option_default = _via_attributes[_via_attribute_being_updated][attr_id].default_options[option_id];
+      attribute_property_add_option(attr_id, option_id, option_desc, option_default, attr_type);
     }
-    attribute_property_add_new_entry_option(attr, attr_type);
+    attribute_property_add_new_entry_option(attr_id, attr_type);
     break;
   default:
     console.log('Attribute type ' + attr_type + ' is unavailable');
@@ -4141,7 +4172,7 @@ function attribute_property_add_option(attr_id, option_id, option_desc, option_d
     c2b.checked = option_default;
   }
   if ( attribute_type === 'radio' ) {
-    // ensured that use can activate only one radio button
+    // ensured that user can activate only one radio button
     c2b.setAttribute('name', attr_id);
   }
   c2b.setAttribute('onclick', 'attribute_property_on_option_update(this)');
@@ -4169,69 +4200,57 @@ function attribute_property_add_new_entry_option(attr_id, attribute_type) {
   c0b.setAttribute('id', '_via_attribute_new_option_id');
   c0b.setAttribute('placeholder', 'Add new id');
 
-  var c1 = document.createElement('span');
-  var c1b = document.createElement('input');
-  c1b.setAttribute('type', 'text');
-  c1b.setAttribute('value', '');
-  c1b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
-  c1b.setAttribute('id', '_via_attribute_new_option_description');
-  c1b.setAttribute('placeholder', 'Optional description');
-
-  var c2 = document.createElement('span');
-  var c2b = document.createElement('input');
-  c2b.setAttribute('type', attribute_type);
-  if ( attribute_type === 'radio' ) {
-    c2b.setAttribute('name', attr_id);
-  }
-  c2b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
-  c2b.setAttribute('id', '_via_attribute_new_option_default');
-
   c0.appendChild(c0b);
-  c1.appendChild(c1b);
-  c2.appendChild(c2b);
   p.appendChild(c0);
-  p.appendChild(c1);
-  p.appendChild(c2);
 
   document.getElementById('attribute_options').appendChild(p);
 }
 
 function attribute_property_on_update(p) {
-  var attr = document.getElementById('attributes_name_list').value;
+  var attr_id = get_current_attribute_id();
   switch(p.id) {
   case 'attribute_name':
     var new_attr = p.value;
-    if ( new_attr !== attr ) {
+    if ( new_attr !== attr_id ) {
       Object.defineProperty(_via_attributes[_via_attribute_being_updated],
                             new_attr,
-                            Object.getOwnPropertyDescriptor(_via_attributes[_via_attribute_being_updated], attr));
+                            Object.getOwnPropertyDescriptor(_via_attributes[_via_attribute_being_updated], attr_id));
 
-      delete _via_attributes[_via_attribute_being_updated][attr];
+      delete _via_attributes[_via_attribute_being_updated][attr_id];
       update_attributes_update_panel();
+      update_annotation_editor();
     }
     break;
   case 'attribute_description':
-    _via_attributes[_via_attribute_being_updated][attr].description = p.value;
+    _via_attributes[_via_attribute_being_updated][attr_id].description = p.value;
     update_attributes_update_panel();
+    update_annotation_editor();
     break;
   case 'attribute_default_value':
-    _via_attributes[_via_attribute_being_updated][attr].default_value = p.value;
+    _via_attributes[_via_attribute_being_updated][attr_id].default_value = p.value;
     update_attributes_update_panel();
+    update_annotation_editor();
     break;
   case 'attribute_type':
-    _via_attributes[_via_attribute_being_updated][attr].type = p.value;
+    _via_attributes[_via_attribute_being_updated][attr_id].type = p.value;
     if( p.value === VIA_ATTRIBUTE_TYPE.TEXT ) {
-      delete _via_attributes[_via_attribute_being_updated][attr].options;
+      _via_attributes[_via_attribute_being_updated][attr_id].default_value = '';
+      delete _via_attributes[_via_attribute_being_updated][attr_id].options;
+      delete _via_attributes[_via_attribute_being_updated][attr_id].default_options;
     } else {
-      _via_attributes[_via_attribute_being_updated][attr].options = {};
+      _via_attributes[_via_attribute_being_updated][attr_id].options = {};
+      _via_attributes[_via_attribute_being_updated][attr_id].default_options = {};
+      delete _via_attributes[_via_attribute_being_updated][attr_id].default_value;
     }
     show_attribute_properties();
+    show_attribute_options();
+    update_annotation_editor();
     break;
   }
 }
 
 function attribute_property_on_option_update(p) {
-  var attr = document.getElementById('attributes_name_list').value;
+  var attr_id = get_current_attribute_id();
   if ( p.id.startsWith('_via_attribute_option_id_') ) {
     var old_key = p.id.substr( '_via_attribute_option_id_'.length );
     var new_key = p.value;
@@ -4243,46 +4262,45 @@ function attribute_property_on_option_update(p) {
       }
 
       if ( new_key !== '' ) {
-        Object.defineProperty(_via_attributes[_via_attribute_being_updated][attr].options,
-                              new_key,
-                              Object.getOwnPropertyDescriptor(_via_attributes[_via_attribute_being_updated][attr].options, old_key));
-        show_message('Renamed option id from [' + old_key + '] to [' + new_key + '].');
+        rename_attribute_option_with_confirm();
       } else {
-        show_message('Deleted option with id [' + old_key + '].');
+        delete_attribute_option_with_confirm(_via_attribute_being_updated,
+                                             attr_id,
+                                             old_key);
       }
-
-      delete _via_attributes[_via_attribute_being_updated][attr].options[old_key];
-      show_attribute_properties();
     }
   }
 
   if ( p.id.startsWith('_via_attribute_option_description_') ) {
     var key = p.id.substr( '_via_attribute_option_description_'.length );
-    var old_value = _via_attributes[_via_attribute_being_updated][attr].options[key];
+    var old_value = _via_attributes[_via_attribute_being_updated][attr_id].options[key];
     if ( p.value !== old_value ) {
-      _via_attributes[_via_attribute_being_updated][attr].options[key] = p.value;
+      _via_attributes[_via_attribute_being_updated][attr_id].options[key] = p.value;
       show_attribute_properties();
+      update_annotation_editor();
     }
   }
 
   if ( p.id.startsWith('_via_attribute_option_default_') ) {
     var key = p.id.substr( '_via_attribute_option_default_'.length );
-    var old_value = _via_attributes[_via_attribute_being_updated][attr].default_options[key];
+    var old_value = _via_attributes[_via_attribute_being_updated][attr_id].default_options[key];
     if ( typeof old_value === 'undefined' ) {
-      _via_attributes[_via_attribute_being_updated][attr].default_options[key] = p.checked;
+      _via_attributes[_via_attribute_being_updated][attr_id].default_options[key] = p.checked;
       show_attribute_properties();
+      update_annotation_editor();
     } else {
       if ( p.value !== old_value ) {
-        switch ( _via_attributes[_via_attribute_being_updated][attr].type ) {
+        switch ( _via_attributes[_via_attribute_being_updated][attr_id].type ) {
         case 'radio':
           // to ensure that only one radio button is selected at a time
-          _via_attributes[_via_attribute_being_updated][attr].default_options = {};
-          _via_attributes[_via_attribute_being_updated][attr].default_options[key] = p.checked;
+          _via_attributes[_via_attribute_being_updated][attr_id].default_options = {};
+          _via_attributes[_via_attribute_being_updated][attr_id].default_options[key] = p.checked;
           break;
-        default:
-          _via_attributes[_via_attribute_being_updated][attr].default_options[key] = p.checked;
+        case 'checkbox':
+          _via_attributes[_via_attribute_being_updated][attr_id].default_options[key] = p.checked;
         }
         show_attribute_properties();
+        update_annotation_editor();
       }
     }
   }
@@ -4298,8 +4316,12 @@ function attribute_property_on_option_add(p) {
       show_message('An option with id [' + option_id + '] already exists.');
       attribute_property_reset_new_entry_inputs();
     } else {
-      _via_attributes[_via_attribute_being_updated][attr].options[option_id] = '';
-      attribute_property_show_new_entry_inputs();
+      var attr_id = get_current_attribute_id();
+      var attribute_type = _via_attributes[_via_attribute_being_updated][attr_id].type;
+
+      _via_attributes[_via_attribute_being_updated][attr_id].options[option_id] = '';
+      show_attribute_options();
+      update_annotation_editor();
     }
   }
 }
@@ -4311,7 +4333,7 @@ function attribute_property_reset_new_entry_inputs() {
   p.childNodes[1].childNodes[0].value = '';
 }
 
-function attribute_property_show_new_entry_inputs() {
+function attribute_property_show_new_entry_inputs(attr_id, attribute_type) {
   var n0 = document.createElement('div');
   n0.classList.add('property');
   var n1a = document.createElement('span');
@@ -4330,8 +4352,19 @@ function attribute_property_show_new_entry_inputs() {
   n2b.setAttribute('id', '_via_attribute_new_option_description');
   n2a.appendChild(n2b);
 
+  var n3a = document.createElement('span');
+  var n3b = document.createElement('input');
+  n3b.setAttribute('type', attribute_type);
+  if ( attribute_type === 'radio' ) {
+    n3b.setAttribute('name', attr_id);
+  }
+  n3b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
+  n3b.setAttribute('id', '_via_attribute_new_option_default');
+  n3a.appendChild(n3b);
+
   n0.appendChild(n1a);
   n0.appendChild(n2a);
+  n0.appendChild(n3a);
 
   var container = document.getElementById('attribute_options');
   container.appendChild(n0);
@@ -4357,35 +4390,37 @@ function attribute_property_id_exists(name) {
   return false;
 }
 
-function delete_existing_attribute_get_confirmation() {
-  var attr = document.getElementById('user_input_attribute_id').value;
-  if ( attr === '' ) {
+function delete_existing_attribute_with_confirm() {
+  var attr_id = document.getElementById('user_input_attribute_id').value;
+  if ( attr_id === '' ) {
     show_message('Enter the name of attribute that you wish to delete');
     return;
   }
-  if ( attribute_property_id_exists(attr) ) {
+  if ( attribute_property_id_exists(attr_id) ) {
     var config = {'title':'Delete ' + _via_attribute_being_updated + ' attribute [' + attr + ']' };
-    var input = { 'confirm':
+    var input = { 'attr_type':{'type':'text', 'name':'Attribute Type', 'value':_via_attribute_being_updated, 'disabled':true},
+                  'attr_id':{'type':'text', 'name':'Attribute Id', 'value':attr_id, 'disabled':true},
+                  'confirm':
                   {
                     type:'checkbox',
-                    description:'Confirm (by checking box) that you understand that deleting an attribute will delete all annotations associated with this attribute across all the files. <p style="color:red;">These deleted content cannot be recovered.</p>',
-                    attribute_type: _via_attribute_being_updated,
-                    attribute_id: attr,
+                    name:'Confirm (by checking box) that you understand that deleting an attribute will delete all annotations associated with this attribute across all the files. <span class="warning">These deleted content cannot be recovered.</span>',
                     value:false
                   }
                 };
     invoke_with_user_inputs(delete_existing_attribute_confirmed, input, config);
   } else {
-    show_message('Attribute [' + attr + '] does not exist!');
+    show_message('Attribute [' + attr_id + '] does not exist!');
     return;
   }
 }
 
 function delete_existing_attribute_confirmed(input) {
   if ( input.confirm.value ) {
-    delete_existing_attribute(input.confirm.attribute_type, input.confirm.attribute_id);
+    var attr_type = input.attr_type.value;
+    var attr_id   = input.attr_id.value;
+    delete_existing_attribute(attr_type, attr_id);
     document.getElementById('user_input_attribute_id').value = '';
-    show_message('Deleted ' + input.confirm.attribute_type + ' attribute [' + input.confirm.attribute_id + ']');
+    show_message('Deleted ' + attr_type + ' attribute [' + attr_id + ']');
   } else {
     show_message('You must tick the checkbox to confirm deletion of attribute.');
   }
@@ -4409,7 +4444,8 @@ function add_new_attribute_from_user_input() {
     add_new_attribute(attr);
     update_attributes_update_panel();
     document.getElementById('attributes_name_list').value = attr;
-    show_attribute_properties();
+    update_attribute_properties_panel();
+    update_annotation_editor();
     show_message('Added ' + _via_attribute_being_updated + ' attribute [' + attr + '].');
   }
 }
@@ -4418,6 +4454,12 @@ function add_new_attribute(attribute_id) {
   _via_attributes[_via_attribute_being_updated][attribute_id] = {};
   _via_attributes[_via_attribute_being_updated][attribute_id].type = 'text';
   _via_attributes[_via_attribute_being_updated][attribute_id].description = '';
+  _via_attributes[_via_attribute_being_updated][attribute_id].default_value = '';
+}
+
+function get_current_attribute_id() {
+  var attr_id = document.getElementById('attributes_name_list').value;
+  return attr_id;
 }
 
 //
@@ -4448,15 +4490,30 @@ function setup_user_input_panel(handler, input, config) {
   var key;
   for ( key in _via_user_input_data ) {
     html.push('<div class="row">');
-    html.push('<span class="cell">' + _via_user_input_data[key].description + '</span>');
+    html.push('<span class="cell">' + _via_user_input_data[key].name + '</span>');
+    var disabled_html = '';
+    if ( _via_user_input_data[key].disabled ) {
+      disabled_html = 'disabled="disabled"';
+    }
+    var value_html = '';
+    if ( _via_user_input_data[key].value ) {
+      value_html = 'value="' + _via_user_input_data[key].value + '"';
+    }
+
     switch(_via_user_input_data[key].type) {
     case 'checkbox':
       html.push('<span class="cell">' +
-                '<input class="_via_user_input_variable" type="checkbox" id="' + key + '"></span>');
+                '<input class="_via_user_input_variable" ' +
+                value_html + ' ' +
+                disabled_html + ' ' +
+                'type="checkbox" id="' + key + '"></span>');
       break;
     case 'text':
       html.push('<span class="cell">' +
-                '<input class="_via_user_input_variable" type="text" id="' + key + '"></span>');
+                '<input class="_via_user_input_variable" ' +
+                value_html + ' ' +
+                disabled_html + ' ' +
+                'type="text" id="' + key + '"></span>');
       break;
     }
     html.push('</div>'); // end of row
@@ -4467,7 +4524,8 @@ function setup_user_input_panel(handler, input, config) {
             '<button onclick="user_input_parse_and_invoke_handler()">&nbsp;OK&nbsp;</button></span>' +
             '<span class="cancel">' +
             '<button onclick="user_input_cancel()">CANCEL</button></span></div>');
-  c.innerHTML = html.join('');
+    c.innerHTML = html.join('');
+    p.innerHTML = '';
   p.appendChild(c);
 
 }
@@ -4531,15 +4589,23 @@ function edit_file_metadata_in_annotation_editor() {
 }
 
 function toggle_annotation_editor() {
-  document.getElementById('annotation_editor_panel').classList.toggle('display_block');
-  update_annotation_editor();
+  var p = document.getElementById('annotation_editor_panel');
+  if ( p.classList.contains('display_block') ) {
+    p.classList.remove('display_block');
+  } else {
+    p.classList.add('display_block');
+    update_annotation_editor();
+  }
 }
 
 function update_annotation_editor() {
-  var ae = document.getElementById('annotation_editor');
-  ae.innerHTML = '';
-  annotation_editor_update_header_html();
-  annotation_editor_update_metadata_html();
+  var p = document.getElementById('annotation_editor_panel');
+  if ( p.classList.contains('display_block') ) {
+    var ae = document.getElementById('annotation_editor');
+    ae.innerHTML = '';
+    annotation_editor_update_header_html();
+    annotation_editor_update_metadata_html();
+  }
 }
 
 function annotation_editor_update_header_html() {
@@ -4623,6 +4689,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
     var attr_type    = _via_attributes[_via_metadata_being_updated][attr_id].type;
     var attr_desc    = _via_attributes[_via_metadata_being_updated][attr_id].desc;
     var attr_html_id = attr_id + row_id;
+
     switch(attr_type) {
     case 'text':
       if ( attr_value === '' ) {
@@ -4630,30 +4697,37 @@ function annotation_editor_get_metadata_row_html(row_id) {
       }
       col.innerHTML = '<textarea ' +
         'onchange="annotation_editor_on_metadata_update()" ' +
+        'title="' + attr_desc + '" ' +
         'id="' + attr_html_id + '">' + attr_value + '</textarea>';
       break;
     case 'checkbox':
       var options = _via_attributes[_via_metadata_being_updated][attr_id].options;
       var option_id;
       for ( option_id in options ) {
-        var option_value = options[option_id];
         var option_html_id = attr_html_id + '_' + option_id;
         var option = document.createElement('input');
         option.setAttribute('type', 'checkbox');
         option.setAttribute('value', option_id);
         option.setAttribute('id', option_html_id);
 
-        var option_value =  _via_img_metadata[_via_image_id].regions[row_id].region_attributes[option_id];
-        if ( typeof option_value === 'underfined' ) {
-          // use default value
-          option.checked = _via_attributes[_via_metadata_being_updated][attr_id].default_options[option_id];
-        } else {
-          option.checked = option_value;
+        var option_desc  = _via_attributes[_via_metadata_being_updated][attr_id].options[option_id];
+        if ( option_desc === '' || typeof(option_desc) === 'undefined' ) {
+          // option description is optional, use option_id when description is not present
+          option_desc = option_id;
+        }
+
+        var options =  _via_img_metadata[_via_image_id].regions[row_id].region_attributes[attr_id];
+        if ( typeof options !== 'undefined' ) {
+          var selected_option_id;
+          for ( selected_option_id in options ) {
+            if ( selected_option_id === option_id ) {
+              option.checked = options[selected_option_id];
+            }
+          }
         }
 
         var label  = document.createElement('label');
         label.setAttribute('for', option_html_id);
-        var option_desc = _via_attributes[_via_metadata_being_updated][attr_id].options[option_id];
         label.innerHTML = option_desc;
 
         var container = document.createElement('span');
@@ -4663,26 +4737,28 @@ function annotation_editor_get_metadata_row_html(row_id) {
       }
       break;
     case 'radio':
-      var options = _via_attributes[_via_metadata_being_updated][attr_id].options;
       var option_id;
-      for ( option_id in options ) {
-        var option_value = options[option_id];
+      for ( option_id in _via_attributes[_via_metadata_being_updated][attr_id].options ) {
         var option_html_id = attr_html_id + '_' + option_id;
         var option = document.createElement('input');
         option.setAttribute('type', 'radio');
-        option.setAttribute('name', attr_id);
+        option.setAttribute('name', attr_html_id);
         option.setAttribute('value', option_id);
         option.setAttribute('id', option_html_id);
 
-        if ( _via_attributes[_via_metadata_being_updated][attr_id].options[option_id] ) {
+        var option_desc  = _via_attributes[_via_metadata_being_updated][attr_id].options[option_id];
+        if ( option_desc === '' || typeof(option_desc) === 'undefined' ) {
+          // option description is optional, use option_id when description is not present
+          option_desc = option_id;
+        }
+
+        if ( attr_value === option_id ) {
           option.checked = true;
-        } else {
-          option.checked = false;
         }
 
         var label  = document.createElement('label');
         label.setAttribute('for', option_html_id);
-        label.innerHTML = option_value;
+        label.innerHTML = option_desc;
 
         var container = document.createElement('span');
         container.appendChild(option);
@@ -4698,6 +4774,170 @@ function annotation_editor_get_metadata_row_html(row_id) {
 }
 
 function annotation_editor_on_metadata_update() {
+}
+
+function set_region_annotations_to_default_value(rid) {
+  var attr_id;
+  for ( attr_id in _via_attributes['region'] ) {
+    var attr_type = _via_attributes['region'][attr_id].type;
+    switch( attr_type ) {
+    case 'text':
+      var default_value = _via_attributes['region'][attr_id].default_value;
+      _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = default_value;
+      break;
+    case 'radio': // handled by case 'checkbox'
+      _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = '';
+      var default_options = _via_attributes['region'][attr_id].default_options;
+      var option_id;
+      for ( option_id in default_options ) {
+        // a radio input has single value
+        _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = option_id;
+      }
+      break;
+    case 'checkbox':
+      _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = [];
+      var default_options = _via_attributes['region'][attr_id].default_options;
+      var option;
+      for ( option_id in default_options ) {
+        _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id].push(option_id);
+      }
+      break;
+    }
+  }
+  console.log(_via_img_metadata[_via_image_id].regions[rid]);
+}
+
+function set_file_annotations_to_default_value(fid) {
+
+}
+
+function rename_attribute_option_with_confirm(attr_id, option_id) {
+
+}
+
+function rename_attribute_option_confirmed(attr_id, option_id) {
+  Object.defineProperty(_via_attributes[_via_attribute_being_updated][attr_id].options,
+                        new_key,
+                        Object.getOwnPropertyDescriptor(_via_attributes[_via_attribute_being_updated][attr_id].options, old_key));
+  delete _via_attributes[_via_attribute_being_updated][attr_id].options[old_key];
+  delete_attribute_option(attr_id, option_id);
+
+  show_message('Renamed option id from [' + old_key + '] to [' + new_key + '].');
+}
+
+function delete_attribute_option_with_confirm(attr_type, attr_id, option_id) {
+  var config = {'title':'Delete an option for ' + attr_type + ' attribute'};
+  var input = { 'attr_type':{'type':'text', 'name':'Attribute Type', 'value':attr_type, 'disabled':true},
+                'attr_id':{'type':'text', 'name':'Attribute Id', 'value':attr_id, 'disabled':true},
+                'option_id':{'type':'text', 'name':'Attribute Option', 'value':option_id, 'disabled':true},
+                'confirm': {
+    type:'checkbox',
+    name:'Confirm (by checking box) that you understand the following: Deleting an option in ' + attr_type + ' attribute will delete all annotations with this option. <span class="warning">WARNING: this process cannot be undone.</span>',
+    value: false
+  }};
+  invoke_with_user_inputs(delete_attribute_option_confirmed, input, config);
+
+}
+
+function delete_attribute_option_confirmed(input) {
+  if ( input.confirm.value ) {
+    var attr_type = input.attr_type.value;
+    var attr_id = input.attr_id.value;
+    var option_id = input.option_id.value;
+    delete_attribute_option(attr_type, attr_id, option_id);
+    show_message('Deleted option [' + option_id + '] for ' + attr_type + ' attribute [' + attr_id + '].');
+    update_attribute_properties_panel();
+    update_annotation_editor();
+  }
+}
+
+function delete_attribute_option(attr_type, attr_id, option_id) {
+  switch ( attr_type ) {
+  case 'region':
+    delete_region_attribute_option_from_all_metadata(attr_id, option_id);
+    delete _via_attributes['region'][attr_id].options[option_id];
+    break;
+  case 'file':
+    delete_file_attribute_option_from_all_metadata(attr_id, option_id);
+    delete _via_attributes['file'][attr_id].options[option_id];
+    break;
+  }
+}
+
+function delete_region_attribute_option_from_all_metadata(attr_id, option_id) {
+  var image_id;
+  for ( image_id in _via_img_metadata ) {
+    if ( _via_img_metadata.hasOwnProperty(image_id) ) {
+      delete_region_attribute_option_from_metadata(image_id, attr_id, option_id);
+    }
+  }
+}
+
+function delete_region_attribute_option_from_metadata(image_id, attr_id, option_id) {
+  var i;
+  for ( i = 0; i < _via_img_metadata[image_id].regions.length; ++i ) {
+    if ( _via_img_metadata[image_id].regions[i].region_attributes.hasOwnProperty(attr_id) ) {
+      if ( _via_img_metadata[image_id].regions[i].region_attributes[attr_id].hasOwnProperty(option_id) ) {
+        delete _via_img_metadata[image_id].regions[i].region_attributes[attr_id][option_id];
+      }
+    }
+  }
+}
+
+function delete_file_attribute_option_from_all_metadata(attr_id, option_id) {
+  var image_id;
+  for ( image_id in _via_img_metadata ) {
+    if ( _via_img_metadata.hasOwnProperty(image_id) ) {
+      delete_file_attribute_option_from_metadata(image_id, attr_id, option_id);
+    }
+  }
+}
+
+function delete_file_attribute_option_from_metadata(image_id, attr_id, option_id) {
+  var i;
+  if ( _via_img_metadata[image_id].file_attributes.hasOwnProperty(attr_id) ) {
+    if ( _via_img_metadata[image_id].file_attributes[attr_id].hasOwnProperty(option_id) ) {
+      delete _via_img_metadata[image_id].file_attributes[attr_id][option_id];
+    }
+  }
+}
+
+function delete_file_attribute_from_all_metadata(image_id, attr_id) {
+  var image_id;
+  for ( image_id in _via_img_metadata ) {
+    if ( _via_img_metadata.hasOwnProperty(image_id) ) {
+      if ( _via_img_metadata[image_id].file_attributes.hasOwnProperty(attr_id) ) {
+        delete _via_img_metadata[image_id].file_attributes[attr_id];
+      }
+    }
+  }
+}
+
+
+//
+// via project
+//
+function save_project_with_confirm() {
+  var config = {'title':'Save Project' };
+  var input = { 'project_name': {
+    type:'text',
+    description:'Name of project (without any spaces or special characters)',
+  },
+                'save_annotations':{ 'type':'checkbox', 'value':true, 'description':'Include region and file annotations in the project file.'},
+                'save_attributes':{ 'type':'checkbox', 'value':true, 'description':'Include region and file attributes.'},
+                'save_via_settings':{'type':'checkbox', 'value':true, 'description':'Include region and file attributes.'},
+                'save_images':{'type':'checkbox', 'value':false, 'description':'Save images in the project file (WARNING: this will result in a project of huge size)'},
+              };
+  invoke_with_user_inputs(save_project_confirmed, input, config);
+
+  // @todo
+}
+
+function save_project_confirmed() {
+
+}
+
+function load_project() {
 }
 
 //
