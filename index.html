@@ -197,10 +197,12 @@
       /* Attribute editor */
       .display_none { display:none; }
       .display_block { display:block !important; }
-      #annotation_editor_panel { position:fixed; display:none; width:100%; height:20%; max-height:30%; left:0; bottom:0; background-color:white; border-top:2px solid #cccccc; padding:0.2rem 1rem; font-size:small; overflow:auto; z-index:100; box-shadow: 0 0 1rem #cccccc;}
+      #annotation_editor_panel { position:fixed; display:none; width:100%; height:20%; max-height:30%; left:0; bottom:0; background-color:white; border-top:2px solid #cccccc; padding:0.2rem 1rem; font-size:small; overflow:auto; z-index:1001; box-shadow: 0 0 1rem #cccccc;}
       #annotation_editor { display:table; margin-bottom:3rem; border-collapse:collapse; font-size:0.8rem; }
       #annotation_editor .row { display:table-row; }
-      #annotation_editor .col { display:table-cell; padding:0.4rem 0.6rem; border:1px solid #f2f2f2; vertical-align:middle; }
+      #annotation_editor .highlight .col { background-color:#f2f2f2;}
+
+      #annotation_editor .col { display:table-cell; padding:0.4rem 0.6rem; border:1px solid #000000; vertical-align:middle; }
       #annotation_editor .header { font-weight:bold; }
       #annotation_editor .id { font-weight:bold; }
       #annotation_editor .col input[type=text] { font-size:0.8rem; width:10rem; border:none; border-bottom:1px solid #cccccc; margin: 0;}
@@ -419,7 +421,7 @@
               <span class="button" onclick="delete_existing_attribute_with_confirm()" title="Delete existing attribute">&minus;</span>
             </div>
             <div class="button_panel" style="margin:0.1rem 0;" >
-              <select style="width:100%" id="attributes_name_list" onchange="update_attributes_properties_panel()" title="List of existing attributes"></select>
+              <select style="width:100%" id="attributes_name_list" onchange="update_attribute_properties_panel()" title="List of existing attributes"></select>
             </div>
             <div id="attribute_properties"></div>
             <div id="attribute_options"></div>
