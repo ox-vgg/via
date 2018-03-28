@@ -1,4 +1,4 @@
-## [1.0.6] - Not release yet!
+## [1.1.0] - Not release yet!
  * a patch from Stefan Mihaila which requires polygon shape to have at least 3 points.
  * rectangles can now be resized from edges
  * added POLYLINE shape
@@ -7,6 +7,16 @@
    - _via_reload_img_table : _via_reload_img_fn_list_table
    - reload_img_table()    : reload_img_fn_list_table()
    - _via_loaded_img_table_html : _via_loaded_img_fn_list_table_html
+ * attributes editor
+   - added _via_attributes{'region','file'} and removed _via_region_attributes, _via_file_attributes
+   - attributes add/remove/update from left sidebar panel
+   - attribute types: text (default), checkbox, radio
+ * annotation editor
+   - similar to previous versions (spreadsheet like editor) supporting attribute types: text, checkbox, radio.
+   - tabbed panel for region and file attribute editor
+ * via project save/load
+   - everything (annotations, attributes, application settings, etc) can now be saved as a VIA project (a json file)
+ * exported csv annotation header line does not contain "#" (this may be a breaking change)
 
 ## [1.0.5] - January 16, 2017
  * (code contributions from Stefan Mihaila) via.js codebase improvement, wider web browser support (IE 10, IE 11 and Opera 12)

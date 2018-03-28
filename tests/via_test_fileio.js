@@ -42,17 +42,6 @@ function _via_test_fileio_json_import() {
 function _via_test_fileio_export() {
     _via_load_test_img();
 
-    /*
-    setTimeout( function() {
-        select_region_shape('point');
-        _via_simulate_canvas_mousedown(50, 50);
-        _via_simulate_canvas_mouseup(50, 50);
-        select_region_shape('rect');
-        _via_simulate_canvas_mousedown(50, 50);
-        _via_simulate_canvas_mouseup(150, 150);
-    }, 200);
-    */
-
     // draw regions, select and move ellipse
     setTimeout( function() {
         select_region_shape('rect');
@@ -86,9 +75,10 @@ function _via_test_fileio_export() {
     // download annotations as csv
     setTimeout( function() {
         var rd = pack_via_metadata('csv');
-        var ground_truth = '#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes\ntest_pattern_qbist.jpg,129855,"{}",3,0,"{""name"":""rect"",""x"":50,""y"":50,""width"":100,""height"":100}","{}"\ntest_pattern_qbist.jpg,129855,"{}",3,1,"{""name"":""ellipse"",""cx"":300,""cy"":300,""rx"":50,""ry"":30}","{}"\ntest_pattern_qbist.jpg,129855,"{}",3,2,"{""name"":""polygon"",""all_points_x"":[425,353,552,425],""all_points_y"":[83,194,148,83]}","{}"\na_swan_swimming_in_geneve_lake.jpg,62201,"{}",0,0,"{}","{}"\nsinus_test_pattern.jpg,27894,"{}",0,0,"{}","{}"';
+        var ground_truth1 = '#filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes\ntest_pattern_qbist.jpg,129855,"{}",3,0,"{""name"":""rect"",""x"":50,""y"":50,""width"":100,""height"":100}","{}"\ntest_pattern_qbist.jpg,129855,"{}",3,1,"{""name"":""ellipse"",""cx"":300,""cy"":300,""rx"":50,""ry"":30}","{}"\ntest_pattern_qbist.jpg,129855,"{}",3,2,"{""name"":""polygon"",""all_points_x"":[425,353,552,425],""all_points_y"":[83,194,148,83]}","{}"\na_swan_swimming_in_geneve_lake.jpg,62201,"{}",0,0,"{}","{}"\nsinus_test_pattern.jpg,27894,"{}",0,0,"{}","{}"';
+        var ground_truth2 = 'filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes\ntest_pattern_qbist.jpg,129855,"{}",3,0,"{""name"":""rect"",""x"":50,""y"":50,""width"":100,""height"":100}","{}"\ntest_pattern_qbist.jpg,129855,"{}",3,1,"{""name"":""ellipse"",""cx"":300,""cy"":300,""rx"":50,""ry"":30}","{}"\ntest_pattern_qbist.jpg,129855,"{}",3,2,"{""name"":""polygon"",""all_points_x"":[425,353,552,425],""all_points_y"":[83,194,148,83]}","{}"\na_swan_swimming_in_geneve_lake.jpg,62201,"{}",0,0,"{}","{}"\nsinus_test_pattern.jpg,27894,"{}",0,0,"{}","{}"';
 
-        if (rd.join('') == ground_truth) {
+        if ( (rd.join('') === ground_truth1) || (rd.join('') === ground_truth2) ) {
             _via_log_test_result('pack_via_metadata(\'csv\');', true, '_via_test_fileio_export');
         } else {
             _via_log_test_result('pack_via_metadata(\'csv\');', false, '_via_test_fileio_export');
@@ -113,3 +103,4 @@ function _via_test_fileio_export() {
     }, 1200);
 
 }
+

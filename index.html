@@ -55,14 +55,14 @@
       * { box-sizing: border-box; }
 
       /* Top panel : #navbar, #toolbar */
-      .top_panel { font-size:small; position:fixed; top:0; left:0; right:0; display:block; background-color:#212121; color:#ffffff; z-index:100; width:100%; border:none; vertical-align:middle;}
+      .top_panel { font-size:small; position:fixed; top:0; left:0; right:0; display:block; background-color:#212121; color:#ffffff; z-index:1001; width:100%;}
 
       /* Navigation menu bar that appear at the top */
-      .menubar { display:inline; }
+      .menubar { display:inline-block; height:1.6rem; } /* height needed to avoid extra bottom border */
       .menubar a:link { color:#eeeeee; text-decoration:none; }
       .menubar a:visited { color:#eeeeee; text-decoration:none; }
-      .menubar ul { display:block; padding:0; margin:0;}
-      .menubar li { display:inline; float:left; padding: 0.4rem 1rem;} /* main menu items */
+      .menubar ul { display:block; padding:0; margin:0; }
+      .menubar li { display:inline; float:left; padding:0.4rem 1rem;}
       .menubar li:hover { background-color:#616161; cursor:default; }
 
       .menubar li ul { display:none; background-color:#212121; border:1px solid #616161; min-width:10rem; position:absolute; z-index:100; margin:0.4rem -1rem;}
@@ -72,10 +72,10 @@
       .menubar li:hover ul { display:block; }
 
       /* toolbar containing small icons for tools */
-      .toolbar { display:inline-block; margin-left:1rem; }
-      .toolbar ul { display:block; padding:0; margin:0;}
-      .toolbar li { display:inline; float:left; padding: 0.4rem 0.3rem;} /* main menu items */
-      .toolbar li:hover { color:red; cursor:pointer; cursor:pointer; }
+      .toolbar { display:inline-block; margin-left:1rem;}
+      .toolbar ul { display:inline-block; padding:0.2rem; margin:0; }
+      .toolbar li { display:inline; float:left; padding:0rem 0.3rem;} /* main menu items */
+      .toolbar li:hover { color:red; cursor:pointer; }
 
       #fileinfo {
       font-size: small;
@@ -317,7 +317,7 @@
           <li>Project
             <ul>
               <li onclick="" title="Load a VIA project (from a JSON file)">Load</li>
-              <li onclick="" title="Save this VIA project (as a JSON file)">Save</li>
+              <li onclick="save_project_with_confirm()" title="Save this VIA project (as a JSON file)">Save</li>
               <li class="submenu_divider"></li>
               <li onclick="sel_local_images()" title="Add images locally stored in this computer">Add local files</li>
               <li onclick="" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)">Add files from URL</li>
@@ -367,7 +367,10 @@
       <!-- Shortcut toolbar -->
       <div class="toolbar">
         <ul>
-          <li id="toolbar_prev_img" style="margin-left: 1em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
+          <li id="toolbar_save_project" style="margin-left: 2em;" onclick="save_project_with_confirm()" title="Save Project">s</li>
+          <li id="toolbar_load_project" onclick="" title="Open Project">o</li>
+
+          <li id="toolbar_prev_img" style="margin-left: 2em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
           <li id="toolbar_next_img" onclick="move_to_next_image()" title="Next Image">&rarr;</li>
           <li id="toolbar_list_img" onclick="show_leftsidebar(); toggle_img_fn_list_visibility();" title="List Images">&#9776;</li>
 
@@ -380,7 +383,8 @@
           <li id="toolbar_sel_all_region" onclick="sel_all_regions()" title="Select All Regions">a</li>
           <li id="toolbar_del_region" onclick="del_sel_regions()" title="Delete Region">&times;</li>
         </ul>
-      </div> <!-- end of shortcut toolbar -->
+      </div>
+<!-- end of shortcut toolbar -->
 
       <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">
     </div> <!-- endof #top_panel -->
@@ -409,7 +413,7 @@
         </div>
 
         <button class="leftsidebar_accordion active" id="attr">Attributes</button>
-        <div class="leftsidebar_accordion_panel show">
+        <div class="leftsidebar_accordion_panel show" id="attributes_editor_panel">
           <div class="button_panel" style="padding:1rem 0;">
             <span class="text_button" onclick="show_region_attributes_update_panel()" id="button_show_region_attributes" title="Show region attributes">Region Attributes</span>
             <span class="text_button" onclick="show_file_attributes_update_panel()" id="button_show_file_attributes" title="Show file attributes">File Attributes</span>
@@ -597,7 +601,7 @@
     <!--    -->
     <script src="via.js"></script>
 
-    <!--    -->
+    <!---->
     <script src="via_demo.js"></script>
 
     <!-- Unit Tests    -->
