@@ -3283,17 +3283,18 @@ _via_reg_canvas.addEventListener('keydown', function(e) {
 
   // zoom
   if (_via_current_image_loaded) {
-    // see: http://www.javascripter.net/faq/keycodes.htm
-    if (e.which === 61 || e.which === 187) { // + for zoom in
-      if (e.shiftKey) {
-        zoom_in();
-      } else {  // = for zoom reset
-        reset_zoom_level();
-      }
+    // see: https://developer.mozilla.org/docs/Web/API/KeyboardEvent
+    if (e.key === "+") { // + for zoom in
+      zoom_in();
       return;
     }
 
-    if (e.which === 173 || e.which === 189) { // - for zoom out
+    if (e.key === "=") { // = for zoom reset
+      reset_zoom_level();
+      return;
+    }
+
+    if (e.key === "-") { // - for zoom out
       zoom_out();
       return;
     }
