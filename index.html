@@ -46,13 +46,9 @@
 
     <!-- CSS style definition -->
     <style type="text/css">
-      body {
-      min-width: 800px;
-      padding: 0;
-      margin: 0;
-      font-family: sans-serif;
-      }
+      body { min-width:800px; padding:0; margin:0; font-family:sans-serif; }
       * { box-sizing: border-box; }
+      input[type=text] { border:1px solid #cccccc; margin:0.6rem 0; padding:0.2rem 0.4rem; }
 
       /* Top panel : #navbar, #toolbar */
       .top_panel { font-size:small; position:fixed; top:0; left:0; right:0; display:block; background-color:#212121; color:#ffffff; z-index:1001; width:100%;}
@@ -214,6 +210,12 @@
       #annotation_editor .col span { display:block; }
       #annotation_editor .col horizontal_container { display:inline-block; }
 
+      #project_info_panel { display:table; border-collapse:collapse; font-size:0.8rem; }
+      #project_info_panel .row { display:table-row; }
+      #project_info_panel .col { display:table-cell; padding:0.4rem 0.1rem; border:none;  }
+      #project_info_panel .col input[type=text] { font-size:0.8rem; border:none; border-bottom:1px solid #cccccc; margin: 0; width:100%;}
+      #project_info_panel .col input:focus { border-bottom:1px solid #000000; background-color:#f2f2f2; color:#000000; }
+
       /* Region shape selection panel inside leftsidebar */
       ul.region_shape { font-size:xx-large; list-style-type:none; overflow:hidden; padding:0.4em 0; margin:0; }
       ul.region_shape li { float:left; padding:0 0.2em; fill:#ffffff; stroke:#000000; }
@@ -222,7 +224,6 @@
 
       /* Loaded image list shown in leftsidebar panel */
       #img_fn_list { font-size:small; overflow:scroll; min-height:10rem; max-height:30rem; }
-      #img_fn_list_panel input { width:88%; border:1px solid #ccc; margin:0.6rem 0; padding:0.2rem 0.4rem; }
       #img_fn_list ul { position:relative; line-height:1.3em; margin:0; padding:0; list-style-type:none; }
       #img_fn_list li { white-space:nowrap; }
       #img_fn_list li:hover { background-color:#cccccc; color:#000000; cursor:pointer; }
@@ -232,32 +233,18 @@
 
       #invisible_file_input { width:0.1px; height:0.1px; opacity:0; overflow:hidden; position:absolute; z-index:-1; }
 
-      .text_panel {
-      display: none;
-      margin: auto;
-      font-size: medium;
-      line-height: 1.3em;
-      margin: 0;
-      max-width: 700px;
-      }
-      .text_panel li {
-      margin: 1em 0;
-      text-align: left;
-      }
-      .text_panel p {
-      text-align: left;
-      }
+      .text_panel { display:none; margin:auto; font-size:medium; line-height:1.3em; margin: 0; max-width:700px; }
+      .text_panel li { margin:1em 0; text-align:left; }
+      .text_panel p { text-align:left; }
 
-      .svg_button:hover {
-      cursor: pointer;
-      }
+      .svg_button:hover { cursor:pointer; }
 
       /* layers of canvas */
       #image_panel { position:relative; display:inline-block; margin:auto; margin-top:1em; }
       #image_canvas { position:absolute; top:0px; left:0px; z-index:1; }
       #region_canvas { position:absolute; top:0px; left:0px;z-index:2; }
       /* Loading spinbar */
-      .loading_spinbox { display:inline-block; border:0.4em solid #cccccc; border-radius:50%; border-top:0.4em solid #000000; -webkit-animation:spin 2s linear infinite; animation:spin 2s linear infinite; }
+      .loading_spinbox { display:inline-block; border:0.4em solid #cccccc; border-radius:50%; border-top:0.4em solid black; border-bottom:0.4em solid black;-webkit-animation:spin 2s linear infinite; animation:spin 2s linear infinite; }
       @-webkit-keyframes spin { 0% { -webkit-transform: rotate(0deg); } 100% { -webkit-transform: rotate(360deg); } }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -318,6 +305,7 @@
             <ul>
               <li onclick="" title="Load a VIA project (from a JSON file)">Load</li>
               <li onclick="save_project_with_confirm()" title="Save this VIA project (as a JSON file)">Save</li>
+              <li onclick="" title="Show/edit project settings">Settings</li>
               <li class="submenu_divider"></li>
               <li onclick="sel_local_images()" title="Add images locally stored in this computer">Add local files</li>
               <li onclick="" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)">Add files from URL</li>
@@ -367,8 +355,8 @@
       <!-- Shortcut toolbar -->
       <div class="toolbar">
         <ul>
-          <li id="toolbar_save_project" style="margin-left: 2em;" onclick="save_project_with_confirm()" title="Save Project">s</li>
-          <li id="toolbar_load_project" onclick="" title="Open Project">o</li>
+          <li id="toolbar_save_project" style="margin-left: 2em;" onclick="project_save_with_confirm()" title="Save Project">s</li>
+          <li id="toolbar_load_project" onclick="project_open_select_project_file()" title="Open Project">o</li>
 
           <li id="toolbar_prev_img" style="margin-left: 2em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
           <li id="toolbar_next_img" onclick="move_to_next_image()" title="Next Image">&rarr;</li>
@@ -384,9 +372,8 @@
           <li id="toolbar_del_region" onclick="del_sel_regions()" title="Delete Region">&times;</li>
         </ul>
       </div>
-<!-- end of shortcut toolbar -->
-
-      <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">
+      <!-- end of shortcut toolbar -->
+      <input type="file" id="invisible_file_input" name="files[]" style="display:none">
     </div> <!-- endof #top_panel -->
 
     <!-- Middle Panel contains a left-sidebar and image display areas -->
@@ -404,23 +391,50 @@
           </ul>
         </div>
 
-        <button class="leftsidebar_accordion" id="loaded_img_panel_title">Loaded Images</button>
-        <div class="leftsidebar_accordion_panel" id="img_fn_list_panel">
-          <div>
-            <input type="text" placeholder="Filter using regular expression" oninput="img_fn_list_onregex()" id="img_fn_list_regex">
+        <!-- Project -->
+        <button class="leftsidebar_accordion" id="project_panel_title">Project</button>
+        <div class="leftsidebar_accordion_panel show" id="img_fn_list_panel">
+          <div id="project_info_panel">
+            <div class="row">
+              <span class="col"><label for="project_name">Name: </label></span>
+              <span class="col"><input type="text" value="" onchange="project_on_name_update()" id="project_name" title="VIA project name"></span>
+            </div>
+          </div>
+          <div id="project_tools_panel">
+            <div class="button_panel" style="margin:0.1rem 0;" >
+              <select style="width:48%" id="filelist_preset_filters_list" onchange="img_fn_list_onpresetfilter_select()" title="Filter file list using predefined filters">
+                <option value="all">All files</option>
+                <option value="files_without_region">Show files without regions</option>
+                <option value="files_missing_region_annotations">Show files missing region annotations</option>
+                <option value="files_missing_file_annotations">Show files missing file annotations</option>
+                <option value="regex">Regular Expression</option>
+              </select>
+              <input style="width:50%" type="text" placeholder="regular expression" oninput="img_fn_list_onregex()" id="img_fn_list_regex" title="Filter using regular expression">
+            </div>
           </div>
           <div id="img_fn_list"></div>
+          <p style="text-align:center">
+            <div class="button_panel">
+              <span class="button" onclick="" title="Add new file from local disk">&plus;File</span>
+              <span class="button" onclick="" title="Add new file using URL">&plus;URL</span>
+              <span style="margin-left:1rem" class="button" onclick="project_file_remove_with_confirm()" title="Remove selected file (i.e. file currently being shown) from project">&times;</span>
+              <!--
+              <span style="margin-left:1rem" class="button" onclick="" title="Project settings">&lowast;</span>-->
+            </div>
+          </p>
+
         </div>
 
-        <button class="leftsidebar_accordion active" id="attr">Attributes</button>
-        <div class="leftsidebar_accordion_panel show" id="attributes_editor_panel">
+        <!-- Attributes -->
+        <button class="leftsidebar_accordion" id="attr">Attributes</button>
+        <div class="leftsidebar_accordion_panel" id="attributes_editor_panel">
           <div class="button_panel" style="padding:1rem 0;">
             <span class="text_button" onclick="show_region_attributes_update_panel()" id="button_show_region_attributes" title="Show region attributes">Region Attributes</span>
             <span class="text_button" onclick="show_file_attributes_update_panel()" id="button_show_file_attributes" title="Show file attributes">File Attributes</span>
           </div>
           <div id="attributes_update_panel">
             <div class="button_panel">
-              <input style="width:65%" type="text" placeholder="attribute name" id="user_input_attribute_id" value="">
+              <input style="width:70%" type="text" placeholder="attribute name" id="user_input_attribute_id" value="">
               <span class="button" onclick="add_new_attribute_from_user_input()" title="Add new attribute">&plus;</span>
               <span class="button" onclick="delete_existing_attribute_with_confirm()" title="Delete existing attribute">&minus;</span>
             </div>
@@ -601,7 +615,7 @@
     <!--    -->
     <script src="via.js"></script>
 
-    <!---->
+    <!--    -->
     <script src="via_demo.js"></script>
 
     <!-- Unit Tests    -->
