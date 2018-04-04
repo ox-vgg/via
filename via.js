@@ -272,7 +272,7 @@ function sel_local_images() {
   if (invisible_file_input) {
     invisible_file_input.setAttribute('multiple', 'multiple')
     invisible_file_input.accept   = '.jpg,.jpeg,.png,.bmp';
-    invisible_file_input.onchange = store_local_img_ref;
+    invisible_file_input.onchange = project_file_add_local;
     invisible_file_input.click();
   }
 }
@@ -335,66 +335,6 @@ function set_all_text_panel_display(style_display) {
 function clear_image_display_area() {
   hide_all_canvas();
   set_all_text_panel_display('none');
-}
-
-//
-// Local file uploaders
-//
-function store_local_img_ref(event) {
-  var user_selected_images = event.target.files;
-  var original_image_count = _via_img_count;
-
-  // clear browser cache if user chooses to load new images
-  if (original_image_count === 0) {
-    remove_via_data_from_localStorage();
-  }
-
-  var discarded_file_count = 0;
-  for ( var i = 0; i < user_selected_images.length; ++i ) {
-    var filetype = user_selected_images[i].type.substr(0, 5);
-    if ( filetype === 'image' ) {
-      var filename = user_selected_images[i].name;
-      var size     = user_selected_images[i].size;
-      var img_id   = _via_get_image_id(filename, size);
-
-      if ( _via_img_metadata.hasOwnProperty(img_id) ) {
-        if ( _via_img_metadata[img_id].fileref ) {
-          show_message('Image ' + filename + ' already loaded. Skipping!');
-        } else {
-          _via_img_metadata[img_id].fileref = user_selected_images[i];
-          show_message('Regions already exist for file ' + filename + ' !');
-        }
-      } else {
-        _via_img_metadata[img_id] = new ImageMetadata(user_selected_images[i],
-                                                      filename,
-                                                      size);
-        _via_image_id_list.push(img_id);
-        _via_loaded_img_fn_list.push(filename);
-        set_file_annotations_to_default_value(img_id);
-        _via_img_count += 1;
-        _via_reload_img_fn_list_table = true;
-      }
-    } else {
-      discarded_file_count += 1;
-    }
-  }
-
-  if ( _via_img_metadata ) {
-    var status_msg = 'Loaded ' + (_via_img_count - original_image_count) + ' images.';
-    if ( discarded_file_count ) {
-      status_msg += ' ( Discarded ' + discarded_file_count + ' non-image files! )';
-    }
-    show_message(status_msg);
-
-    if ( _via_image_index === -1 ) {
-      show_image(0);
-    } else {
-      show_image( original_image_count );
-    }
-    update_img_fn_list();
-  } else {
-    show_message("Please upload some image files!");
-  }
 }
 
 //
@@ -1041,7 +981,7 @@ function show_image(image_index) {
 
   if (_via_img_metadata[img_id].base64_img_data === '') {
     // load image from file
-    img_reader.readAsDataURL( _via_img_metadata[img_id].fileref );
+    img_reader.readAsText( new Blob([_via_img_metadata[img_id].fileref]) );
   } else {
     // load image from base64 data or URL
     img_reader.readAsText( new Blob([_via_img_metadata[img_id].base64_img_data]) );
@@ -3750,8 +3690,8 @@ function img_fn_list_ith_entry_html(i) {
   var filename = _via_loaded_img_fn_list[i];
   if ( i === _via_image_index ) {
     // highlight the current entry
-    htmli += '<li id="flist'+i+'" style="cursor: default;">';
-    htmli += '<b>[' + (i+1) + '] ' + filename + '</b>';
+    htmli += '<li id="flist'+i+'" class="highlight">';
+    htmli += '[' + (i+1) + '] ' + filename;
   } else {
     htmli += '<li id="flist'+i+'" onclick="jump_to_image(' + (i) + ')">';
     htmli += '[' + (i+1) + '] ' + filename;
@@ -4502,11 +4442,16 @@ function setup_user_input_panel(ok_handler, input, config, cancel_handler) {
       if ( _via_user_input_data[key].size ) {
         size = _via_user_input_data[key].size;
       }
+      var placeholder = '';
+      if ( _via_user_input_data[key].placeholder ) {
+        placeholder = _via_user_input_data[key].placeholder;
+      }
       html.push('<span class="cell">' +
                 '<input class="_via_user_input_variable" ' +
                 value_html + ' ' +
                 disabled_html + ' ' +
                 'size="' + size + '" ' +
+                'placeholder="' + placeholder + '" ' +
                 'type="text" id="' + key + '"></span>');
       break;
     }
@@ -5079,7 +5024,7 @@ function project_file_remove_with_confirm() {
   var input = { 'img_index': { type:'text', name:'File Id', value:(_via_image_index+1), disabled:true },
                 'filename':{ type:'text', name:'Filename', value:filename, disabled:true, size:30},
                 'region_count':{ type:'text', name:'Number of regions', disabled:true, value:region_count},
-                'confirm':{ type:'checkbox', name:'Confirm (by checking box) that you understand the following: <span class="warning">Removing a file from this project will remove all the region and file annotations associated with this file.</span>', checked:true},
+                'confirm':{ type:'checkbox', name:'Confirm (by checking box) that you understand the following: <span class="warning">Removing a file from this project will remove all the region and file annotations associated with this file.</span>', checked:false},
               };
 
   invoke_with_user_inputs(project_file_remove_confirmed, input, config);
@@ -5121,6 +5066,102 @@ function project_file_remove_confirmed(input) {
   }
   user_input_default_cancel_handler();
 }
+
+function project_file_add_local(event) {
+  var user_selected_images = event.target.files;
+  var original_image_count = _via_img_count;
+
+  // clear browser cache if user chooses to load new images
+  if (original_image_count === 0) {
+    remove_via_data_from_localStorage();
+  }
+
+  var discarded_file_count = 0;
+  for ( var i = 0; i < user_selected_images.length; ++i ) {
+    var filetype = user_selected_images[i].type.substr(0, 5);
+    if ( filetype === 'image' ) {
+      var filename = user_selected_images[i].name;
+      var size     = user_selected_images[i].size;
+      var img_id   = _via_get_image_id(filename, size);
+
+      if ( _via_img_metadata.hasOwnProperty(img_id) ) {
+        if ( _via_img_metadata[img_id].fileref ) {
+          show_message('Image ' + filename + ' already loaded. Skipping!');
+        } else {
+          _via_img_metadata[img_id].fileref = user_selected_images[i];
+          show_message('Regions already exist for file ' + filename + ' !');
+        }
+      } else {
+        _via_img_metadata[img_id] = new ImageMetadata(user_selected_images[i],
+                                                      filename,
+                                                      size);
+        _via_image_id_list.push(img_id);
+        _via_loaded_img_fn_list.push(filename);
+        set_file_annotations_to_default_value(img_id);
+        _via_img_count += 1;
+        _via_reload_img_fn_list_table = true;
+      }
+    } else {
+      discarded_file_count += 1;
+    }
+  }
+
+  if ( _via_img_metadata ) {
+    var status_msg = 'Loaded ' + (_via_img_count - original_image_count) + ' images.';
+    if ( discarded_file_count ) {
+      status_msg += ' ( Discarded ' + discarded_file_count + ' non-image files! )';
+    }
+    show_message(status_msg);
+
+    if ( _via_image_index === -1 ) {
+      show_image(0);
+    } else {
+      show_image( original_image_count );
+    }
+    update_img_fn_list();
+  } else {
+    show_message("Please upload some image files!");
+  }
+}
+
+function project_file_add_url_with_input() {
+  var config = {'title':'Add File using URL' };
+  var input = { 'url': { type:'text', name:'URL', placeholder:'http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg', disabled:false, size:50 }
+              };
+
+  invoke_with_user_inputs(project_file_add_url, input, config);
+}
+
+function project_file_add_url(input) {
+  var url = input.url.value.trim();
+
+  if ( url !== '' ) {
+    var size = -1; // convention: files added using url have size = -1
+    var img_id   = _via_get_image_id(url, size);
+
+    if ( _via_img_metadata.hasOwnProperty(img_id) ) {
+      if ( _via_img_metadata[img_id].fileref ) {
+        show_message('Image [' + filename + '] already loaded. Skipping!');
+      } else {
+        _via_img_metadata[img_id].fileref = filename;
+        show_message('Regions already exist for file ' + filename + ' !');
+      }
+    } else {
+      _via_img_metadata[img_id] = new ImageMetadata(url,
+                                                    url,
+                                                    size);
+      _via_image_id_list.push(img_id);
+      _via_loaded_img_fn_list.push(url);
+      set_file_annotations_to_default_value(img_id);
+      _via_img_count += 1;
+      _via_reload_img_fn_list_table = true;
+    }
+  }
+  show_message('Added file at url [' + url + ']');
+  update_img_fn_list();
+  user_input_default_cancel_handler();
+}
+
 //
 // hooks for sub-modules
 // implemented by sub-modules

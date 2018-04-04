@@ -223,10 +223,12 @@
       ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
 
       /* Loaded image list shown in leftsidebar panel */
-      #img_fn_list { font-size:small; overflow:scroll; min-height:10rem; max-height:30rem; }
-      #img_fn_list ul { position:relative; line-height:1.3em; margin:0; padding:0; list-style-type:none; }
+      #img_fn_list { font-size:small; overflow:scroll; min-height:10rem; max-height:25rem; }
+      #img_fn_list ul { position:relative; line-height:1.3em; margin:0; padding:0; list-style-type:none;}
       #img_fn_list li { white-space:nowrap; }
-      #img_fn_list li:hover { background-color:#cccccc; color:#000000; cursor:pointer; }
+      #img_fn_list li:hover { background-color:#f2f2f2; cursor:pointer; }
+      #img_fn_list .highlight { font-weight:bold; cursor:default; }
+      #img_fn_list .missing { color:red; cursor:default; }
 
       #message_panel { display:block; width:100%; position:fixed; bottom:0px; z-index:1000; text-align:center; }
       #message_panel_content { display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}
@@ -309,7 +311,8 @@
               <li class="submenu_divider"></li>
               <li onclick="sel_local_images()" title="Add images locally stored in this computer">Add local files</li>
               <li onclick="" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)">Add files from URL</li>
-              <li onclick="" title="Add images from a list of web url stored in a text file (one url per line)">Add files from text file</li>
+              <li onclick="" title="Add images from a list of web url stored in a text file (one url per line)">Add URLs from text file</li>
+              <li onclick="" title="Remove selected file (i.e. file currently being shown)">Remove file</li>
               <li class="submenu_divider"></li>
               <li onclick="" title="Import region and file attributes from a JSON file">Import region/file attributes</li>
               <li onclick="" title="Export region and file attributes to a JSON file">Export region/file attributes</li>
@@ -415,14 +418,14 @@
           <div id="img_fn_list"></div>
           <p style="text-align:center">
             <div class="button_panel">
-              <span class="button" onclick="" title="Add new file from local disk">&plus;File</span>
-              <span class="button" onclick="" title="Add new file using URL">&plus;URL</span>
+              <span class="button" onclick="sel_local_images()" title="Add new file from local disk">&plus;f</span>
+              <span class="button" onclick="project_file_add_url_with_input()" title="Add new file using URL">&plus;u</span>
               <span style="margin-left:1rem" class="button" onclick="project_file_remove_with_confirm()" title="Remove selected file (i.e. file currently being shown) from project">&times;</span>
               <!--
-              <span style="margin-left:1rem" class="button" onclick="" title="Project settings">&lowast;</span>-->
+              <span style="margin-left:1rem" class="button" onclick="" title="Project settings">&lowast;</span>
+              -->
             </div>
           </p>
-
         </div>
 
         <!-- Attributes -->
