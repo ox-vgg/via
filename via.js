@@ -975,13 +975,23 @@ function show_image(image_index) {
       _via_load_canvas_regions(); // image to canvas space transform
       _via_redraw_reg_canvas();
       _via_reg_canvas.focus();
+
+      // Preserve zoom level
+      if (_via_is_canvas_zoomed) {
+        set_zoom( _via_canvas_zoom_level_index );
+      }
     });
     _via_current_image.src = img_reader.result;
   }, false);
 
   if (_via_img_metadata[img_id].base64_img_data === '') {
-    // load image from file
-    img_reader.readAsText( new Blob([_via_img_metadata[img_id].fileref]) );
+    if ( _via_img_metadata[img_id].fileref instanceof File ) {
+      // load image from local file
+      img_reader.readAsDataURL( _via_img_metadata[img_id].fileref );
+    } else {
+      // load image from url
+      img_reader.readAsText( new Blob([_via_img_metadata[img_id].fileref]) );
+    }
   } else {
     // load image from base64 data or URL
     img_reader.readAsText( new Blob([_via_img_metadata[img_id].base64_img_data]) );
@@ -1121,16 +1131,6 @@ function hide_all_canvas() {
 function jump_to_image(image_index) {
   if ( _via_img_count <= 0 ) {
     return;
-  }
-
-  // reset zoom
-  if ( _via_is_canvas_zoomed ) {
-    _via_is_canvas_zoomed = false;
-    _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX;
-    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-    set_all_canvas_scale(zoom_scale);
-    set_all_canvas_size(_via_canvas_width, _via_canvas_height);
-    _via_canvas_scale = _via_canvas_scale_without_zoom;
   }
 
   if ( image_index >= 0 && image_index < _via_img_count) {
@@ -3226,17 +3226,6 @@ function move_to_prev_image() {
     _via_is_region_selected = false;
     _via_user_sel_region_id = -1;
 
-    /* Preserve zoom level when moving image
-    if (_via_is_canvas_zoomed) {
-      _via_is_canvas_zoomed = false;
-      _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX;
-      var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-      set_all_canvas_scale(zoom_scale);
-      set_all_canvas_size(_via_canvas_width, _via_canvas_height);
-      _via_canvas_scale = _via_canvas_scale_without_zoom;
-    }
-    */
-
     var current_img_index = _via_image_index;
     if ( _via_loaded_img_fn_list_file_index.includes( current_img_index ) ) {
       var list_index = _via_loaded_img_fn_list_file_index.indexOf( current_img_index );
@@ -3265,17 +3254,6 @@ function move_to_next_image() {
     _via_is_region_selected = false;
     _via_user_sel_region_id = -1;
 
-    /* Preserve zoom level when moving image
-    if (_via_is_canvas_zoomed) {
-      _via_is_canvas_zoomed = false;
-      _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX;
-      var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-      set_all_canvas_scale(zoom_scale);
-      set_all_canvas_size(_via_canvas_width, _via_canvas_height);
-      _via_canvas_scale = _via_canvas_scale_without_zoom;
-    }
-    */
-
     var current_img_index = _via_image_index;
     if ( _via_loaded_img_fn_list_file_index.includes( current_img_index ) ) {
       var list_index = _via_loaded_img_fn_list_file_index.indexOf( current_img_index );
@@ -3299,24 +3277,34 @@ function move_to_next_image() {
   }
 }
 
+function set_zoom(zoom_level_index) {
+  if ( zoom_level_index === VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX ) {
+    _via_is_canvas_zoomed = false;
+    _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX;
+  } else {
+    _via_is_canvas_zoomed = true;
+    _via_canvas_zoom_level_index = zoom_level_index;
+  }
+
+  var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
+  set_all_canvas_scale(zoom_scale);
+  set_all_canvas_size(_via_canvas_width  * zoom_scale,
+                      _via_canvas_height * zoom_scale);
+  _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
+
+  _via_load_canvas_regions(); // image to canvas space transform
+  _via_redraw_img_canvas();
+  _via_redraw_reg_canvas();
+  _via_reg_canvas.focus();
+}
+
 function reset_zoom_level() {
   if (!_via_current_image_loaded) {
     show_message('First load some images!');
     return;
   }
   if (_via_is_canvas_zoomed) {
-    _via_is_canvas_zoomed = false;
-    _via_canvas_zoom_level_index = VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX;
-
-    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-    set_all_canvas_scale(zoom_scale);
-    set_all_canvas_size(_via_canvas_width, _via_canvas_height);
-    _via_canvas_scale = _via_canvas_scale_without_zoom;
-
-    _via_load_canvas_regions(); // image to canvas space transform
-    _via_redraw_img_canvas();
-    _via_redraw_reg_canvas();
-    _via_reg_canvas.focus();
+    set_zoom(VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX);
     show_message('Zoom reset');
   } else {
     show_message('Cannot reset zoom because image zoom has not been applied!');
@@ -3332,20 +3320,9 @@ function zoom_in() {
   if (_via_canvas_zoom_level_index === (VIA_CANVAS_ZOOM_LEVELS.length-1)) {
     show_message('Further zoom-in not possible');
   } else {
-    _via_canvas_zoom_level_index += 1;
-
-    _via_is_canvas_zoomed = true;
-    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-    set_all_canvas_scale(zoom_scale);
-    set_all_canvas_size(_via_canvas_width  * zoom_scale,
-                        _via_canvas_height * zoom_scale);
-    _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
-
-    _via_load_canvas_regions(); // image to canvas space transform
-    _via_redraw_img_canvas();
-    _via_redraw_reg_canvas();
-    _via_reg_canvas.focus();
-    show_message('Zoomed in to level ' + zoom_scale + 'X');
+    var new_zoom_level_index = _via_canvas_zoom_level_index + 1;
+    set_zoom( new_zoom_level_index );
+    show_message('Zoomed in to level ' + VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index] + 'X');
   }
 }
 
@@ -3358,20 +3335,9 @@ function zoom_out() {
   if (_via_canvas_zoom_level_index === 0) {
     show_message('Further zoom-out not possible');
   } else {
-    _via_canvas_zoom_level_index -= 1;
-
-    _via_is_canvas_zoomed = true;
-    var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
-    set_all_canvas_scale(zoom_scale);
-    set_all_canvas_size(_via_canvas_width  * zoom_scale,
-                        _via_canvas_height * zoom_scale);
-    _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
-
-    _via_load_canvas_regions(); // image to canvas space transform
-    _via_redraw_img_canvas();
-    _via_redraw_reg_canvas();
-    _via_reg_canvas.focus();
-    show_message('Zoomed out to level ' + zoom_scale + 'X');
+    var new_zoom_level_index = _via_canvas_zoom_level_index - 1;
+    set_zoom( new_zoom_level_index );
+    show_message('Zoomed out to level ' + VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index] + 'X');
   }
 }
 

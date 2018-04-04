@@ -16,6 +16,7 @@
  * via project save/load
    - everything (annotations, attributes, application settings, etc) can now be saved as a VIA project (a json file)
  * exported csv annotation header line does not contain "#" (this may be a breaking change)
+ * zoom level does not reset when navigating prev/next images
  * VIA project: open/save
    - image file list can be filtered using regular expression
    - preset filters for image file list
