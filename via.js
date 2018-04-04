@@ -159,7 +159,8 @@ var _via_attribute_being_updated       = 'region'; // {region, file}
 var _via_attributes                    = { 'region':{}, 'file':{} };
 var VIA_ATTRIBUTE_TYPE = { TEXT:'text',
                            CHECKBOX:'checkbox',
-                           RADIO:'radio'
+                           RADIO:'radio',
+                           IMAGE:'image'
                          };
 
 // invoke a method after receiving user input
@@ -182,6 +183,8 @@ var _via_loaded_img_fn_list_table_html = [];
 
 // via settings
 var _via_settings = {};
+_via_settings.ui = {};
+_via_settings.ui.annotation_editor_height = 25; // in percent of the height of browser window
 
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
@@ -202,6 +205,8 @@ var BBOX_BOUNDARY_FILL_COLOR_ANNOTATED = "#f2f2f2";
 var BBOX_BOUNDARY_FILL_COLOR_NEW       = "#aaeeff";
 var BBOX_BOUNDARY_LINE_COLOR           = "#1a1a1a";
 var BBOX_SELECTED_FILL_COLOR           = "#ffffff";
+
+var VIA_ANNOTATION_EDITOR_HEIGHT_CHANGE = 5; // in percent
 
 //
 // Data structure for annotations
@@ -3832,6 +3837,36 @@ function show_attribute_options() {
   case VIA_ATTRIBUTE_TYPE.TEXT:
     // text does not have any additional properties
     break;
+  case VIA_ATTRIBUTE_TYPE.IMAGE:
+    var p = document.createElement('div');
+    p.setAttribute('class', 'property');
+    p.setAttribute('style', 'text-align:center');
+    var c0 = document.createElement('span');
+    c0.setAttribute('style', 'width:25%');
+    c0.setAttribute('title', 'When selected, this is the value that appears in exported annotations');
+    c0.innerHTML = 'id';
+    var c1 = document.createElement('span');
+    c1.setAttribute('style', 'width:60%');
+    c1.setAttribute('title', 'This is the image shown as an option to the annotator');
+    c1.innerHTML = 'image url';
+    var c2 = document.createElement('span');
+    c2.setAttribute('title', 'The default value of this attribute');
+    c2.innerHTML = 'def.';
+    p.appendChild(c0);
+    p.appendChild(c1);
+    p.appendChild(c2);
+    document.getElementById('attribute_options').appendChild(p);
+
+    var options = _via_attributes[_via_attribute_being_updated][attr_id].options;
+    var option_id;
+    for ( option_id in options ) {
+      var option_desc = options[option_id];
+
+      var option_default = _via_attributes[_via_attribute_being_updated][attr_id].default_options[option_id];
+      attribute_property_add_option(attr_id, option_id, option_desc, option_default, attr_type);
+    }
+    attribute_property_add_new_entry_option(attr_id, attr_type);
+    break;
   case VIA_ATTRIBUTE_TYPE.CHECKBOX: // handled by next case
   case VIA_ATTRIBUTE_TYPE.RADIO:
     var p = document.createElement('div');
@@ -3843,10 +3878,10 @@ function show_attribute_options() {
     c0.innerHTML = 'id';
     var c1 = document.createElement('span');
     c1.setAttribute('style', 'width:60%');
-    c1.setAttribute('title', 'This is the text that is seen by the annotator');
+    c1.setAttribute('title', 'This is the text shown as an option to the annotator');
     c1.innerHTML = 'description';
     var c2 = document.createElement('span');
-    c2.setAttribute('title', 'The default value of this option');
+    c2.setAttribute('title', 'The default value of this attribute');
     c2.innerHTML = 'def.';
     p.appendChild(c0);
     p.appendChild(c1);
@@ -3911,8 +3946,9 @@ function attribute_property_add_option(attr_id, option_id, option_desc, option_d
   if ( typeof option_default !== 'undefined' ) {
     c2b.checked = option_default;
   }
-  if ( attribute_type === 'radio' ) {
+  if ( attribute_type === 'radio' || attribute_type === 'image' ) {
     // ensured that user can activate only one radio button
+    c2b.setAttribute('type', 'radio');
     c2b.setAttribute('name', attr_id);
   }
   c2b.setAttribute('onclick', 'attribute_property_on_option_update(this)');
@@ -4521,6 +4557,7 @@ function toggle_annotation_editor() {
     p.classList.remove('display_block');
   } else {
     p.classList.add('display_block');
+    p.style.height = _via_settings.ui.annotation_editor_height + '%';
     update_annotation_editor();
   }
 }
@@ -4713,6 +4750,66 @@ function annotation_editor_get_metadata_row_html(row_id) {
         col.appendChild(container);
       }
       break;
+    case 'image':
+      var option_id;
+      var option_count = 0;
+      for ( option_id in _via_attributes[_via_metadata_being_updated][attr_id].options ) {
+        option_count = option_count + 1;
+      }
+      var img_options = document.createElement('div');
+      img_options.setAttribute('class', 'img_options');
+      col.appendChild(img_options);
+
+      var row0 = document.createElement('div');
+      row0.setAttribute('class', 'imrow');
+      var row1 = document.createElement('div');
+      row1.setAttribute('class', 'imrow');
+
+      img_options.appendChild(row0);
+      img_options.appendChild(row1);
+
+      var option_index = 0;
+      for ( option_id in _via_attributes[_via_metadata_being_updated][attr_id].options ) {
+        var option_html_id = attr_html_id + '__' + option_id;
+        var option = document.createElement('input');
+        option.setAttribute('type', 'radio');
+        option.setAttribute('name', attr_html_id);
+        option.setAttribute('value', option_id);
+        option.setAttribute('id', option_html_id);
+        option.setAttribute('onchange', 'annotation_editor_on_metadata_update(this)');
+
+        var option_desc  = _via_attributes[_via_metadata_being_updated][attr_id].options[option_id];
+        if ( option_desc === '' || typeof(option_desc) === 'undefined' ) {
+          // option description is optional, use option_id when description is not present
+          option_desc = option_id;
+        }
+
+        if ( attr_value === option_id ) {
+          option.checked = true;
+        }
+
+        var label  = document.createElement('label');
+        label.setAttribute('for', option_html_id);
+        label.innerHTML = '<img src="' + option_desc + '"><p>' + option_id + '</p>';
+
+        var container = document.createElement('span');
+        container.appendChild(option);
+        container.appendChild(label);
+        //col.appendChild(container);
+        //img_options.appendChild(container);
+
+        if ( option_count > 5 ) {
+          if ( option_index < (option_count/2) ) {
+            row0.appendChild(container);
+          } else {
+            row1.appendChild(container);
+          }
+        } else {
+          row0.appendChild(container);
+        }
+        option_index = option_index + 1;
+      }
+      break;
     }
 
     row.appendChild(col);
@@ -4779,6 +4876,9 @@ function annotation_editor_on_metadata_update(p) {
   case 'radio':
     _via_img_metadata[_via_image_id].regions[pid.row_id].region_attributes[pid.attr_id] = p.value;
     break;
+  case 'image':
+    _via_img_metadata[_via_image_id].regions[pid.row_id].region_attributes[pid.attr_id] = p.value;
+    break;
   case 'checkbox':
     var option_id = p.value;
     if ( ! _via_img_metadata[_via_image_id].regions[pid.row_id].region_attributes[pid.attr_id] ) {
@@ -4809,7 +4909,7 @@ function set_region_annotations_to_default_value(rid) {
         _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = default_value;
       }
       break;
-    case 'radio': // handled by case 'checkbox'
+    case 'radio':
       _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = '';
       var default_options = _via_attributes['region'][attr_id].default_options;
       if ( typeof(default_options) !== 'underfined' ) {
@@ -4820,6 +4920,18 @@ function set_region_annotations_to_default_value(rid) {
         }
       }
       break;
+    case 'image':
+      _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = '';
+      var default_options = _via_attributes['region'][attr_id].default_options;
+      if ( typeof(default_options) !== 'underfined' ) {
+        var option_id;
+        for ( option_id in default_options ) {
+          // a radio input has single value
+          _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = option_id;
+        }
+      }
+      break;
+
     case 'checkbox':
       _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = {};
       var default_options = _via_attributes['region'][attr_id].default_options;
@@ -4865,6 +4977,22 @@ function set_file_annotations_to_default_value(image_id) {
       }
       break;
     }
+  }
+}
+
+function annotation_editor_increase_panel_height() {
+  var p = document.getElementById('annotation_editor_panel');
+  if ( _via_settings.ui.annotation_editor_height < 95 ) {
+    _via_settings.ui.annotation_editor_height += VIA_ANNOTATION_EDITOR_HEIGHT_CHANGE;
+    p.style.height = _via_settings.ui.annotation_editor_height + '%';
+  }
+}
+
+function annotation_editor_decrease_panel_height() {
+  var p = document.getElementById('annotation_editor_panel');
+  if ( _via_settings.ui.annotation_editor_height > 10 ) {
+    _via_settings.ui.annotation_editor_height -= VIA_ANNOTATION_EDITOR_HEIGHT_CHANGE;
+    p.style.height = _via_settings.ui.annotation_editor_height + '%';
   }
 }
 

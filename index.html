@@ -73,83 +73,25 @@
       .toolbar li { display:inline; float:left; padding:0rem 0.3rem;} /* main menu items */
       .toolbar li:hover { color:red; cursor:pointer; }
 
-      #fileinfo {
-      font-size: small;
-      padding: 1.2em 0.8em;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      }
-
       /* Middle panel: containing #image_panel, #leftsidebar */
-      .middle_panel {
-      position: relative;
-      display: table;
-      table-layout: fixed;
-      width: 100%;
-      z-index: 1;
-      padding: 0;
-      top: 3.5em;
-      /*padding-top: 1.0125em;  ensures the mouse event (x,y) coordinates are integer */
-      }
-      #leftsidebar {
-      display: table-cell;
-      width: 250px;
-      z-index: 10;
-      vertical-align: top;
-      }
-      #display_area {
-      display: table-cell;
-      width: 100%;
-      z-index: 1;
-      margin: 0;
-      padding-left: 1em;
-      vertical-align: top;
-      }
-      #canvas_panel {
-      position: relative;
-      margin: 0;
-      padding: 0;
-      }
-      #canvas_panel canvas:focus {
-      outline: none;
-      }
+      .middle_panel { position:relative; display:table; table-layout:fixed; width:100%; z-index:1; padding:0; top:3.5em; }
+      #leftsidebar { display:table-cell; width:250px; z-index:10; vertical-align:top; }
+      #display_area { display:table-cell; width:100%; z-index:1; margin:0; padding-left:1em; vertical-align:top; }
+      #canvas_panel { position:relative; margin:0; padding:0; }
+      #canvas_panel canvas:focus { outline:none; }
 
       #leftsidebar_collapse_panel { display:table-cell; position:relative; width:0.5%; z-index:10; vertical-align:top; }
       #leftsidebar_collapse_button { font-size: large; padding-left:0.2rem; }
       #leftsidebar_collapse_button:hover { color: red; cursor: pointer; }
 
       /* Left sidebar accordion */
-      button.leftsidebar_accordion {
-      font-size: large;
-      background-color: #f2f2f2;
-      cursor: pointer;
-      padding: 0.5em 0.5em;
-      width: 100%;
-      text-align: left;
-      border: 0;
-      outline: none;
-      }
-      button.leftsidebar_accordion:focus {
-      outline: none;
-      }
-      button.leftsidebar_accordion.active, button.leftsidebar_accordion:hover {
-      background-color: #e6e6e6;
-      }
-      button.leftsidebar_accordion:after {
-      content: '\02795';
-      color: #4d4d4d;
-      float: right;
-      }
+      button.leftsidebar_accordion { font-size:large; background-color:#f2f2f2; cursor:pointer; padding:0.5em 0.5em; width:100%; text-align:left; border:0; outline:none; }
+      button.leftsidebar_accordion:focus { outline: none; }
+      button.leftsidebar_accordion.active, button.leftsidebar_accordion:hover { background-color: #e6e6e6; }
+      button.leftsidebar_accordion:after { content:'\02795'; color:#4d4d4d; float:right; }
       button.leftsidebar_accordion.active:after { content: '\2796'; }
-      .leftsidebar_accordion_panel {
-      display: none;
-      padding: 0 0.5em;
-      font-size: small;
-      border-right: 2px solid #f2f2f2;
-      border-bottom: 2px solid #f2f2f2;
-      }
-      .leftsidebar_accordion_panel.show { display: block; }
+      .leftsidebar_accordion_panel { display:none; padding:0 0.5em; font-size:small; border-right:2px solid #f2f2f2; border-bottom:2px solid #f2f2f2; }
+      .leftsidebar_accordion_panel.show { display:block; }
 
       /* buttons */
       .button_panel { display:table; width:100%; }
@@ -193,7 +135,7 @@
       /* Attribute editor */
       .display_none { display:none; }
       .display_block { display:block !important; }
-      #annotation_editor_panel { position:fixed; display:none; width:100%; height:20%; max-height:30%; left:0; bottom:0; background-color:white; border-top:2px solid #cccccc; padding:0.2rem 1rem; font-size:small; overflow:auto; z-index:1001; box-shadow: 0 0 1rem #cccccc;}
+      #annotation_editor_panel { position:fixed; display:none; width:100%; left:0; bottom:0; background-color:white; border-top:2px solid #cccccc; padding:0.2rem 1rem; font-size:small; overflow:auto; z-index:1001; box-shadow: 0 0 1rem #cccccc;}
       #annotation_editor { display:table; margin-bottom:3rem; border-collapse:collapse; font-size:0.8rem; }
       #annotation_editor .row { display:table-row; }
       #annotation_editor .highlight .col { background-color:#f2f2f2;}
@@ -209,6 +151,15 @@
       #annotation_editor .col textarea:focus { border:1px dashed #cccccc; }
       #annotation_editor .col span { display:block; }
       #annotation_editor .col horizontal_container { display:inline-block; }
+
+      #annotation_editor .col .img_options { display:inline; }
+      #annotation_editor .col .img_options .imrow { display:block; }
+      #annotation_editor .col .img_options .imrow span { display:inline-block; margin: 0.2rem 0.4rem;}
+      #annotation_editor .col .img_options .imrow span img { height:80px; }
+      #annotation_editor .col .img_options p { margin:0; padding:0; font-size:x-small; }
+      #annotation_editor .col .img_options input[type=radio] { display:none; }
+      #annotation_editor .col .img_options input[type=radio] + label { display:block; cursor:pointer; text-align:center;}
+      #annotation_editor .col .img_options input[type=radio]:checked + label { border: 1px solid black; background-color:#cccccc; cursor:default; }
 
       #project_info_panel { display:table; border-collapse:collapse; font-size:0.8rem; }
       #project_info_panel .row { display:table-row; }
@@ -260,7 +211,12 @@
       <div class="button_panel" style="margin:0.5rem 0;">
         <span class="text_button" onclick="edit_region_metadata_in_annotation_editor()" id="button_edit_region_metadata" title="Manual annotations of regions">Region Annotations</span>
         <span class="text_button" onclick="edit_file_metadata_in_annotation_editor()" id="button_edit_file_metadata" title="Manual annotations of a file">File Annotations</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="toggle_annotation_editor()" id="button_edit_file_metadata" title="Close this window of annotation editor">&times;</span>
+
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="" title="Increase size of everything">&plus;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="" title="Decrease size of everything">&minus;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_panel_height()" title="Increase the height of this panel">&uarr;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_panel_height()" title="Decrease the height of this panel">&darr;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="toggle_annotation_editor()" title="Close this window of annotation editor">&times;</span>
       </div>
       <div id="annotation_editor"></div>
     </div>
@@ -327,6 +283,7 @@
               <li onclick="sel_local_data_file('annotations')" title="Import annotations from a CSV file">Import Annotations (from csv)</li>
               <li onclick="sel_local_data_file('annotations')" title="Import annotations from a JSON file">Import Annotations (from json)</li>
               <li class="submenu_divider"></li>
+              <li onclick="toggle_annotation_editor()" title="Toggle annotation editor panel">Toggle Annotation Editor Panel</li>
               <li onclick="show_annotation_data()" title="Show a preview of annotations (opens in a new browser windows)">Preview Annotations (new window)</li>
             </ul>
           </li>
@@ -396,7 +353,7 @@
 
         <!-- Project -->
         <button class="leftsidebar_accordion" id="project_panel_title">Project</button>
-        <div class="leftsidebar_accordion_panel show" id="img_fn_list_panel">
+        <div class="leftsidebar_accordion_panel" id="img_fn_list_panel">
           <div id="project_info_panel">
             <div class="row">
               <span class="col"><label for="project_name">Name: </label></span>
@@ -426,8 +383,8 @@
         </div>
 
         <!-- Attributes -->
-        <button class="leftsidebar_accordion" id="attr">Attributes</button>
-        <div class="leftsidebar_accordion_panel" id="attributes_editor_panel">
+        <button class="leftsidebar_accordion active" id="attr">Attributes</button>
+        <div class="leftsidebar_accordion_panel show" id="attributes_editor_panel">
           <div class="button_panel" style="padding:1rem 0;">
             <span class="text_button" onclick="show_region_attributes_update_panel()" id="button_show_region_attributes" title="Show region attributes">Region Attributes</span>
             <span class="text_button" onclick="show_file_attributes_update_panel()" id="button_show_file_attributes" title="Show file attributes">File Attributes</span>
@@ -445,7 +402,7 @@
             <div id="attribute_options"></div>
             <p style="text-align:center">
               <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor()">Annotation Editor</span>|
-              <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor()">Save Project</span>
+              <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="">Save Attributes</span>
             </p>
 
             <!--

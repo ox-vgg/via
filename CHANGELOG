@@ -9,7 +9,7 @@
  * attributes editor
    - added _via_attributes{'region','file'} and removed _via_region_attributes, _via_file_attributes
    - attributes add/remove/update from left sidebar panel
-   - attribute types: text (default), checkbox, radio
+   - attribute types: text (default), checkbox, radio, image
  * annotation editor
    - similar to previous versions (spreadsheet like editor) supporting attribute types: text, checkbox, radio.
    - tabbed panel for region and file attribute editor
