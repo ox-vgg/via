@@ -147,9 +147,12 @@ var _via_user_sel_region_id        = -1;
 var _via_click_x0 = 0; var _via_click_y0 = 0;
 var _via_click_x1 = 0; var _via_click_y1 = 0;
 var _via_region_click_x, _via_region_click_y;
-var _via_copied_image_regions = [];
 var _via_region_edge          = [-1, -1];
 var _via_current_x = 0; var _via_current_y = 0;
+
+// region copy/paste
+var _via_copied_image_regions = [];
+var _via_paste_to_multiple_images_input;
 
 // message
 var _via_message_clear_timer;
@@ -185,6 +188,7 @@ var _via_loaded_img_fn_list_table_html = [];
 var _via_settings = {};
 _via_settings.ui = {};
 _via_settings.ui.annotation_editor_height = 25; // in percent of the height of browser window
+_via_settings.ui.annotation_editor_fontsize = 0.8; // in rem
 
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
@@ -207,6 +211,7 @@ var BBOX_BOUNDARY_LINE_COLOR           = "#1a1a1a";
 var BBOX_SELECTED_FILL_COLOR           = "#ffffff";
 
 var VIA_ANNOTATION_EDITOR_HEIGHT_CHANGE = 5; // in percent
+var VIA_ANNOTATION_EDITOR_FONTSIZE_CHANGE = 0.1; // in rem
 
 //
 // Data structure for annotations
@@ -1194,8 +1199,11 @@ _via_reg_canvas.addEventListener('dblclick', function(e) {
 
   if (region_id !== -1) {
     // user clicked inside a region, show attribute panel
-    if(!_via_is_reg_attr_panel_visible) {
-      toggle_reg_attr_panel();
+    var p = document.getElementById('annotation_editor_panel');
+    if ( ! p.classList.contains('display_block') ) {
+      p.classList.add('display_block');
+      p.style.height = _via_settings.ui.annotation_editor_height + '%';
+      update_annotation_editor();
     }
   }
 
@@ -2012,8 +2020,8 @@ function _via_redraw_img_canvas() {
 
 function _via_redraw_reg_canvas() {
   if (_via_current_image_loaded) {
+    _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
     if ( _via_canvas_regions.length > 0 ) {
-      _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
       if (_via_is_region_boundary_visible) {
         draw_all_regions();
       }
@@ -2929,7 +2937,7 @@ _via_reg_canvas.addEventListener('keydown', function(e) {
     }
 
     if ( e.which === 86 ) { // Ctrl + v
-      paste_sel_regions();
+      paste_sel_regions_in_current_image();
       e.preventDefault();
       return;
     }
@@ -3196,7 +3204,7 @@ function copy_sel_regions() {
   }
 }
 
-function paste_sel_regions() {
+function paste_sel_regions_in_current_image() {
   if ( !_via_current_image_loaded ) {
     show_message('First load some images!');
     return;
@@ -3224,6 +3232,125 @@ function paste_sel_regions() {
   } else {
     show_message('To paste a region, you first need to select a region and copy it!');
   }
+}
+
+function paste_to_multiple_images_with_confirm() {
+  if ( _via_copied_image_regions.length === 0 ) {
+    show_message('First copy some regions!');
+    return;
+  }
+
+  var config = {'title':'Paste Regions to Multiple Images' };
+  var input = { 'region_count': { type:'text', name:'Number of copied regions', value:_via_copied_image_regions.length, disabled:true },
+                'prev_next_count':{ type:'text', name:'Copy to (count format)<br><span style="font-size:0.8rem">For example: to paste copied regions to the <i>previous 2 images</i> and <i>next 3 images</i>, type <strong>2,3</strong> in the textbox and to paste only in <i>next 5 images</i>, type <strong>0,5</strong></span>', placeholder:'2,3', disabled:false, size:30},
+                'img_index_list':{ type:'text', name:'Copy to (image index list)<br><span style="font-size:0.8rem">For example: <strong>2-5,7,9</strong> pastes the copied regions to the images with the following id <i>2,3,4,5,7,9</i> and <strong>3,8,141</strong> pastes to the images with id <i>3,8 and 141</i></span>', placeholder:'2-5,7,9', disabled:false, size:30},
+                'regex':{ type:'text', name:'Copy to filenames matching a regular expression<br><span style="font-size:0.8rem">For example: <strong>_large</strong> pastes the copied regions to all images whose filename contain the keyword <i>_large</i></span>', placeholder:'regular expression', disabled:false, size:30},
+                'include_region_attributes':{ type:'checkbox', name:'Paste also the region annotations', checked:true},
+              };
+
+  invoke_with_user_inputs(paste_to_multiple_images_confirmed, input, config);
+}
+
+function paste_to_multiple_images_confirmed(input) {
+  // keep a copy of user inputs for the undo operation
+  _via_paste_to_multiple_images_input = input;
+
+  user_input_default_cancel_handler();
+  var intersect = generate_img_index_list(input);
+  var i;
+  var total_pasted_region_count = 0;
+  for ( i = 0; i < intersect.length; i++ ) {
+    total_pasted_region_count += paste_regions( intersect[i] );
+  }
+
+  show_message('Pasted [' + total_pasted_region_count + '] regions ' +
+               'in ' + intersect.length + ' images');
+
+  if ( intersect.includes(_via_image_index) ) {
+    _via_load_canvas_regions();
+    _via_redraw_reg_canvas();
+    _via_reg_canvas.focus();
+  }
+}
+
+
+function paste_regions(img_index) {
+  var pasted_reg_count = 0;
+  if ( _via_copied_image_regions.length ) {
+    var img_id = _via_image_id_list[img_index];
+    var i;
+    for ( i = 0; i < _via_copied_image_regions.length; ++i ) {
+      var r = clone_image_region(_via_copied_image_regions[i]);
+      _via_img_metadata[img_id].regions.push(r);
+
+      pasted_reg_count += 1;
+    }
+  }
+  return pasted_reg_count;
+}
+
+
+function del_sel_regions_with_confirm() {
+  if ( _via_copied_image_regions.length === 0 ) {
+    show_message('First copy some regions!');
+    return;
+  }
+
+  var prev_next_count, img_index_list, regex;
+  if ( _via_paste_to_multiple_images_input ) {
+    prev_next_count = _via_paste_to_multiple_images_input.prev_next_count.value;
+    img_index_list  = _via_paste_to_multiple_images_input.img_index_list.value;
+    regex = _via_paste_to_multiple_images_input.regex.value;
+  }
+
+  var config = {'title':'Undo Regions Pasted to Multiple Images' };
+  var input = { 'region_count': { type:'text', name:'Number of regions selected', value:_via_copied_image_regions.length, disabled:true },
+                'prev_next_count':{ type:'text', name:'Delete from (count format)<br><span style="font-size:0.8rem">For example: to delete copied regions from the <i>previous 2 images</i> and <i>next 3 images</i>, type <strong>2,3</strong> in the textbox and to delete regions only in <i>next 5 images</i>, type <strong>0,5</strong></span>', placeholder:'2,3', disabled:false, size:30, value:prev_next_count},
+                'img_index_list':{ type:'text', name:'Delete from (image index list)<br><span style="font-size:0.8rem">For example: <strong>2-5,7,9</strong> deletes the copied regions to the images with the following id <i>2,3,4,5,7,9</i> and <strong>3,8,141</strong> deletes regions from the images with id <i>3,8 and 141</i></span>', placeholder:'2-5,7,9', disabled:false, size:30, value:img_index_list},
+                'regex':{ type:'text', name:'Delete from filenames matching a regular expression<br><span style="font-size:0.8rem">For example: <strong>_large</strong> deletes the copied regions from all images whose filename contain the keyword <i>_large</i></span>', placeholder:'regular expression', disabled:false, size:30, value:regex},
+              };
+
+  invoke_with_user_inputs(del_sel_regions_confirmed, input, config);
+}
+
+function del_sel_regions_confirmed(input) {
+  user_input_default_cancel_handler();
+  var intersect = generate_img_index_list(input);
+  var i;
+  var total_deleted_region_count = 0;
+  for ( i = 0; i < intersect.length; i++ ) {
+    total_deleted_region_count += delete_regions( intersect[i] );
+  }
+
+  show_message('Deleted [' + total_deleted_region_count + '] regions ' +
+               'in ' + intersect.length + ' images');
+
+  if ( intersect.includes(_via_image_index) ) {
+    _via_load_canvas_regions();
+    _via_redraw_reg_canvas();
+    _via_reg_canvas.focus();
+  }
+}
+
+function delete_regions(img_index) {
+  var del_region_count = 0;
+  if ( _via_copied_image_regions.length ) {
+    var img_id = _via_image_id_list[img_index];
+    var i;
+    for ( i = 0; i < _via_copied_image_regions.length; ++i ) {
+      var copied_region_shape_str = JSON.stringify(_via_copied_image_regions[i].shape_attributes);
+      var j;
+      // start from last region in order to delete the last pasted region
+      for ( j = _via_img_metadata[img_id].regions.length-1; j >= 0; --j ) {
+        if ( JSON.stringify(_via_img_metadata[img_id].regions[j].shape_attributes) === copied_region_shape_str ) {
+          _via_img_metadata[img_id].regions.splice( j, 1);
+          del_region_count += 1;
+          break; // delete only one matching region
+        }
+      }
+    }
+  }
+  return del_region_count;
 }
 
 function move_to_prev_image() {
@@ -3847,8 +3974,8 @@ function show_attribute_options() {
     c0.innerHTML = 'id';
     var c1 = document.createElement('span');
     c1.setAttribute('style', 'width:60%');
-    c1.setAttribute('title', 'This is the image shown as an option to the annotator');
-    c1.innerHTML = 'image url';
+    c1.setAttribute('title', 'URL or base64 (see https://www.base64-image.de/) encoded image data that corresponds to the image shown as an option to the annotator');
+    c1.innerHTML = 'image url or b64';
     var c2 = document.createElement('span');
     c2.setAttribute('title', 'The default value of this attribute');
     c2.innerHTML = 'def.';
@@ -4455,6 +4582,7 @@ function setup_user_input_panel(ok_handler, input, config, cancel_handler) {
                 'size="' + size + '" ' +
                 'placeholder="' + placeholder + '" ' +
                 'type="text" id="' + key + '"></span>');
+
       break;
     }
     html.push('</div>'); // end of row
@@ -4558,6 +4686,7 @@ function toggle_annotation_editor() {
   } else {
     p.classList.add('display_block');
     p.style.height = _via_settings.ui.annotation_editor_height + '%';
+    p.style.fontSize = _via_settings.ui.annotation_editor_fontsize + 'rem';
     update_annotation_editor();
   }
 }
@@ -4760,14 +4889,6 @@ function annotation_editor_get_metadata_row_html(row_id) {
       img_options.setAttribute('class', 'img_options');
       col.appendChild(img_options);
 
-      var row0 = document.createElement('div');
-      row0.setAttribute('class', 'imrow');
-      var row1 = document.createElement('div');
-      row1.setAttribute('class', 'imrow');
-
-      img_options.appendChild(row0);
-      img_options.appendChild(row1);
-
       var option_index = 0;
       for ( option_id in _via_attributes[_via_metadata_being_updated][attr_id].options ) {
         var option_html_id = attr_html_id + '__' + option_id;
@@ -4795,19 +4916,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
         var container = document.createElement('span');
         container.appendChild(option);
         container.appendChild(label);
-        //col.appendChild(container);
-        //img_options.appendChild(container);
-
-        if ( option_count > 5 ) {
-          if ( option_index < (option_count/2) ) {
-            row0.appendChild(container);
-          } else {
-            row1.appendChild(container);
-          }
-        } else {
-          row0.appendChild(container);
-        }
-        option_index = option_index + 1;
+        img_options.appendChild(container);
       }
       break;
     }
@@ -4996,6 +5105,22 @@ function annotation_editor_decrease_panel_height() {
   }
 }
 
+function annotation_editor_increase_content_size() {
+  var p = document.getElementById('annotation_editor_panel');
+  if ( _via_settings.ui.annotation_editor_fontsize < 1.6 ) {
+    _via_settings.ui.annotation_editor_fontsize += VIA_ANNOTATION_EDITOR_FONTSIZE_CHANGE;
+    p.style.fontSize = _via_settings.ui.annotation_editor_fontsize + 'rem';
+  }
+}
+
+function annotation_editor_decrease_content_size() {
+  var p = document.getElementById('annotation_editor_panel');
+  if ( _via_settings.ui.annotation_editor_fontsize > 0.4 ) {
+    _via_settings.ui.annotation_editor_fontsize -= VIA_ANNOTATION_EDITOR_FONTSIZE_CHANGE;
+    p.style.fontSize = _via_settings.ui.annotation_editor_fontsize + 'rem';
+  }
+}
+
 //
 // via project
 //
@@ -5039,7 +5164,7 @@ function project_save_with_confirm() {
                 'save_annotations':{ type:'checkbox', name:'Save region and file annotations (i.e. manual annotations)', checked:true, disabled:false},
                 'save_attributes':{ type:'checkbox', name:'Save region and file attributes.', checked:true},
                 'save_via_settings':{ type:'checkbox', name:'Save VIA application settings', checked:true},
-//                'save_images':{type:'checkbox', 'name':'Save images <span class="warning">(WARNING: only recommended for projects containing small number of images)</span>', value:false},
+                //                'save_images':{type:'checkbox', 'name':'Save images <span class="warning">(WARNING: only recommended for projects containing small number of images)</span>', value:false},
               };
   invoke_with_user_inputs(project_save_confirmed, input, config);
 }
@@ -5254,6 +5379,124 @@ function project_file_add_url(input) {
   show_message('Added file at url [' + url + ']');
   update_img_fn_list();
   user_input_default_cancel_handler();
+}
+
+//
+// utils
+//
+
+// start with the array having smallest number of elements
+// check the remaining arrays if they all contain the elements of this shortest array
+function array_intersect( array_list ) {
+  if ( array_list.length === 0 ) {
+    return [];
+  }
+  if ( array_list.length === 1 ) {
+    return array_list[0];
+  }
+
+  var shortest_array = array_list[0];
+  var shortest_array_index = 0;
+  var i;
+  for ( i = 1; i < array_list.length; ++i ) {
+    if ( array_list[i].length < shortest_array.length ) {
+      shortest_array = array_list[i];
+      shortest_array_index = i;
+    }
+  }
+
+  var intersect = [];
+  var element_count = {};
+
+  var array_index_i;
+  for ( i = 0; i < array_list.length; ++i ) {
+    if ( i === 0 ) {
+      // in the first iteration, process the shortest element array
+      array_index_i = shortest_array_index;
+    } else {
+      array_index_i = i;
+    }
+
+    var j;
+    for ( j = 0; j < array_list[array_index_i].length; ++j ) {
+      if ( element_count[ array_list[array_index_i][j] ] === (i-1) ) {
+        if ( i === array_list.length - 1 ) {
+          intersect.push( array_list[array_index_i][j] );
+          element_count[ array_list[array_index_i][j] ] = 0;
+        } else {
+          element_count[ array_list[array_index_i][j] ] = i;
+        }
+      } else {
+        element_count[ array_list[array_index_i][j] ] = 0;
+      }
+    }
+  }
+  return intersect;
+}
+
+function generate_img_index_list(input) {
+  var all_img_index_list = [];
+
+  // condition: count format a,b
+  var count_format_img_index_list = [];
+  if ( input.prev_next_count.value !== '' ) {
+    var prev_next_split = input.prev_next_count.value.split(',');
+    if ( prev_next_split.length === 2 ) {
+      var prev = parseInt( prev_next_split[0] );
+      var next = parseInt( prev_next_split[1] );
+      var i;
+      for ( i = (_via_image_index - prev); i <= (_via_image_index + next); i++ ) {
+        count_format_img_index_list.push(i);
+      }
+    }
+  }
+  if ( count_format_img_index_list.length !== 0 ) {
+    all_img_index_list.push(count_format_img_index_list);
+  }
+
+  //condition: image index list expression
+  var expr_img_index_list = [];
+  if ( input.img_index_list.value !== '' ) {
+    var img_index_expr = input.img_index_list.value.split(',');
+    if ( img_index_expr.length !== 0 ) {
+      var i;
+      for ( i = 0; i < img_index_expr.length; ++i ) {
+        if ( img_index_expr[i].includes('-') ) {
+          var ab = img_index_expr[i].split('-');
+          var a = parseInt( ab[0] ) - 1; // 0 based indexing
+          var b = parseInt( ab[1] ) - 1;
+          var j;
+          for ( j = a; j <= b; ++j ) {
+            expr_img_index_list.push(j);
+          }
+        } else {
+          expr_img_index_list.push( parseInt(img_index_expr[i]) - 1 );
+        }
+      }
+    }
+  }
+  if ( expr_img_index_list.length !== 0 ) {
+    all_img_index_list.push(expr_img_index_list);
+  }
+
+
+  // condition: regular expression
+  var regex_img_index_list = [];
+  if ( input.regex.value !== '' ) {
+    var regex = input.regex.value;
+    for ( var i=0; i < _via_loaded_img_fn_list.length; ++i ) {
+      var filename = _via_loaded_img_fn_list[i];
+      if ( filename.match(regex) !== null ) {
+        regex_img_index_list.push(i);
+      }
+    }
+  }
+  if ( regex_img_index_list.length !== 0 ) {
+    all_img_index_list.push(regex_img_index_list);
+  }
+
+  var intersect = array_intersect(all_img_index_list);
+  return intersect;
 }
 
 //

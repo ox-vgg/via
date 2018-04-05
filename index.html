@@ -135,31 +135,30 @@
       /* Attribute editor */
       .display_none { display:none; }
       .display_block { display:block !important; }
-      #annotation_editor_panel { position:fixed; display:none; width:100%; left:0; bottom:0; background-color:white; border-top:2px solid #cccccc; padding:0.2rem 1rem; font-size:small; overflow:auto; z-index:1001; box-shadow: 0 0 1rem #cccccc;}
-      #annotation_editor { display:table; margin-bottom:3rem; border-collapse:collapse; font-size:0.8rem; }
+      #annotation_editor_panel { position:fixed; display:none; width:100%; left:0; bottom:0; background-color:white; border-top:2px solid #cccccc; padding:0.2em 1em; overflow:auto; z-index:1001; box-shadow: 0 0 1em #cccccc;}
+      #annotation_editor { display:table; margin-bottom:3em; border-collapse:collapse; font-size:inherit; }
       #annotation_editor .row { display:table-row; }
       #annotation_editor .highlight .col { background-color:#f2f2f2;}
 
-      #annotation_editor .col { display:table-cell; padding:0.4rem 0.6rem; border:1px solid #000000; vertical-align:middle; }
+      #annotation_editor .col { display:table-cell; padding:0.4em 0.6em; border:1px solid #000000; vertical-align:middle; font-size:inherit; }
       #annotation_editor .header { font-weight:bold; }
       #annotation_editor .id { font-weight:bold; }
-      #annotation_editor .col input[type=text] { font-size:0.8rem; width:10rem; border:none; border-bottom:1px solid #cccccc; margin: 0;}
-      #annotation_editor .col input[type=checkbox] { vertical-align:middle; font-size:0.8rem; }
-      #annotation_editor .col label { vertical-align:middle; }
-      #annotation_editor .col input[type=radio] { vertical-align:middle; }
-      #annotation_editor .col textarea { border:1px solid #cccccc; padding:0; margin:0; font-size:0.8rem; background-color:#ffffff; }
-      #annotation_editor .col textarea:focus { border:1px dashed #cccccc; }
+      #annotation_editor .col input[type=checkbox] { vertical-align:middle; }
+      #annotation_editor .col input[type=radio] { vertical-align:middle; font-size:inherit; }
+      #annotation_editor .col label { vertical-align:middle; font-size:inherit; }
+      #annotation_editor .col textarea { border:0.1em solid #cccccc; padding:0; margin:0; font-size:inherit; background-color:#ffffff; }
+      #annotation_editor .col textarea:focus { border:0.1em dashed #cccccc; }
       #annotation_editor .col span { display:block; }
       #annotation_editor .col horizontal_container { display:inline-block; }
 
       #annotation_editor .col .img_options { display:inline; }
       #annotation_editor .col .img_options .imrow { display:block; }
-      #annotation_editor .col .img_options .imrow span { display:inline-block; margin: 0.2rem 0.4rem;}
-      #annotation_editor .col .img_options .imrow span img { height:80px; }
-      #annotation_editor .col .img_options p { margin:0; padding:0; font-size:x-small; }
+      #annotation_editor .col .img_options span { display:inline-block; margin: 0.2rem 0.4rem;}
+      #annotation_editor .col .img_options span img { height:4em; }
+      #annotation_editor .col .img_options p { margin:0; padding:0; font-size:inherit; }
       #annotation_editor .col .img_options input[type=radio] { display:none; }
       #annotation_editor .col .img_options input[type=radio] + label { display:block; cursor:pointer; text-align:center;}
-      #annotation_editor .col .img_options input[type=radio]:checked + label { border: 1px solid black; background-color:#cccccc; cursor:default; }
+      #annotation_editor .col .img_options input[type=radio]:checked + label { border: 0.1em solid black; background-color:#cccccc; cursor:default; font-size:inherit; }
 
       #project_info_panel { display:table; border-collapse:collapse; font-size:0.8rem; }
       #project_info_panel .row { display:table-row; }
@@ -212,8 +211,8 @@
         <span class="text_button" onclick="edit_region_metadata_in_annotation_editor()" id="button_edit_region_metadata" title="Manual annotations of regions">Region Annotations</span>
         <span class="text_button" onclick="edit_file_metadata_in_annotation_editor()" id="button_edit_file_metadata" title="Manual annotations of a file">File Annotations</span>
 
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="" title="Increase size of everything">&plus;</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="" title="Decrease size of everything">&minus;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_content_size()" title="Increase size of contents in annotation editor">&plus;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_content_size()" title="Decrease size of contents in annotation editor">&minus;</span>
         <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_panel_height()" title="Increase the height of this panel">&uarr;</span>
         <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_panel_height()" title="Decrease the height of this panel">&darr;</span>
         <span class="button" style="float:right;margin-right:0.2rem;" onclick="toggle_annotation_editor()" title="Close this window of annotation editor">&times;</span>
@@ -327,7 +326,9 @@
           <li id="toolbar_zoom_reset" onclick="reset_zoom_level()" title="Zoom Reset">&equals;</li>
 
           <li id="toolbar_copy_region" style="margin-left: 2em;" onclick="copy_sel_regions()" title="Copy Region">c</li>
-          <li id="toolbar_paste_region" onclick="paste_sel_regions()" title="Paste Region">v</li>
+          <li id="toolbar_paste_region" onclick="paste_sel_regions_in_current_image()" title="Paste Region">v</li>
+          <li id="toolbar_copy_region" onclick="paste_to_multiple_images_with_confirm()" title="Paste region in multiple images">v2</li>
+                    <li id="toolbar_del_region" onclick="del_sel_regions_with_confirm()" title="Undo the regions copied to multiple images"><del>v2</del></li>
           <li id="toolbar_sel_all_region" onclick="sel_all_regions()" title="Select All Regions">a</li>
           <li id="toolbar_del_region" onclick="del_sel_regions()" title="Delete Region">&times;</li>
         </ul>
