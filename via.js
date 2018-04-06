@@ -66,6 +66,21 @@ var VIA_REGION_SHAPE = { RECT:'rect',
                          POLYLINE:'polyline'
                        };
 
+var VIA_ATTRIBUTE_TYPE = { TEXT:'text',
+                           CHECKBOX:'checkbox',
+                           RADIO:'radio',
+                           IMAGE:'image'
+                         };
+
+var VIA_DISPLAY_AREA_CONTENT_NAME = {IMAGE:'image_panel',
+                                     IMAGE_GRID:'image_grid_panel',
+                                     SETTINGS:'settings_panel',
+                                     PAGE_HELP:'page_help',
+                                     PAGE_ABOUT:'page_about',
+                                     PAGE_START_INFO:'page_start_info',
+                                     PAGE_LICENSE:'page_license'
+                                    };
+
 var VIA_REGION_EDGE_TOL           = 5;   // pixel
 var VIA_REGION_CONTROL_POINT_SIZE = 2;
 var VIA_REGION_POINT_RADIUS       = 3;
@@ -103,15 +118,14 @@ var _via_image_id       = ''; // id={filename+length} of current image
 var _via_image_index    = -1; // index
 
 var _via_current_image_filename;
-var _via_current_image;
+var _via_current_image = document.getElementById('image_content');
 var _via_current_image_width;
 var _via_current_image_height;
 
 // image canvas
-var _via_img_canvas = document.getElementById("image_canvas");
-var _via_img_ctx    = _via_img_canvas.getContext("2d");
-var _via_reg_canvas = document.getElementById("region_canvas");
-var _via_reg_ctx    = _via_reg_canvas.getContext("2d");
+var _via_img_content = document.getElementById("image_content");
+var _via_reg_canvas  = document.getElementById("region_canvas");
+var _via_reg_ctx     = _via_reg_canvas.getContext("2d");
 var _via_canvas_width, _via_canvas_height;
 
 // canvas zoom
@@ -160,41 +174,49 @@ var _via_message_clear_timer;
 // attributes
 var _via_attribute_being_updated       = 'region'; // {region, file}
 var _via_attributes                    = { 'region':{}, 'file':{} };
-var VIA_ATTRIBUTE_TYPE = { TEXT:'text',
-                           CHECKBOX:'checkbox',
-                           RADIO:'radio',
-                           IMAGE:'image'
-                         };
 
 // invoke a method after receiving user input
-var _via_user_input_ok_handler = null;
+var _via_user_input_ok_handler     = null;
 var _via_user_input_cancel_handler = null;
-var _via_user_input_data = {};
+var _via_user_input_data           = {};
 
 // annotation editor
-var _via_metadata_being_updated      = 'region'; // {region, file}
+var _via_metadata_being_updated     = 'region'; // {region, file}
 
 // persistence to local storage
 var _via_is_local_storage_available = false;
-var _via_is_save_ongoing = false;
+var _via_is_save_ongoing            = false;
 
 // image list
-var _via_reload_img_fn_list_table = true;
-var _via_loaded_img_fn_list = [];
+var _via_reload_img_fn_list_table      = true;
+var _via_loaded_img_fn_list            = [];
 var _via_loaded_img_fn_list_file_index = [];
 var _via_loaded_img_fn_list_table_html = [];
+
+// image grid
+var image_grid_panel = document.getElementById('image_grid_panel');
+var _via_image_grid_requires_update              = false;
+var _via_image_grid_content_overflow             = false;
+var _via_image_grid_current_page_first_img_index = 0;
+var _via_image_grid_total_pages                  = -1;
+var _via_image_grid_selected_fileid_list         = [];
+var _via_image_grid_current_page_fileid_list     = [];
+var _via_display_area_content_name               = '';
+var _via_image_grid_mousedown_img_index = -1;
+var _via_image_grid_mouseup_img_index = -1;
 
 // via settings
 var _via_settings = {};
 _via_settings.ui = {};
-_via_settings.ui.annotation_editor_height = 25; // in percent of the height of browser window
-_via_settings.ui.annotation_editor_fontsize = 0.8; // in rem
+_via_settings.ui.annotation_editor_height   = 25; // in percent of the height of browser window
+_via_settings.ui.annotation_editor_fontsize = 0.8;// in rem
+_via_settings.ui.image_grid_panel_img_height= 5;  // in percent
 
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
 var display_area = document.getElementById("display_area");
 var ui_top_panel = document.getElementById("ui_top_panel");
-var canvas_panel = document.getElementById("canvas_panel");
+var image_panel  = document.getElementById("image_panel");
 
 var annotation_list_snippet = document.getElementById("annotation_list_snippet");
 var annotation_textarea     = document.getElementById("annotation_textarea");
@@ -210,8 +232,9 @@ var BBOX_BOUNDARY_FILL_COLOR_NEW       = "#aaeeff";
 var BBOX_BOUNDARY_LINE_COLOR           = "#1a1a1a";
 var BBOX_SELECTED_FILL_COLOR           = "#ffffff";
 
-var VIA_ANNOTATION_EDITOR_HEIGHT_CHANGE = 5; // in percent
+var VIA_ANNOTATION_EDITOR_HEIGHT_CHANGE   = 5;   // in percent
 var VIA_ANNOTATION_EDITOR_FONTSIZE_CHANGE = 0.1; // in rem
+var VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE      = 1; // in percent
 
 //
 // Data structure for annotations
@@ -242,7 +265,10 @@ function _via_init() {
   // initialize default project
   project_init_default_project();
 
-  show_home_panel();
+  // initialize image grid
+  image_grid_init();
+
+  show_single_image_view();
   init_leftsidebar_accordion();
   attribute_update_panel_set_active_button();
   annotation_editor_set_active_button();
@@ -264,19 +290,59 @@ function _via_init() {
 }
 
 //
-// Handlers for top navigation bar
+// Display area content
 //
-function show_home_panel() {
-  if (_via_current_image_loaded) {
-    show_all_canvas();
-    set_all_text_panel_display('none');
-  } else {
-    var start_info = '<p><span class="text_button" title="Load or Add Images" onclick="sel_local_images()">Load images</span> to start annotation or, see <span class="text_button" title="Getting started with VGG Image Annotator" onclick="show_getting_started_panel()">Getting Started</a>.</p>';
-    clear_image_display_area();
-    document.getElementById('via_start_info_panel').innerHTML = start_info;
-    document.getElementById('via_start_info_panel').style.display = 'block';
+function clear_display_area() {
+  var panels = document.getElementsByClassName('display_area_content');
+  var i;
+  for ( i = 0; i < panels.length; ++i ) {
+    panels[i].classList.add('display_none');
   }
 }
+
+function is_content_name_valid(content_name) {
+  var e;
+  for ( e in VIA_DISPLAY_AREA_CONTENT_NAME ) {
+    if ( VIA_DISPLAY_AREA_CONTENT_NAME[e] === content_name ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function show_home_panel() {
+  show_single_image_view();
+}
+
+function set_display_area_content(content_name) {
+  if ( is_content_name_valid(content_name) ) {
+    clear_display_area();
+    var p = document.getElementById(content_name);
+    p.classList.remove('display_none');
+    _via_display_area_content_name = content_name;
+  }
+}
+
+function show_single_image_view() {
+  if (_via_current_image_loaded) {
+    set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE);
+  } else {
+    set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_START_INFO);
+  }
+}
+
+function show_image_grid_view() {
+  if (_via_current_image_loaded) {
+    set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID);
+    image_grid_update();
+  } else {
+    set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_START_INFO);
+  }
+}
+
+//
+// Handlers for top navigation bar
+//
 function sel_local_images() {
   // source: https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications
   if (invisible_file_input) {
@@ -320,31 +386,6 @@ function sel_local_data_file(type) {
     invisible_file_input.removeAttribute('multiple');
     invisible_file_input.click();
   }
-}
-function show_about_panel() {
-  set_all_text_panel_display('none');
-  document.getElementById("about_panel").style.display = "block";
-  canvas_panel.style.display = "none";
-}
-function show_getting_started_panel() {
-  set_all_text_panel_display('none');
-  document.getElementById("getting_started_panel").style.display = "block";
-  canvas_panel.style.display = "none";
-}
-function show_license_panel() {
-  set_all_text_panel_display('none');
-  document.getElementById("license_panel").style.display = 'block';
-  canvas_panel.style.display = "none";
-}
-function set_all_text_panel_display(style_display) {
-  var tp = document.getElementsByClassName('text_panel');
-  for ( var i = 0; i < tp.length; ++i ) {
-    tp[i].style.display = style_display;
-  }
-}
-function clear_image_display_area() {
-  hide_all_canvas();
-  set_all_text_panel_display('none');
 }
 
 //
@@ -904,7 +945,7 @@ function show_image(image_index) {
   }, false);
 
   img_reader.addEventListener( "load", function() {
-    _via_current_image = new Image();
+    //_via_current_image = new Image();
 
     _via_current_image.addEventListener( "error", function() {
       _via_is_loading_current_image = false;
@@ -941,20 +982,20 @@ function show_image(image_index) {
       // set the size of canvas
       // based on the current dimension of browser window
       var de = document.documentElement;
-      var canvas_panel_width = de.clientWidth - 230;
-      var canvas_panel_height = de.clientHeight - 2*ui_top_panel.offsetHeight;
+      var image_panel_width = de.clientWidth - 230;
+      var image_panel_height = de.clientHeight - 2*ui_top_panel.offsetHeight;
       _via_canvas_width = _via_current_image_width;
       _via_canvas_height = _via_current_image_height;
-      if ( _via_canvas_width > canvas_panel_width ) {
+      if ( _via_canvas_width > image_panel_width ) {
         // resize image to match the panel width
-        var scale_width = canvas_panel_width / _via_current_image.naturalWidth;
-        _via_canvas_width = canvas_panel_width;
+        var scale_width = image_panel_width / _via_current_image.naturalWidth;
+        _via_canvas_width = image_panel_width;
         _via_canvas_height = _via_current_image.naturalHeight * scale_width;
       }
-      if ( _via_canvas_height > canvas_panel_height ) {
+      if ( _via_canvas_height > image_panel_height ) {
         // resize further image if its height is larger than the image panel
-        var scale_height = canvas_panel_height / _via_canvas_height;
-        _via_canvas_height = canvas_panel_height;
+        var scale_height = image_panel_height / _via_canvas_height;
+        _via_canvas_height = image_panel_height;
         _via_canvas_width = _via_canvas_width * scale_height;
       }
       _via_canvas_width = Math.round(_via_canvas_width);
@@ -965,13 +1006,7 @@ function show_image(image_index) {
       //set_all_canvas_scale(_via_canvas_scale_without_zoom);
 
       // ensure that all the canvas are visible
-      clear_image_display_area();
-      show_all_canvas();
-
-      // we only need to draw the image once in the image_canvas
-      _via_img_ctx.clearRect(0, 0, _via_canvas_width, _via_canvas_height);
-      _via_img_ctx.drawImage(_via_current_image, 0, 0,
-                             _via_canvas_width, _via_canvas_height);
+      set_display_area_content( VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE );
 
       img_loading_spinbar(image_index, false);
 
@@ -997,6 +1032,7 @@ function show_image(image_index) {
   if (_via_img_metadata[img_id].base64_img_data === '') {
     if ( _via_img_metadata[img_id].fileref instanceof File ) {
       // load image from local file
+      // we only need to draw the image once in the image_canvas
       img_reader.readAsDataURL( _via_img_metadata[img_id].fileref );
     } else {
       // load image from url
@@ -1115,27 +1151,23 @@ function select_region_shape(sel_shape_name) {
 }
 
 function set_all_canvas_size(w, h) {
-  _via_img_canvas.height = h;
-  _via_img_canvas.width  = w;
-
   _via_reg_canvas.height = h;
   _via_reg_canvas.width = w;
 
-  canvas_panel.style.height = h + 'px';
-  canvas_panel.style.width  = w + 'px';
+  image_panel.style.height = h + 'px';
+  image_panel.style.width  = w + 'px';
 }
 
 function set_all_canvas_scale(s) {
-  _via_img_ctx.scale(s, s);
   _via_reg_ctx.scale(s, s);
 }
 
 function show_all_canvas() {
-  canvas_panel.style.display = 'inline-block';
+  image_panel.style.display = 'inline-block';
 }
 
 function hide_all_canvas() {
-  canvas_panel.style.display = 'none';
+  image_panel.style.display = 'none';
 }
 
 function jump_to_image(image_index) {
@@ -2010,14 +2042,6 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
 //
 // Canvas update routines
 //
-function _via_redraw_img_canvas() {
-  if (_via_current_image_loaded) {
-    _via_img_ctx.clearRect(0, 0, _via_img_canvas.width, _via_img_canvas.height);
-    _via_img_ctx.drawImage(_via_current_image, 0, 0,
-                           _via_img_canvas.width, _via_img_canvas.height);
-  }
-}
-
 function _via_redraw_reg_canvas() {
   if (_via_current_image_loaded) {
     _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
@@ -2874,9 +2898,11 @@ function rect_update_corner(corner_id, d, x, y, preserve_aspect_ratio) {
 
 function _via_update_ui_components() {
   if ( !_via_is_window_resized && _via_current_image_loaded ) {
-    set_all_text_panel_display('none');
-    show_all_canvas();
-
+    /////
+    ///// @todo
+    ///// handle all the cases
+    /////
+    console.log('@TODO');
     _via_is_window_resized = true;
     show_image(_via_image_index);
 
@@ -3425,7 +3451,6 @@ function set_zoom(zoom_level_index) {
   _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
 
   _via_load_canvas_regions(); // image to canvas space transform
-  _via_redraw_img_canvas();
   _via_redraw_reg_canvas();
   _via_reg_canvas.focus();
 }
@@ -3572,7 +3597,7 @@ function show_localStorage_recovery_options() {
     hstr.push('<span class="text_button" style="padding-left:2em;" onclick="remove_via_data_from_localStorage(); show_home_panel();" title="Discard annotation data">Discard</span>');
 
     hstr.push('<p style="clear: left;"><b>If you continue, the cached data will be discarded!</b></p></div>');
-    via_start_info_panel.innerHTML += hstr.join('');
+    document.getElementById( VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_START_INFO ).innerHTML += hstr.join('');
   } catch(err) {
     show_message('Failed to recover annotation data saved in browser cache.');
     console.log('Failed to recover annotation data saved in browser cache.');
@@ -5343,24 +5368,46 @@ function project_file_add_local(event) {
   }
 }
 
+function project_file_add_abs_path_with_input() {
+  var config = {'title':'Add File using Absolute Path' };
+  var input = { 'absolute_path': { type:'text', name:'Absolute path', placeholder:'/home/abhishek/image1.jpg', disabled:false, size:50 }
+              };
+
+  invoke_with_user_inputs(project_file_add_abs_path_input_done, input, config);
+}
+
+function project_file_add_abs_path_input_done(input) {
+  var abs_path = input.absolute_path.value.trim();
+  project_file_add_url(abs_path);
+  show_message('Added file at absolute path [' + abs_path + ']');
+  update_img_fn_list();
+  user_input_default_cancel_handler();
+}
+
 function project_file_add_url_with_input() {
   var config = {'title':'Add File using URL' };
   var input = { 'url': { type:'text', name:'URL', placeholder:'http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg', disabled:false, size:50 }
               };
 
-  invoke_with_user_inputs(project_file_add_url, input, config);
+  invoke_with_user_inputs(project_file_add_url_input_done, input, config);
 }
 
-function project_file_add_url(input) {
+function project_file_add_url_input_done(input) {
   var url = input.url.value.trim();
+  project_file_add_url(url);
+  show_message('Added file at url [' + url + ']');
+  update_img_fn_list();
+  user_input_default_cancel_handler();
+}
 
+function project_file_add_url(url) {
   if ( url !== '' ) {
     var size = -1; // convention: files added using url have size = -1
     var img_id   = _via_get_image_id(url, size);
 
     if ( _via_img_metadata.hasOwnProperty(img_id) ) {
       if ( _via_img_metadata[img_id].fileref ) {
-        show_message('Image [' + filename + '] already loaded. Skipping!');
+        show_message('Image [' + _via_img_metadata[img_id].filename + '] already loaded. Skipping!');
       } else {
         _via_img_metadata[img_id].fileref = filename;
         show_message('Regions already exist for file ' + filename + ' !');
@@ -5376,11 +5423,165 @@ function project_file_add_url(input) {
       _via_reload_img_fn_list_table = true;
     }
   }
-  show_message('Added file at url [' + url + ']');
-  update_img_fn_list();
-  user_input_default_cancel_handler();
 }
 
+//
+// image grid
+//
+function image_grid_init() {
+  var p = document.getElementById('image_grid_content');
+  p.addEventListener('mousedown', image_grid_mousedown_handler, false);
+  p.addEventListener('mouseup', image_grid_mouseup_handler, false);
+  p.addEventListener('mousemove', image_grid_mousemove_handler, false);
+  p.addEventListener('dblclick', image_grid_dblclick_handler, false);
+}
+
+function image_grid_update() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    image_grid_set_content(0);
+  }
+}
+
+function image_grid_set_content( image_grid_first_image_index ) {
+  _via_image_grid_current_page_first_img_index = image_grid_first_image_index;
+
+  var pc = document.getElementById('image_grid_content');
+  pc.innerHTML = '';
+  var de = document.documentElement;
+  pc.style.height = (de.clientHeight - 4*ui_top_panel.offsetHeight) + 'px';
+  //pc.style.height = '200px';
+
+  var i = _via_image_grid_current_page_first_img_index;
+  for ( ; i < _via_image_id_list.length; ++i ) {
+    var img_id = _via_image_id_list[i];
+    var e = document.createElement('img');
+    if (_via_img_metadata[img_id].base64_img_data === '') {
+      if ( _via_img_metadata[img_id].fileref instanceof File ) {
+        var img_reader = new FileReader();
+        img_reader.addEventListener( "error", function() {
+          //@todo
+        }, false);
+        img_reader.addEventListener( "load", function() {
+          e.src = img_reader.result;
+        }, false);
+        img_reader.readAsDataURL( _via_img_metadata[img_id].fileref );
+      } else {
+        e.src = _via_img_metadata[img_id].fileref;
+      }
+    } else {
+      e.src = _via_img_metadata[img_id].base64_img_data;
+    }
+    e.setAttribute('class', 'im');
+    e.setAttribute('id', image_grid_get_html_img_id(i));
+    e.setAttribute('height', _via_settings.ui.image_grid_panel_img_height + '%');
+
+    pc.appendChild(e);
+  }
+
+}
+
+function image_grid_image_size_increase() {
+  var new_img_height = _via_settings.ui.image_grid_panel_img_height + VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE;
+  if ( new_img_height < 91 ) {
+    _via_settings.ui.image_grid_panel_img_height = new_img_height;
+    image_grid_update();
+    image_grid_info('Image height set to ' + _via_settings.ui.image_grid_panel_img_height + ' %');
+  } else {
+    image_grid_info('Cannot increase image size anymore than ' + _via_settings.ui.image_grid_panel_img_height + ' %');
+  }
+}
+
+function image_grid_image_size_decrease() {
+  var new_img_height = _via_settings.ui.image_grid_panel_img_height - VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE;
+  if ( new_img_height > 0.1 ) {
+    _via_settings.ui.image_grid_panel_img_height = new_img_height;
+    image_grid_info('Image height set to ' + _via_settings.ui.image_grid_panel_img_height + ' %');
+    image_grid_update();
+  } else {
+    image_grid_info('Cannot reduce image size anymore than ' + _via_settings.ui.image_grid_panel_img_height + ' %');
+  }
+}
+
+function image_grid_info(msg) {
+  document.getElementById('image_grid_info').innerHTML = msg;
+  setTimeout( function() {
+    document.getElementById('image_grid_info').innerHTML = '';
+  }, VIA_THEME_MESSAGE_TIMEOUT_MS);
+}
+
+function image_grid_mousedown_handler(e) {
+  e.preventDefault();
+  _via_image_grid_mousedown_img_index = image_grid_parse_html_img_id(e.target.id);
+  console.log('mousedown on image index ' + _via_image_grid_mousedown_img_index);
+}
+
+function image_grid_mousemove_handler(e) {
+  e.preventDefault();
+  //console.log(e.target.src)
+}
+
+function image_grid_mouseup_handler(e) {
+  e.preventDefault();
+  console.log(e);
+  _via_image_grid_mouseup_img_index = image_grid_parse_html_img_id(e.target.id);
+  console.log('mouseup on image index ' + _via_image_grid_mouseup_img_index);
+
+  if ( _via_image_grid_mouseup_img_index === _via_image_grid_mousedown_img_index ) {
+    // select single image
+    _via_image_grid_selected_fileid_list.push(_via_image_grid_mousedown_img_index);
+  } else {
+    // select multiple images
+    var start = _via_image_grid_mousedown_img_index;
+    var end   = _via_image_grid_mouseup_img_index;
+    if ( _via_image_grid_mousedown_img_index > _via_image_grid_mouseup_img_index ) {
+      var tmp = start;
+      start = end;
+      end = tmp;
+    }
+    console.log('selecting from ' + start + ' to ' + end);
+    var i;
+    for ( i = start; i <= end; ++i ) {
+      _via_image_grid_selected_fileid_list.push(i);
+    }
+  }
+  image_grid_update_selected_img_count();
+}
+
+function image_grid_parse_html_img_id(html_img_id) {
+  var img_index = html_img_id.substr(2);
+  return parseInt(img_index);
+}
+
+function image_grid_get_html_img_id(img_index) {
+  return 'im' + img_index;
+}
+
+function image_grid_dblclick_handler(e) {
+  e.preventDefault();
+  console.log('double click')
+  console.log(e.target.src)
+}
+
+function image_grid_update_selected_img_count() {
+  document.getElementById('image_grid_sel_img_count').innerHTML = _via_image_grid_selected_fileid_list.length;
+}
+
+/*
+image_grid_panel.addEventListener('mousedown', function(e) {
+  console.log(e.target.src)
+  e.preventDefault();
+}, true);
+
+image_grid_panel.addEventListener('mousemove', function(e) {
+  console.log(e.target.src)
+  e.preventDefault();
+}, true);
+
+image_grid_panel.addEventListener('mouseup', function(e) {
+  console.log(e.target.src)
+  e.preventDefault();
+}, true);
+*/
 //
 // utils
 //

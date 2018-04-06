@@ -51,7 +51,7 @@
       input[type=text] { border:1px solid #cccccc; margin:0.6rem 0; padding:0.2rem 0.4rem; }
 
       /* Top panel : #navbar, #toolbar */
-      .top_panel { font-size:small; position:fixed; top:0; left:0; right:0; display:block; background-color:#212121; color:#ffffff; z-index:1001; width:100%;}
+      .top_panel { font-size:0.9rem; position:fixed; top:0; left:0; right:0; display:block; background-color:#212121; color:#ffffff; z-index:1001; width:100%;}
 
       /* Navigation menu bar that appear at the top */
       .menubar { display:inline-block; height:1.6rem; } /* height needed to avoid extra bottom border */
@@ -74,11 +74,20 @@
       .toolbar li:hover { color:red; cursor:pointer; }
 
       /* Middle panel: containing #image_panel, #leftsidebar */
-      .middle_panel { position:relative; display:table; table-layout:fixed; width:100%; z-index:1; padding:0; top:3.5em; }
+      .middle_panel { position:relative; display:table; table-layout:fixed; width:100%; z-index:1; padding:0; top:3em; }
       #leftsidebar { display:table-cell; width:250px; z-index:10; vertical-align:top; }
       #display_area { display:table-cell; width:100%; z-index:1; margin:0; padding-left:1em; vertical-align:top; }
-      #canvas_panel { position:relative; margin:0; padding:0; }
-      #canvas_panel canvas:focus { outline:none; }
+      /* layers of canvas */
+      #image_panel   { position:relative; outline:none; }
+      #image_content  { position:absolute; top:0px; left:0px; z-index:1; width:100%; height:100%; outline:none;}
+      #region_canvas { position:absolute; top:0px; left:0px;z-index:2; outline:none;}
+
+      /* image grid view */
+      #image_grid_panel { position:relative; margin:0; padding:0; border:0px solid red; width:100%; }
+      #image_grid_panel #image_grid_toolbar { display:block; font-size:small; padding-bottom:0.8rem; }
+      #image_grid_panel #image_grid_info { display:block; font-size:small; text-align:center; margin-top:0.8rem; }
+      #image_grid_panel #image_grid_content { overflow:auto; margin:0; padding:0; }
+      #image_grid_panel #image_grid_content .im { margin:0; padding:0; border:1px solid red;}
 
       #leftsidebar_collapse_panel { display:table-cell; position:relative; width:0.5%; z-index:10; vertical-align:top; }
       #leftsidebar_collapse_button { font-size: large; padding-left:0.2rem; }
@@ -94,14 +103,14 @@
       .leftsidebar_accordion_panel.show { display:block; }
 
       /* buttons */
-      .button_panel { display:table; width:100%; }
-      .button_panel .text_button, .text_button { color: #0000ff; padding: 0.2rem 0.2rem;}
+      .button_panel { display:table; width:100%; font-size:1rem; }
+      .button_panel .text_button, .text_button { color: #0000ff; padding: 0.2rem 0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
       .button_panel .flush_right { float:right; }
       .button_panel .text_button:hover, .text_button:hover { cursor:pointer; }
       .button_panel .text_button:active, .text_button:active { color: #000000; }
       .button_panel .active { border-bottom:1px solid black; }
-      .button_panel .button { padding:0.35rem 0.5rem; cursor:pointer; background-color:#cccccc; border-radius:0.2rem;}
-      .button_panel .button:hover { background-color:black; color:white}
+      .button_panel .button { padding:0.35rem 0.5rem; cursor:pointer; background-color:#cccccc; border-radius:0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
+      .button_panel .button:hover { background-color:black; color:white; }
 
       /* Attributes properties: name, description, type, ... */
       #attribute_properties { display:table; width:100%; border-collapse:collapse; margin:1rem 0; border:1px solid #cccccc; }
@@ -133,8 +142,6 @@
       #user_input_panel .content .warning { color:red; }
 
       /* Attribute editor */
-      .display_none { display:none; }
-      .display_block { display:block !important; }
       #annotation_editor_panel { position:fixed; display:none; width:100%; left:0; bottom:0; background-color:white; border-top:2px solid #cccccc; padding:0.2em 1em; overflow:auto; z-index:1001; box-shadow: 0 0 1em #cccccc;}
       #annotation_editor { display:table; margin-bottom:3em; border-collapse:collapse; font-size:inherit; }
       #annotation_editor .row { display:table-row; }
@@ -160,45 +167,44 @@
       #annotation_editor .col .img_options input[type=radio] + label { display:block; cursor:pointer; text-align:center;}
       #annotation_editor .col .img_options input[type=radio]:checked + label { border: 0.1em solid black; background-color:#cccccc; cursor:default; font-size:inherit; }
 
-      #project_info_panel { display:table; border-collapse:collapse; font-size:0.8rem; }
+      #project_info_panel      { display:table; border-collapse:collapse; font-size:0.8rem; }
       #project_info_panel .row { display:table-row; }
       #project_info_panel .col { display:table-cell; padding:0.4rem 0.1rem; border:none;  }
       #project_info_panel .col input[type=text] { font-size:0.8rem; border:none; border-bottom:1px solid #cccccc; margin: 0; width:100%;}
-      #project_info_panel .col input:focus { border-bottom:1px solid #000000; background-color:#f2f2f2; color:#000000; }
+      #project_info_panel .col input:focus      { border-bottom:1px solid #000000; background-color:#f2f2f2; color:#000000; }
 
       /* Region shape selection panel inside leftsidebar */
-      ul.region_shape { font-size:xx-large; list-style-type:none; overflow:hidden; padding:0.4em 0; margin:0; }
-      ul.region_shape li { float:left; padding:0 0.2em; fill:#ffffff; stroke:#000000; }
+      ul.region_shape          { font-size:xx-large; list-style-type:none; overflow:hidden; padding:0.4em 0; margin:0; }
+      ul.region_shape li       { float:left; padding:0 0.2em; fill:#ffffff; stroke:#000000; }
       ul.region_shape li:hover { cursor:pointer; fill:#ffffff; stroke:#ff0000; }
       ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
 
       /* Loaded image list shown in leftsidebar panel */
-      #img_fn_list { font-size:small; overflow:scroll; min-height:10rem; max-height:25rem; }
+      #img_fn_list    { font-size:small; overflow:scroll; min-height:10rem; max-height:25rem; }
       #img_fn_list ul { position:relative; line-height:1.3em; margin:0; padding:0; list-style-type:none;}
       #img_fn_list li { white-space:nowrap; }
-      #img_fn_list li:hover { background-color:#f2f2f2; cursor:pointer; }
+      #img_fn_list li:hover   { background-color:#f2f2f2; cursor:pointer; }
       #img_fn_list .highlight { font-weight:bold; cursor:default; }
-      #img_fn_list .missing { color:red; cursor:default; }
+      #img_fn_list .missing   { color:red; cursor:default; }
 
-      #message_panel { display:block; width:100%; position:fixed; bottom:0px; z-index:1000; text-align:center; }
+      #message_panel         { display:block; width:100%; position:fixed; bottom:0px; z-index:1000; text-align:center; }
       #message_panel_content { display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}
 
-      #invisible_file_input { width:0.1px; height:0.1px; opacity:0; overflow:hidden; position:absolute; z-index:-1; }
-
-      .text_panel { display:none; margin:auto; font-size:medium; line-height:1.3em; margin: 0; max-width:700px; }
+      .text_panel    { display:none; margin:auto; font-size:medium; line-height:1.3em; margin: 0; max-width:700px; }
       .text_panel li { margin:1em 0; text-align:left; }
-      .text_panel p { text-align:left; }
+      .text_panel p  { text-align:left; }
 
       .svg_button:hover { cursor:pointer; }
 
-      /* layers of canvas */
-      #image_panel { position:relative; display:inline-block; margin:auto; margin-top:1em; }
-      #image_canvas { position:absolute; top:0px; left:0px; z-index:1; }
-      #region_canvas { position:absolute; top:0px; left:0px;z-index:2; }
       /* Loading spinbar */
-      .loading_spinbox { display:inline-block; border:0.4em solid #cccccc; border-radius:50%; border-top:0.4em solid black; border-bottom:0.4em solid black;-webkit-animation:spin 2s linear infinite; animation:spin 2s linear infinite; }
+      .loading_spinbox        { display:inline-block; border:0.4em solid #cccccc; border-radius:50%; border-top:0.4em solid black; border-bottom:0.4em solid black;-webkit-animation:spin 2s linear infinite; animation:spin 2s linear infinite; }
       @-webkit-keyframes spin { 0% { -webkit-transform: rotate(0deg); } 100% { -webkit-transform: rotate(360deg); } }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      @keyframes spin         { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+      #invisible_file_input { width:0.1px; height:0.1px; opacity:0; overflow:hidden; position:absolute; z-index:-1; }
+
+      .display_none  { display:none !important; }
+      .display_block { display:block !important; }
     </style>
   </head>
 
@@ -211,11 +217,11 @@
         <span class="text_button" onclick="edit_region_metadata_in_annotation_editor()" id="button_edit_region_metadata" title="Manual annotations of regions">Region Annotations</span>
         <span class="text_button" onclick="edit_file_metadata_in_annotation_editor()" id="button_edit_file_metadata" title="Manual annotations of a file">File Annotations</span>
 
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_content_size()" title="Increase size of contents in annotation editor">&plus;</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_content_size()" title="Decrease size of contents in annotation editor">&minus;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="toggle_annotation_editor()" title="Close this window of annotation editor">&times;</span>
         <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_panel_height()" title="Increase the height of this panel">&uarr;</span>
         <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_panel_height()" title="Decrease the height of this panel">&darr;</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="toggle_annotation_editor()" title="Close this window of annotation editor">&times;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_content_size()" title="Increase size of contents in annotation editor">&plus;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_content_size()" title="Decrease size of contents in annotation editor">&minus;</span>
       </div>
       <div id="annotation_editor"></div>
     </div>
@@ -265,9 +271,10 @@
               <li onclick="" title="Show/edit project settings">Settings</li>
               <li class="submenu_divider"></li>
               <li onclick="sel_local_images()" title="Add images locally stored in this computer">Add local files</li>
-              <li onclick="" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)">Add files from URL</li>
+              <li onclick="project_file_add_url_with_input()" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)">Add files from URL</li>
               <li onclick="" title="Add images from a list of web url stored in a text file (one url per line)">Add URLs from text file</li>
-              <li onclick="" title="Remove selected file (i.e. file currently being shown)">Remove file</li>
+              <li onclick="project_file_add_abs_path_with_input()" title="Add images using absolute path of file (e.g. /home/abhishek/image1.jpg)">Add file using absolute path</li>
+              <li onclick="project_file_remove_with_confirm()" title="Remove selected file (i.e. file currently being shown)">Remove file</li>
               <li class="submenu_divider"></li>
               <li onclick="" title="Import region and file attributes from a JSON file">Import region/file attributes</li>
               <li onclick="" title="Export region and file attributes to a JSON file">Export region/file attributes</li>
@@ -314,6 +321,9 @@
       <!-- Shortcut toolbar -->
       <div class="toolbar">
         <ul>
+          <li id="toolbar_load_project" onclick="show_single_image_view()" title="Switch to Single Image View">&diams;</li>
+          <li id="toolbar_save_project" onclick="show_image_grid_view()" title="Switch to Image Grid View">&#10070;</li>
+
           <li id="toolbar_save_project" style="margin-left: 2em;" onclick="project_save_with_confirm()" title="Save Project">s</li>
           <li id="toolbar_load_project" onclick="project_open_select_project_file()" title="Open Project">o</li>
 
@@ -328,9 +338,10 @@
           <li id="toolbar_copy_region" style="margin-left: 2em;" onclick="copy_sel_regions()" title="Copy Region">c</li>
           <li id="toolbar_paste_region" onclick="paste_sel_regions_in_current_image()" title="Paste Region">v</li>
           <li id="toolbar_copy_region" onclick="paste_to_multiple_images_with_confirm()" title="Paste region in multiple images">v2</li>
-                    <li id="toolbar_del_region" onclick="del_sel_regions_with_confirm()" title="Undo the regions copied to multiple images"><del>v2</del></li>
+          <li id="toolbar_del_region" onclick="del_sel_regions_with_confirm()" title="Undo the regions copied to multiple images"><del>v2</del></li>
           <li id="toolbar_sel_all_region" onclick="sel_all_regions()" title="Select All Regions">a</li>
           <li id="toolbar_del_region" onclick="del_sel_regions()" title="Delete Region">&times;</li>
+
         </ul>
       </div>
       <!-- end of shortcut toolbar -->
@@ -384,8 +395,8 @@
         </div>
 
         <!-- Attributes -->
-        <button class="leftsidebar_accordion active" id="attr">Attributes</button>
-        <div class="leftsidebar_accordion_panel show" id="attributes_editor_panel">
+        <button class="leftsidebar_accordion" id="attr">Attributes</button>
+        <div class="leftsidebar_accordion_panel" id="attributes_editor_panel">
           <div class="button_panel" style="padding:1rem 0;">
             <span class="text_button" onclick="show_region_attributes_update_panel()" id="button_show_region_attributes" title="Show region attributes">Region Attributes</span>
             <span class="text_button" onclick="show_file_attributes_update_panel()" id="button_show_file_attributes" title="Show file attributes">File Attributes</span>
@@ -405,14 +416,6 @@
               <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor()">Annotation Editor</span>|
               <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="">Save Attributes</span>
             </p>
-
-            <!--
-            <ul>
-              <li>to delete an option, delete corresponding "option id"</li>
-              <li>to add a new option, click "Add new id"</li>
-              <li>"option description" is optional</li>
-            </ul>
-            -->
           </div>
         </div>
 
@@ -465,91 +468,113 @@
 
       <!-- Main display area: contains image canvas, ... -->
       <div id="display_area">
-        <div id="canvas_panel">
-          <canvas id="image_canvas" width="1" height="1"></canvas>
+        <div id="image_panel" class="display_area_content">
+          <img id="image_content" src="">
           <canvas id="region_canvas" width="1" height="1" tabindex="1">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
         </div>
+        <div id="image_grid_panel" class="display_area_content">
+          <div id="image_grid_toolbar">
+            <span style="margin-left:2rem;">Page Navigation:</span>
+            <span class="text_button" title="Show previous page" onclick="image_grid_prev_page()">Prev</span>
+            <span class="text_button" title="Show next page" onclick="image_grid_next_page()">Next</span>
 
-        <div>
-          <div class="text_panel" id="via_start_info_panel">Starting VGG Image Annotator ...</div>
+            <span style="margin-left:2rem;">Select:</span>
+            <span class="text_button" title="Select all images in this page" onclick="">All</span>
+            <span class="text_button" title="Remove all selected images from this page" onclick="">None</span>
 
-          <div class="text_panel" style="padding: 1em; border: 1px solid #cccccc;" id="about_panel">
-            <p style="font-size: 2em;">VGG Image Annotator</p>
-            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.1.0</a></p>
-            <p>
-              VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
-              developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
-              and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
-              With this standalone application, you can define regions in an image and create a textual description of those regions.
-              Such image regions and descriptions are useful for supervised training of learning algorithms.
-            </p>
-            <p>Features:</p>
-            <ul>
-              <li>based solely on HTML, CSS and Javascript (no external javascript libraries)</li>
-              <li>can be used off-line (full application in a single html file of size &lt; 200KB)</li>
-              <li>requires nothing more than a modern web browser</li>
-              <li>supported region shapes: rectangle, circle, ellipse, polygon and point</li>
-              <li>import/export of region data in csv and json file format</li>
-            </ul>
-            <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
-            <p>&nbsp;</p>
-            <p>Copyright &copy; 2016-2018, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a> (Visual Geometry Group, Oxford University)</p>
+            <span style="margin-left:2rem;">Image Size:</span>
+            <span class="text_button" title="Increase height of images shown in image grid" onclick="image_grid_image_size_increase()">&plus;</span>
+            <span class="text_button" title="Decrease height of images shown in image grid" onclick="image_grid_image_size_decrease()">&minus;</span>
+
+            <span style="margin-left:2rem;">Selected images:</span>
+            <span id="image_grid_sel_img_count">0</span>
           </div>
 
-          <div class="text_panel" id="getting_started_panel">
-            <h1>Getting Started</h1>
-            <ol>
-              <li>Click [Image > Load or Add Images] in the top menu bar to load a set of images that you wish to annotate.</li>
-              <li>Press n (or p) to navigate through the loaded images. You can also use the &larr; and &rarr; icons in the top panel toolbar for navigation.</li>
-              <li>Click <b>Region Attributes</b> in the left panel to reveal a panel in the bottom. Click <b>[Add New]</b> tp add a new attribute. For example:
-                <pre>
-                  object_name
-                  object_color
-                </pre>
-                You can add more region attributes according to you needs.
-              <li>In the <b>Region Shape</b> section in the left panel, click the rectangular shape</li>
-              <li>On the image area, keep pressing the right click button as you drag the mouse cursor. This will draw a rectangular region on the image.</li>
-              <li>This newly created region is automatically selected. Now you can enter the attribute value for this region in the bottom panel. For example:
-                <pre>
-                  object_name = dog
-                  object_color = white
-                </pre>
-                You can annotate multiple regions in this image or other images and assign a value to each pre-defined attribute.</li>
-              <li>To download the annotated region data, click <b>[Annotation > Save as CSV]</b> in the top menu bar. This will download a text file containing region shape and attribute data.</li>
-              <li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 7) by clicking <b>[Annotation > Import]</b>.
-            </li></ol>
-          </div>
+          <div id="image_grid_content"></div>
 
-          <div class="text_panel" id="license_panel">
-            <pre>
-              Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
-              All rights reserved.
+          <div id="image_grid_info">Tip: use <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor(); edit_file_metadata_in_annotation_editor();">Annotation Editor</span> to bulk update file attributes of selected images and <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_img_fn_list_visibility()">Filename List</span> to show a page containing that image.</div>
 
-              Redistribution and use in source and binary forms, with or without
-              modification, are permitted provided that the following conditions are met:
+        <div id="settings_panel" class="display_area_content"></div>
 
-              Redistributions of source code must retain the above copyright notice, this
-              list of conditions and the following disclaimer.
-              Redistributions in binary form must reproduce the above copyright notice,
-              this list of conditions and the following disclaimer in the documentation
-              and/or other materials provided with the distribution.
-              THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
-              AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-              IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-              ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-              LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-              CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-              SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-              INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-              CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-              ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-              POSSIBILITY OF SUCH DAMAGE.
-            </pre>
-          </div>
-
+        <div id="page_start_info" class="display_area_content">
+          <p><span class="text_button" title="Load or Add Images" onclick="sel_local_images()">Load images</span> to start annotation or, see <span class="text_button" title="Getting started with VGG Image Annotator" onclick="show_getting_started_panel()">Getting Started</a>.</p>
         </div>
-      </div>
-    </div>
+
+        <div id="page_about" class="display_area_content">
+          <p style="font-size: 2em;">VGG Image Annotator</p>
+          <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.1.0</a></p>
+          <p>
+            VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
+            developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
+            and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
+            With this standalone application, you can define regions in an image and create a textual description of those regions.
+            Such image regions and descriptions are useful for supervised training of learning algorithms.
+          </p>
+          <p>Features:</p>
+          <ul>
+            <li>based solely on HTML, CSS and Javascript (no external javascript libraries)</li>
+            <li>can be used off-line (full application in a single html file of size &lt; 200KB)</li>
+            <li>requires nothing more than a modern web browser</li>
+            <li>supported region shapes: rectangle, circle, ellipse, polygon and point</li>
+            <li>import/export of region data in csv and json file format</li>
+          </ul>
+          <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
+          <p>&nbsp;</p>
+          <p>Copyright &copy; 2016-2018, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a> (Visual Geometry Group, Oxford University)</p>
+        </div>
+
+        <div id="page_help" class="display_area_content">
+          <h1>Getting Started</h1>
+          <ol>
+            <li>Click [Image > Load or Add Images] in the top menu bar to load a set of images that you wish to annotate.</li>
+            <li>Press n (or p) to navigate through the loaded images. You can also use the &larr; and &rarr; icons in the top panel toolbar for navigation.</li>
+            <li>Click <b>Region Attributes</b> in the left panel to reveal a panel in the bottom. Click <b>[Add New]</b> tp add a new attribute. For example:
+              <pre>
+                object_name
+                object_color
+              </pre>
+              You can add more region attributes according to you needs.
+            <li>In the <b>Region Shape</b> section in the left panel, click the rectangular shape</li>
+            <li>On the image area, keep pressing the right click button as you drag the mouse cursor. This will draw a rectangular region on the image.</li>
+            <li>This newly created region is automatically selected. Now you can enter the attribute value for this region in the bottom panel. For example:
+              <pre>
+                object_name = dog
+                object_color = white
+              </pre>
+              You can annotate multiple regions in this image or other images and assign a value to each pre-defined attribute.</li>
+            <li>To download the annotated region data, click <b>[Annotation > Save as CSV]</b> in the top menu bar. This will download a text file containing region shape and attribute data.</li>
+            <li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 7) by clicking <b>[Annotation > Import]</b>.
+          </li></ol>
+        </div>
+
+        <div id="page_license" class="display_area_content">
+          <pre>
+            Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
+            All rights reserved.
+
+            Redistribution and use in source and binary forms, with or without
+            modification, are permitted provided that the following conditions are met:
+
+            Redistributions of source code must retain the above copyright notice, this
+            list of conditions and the following disclaimer.
+            Redistributions in binary form must reproduce the above copyright notice,
+            this list of conditions and the following disclaimer in the documentation
+            and/or other materials provided with the distribution.
+            THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+            AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+            IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+            ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+            LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+            CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+            SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+            INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+            CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+            ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+            POSSIBILITY OF SUCH DAMAGE.
+          </pre>
+        </div>
+      </div> <!-- end of display_area -->
+    </div> <!-- end of middle_panel -->
 
     <!-- to show status messages -->
     <div id="message_panel">
@@ -575,6 +600,7 @@
 
     <!--    -->
     <script src="via_demo.js"></script>
+    <script src="./tests/data/via_image_grid_test_data.js"></script>
 
     <!-- Unit Tests    -->
     <!--
