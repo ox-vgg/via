@@ -86,8 +86,14 @@
       #image_grid_panel { position:relative; margin:0; padding:0; border:0px solid red; width:100%; }
       #image_grid_panel #image_grid_toolbar { display:block; font-size:small; padding-bottom:0.8rem; }
       #image_grid_panel #image_grid_info { display:block; font-size:small; text-align:center; margin-top:0.8rem; }
-      #image_grid_panel #image_grid_content { overflow:auto; margin:0; padding:0; }
-      #image_grid_panel #image_grid_content .im { margin:0; padding:0; border:1px solid red;}
+      #image_grid_panel #image_grid_content { position:relative; overflow:hidden; margin:0; padding:0; border:1px solid green; outline:none; }
+      #image_grid_panel #image_grid_content #image_grid_content_img img { margin:0px; padding:2px;}
+      #image_grid_panel #image_grid_content #image_grid_content_img .sel { background-color:red; }
+      #image_grid_panel #image_grid_content #image_grid_content_img { position:absolute; top:0; left:0; width:100%; height:100%; }
+      #image_grid_panel #image_grid_content #image_grid_content_rshape { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+
+      #image_grid_panel #image_grid_content img { float:left; margin:0; }
+/*      #image_grid_panel #image_grid_content .im { margin:0; padding:0; border:1px solid red;}*/
 
       #leftsidebar_collapse_panel { display:table-cell; position:relative; width:0.5%; z-index:10; vertical-align:top; }
       #leftsidebar_collapse_button { font-size: large; padding-left:0.2rem; }
@@ -479,8 +485,8 @@
             <span class="text_button" title="Show next page" onclick="image_grid_next_page()">Next</span>
 
             <span style="margin-left:2rem;">Select:</span>
-            <span class="text_button" title="Select all images in this page" onclick="">All</span>
-            <span class="text_button" title="Remove all selected images from this page" onclick="">None</span>
+            <span class="text_button" title="Select all images in this page" onclick="image_grid_page_select_all()">All</span>
+            <span class="text_button" title="Remove all selected images from this page" onclick="image_grid_page_select_none()">None</span>
 
             <span style="margin-left:2rem;">Image Size:</span>
             <span class="text_button" title="Increase height of images shown in image grid" onclick="image_grid_image_size_increase()">&plus;</span>
@@ -490,7 +496,10 @@
             <span id="image_grid_sel_img_count">0</span>
           </div>
 
-          <div id="image_grid_content"></div>
+          <div id="image_grid_content">
+            <div id="image_grid_content_img"></div>
+            <svg xmlns:xlink="http://www.w3.org/2000/svg" id="image_grid_content_rshape"></svg>
+          </div>
 
           <div id="image_grid_info">Tip: use <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor(); edit_file_metadata_in_annotation_editor();">Annotation Editor</span> to bulk update file attributes of selected images and <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_img_fn_list_visibility()">Filename List</span> to show a page containing that image.</div>
 

@@ -195,22 +195,29 @@ var _via_loaded_img_fn_list_table_html = [];
 
 // image grid
 var image_grid_panel = document.getElementById('image_grid_panel');
+var _via_display_area_content_name               = ''; // describes what is currently shown in display area
 var _via_image_grid_requires_update              = false;
 var _via_image_grid_content_overflow             = false;
+var _via_image_grid_show_region_shape            = false;
 var _via_image_grid_current_page_first_img_index = 0;
-var _via_image_grid_total_pages                  = -1;
 var _via_image_grid_selected_fileid_list         = [];
-var _via_image_grid_current_page_fileid_list     = [];
-var _via_display_area_content_name               = '';
+var _via_image_grid_current_page_img_index_list  = [];
 var _via_image_grid_mousedown_img_index = -1;
 var _via_image_grid_mouseup_img_index = -1;
+var _via_image_grid_row_count = 0;
 
 // via settings
 var _via_settings = {};
 _via_settings.ui = {};
 _via_settings.ui.annotation_editor_height   = 25; // in percent of the height of browser window
 _via_settings.ui.annotation_editor_fontsize = 0.8;// in rem
-_via_settings.ui.image_grid_panel_img_height= 5;  // in percent
+
+_via_settings.ui.image_grid = {};
+_via_settings.ui.image_grid.img_height          = 20;  // in percent
+_via_settings.ui.image_grid.rshape_fill         = VIA_THEME_BOUNDARY_FILL_COLOR;
+_via_settings.ui.image_grid.rshape_fill_opacity = 0.6;
+_via_settings.ui.image_grid.rshape_stroke       = VIA_THEME_BOUNDARY_LINE_COLOR;
+_via_settings.ui.image_grid.rshape_stroke_width = 2;
 
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
@@ -5430,15 +5437,22 @@ function project_file_add_url(url) {
 //
 function image_grid_init() {
   var p = document.getElementById('image_grid_content');
+  p.focus();
   p.addEventListener('mousedown', image_grid_mousedown_handler, false);
   p.addEventListener('mouseup', image_grid_mouseup_handler, false);
   p.addEventListener('mousemove', image_grid_mousemove_handler, false);
   p.addEventListener('dblclick', image_grid_dblclick_handler, false);
+
+  _via_image_grid_show_region_shape = true; // debug
 }
 
 function image_grid_update() {
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
     image_grid_set_content(0);
+
+    if ( _via_image_grid_show_region_shape ) {
+
+    }
   }
 }
 
@@ -5446,10 +5460,18 @@ function image_grid_set_content( image_grid_first_image_index ) {
   _via_image_grid_current_page_first_img_index = image_grid_first_image_index;
 
   var pc = document.getElementById('image_grid_content');
-  pc.innerHTML = '';
+  pc.addEventListener('overflow', function(e) {
+    console.log('image_grid_content: overflow occured!');
+  }, false);
+
   var de = document.documentElement;
-  pc.style.height = (de.clientHeight - 4*ui_top_panel.offsetHeight) + 'px';
-  //pc.style.height = '200px';
+  //pc.style.height = (de.clientHeight - 4*ui_top_panel.offsetHeight) + 'px';
+  pc.style.height = '400px';
+
+  var img_container = document.getElementById('image_grid_content_img');
+  img_container.innerHTML = '';
+  var img_rshape = document.getElementById('image_grid_content_rshape');
+  img_rshape.innerHTML = '';
 
   var i = _via_image_grid_current_page_first_img_index;
   for ( ; i < _via_image_id_list.length; ++i ) {
@@ -5471,34 +5493,98 @@ function image_grid_set_content( image_grid_first_image_index ) {
     } else {
       e.src = _via_img_metadata[img_id].base64_img_data;
     }
-    e.setAttribute('class', 'im');
+    //e.setAttribute('class', 'im');
     e.setAttribute('id', image_grid_get_html_img_id(i));
-    e.setAttribute('height', _via_settings.ui.image_grid_panel_img_height + '%');
-
-    pc.appendChild(e);
+    e.setAttribute('height', _via_settings.ui.image_grid.img_height + '%');
+    e.addEventListener('load', function(e) {
+      if ( _via_image_grid_show_region_shape ) {
+        // draw region shape into global canvas for image grid
+        var img_param = []; // [img_index, width, height, originalWidth, originalHeight, x, y]
+        img_param.push( image_grid_parse_html_img_id(this.id) );
+        img_param.push( parseInt(this.width) );
+        img_param.push( parseInt(this.height) );
+        img_param.push( parseInt(this.naturalWidth) );
+        img_param.push( parseInt(this.naturalHeight) );
+        img_param.push( parseInt(this.offsetLeft) );
+        img_param.push( parseInt(this.offsetTop) );
+        image_grid_show_region_shape( img_param );
+      }
+      //console.log('[' + this.id + '] loaded: ' + this.height + ',' + this.width + ':' + this.offsetTop + ',' + this.offsetLeft);
+    }, false);
+    img_container.appendChild(e);
+    _via_image_grid_current_page_img_index_list.push(i);
   }
 
 }
 
+function image_grid_show_region_shape(img_param) {
+  return new Promise( function(ok_callback, err_callback) {
+    var p = document.getElementById('image_grid_content_rshape');
+
+    var i;
+    var img_index = img_param[0];
+
+    var img_id = _via_image_id_list[img_index];
+    for ( i = 0; i < _via_img_metadata[img_id].regions.length; ++i ) {
+      var r = _via_img_metadata[img_id].regions[i].shape_attributes;
+      var dimg; // region coordinates in original image space
+      switch( r.name ) {
+      case VIA_REGION_SHAPE.RECT:
+        dimg = [ r['x'], r['y'], r['x']+r['width'], r['y']+r['height'] ];
+        break;
+      case VIA_REGION_SHAPE.CIRCLE:
+        dimg = [ r['cx'], r['cy'], r['cx']+r['r'], r['cy']+r['r'] ];
+        break;
+      case VIA_REGION_SHAPE.ELLIPSE:
+        dimg = [ r['cx'], r['cy'], r['cx']+r['rx'], r['cy']+r['ry'] ];
+        break;
+      case VIA_REGION_SHAPE.POLYLINE: // handled by POLYGON
+      case VIA_REGION_SHAPE.POLYGON:
+        var j;
+        dimg = [];
+        for ( j = 0; j < r['all_points_x'].length; ++j ) {
+          dimg.push( r['all_points_x'][j] );
+          dimg.push( r['all_points_y'][j] );
+        }
+        break;
+      case VIA_REGION_SHAPE.POINT:
+        dimg = [ r['cx'], r['cy'] ];
+        break;
+      }
+      var scale_factor = img_param[2] / img_param[4]; // new_height / original height
+      var offset_x     = img_param[5];
+      var offset_y     = img_param[6];
+      var r2 = new _via_region( r.name, i, dimg, scale_factor, offset_x, offset_y);
+      var r2_svg = r2.get_svg_element()
+      r2_svg.setAttribute('fill',         _via_settings.ui.image_grid.rshape_fill);
+      r2_svg.setAttribute('fill-opacity', _via_settings.ui.image_grid.rshape_fill_opacity);
+      r2_svg.setAttribute('stroke',       _via_settings.ui.image_grid.rshape_stroke);
+      r2_svg.setAttribute('stroke-width', _via_settings.ui.image_grid.rshape_stroke_width);
+
+      p.appendChild(r2_svg);
+    }
+  });
+}
+
 function image_grid_image_size_increase() {
-  var new_img_height = _via_settings.ui.image_grid_panel_img_height + VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE;
+  var new_img_height = _via_settings.ui.image_grid.img_height + VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE;
   if ( new_img_height < 91 ) {
-    _via_settings.ui.image_grid_panel_img_height = new_img_height;
+    _via_settings.ui.image_grid.img_height = new_img_height;
     image_grid_update();
-    image_grid_info('Image height set to ' + _via_settings.ui.image_grid_panel_img_height + ' %');
+    //image_grid_info('Image height set to ' + _via_settings.ui.image_grid.img_height + ' %');
   } else {
-    image_grid_info('Cannot increase image size anymore than ' + _via_settings.ui.image_grid_panel_img_height + ' %');
+    //image_grid_info('Cannot increase image size anymore than ' + _via_settings.ui.image_grid.img_height + ' %');
   }
 }
 
 function image_grid_image_size_decrease() {
-  var new_img_height = _via_settings.ui.image_grid_panel_img_height - VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE;
+  var new_img_height = _via_settings.ui.image_grid.img_height - VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE;
   if ( new_img_height > 0.1 ) {
-    _via_settings.ui.image_grid_panel_img_height = new_img_height;
-    image_grid_info('Image height set to ' + _via_settings.ui.image_grid_panel_img_height + ' %');
+    _via_settings.ui.image_grid.img_height = new_img_height;
+    //image_grid_info('Image height set to ' + _via_settings.ui.image_grid.img_height + ' %');
     image_grid_update();
   } else {
-    image_grid_info('Cannot reduce image size anymore than ' + _via_settings.ui.image_grid_panel_img_height + ' %');
+    //image_grid_info('Cannot reduce image size anymore than ' + _via_settings.ui.image_grid.img_height + ' %');
   }
 }
 
@@ -5522,13 +5608,12 @@ function image_grid_mousemove_handler(e) {
 
 function image_grid_mouseup_handler(e) {
   e.preventDefault();
-  console.log(e);
   _via_image_grid_mouseup_img_index = image_grid_parse_html_img_id(e.target.id);
   console.log('mouseup on image index ' + _via_image_grid_mouseup_img_index);
 
   if ( _via_image_grid_mouseup_img_index === _via_image_grid_mousedown_img_index ) {
     // select single image
-    _via_image_grid_selected_fileid_list.push(_via_image_grid_mousedown_img_index);
+    image_grid_toggle_img_select(_via_image_grid_mouseup_img_index);
   } else {
     // select multiple images
     var start = _via_image_grid_mousedown_img_index;
@@ -5542,9 +5627,49 @@ function image_grid_mouseup_handler(e) {
     var i;
     for ( i = start; i <= end; ++i ) {
       _via_image_grid_selected_fileid_list.push(i);
+      var html_img_id = image_grid_get_html_img_id(i);
+      document.getElementById(html_img_id).classList.toggle('sel');
     }
   }
   image_grid_update_selected_img_count();
+}
+
+function image_grid_toggle_img_select(img_index) {
+  var arr_index = _via_image_grid_selected_fileid_list.indexOf(img_index);
+  if ( arr_index === -1 ) {
+    _via_image_grid_selected_fileid_list.splice(arr_index, 1);
+  } else {
+    _via_image_grid_selected_fileid_list.push(img_index);
+  }
+
+  var html_img_id = image_grid_get_html_img_id(img_index);
+  document.getElementById(html_img_id).classList.toggle('sel');
+}
+
+function image_grid_page_select_all() {
+  var i, img_index, arr_index;
+  for ( i = 0; i < _via_image_grid_current_page_img_index_list.length; ++i ) {
+    img_index = _via_image_grid_current_page_img_index_list[i];
+    arr_index = _via_image_grid_selected_fileid_list.indexOf(img_index);
+    if ( arr_index === -1 ) {
+      _via_image_grid_selected_fileid_list.push(img_index);
+      var html_img_id = image_grid_get_html_img_id(img_index);
+      document.getElementById(html_img_id).classList.toggle('sel');
+    }
+  }
+}
+
+function image_grid_page_select_none() {
+  var i, img_index, arr_index;
+  for ( i = 0; i < _via_image_grid_current_page_img_index_list.length; ++i ) {
+    img_index = _via_image_grid_current_page_img_index_list[i];
+    arr_index = _via_image_grid_selected_fileid_list.indexOf(img_index);
+    if ( arr_index !== -1 ) {
+      _via_image_grid_selected_fileid_list.splice(arr_index, 1);
+      var html_img_id = image_grid_get_html_img_id(img_index);
+      document.getElementById(html_img_id).classList.toggle('sel');
+    }
+  }
 }
 
 function image_grid_parse_html_img_id(html_img_id) {
@@ -5557,31 +5682,16 @@ function image_grid_get_html_img_id(img_index) {
 }
 
 function image_grid_dblclick_handler(e) {
-  e.preventDefault();
-  console.log('double click')
-  console.log(e.target.src)
+  console.log('dbl click');
+  console.log(e);
+  show_image( image_grid_parse_html_img_id(e.target.id) );
 }
 
 function image_grid_update_selected_img_count() {
   document.getElementById('image_grid_sel_img_count').innerHTML = _via_image_grid_selected_fileid_list.length;
 }
 
-/*
-image_grid_panel.addEventListener('mousedown', function(e) {
-  console.log(e.target.src)
-  e.preventDefault();
-}, true);
 
-image_grid_panel.addEventListener('mousemove', function(e) {
-  console.log(e.target.src)
-  e.preventDefault();
-}, true);
-
-image_grid_panel.addEventListener('mouseup', function(e) {
-  console.log(e.target.src)
-  e.preventDefault();
-}, true);
-*/
 //
 // utils
 //
@@ -5706,3 +5816,332 @@ function generate_img_index_list(input) {
 //
 //function _via_hook_next_image() {}
 //function _via_hook_prev_image() {}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Code borrowed from via2 branch
+// - in future, the <canvas> based reigon shape drawing will be replaced by <svg>
+//   because svg allows independent manipulation of individual regions without
+//   requiring to clear the canvas every time some region is updated.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// @file        _via_region.js
+// @description Implementation of region shapes like rectangle, circle, etc.
+// @author      Abhishek Dutta <adutta@robots.ox.ac.uk>
+// @date        17 June 2017
+//
+////////////////////////////////////////////////////////////////////////////////
+
+function _via_region( shape, id, data_img_space, view_scale_factor, view_offset_x, view_offset_y) {
+  // Note the following terminology:
+  //   view space  :
+  //     - corresponds to the x-y plane on which the scaled version of original image is shown to the user
+  //     - all the region query operations like is_inside(), is_on_edge(), etc are performed in view space
+  //     - all svg draw operations like get_svg() are also in view space
+  //
+  //   image space :
+  //     - corresponds to the x-y plane which corresponds to the spatial space of the original image
+  //     - region save, export, git push operations are performed in image space
+  //     - to avoid any rounding issues (caused by floating scale factor),
+  //        * user drawn regions in view space is first converted to image space
+  //        * this region in image space is now used to initialize region in view space
+  //
+  //   The two spaces are related by _via_model.now.tform.scale which is computed by the method
+  //     _via_ctrl.compute_view_panel_to_nowfile_tform()
+  //   and applied as follows:
+  //     x coordinate in image space = scale_factor * x coordinate in view space
+  //
+  // shape : {rect, circle, ellipse, line, polyline, polygon, point}
+  // id    : unique region-id
+  // d[]   : (in view space) data whose meaning depend on region shape as follows:
+  //        rect     : d[x1,y1,x2,y2] or d[corner1_x, corner1_y, corner2_x, corner2_y]
+  //        circle   : d[x1,y1,x2,y2] or d[center_x, center_y, circumference_x, circumference_y]
+  //        ellipse  : d[x1,y1,x2,y2]
+  //        line     : d[x1,y1,x2,y2]
+  //        polyline : d[x1,y1,...,xn,yn]
+  //        polygon  : d[x1,y1,...,xn,yn]
+  //        point    : d[cx,cy]
+  // scale_factor : for conversion from view space to image space
+  //
+  // Note: no svg data are stored with prefix "_". For example: _scale_factor, _x2
+  this.shape  = shape;
+  this.id     = id;
+  this.scale_factor     = view_scale_factor;
+  this.offset_x         = view_offset_x;
+  this.offset_y         = view_offset_y;
+  this.recompute_svg    = false;
+  this.attributes  = {};
+
+  var n = data_img_space.length;
+  var i;
+  this.dview  = new Array(n);
+  this.dimg   = new Array(n);
+
+  if ( n !== 0 ) {
+    // IMPORTANT:
+    // to avoid any rounding issues (caused by floating scale factor), we stick to
+    // the principal that image space coordinates are the ground truth for every region.
+    // Hence, we proceed as:
+    //   * user drawn regions in view space is first converted to image space
+    //   * this region in image space is now used to initialize region in view space
+    for ( i = 0; i < n; i++ ) {
+      this.dimg[i]  = data_img_space[i];
+
+      var offset = this.offset_x;
+      if ( i % 2 !== 0 ) {
+        // y coordinate
+        offset = this.offset_y;
+      }
+      this.dview[i] = Math.round( this.dimg[i] * this.scale_factor ) + offset;
+    }
+  }
+
+  // set svg attributes for each shape
+  switch( this.shape ) {
+  case "rect":
+    _via_region_rect.call( this );
+    this.svg_attributes = ['x', 'y', 'width', 'height'];
+    break;
+  case "circle":
+    _via_region_circle.call( this );
+    this.svg_attributes = ['cx', 'cy', 'r'];
+    break;
+  case "ellipse":
+    _via_region_ellipse.call( this );
+    this.svg_attributes = ['cx', 'cy', 'rx', 'ry'];
+    break;
+  case "line":
+    _via_region_line.call( this );
+    this.svg_attributes = ['x1', 'y1', 'x2', 'y2'];
+    break;
+  case "polyline":
+    _via_region_polyline.call( this );
+    this.svg_attributes = ['points'];
+    break;
+  case "polygon":
+    _via_region_polygon.call( this );
+    this.svg_attributes = ['points'];
+    break;
+  case "point":
+    _via_region_point.call( this );
+    // point is a special circle with minimal radius required for visualization
+    this.shape = 'circle';
+    this.svg_attributes = ['cx', 'cy', 'r'];
+    break;
+  }
+
+  this.initialize();
+}
+
+
+_via_region.prototype.prepare_svg_element = function() {
+  var _VIA_SVG_NS = "http://www.w3.org/2000/svg";
+  this.svg_element = document.createElementNS(_VIA_SVG_NS, this.shape);
+  this.svg_string  = '<' + this.shape;
+  this.svg_element.setAttributeNS(null, 'id', this.id);
+
+  var n = this.svg_attributes.length;
+  for ( var i = 0; i < n; i++ ) {
+    this.svg_element.setAttributeNS(null, this.svg_attributes[i], this[this.svg_attributes[i]]);
+    this.svg_string += ' ' + this.svg_attributes[i] + '="' + this[this.svg_attributes[i]] + '"';
+  }
+  this.svg_string  += '/>';
+}
+
+_via_region.prototype.get_svg_element = function() {
+  if ( this.recompute_svg ) {
+    this.prepare_svg_element();
+    this.recompute_svg = false;
+  }
+  return this.svg_element;
+}
+
+_via_region.prototype.get_svg_string = function() {
+  if ( this.recompute_svg ) {
+    this.prepare_svg_element();
+    this.recompute_svg = false;
+  }
+  return this.svg_string;
+}
+
+///
+/// Region shape : rectangle
+///
+function _via_region_rect() {
+  this.is_inside  = _via_region_rect.prototype.is_inside;
+  this.is_on_edge = _via_region_rect.prototype.is_on_edge;
+  this.move  = _via_region_rect.prototype.move;
+  this.resize  = _via_region_rect.prototype.resize;
+  this.initialize = _via_region_rect.prototype.initialize;
+  this.dist_to_nearest_edge = _via_region_rect.prototype.dist_to_nearest_edge;
+}
+
+_via_region_rect.prototype.initialize = function() {
+  // ensure that this.(x,y) corresponds to top-left corner of rectangle
+  // Note: this.(x2,y2) is defined for convenience in calculations
+  if ( this.dview[0] < this.dview[2] ) {
+    this.x  = this.dview[0];
+    this.x2 = this.dview[2];
+  } else {
+    this.x  = this.dview[2];
+    this.x2 = this.dview[0];
+  }
+  if ( this.dview[1] < this.dview[3] ) {
+    this.y  = this.dview[1];
+    this.y2 = this.dview[3];
+  } else {
+    this.y  = this.dview[3];
+    this.y2 = this.dview[1];
+  }
+  this.width  = this.x2 - this.x;
+  this.height = this.y2 - this.y;
+  this.recompute_svg = true;
+}
+
+///
+/// Region shape : circle
+///
+function _via_region_circle() {
+  this.is_inside  = _via_region_circle.prototype.is_inside;
+  this.is_on_edge = _via_region_circle.prototype.is_on_edge;
+  this.move       = _via_region_circle.prototype.move;
+  this.resize     = _via_region_circle.prototype.resize;
+  this.initialize = _via_region_circle.prototype.initialize;
+  this.dist_to_nearest_edge = _via_region_circle.prototype.dist_to_nearest_edge;
+}
+
+_via_region_circle.prototype.initialize = function() {
+  this.cx = this.dview[0];
+  this.cy = this.dview[1];
+  var dx = this.dview[2] - this.dview[0];
+  var dy = this.dview[3] - this.dview[1];
+  this.r  = Math.round( Math.sqrt(dx * dx + dy * dy) );
+  this.r2 = this.r * this.r;
+  this.recompute_svg = true;
+}
+
+
+///
+/// Region shape : ellipse
+///
+function _via_region_ellipse() {
+  this.is_inside  = _via_region_ellipse.prototype.is_inside;
+  this.is_on_edge = _via_region_ellipse.prototype.is_on_edge;
+  this.move  = _via_region_ellipse.prototype.move;
+  this.resize  = _via_region_ellipse.prototype.resize;
+  this.initialize = _via_region_ellipse.prototype.initialize;
+  this.dist_to_nearest_edge = _via_region_ellipse.prototype.dist_to_nearest_edge;
+}
+
+_via_region_ellipse.prototype.initialize = function() {
+  this.cx = this.dview[0];
+  this.cy = this.dview[1];
+  this.rx = Math.abs(this.dview[2] - this.dview[0]);
+  this.ry = Math.abs(this.dview[3] - this.dview[1]);
+
+  this.inv_rx2 = 1 / (this.rx * this.rx);
+  this.inv_ry2 = 1 / (this.ry * this.ry);
+
+  this.recompute_svg = true;
+}
+
+
+
+///
+/// Region shape : line
+///
+function _via_region_line() {
+  this.is_inside  = _via_region_line.prototype.is_inside;
+  this.is_on_edge = _via_region_line.prototype.is_on_edge;
+  this.move  = _via_region_line.prototype.move;
+  this.resize  = _via_region_line.prototype.resize;
+  this.initialize = _via_region_line.prototype.initialize;
+  this.dist_to_nearest_edge = _via_region_line.prototype.dist_to_nearest_edge;
+}
+
+_via_region_line.prototype.initialize = function() {
+  this.x1 = this.dview[0];
+  this.y1 = this.dview[1];
+  this.x2 = this.dview[2];
+  this.y2 = this.dview[3];
+  this.dx = this.x1 - this.x2;
+  this.dy = this.y1 - this.y2;
+  this.mconst = (this.x1 * this.y2) - (this.x2 * this.y1);
+
+  this.recompute_svg = true;
+}
+
+
+///
+/// Region shape : polyline
+///
+function _via_region_polyline() {
+  this.is_inside  = _via_region_polyline.prototype.is_inside;
+  this.is_on_edge = _via_region_polyline.prototype.is_on_edge;
+  this.move  = _via_region_polyline.prototype.move;
+  this.resize  = _via_region_polyline.prototype.resize;
+  this.initialize = _via_region_polyline.prototype.initialize;
+  this.dist_to_nearest_edge = _via_region_polyline.prototype.dist_to_nearest_edge;
+}
+
+_via_region_polyline.prototype.initialize = function() {
+  var n = this.dview.length;
+  var points = new Array(n/2);
+  var points_index = 0;
+  for ( var i = 0; i < n; i += 2 ) {
+    points[points_index] = ( this.dview[i] + ' ' + this.dview[i+1] );
+    points_index++;
+  }
+  this.points = points.join(',');
+  this.recompute_svg = true;
+}
+
+
+///
+/// Region shape : polygon
+///
+function _via_region_polygon() {
+  this.is_inside  = _via_region_polygon.prototype.is_inside;
+  this.is_on_edge = _via_region_polygon.prototype.is_on_edge;
+  this.move  = _via_region_polygon.prototype.move;
+  this.resize  = _via_region_polygon.prototype.resize;
+  this.initialize = _via_region_polygon.prototype.initialize;
+  this.dist_to_nearest_edge = _via_region_polygon.prototype.dist_to_nearest_edge;
+}
+
+_via_region_polygon.prototype.initialize = function() {
+  var n = this.dview.length;
+  var points = new Array(n/2);
+  var points_index = 0;
+  for ( var i = 0; i < n; i += 2 ) {
+    points[points_index] = ( this.dview[i] + ' ' + this.dview[i+1] );
+    points_index++;
+  }
+  this.points = points.join(',');
+  this.recompute_svg = true;
+}
+
+
+///
+/// Region shape : point
+///
+function _via_region_point() {
+  this.is_inside  = _via_region_point.prototype.is_inside;
+  this.is_on_edge = _via_region_point.prototype.is_on_edge;
+  this.move  = _via_region_point.prototype.move;
+  this.resize  = _via_region_point.prototype.resize
+  this.initialize  = _via_region_point.prototype.initialize;
+  this.dist_to_nearest_edge = _via_region_point.prototype.dist_to_nearest_edge;
+}
+
+_via_region_point.prototype.initialize = function() {
+  this.cx = this.dview[0];
+  this.cy = this.dview[1];
+  this.r  = 2;
+  this.r2 = this.r * this.r;
+  this.recompute_svg = true;
+}
