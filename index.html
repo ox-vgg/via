@@ -75,7 +75,7 @@
 
       /* Middle panel: containing #image_panel, #leftsidebar */
       .middle_panel { position:relative; display:table; table-layout:fixed; width:100%; z-index:1; padding:0; top:3em; }
-      #leftsidebar { display:table-cell; width:250px; z-index:10; vertical-align:top; }
+      #leftsidebar { display:table-cell; z-index:10; vertical-align:top; }
       #display_area { display:table-cell; width:100%; z-index:1; margin:0; padding-left:1em; vertical-align:top; }
       /* layers of canvas */
       #image_panel   { position:relative; outline:none; }
@@ -84,20 +84,15 @@
 
       /* image grid view */
       #image_grid_panel { position:relative; margin:0; padding:0; border:0px solid red; width:100%; }
-      #image_grid_panel #image_grid_toolbar { display:block; font-size:small; padding-bottom:0.8rem; }
+      #image_grid_panel #image_grid_toolbar { display:block; font-size:small; padding-bottom:0.2rem; }
       #image_grid_panel #image_grid_info { display:block; font-size:small; text-align:center; margin-top:0.8rem; }
       #image_grid_panel #image_grid_content { position:relative; overflow:hidden; margin:0; padding:0; border:1px solid green; outline:none; }
-      #image_grid_panel #image_grid_content #image_grid_content_img img { margin:0px; padding:2px;}
-      #image_grid_panel #image_grid_content #image_grid_content_img .sel { background-color:red; }
+      #image_grid_panel #image_grid_content #image_grid_content_img img { margin:0; padding:0; border:2px solid white;}
+      #image_grid_panel #image_grid_content #image_grid_content_img .sel { border-color:red; }
       #image_grid_panel #image_grid_content #image_grid_content_img { position:absolute; top:0; left:0; width:100%; height:100%; }
       #image_grid_panel #image_grid_content #image_grid_content_rshape { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
 
       #image_grid_panel #image_grid_content img { float:left; margin:0; }
-/*      #image_grid_panel #image_grid_content .im { margin:0; padding:0; border:1px solid red;}*/
-
-      #leftsidebar_collapse_panel { display:table-cell; position:relative; width:0.5%; z-index:10; vertical-align:top; }
-      #leftsidebar_collapse_button { font-size: large; padding-left:0.2rem; }
-      #leftsidebar_collapse_button:hover { color: red; cursor: pointer; }
 
       /* Left sidebar accordion */
       button.leftsidebar_accordion { font-size:large; background-color:#f2f2f2; cursor:pointer; padding:0.5em 0.5em; width:100%; text-align:left; border:0; outline:none; }
@@ -109,7 +104,7 @@
       .leftsidebar_accordion_panel.show { display:block; }
 
       /* buttons */
-      .button_panel { display:table; width:100%; font-size:1rem; }
+      .button_panel { display:table; width:100%; }
       .button_panel .text_button, .text_button { color: #0000ff; padding: 0.2rem 0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
       .button_panel .flush_right { float:right; }
       .button_panel .text_button:hover, .text_button:hover { cursor:pointer; }
@@ -189,9 +184,9 @@
       #img_fn_list    { font-size:small; overflow:scroll; min-height:10rem; max-height:25rem; }
       #img_fn_list ul { position:relative; line-height:1.3em; margin:0; padding:0; list-style-type:none;}
       #img_fn_list li { white-space:nowrap; }
-      #img_fn_list li:hover   { background-color:#f2f2f2; cursor:pointer; }
-      #img_fn_list .highlight { font-weight:bold; cursor:default; }
+      #img_fn_list li:hover   { background-color:#d5e5ff; cursor:pointer; }
       #img_fn_list .missing   { color:red; cursor:default; }
+      #img_fn_list .sel   { background-color:#d5e5ff; }
 
       #message_panel         { display:block; width:100%; position:fixed; bottom:0px; z-index:1000; text-align:center; }
       #message_panel_content { display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}
@@ -302,7 +297,7 @@
 
           <li>View
             <ul>
-              <li onclick="toggle_leftsidebar()" title="Show or hide the sidebar shown in left hand side">Toggle left sidebar</li>
+              <li onclick="leftsidebar_toggle()" title="Show or hide the sidebar shown in left hand side">Toggle left sidebar</li>
               <li onclick="" title="Show or hide a panel to update annotations corresponding to file and region">Toggle annotation editor</li>
               <li onclick="toggle_img_fn_list_visibility()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle loaded files list</li>
               <li class="submenu_divider"></li>
@@ -335,7 +330,7 @@
 
           <li id="toolbar_prev_img" style="margin-left: 2em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
           <li id="toolbar_next_img" onclick="move_to_next_image()" title="Next Image">&rarr;</li>
-          <li id="toolbar_list_img" onclick="show_leftsidebar(); toggle_img_fn_list_visibility();" title="List Images">&#9776;</li>
+          <li id="toolbar_list_img" onclick="leftsidebar_show(); toggle_img_fn_list_visibility();" title="List Images">&#9776;</li>
 
           <li id="toolbar_zoom_out" style="margin-left: 2em;" onclick="zoom_out()" title="Zoom Out">&minus;</li>
           <li id="toolbar_zoom_in" onclick="zoom_in()" title="Zoom In">&plus;</li>
@@ -357,6 +352,12 @@
     <!-- Middle Panel contains a left-sidebar and image display areas -->
     <div class="middle_panel">
       <div id="leftsidebar">
+        <div class="leftsidebar_accordion_panel show" style="float:right; border:2px solid #f2f2f2;">
+            <span class="text_button" onclick="leftsidebar_decrease_width()" title="Reduce width of this toolbar panel">&minus;</span>
+            <span class="text_button" onclick="leftsidebar_increase_width()" title="Increase width of this toolbar panel">&plus;</span>
+            <span class="text_button" onclick="leftsidebar_toggle()" title="Show/hide this toolbar panel">&times;</span>
+        </div>
+
         <button class="leftsidebar_accordion active">Region Shape</button>
         <div class="leftsidebar_accordion_panel show">
           <ul class="region_shape">
@@ -468,19 +469,21 @@
         </div>
 
       </div> <!-- end of leftsidebar -->
-      <div id="leftsidebar_collapse_panel">
-        <div onclick="toggle_leftsidebar()" id="leftsidebar_collapse_button" title="Show/hide left toolbar">&ltrif;</div>
-      </div>
 
       <!-- Main display area: contains image canvas, ... -->
       <div id="display_area">
         <div id="image_panel" class="display_area_content">
           <img id="image_content" src="">
+          <!-- @todo: in future versions, this canvas will be replaced by a <svg> element -->
           <canvas id="region_canvas" width="1" height="1" tabindex="1">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
         </div>
         <div id="image_grid_panel" class="display_area_content">
           <div id="image_grid_toolbar">
-            <span style="margin-left:2rem;">Page Navigation:</span>
+            <span>Showing images:</span>
+            <span id="image_grid_img_index_start"></span>
+            <span>&nbsp;to&nbsp;</span>
+            <span id="image_grid_img_index_end"></span>
+            <span>&nbsp;|&nbsp;</span>
             <span class="text_button" title="Show previous page" onclick="image_grid_prev_page()">Prev</span>
             <span class="text_button" title="Show next page" onclick="image_grid_next_page()">Next</span>
 
@@ -494,6 +497,12 @@
 
             <span style="margin-left:2rem;">Selected images:</span>
             <span id="image_grid_sel_img_count">0</span>
+
+            <span style="margin-left:2rem; vertical-align:top;">
+              <input style="margin:0; padding:0; vertical-align:top;" type="checkbox" name="image_grid_show_region_shape" checked onchange="image_grid_toggle_region_shape(this)">
+              <label for="image_grid_show_region_shape">Show regions</label>
+            </span>
+
           </div>
 
           <div id="image_grid_content">

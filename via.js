@@ -198,7 +198,6 @@ var image_grid_panel = document.getElementById('image_grid_panel');
 var _via_display_area_content_name               = ''; // describes what is currently shown in display area
 var _via_image_grid_requires_update              = false;
 var _via_image_grid_content_overflow             = false;
-var _via_image_grid_show_region_shape            = false;
 var _via_image_grid_current_page_first_img_index = 0;
 var _via_image_grid_selected_fileid_list         = [];
 var _via_image_grid_current_page_img_index_list  = [];
@@ -211,13 +210,15 @@ var _via_settings = {};
 _via_settings.ui = {};
 _via_settings.ui.annotation_editor_height   = 25; // in percent of the height of browser window
 _via_settings.ui.annotation_editor_fontsize = 0.8;// in rem
+_via_settings.ui.leftsidebar_width          = 15;  // in percent of the width of browser window
 
 _via_settings.ui.image_grid = {};
-_via_settings.ui.image_grid.img_height          = 20;  // in percent
+_via_settings.ui.image_grid.img_height          = 10;  // in percent
 _via_settings.ui.image_grid.rshape_fill         = VIA_THEME_BOUNDARY_FILL_COLOR;
 _via_settings.ui.image_grid.rshape_fill_opacity = 0.6;
 _via_settings.ui.image_grid.rshape_stroke       = VIA_THEME_BOUNDARY_LINE_COLOR;
 _via_settings.ui.image_grid.rshape_stroke_width = 2;
+_via_settings.ui.image_grid.show_region_shape   = true;
 
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
@@ -242,7 +243,7 @@ var BBOX_SELECTED_FILL_COLOR           = "#ffffff";
 var VIA_ANNOTATION_EDITOR_HEIGHT_CHANGE   = 5;   // in percent
 var VIA_ANNOTATION_EDITOR_FONTSIZE_CHANGE = 0.1; // in rem
 var VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE      = 1; // in percent
-
+var VIA_LEFTSIDEBAR_WIDTH_CHANGE          = 1; // in percent
 //
 // Data structure for annotations
 //
@@ -333,6 +334,7 @@ function set_display_area_content(content_name) {
 function show_single_image_view() {
   if (_via_current_image_loaded) {
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE);
+    update_img_fn_list();
   } else {
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_START_INFO);
   }
@@ -1182,8 +1184,18 @@ function jump_to_image(image_index) {
     return;
   }
 
-  if ( image_index >= 0 && image_index < _via_img_count) {
-    show_image(image_index);
+  switch(_via_display_area_content_name) {
+  case VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID:
+    if ( image_index >= 0 && image_index < _via_img_count) {
+      console.log('setting img content' + image_index);
+      image_grid_set_content( image_index );
+    }
+    break;
+  default:
+    if ( image_index >= 0 && image_index < _via_img_count) {
+      show_image(image_index);
+    }
+    break;
   }
 }
 
@@ -3632,17 +3644,34 @@ function update_vertical_space() {
 //
 // left sidebar toolbox maintainer
 //
-function toggle_leftsidebar() {
+function leftsidebar_toggle() {
   var leftsidebar = document.getElementById('leftsidebar');
   if ( leftsidebar.style.display === 'none' ) {
     leftsidebar.style.display = 'table-cell';
-    document.getElementById('leftsidebar_collapse_button').innerHTML ='&ltrif;';
   } else {
     leftsidebar.style.display = 'none';
-    document.getElementById('leftsidebar_collapse_button').innerHTML ='&rtrif;';
   }
 }
-function show_leftsidebar() {
+function leftsidebar_increase_width() {
+  var leftsidebar = document.getElementById('leftsidebar');
+  var new_width = _via_settings.ui.leftsidebar_width + VIA_LEFTSIDEBAR_WIDTH_CHANGE;
+  if ( new_width <= 90 ) {
+    leftsidebar.style.width = new_width + '%';
+    _via_settings.ui.leftsidebar_width = new_width;
+  }
+}
+
+function leftsidebar_decrease_width() {
+  var leftsidebar = document.getElementById('leftsidebar');
+  var new_width = _via_settings.ui.leftsidebar_width - VIA_LEFTSIDEBAR_WIDTH_CHANGE;
+  if ( new_width >= 1 ) {
+    leftsidebar.style.width = new_width + '%';
+    _via_settings.ui.leftsidebar_width = new_width;
+  }
+
+}
+
+function leftsidebar_show() {
   var leftsidebar = document.getElementById('leftsidebar');
   leftsidebar.style.display = 'table-cell';
   document.getElementById('leftsidebar_collapse_button').innerHTML ='&ltrif;';
@@ -3650,6 +3679,9 @@ function show_leftsidebar() {
 
 // source: https://www.w3schools.com/howto/howto_js_accordion.asp
 function init_leftsidebar_accordion() {
+  var leftsidebar = document.getElementById('leftsidebar');
+  leftsidebar.style.width = _via_settings.ui.leftsidebar_width + '%';
+
   var acc = document.getElementsByClassName('leftsidebar_accordion');
   var i;
   for ( i = 0; i < acc.length; ++i ) {
@@ -3818,15 +3850,24 @@ function is_file_annotation_missing(img_id) {
 function img_fn_list_ith_entry_html(i) {
   var htmli = '';
   var filename = _via_loaded_img_fn_list[i];
-  if ( i === _via_image_index ) {
-    // highlight the current entry
-    htmli += '<li id="flist'+i+'" class="highlight">';
-    htmli += '[' + (i+1) + '] ' + filename;
+
+  htmli += '<li id="flist'+i+'" ';
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    if ( _via_image_grid_current_page_img_index_list.includes(i) ) {
+      // highlight the entry
+      htmli += ' class="sel">';
+    } else {
+      htmli += 'onclick="jump_to_image(' + (i) + ')">';
+    }
   } else {
-    htmli += '<li id="flist'+i+'" onclick="jump_to_image(' + (i) + ')">';
-    htmli += '[' + (i+1) + '] ' + filename;
+    if ( i === _via_image_index ) {
+      // highlight the current entry
+      htmli += 'class="sel">';
+    } else {
+      htmli += 'onclick="jump_to_image(' + (i) + ')">';
+    }
   }
-  htmli += '</li>';
+  htmli += '[' + (i+1) + '] ' + filename + '</li>';
   return htmli;
 }
 
@@ -5442,22 +5483,19 @@ function image_grid_init() {
   p.addEventListener('mouseup', image_grid_mouseup_handler, false);
   p.addEventListener('mousemove', image_grid_mousemove_handler, false);
   p.addEventListener('dblclick', image_grid_dblclick_handler, false);
-
-  _via_image_grid_show_region_shape = true; // debug
 }
 
 function image_grid_update() {
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
-    image_grid_set_content(0);
-
-    if ( _via_image_grid_show_region_shape ) {
-
-    }
+    image_grid_set_content( _via_image_grid_current_page_first_img_index );
   }
 }
 
 function image_grid_set_content( image_grid_first_image_index ) {
   _via_image_grid_current_page_first_img_index = image_grid_first_image_index;
+  document.getElementById('image_grid_img_index_start').innerHTML = _via_image_grid_current_page_first_img_index;
+
+  _via_image_grid_current_page_img_index_list = [];
 
   var pc = document.getElementById('image_grid_content');
   pc.addEventListener('overflow', function(e) {
@@ -5465,65 +5503,104 @@ function image_grid_set_content( image_grid_first_image_index ) {
   }, false);
 
   var de = document.documentElement;
-  //pc.style.height = (de.clientHeight - 4*ui_top_panel.offsetHeight) + 'px';
-  pc.style.height = '400px';
+  pc.style.height = (de.clientHeight - 4*ui_top_panel.offsetHeight) + 'px';
+  //pc.style.height = '400px';
 
   var img_container = document.getElementById('image_grid_content_img');
-  img_container.innerHTML = '';
   var img_rshape = document.getElementById('image_grid_content_rshape');
+  img_container.innerHTML = '';
   img_rshape.innerHTML = '';
 
-  var i = _via_image_grid_current_page_first_img_index;
-  for ( ; i < _via_image_id_list.length; ++i ) {
-    var img_id = _via_image_id_list[i];
-    var e = document.createElement('img');
-    if (_via_img_metadata[img_id].base64_img_data === '') {
-      if ( _via_img_metadata[img_id].fileref instanceof File ) {
-        var img_reader = new FileReader();
-        img_reader.addEventListener( "error", function() {
-          //@todo
-        }, false);
-        img_reader.addEventListener( "load", function() {
-          e.src = img_reader.result;
-        }, false);
-        img_reader.readAsDataURL( _via_img_metadata[img_id].fileref );
-      } else {
-        e.src = _via_img_metadata[img_id].fileref;
-      }
-    } else {
-      e.src = _via_img_metadata[img_id].base64_img_data;
-    }
-    //e.setAttribute('class', 'im');
-    e.setAttribute('id', image_grid_get_html_img_id(i));
-    e.setAttribute('height', _via_settings.ui.image_grid.img_height + '%');
-    e.addEventListener('load', function(e) {
-      if ( _via_image_grid_show_region_shape ) {
-        // draw region shape into global canvas for image grid
-        var img_param = []; // [img_index, width, height, originalWidth, originalHeight, x, y]
-        img_param.push( image_grid_parse_html_img_id(this.id) );
-        img_param.push( parseInt(this.width) );
-        img_param.push( parseInt(this.height) );
-        img_param.push( parseInt(this.naturalWidth) );
-        img_param.push( parseInt(this.naturalHeight) );
-        img_param.push( parseInt(this.offsetLeft) );
-        img_param.push( parseInt(this.offsetTop) );
-        image_grid_show_region_shape( img_param );
-      }
-      //console.log('[' + this.id + '] loaded: ' + this.height + ',' + this.width + ':' + this.offsetTop + ',' + this.offsetLeft);
-    }, false);
-    img_container.appendChild(e);
-    _via_image_grid_current_page_img_index_list.push(i);
-  }
-
+  image_grid_content_append_img( _via_image_grid_current_page_first_img_index );
 }
 
-function image_grid_show_region_shape(img_param) {
-  return new Promise( function(ok_callback, err_callback) {
-    var p = document.getElementById('image_grid_content_rshape');
+// We do not know how many images will fit in the display area.
+// Therefore, we add images one-by-one until overflow of parent
+// container is detected.
+function image_grid_content_append_img(img_index) {
+  var img_id = _via_image_id_list[img_index];
+  var e = document.createElement('img');
+  if (_via_img_metadata[img_id].base64_img_data === '') {
+    if ( _via_img_metadata[img_id].fileref instanceof File ) {
+      var img_reader = new FileReader();
+      img_reader.addEventListener( "error", function() {
+        //@todo
+      }, false);
+      img_reader.addEventListener( "load", function() {
+        e.src = img_reader.result;
+      }, false);
+      img_reader.readAsDataURL( _via_img_metadata[img_id].fileref );
+    } else {
+      e.src = _via_img_metadata[img_id].fileref;
+    }
+  } else {
+    e.src = _via_img_metadata[img_id].base64_img_data;
+  }
+  e.setAttribute('id', image_grid_get_html_img_id(img_index));
+  e.setAttribute('height', _via_settings.ui.image_grid.img_height + '%');
+  e.setAttribute('title', '[' + (img_index+1) + '] ' + _via_img_metadata[img_id].filename);
+  e.addEventListener('load', function() {
+    var p = document.getElementById('image_grid_content_img');
+    var img_bottom_right_corner = parseInt(this.offsetTop) + parseInt(this.height);
+    if ( p.clientHeight < img_bottom_right_corner ) {
+      // image causes overflow of parent container
+      var img_container = document.getElementById('image_grid_content_img');
+      img_container.removeChild(this);
+      update_img_fn_list();
+      if ( _via_settings.ui.image_grid.show_region_shape ) {
+        image_grid_page_show_all_regions();
+      }
+      var last_img_index = _via_image_grid_current_page_img_index_list[ _via_image_grid_current_page_img_index_list.length - 1];
+      document.getElementById('image_grid_img_index_end').innerHTML = last_img_index;
+    } else {
+      // process this image and trigger addition of next image in sequence
+      var img_index = image_grid_parse_html_img_id(this.id);
+      _via_image_grid_current_page_img_index_list.push(img_index);
 
+      if ( img_index < _via_img_count ) {
+        image_grid_content_append_img(img_index + 1);
+      }
+    }
+  }, false);
+  document.getElementById('image_grid_content_img').appendChild(e);
+}
+
+function image_grid_toggle_region_shape(e) {
+  if ( e.checked ) {
+    _via_settings.ui.image_grid.show_region_shape = true;
+    image_grid_page_show_all_regions();
+  } else {
+    _via_settings.ui.image_grid.show_region_shape = false;
+    document.getElementById('image_grid_content_rshape').innerHTML = '';
+  }
+}
+
+function image_grid_page_show_all_regions() {
+  var all_promises = [];
+  if ( _via_settings.ui.image_grid.show_region_shape ) {
+    var p = document.getElementById('image_grid_content_img');
+    var n = p.childNodes.length;
     var i;
-    var img_index = img_param[0];
+    for ( i = 0; i < n; ++i ) {
+      // draw region shape into global canvas for image grid
+      var img_index = image_grid_parse_html_img_id( p.childNodes[i].id );
+      var img_param = []; // [width, height, originalWidth, originalHeight, x, y]
+      img_param.push( parseInt(p.childNodes[i].width) );
+      img_param.push( parseInt(p.childNodes[i].height) );
+      img_param.push( parseInt(p.childNodes[i].naturalWidth) );
+      img_param.push( parseInt(p.childNodes[i].naturalHeight) );
+      img_param.push( parseInt(p.childNodes[i].offsetLeft) + parseInt(p.childNodes[i].clientLeft) );
+      img_param.push( parseInt(p.childNodes[i].offsetTop) + parseInt(p.childNodes[i].clientTop) );
+      var promise = image_grid_show_region_shape( img_index, img_param );
+      all_promises.push( promise );
+    }
+    // @todo: ensure that all promises are fulfilled
+  }
+}
 
+function image_grid_show_region_shape(img_index, img_param) {
+  return new Promise( function(ok_callback, err_callback) {
+    var i;
     var img_id = _via_image_id_list[img_index];
     for ( i = 0; i < _via_img_metadata[img_id].regions.length; ++i ) {
       var r = _via_img_metadata[img_id].regions[i].shape_attributes;
@@ -5551,9 +5628,9 @@ function image_grid_show_region_shape(img_param) {
         dimg = [ r['cx'], r['cy'] ];
         break;
       }
-      var scale_factor = img_param[2] / img_param[4]; // new_height / original height
-      var offset_x     = img_param[5];
-      var offset_y     = img_param[6];
+      var scale_factor = img_param[1] / img_param[3]; // new_height / original height
+      var offset_x     = img_param[4];
+      var offset_y     = img_param[5];
       var r2 = new _via_region( r.name, i, dimg, scale_factor, offset_x, offset_y);
       var r2_svg = r2.get_svg_element()
       r2_svg.setAttribute('fill',         _via_settings.ui.image_grid.rshape_fill);
@@ -5561,7 +5638,7 @@ function image_grid_show_region_shape(img_param) {
       r2_svg.setAttribute('stroke',       _via_settings.ui.image_grid.rshape_stroke);
       r2_svg.setAttribute('stroke-width', _via_settings.ui.image_grid.rshape_stroke_width);
 
-      p.appendChild(r2_svg);
+      document.getElementById('image_grid_content_rshape').appendChild(r2_svg);
     }
   });
 }
@@ -5637,9 +5714,9 @@ function image_grid_mouseup_handler(e) {
 function image_grid_toggle_img_select(img_index) {
   var arr_index = _via_image_grid_selected_fileid_list.indexOf(img_index);
   if ( arr_index === -1 ) {
-    _via_image_grid_selected_fileid_list.splice(arr_index, 1);
-  } else {
     _via_image_grid_selected_fileid_list.push(img_index);
+  } else {
+    _via_image_grid_selected_fileid_list.splice(arr_index, 1);
   }
 
   var html_img_id = image_grid_get_html_img_id(img_index);
@@ -5657,9 +5734,12 @@ function image_grid_page_select_all() {
       document.getElementById(html_img_id).classList.toggle('sel');
     }
   }
+  image_grid_update_selected_img_count();
 }
 
 function image_grid_page_select_none() {
+  console.log(_via_image_grid_current_page_img_index_list)
+  console.log(_via_image_grid_selected_fileid_list)
   var i, img_index, arr_index;
   for ( i = 0; i < _via_image_grid_current_page_img_index_list.length; ++i ) {
     img_index = _via_image_grid_current_page_img_index_list[i];
@@ -5670,6 +5750,7 @@ function image_grid_page_select_none() {
       document.getElementById(html_img_id).classList.toggle('sel');
     }
   }
+  image_grid_update_selected_img_count();
 }
 
 function image_grid_parse_html_img_id(html_img_id) {
