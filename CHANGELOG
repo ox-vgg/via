@@ -26,6 +26,7 @@
  * paste regions in multiple images and option to undo this operation (issue 123)
  * (simplified code) image content is shown using <img> instead of <canvas> (region shapes still shown using <canvas>)
  * image grid to perform bulk operations on a set of images (like changing file attribute of multiple images)
+ * images are buffered to allow faster and smoother prev/next image navigation
 
 ## [1.0.5] - January 16, 2017
  * (code contributions from Stefan Mihaila) via.js codebase improvement, wider web browser support (IE 10, IE 11 and Opera 12)
