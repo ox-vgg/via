@@ -223,6 +223,7 @@ var VIA_IMG_PRELOAD_COUNT   = 4;
 var _via_buffer_preload_img_index = -1;
 var _via_buffer_img_index_list = [];
 var _via_buffer_img_shown_timestamp = [];
+var _via_preload_img_promise_list = [];
 
 // via settings
 var _via_settings = {};
@@ -240,7 +241,7 @@ _via_settings.ui.image_grid.rshape_stroke_width = 2;
 _via_settings.ui.image_grid.show_region_shape   = true;
 
 _via_settings.core = {};
-_via_settings.core.buffer_size = 2*VIA_IMG_PRELOAD_COUNT + 2;
+_via_settings.core.buffer_size = 4*VIA_IMG_PRELOAD_COUNT + 2;
 
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
@@ -357,6 +358,8 @@ function set_display_area_content(content_name) {
 
 function show_single_image_view() {
   if (_via_current_image_loaded) {
+    img_fn_list_clear_all_style();
+    _via_show_img(_via_image_index);
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE);
   } else {
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_START_INFO);
@@ -5573,7 +5576,6 @@ function project_file_add_url(url) {
 }
 
 function project_file_load_on_fail(img_index) {
-  console.log('called project_file_load_on_fail() from ' + project_file_load_on_fail.caller);
   _via_image_load_error[img_index] = true;
   img_fn_list_ith_entry_error(img_index, true);
 }
@@ -5664,7 +5666,7 @@ function image_grid_content_append_img( img_fn_list_index ) {
 function image_grid_on_img_load(e) {
   var img = e.target;
   var img_index = image_grid_parse_html_img_id(img.id);
-  project_file_load_on_success(image_index);
+  project_file_load_on_success(img_index);
 
   image_grid_add_img_if_possible(img);
 }
@@ -5672,7 +5674,7 @@ function image_grid_on_img_load(e) {
 function image_grid_on_img_error(e) {
   var img = e.target;
   var img_index = image_grid_parse_html_img_id(img.id);
-  project_file_load_on_fail(image_index);
+  project_file_load_on_fail(img_index);
 
   image_grid_add_img_if_possible(img);
 }
@@ -6464,131 +6466,142 @@ function _via_show_img(img_index) {
     return;
   }
 
-  _via_is_loading_current_image = true;
-  _via_current_image_loaded = false;
+  if ( _via_buffer_img_index_list.includes(img_index) ) {
+    _via_current_image_loaded = false;
+    _via_show_img_from_buffer(img_index).then( function(ok_img_index) {
+      _via_current_image_loaded = true;
 
-  if ( ! _via_buffer_img_index_list.includes(img_index) ) {
-    //console.log('image ' + img_index + ' not in buffer, adding to buffer now');
-
-    _via_img_buffer_add_image(img_index).then( function(ok_img_index) {
-      //console.log('image ' + img_index + ' added to buffer');
-      _via_show_img_from_buffer(img_index);
-
-      _via_img_buffer_start_preload( img_index, 0 ); // trigger preload of images in buffer corresponding to img_index
+      // trigger preload of images in buffer corresponding to img_index
+      // but, wait until all previous promises get cancelled
+      Promise.all(_via_preload_img_promise_list).then( function(values) {
+        _via_preload_img_promise_list = [];
+        var preload_promise = _via_img_buffer_start_preload( img_index, 0 )
+        _via_preload_img_promise_list.push(preload_promise);
+      });
     }, function(err_img_index) {
-      console.log('Could not add image ' + err_img_index + ' to buffer!');
+      console.log('Failed to load image ' + err_img_index);
+      _via_current_image_loaded = false;
     });
   } else {
-    _via_show_img_from_buffer(img_index);
-    _via_img_buffer_start_preload( img_index, 0 ); // trigger preload of images in buffer corresponding to img_index
+    // image not in buffer, so first add this image to buffer
+    _via_is_loading_current_image = true;
+    _via_img_buffer_add_image(img_index).then( function(ok_img_index) {
+      _via_is_loading_current_image = false;
+      _via_show_img(img_index);
+    }, function(err_img_index) {
+      _via_is_loading_current_image = false;
+      _via_show_img(img_index); // still show the blank image
+      console.log('Failed to load image ' + _via_image_filename_list[err_img_index]);
+    });
   }
 }
 
 function _via_show_img_from_buffer(img_index) {
-  var bimg_html_id = _via_img_buffer_get_html_id(img_index);
-  var bimg = document.getElementById(bimg_html_id);
-  if ( ! bimg ) {
-    // the said image is not present in buffer, which could be because
-    // the image got removed from the buffer
-    // @todo handle this
-    /*
-    _via_img_buffer_add_image(img_index).then( function(ok_img_index) {
-      console.log('image ' + img_index + ' added to buffer');
-      _via_show_img_from_buffer(img_index);
-    }, function(err_img_index) {
-      console.log('Could not add image ' + err_img_index + ' to buffer!');
-    });
-    */
-    console.log('this should never happen');
-    return;
-  }
-  _via_clear_reg_canvas(); // clear old region shapes
-  bimg.classList.add('visible');
+  return new Promise( function(ok_callback, err_callback) {
+    var bimg_html_id = _via_img_buffer_get_html_id(img_index);
+    var bimg = document.getElementById(bimg_html_id);
+    if ( ! bimg ) {
+      // the said image is not present in buffer, which could be because
+      // the image got removed from the buffer
+      err_callback(img_index);
+      return;
+    }
+    bimg.classList.add('visible'); // now show the new image
 
-  // hide the old image
-  var old_bimg_html_id = _via_img_buffer_get_html_id(_via_image_index);
-  var old_bimg = document.getElementById(old_bimg_html_id);
-  if ( old_bimg ) {
-    old_bimg.classList.remove('visible');
-  }
-  img_fn_list_ith_entry_selected(_via_image_index, false);
+    // hide the old image
+    var current_img_id = _via_img_buffer_get_html_id(_via_image_index);
+    var current_img = document.getElementById(current_img_id);
+    if ( current_img ) {
+      if ( _via_image_index !== img_index ) {
+        current_img.classList.remove('visible');
+        img_fn_list_ith_entry_selected(_via_image_index, false);
+        _via_clear_reg_canvas(); // clear old region shapes
+      }
+    }
 
-  _via_current_image = bimg;
-  _via_image_index = img_index;
-  _via_image_id    = _via_image_id_list[_via_image_index];
-  _via_current_image_filename = _via_img_metadata[_via_image_id].filename;
+    _via_current_image = bimg;
+    _via_image_index = img_index;
+    _via_image_id    = _via_image_id_list[_via_image_index];
+    _via_current_image_filename = _via_img_metadata[_via_image_id].filename;
 
-  var arr_index = _via_buffer_img_index_list.indexOf(img_index);
-  _via_buffer_img_shown_timestamp[arr_index] = Date.now(); // update shown timestamp
+    var arr_index = _via_buffer_img_index_list.indexOf(img_index);
+    _via_buffer_img_shown_timestamp[arr_index] = Date.now(); // update shown timestamp
 
-  _via_img_set_now(img_index);
+    // update the current state of application
+    _via_click_x0 = 0; _via_click_y0 = 0;
+    _via_click_x1 = 0; _via_click_y1 = 0;
+    _via_is_user_drawing_region = false;
+    _via_is_window_resized = false;
+    _via_is_user_resizing_region = false;
+    _via_is_user_moving_region = false;
+    _via_is_user_drawing_polygon = false;
+    _via_is_region_selected = false;
+    _via_user_sel_region_id = -1;
+    _via_current_image_width = _via_current_image.naturalWidth;
+    _via_current_image_height = _via_current_image.naturalHeight;
 
-  _via_current_image_loaded = true;
-  _via_is_loading_current_image = false;
-}
+    if ( _via_current_image_width === 0 || _via_current_image_height === 0 ) {
+      // for error image icon
+      _via_current_image_width = 640;
+      _via_current_image_height = 480;
+    }
 
-function _via_img_set_now(img_index) {
-  // update the current state of application
-  _via_click_x0 = 0; _via_click_y0 = 0;
-  _via_click_x1 = 0; _via_click_y1 = 0;
-  _via_is_user_drawing_region = false;
-  _via_is_window_resized = false;
-  _via_is_user_resizing_region = false;
-  _via_is_user_moving_region = false;
-  _via_is_user_drawing_polygon = false;
-  _via_is_region_selected = false;
-  _via_user_sel_region_id = -1;
-  _via_current_image_width = _via_current_image.naturalWidth;
-  _via_current_image_height = _via_current_image.naturalHeight;
 
-  // set the size of canvas
-  // based on the current dimension of browser window
-  var de = document.documentElement;
-  var image_panel_width = de.clientWidth - leftsidebar.clientWidth - 20;
-  if ( leftsidebar.style.display === 'none' ) {
-    image_panel_width = de.clientWidth;
-  }
+    // set the size of canvas
+    // based on the current dimension of browser window
+    var de = document.documentElement;
+    var image_panel_width = de.clientWidth - leftsidebar.clientWidth - 20;
+    if ( leftsidebar.style.display === 'none' ) {
+      image_panel_width = de.clientWidth;
+    }
 
-  var image_panel_height = de.clientHeight - 2*ui_top_panel.offsetHeight;
-  _via_canvas_width = _via_current_image_width;
-  _via_canvas_height = _via_current_image_height;
-  if ( _via_canvas_width > image_panel_width ) {
-    // resize image to match the panel width
-    var scale_width = image_panel_width / _via_current_image.naturalWidth;
-    _via_canvas_width = image_panel_width;
-    _via_canvas_height = _via_current_image.naturalHeight * scale_width;
-  }
-  if ( _via_canvas_height > image_panel_height ) {
-    // resize further image if its height is larger than the image panel
-    var scale_height = image_panel_height / _via_canvas_height;
-    _via_canvas_height = image_panel_height;
-    _via_canvas_width = _via_canvas_width * scale_height;
-  }
+    var image_panel_height = de.clientHeight - 2*ui_top_panel.offsetHeight;
 
-  _via_canvas_width = Math.round(_via_canvas_width);
-  _via_canvas_height = Math.round(_via_canvas_height);
-  _via_canvas_scale = _via_current_image.naturalWidth / _via_canvas_width;
-  _via_canvas_scale_without_zoom = _via_canvas_scale;
-  set_all_canvas_size(_via_canvas_width, _via_canvas_height);
-  //set_all_canvas_scale(_via_canvas_scale_without_zoom);
+    _via_canvas_width = _via_current_image_width;
+    _via_canvas_height = _via_current_image_height;
 
-  // ensure that all the canvas are visible
-  set_display_area_content( VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE );
+    if ( _via_canvas_width > image_panel_width ) {
+      // resize image to match the panel width
+      var scale_width = image_panel_width / _via_current_image.naturalWidth;
+      _via_canvas_width = image_panel_width;
+      _via_canvas_height = _via_current_image.naturalHeight * scale_width;
+    }
+    if ( _via_canvas_height > image_panel_height ) {
+      // resize further image if its height is larger than the image panel
+      var scale_height = image_panel_height / _via_canvas_height;
+      _via_canvas_height = image_panel_height;
+      _via_canvas_width = _via_canvas_width * scale_height;
+    }
 
-  // update img_fn_list
-  img_fn_list_ith_entry_selected(img_index, true);
+    _via_canvas_width = Math.round(_via_canvas_width);
+    _via_canvas_height = Math.round(_via_canvas_height);
+    _via_canvas_scale = _via_current_image.naturalWidth / _via_canvas_width;
+    _via_canvas_scale_without_zoom = _via_canvas_scale;
+    set_all_canvas_size(_via_canvas_width, _via_canvas_height);
+    //set_all_canvas_scale(_via_canvas_scale_without_zoom);
 
-  // refresh the annotations panel
-  update_annotation_editor();
+    // ensure that all the canvas are visible
+    set_display_area_content( VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE );
 
-  _via_load_canvas_regions(); // image to canvas space transform
-  _via_redraw_reg_canvas();
-  _via_reg_canvas.focus();
+    // update img_fn_list
+    img_fn_list_ith_entry_selected(img_index, true);
+    img_fn_list_scroll_to_file(img_index);
 
-  // Preserve zoom level
-  if (_via_is_canvas_zoomed) {
-    set_zoom( _via_canvas_zoom_level_index );
-  }
+
+    // refresh the annotations panel
+    update_annotation_editor();
+
+    _via_load_canvas_regions(); // image to canvas space transform
+    _via_redraw_reg_canvas();
+    _via_reg_canvas.focus();
+
+    // Preserve zoom level
+    if (_via_is_canvas_zoomed) {
+      set_zoom( _via_canvas_zoom_level_index );
+    }
+
+    ok_callback(img_index);
+  });
 }
 
 function _via_img_buffer_add_image(img_index) {
@@ -6635,20 +6648,27 @@ function _via_img_buffer_add_image(img_index) {
       bimg.setAttribute('id', _via_img_buffer_get_html_id(img_index));
       bimg.setAttribute('src', img_reader.result);
 
+      bimg.addEventListener('abort', function() {
+        project_file_load_on_fail(img_index);
+        _via_img_buffer_add_html_element(img_index, bimg);
+        bimg.setAttribute('alt', 'Error loading image: ' + img_filename);
+        err_callback(img_index);
+      });
+      bimg.addEventListener('error', function() {
+        project_file_load_on_fail(img_index);
+        _via_img_buffer_add_html_element(img_index, bimg);
+        bimg.setAttribute('alt', 'Error loading image: ' + img_filename);
+        err_callback(img_index);
+      });
+
       // Note: _via_current_image.{naturalWidth,naturalHeight} is only accessible after
       // the "load" event. Therefore, all processing must happen inside this event handler.
       bimg.addEventListener('load', function() {
         project_file_load_on_success(img_index);
-        _via_img_panel.insertBefore(bimg, _via_reg_canvas);
-
-        // add timestamp so that we can apply Least Recently Used (LRU)
-        // scheme to remove elements when buffer is full
-        var arr_index = _via_buffer_img_index_list.length;
-        _via_buffer_img_index_list.push(img_index);
-        _via_buffer_img_shown_timestamp[arr_index] = Date.now(); // not seen yet
-
+        _via_img_buffer_add_html_element(img_index, bimg);
         //console.log('Buffer [' + _via_buffer_img_index_list.length + '] : added img_index ' + img_index);
         //console.log(_via_buffer_img_index_list);
+        img_fn_list_ith_entry_add_css_class(img_index, 'buffered')
 
         ok_callback(img_index);
       }, false);
@@ -6668,6 +6688,16 @@ function _via_img_buffer_add_image(img_index) {
   });
 }
 
+function _via_img_buffer_add_html_element(img_index, img) {
+  _via_img_panel.insertBefore(img, _via_reg_canvas);
+
+  // add timestamp so that we can apply Least Recently Used (LRU)
+  // scheme to remove elements when buffer is full
+  var arr_index = _via_buffer_img_index_list.length;
+  _via_buffer_img_index_list.push(img_index);
+  _via_buffer_img_shown_timestamp[arr_index] = Date.now(); // though, not seen yet
+}
+
 function _via_img_buffer_get_html_id(img_index) {
   return 'bim' + img_index;
 }
@@ -6677,42 +6707,74 @@ function _via_img_buffer_parse_html_id(html_id) {
 }
 
 function _via_img_buffer_start_preload(img_index, preload_index) {
-  console.log('starting preload of ' + img_index);
-  _via_buffer_preload_img_index = img_index;
-  _via_img_buffer_preload_img(_via_buffer_preload_img_index, preload_index);
+  return new Promise( function(ok_callback, err_callback) {
+    _via_buffer_preload_img_index = img_index;
+    _via_img_buffer_preload_img(_via_buffer_preload_img_index, 0).then( function(ok_img_index_list) {
+      ok_callback(ok_img_index_list);
+    });
+  });
 }
 
 function _via_img_buffer_preload_img(img_index, preload_index) {
-  console.log('preload index' + preload_index + ' for image ' + img_index);
-  // ensure that there is sufficient buffer space left for preloading image
-  if ( _via_buffer_img_index_list.length > _via_settings.core.buffer_size ) {
-    while( _via_buffer_img_index_list.length > _via_settings.core.buffer_size ) {
-      _via_img_buffer_remove_least_useful_img();
+  return new Promise( function(ok_callback, err_callback) {
+    var preload_img_index = _via_img_buffer_get_preload_img_index(img_index, preload_index);
+
+    if ( _via_buffer_preload_img_index !== _via_image_index ) {
+      ok_callback([]);
+      return;
     }
-  }
 
-  var buffer_load_img_index = img_index + VIA_IMG_PRELOAD_INDICES[preload_index];
-  if ( buffer_load_img_index < 0 ) {
-    // negative indices correspond to indices from the end
-    buffer_load_img_index = _via_img_count + buffer_load_img_index;
-  }
-
-  _via_img_buffer_add_image(buffer_load_img_index).then( function(ok_img_index) {
-    if ( (preload_index + 1) < VIA_IMG_PRELOAD_COUNT ) {
-      // trigger preload of next image in preload sequence
-      var next_preload_index = preload_index + 1;
-
-      if ( _via_image_index === _via_buffer_preload_img_index ) {
-        // only continue preload if the current image is not changed
-        _via_img_buffer_preload_img(img_index, preload_index + 1);
-      } else {
-        console.log('Cancelling preload of ' + ok_img_index);
+    // ensure that there is sufficient buffer space left for preloading image
+    if ( _via_buffer_img_index_list.length > _via_settings.core.buffer_size ) {
+      while( _via_buffer_img_index_list.length > _via_settings.core.buffer_size ) {
+        _via_img_buffer_remove_least_useful_img();
+        if ( _via_image_index !== _via_buffer_preload_img_index ) {
+          // current image has changed therefore, we need to cancel this preload operation
+          ok_callback([]);
+          return;
+        }
       }
     }
-  }, function(err_img_index) {
-    console.log('Could not add image ' + err_img_index + ' to buffer!');
+
+    _via_img_buffer_add_image(preload_img_index).then( function(ok_img_index) {
+      if ( _via_image_index !== _via_buffer_preload_img_index ) {
+        ok_callback( [ok_img_index] );
+        return;
+      }
+
+      var next_preload_index = preload_index + 1;
+      if ( next_preload_index !== VIA_IMG_PRELOAD_COUNT ) {
+        _via_img_buffer_preload_img(img_index, next_preload_index).then( function(ok_img_index_list) {
+          ok_img_index_list.push( ok_img_index )
+          ok_callback( ok_img_index_list );
+        });
+      } else {
+        ok_callback( [ok_img_index] );
+      }
+    }, function(err_img_index) {
+      // continue with preload of other images in sequence
+      var next_preload_index = preload_index + 1;
+      if ( next_preload_index !== VIA_IMG_PRELOAD_COUNT ) {
+        _via_img_buffer_preload_img(img_index, next_preload_index).then( function(ok_img_index_list) {
+          ok_callback( ok_img_index_list );
+        });
+      } else {
+        ok_callback([]);
+      }
+    });
   });
-  return;
+}
+
+function _via_img_buffer_get_preload_img_index(img_index, preload_index) {
+  var preload_img_index = img_index + VIA_IMG_PRELOAD_INDICES[preload_index];
+  if ( (preload_img_index < 0) || (preload_img_index >= _via_img_count) ) {
+    if ( preload_img_index < 0 ) {
+      preload_img_index = _via_img_count + preload_img_index;
+    } else {
+      preload_img_index = preload_img_index - _via_img_count;
+    }
+  }
+  return preload_img_index;
 }
 
 // the least useful image is, one with the following properties:
@@ -6744,6 +6806,8 @@ function _via_buffer_remove( buffer_index ) {
       _via_buffer_img_index_list.splice(buffer_index, 1);
       _via_buffer_img_shown_timestamp.splice(buffer_index, 1);
       _via_img_panel.removeChild(bimg);
+
+      img_fn_list_ith_entry_remove_css_class(img_index, 'buffered')
       //console.log('Buffer [' + _via_buffer_img_index_list.length + '] : removed img_index ' + img_index);
       //console.log(_via_buffer_img_index_list);
     }
