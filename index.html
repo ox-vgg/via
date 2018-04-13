@@ -68,9 +68,12 @@
       .menubar li:hover ul { display:block; }
 
       /* toolbar containing small icons for tools */
-      .toolbar { display:inline-block; margin-left:1rem;}
+      .toolbar { display:inline-block; margin-left:1rem; }
+      .toolbar svg { fill:white; margin: 0 0.1rem; height:24px; }
+      .toolbar svg:hover { fill:red; cursor:pointer; }
+      .toolbar svg:active { fill:white; }
       .toolbar ul { display:inline-block; padding:0.2rem; margin:0; }
-      .toolbar li { display:inline; float:left; padding:0rem 0.3rem;} /* main menu items */
+      .toolbar li { display:inline; float:left; padding:0rem 0.3rem; border:1px solid white;} /* main menu items */
       .toolbar li:hover { color:red; cursor:pointer; }
 
       /* Middle panel: containing #image_panel, #leftsidebar */
@@ -79,9 +82,8 @@
       #display_area { display:table-cell; width:100%; z-index:1; margin:0; padding-left:1em; vertical-align:top; }
       /* layers of canvas */
       #image_panel        { position:relative; outline:none; }
-      #image_panel img    { visibility:hidden; opacity:0; position:absolute; top:0px; left:0px; width:100%; height:100%; outline:none;}
+      #image_panel img    { visibility:hidden; opacity:0; position:absolute; top:0px; left:0px; width:100%; height:100%; outline:none; }
       #image_panel canvas { position:absolute; top:0px; left:0px; outline:none;}
-
       #image_panel .visible { visibility:visible !important; opacity:1 !important; }
 
       /* image buffer
@@ -98,8 +100,11 @@
       #image_grid_panel #image_grid_content #image_grid_content_img .sel { border-color:red; }
       #image_grid_panel #image_grid_content #image_grid_content_img { position:absolute; top:0; left:0; width:100%; height:100%; }
       #image_grid_panel #image_grid_content #image_grid_content_rshape { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
-
       #image_grid_panel #image_grid_content img { float:left; margin:0; }
+
+      #leftsidebar_collapse_panel { display:none; position:relative; z-index:10; vertical-align:top; }
+      #leftsidebar_show_button { font-size:large; margin-left:0.1rem; }
+      #leftsidebar_show_button:hover { color:red; cursor: pointer; }
 
       /* Left sidebar accordion */
       button.leftsidebar_accordion { font-size:large; background-color:#f2f2f2; cursor:pointer; padding:0.5em 0.5em; width:100%; text-align:left; border:0; outline:none; }
@@ -153,7 +158,7 @@
       #annotation_editor_panel { position:fixed; display:none; width:100%; left:0; bottom:0; background-color:white; border-top:2px solid #cccccc; padding:0.2em 1em; overflow:auto; z-index:1001; box-shadow: 0 0 1em #cccccc;}
       #annotation_editor { display:table; margin-bottom:3em; border-collapse:collapse; font-size:inherit; }
       #annotation_editor .row { display:table-row; }
-      #annotation_editor .highlight .col { background-color:#f2f2f2;}
+      #annotation_editor .highlight .col { background-color:#e6e6e6;}
 
       #annotation_editor .col { display:table-cell; padding:0.4em 0.6em; border:1px solid #000000; vertical-align:middle; font-size:inherit; }
       #annotation_editor .header { font-weight:bold; }
@@ -193,11 +198,11 @@
       #img_fn_list li { white-space:nowrap; display:inline-block; padding:0 0.4rem; }
       #img_fn_list li:hover   { background-color:#d5e5ff; cursor:pointer; }
       #img_fn_list .error     { color:red; }
-      #img_fn_list .sel       { border-left:0.2rem solid black !important; border-right:0.2rem solid black !important; font-weight:bold; }
+      #img_fn_list .sel       { border-left:0.2rem solid black !important; font-weight:bold; }
       #img_fn_list .buffered  { border-left:0.2rem solid #cccccc; }
 
       #message_panel         { display:block; width:100%; position:fixed; bottom:0px; z-index:1000; text-align:center; }
-      #message_panel_content { display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}
+      #message_panel .content { display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}
 
       .text_panel    { display:none; margin:auto; font-size:medium; line-height:1.3em; margin: 0; max-width:700px; }
       .text_panel li { margin:1em 0; text-align:left; }
@@ -218,24 +223,11 @@
   </head>
 
   <body onload="_via_init()" onresize="_via_update_ui_components()">
-    <!-- used by invoke_with_user_inputs() to gather user inputs -->
-    <div id="user_input_panel"></div>
-    <!-- spreadsheet like editor for annotations -->
-    <div id="annotation_editor_panel">
-      <div class="button_panel" style="margin:0.5rem 0;">
-        <span class="text_button" onclick="edit_region_metadata_in_annotation_editor()" id="button_edit_region_metadata" title="Manual annotations of regions">Region Annotations</span>
-        <span class="text_button" onclick="edit_file_metadata_in_annotation_editor()" id="button_edit_file_metadata" title="Manual annotations of a file">File Annotations</span>
-
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="toggle_annotation_editor()" title="Close this window of annotation editor">&times;</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_panel_height()" title="Increase the height of this panel">&uarr;</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_panel_height()" title="Decrease the height of this panel">&darr;</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_content_size()" title="Increase size of contents in annotation editor">&plus;</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_content_size()" title="Decrease size of contents in annotation editor">&minus;</span>
-      </div>
-      <div id="annotation_editor"></div>
-    </div>
-
-    <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!--
+         SVG icon set definitions
+         Material icons downloaded from https://material.io/icons
+      -->
+    <svg style="display:none;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
         <symbol id="shape_rectangle">
           <title>Rectangular region shape</title>
@@ -265,8 +257,88 @@
           <circle r="1" cx="18" cy="12" stroke-width="2"/>
           <circle r="1" cx="24" cy="18" stroke-width="2"/>
         </symbol>
+
+        <!-- Material icons downloaded from https://material.io/icons -->
+        <symbol id="icon_settings">
+          <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+        </symbol>
+        <symbol id="icon_save">
+          <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+        </symbol>
+        <symbol id="icon_open">
+          <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+        </symbol>
+        <symbol id="icon_gridon">
+          <path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 20H4v-4h4v4zm0-6H4v-4h4v4zm0-6H4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4z"/>
+        </symbol>
+        <symbol id="icon_gridoff">
+          <path d="M8 4v1.45l2 2V4h4v4h-3.45l2 2H14v1.45l2 2V10h4v4h-3.45l2 2H20v1.45l2 2V4c0-1.1-.9-2-2-2H4.55l2 2H8zm8 0h4v4h-4V4zM1.27 1.27L0 2.55l2 2V20c0 1.1.9 2 2 2h15.46l2 2 1.27-1.27L1.27 1.27zM10 12.55L11.45 14H10v-1.45zm-6-6L5.45 8H4V6.55zM8 20H4v-4h4v4zm0-6H4v-4h3.45l.55.55V14zm6 6h-4v-4h3.45l.55.54V20zm2 0v-1.46L17.46 20H16z"/>
+        </symbol>
+        <symbol id="icon_next">
+          <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+        </symbol>
+        <symbol id="icon_prev">
+          <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+        </symbol>
+        <symbol id="icon_list">
+          <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+        </symbol>
+        <symbol id="icon_zoomin">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+          <path d="M12 10h-2v2H9v-2H7V9h2V7h1v2h2v1z"/>
+        </symbol>
+        <symbol id="icon_zoomout">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zM7 9h5v1H7z"/>
+        </symbol>
+        <symbol id="icon_copy">
+          <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+        </symbol>
+        <symbol id="icon_paste">
+          <path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/>
+        </symbol>
+        <symbol id="icon_pasten">
+          <path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/>
+          <text x="8" y="17">n</text>
+        </symbol>
+        <symbol id="icon_pasteundo">
+          <path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/>
+          <text x="8" y="17">x</text>
+        </symbol>
+        <symbol id="icon_selectall">
+          <path d="M3 5h2V3c-1.1 0-2 .9-2 2zm0 8h2v-2H3v2zm4 8h2v-2H7v2zM3 9h2V7H3v2zm10-6h-2v2h2V3zm6 0v2h2c0-1.1-.9-2-2-2zM5 21v-2H3c0 1.1.9 2 2 2zm-2-4h2v-2H3v2zM9 3H7v2h2V3zm2 18h2v-2h-2v2zm8-8h2v-2h-2v2zm0 8c1.1 0 2-.9 2-2h-2v2zm0-12h2V7h-2v2zm0 8h2v-2h-2v2zm-4 4h2v-2h-2v2zm0-16h2V3h-2v2zM7 17h10V7H7v10zm2-8h6v6H9V9z"/>
+        </symbol>
+        <symbol id="icon_close">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </symbol>
+        <symbol id="icon_">
+        </symbol>
+        <symbol id="icon_">
+        </symbol>
       </defs>
     </svg>
+
+    <!-- used by invoke_with_user_inputs() to gather user inputs -->
+    <div id="user_input_panel"></div>
+
+    <!-- to show status messages -->
+    <div id="message_panel">
+      <div id="message_panel_content" class="content"></div>
+    </div>
+
+    <!-- spreadsheet like editor for annotations -->
+    <div id="annotation_editor_panel">
+      <div class="button_panel" style="margin:0.5rem 0;">
+        <span class="text_button" onclick="edit_region_metadata_in_annotation_editor()" id="button_edit_region_metadata" title="Manual annotations of regions">Region Annotations</span>
+        <span class="text_button" onclick="edit_file_metadata_in_annotation_editor()" id="button_edit_file_metadata" title="Manual annotations of a file">File Annotations</span>
+
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="toggle_annotation_editor()" title="Close this window of annotation editor">&times;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_panel_height()" title="Increase the height of this panel">&uarr;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_panel_height()" title="Decrease the height of this panel">&darr;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_content_size()" title="Increase size of contents in annotation editor">&plus;</span>
+        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_content_size()" title="Decrease size of contents in annotation editor">&minus;</span>
+      </div>
+      <div id="annotation_editor"></div>
+    </div>
 
     <div class="top_panel" id="ui_top_panel">
       <!-- menu bar -->
@@ -275,8 +347,8 @@
           <li onclick="show_home_panel()" style="cursor:pointer;">Home</li>
           <li>Project
             <ul>
-              <li onclick="" title="Load a VIA project (from a JSON file)">Load</li>
-              <li onclick="save_project_with_confirm()" title="Save this VIA project (as a JSON file)">Save</li>
+              <li onclick="project_open_select_project_file()" title="Load a VIA project (from a JSON file)">Load</li>
+              <li onclick="project_save_with_confirm()" title="Save this VIA project (as a JSON file)">Save</li>
               <li onclick="" title="Show/edit project settings">Settings</li>
               <li class="submenu_divider"></li>
               <li onclick="sel_local_images()" title="Add images locally stored in this computer">Add local files</li>
@@ -306,7 +378,7 @@
           <li>View
             <ul>
               <li onclick="leftsidebar_toggle()" title="Show or hide the sidebar shown in left hand side">Toggle left sidebar</li>
-              <li onclick="" title="Show or hide a panel to update annotations corresponding to file and region">Toggle annotation editor</li>
+              <li onclick="toggle_annotation_editor()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle annotation editor</li>
               <li onclick="toggle_img_fn_list_visibility()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle image filename list</li>
               <li class="submenu_divider"></li>
               <li onclick="toggle_region_boundary_visibility()" title="Show or hide the region boundaries">Show/hide region boundaries</li>
@@ -329,29 +401,25 @@
 
       <!-- Shortcut toolbar -->
       <div class="toolbar">
-        <ul>
-          <li id="toolbar_load_project" onclick="show_single_image_view()" title="Switch to Single Image View">&diams;</li>
-          <li id="toolbar_save_project" onclick="show_image_grid_view()" title="Switch to Image Grid View">&#10070;</li>
+        <svg onclick="project_open_select_project_file()" viewbox="0 0 24 24"><use xlink:href="#icon_open"></use><title>Open Project</title></svg>
+        <svg onclick="project_save_with_confirm()" viewbox="0 0 24 24"><use xlink:href="#icon_save"></use><title>Save Project</title></svg>
+        <svg onclick="project_toggle_settings()" viewbox="0 0 24 24"><use xlink:href="#icon_settings"></use><title>Update Project Settings</title></svg>
 
-          <li id="toolbar_save_project" style="margin-left: 2em;" onclick="project_save_with_confirm()" title="Save Project">s</li>
-          <li id="toolbar_load_project" onclick="project_open_select_project_file()" title="Open Project">o</li>
+        <svg onclick="image_grid_toggle()" id="toolbar_image_grid_toggle" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_gridon"></use><title>Switch to Image Grid View</title></svg>
 
-          <li id="toolbar_prev_img" style="margin-left: 2em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
-          <li id="toolbar_next_img" onclick="move_to_next_image()" title="Next Image">&rarr;</li>
-          <li id="toolbar_list_img" onclick="leftsidebar_show(); toggle_img_fn_list_visibility();" title="List Images">&#9776;</li>
+        <svg onclick="move_to_prev_image()" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_prev"></use><title>Previous Image</title></svg>
+        <svg onclick="toggle_img_fn_list_visibility()" viewbox="0 0 24 24"><use xlink:href="#icon_list"></use><title>Toggle Filename List</title></svg>
+        <svg onclick="move_to_next_image()" viewbox="0 0 24 24"><use xlink:href="#icon_next"></use><title>Next Image</title></svg>
 
-          <li id="toolbar_zoom_out" style="margin-left: 2em;" onclick="zoom_out()" title="Zoom Out">&minus;</li>
-          <li id="toolbar_zoom_in" onclick="zoom_in()" title="Zoom In">&plus;</li>
-          <li id="toolbar_zoom_reset" onclick="reset_zoom_level()" title="Zoom Reset">&equals;</li>
+        <svg onclick="zoom_in()" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_zoomin"></use><title>Zoom In</title></svg>
+        <svg onclick="zoom_out()" viewbox="0 0 24 24"><use xlink:href="#icon_zoomout"></use><title>Zoom Out</title></svg>
 
-          <li id="toolbar_copy_region" style="margin-left: 2em;" onclick="copy_sel_regions()" title="Copy Region">c</li>
-          <li id="toolbar_paste_region" onclick="paste_sel_regions_in_current_image()" title="Paste Region">v</li>
-          <li id="toolbar_copy_region" onclick="paste_to_multiple_images_with_confirm()" title="Paste region in multiple images">v2</li>
-          <li id="toolbar_del_region" onclick="del_sel_regions_with_confirm()" title="Undo the regions copied to multiple images"><del>v2</del></li>
-          <li id="toolbar_sel_all_region" onclick="sel_all_regions()" title="Select All Regions">a</li>
-          <li id="toolbar_del_region" onclick="del_sel_regions()" title="Delete Region">&times;</li>
-
-        </ul>
+        <svg onclick="sel_all_regions()" viewbox="0 0 24 24" style="margin-left:1rem;"><use xlink:href="#icon_selectall"></use><title>Select All Regions</title></svg>
+        <svg onclick="copy_sel_regions()" viewbox="0 0 24 24"><use xlink:href="#icon_copy"></use><title>Copy Regions</title></svg>
+        <svg onclick="paste_sel_regions_in_current_image()" viewbox="0 0 24 24"><use xlink:href="#icon_paste"></use><title>Paste Regions</title></svg>
+        <svg onclick="paste_to_multiple_images_with_confirm()" viewbox="0 0 24 24"><use xlink:href="#icon_pasten"></use><title>Paste Region in Multiple Images</title></svg>
+        <svg onclick="del_sel_regions_with_confirm()" viewbox="0 0 24 24"><use xlink:href="#icon_pasteundo"></use><title>Undo Regions Pasted in Multiple Images</title></svg>
+        <svg onclick="del_sel_regions()" viewbox="0 0 24 24"><use xlink:href="#icon_close"></use><title>Delete Region</title></svg>
       </div>
       <!-- end of shortcut toolbar -->
       <input type="file" id="invisible_file_input" name="files[]" style="display:none">
@@ -359,6 +427,11 @@
 
     <!-- Middle Panel contains a left-sidebar and image display areas -->
     <div class="middle_panel">
+      <!-- this panel contains a button to shows the left side bar -->
+      <div id="leftsidebar_collapse_panel">
+        <div onclick="leftsidebar_toggle()" id="leftsidebar_show_button" title="Show left side toolbar">&rtrif;</div>
+      </div>
+
       <div id="leftsidebar">
         <div class="leftsidebar_accordion_panel show" style="float:right; border:2px solid #f2f2f2;">
             <span class="text_button" onclick="leftsidebar_decrease_width()" title="Reduce width of this toolbar panel">&minus;</span>
@@ -524,7 +597,9 @@
 
           <div id="image_grid_info">Tip: press and move mouse to select images, use <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor(); edit_file_metadata_in_annotation_editor();">Annotation Editor</span> to bulk update file attributes of selected images and <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_img_fn_list_visibility()">Filename List</span> to show a page containing that image.</div>
 
-        <div id="settings_panel" class="display_area_content"></div>
+          <div id="settings_panel" class="display_area_content">
+            <h2>Project Settings</h2>
+          </div>
 
         <div id="page_start_info" class="display_area_content">
           <p><span class="text_button" title="Load or Add Images" onclick="sel_local_images()">Load images</span> to start annotation or, see <span class="text_button" title="Getting started with VGG Image Annotator" onclick="show_getting_started_panel()">Getting Started</a>.</p>
@@ -606,15 +681,6 @@
       </div> <!-- end of display_area -->
     </div> <!-- end of middle_panel -->
 
-    <!-- to show status messages -->
-    <div id="message_panel">
-      <div id="message_panel_content"></div>
-    </div>
-
-    <!-- this vertical spacer is needed to allow scrollbar to show
-         items like Keyboard Shortcut hidden under the attributes panel -->
-    <div style="width: 100%;" id="vertical_space"></div>
-
     <script type="text/javascript">
       //<!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
     </script>
@@ -631,8 +697,8 @@
     <!--    -->
     <script src="via_demo.js"></script>
     <script src="./tests/data/via_image_grid_test_data.js"></script>
-    <script src="./tests/data/via_image_grid_test_data.js"></script>
     <script src="./tests/data/wikimedia_commons_featured_images_url.js"></script>
+
 
     <!-- Unit Tests    -->
     <!--

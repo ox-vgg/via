@@ -23,10 +23,13 @@
    - preset filters for image file list
    - shortcuts to add files to project (local, url) and remove files from project
    - files in local disk drive can also be added using absolute path (e.g. /home/tlm/image1.jpg)
+   - project settings
  * paste regions in multiple images and option to undo this operation (issue 123)
  * (simplified code) image content is shown using <img> instead of <canvas> (region shapes still shown using <canvas>)
  * image grid to perform bulk operations on a set of images (like changing file attribute of multiple images)
- * images are buffered to allow faster and smoother prev/next image navigation
+ * images are preloaded and buffered to allow faster and smoother prev/next image navigation
+ * image data can be pulled from custom locations in local disk in order to resolve image files
+ * action buttons use icons from material icon set (https://material.io/icons/)
 
 ## [1.0.5] - January 16, 2017
  * (code contributions from Stefan Mihaila) via.js codebase improvement, wider web browser support (IE 10, IE 11 and Opera 12)
