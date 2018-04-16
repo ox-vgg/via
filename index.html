@@ -118,6 +118,7 @@
       /* buttons */
       .button_panel { display:table; width:100%; }
       .button_panel .text_button, .text_button { color: #0000ff; padding: 0.2rem 0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
+      .button_panel .text_button, .text_button { color: #0000ff; padding: 0.2rem 0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
       .button_panel .flush_right { float:right; }
       .button_panel .text_button:hover, .text_button:hover { cursor:pointer; }
       .button_panel .text_button:active, .text_button:active { color: #000000; }
@@ -219,13 +220,23 @@
 
       .display_none  { display:none !important; }
       .display_block { display:block !important; }
+
+      /* project settings */
+      #settings_panel { display:table; font-size:1rem; border-collapse:collapse; width:95%;}
+      #settings_panel a { border: 1px solid #f2f2f2; }
+      #settings_panel .row { display:table-row; border-bottom:1px solid #f2f2f2;}
+      #settings_panel .variable { display:table-cell; width:60%; padding:0.5rem 0.5rem;}
+      #settings_panel .variable div { display:block;}
+      #settings_panel .variable .name { }
+      #settings_panel .variable .desc { font-size:0.7em; color:#808080; padding:0.2rem 0rem;}
+      #settings_panel .value { display:table-cell; vertical-align:middle; padding-left:1rem;}
     </style>
   </head>
 
   <body onload="_via_init()" onresize="_via_update_ui_components()">
     <!--
-         SVG icon set definitions
-         Material icons downloaded from https://material.io/icons
+        SVG icon set definitions
+        Material icons downloaded from https://material.io/icons
       -->
     <svg style="display:none;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
@@ -310,7 +321,8 @@
         <symbol id="icon_close">
           <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
         </symbol>
-        <symbol id="icon_">
+        <symbol id="icon_insertcomment">
+          <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
         </symbol>
         <symbol id="icon_">
         </symbol>
@@ -403,9 +415,10 @@
       <div class="toolbar">
         <svg onclick="project_open_select_project_file()" viewbox="0 0 24 24"><use xlink:href="#icon_open"></use><title>Open Project</title></svg>
         <svg onclick="project_save_with_confirm()" viewbox="0 0 24 24"><use xlink:href="#icon_save"></use><title>Save Project</title></svg>
-        <svg onclick="project_toggle_settings()" viewbox="0 0 24 24"><use xlink:href="#icon_settings"></use><title>Update Project Settings</title></svg>
+        <svg onclick="settings_panel_toggle()" viewbox="0 0 24 24"><use xlink:href="#icon_settings"></use><title>Update Project Settings</title></svg>
 
         <svg onclick="image_grid_toggle()" id="toolbar_image_grid_toggle" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_gridon"></use><title>Switch to Image Grid View</title></svg>
+        <svg onclick="toggle_annotation_editor()" viewbox="0 0 24 24"><use xlink:href="#icon_insertcomment"></use><title>Toggle Annotation Editor</title></svg>
 
         <svg onclick="move_to_prev_image()" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_prev"></use><title>Previous Image</title></svg>
         <svg onclick="toggle_img_fn_list_visibility()" viewbox="0 0 24 24"><use xlink:href="#icon_list"></use><title>Toggle Filename List</title></svg>
@@ -434,9 +447,9 @@
 
       <div id="leftsidebar">
         <div class="leftsidebar_accordion_panel show" style="float:right; border:2px solid #f2f2f2;">
-            <span class="text_button" onclick="leftsidebar_decrease_width()" title="Reduce width of this toolbar panel">&minus;</span>
-            <span class="text_button" onclick="leftsidebar_increase_width()" title="Increase width of this toolbar panel">&plus;</span>
-            <span class="text_button" onclick="leftsidebar_toggle()" title="Show/hide this toolbar panel">&times;</span>
+          <span class="text_button" onclick="leftsidebar_decrease_width()" title="Reduce width of this toolbar panel">&minus;</span>
+          <span class="text_button" onclick="leftsidebar_increase_width()" title="Increase width of this toolbar panel">&plus;</span>
+          <span class="text_button" onclick="leftsidebar_toggle()" title="Show/hide this toolbar panel">&times;</span>
         </div>
 
         <button class="leftsidebar_accordion active">Region Shape</button>
@@ -457,7 +470,7 @@
           <div id="project_info_panel">
             <div class="row">
               <span class="col"><label for="project_name">Name: </label></span>
-              <span class="col"><input type="text" value="" onchange="project_on_name_update()" id="project_name" title="VIA project name"></span>
+              <span class="col"><input type="text" value="" onchange="project_on_name_update(this)" id="project_name" title="VIA project name"></span>
             </div>
           </div>
           <div id="project_tools_panel">
@@ -596,10 +609,69 @@
           </div>
 
           <div id="image_grid_info">Tip: press and move mouse to select images, use <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor(); edit_file_metadata_in_annotation_editor();">Annotation Editor</span> to bulk update file attributes of selected images and <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_img_fn_list_visibility()">Filename List</span> to show a page containing that image.</div>
+        </div> <!-- end of image grid panel -->
 
-          <div id="settings_panel" class="display_area_content">
-            <h2>Project Settings</h2>
+        <div id="settings_panel" class="display_area_content">
+          <h2>Settings</h2>
+          <div class="row">
+            <div class="variable">
+              <div class="name">Project Name</div>
+            </div>
+
+            <div class="value">
+              <input type="text" id="_via_settings.project.name"/>
+            </div>
           </div>
+
+
+          <div class="row">
+            <div class="variable">
+              <div class="name">Image Path</div>
+              <div class="desc">You can specify the absolute path (i.e. location) of images in your computer. You can add multiple paths and this application will search for image files in these location. The current image path is :<ol id="_via_settings.core.filepath"></ol></div>
+            </div>
+
+            <div class="value">
+              <input type="text" id="settings_input_new_filepath" placeholder="/datasets/pascal/voc2012/VOCdevkit/VOC2012/JPEGImages"/>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="variable">
+              <div class="name">Region Label</div>
+              <div class="desc">By default, each region in an image is labelled using the region-id. Here, you can select a more descriptive labelling of regions.</div>
+            </div>
+
+            <div class="value">
+              <select id="_via_settings.ui.image.region_label"></select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="variable">
+              <div class="name">Region Label Font</div>
+              <div class="desc">Font size and font family for showing region labels.</div>
+            </div>
+
+            <div class="value">
+              <input id="_via_settings.ui.image.region_label_font" placeholder="12px Arial"/>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="variable">
+              <div class="name">Preload Buffer Size</div>
+              <div class="desc">Images are preloaded in buffer to allow smoother navigation of next/prev images. A large buffer size may slow down the overall browser performance. To disable preloading, set buffer size to 0.</div>
+            </div>
+            <div class="value">
+              <input type="text" id="_via_settings.core.buffer_size" />
+            </div>
+          </div>
+
+          <div class="row" style="border:none;">
+              <button onclick="settings_save()" value="save_settings" style="margin-top:2rem">Save</button>
+              <button onclick="settings_panel_toggle()" value="cancel_settings" style="margin-left:2rem;">Cancel</button>
+          </div>
+        </div> <!-- end of settings panel -->
 
         <div id="page_start_info" class="display_area_content">
           <p><span class="text_button" title="Load or Add Images" onclick="sel_local_images()">Load images</span> to start annotation or, see <span class="text_button" title="Getting started with VGG Image Annotator" onclick="show_getting_started_panel()">Getting Started</a>.</p>
@@ -626,7 +698,7 @@
           <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
           <p>&nbsp;</p>
           <p>Copyright &copy; 2016-2018, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a> (Visual Geometry Group, Oxford University)</p>
-        </div>
+        </div> <!-- end of page_about -->
 
         <div id="page_help" class="display_area_content">
           <h1>Getting Started</h1>
@@ -698,6 +770,7 @@
     <script src="via_demo.js"></script>
     <script src="./tests/data/via_image_grid_test_data.js"></script>
     <script src="./tests/data/wikimedia_commons_featured_images_url.js"></script>
+    <script src="/data/datasets/via/import/pascal_voc/_via_project_pascal_voc2012_import.js"></script>
 
     <!-- Unit Tests    -->
     <!--

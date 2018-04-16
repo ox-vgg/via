@@ -100,7 +100,6 @@ var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
 var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
 var VIA_THEME_SEL_REGION_OPACITY    = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS    = 6000;
-var VIA_THEME_ATTRIBUTE_VALUE_FONT  = '10pt Sans';
 var VIA_THEME_CONTROL_POINT_COLOR   = '#ff0000';
 
 var VIA_CSV_SEP        = ',';
@@ -204,6 +203,7 @@ var _via_img_fn_list_html              = []; // html representation of image fil
 // image grid
 var image_grid_panel = document.getElementById('image_grid_panel');
 var _via_display_area_content_name               = ''; // describes what is currently shown in display area
+var _via_display_area_content_name_prev          = '';
 var _via_image_grid_requires_update              = false;
 var _via_image_grid_content_overflow             = false;
 var _via_image_grid_load_ongoing                 = false;
@@ -239,11 +239,14 @@ _via_settings.ui.image_grid.rshape_stroke_width = 2;
 _via_settings.ui.image_grid.show_region_shape   = true;
 
 _via_settings.ui.image = {};
-_via_settings.ui.image.region_label = 'region_id';
+_via_settings.ui.image.region_label = 'name'; // default: region_id
+_via_settings.ui.image.region_label_font = '10px Sans';
 
 _via_settings.core = {};
 _via_settings.core.buffer_size = 4*VIA_IMG_PRELOAD_COUNT + 2;
-_via_settings.core.path = []; // local search path for local files
+_via_settings.core.filepath = [
+  '/data/datasets/voc2012/VOCdevkit/VOC2012/JPEGImages',
+  '/home/tlm/data/images/']; // local search path for local files
 
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
@@ -351,6 +354,7 @@ function show_home_panel() {
 
 function set_display_area_content(content_name) {
   if ( is_content_name_valid(content_name) ) {
+    _via_display_area_content_name_prev = _via_display_area_content_name;
     clear_display_area();
     var p = document.getElementById(content_name);
     p.classList.remove('display_none');
@@ -2287,6 +2291,7 @@ function _via_draw_point(cx, cy, r) {
 
 function draw_all_region_id() {
   _via_reg_ctx.shadowColor = "transparent";
+  _via_reg_ctx.font = _via_settings.ui.image.region_label_font;
   for ( var i = 0; i < _via_img_metadata[_via_image_id].regions.length; ++i ) {
     var canvas_reg = _via_canvas_regions[i];
 
@@ -2294,30 +2299,30 @@ function draw_all_region_id() {
     var x = bbox[0];
     var y = bbox[1];
     var w = Math.abs(bbox[2] - bbox[0]);
-    _via_reg_ctx.font = VIA_THEME_ATTRIBUTE_VALUE_FONT;
-
-    var annotation_str  = (i+1).toString();
-    var bgnd_rect_width = _via_reg_ctx.measureText(annotation_str).width * 2;
 
     var char_width  = _via_reg_ctx.measureText('M').width;
     var char_height = 1.8 * char_width;
 
-    var r = _via_img_metadata[_via_image_id].regions[i].region_attributes;
-    if ( Object.keys(r).length === 1 && w > (2*char_width) ) {
-      // show the attribute value
-      for (var key in r) {
-        annotation_str = r[key];
-      }
-      var strw = _via_reg_ctx.measureText(annotation_str).width;
-
-      if ( strw > w ) {
-        // if text overflows, crop it
-        var str_max     = Math.floor((w * annotation_str.length) / strw);
-        annotation_str  = annotation_str.substr(0, str_max-1) + '.';
-        bgnd_rect_width = w;
+    var annotation_str  = (i+1).toString();
+    var rattr = _via_img_metadata[_via_image_id].regions[i].region_attributes[_via_settings.ui.image.region_label];
+    var rshape = _via_img_metadata[_via_image_id].regions[i].shape_attributes['name'];
+    if ( _via_settings.ui.image.region_label !== 'region_id' ) {
+      if ( typeof(rattr) === 'undefined' || rattr === '' ) {
+        continue; // skip this region label
       } else {
-        bgnd_rect_width = strw + char_width;
+        annotation_str = rattr;
       }
+    }
+
+    var bgnd_rect_width;
+    var strw = _via_reg_ctx.measureText(annotation_str).width;
+    if ( strw > w ) {
+      // if text overflows, crop it
+      var str_max     = Math.floor((w * annotation_str.length) / strw);
+      annotation_str  = annotation_str.substr(0, str_max-1) + '.';
+      bgnd_rect_width = w;
+    } else {
+      bgnd_rect_width = strw + char_width;
     }
 
     if (canvas_reg.shape_attributes['name'] === VIA_REGION_SHAPE.POLYGON ||
@@ -2328,6 +2333,11 @@ function draw_all_region_id() {
     } else {
       // center the label
       x = x - (bgnd_rect_width/2 - w/2);
+    }
+
+    // ensure that the text is within the image boundaries
+    if ( y < char_height ) {
+      y = char_height;
     }
 
     // first, draw a background rectangle first
@@ -4178,12 +4188,49 @@ function attribute_property_on_update(p) {
       _via_attributes[_via_attribute_being_updated][attr_id].options = {};
       _via_attributes[_via_attribute_being_updated][attr_id].default_options = {};
       delete _via_attributes[_via_attribute_being_updated][attr_id].default_value;
+
+      // collect existing attribute values and add them as options
+      var attr_values = attribute_get_unique_values(_via_attribute_being_updated, attr_id);
+      var i;
+      for ( i = 0; i < attr_values.length; ++i ) {
+        var attr_val = attr_values[i];
+        _via_attributes[_via_attribute_being_updated][attr_id].options[attr_val] = attr_val;
+      }
     }
     show_attribute_properties();
     show_attribute_options();
     update_annotation_editor();
     break;
   }
+}
+
+function attribute_get_unique_values(attr_type, attr_id) {
+  var values = [];
+  switch ( attr_type ) {
+  case 'file':
+    var img_id, attr_val;
+    for ( img_id in _via_img_metadata ) {
+      attr_val = _via_img_metadata[img_id].file_attributes[attr_id];
+      if ( ! values.includes(attr_val) ) {
+        values.push(attr_val);
+      }
+    }
+    break;
+  case 'region':
+    var img_id, attr_val, i;
+    for ( img_id in _via_img_metadata ) {
+      for ( i = 0; i < _via_img_metadata[img_id].regions.length; ++i ) {
+        attr_val = _via_img_metadata[img_id].regions[i].region_attributes[attr_id];
+        if ( ! values.includes(attr_val) ) {
+          values.push(attr_val);
+        }
+      }
+    }
+    break;
+  default:
+    break;
+  }
+  return values;
 }
 
 function attribute_property_on_option_update(p) {
@@ -4842,6 +4889,9 @@ function annotation_editor_get_metadata_row_html(row_id) {
     case 'text':
       if ( attr_value === '' ) {
         attr_value = _via_attributes[_via_metadata_being_updated][attr_id].default_value;
+        if ( typeof(attr_value) === 'undefined' || attr_value === '' ) {
+          attr_value = '';
+        }
       }
       col.innerHTML = '<textarea ' +
         'onchange="annotation_editor_on_metadata_update(this)" ' +
@@ -5037,6 +5087,8 @@ function annotation_editor_on_metadata_update(p) {
     break;
   }
 
+  _via_redraw_reg_canvas();
+
   //console.log('annotation updated: attr_id='+pid.attr_id+', row_id='+pid.row_id+', option_id='+pid.option_id);
   //console.log(_via_img_metadata[_via_image_id].regions[pid.row_id].region_attributes);
 }
@@ -5171,14 +5223,10 @@ function project_init_default_project() {
   }
 
   project_set_name( project_get_default_project_name() );
-
-  var p = document.getElementById('project_name');
-  p.setAttribute('value', _via_settings.project.name);
 }
 
-function project_on_name_update() {
-  var p = document.getElementById('project_name');
-  _via_settings.project.name = p.value;
+function project_on_name_update(p) {
+  project_set_name(p.value);
 }
 
 function project_get_default_project_name() {
@@ -6901,4 +6949,148 @@ function _via_buffer_get_current_preload_list() {
     preload_list.push(preload_index);
   }
   return preload_list;
+}
+
+//
+// settings
+//
+function settings_panel_toggle() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.SETTINGS ) {
+    if ( _via_display_area_content_name_prev !== '' ) {
+      set_display_area_content(_via_display_area_content_name_prev);
+    } else {
+      show_single_image_view();
+    }
+  }
+  else {
+    settings_init();
+    set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.SETTINGS);
+  }
+}
+
+function settings_init() {
+  settings_region_label_update_options();
+  settings_filepath_update_html();
+  settings_show_current_value();
+}
+
+function settings_save() {
+  var p = document.getElementById('settings_panel');
+  var vl = p.getElementsByClassName('value');
+  var n = vl.length;
+  var i;
+  for ( i = 0; i < n; ++i ) {
+    var s = vl[i].childNodes[1];
+    var sid_parts = s.id.split('.');
+    if ( sid_parts[0] === '_via_settings' ) {
+      var el = _via_settings;
+      var found = true;
+      var j;
+      for ( j = 1; j < sid_parts.length - 1; ++j ) {
+        if ( el.hasOwnProperty( sid_parts[j] ) ) {
+          el = el[ sid_parts[j] ];
+        } else {
+          // unrecognized setting
+          found = false;
+          break;
+        }
+      }
+      if ( found ) {
+        var param = sid_parts[ sid_parts.length - 1 ];
+        if ( s.value !== '' || typeof(s.value) !== 'undefined' ) {
+          el[param] = s.value;
+        }
+      }
+    }
+  }
+
+  // non-standard settings
+  var p;
+  p = document.getElementById('settings_input_new_filepath');
+  if ( p.value !== '' ) {
+    settings_filepath_add(p.value.trim());
+  }
+  p = document.getElementById('project_name');
+  if ( p.value !== _via_settings.project.name ) {
+    p.value = _via_settings.project.name;
+  }
+
+  show_message('Settings saved.');
+  settings_panel_toggle();
+  console.log(_via_settings)
+}
+
+function settings_show_current_value() {
+  var p = document.getElementById('settings_panel');
+  var vl = p.getElementsByClassName('value');
+  var n = vl.length;
+  var i;
+  for ( i = 0; i < n; ++i ) {
+    var s = vl[i].childNodes[1];
+    var sid_parts = s.id.split('.');
+    if ( sid_parts[0] === '_via_settings' ) {
+      var el = _via_settings;
+      var found = true;
+      var j;
+      for ( j = 1; j < sid_parts.length; ++j ) {
+        if ( el.hasOwnProperty( sid_parts[j] ) ) {
+          el = el[ sid_parts[j] ];
+        } else {
+          // unrecognized setting
+          found = false;
+          break;
+        }
+      }
+
+      if ( found ) {
+        s.value = el;
+      }
+    }
+  }
+}
+
+function settings_region_label_update_options() {
+  var p = document.getElementById('_via_settings.ui.image.region_label');
+
+  var default_option = document.createElement('option');
+  default_option.setAttribute('value', 'region_id');
+  default_option.innerHTML = 'Region id (1, 2, ...)';
+  p.innerHTML = '';
+  p.appendChild(default_option);
+
+  // options: add region attributes
+  var rattr;
+  for ( rattr in _via_attributes['region'] ) {
+    var o = document.createElement('option');
+    o.setAttribute('value', rattr);
+    o.innerHTML = 'Value of Region Attribute: ' + rattr;
+    p.appendChild(o);
+  }
+}
+
+function settings_filepath_add(path) {
+  var i = _via_settings.core.filepath.indexOf(path);
+  if ( i === -1 ) {
+    _via_settings.core.filepath.push(path);
+  }
+}
+
+function settings_filepath_del(path_index) {
+  if ( path_index >= 0 || path_index < _via_settings.core.filepath.length ) {
+    _via_settings.core.filepath.splice(path_index, 1);
+    settings_filepath_update_html();
+  }
+}
+
+function settings_filepath_update_html() {
+  var p = document.getElementById('_via_settings.core.filepath');
+  p.innerHTML = '';
+  var i, path;
+  var n = _via_settings.core.filepath.length;
+  for ( i = 0; i < n; ++i ) {
+    path = _via_settings.core.filepath[i];
+    var li = document.createElement('li');
+    li.innerHTML = _via_settings.core.filepath[i] + '<span class="text_button" title="Delete image path" onclick="settings_filepath_del(' + i + ')">&times;</span>';
+    p.appendChild(li);
+  }
 }
