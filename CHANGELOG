@@ -30,7 +30,7 @@
  * images are preloaded and buffered to allow faster and smoother prev/next image navigation
  * image data can be pulled from custom locations in local disk in order to resolve image files
  * action buttons use icons from material icon set (https://material.io/icons/)
-
+ * updated ImageMetadata() and RegionMetadata()
 ## [1.0.5] - January 16, 2017
  * (code contributions from Stefan Mihaila) via.js codebase improvement, wider web browser support (IE 10, IE 11 and Opera 12)
  * added Contributors.md file to record contributions to VIA codebase

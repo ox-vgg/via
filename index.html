@@ -70,7 +70,7 @@
       /* toolbar containing small icons for tools */
       .toolbar { display:inline-block; margin-left:1rem; }
       .toolbar svg { fill:white; margin: 0.2rem 0.1rem; height:1.2rem; }
-      .toolbar svg:hover { fill:red; cursor:pointer; }
+      .toolbar svg:hover { fill:yellow; cursor:pointer; }
       .toolbar svg:active { fill:white; }
       .toolbar ul { display:inline-block; padding:0.2rem; margin:0; }
       .toolbar li { display:inline; float:left; padding:0rem 0.3rem; border:1px solid white;} /* main menu items */
@@ -230,6 +230,13 @@
       #settings_panel .variable .name { }
       #settings_panel .variable .desc { font-size:0.7em; color:#808080; padding:0.2rem 0rem;}
       #settings_panel .value { display:table-cell; vertical-align:middle; padding-left:1rem;}
+
+      /* page {about, help, file not found, etc.}*/
+      .display_area_content { width: 70%; }
+      .display_area_content .table { display:table; border-collapse:collapse; }
+      .display_area_content .row { display:table-row; }
+      .display_area_content .col { display:table-cell; border:1px solid #f2f2f2; padding: 0.5rem; }
+      .display_area_content .heading { font-weight:bold; margin-top:1rem; }
     </style>
   </head>
 
@@ -324,7 +331,8 @@
         <symbol id="icon_insertcomment">
           <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
         </symbol>
-        <symbol id="icon_">
+        <symbol id="icon_checkbox">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
         </symbol>
       </defs>
     </svg>
@@ -416,6 +424,7 @@
         <svg onclick="project_open_select_project_file()" viewbox="0 0 24 24"><use xlink:href="#icon_open"></use><title>Open Project</title></svg>
         <svg onclick="project_save_with_confirm()" viewbox="0 0 24 24"><use xlink:href="#icon_save"></use><title>Save Project</title></svg>
         <svg onclick="settings_panel_toggle()" viewbox="0 0 24 24"><use xlink:href="#icon_settings"></use><title>Update Project Settings</title></svg>
+        <svg onclick="" viewbox="0 0 24 24"><use xlink:href="#icon_checkbox"></use><title>Locate Files</title></svg>
 
         <svg onclick="image_grid_toggle()" id="toolbar_image_grid_toggle" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_gridon"></use><title>Switch to Image Grid View</title></svg>
         <svg onclick="toggle_annotation_editor()" viewbox="0 0 24 24"><use xlink:href="#icon_insertcomment"></use><title>Toggle Annotation Editor</title></svg>
@@ -465,8 +474,8 @@
         </div>
 
         <!-- Project -->
-        <button class="leftsidebar_accordion" id="project_panel_title">Project</button>
-        <div class="leftsidebar_accordion_panel" id="img_fn_list_panel">
+        <button class="leftsidebar_accordion active" id="project_panel_title">Project</button>
+        <div class="leftsidebar_accordion_panel show" id="img_fn_list_panel">
           <div id="project_info_panel">
             <div class="row">
               <span class="col"><label for="project_name">Name: </label></span>
@@ -668,10 +677,29 @@
           </div>
 
           <div class="row" style="border:none;">
-              <button onclick="settings_save()" value="save_settings" style="margin-top:2rem">Save</button>
-              <button onclick="settings_panel_toggle()" value="cancel_settings" style="margin-left:2rem;">Cancel</button>
+            <button onclick="settings_save()" value="save_settings" style="margin-top:2rem">Save</button>
+            <button onclick="settings_panel_toggle()" value="cancel_settings" style="margin-left:2rem;">Cancel</button>
           </div>
         </div> <!-- end of settings panel -->
+
+        <div id="page_404" class="display_area_content">
+          <h2>File Not Found</h2>
+          <p>Filename: <span style="font-family:Mono;" id="page_404_filename"></span></p>
+          <p>This file was not found in the following folder locations:</p>
+          <ul id="page_404_search_path_list"></ul>
+
+          <div class="table">
+            <div class="row">Add new paths to locate this missing image:</div>
+            <div class="row"><input type="text" id="user_input_new_search_path" placeholder="e.g. /Users/xyz/images/ or C:\dataset\images\" value="/home/tlm/dev/via/debug/" size="50"/><button value="" id="page_404_img_index" onclick="project_filepath_add_from_input('user_input_new_search_path', this)">Add</button></div>
+          </div>
+
+          <div class="heading">Other Temporary Fixes</div>
+          <ul>
+            <li>Use <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">browser's file selector</span> to manually add this (and other) files (Note that this needs to be done every time application is started) </li>
+            <li>Copy this image file to the folder which contains the VIA application (i.e. via.html) file.</li>
+            <li>Copy VIA application (i.e. via.html) to the folder that contains this image.</li>
+          </ul>
+        </div> <!-- end of file not found panel -->
 
         <div id="page_start_info" class="display_area_content">
           <p><span class="text_button" title="Load or Add Images" onclick="sel_local_images()">Load images</span> to start annotation or, see <span class="text_button" title="Getting started with VGG Image Annotator" onclick="show_getting_started_panel()">Getting Started</a>.</p>
@@ -766,11 +794,12 @@
     <!--    -->
     <script src="via.js"></script>
 
-    <!---->
+    <!--
     <script src="via_demo.js"></script>
     <script src="./tests/data/via_image_grid_test_data.js"></script>
     <script src="./tests/data/wikimedia_commons_featured_images_url.js"></script>
     <script src="/data/datasets/via/import/pascal_voc/_via_project_pascal_voc2012_import.js"></script>
+    -->
 
     <!-- Unit Tests    -->
     <!--
