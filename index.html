@@ -94,6 +94,8 @@
       /* image grid view */
       #image_grid_panel { position:relative; margin:0; padding:0; width:100%; }
       #image_grid_panel #image_grid_toolbar { display:block; font-size:small; padding-bottom:0.2rem; }
+      #image_grid_panel #image_grid_toolbar select { font-size:small; width:4rem;}
+      #image_grid_panel #image_grid_toolbar .tool { display:inline; margin:0 0.5rem;}
       #image_grid_panel #image_grid_info { display:block; font-size:small; text-align:center; margin-top:0.8rem; }
       #image_grid_panel #image_grid_content { position:relative; overflow:hidden; margin:0; padding:0;  outline:none; }
       #image_grid_panel #image_grid_content #image_grid_content_img img { margin:0; padding:0; border:2px solid white;}
@@ -334,6 +336,12 @@
         <symbol id="icon_checkbox">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
         </symbol>
+        <symbol id="icon_fileupload">
+          <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+        </symbol>
+        <symbol id="icon_filedownload">
+          <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+        </symbol>
       </defs>
     </svg>
 
@@ -425,6 +433,9 @@
         <svg onclick="project_save_with_confirm()" viewbox="0 0 24 24"><use xlink:href="#icon_save"></use><title>Save Project</title></svg>
         <svg onclick="settings_panel_toggle()" viewbox="0 0 24 24"><use xlink:href="#icon_settings"></use><title>Update Project Settings</title></svg>
         <svg onclick="" viewbox="0 0 24 24"><use xlink:href="#icon_checkbox"></use><title>Locate Files</title></svg>
+
+        <svg onclick="sel_local_data_file('annotations')" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_fileupload"></use><title>Import Annotations from CSV</title></svg>
+        <svg onclick="download_all_region_data('csv')" viewbox="0 0 24 24"><use xlink:href="#icon_filedownload"></use><title>Download Annotations as CSV</title></svg>
 
         <svg onclick="image_grid_toggle()" id="toolbar_image_grid_toggle" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_gridon"></use><title>Switch to Image Grid View</title></svg>
         <svg onclick="toggle_annotation_editor()" viewbox="0 0 24 24"><use xlink:href="#icon_insertcomment"></use><title>Toggle Annotation Editor</title></svg>
@@ -584,6 +595,12 @@
         </div>
         <div id="image_grid_panel" class="display_area_content">
           <div id="image_grid_toolbar">
+            <span class="tool">Group by&nbsp; <select id="image_grid_toolbar_select_group_by" onchange="image_grid_on_group_by_select(this)"></select>
+            </span>
+
+            <span class="tool" id="image_grid_group_by_panel">
+            </span>
+
             <span>Page:</span>
             <span id="image_grid_toolbar_page_prev" class="text_button" title="Show previous page" onclick="image_grid_page_prev()">Prev</span>
             <span id="image_grid_toolbar_page_next" class="text_button" title="Show next page" onclick="image_grid_page_next()">Next</span>
@@ -632,11 +649,21 @@
             </div>
           </div>
 
+          <div class="row">
+            <div class="variable">
+              <div class="name">Default Path</div>
+              <div class="desc">If all images in your project are saved in a single folder, set the default path to the location of this folder. The VIA application will load images from this folder by default. Note: a default path of <code>"./"</code> indicates that the folder containing <code>via.html</code> application file also contains the images in this project. For example: <code>/datasets/VOC2012/JPEGImages/</code> (note the trailing <code>/</code>)</div>
+            </div>
+
+            <div class="value">
+              <input type="text" id="_via_settings.core.default_filepath" placeholder="/datasets/pascal/voc2012/VOCdevkit/VOC2012/JPEGImages/"/>
+            </div>
+          </div>
 
           <div class="row">
             <div class="variable">
-              <div class="name">Image Path</div>
-              <div class="desc">You can specify the absolute path (i.e. location) of images in your computer. You can add multiple paths and this application will search for image files in these location. The current image path is :<ol id="_via_settings.core.filepath"></ol></div>
+              <div class="name">Search Path List</div>
+              <div class="desc">If you define multiple paths, all these folders will be searched to find images in this project. We do not recommend this approach as it is computationally expensive to search for images in multiple folders. <ol id="_via_settings.core.filepath"></ol></div>
             </div>
 
             <div class="value">
@@ -685,121 +712,112 @@
         <div id="page_404" class="display_area_content">
           <h2>File Not Found</h2>
           <p>Filename: <span style="font-family:Mono;" id="page_404_filename"></span></p>
-          <p>This file was not found in the following folder locations:</p>
-          <ul id="page_404_search_path_list"></ul>
 
-          <div class="table">
-            <div class="row">Add new paths to locate this missing image:</div>
-            <div class="row"><input type="text" id="user_input_new_search_path" placeholder="e.g. /Users/xyz/images/ or C:\dataset\images\" value="/home/tlm/dev/via/debug/" size="50"/><button value="" id="page_404_img_index" onclick="project_filepath_add_from_input('user_input_new_search_path', this)">Add</button></div>
-          </div>
+          <p>We recommend that you update the default path in <span class="text_button" title="Show Project Settings" onclick="settings_panel_toggle()">project settings</span> to the folder which contains this image.</p>
 
-          <div class="heading">Other Temporary Fixes</div>
-          <ul>
-            <li>Use <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">browser's file selector</span> to manually add this (and other) files (Note that this needs to be done every time application is started) </li>
-            <li>Copy this image file to the folder which contains the VIA application (i.e. via.html) file.</li>
-            <li>Copy VIA application (i.e. via.html) to the folder that contains this image.</li>
-          </ul>
+          <p>A temporary fix is to use <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">browser's file selector</span> to manually locate and add this file. We do not recommend this approach because it requires you to repeat this process every time your load this project in the VIA application.</p>
         </div> <!-- end of file not found panel -->
 
         <div id="page_start_info" class="display_area_content">
           <p><span class="text_button" title="Load or Add Images" onclick="sel_local_images()">Load images</span> to start annotation or, see <span class="text_button" title="Getting started with VGG Image Annotator" onclick="show_getting_started_panel()">Getting Started</a>.</p>
-        </div>
+</div>
 
-        <div id="page_about" class="display_area_content">
-          <p style="font-size: 2em;">VGG Image Annotator</p>
-          <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.1.0</a></p>
-          <p>
-            VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
-            developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
-            and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
-            With this standalone application, you can define regions in an image and create a textual description of those regions.
-            Such image regions and descriptions are useful for supervised training of learning algorithms.
-          </p>
-          <p>Features:</p>
-          <ul>
-            <li>based solely on HTML, CSS and Javascript (no external javascript libraries)</li>
-            <li>can be used off-line (full application in a single html file of size &lt; 200KB)</li>
-            <li>requires nothing more than a modern web browser</li>
-            <li>supported region shapes: rectangle, circle, ellipse, polygon and point</li>
-            <li>import/export of region data in csv and json file format</li>
-          </ul>
-          <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
-          <p>&nbsp;</p>
-          <p>Copyright &copy; 2016-2018, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a> (Visual Geometry Group, Oxford University)</p>
-        </div> <!-- end of page_about -->
+<div id="page_about" class="display_area_content">
+  <p style="font-size: 2em;">VGG Image Annotator</p>
+  <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.1.0</a></p>
+  <p>
+    VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
+    developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
+    and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
+    With this standalone application, you can define regions in an image and create a textual description of those regions.
+    Such image regions and descriptions are useful for supervised training of learning algorithms.
+  </p>
+  <p>Features:</p>
+  <ul>
+    <li>based solely on HTML, CSS and Javascript (no external javascript libraries)</li>
+    <li>can be used off-line (full application in a single html file of size &lt; 200KB)</li>
+    <li>requires nothing more than a modern web browser</li>
+    <li>supported region shapes: rectangle, circle, ellipse, polygon and point</li>
+    <li>import/export of region data in csv and json file format</li>
+  </ul>
+  <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
+  <p>&nbsp;</p>
+  <p>Copyright &copy; 2016-2018, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a> (Visual Geometry Group, Oxford University)</p>
+</div> <!-- end of page_about -->
 
-        <div id="page_help" class="display_area_content">
-          <h1>Getting Started</h1>
-          <ol>
-            <li>Click [Image > Load or Add Images] in the top menu bar to load a set of images that you wish to annotate.</li>
-            <li>Press n (or p) to navigate through the loaded images. You can also use the &larr; and &rarr; icons in the top panel toolbar for navigation.</li>
-            <li>Click <b>Region Attributes</b> in the left panel to reveal a panel in the bottom. Click <b>[Add New]</b> tp add a new attribute. For example:
-              <pre>
-                object_name
-                object_color
-              </pre>
-              You can add more region attributes according to you needs.
-            <li>In the <b>Region Shape</b> section in the left panel, click the rectangular shape</li>
-            <li>On the image area, keep pressing the right click button as you drag the mouse cursor. This will draw a rectangular region on the image.</li>
-            <li>This newly created region is automatically selected. Now you can enter the attribute value for this region in the bottom panel. For example:
-              <pre>
-                object_name = dog
-                object_color = white
-              </pre>
-              You can annotate multiple regions in this image or other images and assign a value to each pre-defined attribute.</li>
-            <li>To download the annotated region data, click <b>[Annotation > Save as CSV]</b> in the top menu bar. This will download a text file containing region shape and attribute data.</li>
-            <li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 7) by clicking <b>[Annotation > Import]</b>.
-          </li></ol>
-        </div>
+<div id="page_help" class="display_area_content">
+  <h1>Getting Started</h1>
+  <ol>
+    <li>Click [Image > Load or Add Images] in the top menu bar to load a set of images that you wish to annotate.</li>
+    <li>Press n (or p) to navigate through the loaded images. You can also use the &larr; and &rarr; icons in the top panel toolbar for navigation.</li>
+    <li>Click <b>Region Attributes</b> in the left panel to reveal a panel in the bottom. Click <b>[Add New]</b> tp add a new attribute. For example:
+      <pre>
+        object_name
+        object_color
+      </pre>
+      You can add more region attributes according to you needs.
+    <li>In the <b>Region Shape</b> section in the left panel, click the rectangular shape</li>
+    <li>On the image area, keep pressing the right click button as you drag the mouse cursor. This will draw a rectangular region on the image.</li>
+    <li>This newly created region is automatically selected. Now you can enter the attribute value for this region in the bottom panel. For example:
+      <pre>
+        object_name = dog
+        object_color = white
+      </pre>
+      You can annotate multiple regions in this image or other images and assign a value to each pre-defined attribute.</li>
+    <li>To download the annotated region data, click <b>[Annotation > Save as CSV]</b> in the top menu bar. This will download a text file containing region shape and attribute data.</li>
+    <li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 7) by clicking <b>[Annotation > Import]</b>.
+  </li></ol>
+</div>
 
-        <div id="page_license" class="display_area_content">
-          <pre>
-            Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
-            All rights reserved.
+<div id="page_license" class="display_area_content">
+  <pre>
+    Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
+    All rights reserved.
 
-            Redistribution and use in source and binary forms, with or without
-            modification, are permitted provided that the following conditions are met:
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
 
-            Redistributions of source code must retain the above copyright notice, this
-            list of conditions and the following disclaimer.
-            Redistributions in binary form must reproduce the above copyright notice,
-            this list of conditions and the following disclaimer in the documentation
-            and/or other materials provided with the distribution.
-            THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
-            AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-            IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-            ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-            LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-            CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-            SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-            INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-            CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-            ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-            POSSIBILITY OF SUCH DAMAGE.
-          </pre>
-        </div>
-      </div> <!-- end of display_area -->
-    </div> <!-- end of middle_panel -->
+    Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+    Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+  </pre>
+</div>
+</div> <!-- end of display_area -->
+</div> <!-- end of middle_panel -->
 
-    <script type="text/javascript">
-      //<!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
-    </script>
-    <script type="text/javascript">
-      //<!--AUTO_INSERT_VIA_JS_HERE-->
-    </script>
-    <script type="text/javascript">
-      //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
-    </script>
+<script type="text/javascript">
+  //<!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
+</script>
+<script type="text/javascript">
+  //<!--AUTO_INSERT_VIA_JS_HERE-->
+</script>
+<script type="text/javascript">
+  //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
+</script>
 
-    <!--    -->
-    <script src="via.js"></script>
+<!--    -->
+<script src="via.js"></script>
 
-    <!--
-    <script src="via_demo.js"></script>
-    <script src="./tests/data/via_image_grid_test_data.js"></script>
-    <script src="./tests/data/wikimedia_commons_featured_images_url.js"></script>
-    <script src="/data/datasets/via/import/pascal_voc/_via_project_pascal_voc2012_import.js"></script>
-    -->
+<!--    -->
+<script src="via_demo.js"></script>
+<script src="./tests/data/via_image_grid_test_data.js"></script>
+<script src="./tests/data/wikimedia_commons_featured_images_url.js"></script>
+<script src="/data/datasets/via/import/pascal_voc/_via_project_pascal_voc2012_import.js"></script>
+<script src="/data/datasets/arsha/sherlock/facetracks/s01_from_RCNN/e01/tracks_FRCNN_remove_full_path_1000.json"></script>
+
 
     <!-- Unit Tests    -->
     <!--
