@@ -5967,6 +5967,7 @@ function image_grid_set_content(img_index_list) {
     }
     break;
   }
+  console.log(_via_image_grid_page_img_index_list)
   image_grid_content_append_img(0);
 }
 
@@ -5991,6 +5992,7 @@ function image_grid_set_content_panel_height_fixed() {
 // container is detected.
 function image_grid_content_append_img( img_grid_index ) {
   var img_index = _via_image_grid_page_img_index_list[img_grid_index];
+  var html_img_id = image_grid_get_html_img_id(img_index);
   var img_id = _via_image_id_list[img_index];
   var e = document.createElement('img');
   if ( _via_img_fileref[img_id] instanceof File ) {
@@ -6005,7 +6007,7 @@ function image_grid_content_append_img( img_grid_index ) {
   } else {
     e.src = _via_img_src[img_id];
   }
-  e.setAttribute('id', image_grid_get_html_img_id(img_index));
+  e.setAttribute('id', html_img_id);
   e.setAttribute('height', _via_settings.ui.image_grid.img_height + 'px');
   e.setAttribute('title', '[' + (img_index+1) + '] ' + _via_img_metadata[img_id].filename);
 
@@ -6455,6 +6457,7 @@ function image_grid_group_by(type, name) {
     var new_group_values = Object.keys(_via_image_grid_group);
     _via_image_grid_group_var = [];
     _via_image_grid_group_var.push( { 'type':type, 'name':name, 'current_value_index':2, 'values':new_group_values, 'group_index':0 } );
+    console.log(_via_image_grid_group);
 
     image_grid_add_html_group_panel(_via_image_grid_group_var[0]);
   } else {
@@ -6525,7 +6528,8 @@ function image_grid_split_array_to_group(img_index_array, attr_type, attr_name) 
   var n = img_index_array.length;
   var attr_value;
 
-  if ( attr_type === 'file' ) {
+  switch(attr_type) {
+  case 'file':
     for ( i = 0; i < n; ++i ) {
       img_index = img_index_array[i];
       img_id = _via_image_id_list[img_index];
@@ -6538,8 +6542,8 @@ function image_grid_split_array_to_group(img_index_array, attr_type, attr_name) 
         grp[attr_value].push(img_index);
       }
     }
-  }
-  if ( attr_type === 'region' ) {
+    break;
+  case 'region':
     var j;
     var region_count;
     for ( i = 0; i < n; ++i ) {
@@ -6553,10 +6557,15 @@ function image_grid_split_array_to_group(img_index_array, attr_type, attr_name) 
           if ( ! grp.hasOwnProperty(attr_value) ) {
             grp[attr_value] = [];
           }
-          grp[attr_value].push(img_index);
+          if ( grp[attr_value].includes(img_index) ) {
+            continue;
+          } else {
+            grp[attr_value].push(img_index);
+          }
         }
       }
     }
+    break;
   }
   return grp;
 }
@@ -6686,7 +6695,7 @@ function image_grid_set_content_to_current_group() {
   }
 
   if ( Array.isArray(img_index_list) ) {
-    image_grid_set_content( img_index_list );
+    image_grid_set_content(img_index_list );
   } else {
     console.log('image_grid_set_content_to_current_group(): expected array while got ' + typeof(img_index_list));
   }
