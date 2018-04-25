@@ -69,7 +69,8 @@ var VIA_REGION_SHAPE = { RECT:'rect',
 var VIA_ATTRIBUTE_TYPE = { TEXT:'text',
                            CHECKBOX:'checkbox',
                            RADIO:'radio',
-                           IMAGE:'image'
+                           IMAGE:'image',
+                           DROPDOWN:'dropdown'
                          };
 
 var VIA_DISPLAY_AREA_CONTENT_NAME = {IMAGE:'image_panel',
@@ -95,10 +96,10 @@ var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
 var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4, 5];
 
 var VIA_THEME_REGION_BOUNDARY_WIDTH = 4;
-var VIA_THEME_BOUNDARY_LINE_COLOR   = "#1a1a1a";
-var VIA_THEME_BOUNDARY_FILL_COLOR   = "#aaeeff";
+var VIA_THEME_BOUNDARY_LINE_COLOR   = "black";
+var VIA_THEME_BOUNDARY_FILL_COLOR   = "yellow";
 var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
-var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "#000000";
+var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "yellow";
 var VIA_THEME_SEL_REGION_OPACITY    = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS    = 6000;
 var VIA_THEME_CONTROL_POINT_COLOR   = '#ff0000';
@@ -106,7 +107,6 @@ var VIA_THEME_CONTROL_POINT_COLOR   = '#ff0000';
 var VIA_CSV_SEP        = ',';
 var VIA_CSV_QUOTE_CHAR = '"';
 var VIA_CSV_KEYVAL_SEP = ':';
-var VIA_IMPORT_CSV_COMMENT_CHAR = '#';
 
 var _via_img_metadata = {};   // data structure to store loaded images metadata
 var _via_img_src      = {};   // image content {abs. path, url, base64 data, etc}
@@ -215,14 +215,14 @@ var _via_image_grid_content_overflow             = false;
 var _via_image_grid_load_ongoing                 = false;
 var _via_image_grid_page_first_index             = 0; // array index in _via_img_fn_list_img_index_list[]
 var _via_image_grid_page_last_index              = -1;
-var _via_image_grid_page_boundary_cache          = {};
 var _via_image_grid_selected_img_index_list      = [];
-var _via_image_grid_page_img_index_list          = [];
+var _via_image_grid_page_img_index_list          = []; // list of all image index in current page of image grid
 var _via_image_grid_mousedown_img_index          = -1;
 var _via_image_grid_mouseup_img_index            = -1;
-var _via_image_grid_group = {};
-var _via_image_grid_group_var_type = [];
-var _via_image_grid_group_var_name = [];
+var _via_image_grid_img_index_list               = []; // list of all image index in the image grid
+var _via_image_grid_group                        = {}; // {'value':[image_index_list]}
+var _via_image_grid_group_var                    = []; // {type, name, value}
+var _via_image_grid_group_show_all               = false;
 
 // image buffer
 var VIA_IMG_PRELOAD_INDICES = [1, -1, 2, 3, -2, 4]; // for any image, preload previous 2 and next 4 images
@@ -240,12 +240,13 @@ _via_settings.ui.annotation_editor_fontsize = 0.8;// in rem
 _via_settings.ui.leftsidebar_width          = 16;  // in percent of the width of browser window
 
 _via_settings.ui.image_grid = {};
-_via_settings.ui.image_grid.img_height          = 10;  // in percent
-_via_settings.ui.image_grid.rshape_fill         = VIA_THEME_BOUNDARY_FILL_COLOR;
+_via_settings.ui.image_grid.img_height          = 80;  // in pixel
+_via_settings.ui.image_grid.rshape_fill         = 'none';
 _via_settings.ui.image_grid.rshape_fill_opacity = 0.3;
-_via_settings.ui.image_grid.rshape_stroke       = VIA_THEME_BOUNDARY_LINE_COLOR;
+_via_settings.ui.image_grid.rshape_stroke       = 'yellow';
 _via_settings.ui.image_grid.rshape_stroke_width = 2;
 _via_settings.ui.image_grid.show_region_shape   = true;
+_via_settings.ui.image_grid.show_image_policy   = 'first_k';
 
 _via_settings.ui.image = {};
 _via_settings.ui.image.region_label = 'region_id'; // default: region_id
@@ -280,7 +281,7 @@ var BBOX_SELECTED_FILL_COLOR           = "#ffffff";
 
 var VIA_ANNOTATION_EDITOR_HEIGHT_CHANGE   = 5;   // in percent
 var VIA_ANNOTATION_EDITOR_FONTSIZE_CHANGE = 0.1; // in rem
-var VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE      = 1; // in percent
+var VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE      = 20; // in percent
 var VIA_LEFTSIDEBAR_WIDTH_CHANGE          = 1; // in percent
 
 //
@@ -372,18 +373,31 @@ function show_single_image_view() {
     img_fn_list_clear_all_style();
     _via_show_img(_via_image_index);
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE);
+    update_annotation_editor();
   } else {
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_START_INFO);
   }
+  var p = document.getElementById('toolbar_image_grid_toggle');
+  p.firstChild.setAttribute('xlink:href', '#icon_gridon');
+  p.childNodes[1].innerHTML = 'Switch to Single Image View';
 }
 
 function show_image_grid_view() {
   if (_via_current_image_loaded) {
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID);
-    image_grid_update();
+    image_grid_toolbar_update_group_by_select();
+    update_annotation_editor();
+
+    if ( _via_image_grid_group_var.length === 0 ) {
+      image_grid_show_all_project_images();
+    }
+    //image_grid_update();
   } else {
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_START_INFO);
   }
+  var p = document.getElementById('toolbar_image_grid_toggle');
+  p.firstChild.setAttribute('xlink:href', '#icon_gridoff');
+  p.childNodes[1].innerHTML = 'Switch to Image Grid View';
 }
 
 //
@@ -2851,7 +2865,7 @@ function _via_update_ui_components() {
     ///// handle all the cases
     /////
     console.log('@TODO');
-    image_grid_set_content_panel_height();
+    image_grid_set_content_panel_height_fixed();
     image_grid_set_first_img_index( _via_image_grid_page_first_index );
 
     _via_is_window_resized = true;
@@ -3450,9 +3464,21 @@ function zoom_out() {
 }
 
 function toggle_region_boundary_visibility() {
-  _via_is_region_boundary_visible = !_via_is_region_boundary_visible;
-  _via_redraw_reg_canvas();
-  _via_reg_canvas.focus();
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE ) {
+    _via_is_region_boundary_visible = !_via_is_region_boundary_visible;
+    _via_redraw_reg_canvas();
+    _via_reg_canvas.focus();
+  }
+
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    if ( _via_settings.ui.image_grid.show_region_shape ) {
+      _via_settings.ui.image_grid.show_region_shape = false;
+      document.getElementById('image_grid_content_rshape').innerHTML = '';
+    } else {
+      _via_settings.ui.image_grid.show_region_shape = true;
+      image_grid_page_show_all_regions();
+    }
+  }
 }
 
 function toggle_region_id_visibility() {
@@ -3899,6 +3925,12 @@ function toggle_img_fn_list_visibility() {
   document.getElementById('project_panel_title').classList.toggle('active');
 }
 
+function toggle_attributes_editor() {
+  leftsidebar_show();
+  document.getElementById('attributes_editor_panel').classList.toggle('show');
+  document.getElementById('attributes_editor_panel_title').classList.toggle('active');
+}
+
 //
 // region and file attributes update panel
 //
@@ -3936,6 +3968,7 @@ function update_attributes_name_list() {
     var attribute_desc0 = p.options[ p.selectedIndex ].innerHTML;
     p.innerHTML = '';
   }
+  var attr;
   for ( attr in _via_attributes[_via_attribute_being_updated] ) {
     var o = document.createElement('option');
     o.setAttribute('value', attr)
@@ -4067,6 +4100,7 @@ function show_attribute_options() {
     attribute_property_add_new_entry_option(attr_id, attr_type);
     break;
   case VIA_ATTRIBUTE_TYPE.CHECKBOX: // handled by next case
+  case VIA_ATTRIBUTE_TYPE.DROPDOWN: // handled by next case
   case VIA_ATTRIBUTE_TYPE.RADIO:
     var p = document.createElement('div');
     p.setAttribute('class', 'property');
@@ -4145,7 +4179,7 @@ function attribute_property_add_option(attr_id, option_id, option_desc, option_d
   if ( typeof option_default !== 'undefined' ) {
     c2b.checked = option_default;
   }
-  if ( attribute_type === 'radio' || attribute_type === 'image' ) {
+  if ( attribute_type === 'radio' || attribute_type === 'image' || attribute_type === 'dropdown' ) {
     // ensured that user can activate only one radio button
     c2b.setAttribute('type', 'radio');
     c2b.setAttribute('name', attr_id);
@@ -4238,9 +4272,11 @@ function attribute_get_unique_values(attr_type, attr_id) {
   case 'file':
     var img_id, attr_val;
     for ( img_id in _via_img_metadata ) {
-      attr_val = _via_img_metadata[img_id].file_attributes[attr_id];
-      if ( ! values.includes(attr_val) ) {
-        values.push(attr_val);
+      if ( _via_img_metadata[img_id].file_attributes.hasOwnProperty(attr_id) ) {
+        attr_val = _via_img_metadata[img_id].file_attributes[attr_id];
+        if ( ! values.includes(attr_val) ) {
+          values.push(attr_val);
+        }
       }
     }
     break;
@@ -4248,9 +4284,11 @@ function attribute_get_unique_values(attr_type, attr_id) {
     var img_id, attr_val, i;
     for ( img_id in _via_img_metadata ) {
       for ( i = 0; i < _via_img_metadata[img_id].regions.length; ++i ) {
-        attr_val = _via_img_metadata[img_id].regions[i].region_attributes[attr_id];
-        if ( ! values.includes(attr_val) ) {
-          values.push(attr_val);
+        if ( _via_img_metadata[img_id].regions[i].region_attributes.hasOwnProperty(attr_id) ) {
+          attr_val = _via_img_metadata[img_id].regions[i].region_attributes[attr_id];
+          if ( ! values.includes(attr_val) ) {
+            values.push(attr_val);
+          }
         }
       }
     }
@@ -4267,7 +4305,7 @@ function attribute_property_on_option_update(p) {
     var old_key = p.id.substr( '_via_attribute_option_id_'.length );
     var new_key = p.value;
     if ( old_key !== new_key ) {
-      var option_id_test = attribute_property_option_id_is_valid(new_key);
+      var option_id_test = attribute_property_option_id_is_valid(attr_id, new_key);
       if ( option_id_test.is_valid ) {
         update_attribute_option_id_with_confirm(_via_attribute_being_updated,
                                                 attr_id,
@@ -4292,28 +4330,64 @@ function attribute_property_on_option_update(p) {
   }
 
   if ( p.id.startsWith('_via_attribute_option_default_') ) {
-    var key = p.id.substr( '_via_attribute_option_default_'.length );
-    var old_value = _via_attributes[_via_attribute_being_updated][attr_id].default_options[key];
-    if ( typeof old_value === 'undefined' ) {
-      _via_attributes[_via_attribute_being_updated][attr_id].default_options[key] = p.checked;
-      show_attribute_properties();
-      update_annotation_editor();
+    var new_default_option_id = p.id.substr( '_via_attribute_option_default_'.length );
+    var old_default_option_id_list = Object.keys(_via_attributes[_via_attribute_being_updated][attr_id].default_options);
+
+    if ( old_default_option_id_list.length === 0 ) {
+      // default set for the first time
+      _via_attributes[_via_attribute_being_updated][attr_id].default_options[new_default_option_id] = p.checked;
     } else {
-      if ( p.value !== old_value ) {
-        switch ( _via_attributes[_via_attribute_being_updated][attr_id].type ) {
-        case 'radio':
-          // to ensure that only one radio button is selected at a time
-          _via_attributes[_via_attribute_being_updated][attr_id].default_options = {};
-          _via_attributes[_via_attribute_being_updated][attr_id].default_options[key] = p.checked;
-          break;
-        case 'checkbox':
-          _via_attributes[_via_attribute_being_updated][attr_id].default_options[key] = p.checked;
-        }
-        show_attribute_properties();
-        update_annotation_editor();
+      switch ( _via_attributes[_via_attribute_being_updated][attr_id].type ) {
+      case 'image':    // fallback
+      case 'dropdown': // fallback
+      case 'radio':    // fallback
+        // to ensure that only one radio button is selected at a time
+        _via_attributes[_via_attribute_being_updated][attr_id].default_options = {};
+        _via_attributes[_via_attribute_being_updated][attr_id].default_options[new_default_option_id] = p.checked;
+        break;
+      case 'checkbox':
+        _via_attributes[_via_attribute_being_updated][attr_id].default_options[new_default_option_id] = p.checked;
+        break;
       }
     }
+    // default option updated
+    attribute_property_on_option_default_update(_via_attribute_being_updated,
+                                                attr_id,
+                                                new_default_option_id).then( function() {
+                                                  show_attribute_properties();
+                                                  update_annotation_editor();
+                                                });
   }
+}
+
+function attribute_property_on_option_default_update(attribute_being_updated, attr_id, new_default_option_id) {
+  return new Promise( function(ok_callback, err_callback) {
+    // set all metadata to new_value if:
+    // - metadata[attr_id] is missing
+    // - metadata[attr_id] is set to option_old_value
+    var img_id, attr_value, n, i;
+    var attr_type = _via_attributes[attribute_being_updated][attr_id].type;
+    switch( attribute_being_updated ) {
+    case 'file':
+      for ( img_id in _via_img_metadata ) {
+        if ( ! _via_img_metadata[img_id].file_attributes.hasOwnProperty(attr_id) ) {
+          _via_img_metadata[img_id].file_attributes[attr_id] = new_default_option_id;
+        }
+      }
+      break;
+    case 'region':
+      for ( img_id in _via_img_metadata ) {
+        n = _via_img_metadata[img_id].regions.length;
+        for ( i = 0; i < n; ++i ) {
+          if ( ! _via_img_metadata[img_id].regions[i].region_attributes.hasOwnProperty(attr_id) ) {
+            _via_img_metadata[img_id].regions[i].region_attributes[attr_id] = new_default_option_id;
+          }
+        }
+      }
+      break;
+    }
+    ok_callback();
+  });
 }
 
 function attribute_property_on_option_add(p) {
@@ -4321,10 +4395,10 @@ function attribute_property_on_option_add(p) {
     return;
   }
   if ( p.id === '_via_attribute_new_option_id' ) {
+    var attr_id = get_current_attribute_id();
     var option_id = p.value;
-    var option_id_test = attribute_property_option_id_is_valid(option_id);
+    var option_id_test = attribute_property_option_id_is_valid(attr_id, option_id);
     if ( option_id_test.is_valid ) {
-      var attr_id = get_current_attribute_id();
       var attribute_type = _via_attributes[_via_attribute_being_updated][attr_id].type;
 
       _via_attributes[_via_attribute_being_updated][attr_id].options[option_id] = '';
@@ -4389,15 +4463,15 @@ function attribute_property_show_new_entry_inputs(attr_id, attribute_type) {
   container.appendChild(n0);
 }
 
-function attribute_property_option_id_is_valid(id) {
+function attribute_property_option_id_is_valid(attr_id, new_option_id) {
   var option_id;
-  for ( option_id in _via_attributes[_via_attribute_being_updated][attr].options ) {
-    if ( option_id === id ) {
+  for ( option_id in _via_attributes[_via_attribute_being_updated][attr_id].options ) {
+    if ( option_id === new_option_id ) {
       return { 'is_valid':false, 'message':'Option id [' + id + '] already exists' };
     }
   }
 
-  if ( id.includes('__') ) { // reserved separator for attribute-id, row-id, option-id
+  if ( new_option_id.includes('__') ) { // reserved separator for attribute-id, row-id, option-id
     return {'is_valid':false, 'message':'Option id cannot contain two consecutive underscores'};
   }
 
@@ -4805,8 +4879,19 @@ function update_annotation_editor() {
   if ( p.classList.contains('display_block') ) {
     var ae = document.getElementById('annotation_editor');
     ae.innerHTML = '';
-    annotation_editor_update_header_html();
-    annotation_editor_update_metadata_html();
+    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE ) {
+      annotation_editor_update_header_html();
+      annotation_editor_update_metadata_html();
+    }
+    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+      if ( _via_metadata_being_updated === 'region' ) {
+        ae.innerHTML = '<p>Region annotations cannot be updated in image grid view. ' +
+          'Switch to <span class="text_button" onclick="show_single_image_view()">single image view</span> to update region annotations.</p>';
+      } else {
+        annotation_editor_update_header_html();
+        annotation_editor_update_metadata_html();
+      }
+    }
   }
 }
 
@@ -4819,6 +4904,17 @@ function annotation_editor_update_header_html() {
     var rid_col = document.createElement('span');
     rid_col.setAttribute('class', 'col');
     rid_col.innerHTML = '';
+    head.appendChild(rid_col);
+  }
+
+  if ( _via_metadata_being_updated === 'file' ) {
+    var rid_col = document.createElement('span');
+    rid_col.setAttribute('class', 'col header');
+    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+      rid_col.innerHTML = 'group';
+    } else {
+      rid_col.innerHTML = 'filename';
+    }
     head.appendChild(rid_col);
   }
 
@@ -4894,38 +4990,69 @@ function annotation_editor_get_metadata_row_html(row_id) {
     row.appendChild(rid);
   }
 
+  if ( _via_metadata_being_updated === 'file' ) {
+    var rid = document.createElement('span');
+    rid.setAttribute('class', 'col');
+    switch(_via_display_area_content_name) {
+    case VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID:
+      rid.innerHTML = 'Group of ' + _via_image_grid_img_index_list.length + ' files';
+      break;
+    case VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE:
+      rid.innerHTML = _via_image_filename_list[_via_image_index];
+      break;
+    }
+
+    _via_image_grid_img_index_list
+    row.appendChild(rid);
+  }
+
   var attr_id;
   for ( attr_id in _via_attributes[_via_metadata_being_updated] ) {
     var col = document.createElement('span');
     col.setAttribute('class', 'col');
 
-    var attr_value = '';
-    switch(_via_metadata_being_updated) {
-    case 'region':
-      if ( _via_img_metadata[_via_image_id].regions[row_id].region_attributes.hasOwnProperty(attr_id) ) {
-        attr_value = _via_img_metadata[_via_image_id].regions[row_id].region_attributes[attr_id];
-      }
-    case 'file':
-      if ( _via_img_metadata[_via_image_id].file_attributes.hasOwnProperty(attr_id) ) {
-        attr_value = _via_img_metadata[_via_image_id].file_attributes[attr_id];
+    var attr_type    = _via_attributes[_via_metadata_being_updated][attr_id].type;
+    var attr_desc    = _via_attributes[_via_metadata_being_updated][attr_id].desc;
+    if ( typeof(attr_desc) === 'undefined' ) {
+      attr_desc = '';
+    }
+    var attr_html_id = attr_id + '__' + row_id;
+
+    var attr_value;
+    var attr_placeholder = '';
+    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE ) {
+      switch(_via_metadata_being_updated) {
+      case 'region':
+        if ( _via_img_metadata[_via_image_id].regions[row_id].region_attributes.hasOwnProperty(attr_id) ) {
+          attr_value = _via_img_metadata[_via_image_id].regions[row_id].region_attributes[attr_id];
+        }
+      case 'file':
+        if ( _via_img_metadata[_via_image_id].file_attributes.hasOwnProperty(attr_id) ) {
+          attr_value = _via_img_metadata[_via_image_id].file_attributes[attr_id];
+        }
       }
     }
 
-    var attr_type    = _via_attributes[_via_metadata_being_updated][attr_id].type;
-    var attr_desc    = _via_attributes[_via_metadata_being_updated][attr_id].desc;
-    var attr_html_id = attr_id + '__' + row_id;
+    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+      if ( attr_type === 'text' ) {
+        var attr_metadata_stat = _via_get_file_metadata_stat(_via_image_grid_img_index_list, attr_id);
+        var attr_value_set = Object.keys(attr_metadata_stat[attr_id]);
+        if ( attr_value_set.length === 1 ) {
+          attr_value = attr_value_set[0];
+          attr_placeholder = '';
+        } else {
+          attr_value = '';
+          attr_placeholder = attr_value_set.length + ' different values';
+        }
+      }
+    }
 
     switch(attr_type) {
     case 'text':
-      if ( attr_value === '' ) {
-        attr_value = _via_attributes[_via_metadata_being_updated][attr_id].default_value;
-        if ( typeof(attr_value) === 'undefined' || attr_value === '' ) {
-          attr_value = '';
-        }
-      }
       col.innerHTML = '<textarea ' +
         'onchange="annotation_editor_on_metadata_update(this)" ' +
         'title="' + attr_desc + '" ' +
+        'placeholder="' + attr_placeholder + '" ' +
         'id="' + attr_html_id + '">' + attr_value + '</textarea>';
       break;
     case 'checkbox':
@@ -5033,6 +5160,31 @@ function annotation_editor_get_metadata_row_html(row_id) {
         img_options.appendChild(container);
       }
       break;
+
+    case 'dropdown':
+      var sel = document.createElement('select');
+      sel.setAttribute('id', attr_html_id);
+      sel.setAttribute('onchange', 'annotation_editor_on_metadata_update(this)');
+      var option_id;
+      for ( option_id in _via_attributes[_via_metadata_being_updated][attr_id].options ) {
+        var option_html_id = attr_html_id + '__' + option_id;
+        var option = document.createElement('option');
+        option.setAttribute('value', option_id);
+
+        var option_desc  = _via_attributes[_via_metadata_being_updated][attr_id].options[option_id];
+        if ( option_desc === '' || typeof(option_desc) === 'undefined' ) {
+          // option description is optional, use option_id when description is not present
+          option_desc = option_id;
+        }
+
+        if ( option_id === attr_value ) {
+          option.setAttribute('selected', 'selected');
+        }
+        option.innerHTML = option_desc;
+        sel.appendChild(option);
+      }
+      col.appendChild(sel);
+      break;
     }
 
     row.appendChild(col);
@@ -5087,40 +5239,117 @@ function annotation_editor_extract_html_id_components(html_id) {
   return parsed_id;
 }
 
+function _via_get_file_metadata_stat(img_index_list, attr_id) {
+  var stat = {};
+  var i, n, img_id, img_index, value;
+  n = img_index_list.length;
+  for ( i = 0; i < n; ++i ) {
+    img_index = img_index_list[i];
+    img_id = _via_image_id_list[i];
+    if ( _via_img_metadata[img_id].file_attributes.hasOwnProperty(attr_id) ) {
+      value = _via_img_metadata[img_id].file_attributes[attr_id];
+      if ( ! stat.hasOwnProperty(attr_id) ) {
+        stat[attr_id] = {};
+      }
+      if ( stat[attr_id].hasOwnProperty(value) ) {
+        stat[attr_id][value] += 1;
+      } else {
+        stat[attr_id][value] = 1;
+      }
+    }
+
+  }
+  return stat;
+}
+
 // invoked when the user updates annotations using the annotation editor
 function annotation_editor_on_metadata_update(p) {
-  var pid = annotation_editor_extract_html_id_components(p.id);
-  var attr_type = _via_attributes[_via_attribute_being_updated][pid.attr_id].type;
+  var pid       = annotation_editor_extract_html_id_components(p.id);
+  var img_id    = _via_image_id;
 
-  switch( attr_type ) {
-  case 'text':
-    _via_img_metadata[_via_image_id].regions[pid.row_id].region_attributes[pid.attr_id] = p.value;
-    break;
-  case 'radio':
-    _via_img_metadata[_via_image_id].regions[pid.row_id].region_attributes[pid.attr_id] = p.value;
-    break;
-  case 'image':
-    _via_img_metadata[_via_image_id].regions[pid.row_id].region_attributes[pid.attr_id] = p.value;
-    break;
-  case 'checkbox':
-    var option_id = p.value;
-    if ( ! _via_img_metadata[_via_image_id].regions[pid.row_id].region_attributes[pid.attr_id] ) {
-      _via_img_metadata[_via_image_id].regions[pid.row_id].region_attributes[pid.attr_id] = {};
-    }
-
-    if ( p.checked ) {
-      _via_img_metadata[_via_image_id].regions[pid.row_id].region_attributes[pid.attr_id][option_id] = true;
-    } else {
-      // false option values are not stored
-      delete _via_img_metadata[_via_image_id].regions[pid.row_id].region_attributes[pid.attr_id][option_id];
-    }
-    break;
+  if ( _via_metadata_being_updated === 'region' ) {
+    annotation_editor_update_region_metadata(img_id, pid.row_id, pid.attr_id, p.value, p.checked);
+    _via_redraw_reg_canvas();
+    return;
   }
 
-  _via_redraw_reg_canvas();
+  if ( _via_metadata_being_updated === 'file' ) {
+    var img_index_list = [ _via_image_index ];
+    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+      img_index_list = _via_image_grid_img_index_list.slice(0);
+    }
+    annotation_editor_update_file_metadata(img_index_list, pid.attr_id, p.value, p.checked).then( function(update_count) {
+      console.log('Updated file attributes of ' + update_count + ' files');
+      console.log('@todo: what happens to image grid when file attributes are updates?');
+    }, function(err) {
+      console.log('annotation_editor_on_metadata_update(): error');
+    });
+  }
+
 
   //console.log('annotation updated: attr_id='+pid.attr_id+', row_id='+pid.row_id+', option_id='+pid.option_id);
   //console.log(_via_img_metadata[_via_image_id].regions[pid.row_id].region_attributes);
+}
+
+function annotation_editor_update_file_metadata(img_index_list, attr_id, new_value, new_checked) {
+  return new Promise( function(ok_callback, err_callback) {
+    var i, n, img_id;
+    n = _via_image_id_list.length;
+    var update_count = 0;
+    for ( i = 0; i < n; ++i ) {
+      img_id = _via_image_id_list[i];
+
+      switch( _via_attributes['file'][attr_id].type ) {
+      case 'text':  // fallback
+      case 'radio': // fallback
+      case 'dropdown': // fallback
+      case 'image':
+        _via_img_metadata[img_id].file_attributes[attr_id] = new_value;
+        update_count += 1;
+        break;
+
+      case 'checkbox':
+        var option_id = new_value;
+        if ( ! _via_img_metadata[img_id].file_attributes.hasOwnProperty(attr_id) ) {
+          _via_img_metadata[img_id].file_attributes[attr_id] = {};
+        }
+
+        if ( new_checked ) {
+          _via_img_metadata[img_id].file_attributes[attr_id][option_id] = true;
+        } else {
+          // false option values are not stored
+          delete _via_img_metadata[img_id].file_attributes[attr_id][option_id];
+        }
+        update_count += 1;
+        break;
+      }
+    }
+    ok_callback(update_count);
+  });
+}
+
+function annotation_editor_update_region_metadata(img_id, region_id, attr_id, new_value, new_checked) {
+  switch(  _via_attributes['region'][attr_id].type ) {
+  case 'text':  // fallback
+  case 'dropdown': // fallback
+  case 'radio': // fallback
+  case 'image':
+    _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id] = new_value;
+    break;
+  case 'checkbox':
+    var option_id = new_value;
+    if ( ! _via_img_metadata[img_id].regions[region_id].region_attributes.hasOwnProperty(attr_id) ) {
+      _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id] = {};
+    }
+
+    if ( new_checked ) {
+      _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id][option_id] = true;
+    } else {
+      // false option values are not stored
+      delete _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id][option_id];
+    }
+    break;
+  }
 }
 
 function set_region_annotations_to_default_value(rid) {
@@ -5134,26 +5363,13 @@ function set_region_annotations_to_default_value(rid) {
         _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = default_value;
       }
       break;
+    case 'image':    // fallback
+    case 'dropdown': // fallback
     case 'radio':
       _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = '';
       var default_options = _via_attributes['region'][attr_id].default_options;
-      if ( typeof(default_options) !== 'underfined' ) {
-        var option_id;
-        for ( option_id in default_options ) {
-          // a radio input has single value
-          _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = option_id;
-        }
-      }
-      break;
-    case 'image':
-      _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = '';
-      var default_options = _via_attributes['region'][attr_id].default_options;
-      if ( typeof(default_options) !== 'underfined' ) {
-        var option_id;
-        for ( option_id in default_options ) {
-          // a radio input has single value
-          _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = option_id;
-        }
+      if ( typeof(default_options) !== 'undefined' ) {
+        _via_img_metadata[_via_image_id].regions[rid].region_attributes[attr_id] = Object.keys(default_options)[0];
       }
       break;
 
@@ -5183,14 +5399,12 @@ function set_file_annotations_to_default_value(image_id) {
       var default_value = _via_attributes['file'][attr_id].default_value;
       _via_img_metadata[image_id].file_attributes[attr_id] = default_value;
       break;
-    case 'radio': // handled by case 'checkbox'
+    case 'image':    // fallback
+    case 'dropdown': // fallback
+    case 'radio':
       _via_img_metadata[image_id].file_attributes[attr_id] = '';
       var default_options = _via_attributes['file'][attr_id].default_options;
-      var option_id;
-      for ( option_id in default_options ) {
-        // a radio input has single value
-        _via_img_metadata[image_id].file_attributes[attr_id] = option_id;
-      }
+      _via_img_metadata[image_id].file_attributes[attr_id] = Object.keys(default_options)[0];
       break;
     case 'checkbox':
       _via_img_metadata[image_id].file_attributes[attr_id] = {};
@@ -5648,45 +5862,112 @@ function image_grid_init() {
   p.addEventListener('mouseup', image_grid_mouseup_handler, false);
   p.addEventListener('mousemove', image_grid_mousemove_handler, false);
   p.addEventListener('dblclick', image_grid_dblclick_handler, false);
-  image_grid_set_content_panel_height();
+
+  image_grid_set_content_panel_height_fixed();
+
+  // select policy as defined in settings
+  var i, option;
+  var p = document.getElementById('image_grid_show_image_policy');
+  var n = p.options.length;
+  for ( i = 0; i < n; ++i ) {
+    if ( p.options[i].value === _via_settings.ui.image_grid.show_image_policy ) {
+      p.selectedIndex = i;
+      break;
+    }
+  }
 }
 
 function image_grid_update() {
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
-    image_grid_jump_to_page_with_first_img_index( _via_image_grid_page_first_index );
+    image_grid_set_content( _via_image_grid_img_index_list );
   }
 }
 
 function image_grid_toggle() {
   var p = document.getElementById('toolbar_image_grid_toggle');
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
-    p.firstChild.setAttribute('xlink:href', '#icon_gridon');
-    p.childNodes[1].innerHTML = 'Switch to Single Image View';
     show_single_image_view();
   } else {
-    p.firstChild.setAttribute('xlink:href', '#icon_gridoff');
-    p.childNodes[1].innerHTML = 'Switch to Image Grid View';
     show_image_grid_view();
   }
 }
 
-function image_grid_jump_to_page_with_first_img_index( first_index ) {
-  _via_image_grid_page_first_index    = first_index;
-  _via_image_grid_page_last_index     = null;
+function image_grid_show_all_project_images() {
+  var all_img_index_list = [];
+  var i, n;
+  n = _via_image_id_list.length;
+  for ( i = 0; i < n; ++i ) {
+    all_img_index_list.push(i);
+  }
+  image_grid_clear_all_groups();
 
-  image_grid_clear_page_boundary_cache();
-  image_grid_update_group_by_select();
-
-  image_grid_clear_content();
-  img_fn_list_clear_all_style();
-  img_fn_list_scroll_to_file( _via_image_grid_page_first_index );
-  _via_image_grid_load_ongoing = true;
-  image_grid_content_append_img( _via_image_grid_page_first_index );
+  var p = document.getElementById('image_grid_toolbar_group_by_select');
+  p.selectedIndex = 0;
+  image_grid_set_content(all_img_index_list);
 }
 
-function image_grid_clear_page_boundary_cache() {
-  _via_image_grid_page_boundary_cache = {};
-  document.getElementById('image_grid_toolbar_page_prev').classList.remove('text_button');
+function image_grid_clear_all_groups() {
+  var i, n;
+  n = _via_image_grid_group_var.length;
+  for ( i = 0; i < n; ++i ) {
+    image_grid_remove_html_group_panel( _via_image_grid_group_var[i] );
+    image_grid_group_by_select_set_disabled( _via_image_grid_group_var[i].type,
+                                             _via_image_grid_group_var[i].name,
+                                             false);
+  }
+  _via_image_grid_group = {};
+  _via_image_grid_group_var = [];
+
+}
+
+function image_grid_set_content(img_index_list) {
+  if ( img_index_list.length === 0 ) {
+    return;
+  }
+  if ( _via_image_grid_load_ongoing ) {
+    return;
+  }
+
+  _via_image_grid_img_index_list = img_index_list.slice(0);
+  document.getElementById('image_grid_group_by_img_count').innerHTML = _via_image_grid_img_index_list.length;
+
+  _via_image_grid_page_first_index    = 0;
+  _via_image_grid_page_last_index     = null;
+
+  image_grid_clear_content();
+  image_grid_set_content_panel_height_fixed();
+  _via_image_grid_load_ongoing = true;
+
+  var n = _via_image_grid_img_index_list.length;
+  switch ( _via_settings.ui.image_grid.show_image_policy ) {
+  case 'first_k': // handled by all
+  case 'all':
+    _via_image_grid_page_img_index_list = _via_image_grid_img_index_list.slice(0);
+    document.getElementById('image_grid_info').innerHTML = 'Loading all ' + _via_image_grid_page_img_index_list.length + ' files. Please wait ...';
+    break;
+  case 'first_mid_last':
+    _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[0] );
+    _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[ Math.floor(n/2) ] );
+    _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[n-1] );
+    break;
+  case 'even_indexed':
+    var i;
+    for ( i = 0; i < n; ++i ) {
+      if ( i % 2 !== 0 ) { // since the user views (i+1) based indexing
+        _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[i] );
+      }
+    }
+    break;
+  case 'odd_indexed':
+    var i;
+    for ( i = 0; i < n; ++i ) {
+      if ( i % 2 === 0 ) { // since the user views (i+1) based indexing
+        _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[i] );
+      }
+    }
+    break;
+  }
+  image_grid_content_append_img(0);
 }
 
 function image_grid_clear_content() {
@@ -5699,17 +5980,17 @@ function image_grid_clear_content() {
 
 }
 
-function image_grid_set_content_panel_height() {
+function image_grid_set_content_panel_height_fixed() {
   var pc = document.getElementById('image_grid_content');
   var de = document.documentElement;
-  pc.style.height = (de.clientHeight - 4*ui_top_panel.offsetHeight) + 'px';
+  pc.style.height = (de.clientHeight - 5*ui_top_panel.offsetHeight) + 'px';
 }
 
 // We do not know how many images will fit in the display area.
 // Therefore, we add images one-by-one until overflow of parent
 // container is detected.
-function image_grid_content_append_img( img_fn_list_index ) {
-  var img_index = _via_img_fn_list_img_index_list[img_fn_list_index];
+function image_grid_content_append_img( img_grid_index ) {
+  var img_index = _via_image_grid_page_img_index_list[img_grid_index];
   var img_id = _via_image_id_list[img_index];
   var e = document.createElement('img');
   if ( _via_img_fileref[img_id] instanceof File ) {
@@ -5725,7 +6006,7 @@ function image_grid_content_append_img( img_fn_list_index ) {
     e.src = _via_img_src[img_id];
   }
   e.setAttribute('id', image_grid_get_html_img_id(img_index));
-  e.setAttribute('height', _via_settings.ui.image_grid.img_height + '%');
+  e.setAttribute('height', _via_settings.ui.image_grid.img_height + 'px');
   e.setAttribute('title', '[' + (img_index+1) + '] ' + _via_img_metadata[img_id].filename);
 
   e.addEventListener('load', image_grid_on_img_load, false);
@@ -5753,65 +6034,53 @@ function image_grid_add_img_if_possible(img) {
   var p = document.getElementById('image_grid_content_img');
   var img_index = image_grid_parse_html_img_id(img.id);
   var img_bottom_right_corner = parseInt(img.offsetTop) + parseInt(img.height);
-  if ( p.clientHeight < img_bottom_right_corner ) {
+
+  if ( _via_settings.ui.image_grid.show_image_policy === 'first_k' &&
+       p.clientHeight < img_bottom_right_corner ) {
     // image causes overflow of parent container
     var img_container = document.getElementById('image_grid_content_img');
     img_container.removeChild(img);
-    var page_last_img_index = img_index;
+
     _via_image_grid_page_last_index = img_index;
-    _via_image_grid_page_boundary_cache[_via_image_grid_page_first_index] = _via_image_grid_page_last_index;
-    document.getElementById('image_grid_toolbar_page_next').classList.add('text_button');
-    image_grid_activate_prev_button_if_possible();
     if ( _via_settings.ui.image_grid.show_region_shape ) {
       image_grid_page_show_all_regions();
     }
     _via_image_grid_load_ongoing = false;
+
+    var index = _via_image_grid_page_img_index_list.indexOf(img_index);
+    _via_image_grid_page_img_index_list.splice(index);
+
+    var info = document.getElementById('image_grid_info');
+    info.innerHTML = 'Showing only first ' + _via_image_grid_page_img_index_list.length + ' files.';
   } else {
     // process this image and trigger addition of next image in sequence
-    _via_image_grid_page_img_index_list.push(img_index);
-    //img_fn_list_ith_entry_selected(img_index, true);
-
-    var img_fn_list_index = _via_img_fn_list_img_index_list.indexOf(img_index);
-    if ( (img_fn_list_index + 1) !==  _via_img_fn_list_img_index_list.length ) {
+    var img_fn_list_index = _via_image_grid_page_img_index_list.indexOf(img_index);
+    if ( (img_fn_list_index + 1) !==  _via_image_grid_page_img_index_list.length ) {
       if ( _via_image_grid_load_ongoing ) {
         image_grid_content_append_img( img_fn_list_index + 1 );
       } else {
         // image grid load operation was cancelled
-        delete _via_image_grid_page_boundary_cache[_via_image_grid_page_first_index];
-        image_grid_activate_prev_button_if_possible();
       }
     } else {
       // last page
       _via_image_grid_page_last_index = img_index;
-      _via_image_grid_page_boundary_cache[_via_image_grid_page_first_index] = _via_image_grid_page_last_index;
-      image_grid_activate_prev_button_if_possible();
-      document.getElementById('image_grid_toolbar_page_next').classList.remove('text_button');
       if ( _via_settings.ui.image_grid.show_region_shape ) {
         image_grid_page_show_all_regions();
       }
       _via_image_grid_load_ongoing = false;
+      document.getElementById('image_grid_info').innerHTML = 'Showing all ' + _via_image_grid_page_img_index_list.length + ' files.';
+
+      if (_via_settings.ui.image_grid.show_image_policy === 'all') {
+        var pc = document.getElementById('image_grid_content');
+        pc.style.height = img_bottom_right_corner + 'px';
+      }
     }
   }
 }
 
-function image_grid_activate_prev_button_if_possible() {
-  var first_index;
-  document.getElementById('image_grid_toolbar_page_prev').classList.remove('text_button');
-  for ( first_index in _via_image_grid_page_boundary_cache ) {
-    if ( _via_image_grid_page_boundary_cache[first_index] === _via_image_grid_page_first_index ) {
-      document.getElementById('image_grid_toolbar_page_prev').classList.add('text_button');
-    }
-  }
-}
-
-function image_grid_toggle_region_shape(e) {
-  if ( e.checked ) {
-    _via_settings.ui.image_grid.show_region_shape = true;
-    image_grid_page_show_all_regions();
-  } else {
-    _via_settings.ui.image_grid.show_region_shape = false;
-    document.getElementById('image_grid_content_rshape').innerHTML = '';
-  }
+function image_grid_onchange_show_image_policy(p) {
+  _via_settings.ui.image_grid.show_image_policy = p.options[p.selectedIndex].value;
+  image_grid_set_content(_via_image_grid_img_index_list);
 }
 
 function image_grid_page_show_all_regions() {
@@ -5873,7 +6142,7 @@ function image_grid_show_region_shape(img_index, img_param) {
       var r2 = new _via_region( r.name, i, dimg, scale_factor, offset_x, offset_y);
       var r2_svg = r2.get_svg_element()
       r2_svg.setAttribute('fill',         _via_settings.ui.image_grid.rshape_fill);
-      r2_svg.setAttribute('fill-opacity', _via_settings.ui.image_grid.rshape_fill_opacity);
+      //r2_svg.setAttribute('fill-opacity', _via_settings.ui.image_grid.rshape_fill_opacity);
       r2_svg.setAttribute('stroke',       _via_settings.ui.image_grid.rshape_stroke);
       r2_svg.setAttribute('stroke-width', _via_settings.ui.image_grid.rshape_stroke_width);
 
@@ -5884,31 +6153,18 @@ function image_grid_show_region_shape(img_index, img_param) {
 
 function image_grid_image_size_increase() {
   var new_img_height = _via_settings.ui.image_grid.img_height + VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE;
-  if ( new_img_height < 91 ) {
-    _via_settings.ui.image_grid.img_height = new_img_height;
+  _via_settings.ui.image_grid.img_height = new_img_height;
 
-    _via_image_grid_page_last_index = null;
-    image_grid_clear_page_boundary_cache();
-
-    image_grid_update();
-    //image_grid_info('Image height set to ' + _via_settings.ui.image_grid.img_height + ' %');
-  } else {
-    //image_grid_info('Cannot increase image size anymore than ' + _via_settings.ui.image_grid.img_height + ' %');
-  }
+  _via_image_grid_page_last_index = null;
+  image_grid_update();
 }
 
 function image_grid_image_size_decrease() {
   var new_img_height = _via_settings.ui.image_grid.img_height - VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE;
-  if ( new_img_height > 0.1 ) {
+  if ( new_img_height > 1 ) {
     _via_settings.ui.image_grid.img_height = new_img_height;
-    //image_grid_info('Image height set to ' + _via_settings.ui.image_grid.img_height + ' %');
-
     _via_image_grid_page_last_index = null;
-    image_grid_clear_page_boundary_cache();
-
     image_grid_update();
-  } else {
-    //image_grid_info('Cannot reduce image size anymore than ' + _via_settings.ui.image_grid.img_height + ' %');
   }
 }
 
@@ -5922,7 +6178,6 @@ function image_grid_info(msg) {
 function image_grid_mousedown_handler(e) {
   e.preventDefault();
   _via_image_grid_mousedown_img_index = image_grid_parse_html_img_id(e.target.id);
-  console.log('mousedown on image index ' + _via_image_grid_mousedown_img_index);
 }
 
 function image_grid_mousemove_handler(e) {
@@ -5933,7 +6188,6 @@ function image_grid_mousemove_handler(e) {
 function image_grid_mouseup_handler(e) {
   e.preventDefault();
   _via_image_grid_mouseup_img_index = image_grid_parse_html_img_id(e.target.id);
-  console.log('mouseup on image index ' + _via_image_grid_mouseup_img_index);
 
   if ( _via_image_grid_mouseup_img_index === _via_image_grid_mousedown_img_index ) {
     // select single image
@@ -5954,7 +6208,6 @@ function image_grid_mouseup_handler(e) {
       document.getElementById(html_img_id).classList.toggle('sel');
     }
   }
-  image_grid_update_selected_img_count();
 }
 
 function image_grid_toggle_img_select(img_index) {
@@ -5968,78 +6221,6 @@ function image_grid_toggle_img_select(img_index) {
   var html_img_id = image_grid_get_html_img_id(img_index);
   document.getElementById(html_img_id).classList.toggle('sel');
 }
-
-function image_grid_page_select_all() {
-  var i, img_index, arr_index;
-  var n = _via_image_grid_page_img_fn_list_index_list.length;
-  for ( i = 0; i < n; ++i ) {
-    img_index = _via_image_grid_page_img_fn_list_index_list[i];
-    arr_index = _via_image_grid_selected_img_index_list.indexOf(img_index);
-    if ( arr_index === -1 ) {
-      _via_image_grid_selected_img_index_list.push(img_index);
-      var html_img_id = image_grid_get_html_img_id(img_index);
-      document.getElementById(html_img_id).classList.toggle('sel');
-    }
-  }
-  image_grid_update_selected_img_count();
-}
-
-function image_grid_page_select_none() {
-  var i, img_index, arr_index;
-  var n = _via_image_grid_page_img_fn_list_index_list.length;
-  for ( i = 0; i < n; ++i ) {
-    img_index = _via_image_grid_page_img_fn_list_index_list[i];
-    arr_index = _via_image_grid_selected_img_index_list.indexOf(img_index);
-    if ( arr_index !== -1 ) {
-      _via_image_grid_selected_img_index_list.splice(arr_index, 1);
-      var html_img_id = image_grid_get_html_img_id(img_index);
-      document.getElementById(html_img_id).classList.toggle('sel');
-    }
-  }
-  image_grid_update_selected_img_count();
-}
-
-function image_grid_img_fn_list_select_all() {
-  var n = _via_img_fn_list_img_index_list.length;
-  var i, img_index;
-  for ( i = 0; i < n; ++i ) {
-    img_index = _via_img_fn_list_img_index_list[i];
-    if ( ! _via_image_grid_selected_img_index_list.includes(img_index) ) {
-      _via_image_grid_selected_img_index_list.push( img_index );
-
-      if ( _via_image_grid_page_img_index_list.includes(img_index) ) {
-        var html_img_id = image_grid_get_html_img_id(img_index);
-        document.getElementById(html_img_id).classList.add('sel');
-      }
-    }
-  }
-  image_grid_update_selected_img_count();
-}
-
-function image_grid_img_fn_list_select_none() {
-  var n = _via_img_fn_list_img_index_list.length;
-  var i, img_index, arr_index;
-  for ( i = 0; i < n; ++i ) {
-    img_index = _via_img_fn_list_img_index_list[i];
-    arr_index = _via_image_grid_selected_img_index_list.indexOf(img_index);
-    if ( arr_index !== -1 ) {
-      _via_image_grid_selected_img_index_list.splice( arr_index, 1 );
-
-      if ( _via_image_grid_page_img_index_list.includes(img_index) ) {
-        var html_img_id = image_grid_get_html_img_id(img_index);
-        document.getElementById(html_img_id).classList.remove('sel');
-      }
-    }
-  }
-  image_grid_update_selected_img_count();
-}
-
-function image_grid_clear_all_selection() {
-  _via_image_grid_selected_img_index_list = [];
-  image_grid_page_style_set_selection(false);
-  image_grid_update_selected_img_count();
-}
-
 
 function image_grid_page_style_set_selection( all_selected ) {
   var cn = document.getElementById('image_grid_content_img').childNodes;
@@ -6066,81 +6247,26 @@ function image_grid_get_html_img_id(img_index) {
 }
 
 function image_grid_dblclick_handler(e) {
-  _via_show_img( image_grid_parse_html_img_id(e.target.id) );
-  console.log('@todo: handle dbl click properly');
+  _via_image_index = image_grid_parse_html_img_id(e.target.id);
+  show_single_image_view();
 }
 
-function image_grid_update_selected_img_count() {
-  document.getElementById('image_grid_sel_img_count').innerHTML = _via_image_grid_selected_img_index_list.length;
-}
-
-function image_grid_page_next() {
-  if ( _via_image_grid_load_ongoing ) {
-    _via_image_grid_load_ongoing = false;
-    _via_image_grid_page_last_index = null;
-    show_message('Cancelled image grid load process!');
-    return;
-  }
-
-  if ( (_via_image_grid_page_last_index + 1) >=  _via_img_fn_list_img_index_list.length ) {
-    show_message('Reached end of image list!');
-    return;
-  }
-
-  _via_image_grid_page_first_index    = _via_image_grid_page_last_index;
-
-  _via_image_grid_page_img_index_list = [];
-  image_grid_clear_content();
-  img_fn_list_scroll_to_file( _via_image_grid_page_first_index );
-  _via_image_grid_load_ongoing = true;
-  image_grid_content_append_img( _via_image_grid_page_first_index );
-}
-
-function image_grid_page_prev() {
-  if ( _via_image_grid_load_ongoing ) {
-    _via_image_grid_load_ongoing = false;
-    _via_image_grid_page_last_index = null;
-    show_message('Cancelled image grid load process!');
-    return;
-  }
-
-  var match_first_index = -1;
-  var first_index;
-  for ( first_index in _via_image_grid_page_boundary_cache ) {
-    if ( _via_image_grid_page_boundary_cache[first_index] === _via_image_grid_page_first_index ) {
-      match_first_index = first_index;
-      break;
-    }
-  }
-
-  if ( match_first_index === -1 ) {
-    show_message('Already at the beginning of image list');
-    return;
-  }
-
-  _via_image_grid_page_first_index = parseInt(match_first_index);
-  _via_image_grid_page_img_index_list = [];
-  image_grid_clear_content();
-  img_fn_list_scroll_to_file( _via_image_grid_page_first_index );
-  _via_image_grid_load_ongoing = true;
-  image_grid_content_append_img( _via_image_grid_page_first_index );
-}
-
-function image_grid_update_group_by_select() {
-  var p = document.getElementById('image_grid_toolbar_select_group_by');
+function image_grid_toolbar_update_group_by_select() {
+  var p = document.getElementById('image_grid_toolbar_group_by_select');
+  p.innerHTML = '';
 
   var o = document.createElement('option');
   o.setAttribute('value', '');
   o.setAttribute('selected', 'selected');
-  o.innerHTML = 'None';
+  o.innerHTML = 'All Images';
   p.appendChild(o);
 
   // add file attributes
   var fattr;
   for ( fattr in _via_attributes['file'] ) {
     var o = document.createElement('option');
-    o.setAttribute('value', image_grid_on_group_by_get_option_value('file', fattr));
-    o.innerHTML = 'file attribute: ' + fattr;
+    o.setAttribute('value', image_grid_toolbar_group_by_select_get_html_id('file', fattr));
+    o.innerHTML = '[file] ' + fattr;
     p.appendChild(o);
   }
 
@@ -6148,13 +6274,13 @@ function image_grid_update_group_by_select() {
   var rattr;
   for ( rattr in _via_attributes['region'] ) {
     var o = document.createElement('option');
-    o.setAttribute('value', image_grid_on_group_by_get_option_value('region', fattr));
-    o.innerHTML = 'region attribute: ' + rattr;
+    o.setAttribute('value', image_grid_toolbar_group_by_select_get_html_id('region', rattr));
+    o.innerHTML = '[region] ' + rattr;
     p.appendChild(o);
   }
 }
 
-function image_grid_on_group_by_get_option_value(type, name) {
+function image_grid_toolbar_group_by_select_get_html_id(type, name) {
   if ( type === 'file' ) {
     return 'f_' + name;
   }
@@ -6163,40 +6289,234 @@ function image_grid_on_group_by_get_option_value(type, name) {
   }
 }
 
-function image_grid_on_group_by_parse_option_value(value) {
-  if ( value.startsWith('f_') ) {
-    return { 'attr_type':'file', 'attr_name':value.substr(2) };
+function image_grid_toolbar_group_by_select_parse_html_id(id) {
+  if ( id.startsWith('f_') ) {
+    return { 'attr_type':'file', 'attr_name':id.substr(2) };
   }
-  if ( value.startsWith('r_') ) {
-    return { 'attr_type':'region', 'attr_name':value.substr(2) };
+  if ( id.startsWith('r_') ) {
+    return { 'attr_type':'region', 'attr_name':id.substr(2) };
   }
 }
 
-function image_grid_on_group_by_select(p) {
-  if ( p.selectedIndex === 0 ) {
+function image_grid_toolbar_onchange_group_by_select(p) {
+  if ( p.options[p.selectedIndex].value === '' ) {
+    image_grid_show_all_project_images();
     return;
   }
 
-  var v = image_grid_on_group_by_parse_option_value( p.options[p.selectedIndex].value );
+  var v = image_grid_toolbar_group_by_select_parse_html_id( p.options[p.selectedIndex].value );
   var attr_type = v.attr_type;
   var attr_name = v.attr_name;
   image_grid_group_by(attr_type, attr_name);
+
+  image_grid_group_by_select_set_disabled(attr_type, attr_name, true);
 }
 
-function image_grid_group_by(attr_type, attr_name) {
-  console.log('grouping by ' + attr_type + ', ' + attr_name);
-  _via_image_grid_group_var_type.push(attr_type);
-  _via_image_grid_group_var_name.push(attr_name);
+function image_grid_remove_html_group_panel(d) {
+  var p = document.getElementById('group_toolbar_' + d.group_index);
+  document.getElementById('image_grid_group_panel').removeChild(p);
+}
 
-  var img_index_array = [];
+function image_grid_add_html_group_panel(d) {
+  var p = document.createElement('div');
+  p.classList.add('image_grid_group_toolbar');
+  p.setAttribute('id', 'group_toolbar_' + d.group_index);
+
+  var del = document.createElement('span');
+  del.classList.add('text_button');
+  del.setAttribute('onclick', 'image_grid_remove_group_by(this)');
+  del.innerHTML = '&times;';
+  p.appendChild(del);
+
+  var prev = document.createElement('button');
+  prev.innerHTML = '<';
+  prev.setAttribute('value', d.group_index);
+  prev.setAttribute('onclick', 'image_grid_group_prev(this)');
+  p.appendChild(prev);
+
+  var sel = document.createElement('select');
+  sel.setAttribute('id', image_grid_group_select_get_html_id(d.group_index));
+  sel.setAttribute('onchange', 'image_grid_group_value_onchange(this)');
+  var i, value;
+  var n = d.values.length;
+  var current_value = d.values[ d.current_value_index ];
+  for ( i = 0; i < n; ++i ) {
+    value = d.values[i];
+    var o = document.createElement('option');
+    o.setAttribute('value', value);
+    o.innerHTML = '(' + (i+1) + '/' + n + ') ' + d.name + ' = ' + value;
+    if ( value === current_value ) {
+      o.setAttribute('selected', 'selected');
+    }
+
+    sel.appendChild(o);
+  }
+  p.appendChild(sel);
+
+  var next = document.createElement('button');
+  next.innerHTML = '>';
+  next.setAttribute('value', d.group_index);
+  next.setAttribute('onclick', 'image_grid_group_next(this)');
+  p.appendChild(next);
+
+  document.getElementById('image_grid_group_panel').appendChild(p);
+}
+
+function image_grid_group_panel_set_selected_value(group_index) {
+  var sel = document.getElementById(image_grid_group_select_get_html_id(group_index));
+  sel.selectedIndex = _via_image_grid_group_var[group_index].current_value_index;
+}
+
+function image_grid_group_panel_set_options(group_index) {
+  var sel = document.getElementById(image_grid_group_select_get_html_id(group_index));
+  sel.innerHTML = '';
+
+  var i, value;
+  var n = _via_image_grid_group_var[group_index].values.length;
+  var name = _via_image_grid_group_var[group_index].name;
+  var current_value = _via_image_grid_group_var[group_index].values[ _via_image_grid_group_var[group_index].current_value_index ]
+  for ( i = 0; i < n; ++i ) {
+    value = _via_image_grid_group_var[group_index].values[i];
+    var o = document.createElement('option');
+    o.setAttribute('value', value);
+    o.innerHTML = '(' + (i+1) + '/' + n + ') ' + name + ' = ' + value;
+    if ( value === current_value ) {
+      o.setAttribute('selected', 'selected');
+    }
+    sel.appendChild(o);
+  }
+}
+
+function image_grid_group_select_get_html_id(group_index) {
+  return 'gi_' + group_index;
+}
+
+function image_grid_group_select_parse_html_id(id) {
+  return parseInt(id.substr(3));
+}
+
+function image_grid_group_by_select_set_disabled(type, name, is_disabled) {
+  var p = document.getElementById('image_grid_toolbar_group_by_select');
+  var sel_option_value = image_grid_toolbar_group_by_select_get_html_id(type, name);
+
+  var n = p.options.length;
+  var option_value;
   var i;
-  for ( i = 0; i < _via_img_count; ++i ) {
-    img_index_array.push(i);
+  for ( i = 0; i < n; ++i ) {
+    if ( sel_option_value === p.options[i].value ) {
+      if ( is_disabled ) {
+        p.options[i].setAttribute('disabled', 'disabled');
+      } else {
+        p.options[i].removeAttribute('disabled');
+      }
+      break;
+    }
+  }
+}
+
+function image_grid_remove_group_by(p) {
+  var prefix = 'group_toolbar_';
+  var group_index = parseInt( p.parentNode.id.substr( prefix.length ) );
+
+  if ( group_index === 0 ) {
+    image_grid_show_all_project_images();
+  } else {
+    // merge all groups that are child of group_index
+    image_grid_group_by_merge(_via_image_grid_group, 0, group_index);
+
+    var n = _via_image_grid_group_var.length;
+    var p = document.getElementById('image_grid_group_panel');
+    var group_panel_id;
+    var i;
+    for ( i = group_index; i < n; ++i ) {
+      image_grid_remove_html_group_panel( _via_image_grid_group_var[i] );
+      image_grid_group_by_select_set_disabled( _via_image_grid_group_var[i].type,
+                                               _via_image_grid_group_var[i].name,
+                                               false);
+    }
+    _via_image_grid_group_var.splice(group_index);
+
+    image_grid_set_content_to_current_group();
+  }
+}
+
+function image_grid_group_by(type, name) {
+  console.log('grouping by ' + type + ', ' + name);
+
+  if ( Object.keys(_via_image_grid_group).length === 0 ) {
+    // first group
+    var img_index_array = [];
+    var i;
+    for ( i = 0; i < _via_img_count; ++i ) {
+      img_index_array.push(i);
+    }
+
+    _via_image_grid_group = image_grid_split_array_to_group(img_index_array, type, name);
+    var new_group_values = Object.keys(_via_image_grid_group);
+    _via_image_grid_group_var = [];
+    _via_image_grid_group_var.push( { 'type':type, 'name':name, 'current_value_index':2, 'values':new_group_values, 'group_index':0 } );
+
+    image_grid_add_html_group_panel(_via_image_grid_group_var[0]);
+  } else {
+    image_grid_group_split_all_arrays( _via_image_grid_group, type, name );
+
+    var i, n, value;
+    var current_group_value = _via_image_grid_group;
+    n = _via_image_grid_group_var.length;
+
+    for ( i = 0; i < n; ++i ) {
+      value = _via_image_grid_group_var[i].values[ _via_image_grid_group_var[i].current_value_index ];
+      current_group_value = current_group_value[ value ];
+    }
+    var new_group_values = Object.keys(current_group_value);
+    var group_var_index = _via_image_grid_group_var.length;
+    _via_image_grid_group_var.push( { 'type':type, 'name':name, 'current_value_index':0, 'values':new_group_values, 'group_index':group_var_index } );
+    image_grid_add_html_group_panel( _via_image_grid_group_var[group_var_index] );
   }
 
-  var grp;
-  grp = image_grid_split_array_to_group(img_index_array, attr_type, attr_name);
-  console.log(grp);
+  image_grid_set_content_to_current_group();
+}
+
+function image_grid_group_by_merge(group, current_level, target_level) {
+  var child_value;
+  var group_data = [];
+  if ( current_level === target_level ) {
+    return image_grid_group_by_collapse(group);
+  } else {
+    for ( child_value in group ) {
+      group[child_value] = image_grid_group_by_merge(group[child_value], current_level + 1, target_level);
+    }
+  }
+}
+
+function image_grid_group_by_collapse(group) {
+  var child_value;
+  var child_collapsed_value;
+  var group_data = [];
+  for ( child_value in group ) {
+    if ( Array.isArray(group[child_value]) ) {
+      group_data = group_data.concat(group[child_value]);
+    } else {
+      group_data = group_data.concat(image_grid_group_by_collapse(group[child_value]));
+    }
+  }
+  return group_data;
+}
+
+// recursively collapse all arrays to list
+function image_grid_group_split_all_arrays(group, type, name) {
+  if ( Array.isArray(group) ) {
+    return image_grid_split_array_to_group(group, type, name);
+  } else {
+    var group_value;
+    for ( group_value in group ) {
+      if ( Array.isArray( group[group_value] ) ) {
+        group[group_value] = image_grid_split_array_to_group(group[group_value], type, name);
+      } else {
+        image_grid_group_split_all_arrays(group[group_value], type, name);
+      }
+    }
+  }
 }
 
 function image_grid_split_array_to_group(img_index_array, attr_type, attr_name) {
@@ -6241,9 +6561,135 @@ function image_grid_split_array_to_group(img_index_array, attr_type, attr_name) 
   return grp;
 }
 
-function image_grid_reset_group_by() {
-  var _via_image_grid_group = {};
-  var _via_image_grid_group_var = [];
+function image_grid_group_next(p) {
+  var group_index = parseInt( p.value );
+  var group_value_list = _via_image_grid_group_var[group_index].values;
+  var n = group_value_list.length;
+  var current_index = _via_image_grid_group_var[group_index].current_value_index;
+  var next_index = current_index + 1;
+  if ( next_index >= n ) {
+    if ( group_index === 0 ) {
+      next_index = next_index - n;
+      image_grid_jump_to_group(group_index, next_index);
+    } else {
+      // next of parent group
+      var parent_group_index = group_index - 1;
+      var parent_current_val_index = _via_image_grid_group_var[parent_group_index].current_value_index;
+      var parent_next_val_index = parent_current_val_index + 1;
+      while ( parent_group_index !== 0 ) {
+        if ( parent_next_val_index >= _via_image_grid_group_var[parent_group_index].values.length ) {
+          parent_group_index = group_index - 1;
+          parent_current_val_index = _via_image_grid_group_var[parent_group_index].current_value_index;
+          parent_next_val_index = parent_current_val_index + 1;
+        } else {
+          break;
+        }
+      }
+
+      if ( parent_next_val_index >= _via_image_grid_group_var[parent_group_index].values.length ) {
+        parent_next_val_index = 0;
+      }
+      image_grid_jump_to_group(parent_group_index, parent_next_val_index);
+    }
+  } else {
+    image_grid_jump_to_group(group_index, next_index);
+  }
+  image_grid_set_content_to_current_group();
+}
+
+function image_grid_group_prev(p) {
+  var group_index = parseInt( p.value );
+  var group_value_list = _via_image_grid_group_var[group_index].values;
+  var n = group_value_list.length;
+  var current_index = _via_image_grid_group_var[group_index].current_value_index;
+  var prev_index = current_index - 1;
+  if ( prev_index < 0 ) {
+    if ( group_index === 0 ) {
+      prev_index = n + prev_index;
+      image_grid_jump_to_group(group_index, prev_index);
+    } else {
+      // next of parent group
+      var parent_group_index = group_index - 1;
+      var parent_current_val_index = _via_image_grid_group_var[parent_group_index].current_value_index;
+      var parent_prev_val_index = parent_current_val_index - 1;
+      while ( parent_group_index !== 0 ) {
+        if ( parent_prev_val_index < 0 ) {
+          parent_group_index = group_index - 1;
+          parent_current_val_index = _via_image_grid_group_var[parent_group_index].current_value_index;
+          parent_prev_val_index = parent_current_val_index - 1;
+        } else {
+          break;
+        }
+      }
+
+      if ( parent_prev_val_index < 0 ) {
+        parent_prev_val_index = 0;
+      }
+      image_grid_jump_to_group(parent_group_index, parent_prev_val_index);
+    }
+  } else {
+    image_grid_jump_to_group(group_index, prev_index);
+  }
+  image_grid_set_content_to_current_group();
+}
+
+
+function image_grid_group_value_onchange(p) {
+  var group_index = image_grid_group_select_parse_html_id(p.id);
+  image_grid_jump_to_group(group_index, p.selectedIndex);
+  image_grid_set_content_to_current_group();
+}
+
+function image_grid_jump_to_group(group_index, value_index) {
+  var n = _via_image_grid_group_var[group_index].values.length;
+  if ( value_index >=n || value_index < 0 ) {
+    return;
+  }
+
+  _via_image_grid_group_var[group_index].current_value_index = value_index;
+  image_grid_group_panel_set_selected_value( group_index );
+
+  // reset the value of lower groups
+  var i, value;
+  if ( group_index + 1 < _via_image_grid_group_var.length ) {
+    var e = _via_image_grid_group;
+    for ( i = 0; i <= group_index; ++i ) {
+      value = _via_image_grid_group_var[i].values[ _via_image_grid_group_var[i].current_value_index ];
+      e = e[ value ];
+    }
+
+    for ( i = group_index + 1; i < _via_image_grid_group_var.length; ++i ) {
+      _via_image_grid_group_var[i].values = Object.keys(e);
+      if ( _via_image_grid_group_var[i].values.length === 0 ) {
+        _via_image_grid_group_var[i].current_value_index = -1;
+        _via_image_grid_group_var.splice(i);
+        image_grid_group_panel_set_options(i);
+        break;
+      } else {
+        _via_image_grid_group_var[i].current_value_index = 0;
+        value = _via_image_grid_group_var[i].values[0]
+        e = e[value];
+        image_grid_group_panel_set_options(i);
+      }
+    }
+  }
+}
+
+function image_grid_set_content_to_current_group() {
+  var group_img_index_list = [];
+  var img_index_list = _via_image_grid_group;
+  var i, n, value, current_value_index;
+  n = _via_image_grid_group_var.length;
+  for ( i = 0; i < n; ++i ) {
+    value = _via_image_grid_group_var[i].values[ _via_image_grid_group_var[i].current_value_index ];
+    img_index_list = img_index_list[ value ];
+  }
+
+  if ( Array.isArray(img_index_list) ) {
+    image_grid_set_content( img_index_list );
+  } else {
+    console.log('image_grid_set_content_to_current_group(): expected array while got ' + typeof(img_index_list));
+  }
 }
 
 //

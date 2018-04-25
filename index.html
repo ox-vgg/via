@@ -93,13 +93,18 @@
 
       /* image grid view */
       #image_grid_panel { position:relative; margin:0; padding:0; width:100%; }
-      #image_grid_panel #image_grid_toolbar { display:block; font-size:small; padding-bottom:0.2rem; }
-      #image_grid_panel #image_grid_toolbar select { font-size:small; width:4rem;}
+      #image_grid_panel #image_grid_toolbar { display:block; font-size:small; padding:0.5rem 0;}
+      #image_grid_panel #image_grid_toolbar select { font-size:small; }
       #image_grid_panel #image_grid_toolbar .tool { display:inline; margin:0 0.5rem;}
+      #image_grid_panel #image_grid_group_panel { font-size:small; }
+      #image_grid_panel #image_grid_group_panel select { font-size:small; }
+      #image_grid_panel #image_grid_group_panel .image_grid_group_toolbar { display:inline; margin-left: 2rem;}
+      #image_grid_panel #image_grid_group_panel .image_grid_group_toolbar select { margin:0 0.2rem; padding:0; font-size:small;}
+
       #image_grid_panel #image_grid_info { display:block; font-size:small; text-align:center; margin-top:0.8rem; }
-      #image_grid_panel #image_grid_content { position:relative; overflow:hidden; margin:0; padding:0;  outline:none; }
+      #image_grid_panel #image_grid_content { position:relative; overflow:hidden; margin:0; padding:0; outline:none; }
       #image_grid_panel #image_grid_content #image_grid_content_img img { margin:0; padding:0; border:2px solid white;}
-      #image_grid_panel #image_grid_content #image_grid_content_img .sel { border-color:red; }
+      #image_grid_panel #image_grid_content #image_grid_content_img .sel { border-color:white; } /* hidden until used */
       #image_grid_panel #image_grid_content #image_grid_content_img { position:absolute; top:0; left:0; width:100%; height:100%; }
       #image_grid_panel #image_grid_content #image_grid_content_rshape { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
       #image_grid_panel #image_grid_content img { float:left; margin:0; }
@@ -406,6 +411,7 @@
           <li>View
             <ul>
               <li onclick="leftsidebar_toggle()" title="Show or hide the sidebar shown in left hand side">Toggle left sidebar</li>
+              <li onclick="toggle_attributes_editor()" title="Show or hide a panel to update file and region attributes">Toggle attributes editor</li>
               <li onclick="toggle_annotation_editor()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle annotation editor</li>
               <li onclick="toggle_img_fn_list_visibility()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle image filename list</li>
               <li class="submenu_divider"></li>
@@ -517,7 +523,7 @@
         </div>
 
         <!-- Attributes -->
-        <button class="leftsidebar_accordion" id="attr">Attributes</button>
+        <button class="leftsidebar_accordion" id="attributes_editor_panel_title">Attributes</button>
         <div class="leftsidebar_accordion_panel" id="attributes_editor_panel">
           <div class="button_panel" style="padding:1rem 0;">
             <span class="text_button" onclick="show_region_attributes_update_panel()" id="button_show_region_attributes" title="Show region attributes">Region Attributes</span>
@@ -594,39 +600,29 @@
           <canvas id="region_canvas" width="1" height="1" tabindex="1">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
         </div>
         <div id="image_grid_panel" class="display_area_content">
+
+          <div id="image_grid_group_panel">
+            <span class="tool">Group by&nbsp; <select id="image_grid_toolbar_group_by_select" onchange="image_grid_toolbar_onchange_group_by_select(this)"></select></span>
+          </div>
+
           <div id="image_grid_toolbar">
-            <span class="tool">Group by&nbsp; <select id="image_grid_toolbar_select_group_by" onchange="image_grid_on_group_by_select(this)"></select>
+            <span>Current group contains</span>
+            <span id="image_grid_group_by_img_count">0</span>
+            <span>images, show</span>
+
+            <span>
+              <select id="image_grid_show_image_policy" onchange="image_grid_onchange_show_image_policy(this)">
+                <option value="first_k">first N images that fit in this screen</option>
+                <option value="first_mid_last">only first, middle and last image</option>
+                <option value="even_indexed">even indexed images (i.e. 0,2,4,...)</option>
+                <option value="odd_indexed">odd indexed images (i.e. 1,3,5,...)</option>
+                <option value="all">all images (can be slow)</option>
+              </select>
             </span>
-
-            <span class="tool" id="image_grid_group_by_panel">
-            </span>
-
-            <span>Page:</span>
-            <span id="image_grid_toolbar_page_prev" class="text_button" title="Show previous page" onclick="image_grid_page_prev()">Prev</span>
-            <span id="image_grid_toolbar_page_next" class="text_button" title="Show next page" onclick="image_grid_page_next()">Next</span>
-
-            <span style="margin-left:2rem;">Image Select:</span>
-            <span class="text_button" title="Select all images in this page" onclick="image_grid_page_select_all()">All</span>
-            <span class="text_button" title="Remove all selected images from this page" onclick="image_grid_page_select_none()">None</span>
-
-            <span style="margin-left:2rem;">File List Select:</span>
-            <span class="text_button" title="Select all images shown in the current image file list" onclick="image_grid_img_fn_list_select_all()">All</span>
-            <span class="text_button" title="Remove all selected images contained in current image file list" onclick="image_grid_img_fn_list_select_none()">None</span>
-
-            <span style="margin-left:2rem;">Selected&nbsp;</span>
-            <span id="image_grid_sel_img_count">0</span>
-            <span class="text_button" style="margin:0; padding:0;" title="Clear all selection" onclick="image_grid_clear_all_selection()">&times;</span>
-            <span id="image_grid_sel_img_count">&nbsp;files</span>
 
             <span style="margin-left:2rem;">Image Size:</span>
             <span class="text_button" title="Increase height of images shown in image grid" onclick="image_grid_image_size_increase()">&plus;</span>
             <span class="text_button" title="Decrease height of images shown in image grid" onclick="image_grid_image_size_decrease()">&minus;</span>
-
-            <span style="margin-left:2rem; vertical-align:top;">
-              <input style="margin:0; padding:0; vertical-align:top;" type="checkbox" name="image_grid_show_region_shape" checked onchange="image_grid_toggle_region_shape(this)">
-              <label for="image_grid_show_region_shape">Show regions</label>
-            </span>
-
           </div>
 
           <div id="image_grid_content">
@@ -634,7 +630,7 @@
             <svg xmlns:xlink="http://www.w3.org/2000/svg" id="image_grid_content_rshape"></svg>
           </div>
 
-          <div id="image_grid_info">Tip: press and move mouse to select images, use <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor(); edit_file_metadata_in_annotation_editor();">Annotation Editor</span> to bulk update file attributes of selected images and <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_img_fn_list_visibility()">Filename List</span> to show a page containing that image.</div>
+          <div id="image_grid_info"></div>
         </div> <!-- end of image grid panel -->
 
         <div id="settings_panel" class="display_area_content">
