@@ -101,7 +101,9 @@
       #image_grid_panel #image_grid_group_panel .image_grid_group_toolbar { display:inline; margin-left: 2rem;}
       #image_grid_panel #image_grid_group_panel .image_grid_group_toolbar select { margin:0 0.2rem; padding:0; font-size:small;}
 
-      #image_grid_panel #image_grid_info { display:block; font-size:small; text-align:center; margin-top:0.8rem; }
+      #image_grid_panel #image_grid_info { display:block; font-size:small; text-align:center; margin-top:0.5rem; }
+      #image_grid_panel #image_grid_info .left { float:left; margin-left:2rem; }
+      #image_grid_panel #image_grid_info .right { float:right; margin-right:2rem; }
       #image_grid_panel #image_grid_content { position:relative; overflow:hidden; margin:0; padding:0; outline:none; }
       #image_grid_panel #image_grid_content #image_grid_content_img img { margin:0; padding:0; border:2px solid white;}
       #image_grid_panel #image_grid_content #image_grid_content_img .sel { border-color:white; } /* hidden until used */
@@ -612,11 +614,13 @@
 
             <span>
               <select id="image_grid_show_image_policy" onchange="image_grid_onchange_show_image_policy(this)">
-                <option value="first_k">first N images that fit in this screen</option>
+                <option value="all">all images (paginated)</option>
                 <option value="first_mid_last">only first, middle and last image</option>
                 <option value="even_indexed">even indexed images (i.e. 0,2,4,...)</option>
                 <option value="odd_indexed">odd indexed images (i.e. 1,3,5,...)</option>
-                <option value="all">all images (can be slow)</option>
+                <option value="gap5">images 1, 5, 10, 15,...</option>
+                <option value="gap25">images 1, 25, 50, 75, ...</option>
+                <option value="gap50">images 1, 50, 100, 150, ...</option>
               </select>
             </span>
 
@@ -630,7 +634,8 @@
             <svg xmlns:xlink="http://www.w3.org/2000/svg" id="image_grid_content_rshape"></svg>
           </div>
 
-          <div id="image_grid_info"></div>
+          <div id="image_grid_info">
+          </div>
         </div> <!-- end of image grid panel -->
 
         <div id="settings_panel" class="display_area_content">
