@@ -69,7 +69,7 @@
 
       /* toolbar containing small icons for tools */
       .toolbar { display:inline-block; margin-left:1rem; }
-      .toolbar svg { fill:white; margin: 0.2rem 0.1rem; height:1.2rem; }
+      .toolbar svg { fill:white; margin: 0.2rem 0.1rem; height:1.2rem;  -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none;}
       .toolbar svg:hover { fill:yellow; cursor:pointer; }
       .toolbar svg:active { fill:white; }
       .toolbar ul { display:inline-block; padding:0.2rem; margin:0; }
@@ -125,14 +125,13 @@
       .leftsidebar_accordion_panel.show { display:block; }
 
       /* buttons */
-      .button_panel { display:table; width:100%; }
-      .button_panel .text_button, .text_button { color: #0000ff; padding: 0.2rem 0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
+      .button_panel { display:inline-block; width:100%; margin:0.2rem 0; }
       .button_panel .text_button, .text_button { color: #0000ff; padding: 0.2rem 0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
       .button_panel .flush_right { float:right; }
       .button_panel .text_button:hover, .text_button:hover { cursor:pointer; }
       .button_panel .text_button:active, .text_button:active { color: #000000; }
       .button_panel .active { border-bottom:1px solid black; }
-      .button_panel .button { padding:0.35rem 0.5rem; cursor:pointer; background-color:#cccccc; border-radius:0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
+      .button_panel .button { display:inline-block; padding:0.35rem 0.5rem; margin:0 0.05rem; cursor:pointer; background-color:#cccccc; border-radius:0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
       .button_panel .button:hover { background-color:black; color:white; }
 
       /* Attributes properties: name, description, type, ... */
@@ -362,7 +361,7 @@
 
     <!-- spreadsheet like editor for annotations -->
     <div id="annotation_editor_panel">
-      <div class="button_panel" style="margin:0.5rem 0;">
+      <div class="button_panel">
         <span class="text_button" onclick="edit_region_metadata_in_annotation_editor()" id="button_edit_region_metadata" title="Manual annotations of regions">Region Annotations</span>
         <span class="text_button" onclick="edit_file_metadata_in_annotation_editor()" id="button_edit_file_metadata" title="Manual annotations of a file">File Annotations</span>
 
@@ -388,7 +387,7 @@
               <li class="submenu_divider"></li>
               <li onclick="sel_local_images()" title="Add images locally stored in this computer">Add local files</li>
               <li onclick="project_file_add_url_with_input()" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)">Add files from URL</li>
-              <li onclick="" title="Add images from a list of web url stored in a text file (one url per line)">Add URLs from text file</li>
+              <li onclick="sel_local_data_file('files_url')" title="Add images from a list of web url or absolute path stored in a text file (one url or path per line)">Add url or path from text file</li>
               <li onclick="project_file_add_abs_path_with_input()" title="Add images using absolute path of file (e.g. /home/abhishek/image1.jpg)">Add file using absolute path</li>
               <li onclick="project_file_remove_with_confirm()" title="Remove selected file (i.e. file currently being shown)">Remove file</li>
               <li class="submenu_divider"></li>
@@ -534,8 +533,8 @@
           <div id="attributes_update_panel">
             <div class="button_panel">
               <input style="width:70%" type="text" placeholder="attribute name" id="user_input_attribute_id" value="">
-              <span class="button" onclick="add_new_attribute_from_user_input()" title="Add new attribute">&plus;</span>
-              <span class="button" onclick="delete_existing_attribute_with_confirm()" title="Delete existing attribute">&minus;</span>
+              <span id="button_add_new_attribute" class="button" onclick="add_new_attribute_from_user_input()" title="Add new attribute">&plus;</span>
+              <span id="button_del_attribute" class="button" onclick="delete_existing_attribute_with_confirm()" title="Delete existing attribute">&minus;</span>
             </div>
             <div class="button_panel" style="margin:0.1rem 0;" >
               <select style="width:100%" id="attributes_name_list" onchange="update_attribute_properties_panel()" title="List of existing attributes"></select>
@@ -543,8 +542,9 @@
             <div id="attribute_properties"></div>
             <div id="attribute_options"></div>
             <p style="text-align:center">
-              <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor()">Annotation Editor</span>|
-              <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="">Save Attributes</span>
+              <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor()">Toggle Annotation Editor</span>
+              <!--
+              |<span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="">Save Attributes</span>-->
             </p>
           </div>
         </div>
@@ -559,6 +559,10 @@
             <tr>
               <td>+&nbsp;/&nbsp;-&nbsp;/&nbsp;=</td>
               <td>Zoom in/out/reset</td>
+            </tr>
+            <tr>
+              <td>Mouse wheel</td>
+              <td>Zoom or change region label</td>
             </tr>
             <tr>
               <td>Ctrl + c</td>
@@ -812,20 +816,24 @@
 <!--    -->
 <script src="via.js"></script>
 
-<!--    -->
+<!--
 <script src="via_demo.js"></script>
 <script src="./tests/data/via_image_grid_test_data.js"></script>
 <script src="./tests/data/wikimedia_commons_featured_images_url.js"></script>
 <script src="/data/datasets/via/import/pascal_voc/_via_project_pascal_voc2012_import.js"></script>
 <script src="/data/datasets/arsha/sherlock/facetracks/s01_from_RCNN/e01/tracks_FRCNN_remove_full_path_1000.json"></script>
-
+    -->
 
     <!-- Unit Tests    -->
+    <!--     -->
+    <script src="./tests/_via_test_data.js"></script>
+    <script src="./tests/_via_test.js"></script>
+
+    <script src="./tests/_via_test_region.js"></script>
     <!--
-    <script src="./tests/via_test_data.js"></script>
-    <script src="./tests/via_test.js"></script>
     <script src="./tests/via_test_fileio.js"></script>
-    <script src="./tests/via_test_region.js"></script>
-     -->
+-->
+
+
   </body>
 </html>

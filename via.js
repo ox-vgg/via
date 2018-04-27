@@ -319,13 +319,6 @@ function _via_init() {
   annotation_editor_set_active_button();
   init_message_panel();
 
-  _via_is_local_storage_available = check_local_storage();
-  if (_via_is_local_storage_available) {
-    if (is_via_data_in_localStorage()) {
-      show_localStorage_recovery_options();
-    }
-  }
-
   // run attached sub-modules (if any)
   if (typeof _via_load_submodules === 'function') {
     setTimeout(function() {
@@ -375,16 +368,18 @@ function show_single_image_view() {
     _via_show_img(_via_image_index);
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE);
     update_annotation_editor();
+
+    var p = document.getElementById('toolbar_image_grid_toggle');
+    p.firstChild.setAttribute('xlink:href', '#icon_gridon');
+    p.childNodes[1].innerHTML = 'Switch to Single Image View';
   } else {
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_START_INFO);
   }
-  var p = document.getElementById('toolbar_image_grid_toggle');
-  p.firstChild.setAttribute('xlink:href', '#icon_gridon');
-  p.childNodes[1].innerHTML = 'Switch to Single Image View';
 }
 
 function show_image_grid_view() {
   if (_via_current_image_loaded) {
+    img_fn_list_clear_all_style();
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID);
     image_grid_toolbar_update_group_by_select();
     update_annotation_editor();
@@ -392,13 +387,13 @@ function show_image_grid_view() {
     if ( _via_image_grid_group_var.length === 0 ) {
       image_grid_show_all_project_images();
     }
-    //image_grid_update();
+
+    var p = document.getElementById('toolbar_image_grid_toggle');
+    p.firstChild.setAttribute('xlink:href', '#icon_gridoff');
+    p.childNodes[1].innerHTML = 'Switch to Image Grid View';
   } else {
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_START_INFO);
   }
-  var p = document.getElementById('toolbar_image_grid_toggle');
-  p.firstChild.setAttribute('xlink:href', '#icon_gridoff');
-  p.childNodes[1].innerHTML = 'Switch to Image Grid View';
 }
 
 //
@@ -437,8 +432,8 @@ function sel_local_data_file(type) {
       invisible_file_input.onchange = import_annotations_from_file;
       break;
 
-    case 'attributes':
-      invisible_file_input.onchange = import_attributes_from_file;
+    case 'files_url':
+      invisible_file_input.onchange = import_files_url_from_file;
       break;
 
     default:
@@ -452,6 +447,14 @@ function sel_local_data_file(type) {
 //
 // Data Importer
 //
+function import_files_url_from_file(event) {
+  var selected_files = event.target.files;
+  for ( var i = 0; i < selected_files.length; ++i ) {
+    var file = selected_files[i];
+    load_text_file(file, import_files_url_from_csv);
+  }
+}
+
 function import_annotations_from_file(event) {
   var selected_files = event.target.files;
   for ( var i = 0; i < selected_files.length; ++i ) {
@@ -476,6 +479,7 @@ function import_annotations_from_file(event) {
     }
   }
 }
+
 function import_annotations_from_csv(data) {
   return new Promise( function(ok_callback, err_callback) {
     if ( data === '' || typeof(data) === 'undefined') {
@@ -594,6 +598,9 @@ function import_annotations_from_csv(data) {
       if ( region_import_count ) {
         update_attributes_update_panel();
         update_annotation_editor();
+        _via_load_canvas_regions(); // image to canvas space transform
+        _via_redraw_reg_canvas();
+        _via_reg_canvas.focus();
       }
     } else {
       if ( file_added_count ) {
@@ -861,6 +868,37 @@ function load_text_file(text_file, callback_function) {
     }, false);
     text_reader.readAsText(text_file, 'utf-8');
   }
+}
+
+function import_files_url_from_csv(data) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( data === '' || typeof(data) === 'undefined') {
+      err_callback();
+    }
+
+    var malformed_url_count = 0;
+    var url_added_count = 0;
+
+    var line_split_regex = new RegExp('\n|\r|\r\n', 'g');
+    var csvdata = data.split(line_split_regex);
+
+    var percent_completed = 0;
+    var n = csvdata.length;
+    var i;
+    for ( i=0; i < n; ++i ) {
+      // ignore blank lines
+      if (csvdata[i].charAt(0) === '\n' || csvdata[i].charAt(0) === '') {
+        malformed_url_count += 1;
+        continue;
+      } else {
+        project_file_add_url(csvdata[i]);
+        url_added_count += 1;
+      }
+    }
+    show_message('Added ' + url_added_count + ' files to project');
+
+    update_img_fn_list();
+  });
 }
 
 //
@@ -1339,7 +1377,6 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
     }
     _via_redraw_reg_canvas();
     _via_reg_canvas.focus();
-    save_current_data_to_browser_cache();
     return;
   }
 
@@ -1448,7 +1485,6 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 
     _via_redraw_reg_canvas();
     _via_reg_canvas.focus();
-    save_current_data_to_browser_cache();
     return;
   }
 
@@ -1459,63 +1495,9 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
     if ( _via_is_user_drawing_polygon ) {
       var canvas_x0 = Math.round(_via_click_x0);
       var canvas_y0 = Math.round(_via_click_y0);
-
-      // check if the clicked point is close to the first point
-      var fx0 = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'][0];
-      var fy0 = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_y'][0];
-      var  dx = (fx0 - canvas_x0);
-      var  dy = (fy0 - canvas_y0);
-      // @todo: add test for the inner area delimited by the enclosed polygon to have at least a minimum given value
-      if ( Math.sqrt(dx*dx + dy*dy) <= VIA_POLYGON_VERTEX_MATCH_TOL &&
-           _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'].length >= 3 ) {
-        // user clicked on the first polygon point to close the path and the polygon has at least 3 points defined
-        _via_is_user_drawing_polygon = false;
-
-        // add all polygon points stored in _via_canvas_regions[]
-        var all_points_x = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'].slice(0);
-        var all_points_y = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_y'].slice(0);
-        // close path - this will make any final, polygon region to contain at least 4 points
-        all_points_x.push(all_points_x[0]);
-        all_points_y.push(all_points_y[0]);
-
-        var canvas_all_points_x = [];
-        var canvas_all_points_y = [];
-
-        //var points_str = '';
-        for ( var i=0; i<all_points_x.length; ++i ) {
-          all_points_x[i] = Math.round( all_points_x[i] * _via_canvas_scale );
-          all_points_y[i] = Math.round( all_points_y[i] * _via_canvas_scale );
-
-          canvas_all_points_x[i] = Math.round( all_points_x[i] / _via_canvas_scale );
-          canvas_all_points_y[i] = Math.round( all_points_y[i] / _via_canvas_scale );
-
-          //points_str += all_points_x[i] + ' ' + all_points_y[i] + ',';
-        }
-        //points_str = points_str.substring(0, points_str.length-1); // remove last comma
-
-        var polygon_region = new file_region();
-        polygon_region.shape_attributes['name'] = 'polygon';
-        //polygon_region.shape_attributes['points'] = points_str;
-        polygon_region.shape_attributes['all_points_x'] = all_points_x;
-        polygon_region.shape_attributes['all_points_y'] = all_points_y;
-        _via_current_polygon_region_id = _via_img_metadata[_via_image_id].regions.length;
-        _via_img_metadata[_via_image_id].regions.push(polygon_region);
-
-        // update canvas
-        _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'] = canvas_all_points_x;
-        _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_y'] = canvas_all_points_y;
-
-        // newly drawn region is automatically selected
-        select_only_region(_via_current_polygon_region_id);
-
-        _via_current_polygon_region_id = -1;
-        update_annotation_editor();
-        save_current_data_to_browser_cache();
-      } else {
-        // user clicked on a new polygon point
-        _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'].push(canvas_x0);
-        _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_y'].push(canvas_y0);
-      }
+      // user clicked on a new polygon point
+      _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'].push(canvas_x0);
+      _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_y'].push(canvas_y0);
     } else {
       var region_id = is_inside_region(_via_click_x0, _via_click_y0);
       if ( region_id >= 0 ) {
@@ -1553,6 +1535,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
             canvas_polygon_region.shape_attributes['all_points_y'] = [Math.round(_via_click_y0)];
             _via_canvas_regions.push(canvas_polygon_region);
             _via_current_polygon_region_id =_via_canvas_regions.length - 1;
+            console.log('set _via_current_polygon_region_id=' + _via_current_polygon_region_id);
             break;
 
           case VIA_REGION_SHAPE.POINT:
@@ -1570,7 +1553,6 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
             _via_canvas_regions.push(canvas_point_region);
 
             update_annotation_editor();
-            save_current_data_to_browser_cache();
             break;
           }
         }
@@ -1693,8 +1675,6 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
     annotation_editor_highlight_row( _via_user_sel_region_id );
     _via_redraw_reg_canvas();
     _via_reg_canvas.focus();
-
-    save_current_data_to_browser_cache();
     return;
   }
 
@@ -2003,7 +1983,6 @@ function _via_redraw_reg_canvas() {
       if (_via_is_region_boundary_visible) {
         draw_all_regions();
       }
-
       if (_via_is_region_id_visible) {
         draw_all_region_id();
       }
@@ -2861,15 +2840,8 @@ function rect_update_corner(corner_id, d, x, y, preserve_aspect_ratio) {
 
 function _via_update_ui_components() {
   if ( !_via_is_window_resized && _via_current_image_loaded ) {
-    /////
-    ///// @todo
-    ///// handle all the cases
-    /////
-    console.log('@TODO');
-    image_grid_set_content_panel_height_fixed();
-    image_grid_set_first_img_index( _via_image_grid_page_first_index );
-
     _via_is_window_resized = true;
+    show_single_image_view();
     _via_show_img(_via_image_index);
 
     if (_via_is_canvas_zoomed) {
@@ -3051,6 +3023,12 @@ _via_reg_canvas.addEventListener('keydown', function(e) {
       // [Enter] key is used to indicate completion of
       // polygon or polyline drawing action
 
+      // debug
+      // ERROR: _via_current_polygon_region_id is not being set sometimes
+      // could be because the first point falls in another already drawn region???
+      // @fixme
+      console.log(_via_canvas_regions);
+      console.log(_via_current_polygon_region_id);
       var npts =  _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'].length;
       if ( npts <=2 && _via_current_shape === VIA_REGION_SHAPE.POLYGON ) {
         show_message('For a polygon, you must define at least 3 points. ' +
@@ -3073,7 +3051,6 @@ _via_reg_canvas.addEventListener('keydown', function(e) {
       annotation_editor_scroll_to_row( _via_current_polygon_region_id );
       _via_current_polygon_region_id = -1;
 
-      save_current_data_to_browser_cache();
       _via_redraw_reg_canvas();
       _via_reg_canvas.focus();
     }
@@ -3157,7 +3134,6 @@ function del_sel_regions() {
   }
   _via_reg_canvas.focus();
   update_annotation_editor();
-  save_current_data_to_browser_cache();
 
   show_message('Deleted ' + del_region_count + ' selected regions');
 }
@@ -3491,114 +3467,31 @@ function toggle_region_id_visibility() {
 //
 // Mouse wheel event listener
 //
-window.addEventListener('wheel', function(e) {
+_via_reg_canvas.addEventListener('wheel', function(e) {
+  console.log('wheel')
   if (!_via_current_image_loaded) {
     return;
   }
 
-  if (e.ctrlKey) {
-    if (e.deltaY < 0) {
-      zoom_in();
-    } else {
-      zoom_out();
-    }
-    e.preventDefault();
+  if (e.deltaY < 0) {
+    zoom_in();
+  } else {
+    zoom_out();
   }
+  e.preventDefault();
 });
 
 //
-// Persistence of annotation data in browser cache (i.e. localStorage)
+// To protect loss of user data
 //
-
-function check_local_storage() {
-  // https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
-  try {
-    var x = '__storage_test__';
-    localStorage.setItem(x, x);
-    localStorage.removeItem(x);
-    return true;
-  }
-  catch(e) {
-    return false;
-  }
-}
-
-function save_current_data_to_browser_cache() {
-  setTimeout(function() {
-    if ( _via_is_local_storage_available &&
-         ! _via_is_save_ongoing) {
-      try {
-        _via_is_save_ongoing = true;
-        var img_metadata = pack_via_metadata('json');
-        var timenow = new Date().toUTCString();
-        localStorage.setItem('_via_timestamp', timenow);
-        localStorage.setItem('_via_img_metadata', img_metadata[0]);
-        localStorage.setItem('_via_attributes', JSON.stringify(_via_attributes));
-        _via_is_save_ongoing = false;
-      } catch(err) {
-        _via_is_save_ongoing = false;
-        _via_is_local_storage_available = false;
-        show_message('Failed to save annotation data to browser cache.');
-        alert('Failed to save annotation data to browser cache.');
-        console.log('Failed to save annotation data to browser cache');
-        console.log(err.message);
-      }
-    }
-  }, 1000);
-}
-
-function is_via_data_in_localStorage() {
-  return localStorage.getItem('_via_timestamp') &&
-    localStorage.getItem('_via_img_metadata');
-}
-
-function remove_via_data_from_localStorage() {
-  if( check_local_storage() && is_via_data_in_localStorage() ) {
-    localStorage.removeItem('_via_timestamp');
-    localStorage.removeItem('_via_img_metadata');
-  }
-}
-
-function show_localStorage_recovery_options() {
-  try {
-    var hstr = [];
-    var saved_date = localStorage.getItem('_via_timestamp');
-    var saved_data_size = localStorage.getItem('_via_img_metadata').length / 1024; // in Kb
-
-    hstr.push('<div style="padding: 1em; border: 1px solid #cccccc; width:80%;">');
-    hstr.push('<h3 style="border-bottom: 1px solid #5599FF">Data Recovery from Browser Cache</h3>');
-    hstr.push('<p>Annotation data from your previous session exists in this browser\'s cache :</h3>');
-    hstr.push('<ul><li>Saved on : ' + saved_date + '</li>');
-    hstr.push('<li>Size : ' + Math.round(saved_data_size) + ' KB</li>');
-    hstr.push('</ul>');
-    hstr.push('<span class="text_button" title="Save annotations as JSON" onclick="download_localStorage_data(\'json\')">Save</span>');
-    hstr.push('<span class="text_button" style="padding-left:2em;" onclick="remove_via_data_from_localStorage(); show_home_panel();" title="Discard annotation data">Discard</span>');
-
-    hstr.push('<p style="clear: left;"><b>If you continue, the cached data will be discarded!</b></p></div>');
-    document.getElementById( VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_START_INFO ).innerHTML += hstr.join('');
-  } catch(err) {
-    show_message('Failed to recover annotation data saved in browser cache.');
-    console.log('Failed to recover annotation data saved in browser cache.');
-    console.log(err.message);
-  }
-}
-
-function download_localStorage_data(type) {
-  var saved_date = new Date( localStorage.getItem('_via_timestamp') );
-
-  var localStorage_data_blob = new Blob( [localStorage.getItem('_via_img_metadata')],
-                                         {type: 'text/json;charset=utf-8'});
-
-  save_data_to_local_file(localStorage_data_blob, 'VIA_browser_cache_' + saved_date + '.json');
-}
-
-// this vertical spacer is needed to allow scrollbar to show
-// items like Keyboard Shortcut hidden under the attributes panel
-function update_vertical_space() {
-  var panel = document.getElementById('vertical_space');
-  panel.style.height = attributes_panel.offsetHeight+'px';
-}
-
+// source: https://developer.mozilla.org/en-US/docs/Web/Events/beforeunload
+/*
+window.addEventListener('beforeunload', function(e) {
+  var confirmationMessage = "\o/";
+  e.returnValue = confirmationMessage;     // Gecko, Trident, Chrome 34+
+  return confirmationMessage;              // Gecko, WebKit, Chrome <34
+});
+*/
 
 //
 // left sidebar toolbox maintainer
@@ -3851,7 +3744,6 @@ function img_fn_list_clear_all_style() {
   var cn = document.getElementById('img_fn_list').childNodes[0].childNodes;
   var i;
   var n = cn.length;
-  console.log('img_fn_list_clear_all_style()')
   for ( i = 0; i < n; ++i ) {
     cn[i].classList = [];
   }
@@ -4185,7 +4077,8 @@ function attribute_property_add_option(attr_id, option_id, option_desc, option_d
     c2b.setAttribute('type', 'radio');
     c2b.setAttribute('name', attr_id);
   }
-  c2b.setAttribute('onclick', 'attribute_property_on_option_update(this)');
+
+  c2b.setAttribute('onchange', 'attribute_property_on_option_update(this)');
   c2b.setAttribute('id', '_via_attribute_option_default_' + option_id);
 
   c0.appendChild(c0b);
@@ -4248,9 +4141,15 @@ function attribute_property_on_update(p) {
       delete _via_attributes[_via_attribute_being_updated][attr_id].options;
       delete _via_attributes[_via_attribute_being_updated][attr_id].default_options;
     } else {
-      _via_attributes[_via_attribute_being_updated][attr_id].options = {};
-      _via_attributes[_via_attribute_being_updated][attr_id].default_options = {};
-      delete _via_attributes[_via_attribute_being_updated][attr_id].default_value;
+      // preserve existing options
+      if ( ! _via_attributes[_via_attribute_being_updated][attr_id].hasOwnProperty('options') ) {
+        _via_attributes[_via_attribute_being_updated][attr_id].options = {};
+        _via_attributes[_via_attribute_being_updated][attr_id].default_options = {};
+      }
+
+      if ( _via_attributes[_via_attribute_being_updated][attr_id].hasOwnProperty('default_value') ) {
+        delete _via_attributes[_via_attribute_being_updated][attr_id].default_value;
+      }
 
       // collect existing attribute values and add them as options
       var attr_values = attribute_get_unique_values(_via_attribute_being_updated, attr_id);
@@ -4323,8 +4222,9 @@ function attribute_property_on_option_update(p) {
   if ( p.id.startsWith('_via_attribute_option_description_') ) {
     var key = p.id.substr( '_via_attribute_option_description_'.length );
     var old_value = _via_attributes[_via_attribute_being_updated][attr_id].options[key];
-    if ( p.value !== old_value ) {
-      _via_attributes[_via_attribute_being_updated][attr_id].options[key] = p.value;
+    var new_value = p.value;
+    if ( new_value !== old_value ) {
+      _via_attributes[_via_attribute_being_updated][attr_id].options[key] = new_value;
       show_attribute_properties();
       update_annotation_editor();
     }
@@ -4400,8 +4300,6 @@ function attribute_property_on_option_add(p) {
     var option_id = p.value;
     var option_id_test = attribute_property_option_id_is_valid(attr_id, option_id);
     if ( option_id_test.is_valid ) {
-      var attribute_type = _via_attributes[_via_attribute_being_updated][attr_id].type;
-
       _via_attributes[_via_attribute_being_updated][attr_id].options[option_id] = '';
       show_attribute_options();
       update_annotation_editor();
@@ -4468,7 +4366,7 @@ function attribute_property_option_id_is_valid(attr_id, new_option_id) {
   var option_id;
   for ( option_id in _via_attributes[_via_attribute_being_updated][attr_id].options ) {
     if ( option_id === new_option_id ) {
-      return { 'is_valid':false, 'message':'Option id [' + id + '] already exists' };
+      return { 'is_valid':false, 'message':'Option id [' + attr_id + '] already exists' };
     }
   }
 
@@ -4496,7 +4394,7 @@ function delete_existing_attribute_with_confirm() {
     return;
   }
   if ( attribute_property_id_exists(attr_id) ) {
-    var config = {'title':'Delete ' + _via_attribute_being_updated + ' attribute [' + attr + ']' };
+    var config = {'title':'Delete ' + _via_attribute_being_updated + ' attribute [' + attr_id + ']' };
     var input = { 'attr_type':{'type':'text', 'name':'Attribute Type', 'value':_via_attribute_being_updated, 'disabled':true},
                   'attr_id':{'type':'text', 'name':'Attribute Id', 'value':attr_id, 'disabled':true},
                   'confirm':
@@ -4774,9 +4672,9 @@ function setup_user_input_panel(ok_handler, input, config, cancel_handler) {
   html.push('</div>'); // end of user_input div
   html.push('<div class="user_confirm">' +
             '<span class="ok">' +
-            '<button onclick="user_input_parse_and_invoke_handler()">&nbsp;OK&nbsp;</button></span>' +
+            '<button id="user_input_ok_button" onclick="user_input_parse_and_invoke_handler()">&nbsp;OK&nbsp;</button></span>' +
             '<span class="cancel">' +
-            '<button onclick="user_input_cancel_handler()">CANCEL</button></span></div>');
+            '<button id="user_input_cancel_button" onclick="user_input_cancel_handler()">CANCEL</button></span></div>');
   c.innerHTML = html.join('');
   p.innerHTML = '';
   p.appendChild(c);
@@ -5785,16 +5683,25 @@ function project_file_add_url(url) {
     var size = -1; // convention: files added using url have size = -1
     var img_id   = _via_get_image_id(url, size);
 
-    if ( _via_img_metadata.hasOwnProperty(img_id) ) {
-      show_message('File [' + _via_img_metadata[img_id].filename + '] already loaded. Skipping!');
-    } else {
+    if ( ! _via_img_metadata.hasOwnProperty(img_id) ) {
       img_id = project_add_new_file(url);
       _via_img_src[img_id] = _via_img_metadata[img_id].filename;
       set_file_annotations_to_default_value(img_id);
     }
   }
-
 }
+
+function project_file_add_base64(filename, base64) {
+  var size = -1; // convention: files added using url have size = -1
+  var img_id   = _via_get_image_id(filename, size);
+
+  if ( ! _via_img_metadata.hasOwnProperty(img_id) ) {
+    img_id = project_add_new_file(filename, size);
+    _via_img_src[img_id] = base64;
+    set_file_annotations_to_default_value(img_id);
+  }
+}
+
 function project_file_load_on_fail(img_index) {
   var img_id = _via_image_id_list[img_index];
   _via_img_src[img_id] = '';

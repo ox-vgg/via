@@ -1,7 +1,7 @@
 ## [1.1.0] - Not release yet!
- * polygon shape requires at least 3 points (patch by Stefan Mihaila)
  * rectangles can now be resized from edges (issue 120)
  * added POLYLINE shape
+   - both polygon and polyline shape drawing operation is now ended using [Enter] key
  * renamed many methods and variables
  * attributes editor
    - added _via_attributes{'region','file'} and removed _via_region_attributes, _via_file_attributes
@@ -33,6 +33,9 @@
  * shortcut toolbar (in top) now uses icons from material icon set (https://material.io/icons/)
  * updated ImageMetadata() and RegionMetadata()
  * updated region shape color to yellow
+ * removed persistence of annotation data in browser cache (i.e. localStorage)
+   - this feature proved difficult to maintain for cross browser support
+   - uses "beforeunload" event to warn users of data loss
 
 ## [1.0.5] - January 16, 2017
  * (code contributions from Stefan Mihaila) via.js codebase improvement, wider web browser support (IE 10, IE 11 and Opera 12)
