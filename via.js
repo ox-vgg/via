@@ -1309,54 +1309,13 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
 
     if (Math.abs(move_x) > VIA_MOUSE_CLICK_TOL ||
         Math.abs(move_y) > VIA_MOUSE_CLICK_TOL) {
-
-      var image_attr = _via_img_metadata[_via_image_id].regions[_via_user_sel_region_id].shape_attributes;
-      var canvas_attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
-
-      switch( canvas_attr['name'] ) {
-      case VIA_REGION_SHAPE.RECT:
-        var xnew = image_attr['x'] + Math.round(move_x * _via_canvas_scale);
-        var ynew = image_attr['y'] + Math.round(move_y * _via_canvas_scale);
-        image_attr['x'] = xnew;
-        image_attr['y'] = ynew;
-
-        canvas_attr['x'] = Math.round( image_attr['x'] / _via_canvas_scale);
-        canvas_attr['y'] = Math.round( image_attr['y'] / _via_canvas_scale);
-        break;
-
-      case VIA_REGION_SHAPE.CIRCLE: // Fall-through
-      case VIA_REGION_SHAPE.ELLIPSE: // Fall-through
-      case VIA_REGION_SHAPE.POINT:
-        var cxnew = image_attr['cx'] + Math.round(move_x * _via_canvas_scale);
-        var cynew = image_attr['cy'] + Math.round(move_y * _via_canvas_scale);
-        image_attr['cx'] = cxnew;
-        image_attr['cy'] = cynew;
-
-        canvas_attr['cx'] = Math.round( image_attr['cx'] / _via_canvas_scale);
-        canvas_attr['cy'] = Math.round( image_attr['cy'] / _via_canvas_scale);
-        break;
-
-      case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
-      case VIA_REGION_SHAPE.POLYGON:
-        var img_px = image_attr['all_points_x'];
-        var img_py = image_attr['all_points_y'];
-        for (var i=0; i<img_px.length; ++i) {
-          img_px[i] = img_px[i] + Math.round(move_x * _via_canvas_scale);
-          img_py[i] = img_py[i] + Math.round(move_y * _via_canvas_scale);
-        }
-
-        var canvas_px = canvas_attr['all_points_x'];
-        var canvas_py = canvas_attr['all_points_y'];
-        for (var i=0; i<canvas_px.length; ++i) {
-          canvas_px[i] = Math.round( img_px[i] / _via_canvas_scale );
-          canvas_py[i] = Math.round( img_py[i] / _via_canvas_scale );
-        }
-        break;
-      }
+      // move all selected regions
+      _via_move_selected_regions(move_x, move_y);
     } else {
       // indicates a user click on an already selected region
       // this could indicate a user's intention to select another
       // nested region within this region
+      console.log('single click inside sel region')
 
       // traverse the canvas regions in alternating ascending
       // and descending order to solve the issue of nested regions
@@ -1501,6 +1460,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
     } else {
       var region_id = is_inside_region(_via_click_x0, _via_click_y0);
       if ( region_id >= 0 ) {
+        console.log('region selected')
         // first click selects region
         _via_user_sel_region_id     = region_id;
         _via_is_region_selected     = true;
@@ -1972,6 +1932,61 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
   }
 });
 
+function _via_move_selected_regions(move_x, move_y) {
+  var i, n;
+  n = _via_region_selected_flag.length;
+  for ( i = 0; i < n; ++i ) {
+    if ( _via_region_selected_flag[i] ) {
+      _via_move_region(i, move_x, move_y);
+    }
+  }
+}
+
+function _via_move_region(region_id, move_x, move_y) {
+  var image_attr = _via_img_metadata[_via_image_id].regions[region_id].shape_attributes;
+  var canvas_attr = _via_canvas_regions[region_id].shape_attributes;
+
+  switch( canvas_attr['name'] ) {
+  case VIA_REGION_SHAPE.RECT:
+    var xnew = image_attr['x'] + Math.round(move_x * _via_canvas_scale);
+    var ynew = image_attr['y'] + Math.round(move_y * _via_canvas_scale);
+    image_attr['x'] = xnew;
+    image_attr['y'] = ynew;
+
+    canvas_attr['x'] = Math.round( image_attr['x'] / _via_canvas_scale);
+    canvas_attr['y'] = Math.round( image_attr['y'] / _via_canvas_scale);
+    break;
+
+  case VIA_REGION_SHAPE.CIRCLE: // Fall-through
+  case VIA_REGION_SHAPE.ELLIPSE: // Fall-through
+  case VIA_REGION_SHAPE.POINT:
+    var cxnew = image_attr['cx'] + Math.round(move_x * _via_canvas_scale);
+    var cynew = image_attr['cy'] + Math.round(move_y * _via_canvas_scale);
+    image_attr['cx'] = cxnew;
+    image_attr['cy'] = cynew;
+
+    canvas_attr['cx'] = Math.round( image_attr['cx'] / _via_canvas_scale);
+    canvas_attr['cy'] = Math.round( image_attr['cy'] / _via_canvas_scale);
+    break;
+
+  case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
+  case VIA_REGION_SHAPE.POLYGON:
+    var img_px = image_attr['all_points_x'];
+    var img_py = image_attr['all_points_y'];
+    for (var i=0; i<img_px.length; ++i) {
+      img_px[i] = img_px[i] + Math.round(move_x * _via_canvas_scale);
+      img_py[i] = img_py[i] + Math.round(move_y * _via_canvas_scale);
+    }
+
+    var canvas_px = canvas_attr['all_points_x'];
+    var canvas_py = canvas_attr['all_points_y'];
+    for (var i=0; i<canvas_px.length; ++i) {
+      canvas_px[i] = Math.round( img_px[i] / _via_canvas_scale );
+      canvas_py[i] = Math.round( img_py[i] / _via_canvas_scale );
+    }
+    break;
+  }
+}
 
 //
 // Canvas update routines
@@ -2869,13 +2884,6 @@ _via_reg_canvas.addEventListener('keyup', function(e) {
 });
 
 _via_reg_canvas.addEventListener('keydown', function(e) {
-  if (_via_is_user_updating_attribute_value ||
-      _via_is_user_updating_attribute_name  ||
-      _via_is_user_adding_attribute_name) {
-
-    return;
-  }
-
   // user commands
   if ( e.ctrlKey ) {
     _via_is_ctrl_pressed = true;
@@ -2907,9 +2915,38 @@ _via_reg_canvas.addEventListener('keydown', function(e) {
     }
   }
 
-  if( e.which === 46 || e.which === 8) { // Del or Backspace
-    del_sel_regions();
+  if ( _via_is_region_selected ) {
     e.preventDefault();
+    if ( e.which === 46 || e.which === 8 ) { // Del or Backspace key
+      del_sel_regions();
+      return;
+    }
+    if ( e.which > 36 && e.which < 41 ) {    // arrow keys
+      var del = 1;
+      if (e.shiftKey) {
+        del = 10;
+      }
+      var move_x = 0;
+      var move_y = 0;
+      switch(e.which) {
+      case 37: // left arrow
+        move_x = -del;
+        break;
+      case 38:
+        move_y = -del;
+        break;
+      case 39:
+        move_x =  del;
+        break;
+      case 40:
+        move_y =  del;
+        break;
+      }
+      _via_move_selected_regions(move_x, move_y);
+      _via_redraw_reg_canvas();
+      _via_reg_canvas.focus();
+      return;
+    }
   }
   if (e.which === 78 || e.which === 39) { // n or right arrow
     move_to_next_image();
@@ -7154,6 +7191,9 @@ function _via_show_img_from_buffer(img_index) {
     _via_canvas_scale_without_zoom = _via_canvas_scale;
     set_all_canvas_size(_via_canvas_width, _via_canvas_height);
     //set_all_canvas_scale(_via_canvas_scale_without_zoom);
+
+    // reset all regions to "not selected" state
+    toggle_all_regions_selection(false);
 
     // ensure that all the canvas are visible
     set_display_area_content( VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE );
