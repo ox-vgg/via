@@ -32,10 +32,15 @@
  * image data can be pulled from custom locations in local disk in order to resolve image files
  * shortcut toolbar (in top) now uses icons from material icon set (https://material.io/icons/)
  * updated ImageMetadata() and RegionMetadata()
- * updated region shape color to yellow
  * removed persistence of annotation data in browser cache (i.e. localStorage)
    - this feature proved difficult to maintain for cross browser support
    - uses "beforeunload" event to warn users of data loss
+ * minor improvements
+   - updated region shape color to yellow
+   - selected regions can be precisely moved by 1 pixel using arrow keys (press Shift to move by 10 pixel)
+   - move multiple selected regions
+   - {polygon, polyline, point} regions can now be drawn inside existing regions (i.e. nested regions)
+ * updated VIA unit tests for 1.1.x
 
 ## [1.0.5] - January 16, 2017
  * (code contributions from Stefan Mihaila) via.js codebase improvement, wider web browser support (IE 10, IE 11 and Opera 12)

@@ -233,6 +233,15 @@ function _via_test_rand_int_array(max, n) {
   return arr;
 }
 
+function _via_test_is_inside_any_region(x, y) {
+  var region_id = is_inside_region(x, y);
+  if ( region_id >= 0 ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 function _via_test_rand_str() {
   var start  = _via_test_rand_int(_via_test_random_text_n - 2);
   return _via_test_random_text.substr(start);

@@ -12,7 +12,32 @@ async function _via_test_case_region_create() {
     await _via_test_draw_rand_region('ellipse');
     await _via_test_draw_rand_region('rect');
     await _via_test_draw_rand_region('circle');
+    await _via_test_draw_rand_region('ellipse');
+    await _via_test_draw_rand_region('rect');
+    await _via_test_draw_rand_region('circle');
+    await _via_test_draw_rand_region('ellipse');
+    await _via_test_draw_rand_region('rect');
+    await _via_test_draw_rand_region('circle');
+
     await _via_test_draw_rand_region('point');
+    await _via_test_draw_rand_region('point');
+    await _via_test_draw_rand_region('point');
+    await _via_test_draw_rand_region('point');
+    await _via_test_draw_rand_region('point');
+    await _via_test_draw_rand_region('point');
+    await _via_test_draw_rand_region('point');
+    await _via_test_draw_rand_region('point');
+
+    await _via_test_draw_rand_region('polyline');
+    await _via_test_draw_rand_region('polygon');
+    await _via_test_draw_rand_region('polyline');
+    await _via_test_draw_rand_region('polygon');
+    await _via_test_draw_rand_region('polyline');
+    await _via_test_draw_rand_region('polygon');
+    await _via_test_draw_rand_region('polyline');
+    await _via_test_draw_rand_region('polygon');
+    await _via_test_draw_rand_region('polyline');
+    await _via_test_draw_rand_region('polygon');
     await _via_test_draw_rand_region('polyline');
     await _via_test_draw_rand_region('polygon');
   }, 1000);
@@ -33,6 +58,14 @@ function _via_test_draw_rand_region(shape) {
       var x = _via_test_rand_int_array(w, 2);
       var y = _via_test_rand_int_array(h, 2);
 
+      if ( _via_test_is_inside_any_region(x[0], y[0]) ) {
+        var region_id = is_inside_region(x[0], y[0]);
+        if ( _via_region_selected_flag[region_id] ) {
+          // the region is selected, hence we need to remove selection
+          // in order to draw a new nested region
+          _via_test_simulate_canvas_click(x[0], y[0]); // unselect existing region
+        }
+      }
       _via_test_simulate_canvas_mousedown(x[0], y[0]);
       _via_test_simulate_canvas_mouseup(x[1], y[1]);
 
@@ -42,7 +75,13 @@ function _via_test_draw_rand_region(shape) {
     case VIA_REGION_SHAPE.POINT:
       var x = _via_test_rand_int(w);
       var y = _via_test_rand_int(h);
+
       _via_test_simulate_canvas_click(x, y);
+      if ( _via_test_is_inside_any_region(x, y) ) {
+        // (x,y) falls inside an existing region and therefore
+        // we need to click again to unselect existing region and draw this new region
+        _via_test_simulate_canvas_click(x, y);
+      }
 
       r = new _via_region(shape, '', [ x, y ], 1, 0, 0);
       break;
@@ -55,6 +94,12 @@ function _via_test_draw_rand_region(shape) {
       var d = [];
       var i;
       for ( i = 0; i < n; ++i ) {
+        if ( _via_test_is_inside_any_region(x[i], y[i]) ) {
+          // the region is selected, hence we need to remove selection
+          // in order to draw a new nested region
+          _via_test_simulate_canvas_click(x[i], y[i]);
+        }
+
         _via_test_simulate_canvas_click(x[i], y[i]);
         d.push(x[i]);
         d.push(y[i]);
