@@ -17,13 +17,18 @@ var _via_test_unit_test_complete_event = new Event('_via_test_test_done');
 function _via_load_submodules() {
   _via_test_init_console();
   _via_test_init_unit_tests();
+  /*
+  _via_test_run_unit_tests().then( function(ok_test_case_count) {
+    console.log('Passed test cases = ' + ok_test_case_count);
+  }, function(err_test_case_count) {
+    console.log('Failed test cases = ' + err_test_case_count);
+  });
+*/
 }
 
 async function _via_test_init_unit_tests() {
   await _via_test_reset_to_initial_state();
   await _via_test_search_unit_tests();
-
-  setTimeout(_via_test_run_unit_tests, 500);
 }
 
 async function _via_test_reset_to_initial_state() {
@@ -50,11 +55,28 @@ async function _via_test_reset_to_initial_state() {
   update_img_fn_list();
 
   // add attributes
-  var ok1 = await _via_test_create_rand_attributes( VIA_ATTRIBUTE_TYPE.CHECKBOX );
-  var ok2 = await _via_test_create_rand_attributes( VIA_ATTRIBUTE_TYPE.RADIO );
-  var ok3 = await _via_test_create_rand_attributes( VIA_ATTRIBUTE_TYPE.TEXT );
-  var ok3 = await _via_test_create_rand_attributes( VIA_ATTRIBUTE_TYPE.DROPDOWN );
-  var ok4 = await _via_test_create_rand_attributes( VIA_ATTRIBUTE_TYPE.IMAGE );
+  var i, attr_input_type;
+  var promises = [];
+  promises.push( _via_test_create_rand_attributes( 'region', VIA_ATTRIBUTE_TYPE.TEXT ) );
+  promises.push( _via_test_create_rand_attributes( 'region', VIA_ATTRIBUTE_TYPE.CHECKBOX ) );
+
+/*
+  for ( i = 0; i < 1; ++i ) {
+    for ( attr_input_type in VIA_ATTRIBUTE_TYPE ) {
+      promises.push( _via_test_create_rand_attributes( 'region', attr_input_type ) );
+      //promises.push( _via_test_create_rand_attributes( 'file', attr_input_type ) );
+    }
+  }
+*/
+
+  // wait until all promises are setteled
+  await Promise.all(promises).then( function(ok_attr_id_list) {
+    console.log(ok_attr_id_list);
+    console.log(_via_attributes);
+  }, function(err_attr_id_list) {
+    console.log('Failed to add the following attributes');
+    console.log(err_attr_id_list);
+  });
 }
 
 function _via_test_assert_test_data_exists() {
@@ -72,14 +94,16 @@ function _via_test_assert_test_data_exists() {
 
 
 function _via_test_run_unit_tests() {
-  // execute these functions sequentially
-  _via_test_print(_via_test_unit_tests[_via_test_ongoing_unit_test_id]);
-  eval(_via_test_unit_tests[_via_test_ongoing_unit_test_id]);
-  window.addEventListener('_via_test_done', function(e) {
-    _via_test_ongoing_unit_test_id += 1;
-    _via_test_print(_via_test_unit_tests[_via_test_ongoing_unit_test_id]);
-    eval(_via_test_unit_tests[_via_test_ongoing_unit_test_id]);
-  }, false);
+  return new Promise( function(ok_callback, err_callback) {
+    var i, n;
+    n = _via_test_unit_tests.length;
+    for ( i = 0; i < n; ++i ) {
+      _via_test_ongoing_unit_test_id = i;
+      console.log('running')
+      console.log( _via_test_unit_tests[_via_test_ongoing_unit_test_id] )
+    }
+    ok_callback()
+  });
 }
 
 function _via_test_search_unit_tests() {
@@ -87,7 +111,7 @@ function _via_test_search_unit_tests() {
   for ( var i in window) {
     if ( typeof window[i] === 'function' ) {
       if ( window[i].name.substr(0, _via_test_test_prefix.length) === _via_test_test_prefix) {
-        _via_test_unit_tests.push(window[i].name + '()');
+        _via_test_unit_tests.push(window[i].name);
       }
     }
   }
@@ -106,27 +130,17 @@ function _via_run_test(cmd, delay_ms) {
   }, delay_ms, cmd, caller_name);
 }
 
-function _via_test_simulate_htmlelement_click(html_elements, click_delay_ms) {
-  if (typeof(click_delay_ms) === 'undefined') {
-    click_delay_ms = 0;
-  }
+function _via_test_simulate_htmlelement_click(html_element) {
+  return new Promise( function(ok_callback, err_callback) {
+    var e = new MouseEvent('click', {
+      'view': window,
+      'bubbles': true,
+      'cancelable': true
+    });
 
-  var e = new MouseEvent('click', {
-    'view': window,
-    'bubbles': true,
-    'cancelable': true
+    document.getElementById(html_element).dispatchEvent(e);
+    ok_callback();
   });
-
-  for (var i=0; i<html_elements.length; ++i) {
-    var html_element_i = document.getElementById(html_elements[i])
-    if ( click_delay_ms === 0 ) {
-      html_element_i.dispatchEvent(e);
-    } else {
-      setTimeout( function(html_element) {
-        html_element.dispatchEvent(e);
-      }, click_delay_ms * i, html_element_i);
-    }
-  }
 }
 
 function _via_test_simulate_canvas_mouseevent(eventname, x, y) {
@@ -176,16 +190,10 @@ function _via_test_simulate_canvas_click(x, y) {
   _via_test_simulate_canvas_mouseup(x, y);
 }
 
-function _via_test_input_text_value(id, value) {
-  var p = document.getElementById(id);
-  p.value = value;
-  return p.value;
-}
-
-function _via_test_input_checkbox_checked(id, checked) {
+async function _via_test_input_checkbox_checked(id, checked) {
   var p = document.getElementById(id);
   p.checked = checked;
-  p.onchange();
+  await p.onchange();
 }
 
 function _via_test_simulate_button_click(id, delay) {
@@ -205,18 +213,25 @@ function _via_test_dropdown_get_index(id, value) {
   }
 }
 
-function _via_test_simulate_dropdown_select(id, value, delay) {
-  setTimeout( function() {
-    var p = document.getElementById(id);
-    p.selectedIndex = _via_test_dropdown_get_index(id, value);
-    p.onchange();
-  }, delay);
+async function _via_test_simulate_dropdown_select(id, value) {
+  var p = document.getElementById(id);
+  var i = _via_test_dropdown_get_index(id, value);
+  console.log('dropdown index for ' + value + '=' + i);
+  console.log(p)
+  p.selectedIndex = i;
+
+  await p.onchange();
 }
 
-function _via_test_simulate_input_text_blur(id) {
+
+async function _via_test_input_text_value(id, value) {
   var p = document.getElementById(id);
-  p.focus();
-  p.blur();
+  await p.setAttribute('value', value);
+  return p.getAttribute('value');
+}
+
+async function _via_test_simulate_input_text_onchange(id) {
+  await document.getElementById(id).onchange();
 }
 
 // source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
@@ -249,7 +264,7 @@ function _via_test_rand_str() {
 
 function _via_test_rand_strn() {
   var start  = _via_test_rand_int(_via_test_random_textnum_n - 2);
-  return _via_test_random_textnum.substr(start);
+  return _via_test_random_textnum.substr(start, 8);
 }
 
 function _via_test_rand_strs() {
@@ -257,8 +272,94 @@ function _via_test_rand_strs() {
   return _via_test_random_textspecial.substr(start);
 }
 
-function _via_test_create_rand_attributes(type) {
+function _via_test_create_rand_attributes(attr_type, attr_input_type) {
   return new Promise( function(ok_callback, err_callback) {
+    if ( ! document.getElementById('attributes_editor_panel_title').classList.contains('active') ) {
+      _via_test_simulate_htmlelement_click('attributes_editor_panel_title');
+    }
+    _via_test_simulate_htmlelement_click('button_show_' + attr_type + '_attributes');
+
+
+    var attr_id = _via_test_rand_strn();
+    console.log('adding attribute ' + attr_id)
+
+    _via_test_input_text_value('user_input_attribute_id', attr_id);
+    _via_test_simulate_htmlelement_click('button_add_new_attribute');
+
+    var attr_desc = _via_test_input_text_value('attribute_description', _via_test_rand_str());
+    _via_test_simulate_input_text_onchange('attribute_description');
+
+    _via_test_simulate_dropdown_select('attribute_type', attr_input_type);
+/**/
+    switch(attr_input_type) {
+    default: // fallback
+    case VIA_ATTRIBUTE_TYPE.TEXT:
+      var attr_default = _via_test_input_text_value('attribute_default_value', _via_test_rand_str());
+      _via_test_simulate_input_text_onchange('attribute_default_value');
+      break;
+
+    case VIA_ATTRIBUTE_TYPE.RADIO:    // fallback
+    case VIA_ATTRIBUTE_TYPE.IMAGE:    // fallback
+    case VIA_ATTRIBUTE_TYPE.DROPDOWN: // fallback
+    case VIA_ATTRIBUTE_TYPE.CHECKBOX: // fallback
+      var i, n;
+      var option_id_list = [];
+      ////////////////////////////
+      //////////// @todo
+      ////////////////////////////
+      break;
+    }
+
+    // assert that attribute was added successfully
+    if ( _via_attributes[attr_type].hasOwnProperty(attr_id) ) {
+      ok_callback( {'attr_type':attr_type, 'attr_input_type':attr_input_type, 'attr_id':attr_id} );
+    } else {
+      err_callback( {'attr_type':attr_type, 'attr_input_type':attr_input_type, 'attr_id':attr_id} );
+    }
+
+    /*
+    switch(type) {
+    default: // fallback
+    case VIA_ATTRIBUTE_TYPE.TEXT:
+      var attr_default = await _via_test_input_text_value('attribute_default_value', _via_test_rand_str());
+      await _via_test_simulate_input_text_blur('attribute_default_value');
+      ok_callback({'attr_id':attr_id, 'attr_desc':attr_desc, 'attr_default':attr_default});
+      break;
+
+    case VIA_ATTRIBUTE_TYPE.RADIO:    // fallback
+    case VIA_ATTRIBUTE_TYPE.IMAGE:    // fallback
+    case VIA_ATTRIBUTE_TYPE.DROPDOWN: // fallback
+    case VIA_ATTRIBUTE_TYPE.CHECKBOX: // fallback
+      var i, n;
+      var option_id_list = [];
+      //n = 2 + _via_test_rand_int(4);
+      n = 1;
+      for ( i = 0; i < n; ++i ) {
+        var oi_id = await _via_test_input_text_value('_via_attribute_new_option_id', _via_test_rand_strn());
+        await _via_test_simulate_input_text_blur('_via_attribute_new_option_id');
+        option_id_list.push(oi_id);
+
+        var oi_desc_id = '_via_attribute_option_description_' + oi_id;
+        var oi_desc;
+        //var oi_desc = _via_test_input_text_value(oi_desc_id, _via_test_rand_str());
+        if ( type === VIA_ATTRIBUTE_TYPE.IMAGE ) {
+          var url = _via_test_option_img_url[ _via_test_rand_int(_via_test_option_img_url.length) ];
+          oi_desc = _via_test_input_text_value(oi_desc_id, url);
+        }
+        await _via_test_simulate_input_text_blur(oi_desc_id);
+
+        if ( _via_test_rand_int(2) ) {
+          // add this as default option
+          var oi_default_id = '_via_attribute_option_default_' + oi_id;
+          await _via_test_input_checkbox_checked(oi_default_id, true);
+        }
+
+      }
+      ok_callback({'attr_id':attr_id, 'attr_desc':attr_desc, 'attr_type':type, 'option_id_list':option_id_list});
+      break;
+    }
+*/
+    /*
     if ( document.getElementById('attributes_editor_panel_title').classList.contains('active') ) {
       _via_test_simulate_htmlelement_click( ['button_show_region_attributes',
                                              'user_input_attribute_id'
@@ -271,70 +372,55 @@ function _via_test_create_rand_attributes(type) {
     }
 
     var attr_id = _via_test_input_text_value('user_input_attribute_id', _via_test_rand_strn());
-    _via_test_simulate_htmlelement_click( ['button_add_new_attribute'] );
-    _via_test_simulate_dropdown_select('attribute_type', type, 1);
+    await _via_test_simulate_htmlelement_click( ['button_add_new_attribute'] );
+    await _via_test_simulate_dropdown_select('attribute_type', type, 1);
 
-    setTimeout( function() {
-      var attr_desc    = _via_test_input_text_value('attribute_description', _via_test_rand_str());
-      _via_test_simulate_input_text_blur('attribute_description');
 
-      switch(type) {
-      default: // fallback
-      case VIA_ATTRIBUTE_TYPE.TEXT:
-        var attr_default = _via_test_input_text_value('attribute_default_value', _via_test_rand_str());
-        _via_test_simulate_input_text_blur('attribute_default_value');
+    var attr_desc = await _via_test_input_text_value('attribute_description', _via_test_rand_str());
+    await _via_test_simulate_input_text_blur('attribute_description');
 
-        ok_callback({'attr_id':attr_id, 'attr_desc':attr_desc, 'attr_default':attr_default});
-        break;
+    switch(type) {
+    default: // fallback
+    case VIA_ATTRIBUTE_TYPE.TEXT:
+      var attr_default = _via_test_input_text_value('attribute_default_value', _via_test_rand_str());
+      _via_test_simulate_input_text_blur('attribute_default_value');
 
-      case VIA_ATTRIBUTE_TYPE.RADIO:    // fallback
-      case VIA_ATTRIBUTE_TYPE.IMAGE:    // fallback
-      case VIA_ATTRIBUTE_TYPE.DROPDOWN: // fallback
-      case VIA_ATTRIBUTE_TYPE.CHECKBOX: // fallback
-        setTimeout( function() {
-          var i, n;
-          var option_id_list = [];
-          var promises = [];
-          n = 2 + _via_test_rand_int(4);
-          for ( i = 0; i < n; ++i ) {
-            var oi_id = _via_test_input_text_value('_via_attribute_new_option_id', _via_test_rand_strn());
-            _via_test_simulate_input_text_blur('_via_attribute_new_option_id');
-            option_id_list.push(oi_id);
+      ok_callback({'attr_id':attr_id, 'attr_desc':attr_desc, 'attr_default':attr_default});
+      break;
 
-            var oi_desc_id = '_via_attribute_option_description_' + oi_id;
-            var oi_desc;
-            //var oi_desc = _via_test_input_text_value(oi_desc_id, _via_test_rand_str());
-            if ( type === VIA_ATTRIBUTE_TYPE.IMAGE ) {
-              var url = _via_test_option_img_url[ _via_test_rand_int(_via_test_option_img_url.length) ];
-              oi_desc = _via_test_input_text_value(oi_desc_id, url);
-            }
-            _via_test_simulate_input_text_blur(oi_desc_id);
+    case VIA_ATTRIBUTE_TYPE.RADIO:    // fallback
+    case VIA_ATTRIBUTE_TYPE.IMAGE:    // fallback
+    case VIA_ATTRIBUTE_TYPE.DROPDOWN: // fallback
+    case VIA_ATTRIBUTE_TYPE.CHECKBOX: // fallback
+      var i, n;
+      var option_id_list = [];
+      var promises = [];
+      n = 2 + _via_test_rand_int(4);
+      for ( i = 0; i < n; ++i ) {
+        var oi_id = _via_test_input_text_value('_via_attribute_new_option_id', _via_test_rand_strn());
+        _via_test_simulate_input_text_blur('_via_attribute_new_option_id');
+        option_id_list.push(oi_id);
 
-            if ( _via_test_rand_int(2) ) {
-              // add this as default option
-              var oi_default_id = '_via_attribute_option_default_' + oi_id;
-              _via_test_input_checkbox_checked(oi_default_id, true);
-            }
-          }
-          ok_callback({'attr_id':attr_id, 'attr_desc':attr_desc, 'attr_type':type, 'option_id_list':option_id_list});
-        }, 10);
-        break;
+        var oi_desc_id = '_via_attribute_option_description_' + oi_id;
+        var oi_desc;
+        //var oi_desc = _via_test_input_text_value(oi_desc_id, _via_test_rand_str());
+        if ( type === VIA_ATTRIBUTE_TYPE.IMAGE ) {
+          var url = _via_test_option_img_url[ _via_test_rand_int(_via_test_option_img_url.length) ];
+          oi_desc = _via_test_input_text_value(oi_desc_id, url);
+        }
+        _via_test_simulate_input_text_blur(oi_desc_id);
+
+        if ( _via_test_rand_int(2) ) {
+          // add this as default option
+          var oi_default_id = '_via_attribute_option_default_' + oi_id;
+          _via_test_input_checkbox_checked(oi_default_id, true);
+        }
       }
-    });
-  }, 10);
-}
-
-function _via_test_set_attributes_rand_default(attr_type, option_id_list) {
-  var i, n, oi_id;
-  n = option_id_list.length;
-  for ( i = 0; i < n; ++i ) {
-    if ( _via_test_rand_int(2) ) {
-      // add this as default option
-      oi_id = option_id_list[i];
-      var oi_default_id = '_via_attribute_option_default_' + oi_id;
-      _via_test_input_checkbox_checked(oi_default_id, true);
+      ok_callback({'attr_id':attr_id, 'attr_desc':attr_desc, 'attr_type':type, 'option_id_list':option_id_list});
+      break;
     }
-  }
+*/
+  });
 }
 
 function _via_test_del_attributes(attr_id) {
@@ -347,6 +433,84 @@ function _via_test_del_attributes(attr_id) {
     _via_test_input_checkbox_checked('confirm', true, 30);
     _via_test_simulate_button_click( 'user_input_ok_button', 40 );
     ok_callback(attr_id);
+  });
+}
+
+
+function _via_test_draw_rand_region(shape) {
+  return new Promise( function(ok_callback, err_callback) {
+    _via_test_simulate_htmlelement_click(['region_shape_' + shape], 0);
+    var rc = document.getElementById('region_canvas');
+    var w = rc.width;
+    var h = rc.height;
+    var r;
+
+    switch(shape) {
+    case VIA_REGION_SHAPE.RECT:
+    case VIA_REGION_SHAPE.CIRCLE:
+    case VIA_REGION_SHAPE.ELLIPSE:
+      var x = _via_test_rand_int_array(w, 2);
+      var y = _via_test_rand_int_array(h, 2);
+
+      if ( _via_test_is_inside_any_region(x[0], y[0]) ) {
+        var region_id = is_inside_region(x[0], y[0]);
+        if ( _via_region_selected_flag[region_id] ) {
+          // the region is selected, hence we need to remove selection
+          // in order to draw a new nested region
+          _via_test_simulate_canvas_click(x[0], y[0]); // unselect existing region
+        }
+      }
+      _via_test_simulate_canvas_mousedown(x[0], y[0]);
+      _via_test_simulate_canvas_mouseup(x[1], y[1]);
+
+      r = new _via_region(shape, '', [ x[0], y[0], x[1], y[1] ], 1, 0, 0);
+      break;
+
+    case VIA_REGION_SHAPE.POINT:
+      var x = _via_test_rand_int(w);
+      var y = _via_test_rand_int(h);
+
+      _via_test_simulate_canvas_click(x, y);
+      if ( _via_test_is_inside_any_region(x, y) ) {
+        // (x,y) falls inside an existing region and therefore
+        // we need to click again to unselect existing region and draw this new region
+        _via_test_simulate_canvas_click(x, y);
+      }
+
+      r = new _via_region(shape, '', [ x, y ], 1, 0, 0);
+      break;
+
+    case VIA_REGION_SHAPE.POLYGON:
+    case VIA_REGION_SHAPE.POLYLINE:
+      var n = 3 + _via_test_rand_int(10);
+      var x = _via_test_rand_int_array(w, n);
+      var y = _via_test_rand_int_array(h, n);
+      var d = [];
+      var i;
+      for ( i = 0; i < n; ++i ) {
+        if ( _via_test_is_inside_any_region(x[i], y[i]) ) {
+          // the region is selected, hence we need to remove selection
+          // in order to draw a new nested region
+          _via_test_simulate_canvas_click(x[i], y[i]);
+        }
+
+        _via_test_simulate_canvas_click(x[i], y[i]);
+        d.push(x[i]);
+        d.push(y[i]);
+      }
+      _via_test_simulate_canvas_keyevent('keydown')
+      r = new _via_region(shape, '', d, 1, 0, 0);
+      break;
+    }
+
+    var rshape = { 'name':shape };
+    var i, n, attr;
+    n = r.svg_attributes.length;
+    for ( i = 0; i < n; ++i ) {
+      attr = r.svg_attributes[i];
+      rshape[attr] = r[attr];
+    }
+    ok_callback(rshape)
   });
 }
 

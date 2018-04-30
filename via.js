@@ -176,6 +176,7 @@ var _via_message_clear_timer;
 // attributes
 var _via_attribute_being_updated       = 'region'; // {region, file}
 var _via_attributes                    = { 'region':{}, 'file':{} };
+var _via_current_attribute_id          = '';
 
 // invoke a method after receiving user input
 var _via_user_input_ok_handler     = null;
@@ -321,9 +322,10 @@ function _via_init() {
 
   // run attached sub-modules (if any)
   if (typeof _via_load_submodules === 'function') {
-    setTimeout(function() {
+    console.log('Loading VIA submodule');
+    setTimeout( function() {
       _via_load_submodules();
-    }, 100);
+    }, 500);
   }
 }
 
@@ -415,13 +417,7 @@ function download_all_region_data(type) {
   var blob_attr = {type: 'text/'+type+';charset=utf-8'};
   var all_region_data_blob = new Blob(all_region_data, blob_attr);
 
-  if ( all_region_data_blob.size > (2*1024*1024) &&
-       type === 'csv' ) {
-    show_message('CSV file size is ' + (all_region_data_blob.size/(1024*1024)) +
-                 ' MB. We advise you to instead download as JSON');
-  } else {
-    save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
-  }
+  save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
 }
 
 function sel_local_data_file(type) {
@@ -943,41 +939,7 @@ function pack_via_metadata(return_type) {
     }
     return csvdata;
   } else {
-    // remove the data that is not needed
-    var _via_img_metadata_as_obj = {};
-    for ( var image_id in _via_img_metadata ) {
-      var image_data = {};
-      //image_data.fileref = _via_img_metadata[image_id].fileref;
-      image_data.fileref = '';
-      image_data.size = _via_img_metadata[image_id].size;
-      image_data.filename = _via_img_metadata[image_id].filename;
-      image_data.base64_img_data = '';
-      //image_data.base64_img_data = _via_img_metadata[image_id].base64_img_data;
-
-      // copy file attributes
-      image_data.file_attributes = {};
-      for ( var key in _via_img_metadata[image_id].file_attributes ) {
-        image_data.file_attributes[key] = _via_img_metadata[image_id].file_attributes[key];
-      }
-
-      // copy all region shape_attributes
-      image_data.regions = {};
-      for ( var i = 0; i < _via_img_metadata[image_id].regions.length; ++i ) {
-        image_data.regions[i] = {};
-        image_data.regions[i].shape_attributes = {};
-        image_data.regions[i].region_attributes = {};
-        // copy region shape_attributes
-        for ( var key in _via_img_metadata[image_id].regions[i].shape_attributes ) {
-          image_data.regions[i].shape_attributes[key] = _via_img_metadata[image_id].regions[i].shape_attributes[key];
-        }
-        // copy region_attributes
-        for ( var key in _via_img_metadata[image_id].regions[i].region_attributes ) {
-          image_data.regions[i].region_attributes[key] = _via_img_metadata[image_id].regions[i].region_attributes[key];
-        }
-      }
-      _via_img_metadata_as_obj[image_id] = image_data;
-    }
-    return [JSON.stringify(_via_img_metadata_as_obj)];
+    return [ JSON.stringify(_via_img_metadata) ];
   }
 }
 
@@ -1313,9 +1275,10 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
       _via_move_selected_regions(move_x, move_y);
     } else {
       // indicates a user click on an already selected region
-      // this could indicate a user's intention to select another
+      // this could indicate the user's intention to select another
       // nested region within this region
-      console.log('single click inside sel region')
+      // OR
+      // draw a nested region (i.e. region inside a region)
 
       // traverse the canvas regions in alternating ascending
       // and descending order to solve the issue of nested regions
@@ -1331,6 +1294,42 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
           toggle_all_regions_selection(false);
         }
         set_region_select_state(nested_region_id, true);
+        update_annotation_editor();
+      } else {
+        // user clicking inside an already selected region
+        // indicates that the user intends to draw a nested region
+        toggle_all_regions_selection(false);
+        _via_is_region_selected = false;
+
+        switch (_via_current_shape) {
+        case VIA_REGION_SHAPE.POLYLINE: // handled by case for POLYGON
+        case VIA_REGION_SHAPE.POLYGON:
+          // user has clicked on the first point in a new polygon
+          _via_is_user_drawing_polygon = true;
+
+          var canvas_polygon_region = new file_region();
+          canvas_polygon_region.shape_attributes['name'] = _via_current_shape;
+          canvas_polygon_region.shape_attributes['all_points_x'] = [Math.round(_via_click_x0)];
+          canvas_polygon_region.shape_attributes['all_points_y'] = [Math.round(_via_click_y0)];
+          _via_canvas_regions.push(canvas_polygon_region);
+          _via_current_polygon_region_id =_via_canvas_regions.length - 1;
+          break;
+
+        case VIA_REGION_SHAPE.POINT:
+          // user has marked a landmark point
+          var point_region = new file_region();
+          point_region.shape_attributes['name'] = VIA_REGION_SHAPE.POINT;
+          point_region.shape_attributes['cx'] = Math.round(_via_click_x0 * _via_canvas_scale);
+          point_region.shape_attributes['cy'] = Math.round(_via_click_y0 * _via_canvas_scale);
+          _via_img_metadata[_via_image_id].regions.push(point_region);
+
+          var canvas_point_region = new file_region();
+          canvas_point_region.shape_attributes['name'] = VIA_REGION_SHAPE.POINT;
+          canvas_point_region.shape_attributes['cx'] = Math.round(_via_click_x0);
+          canvas_point_region.shape_attributes['cy'] = Math.round(_via_click_y0);
+          _via_canvas_regions.push(canvas_point_region);
+          break;
+        }
         update_annotation_editor();
       }
     }
@@ -1460,7 +1459,6 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
     } else {
       var region_id = is_inside_region(_via_click_x0, _via_click_y0);
       if ( region_id >= 0 ) {
-        console.log('region selected')
         // first click selects region
         _via_user_sel_region_id     = region_id;
         _via_is_region_selected     = true;
@@ -1475,6 +1473,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         set_region_select_state(region_id, true);
         annotation_editor_scroll_to_row(region_id);
         annotation_editor_highlight_row(region_id);
+        show_message('Region selected. If you intended to draw a region, click again inside the selected region to start drawing a region.')
       } else {
         if ( _via_is_user_drawing_region ) {
           // clear all region selection
@@ -1495,7 +1494,6 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
             canvas_polygon_region.shape_attributes['all_points_y'] = [Math.round(_via_click_y0)];
             _via_canvas_regions.push(canvas_polygon_region);
             _via_current_polygon_region_id =_via_canvas_regions.length - 1;
-            console.log('set _via_current_polygon_region_id=' + _via_current_polygon_region_id);
             break;
 
           case VIA_REGION_SHAPE.POINT:
@@ -3059,13 +3057,6 @@ _via_reg_canvas.addEventListener('keydown', function(e) {
          _via_current_shape === VIA_REGION_SHAPE.POLYGON) {
       // [Enter] key is used to indicate completion of
       // polygon or polyline drawing action
-
-      // debug
-      // ERROR: _via_current_polygon_region_id is not being set sometimes
-      // could be because the first point falls in another already drawn region???
-      // @fixme
-      console.log(_via_canvas_regions);
-      console.log(_via_current_polygon_region_id);
       var npts =  _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'].length;
       if ( npts <=2 && _via_current_shape === VIA_REGION_SHAPE.POLYGON ) {
         show_message('For a polygon, you must define at least 3 points. ' +
@@ -3892,23 +3883,17 @@ function show_file_attributes_update_panel() {
 
 function update_attributes_name_list() {
   var p = document.getElementById('attributes_name_list');
-  if ( p.options.length !== 0 ) {
-    // to retain the old selected attribute
-    var attribute_name0 = p.options[ p.selectedIndex ].value;
-    var attribute_desc0 = p.options[ p.selectedIndex ].innerHTML;
-    p.innerHTML = '';
-  }
+  p.innerHTML = '';
+
   var attr;
   for ( attr in _via_attributes[_via_attribute_being_updated] ) {
-    var o = document.createElement('option');
-    o.setAttribute('value', attr)
-    //o.text = _via_attributes[_via_attribute_being_updated][attr].description;
-    o.text = attr;
-    if ( attribute_name0 === attr ||
-         attribute_desc0 === o.text ) {
-      o.setAttribute('selected', 'selected');
+    var option = document.createElement('option');
+    option.setAttribute('value', attr)
+    option.innerHTML = attr;
+    if ( attr === _via_current_attribute_id ) {
+      option.setAttribute('selected', 'selected');
     }
-    p.add(o);
+    p.appendChild(option);
   }
 }
 
@@ -3935,10 +3920,11 @@ function show_attribute_properties() {
     return;
   }
 
-  var attr_id = attr_list.value;
+  var attr_id = _via_current_attribute_id;
   var attr_type = _via_attributes[_via_attribute_being_updated][attr_id].type;
   var attr_desc = _via_attributes[_via_attribute_being_updated][attr_id].description;
 
+  console.log('show_attribute_properties() for attr_id=' + attr_id + ', attr_desc = ' + attr_desc)
 
   attribute_property_add_input_property('Name of attribute (appears in exported annotations)',
                                         'Name',
@@ -4074,7 +4060,8 @@ function attribute_property_add_input_property(title, name, value, id) {
   c0.innerHTML = name;
   var c1 = document.createElement('span');
   var c1b = document.createElement('input');
-  c1b.setAttribute('onblur', 'attribute_property_on_update(this)');
+  c1b.setAttribute('onchange', 'attribute_property_on_update(this)');
+  console.log('attribute_property_add_input_property value : id=' + id + ', value=' + value)
   if ( typeof(value) !== 'undefined' ) {
     c1b.setAttribute('value', value);
   }
@@ -4148,52 +4135,56 @@ function attribute_property_add_new_entry_option(attr_id, attribute_type) {
 
 function attribute_property_on_update(p) {
   var attr_id = get_current_attribute_id();
+  var attr_type = _via_attribute_being_updated;
+  var attr_value = p.value;
+
   switch(p.id) {
   case 'attribute_name':
-    var new_attr = p.value;
-    if ( new_attr !== attr_id ) {
-      Object.defineProperty(_via_attributes[_via_attribute_being_updated],
-                            new_attr,
-                            Object.getOwnPropertyDescriptor(_via_attributes[_via_attribute_being_updated], attr_id));
+    if ( attr_value !== attr_id ) {
+      Object.defineProperty(_via_attributes[attr_type],
+                            attr_value,
+                            Object.getOwnPropertyDescriptor(_via_attributes[attr_type], attr_id));
 
-      delete _via_attributes[_via_attribute_being_updated][attr_id];
+      delete _via_attributes[attr_type][attr_id];
       update_attributes_update_panel();
       update_annotation_editor();
     }
     break;
   case 'attribute_description':
-    _via_attributes[_via_attribute_being_updated][attr_id].description = p.value;
+    console.log('updating description for attribute ' + attr_id + ' to value ' + attr_value)
+    _via_attributes[attr_type][attr_id].description = attr_value;
+    console.log(_via_attributes[attr_type][attr_id].description)
     update_attributes_update_panel();
     update_annotation_editor();
     break;
   case 'attribute_default_value':
-    _via_attributes[_via_attribute_being_updated][attr_id].default_value = p.value;
+    _via_attributes[attr_type][attr_id].default_value = attr_value;
     update_attributes_update_panel();
     update_annotation_editor();
     break;
   case 'attribute_type':
-    _via_attributes[_via_attribute_being_updated][attr_id].type = p.value;
-    if( p.value === VIA_ATTRIBUTE_TYPE.TEXT ) {
-      _via_attributes[_via_attribute_being_updated][attr_id].default_value = '';
-      delete _via_attributes[_via_attribute_being_updated][attr_id].options;
-      delete _via_attributes[_via_attribute_being_updated][attr_id].default_options;
+    _via_attributes[attr_type][attr_id].type = attr_value;
+    if( attr_value === VIA_ATTRIBUTE_TYPE.TEXT ) {
+      _via_attributes[attr_type][attr_id].default_value = '';
+      delete _via_attributes[attr_type][attr_id].options;
+      delete _via_attributes[attr_type][attr_id].default_options;
     } else {
       // preserve existing options
-      if ( ! _via_attributes[_via_attribute_being_updated][attr_id].hasOwnProperty('options') ) {
-        _via_attributes[_via_attribute_being_updated][attr_id].options = {};
-        _via_attributes[_via_attribute_being_updated][attr_id].default_options = {};
+      if ( ! _via_attributes[attr_type][attr_id].hasOwnProperty('options') ) {
+        _via_attributes[attr_type][attr_id].options = {};
+        _via_attributes[attr_type][attr_id].default_options = {};
       }
 
-      if ( _via_attributes[_via_attribute_being_updated][attr_id].hasOwnProperty('default_value') ) {
-        delete _via_attributes[_via_attribute_being_updated][attr_id].default_value;
+      if ( _via_attributes[attr_type][attr_id].hasOwnProperty('default_value') ) {
+        delete _via_attributes[attr_type][attr_id].default_value;
       }
 
       // collect existing attribute values and add them as options
-      var attr_values = attribute_get_unique_values(_via_attribute_being_updated, attr_id);
+      var attr_values = attribute_get_unique_values(attr_type, attr_id);
       var i;
       for ( i = 0; i < attr_values.length; ++i ) {
         var attr_val = attr_values[i];
-        _via_attributes[_via_attribute_being_updated][attr_id].options[attr_val] = attr_val;
+        _via_attributes[attr_type][attr_id].options[attr_val] = attr_val;
       }
     }
     show_attribute_properties();
@@ -4466,21 +4457,20 @@ function delete_existing_attribute(attribute_type, attribute_id) {
 }
 
 function add_new_attribute_from_user_input() {
-  var attr = document.getElementById('user_input_attribute_id').value;
-  if ( attr === '' ) {
+  var attr_id = document.getElementById('user_input_attribute_id').value;
+  if ( attr_id === '' ) {
     show_message('Enter the name of attribute that you wish to delete');
     return;
   }
-  if ( attribute_property_id_exists(attr) ) {
-    show_message('The ' + _via_attribute_being_updated + ' attribute [' + attr + '] already exists.');
-    return
+
+  if ( attribute_property_id_exists(attr_id) ) {
+    show_message('The ' + _via_attribute_being_updated + ' attribute [' + attr_id + '] already exists.');
   } else {
-    add_new_attribute(attr);
+    _via_current_attribute_id = attr_id;
+    add_new_attribute(attr_id);
     update_attributes_update_panel();
-    document.getElementById('attributes_name_list').value = attr;
-    update_attribute_properties_panel();
     update_annotation_editor();
-    show_message('Added ' + _via_attribute_being_updated + ' attribute [' + attr + '].');
+    show_message('Added ' + _via_attribute_being_updated + ' attribute [' + attr_id + '].');
   }
 }
 
@@ -4491,9 +4481,13 @@ function add_new_attribute(attribute_id) {
   _via_attributes[_via_attribute_being_updated][attribute_id].default_value = '';
 }
 
+function update_current_attribute_id(p) {
+  _via_current_attribute_id = p.options[p.selectedIndex].value;
+  update_attribute_properties_panel();
+}
+
 function get_current_attribute_id() {
-  var attr_id = document.getElementById('attributes_name_list').value;
-  return attr_id;
+  return document.getElementById('attributes_name_list').value;
 }
 
 function update_attribute_option_id_with_confirm(attr_type, attr_id, option_id, new_option_id) {

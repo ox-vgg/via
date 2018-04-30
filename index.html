@@ -537,7 +537,7 @@
               <span id="button_del_attribute" class="button" onclick="delete_existing_attribute_with_confirm()" title="Delete existing attribute">&minus;</span>
             </div>
             <div class="button_panel" style="margin:0.1rem 0;" >
-              <select style="width:100%" id="attributes_name_list" onchange="update_attribute_properties_panel()" title="List of existing attributes"></select>
+              <select style="width:100%" id="attributes_name_list" onchange="update_current_attribute_id(this)" title="List of existing attributes"></select>
             </div>
             <div id="attribute_properties"></div>
             <div id="attribute_options"></div>
@@ -825,11 +825,12 @@
     -->
 
     <!-- Unit Tests    -->
-    <!--     -->
+    <!---->
     <script src="./tests/_via_test_data.js"></script>
     <script src="./tests/_via_test.js"></script>
 
     <script src="./tests/_via_test_region.js"></script>
+
     <!--
     <script src="./tests/via_test_fileio.js"></script>
 -->
