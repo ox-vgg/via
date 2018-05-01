@@ -1,7 +1,6 @@
-## [1.1.0] - Not release yet!
+## [2.0.0] - Not release yet!
  * rectangles can now be resized from edges (issue 120)
  * added POLYLINE shape
-   - both polygon and polyline shape drawing operation is now ended using [Enter] key
  * renamed many methods and variables
  * attributes editor
    - added _via_attributes{'region','file'} and removed _via_region_attributes, _via_file_attributes
@@ -40,6 +39,7 @@
    - selected regions can be precisely moved by 1 pixel using arrow keys (press Shift to move by 10 pixel)
    - move multiple selected regions
    - {polygon, polyline, point} regions can now be drawn inside existing regions (i.e. nested regions)
+   - both polygon and polyline shape drawing operation is now ended by pressing [Enter] key
  * updated VIA unit tests for 1.1.x
 
 ## [1.0.5] - January 16, 2017
