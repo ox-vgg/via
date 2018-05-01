@@ -7062,18 +7062,24 @@ function _via_show_img(img_index) {
   if ( typeof(_via_img_fileref[img_id]) === 'undefined' || ! _via_img_fileref[img_id] instanceof File ) {
     // try preload from local file or url
     if ( typeof(_via_img_src[img_id]) === 'undefined' || _via_img_src[img_id] === '' ) {
-      //console.log('resolving file ' + img_index);
-      var search_path_list = _via_file_get_search_path_list();
-      //console.log(search_path_list)
-      _via_file_resolve(img_index, search_path_list).then( function(ok_file_index) {
-        //console.log('resolving success ' + img_index);
-        //console.log(_via_img_src[img_id])
+      if ( is_url( _via_img_metadata[img_id].filename ) ) {
+        _via_img_src[img_id] = _via_img_metadata[img_id].filename;
         _via_show_img(img_index);
-      }, function(err_file_index) {
-        console.log('resolving failed for ' + img_index);
-        show_page_404(img_index);
-      });
-      return;
+        return;
+      } else {
+        //console.log('resolving file ' + img_index);
+        var search_path_list = _via_file_get_search_path_list();
+        console.log(search_path_list)
+        _via_file_resolve(img_index, search_path_list).then( function(ok_file_index) {
+          //console.log('resolving success ' + img_index);
+          //console.log(_via_img_src[img_id])
+          _via_show_img(img_index);
+        }, function(err_file_index) {
+          console.log('resolving failed for ' + img_index);
+          show_page_404(img_index);
+        });
+        return;
+      }
     }
   }
 
@@ -7099,7 +7105,7 @@ function _via_show_img(img_index) {
     _via_is_loading_current_image = true;
     img_loading_spinbar(img_index, true);
     _via_img_buffer_add_image(img_index).then( function(ok_img_index) {
-      //console.log('_via_show_img(): image ' + img_index + ' loaded in buffer');
+      console.log('_via_show_img(): image ' + img_index + ' loaded in buffer');
       _via_is_loading_current_image = false;
       img_loading_spinbar(img_index, false);
       _via_show_img(img_index);
