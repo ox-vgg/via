@@ -57,18 +57,12 @@ async function _via_test_reset_to_initial_state() {
   // add attributes
   var i, attr_input_type;
   var promises = [];
-  promises.push( _via_test_create_rand_attributes( 'region', VIA_ATTRIBUTE_TYPE.TEXT ) );
-  promises.push( _via_test_create_rand_attributes( 'region', VIA_ATTRIBUTE_TYPE.CHECKBOX ) );
-
-/*
-  for ( i = 0; i < 1; ++i ) {
+  for ( i = 0; i < 3; ++i ) {
     for ( attr_input_type in VIA_ATTRIBUTE_TYPE ) {
-      promises.push( _via_test_create_rand_attributes( 'region', attr_input_type ) );
-      //promises.push( _via_test_create_rand_attributes( 'file', attr_input_type ) );
+      promises.push( _via_test_create_rand_attributes( 'region', VIA_ATTRIBUTE_TYPE[attr_input_type] ) );
+      promises.push( _via_test_create_rand_attributes( 'file', VIA_ATTRIBUTE_TYPE[attr_input_type] ) );
     }
   }
-*/
-
   // wait until all promises are setteled
   await Promise.all(promises).then( function(ok_attr_id_list) {
     console.log(ok_attr_id_list);
@@ -77,6 +71,7 @@ async function _via_test_reset_to_initial_state() {
     console.log('Failed to add the following attributes');
     console.log(err_attr_id_list);
   });
+  console.log('finished adding attributes')
 }
 
 function _via_test_assert_test_data_exists() {
@@ -216,8 +211,6 @@ function _via_test_dropdown_get_index(id, value) {
 async function _via_test_simulate_dropdown_select(id, value) {
   var p = document.getElementById(id);
   var i = _via_test_dropdown_get_index(id, value);
-  console.log('dropdown index for ' + value + '=' + i);
-  console.log(p)
   p.selectedIndex = i;
 
   await p.onchange();
@@ -225,6 +218,7 @@ async function _via_test_simulate_dropdown_select(id, value) {
 
 
 async function _via_test_input_text_value(id, value) {
+  //console.log('_via_test_input_text_value() : ' + id + ' = ' + value);
   var p = document.getElementById(id);
   await p.setAttribute('value', value);
   return p.getAttribute('value');
@@ -281,7 +275,7 @@ function _via_test_create_rand_attributes(attr_type, attr_input_type) {
 
 
     var attr_id = _via_test_rand_strn();
-    console.log('adding attribute ' + attr_id)
+    console.log('adding attribute ' + attr_type + ':' + attr_input_type + ':' + attr_id)
 
     _via_test_input_text_value('user_input_attribute_id', attr_id);
     _via_test_simulate_htmlelement_click('button_add_new_attribute');
@@ -290,7 +284,7 @@ function _via_test_create_rand_attributes(attr_type, attr_input_type) {
     _via_test_simulate_input_text_onchange('attribute_description');
 
     _via_test_simulate_dropdown_select('attribute_type', attr_input_type);
-/**/
+
     switch(attr_input_type) {
     default: // fallback
     case VIA_ATTRIBUTE_TYPE.TEXT:
@@ -304,9 +298,31 @@ function _via_test_create_rand_attributes(attr_type, attr_input_type) {
     case VIA_ATTRIBUTE_TYPE.CHECKBOX: // fallback
       var i, n;
       var option_id_list = [];
-      ////////////////////////////
-      //////////// @todo
-      ////////////////////////////
+      n = 2 + _via_test_rand_int(4);
+      //n = 1;
+      for ( i = 0; i < n; ++i ) {
+        var oi_id = _via_test_rand_strn();
+        _via_test_input_text_value('_via_attribute_new_option_id', oi_id);
+        _via_test_simulate_input_text_onchange('_via_attribute_new_option_id');
+        option_id_list.push(oi_id);
+
+        var oi_desc_id = '_via_attribute_option_description_' + oi_id;
+        var oi_desc_value;
+        //var oi_desc = _via_test_input_text_value(oi_desc_id, _via_test_rand_str());
+        if ( attr_input_type === VIA_ATTRIBUTE_TYPE.IMAGE ) {
+          oi_desc_value = _via_test_option_img_url[ _via_test_rand_int(_via_test_option_img_url.length) ];
+        } else {
+          oi_desc_value = _via_test_rand_str();
+        }
+        _via_test_input_text_value(oi_desc_id, oi_desc_value);
+        _via_test_simulate_input_text_onchange(oi_desc_id);
+
+        if ( _via_test_rand_int(2) ) {
+          // add this as default option
+          var oi_default_id = '_via_attribute_option_default_' + oi_id;
+          _via_test_input_checkbox_checked(oi_default_id, true);
+        }
+      }
       break;
     }
 

@@ -240,11 +240,9 @@
       #settings_panel .value { display:table-cell; vertical-align:middle; padding-left:1rem;}
 
       /* page {about, help, file not found, etc.}*/
-      .display_area_content { width: 70%; }
-      .display_area_content .table { display:table; border-collapse:collapse; }
-      .display_area_content .row { display:table-row; }
-      .display_area_content .col { display:table-cell; border:1px solid #f2f2f2; padding: 0.5rem; }
-      .display_area_content .heading { font-weight:bold; margin-top:1rem; }
+      .display_area_content { font-size:0.9rem; }
+      .narrow { width: 60%; }
+      .display_area_content li { margin: 0.4rem 0; }
     </style>
   </head>
 
@@ -427,8 +425,8 @@
               <li title="Visit the project page for this application"><a href="https://gitlab.com/vgg/via" target="_blank">Project Page</a></li>
               <li onclick="" title="Report an issue to the developers of this application (requires an account at gitlab.com)"><a href="https://gitlab.com/vgg/via/issues" target="_blank">Report issues</a></li>
               <li class="submenu_divider"></li>
-              <li onclick="show_license_panel()" title="View license of this application">License</li>
-              <li onclick="show_about_panel()" title="Show more details about this application">About VIA</li>
+              <li onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_LICENSE)" title="View license of this application">License</li>
+              <li onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_ABOUT)" title="Show more details about this application">About VIA</li>
             </ul>
           </li>
         </ul>
@@ -544,7 +542,7 @@
             <p style="text-align:center">
               <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor()">Toggle Annotation Editor</span>
               <!--
-              |<span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="">Save Attributes</span>-->
+                  |<span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="">Save Attributes</span>-->
             </p>
           </div>
         </div>
@@ -724,108 +722,94 @@
         </div> <!-- end of file not found panel -->
 
         <div id="page_start_info" class="display_area_content">
-          <p><span class="text_button" title="Load or Add Images" onclick="sel_local_images()">Load images</span> to start annotation or, see <span class="text_button" title="Getting started with VGG Image Annotator" onclick="show_getting_started_panel()">Getting Started</a>.</p>
-</div>
+          <ul>
+            <li>To start annotation, <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">select images</span> (or, add images from <span class="text_button" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)" onclick="project_file_add_url_with_input()">URL</span> or <span class="text_button" title="Add images using absolute path of file (e.g. /home/abhishek/image1.jpg)" onclick="project_file_add_abs_path_with_input()">absolute path</span>) and draw regions</li>
+            <li>Use <span class="text_button" title="Toggle attributes editor panel" onclick="toggle_attributes_editor()">attribute editor</span> to define attributes (e.g. name) and <span class="text_button" title="Toggle annotations editor panel" onclick="toggle_annotation_editor()">annotation editor</span> to describe each region (e.g. cat) using these attributes.</li>
+            <li>Remember to <span class="text_button" onclick="project_save_with_confirm()">save</span> your project before closing this application so that you can <span class="text_button" onclick="project_open_select_project_file()">load</span> it later to continue annotation.</li>
+            <li>For help, see the <span class="text_button" onclick="">User Guide</span> and pre-loaded demo: <span class="text_button" onclick="">face annotation</span>, <span class="text_button" onclick="">general image annotation</span>.</li>
+          </ul>
+        </div>
 
-<div id="page_about" class="display_area_content">
-  <p style="font-size: 2em;">VGG Image Annotator</p>
-  <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">1.1.0</a></p>
-  <p>
-    VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
-    developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
-    and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
-    With this standalone application, you can define regions in an image and create a textual description of those regions.
-    Such image regions and descriptions are useful for supervised training of learning algorithms.
-  </p>
-  <p>Features:</p>
-  <ul>
-    <li>based solely on HTML, CSS and Javascript (no external javascript libraries)</li>
-    <li>can be used off-line (full application in a single html file of size &lt; 200KB)</li>
-    <li>requires nothing more than a modern web browser</li>
-    <li>supported region shapes: rectangle, circle, ellipse, polygon and point</li>
-    <li>import/export of region data in csv and json file format</li>
-  </ul>
-  <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
-  <p>&nbsp;</p>
-  <p>Copyright &copy; 2016-2018, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a> (Visual Geometry Group, Oxford University)</p>
-</div> <!-- end of page_about -->
+        <div id="page_about" class="display_area_content narrow">
+          <p style="font-size: 2em;">VGG Image Annotator</p>
+          <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">2.0.0</a></p>
+          <p>
+            VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
+            developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
+            and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
+            With this standalone application, you can define regions in an image and create a textual description of those regions.
+            Such image regions and descriptions are useful for supervised training of learning algorithms.
+          </p>
+          <p>Features:</p>
+          <ul>
+            <li>based solely on HTML, CSS and Javascript (no external javascript libraries)</li>
+            <li>can be used off-line (full application in a single html file of size &lt; 200KB)</li>
+            <li>requires nothing more than a modern web browser</li>
+            <li>supported region shapes: rectangle, circle, ellipse, polygon and point</li>
+            <li>import/export of region data in csv and json file format</li>
+          </ul>
+          <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
+          <p>&nbsp;</p>
+          <p>Copyright &copy; 2016-2018, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a> (Visual Geometry Group, Oxford University)</p>
+        </div> <!-- end of page_about -->
 
-<div id="page_help" class="display_area_content">
-  <h1>Getting Started</h1>
-  <ol>
-    <li>Click [Image > Load or Add Images] in the top menu bar to load a set of images that you wish to annotate.</li>
-    <li>Press n (or p) to navigate through the loaded images. You can also use the &larr; and &rarr; icons in the top panel toolbar for navigation.</li>
-    <li>Click <b>Region Attributes</b> in the left panel to reveal a panel in the bottom. Click <b>[Add New]</b> tp add a new attribute. For example:
-      <pre>
-        object_name
-        object_color
-      </pre>
-      You can add more region attributes according to you needs.
-    <li>In the <b>Region Shape</b> section in the left panel, click the rectangular shape</li>
-    <li>On the image area, keep pressing the right click button as you drag the mouse cursor. This will draw a rectangular region on the image.</li>
-    <li>This newly created region is automatically selected. Now you can enter the attribute value for this region in the bottom panel. For example:
-      <pre>
-        object_name = dog
-        object_color = white
-      </pre>
-      You can annotate multiple regions in this image or other images and assign a value to each pre-defined attribute.</li>
-    <li>To download the annotated region data, click <b>[Annotation > Save as CSV]</b> in the top menu bar. This will download a text file containing region shape and attribute data.</li>
-    <li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 7) by clicking <b>[Annotation > Import]</b>.
-  </li></ol>
-</div>
+        <div id="page_help" class="display_area_content">
+          <h1>Getting Started</h1>
+          <p>@todo</p>
+        </div>
 
-<div id="page_license" class="display_area_content">
-  <pre>
-    Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
-    All rights reserved.
+        <div id="page_license" class="display_area_content">
+          <pre>
+            Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University.
+            All rights reserved.
 
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
+            Redistribution and use in source and binary forms, with or without
+            modification, are permitted provided that the following conditions are met:
 
-    Redistributions of source code must retain the above copyright notice, this
-    list of conditions and the following disclaimer.
-    Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation
-    and/or other materials provided with the distribution.
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
-    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-    POSSIBILITY OF SUCH DAMAGE.
-  </pre>
-</div>
-</div> <!-- end of display_area -->
-</div> <!-- end of middle_panel -->
+            Redistributions of source code must retain the above copyright notice, this
+            list of conditions and the following disclaimer.
+            Redistributions in binary form must reproduce the above copyright notice,
+            this list of conditions and the following disclaimer in the documentation
+            and/or other materials provided with the distribution.
+            THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+            AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+            IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+            ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+            LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+            CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+            SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+            INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+            CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+            ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+            POSSIBILITY OF SUCH DAMAGE.
+          </pre>
+        </div>
+      </div> <!-- end of display_area -->
+    </div> <!-- end of middle_panel -->
 
-<script type="text/javascript">
-  //<!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
-</script>
-<script type="text/javascript">
-  //<!--AUTO_INSERT_VIA_JS_HERE-->
-</script>
-<script type="text/javascript">
-  //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
-</script>
+    <script type="text/javascript">
+      //<!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
+    </script>
+    <script type="text/javascript">
+      //<!--AUTO_INSERT_VIA_JS_HERE-->
+    </script>
+    <script type="text/javascript">
+      //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
+    </script>
 
-<!--    -->
-<script src="via.js"></script>
+    <!--    -->
+    <script src="via.js"></script>
 
-<!--
-<script src="via_demo.js"></script>
-<script src="./tests/data/via_image_grid_test_data.js"></script>
-<script src="./tests/data/wikimedia_commons_featured_images_url.js"></script>
-<script src="/data/datasets/via/import/pascal_voc/_via_project_pascal_voc2012_import.js"></script>
-<script src="/data/datasets/arsha/sherlock/facetracks/s01_from_RCNN/e01/tracks_FRCNN_remove_full_path_1000.json"></script>
-    -->
+    <!--
+        <script src="via_demo.js"></script>
+        <script src="./tests/data/via_image_grid_test_data.js"></script>
+        <script src="./tests/data/wikimedia_commons_featured_images_url.js"></script>
+        <script src="/data/datasets/via/import/pascal_voc/_via_project_pascal_voc2012_import.js"></script>
+        <script src="/data/datasets/arsha/sherlock/facetracks/s01_from_RCNN/e01/tracks_FRCNN_remove_full_path_1000.json"></script>
+        -->
 
-    <!-- Unit Tests    -->
-    <!---->
+    <!-- Regression Tests    -->
+    <!--    -->
     <script src="./tests/_via_test_data.js"></script>
     <script src="./tests/_via_test.js"></script>
 
@@ -833,8 +817,6 @@
 
     <!--
     <script src="./tests/via_test_fileio.js"></script>
--->
-
-
+    -->
   </body>
 </html>

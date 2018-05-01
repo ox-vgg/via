@@ -55,7 +55,7 @@
 
 "use strict";
 
-var VIA_VERSION      = '1.1.0';
+var VIA_VERSION      = '2.0.0';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -3868,6 +3868,7 @@ function attribute_update_panel_set_active_button() {
 function show_region_attributes_update_panel() {
   if ( _via_attribute_being_updated !== 'region' ) {
     _via_attribute_being_updated = 'region';
+    _via_current_attribute_id = Object.keys(_via_attributes['region'])[0];
     update_attributes_update_panel();
     attribute_update_panel_set_active_button();
   }
@@ -3876,6 +3877,7 @@ function show_region_attributes_update_panel() {
 function show_file_attributes_update_panel() {
   if ( _via_attribute_being_updated !== 'file' ) {
     _via_attribute_being_updated = 'file';
+    _via_current_attribute_id = Object.keys(_via_attributes['file'])[0];
     update_attributes_update_panel();
     attribute_update_panel_set_active_button();
   }
@@ -3921,10 +3923,11 @@ function show_attribute_properties() {
   }
 
   var attr_id = _via_current_attribute_id;
-  var attr_type = _via_attributes[_via_attribute_being_updated][attr_id].type;
-  var attr_desc = _via_attributes[_via_attribute_being_updated][attr_id].description;
+  var attr_type = _via_attribute_being_updated;
+  var attr_input_type = _via_attributes[attr_type][attr_id].type;
+  var attr_desc = _via_attributes[attr_type][attr_id].description;
 
-  console.log('show_attribute_properties() for attr_id=' + attr_id + ', attr_desc = ' + attr_desc)
+  //console.log('show_attribute_properties() for attr_id=' + attr_id + ', attr_type = ' + attr_type + ', attr_input_type = ' + attr_input_type)
 
   attribute_property_add_input_property('Name of attribute (appears in exported annotations)',
                                         'Name',
@@ -3935,8 +3938,8 @@ function show_attribute_properties() {
                                         attr_desc,
                                         'attribute_description');
 
-  if ( attr_type === 'text' ) {
-    var attr_default_value = _via_attributes[_via_attribute_being_updated][attr_id].default_value;
+  if ( attr_input_type === 'text' ) {
+    var attr_default_value = _via_attributes[attr_type][attr_id].default_value;
     attribute_property_add_input_property('Default value of this attribute',
                                           'Def.',
                                           attr_default_value,
@@ -3959,7 +3962,7 @@ function show_attribute_properties() {
     var option = document.createElement('option');
     option.setAttribute('value', type);
     option.innerHTML = type;
-    if ( attr_type == type ) {
+    if ( attr_input_type == type ) {
       option.setAttribute('selected', 'selected');
     }
     c1b.appendChild(option);
@@ -4061,7 +4064,7 @@ function attribute_property_add_input_property(title, name, value, id) {
   var c1 = document.createElement('span');
   var c1b = document.createElement('input');
   c1b.setAttribute('onchange', 'attribute_property_on_update(this)');
-  console.log('attribute_property_add_input_property value : id=' + id + ', value=' + value)
+  //console.log('attribute_property_add_input_property value : id=' + id + ', value=' + value)
   if ( typeof(value) !== 'undefined' ) {
     c1b.setAttribute('value', value);
   }
@@ -4080,14 +4083,14 @@ function attribute_property_add_option(attr_id, option_id, option_desc, option_d
   var c0b = document.createElement('input');
   c0b.setAttribute('value', option_id);
   c0b.setAttribute('title', option_id);
-  c0b.setAttribute('onblur', 'attribute_property_on_option_update(this)');
+  c0b.setAttribute('onchange', 'attribute_property_on_option_update(this)');
   c0b.setAttribute('id', '_via_attribute_option_id_' + option_id);
 
   var c1 = document.createElement('span');
   var c1b = document.createElement('input');
   c1b.setAttribute('value', option_desc);
   c1b.setAttribute('title', option_desc);
-  c1b.setAttribute('onblur', 'attribute_property_on_option_update(this)');
+  c1b.setAttribute('onchange', 'attribute_property_on_option_update(this)');
   c1b.setAttribute('id', '_via_attribute_option_description_' + option_id);
 
   var c2 = document.createElement('span');
@@ -4123,7 +4126,7 @@ function attribute_property_add_new_entry_option(attr_id, attribute_type) {
   var c0b = document.createElement('input');
   c0b.setAttribute('type', 'text');
   c0b.setAttribute('value', '');
-  c0b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
+  c0b.setAttribute('onchange', 'attribute_property_on_option_add(this)');
   c0b.setAttribute('id', '_via_attribute_new_option_id');
   c0b.setAttribute('placeholder', 'Add new id');
 
@@ -4151,9 +4154,9 @@ function attribute_property_on_update(p) {
     }
     break;
   case 'attribute_description':
-    console.log('updating description for attribute ' + attr_id + ' to value ' + attr_value)
+    //console.log('updating description for attribute ' + attr_id + ' to value ' + attr_value)
     _via_attributes[attr_type][attr_id].description = attr_value;
-    console.log(_via_attributes[attr_type][attr_id].description)
+    //console.log(_via_attributes[attr_type][attr_id].description)
     update_attributes_update_panel();
     update_annotation_editor();
     break;
@@ -4358,7 +4361,7 @@ function attribute_property_show_new_entry_inputs(attr_id, attribute_type) {
   n0.classList.add('property');
   var n1a = document.createElement('span');
   var n1b = document.createElement('input');
-  n1b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
+  n1b.setAttribute('onchange', 'attribute_property_on_option_add(this)');
   n1b.setAttribute('placeholder', 'Add new id');
   n1b.setAttribute('value', '');
   n1b.setAttribute('id', '_via_attribute_new_option_id');
@@ -4366,7 +4369,7 @@ function attribute_property_show_new_entry_inputs(attr_id, attribute_type) {
 
   var n2a = document.createElement('span');
   var n2b = document.createElement('input');
-  n2b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
+  n2b.setAttribute('onchange', 'attribute_property_on_option_add(this)');
   n2b.setAttribute('placeholder', 'Optional description');
   n2b.setAttribute('value', '');
   n2b.setAttribute('id', '_via_attribute_new_option_description');
@@ -4378,7 +4381,7 @@ function attribute_property_show_new_entry_inputs(attr_id, attribute_type) {
   if ( attribute_type === 'radio' ) {
     n3b.setAttribute('name', attr_id);
   }
-  n3b.setAttribute('onblur', 'attribute_property_on_option_add(this)');
+  n3b.setAttribute('onchange', 'attribute_property_on_option_add(this)');
   n3b.setAttribute('id', '_via_attribute_new_option_default');
   n3a.appendChild(n3b);
 
@@ -5686,10 +5689,12 @@ function project_file_add_abs_path_with_input() {
 }
 
 function project_file_add_abs_path_input_done(input) {
-  var abs_path = input.absolute_path.value.trim();
-  project_file_add_url(abs_path);
+  var abs_path  = input.absolute_path.value.trim();
+  var img_id    = project_file_add_url(abs_path);
+  var img_index = _via_image_id_list.indexOf(img_id);
   show_message('Added file at absolute path [' + abs_path + ']');
   update_img_fn_list();
+  _via_show_img(img_index);
   user_input_default_cancel_handler();
 }
 
@@ -5703,9 +5708,11 @@ function project_file_add_url_with_input() {
 
 function project_file_add_url_input_done(input) {
   var url = input.url.value.trim();
-  project_file_add_url(url);
+  var img_id    = project_file_add_url(url);
+  var img_index = _via_image_id_list.indexOf(img_id);
   show_message('Added file at url [' + url + ']');
   update_img_fn_list();
+  _via_show_img(img_index);
   user_input_default_cancel_handler();
 }
 
@@ -5718,6 +5725,7 @@ function project_file_add_url(url) {
       img_id = project_add_new_file(url);
       _via_img_src[img_id] = _via_img_metadata[img_id].filename;
       set_file_annotations_to_default_value(img_id);
+      return img_id;
     }
   }
 }
