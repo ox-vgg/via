@@ -5,73 +5,79 @@
   Date  : Apr. 26, 2018
 */
 
-var _via_test_unit_tests = [];
-var _via_test_test_prefix = '_via_test_case_';
+var _via_test_regression_tests = [];
+var _via_test_case_prefix = '_via_test_case_';
 var _via_test_ongoing_unit_test_id = 0;
-
+var _via_test_log_data = [];
 var _via_test_console_window;
+var _via_test_result_passed = [];
+var _via_test_result_failed = [];
 
 // events
 var _via_test_unit_test_complete_event = new Event('_via_test_test_done');
 
-function _via_load_submodules() {
-  _via_test_init_console();
-  _via_test_init_unit_tests();
-  /*
-  _via_test_run_unit_tests().then( function(ok_test_case_count) {
-    console.log('Passed test cases = ' + ok_test_case_count);
-  }, function(err_test_case_count) {
-    console.log('Failed test cases = ' + err_test_case_count);
-  });
-*/
+async function _via_load_submodules() {
+  _via_test_log_init();
+  await _via_test_init_regression_tests();
+  await _via_test_run_regression_tests();
 }
 
-async function _via_test_init_unit_tests() {
+async function _via_test_init_regression_tests() {
   await _via_test_reset_to_initial_state();
-  await _via_test_search_unit_tests();
+  await _via_test_search_regression_tests();
 }
 
 async function _via_test_reset_to_initial_state() {
-  _via_test_print('_via_test: reset to initial state');
   if ( ! _via_test_assert_test_data_exists() ) {
-    _via_test_print('_via_test: test data does not exist!');
+    _via_test_log('_via_test_reset_to_initial_state(): test data set does not exist!');
     return;
   }
-  var i, n;
 
   // add files
+  var i, n;
+  var file_count = 0;
   n = _via_test_img_base64.length;
   for ( i = 0; i < n; ++i ) {
     project_file_add_base64( 'base64_file_' + (i+1) + '.jpg', _via_test_img_base64[i] );
+    file_count += 1;
   }
   n = _via_test_img_url.length;
   for ( i = 0; i < n; ++i ) {
     project_file_add_url(_via_test_img_url[i]);
+    file_count += 1;
   }
   n = _via_test_img_local.length;
   for ( i = 0; i < n; ++i ) {
     project_file_add_url(_via_test_img_local[i]);
+    file_count += 1;
   }
   update_img_fn_list();
+  _via_test_log('_via_test_reset_to_initial_state(): added ' + file_count + ' files to project');
 
   // add attributes
   var i, attr_input_type;
-  var promises = [];
+  var added_attributes = { 'region':{}, 'file':{} };
+  var d;
   for ( i = 0; i < 3; ++i ) {
     for ( attr_input_type in VIA_ATTRIBUTE_TYPE ) {
-      promises.push( _via_test_create_rand_attributes( 'region', VIA_ATTRIBUTE_TYPE[attr_input_type] ) );
-      promises.push( _via_test_create_rand_attributes( 'file', VIA_ATTRIBUTE_TYPE[attr_input_type] ) );
+      d = await _via_test_create_rand_attributes( 'region', VIA_ATTRIBUTE_TYPE[attr_input_type] );
+      if ( d ) {
+        added_attributes['region'][d.attr_id] = d.attr_data;
+      } else {
+        console.log('Error adding attribute region:' + VIA_ATTRIBUTE_TYPE[attr_input_type] + ':' + i);
+      }
+
+      d = await _via_test_create_rand_attributes( 'file', VIA_ATTRIBUTE_TYPE[attr_input_type] );
+      if ( d ) {
+        added_attributes['file'][d.attr_id] = d.attr_data;
+      } else {
+        console.log('Error adding attribute file:' + VIA_ATTRIBUTE_TYPE[attr_input_type] + ':' + i);
+      }
     }
   }
-  // wait until all promises are setteled
-  await Promise.all(promises).then( function(ok_attr_id_list) {
-    console.log(ok_attr_id_list);
-    console.log(_via_attributes);
-  }, function(err_attr_id_list) {
-    console.log('Failed to add the following attributes');
-    console.log(err_attr_id_list);
-  });
-  console.log('finished adding attributes')
+  var rattr = Object.keys(added_attributes['region']).length;
+  var fattr = Object.keys(added_attributes['file']).length;
+  _via_test_log('_via_test_reset_to_initial_state(): added ' + rattr + ' region attributes and ' + fattr + ' file attributes');
 }
 
 function _via_test_assert_test_data_exists() {
@@ -88,41 +94,63 @@ function _via_test_assert_test_data_exists() {
 }
 
 
-function _via_test_run_unit_tests() {
-  return new Promise( function(ok_callback, err_callback) {
-    var i, n;
-    n = _via_test_unit_tests.length;
-    for ( i = 0; i < n; ++i ) {
-      _via_test_ongoing_unit_test_id = i;
-      console.log('running')
-      console.log( _via_test_unit_tests[_via_test_ongoing_unit_test_id] )
+async function _via_test_run_regression_tests() {
+  var i, n;
+  n = _via_test_regression_tests.length;
+  var test_case_result, test_case_name;
+  for ( i = 0; i < n; ++i ) {
+    _via_test_ongoing_unit_test_id = i;
+    test_case_name   = _via_test_regression_tests[_via_test_ongoing_unit_test_id].name;
+    test_case_result = await _via_test_regression_tests[_via_test_ongoing_unit_test_id]();
+    console.log(test_case_result)
+    if ( test_case_result.has_passed ) {
+      _via_test_result_passed.push( test_case_result );
+      _via_test_log(test_case_name + ' : PASSED ');
+    } else {
+      _via_test_result_failed.push( test_case_result );
+      _via_test_log(test_case_name + ' : FAILED ************************************');
     }
-    ok_callback()
-  });
+  }
+
+  if ( _via_test_result_passed.length ) {
+  _via_test_log('_via_test_run_regression_tests(): summary of PASSED test cases');
+    _via_test_print_test_result(_via_test_result_passed);
+    console.log(_via_test_result_passed)
+  }
+
+  if ( _via_test_result_failed.length ) {
+    _via_test_log('_via_test_run_regression_tests(): summary of FAILED test cases');
+    _via_test_print_test_result(_via_test_result_failed);
+    console.log(_via_test_result_failed)
+  }
 }
 
-function _via_test_search_unit_tests() {
+function _via_test_print_test_result(results) {
+  var result;
+  var status;
+  var i, n;
+  n = results.length;
+  for ( i = 0; i < n; ++i ) {
+    result = results[i];
+    if ( result.has_passed ) {
+      status = 'PASSED';
+    } else {
+      status = 'FAILED';
+    }
+    _via_test_log(status + ':' + result.name);
+  }
+}
+
+function _via_test_search_regression_tests() {
   // retrive a list of all function names starting with _via_test_*()
   for ( var i in window) {
     if ( typeof window[i] === 'function' ) {
-      if ( window[i].name.substr(0, _via_test_test_prefix.length) === _via_test_test_prefix) {
-        _via_test_unit_tests.push(window[i].name);
+      if ( window[i].name.substr(0, _via_test_case_prefix.length) === _via_test_case_prefix) {
+        _via_test_regression_tests.push(window[i]);
       }
     }
   }
-  _via_test_print('found the following test cases: ' + JSON.stringify(_via_test_unit_tests));
-}
-
-function _via_run_test(cmd, delay_ms) {
-  var caller_name = _via_run_test.caller.name;
-
-  setTimeout( function(cmd, caller_name) {
-    for ( var i=0; i<cmd.length; ++i) {
-      var result_i = eval(cmd[i]);
-      _via_log_test_result(cmd[i], result_i, caller_name);
-    }
-    window.dispatchEvent(_via_unit_test_complete_event);
-  }, delay_ms, cmd, caller_name);
+  _via_test_log('_via_test_search_regression_tests(): test cases count = ' + _via_test_regression_tests.length);
 }
 
 function _via_test_simulate_htmlelement_click(html_element) {
@@ -133,68 +161,109 @@ function _via_test_simulate_htmlelement_click(html_element) {
       'cancelable': true
     });
 
-    document.getElementById(html_element).dispatchEvent(e);
-    ok_callback();
+    var p = document.getElementById(html_element);
+    if ( p ) {
+      p.dispatchEvent(e);
+      ok_callback(0);
+    } else {
+      err_callback(1);
+    }
   });
 }
 
 function _via_test_simulate_canvas_mouseevent(eventname, x, y) {
-  var canvas_name = 'region_canvas';
-  var c = document.getElementById(canvas_name);
-  var r = c.getBoundingClientRect();
-  var e = new MouseEvent(eventname, {
-    'view': window,
-    'bubbles': true,
-    'cancelable': true,
-    'screenX': x + r.left,
-    'screenY': y + r.top,
-    'clientX': x + r.left,
-    'clientY': y + r.top,
-    'button': 0
+  return new Promise( function(ok_callback, err_callback) {
+    var canvas_name = 'region_canvas';
+    var c = document.getElementById(canvas_name);
+    if ( c ) {
+      var r = c.getBoundingClientRect();
+      var e = new MouseEvent(eventname, {
+        'view': window,
+        'bubbles': true,
+        'cancelable': true,
+        'screenX': x + r.left,
+        'screenY': y + r.top,
+        'clientX': x + r.left,
+        'clientY': y + r.top,
+        'button': 0
+      });
+      if ( e ) {
+        c.dispatchEvent(e);
+        //console.log('_via_test_simulate_canvas_mouseevent() ' + eventname + ': (' + x + ',' + y + ')');
+        ok_callback(0);
+      } else {
+        err_callback(1);
+      }
+    } else {
+      err_callback(1);
+    }
   });
-  c.dispatchEvent(e);
 }
 
-function _via_test_simulate_canvas_keyevent(eventname) {
-  var canvas_name = 'region_canvas';
-  var c = document.getElementById(canvas_name);
-  var r = c.getBoundingClientRect();
-  var e = new KeyboardEvent('keydown', {
-    'code':'Enter',
-    'key':'Enter',
-    'which':13,
-    'keyCode':13
+function _via_test_simulate_canvas_keyevent_enter() {
+  return new Promise( function(ok_callback, err_callback) {
+    var canvas_name = 'region_canvas';
+    var c = document.getElementById(canvas_name);
+    if ( c ) {
+      var r = c.getBoundingClientRect();
+      var e = new KeyboardEvent('keydown', {
+        'code':'Enter',
+        'key':'Enter',
+        'which':13,
+        'keyCode':13
+      });
+      if ( e ) {
+        c.dispatchEvent(e);
+        ok_callback(0);
+      } else {
+        err_callback(1);
+      }
+    } else {
+      err_callback(1);
+    }
   });
-  c.dispatchEvent(e);
 }
 
 function _via_test_simulate_canvas_mouseup(x, y) {
-  _via_test_simulate_canvas_mouseevent('mouseup', x, y);
+  return _via_test_simulate_canvas_mouseevent('mouseup', x, y);
 }
 
 function _via_test_simulate_canvas_mousedown(x, y) {
-  _via_test_simulate_canvas_mouseevent('mousedown', x, y);
+  return _via_test_simulate_canvas_mouseevent('mousedown', x, y);
 }
 
 function _via_test_simulate_canvas_mousemove(x, y) {
-  _via_test_simulate_canvas_mouseevent('mousemove', x, y);
+  return _via_test_simulate_canvas_mouseevent('mousemove', x, y);
 }
 
 function _via_test_simulate_canvas_click(x, y) {
-  _via_test_simulate_canvas_mousedown(x, y);
-  _via_test_simulate_canvas_mouseup(x, y);
+  return new Promise( async function(ok_callback, err_callback) {
+    var e1 = await _via_test_simulate_canvas_mousedown(x, y);
+    if ( e1 ) {
+      err_callback(1);
+    } else {
+      var e2 = await _via_test_simulate_canvas_mouseup(x, y);
+      if ( e2 ) {
+        err_callback(1);
+      } else {
+        //console.log('_via_test_simulate_canvas_click(): click at (' + x + ',' + y + ')');
+        ok_callback(0);
+      }
+    }
+  });
 }
 
-async function _via_test_input_checkbox_checked(id, checked) {
-  var p = document.getElementById(id);
-  p.checked = checked;
-  await p.onchange();
-}
-
-function _via_test_simulate_button_click(id, delay) {
-  setTimeout( function() {
-    document.getElementById(id).click();
-  }, delay);
+function _via_test_input_checkbox_checked(id, checked) {
+  return new Promise( function(ok_callback, err_callback) {
+    var p = document.getElementById(id);
+    if ( p ) {
+      p.checked = checked;
+      p.onchange();
+      ok_callback(0);
+    } else {
+      err_callback(1);
+    }
+  });
 }
 
 function _via_test_dropdown_get_index(id, value) {
@@ -208,24 +277,50 @@ function _via_test_dropdown_get_index(id, value) {
   }
 }
 
-async function _via_test_simulate_dropdown_select(id, value) {
-  var p = document.getElementById(id);
-  var i = _via_test_dropdown_get_index(id, value);
-  p.selectedIndex = i;
-
-  await p.onchange();
+function _via_test_simulate_dropdown_select(id, value) {
+  return new Promise( function(ok_callback, err_callback) {
+    var p = document.getElementById(id);
+    if ( p && p.options.length) {
+      var i = _via_test_dropdown_get_index(id, value);
+      if ( i >= 0 && i < p.options.length ) {
+        p.selectedIndex = i;
+        p.onchange();
+        ok_callback(0);
+      } else {
+        err_callback(1);
+      }
+    } else {
+      err_callback(1);
+    }
+  });
 }
 
 
-async function _via_test_input_text_value(id, value) {
-  //console.log('_via_test_input_text_value() : ' + id + ' = ' + value);
-  var p = document.getElementById(id);
-  await p.setAttribute('value', value);
-  return p.getAttribute('value');
+function _via_test_input_text_value(id, value, attr_id) {
+  return new Promise( function(ok_callback, err_callback) {
+    var p = document.getElementById(id);
+    if ( p ) {
+      p.setAttribute('value', value);
+      var set_value = p.getAttribute('value');
+      ok_callback( set_value );
+    } else {
+      console.log('_via_test_input_text_value() ' + attr_id + ':' + id + ':[' + value.substr(0,50) + '] not available!');
+      err_callback();
+    }
+  });
 }
 
-async function _via_test_simulate_input_text_onchange(id) {
-  await document.getElementById(id).onchange();
+function _via_test_simulate_input_text_onchange(id, attr_id) {
+  return new Promise( function(ok_callback, err_callback) {
+    var p = document.getElementById(id);
+    if ( p && p.onchange ) {
+      p.onchange();
+      ok_callback(0);
+    } else {
+      console.log('_via_test_simulate_input_text_onchange() ' + attr_id + ':' + id + ' not available!');
+      err_callback(1);
+    }
+  });
 }
 
 // source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
@@ -252,44 +347,89 @@ function _via_test_is_inside_any_region(x, y) {
 }
 
 function _via_test_rand_str() {
-  var start  = _via_test_rand_int(_via_test_random_text_n - 2);
+  var start  = _via_test_rand_int(_via_test_random_text_n - 5);
   return _via_test_random_text.substr(start);
 }
 
 function _via_test_rand_strn() {
-  var start  = _via_test_rand_int(_via_test_random_textnum_n - 2);
+  var start  = _via_test_rand_int(_via_test_random_textnum_n - 5);
   return _via_test_random_textnum.substr(start, 8);
 }
 
 function _via_test_rand_strs() {
-  var start  = _via_test_rand_int(_via_test_random_textspecial_n - 2);
+  var start  = _via_test_rand_int(_via_test_random_textspecial_n - 5);
   return _via_test_random_textspecial.substr(start);
 }
 
 function _via_test_create_rand_attributes(attr_type, attr_input_type) {
-  return new Promise( function(ok_callback, err_callback) {
+  return new Promise( async function(ok_callback, err_callback) {
     if ( ! document.getElementById('attributes_editor_panel_title').classList.contains('active') ) {
-      _via_test_simulate_htmlelement_click('attributes_editor_panel_title');
+      var r = await _via_test_simulate_htmlelement_click('attributes_editor_panel_title');
+      if ( r ) {
+        err_callback();
+        return;
+      }
     }
-    _via_test_simulate_htmlelement_click('button_show_' + attr_type + '_attributes');
-
+    var r = await _via_test_simulate_htmlelement_click('button_show_' + attr_type + '_attributes');
+    if ( r ) {
+      err_callback();
+      return;
+    }
 
     var attr_id = _via_test_rand_strn();
-    console.log('adding attribute ' + attr_type + ':' + attr_input_type + ':' + attr_id)
+    while ( attribute_property_id_exists(attr_id) ) {
+      var attr_id = _via_test_rand_strn();
+    }
 
-    _via_test_input_text_value('user_input_attribute_id', attr_id);
-    _via_test_simulate_htmlelement_click('button_add_new_attribute');
+    //console.log('adding attribute ' + attr_type + ':' + attr_input_type + ':' + attr_id)
 
-    var attr_desc = _via_test_input_text_value('attribute_description', _via_test_rand_str());
-    _via_test_simulate_input_text_onchange('attribute_description');
+    var r = await _via_test_input_text_value('user_input_attribute_id', attr_id, attr_id);
+    if ( r !== attr_id ) {
+      err_callback();
+      return;
+    }
 
-    _via_test_simulate_dropdown_select('attribute_type', attr_input_type);
+    var r = await _via_test_simulate_htmlelement_click('button_add_new_attribute');
+    if ( r ) {
+      err_callback();
+      return;
+    }
+
+    var attr_desc = _via_test_rand_str();
+    var r = await _via_test_input_text_value('attribute_description', attr_desc, attr_id);
+    if ( r !== attr_desc) {
+      err_callback();
+      return;
+    }
+
+    var r = await _via_test_simulate_input_text_onchange('attribute_description', attr_id);
+    if ( r ) {
+      err_callback();
+      return;
+    }
+
+    var r = await _via_test_simulate_dropdown_select('attribute_type', attr_input_type);
+    if ( r ) {
+      err_callback();
+      return;
+    }
 
     switch(attr_input_type) {
     default: // fallback
     case VIA_ATTRIBUTE_TYPE.TEXT:
-      var attr_default = _via_test_input_text_value('attribute_default_value', _via_test_rand_str());
-      _via_test_simulate_input_text_onchange('attribute_default_value');
+      var attr_default_value = _via_test_rand_str();
+      var r = await _via_test_input_text_value('attribute_default_value', attr_default_value, attr_id);
+      if ( r !== attr_default_value ) {
+        err_callback();
+        return;
+      }
+      var r = await _via_test_simulate_input_text_onchange('attribute_default_value', attr_id);
+      if ( r ) {
+        err_callback();
+        return;
+      }
+
+      ok_callback( { 'attr_id':attr_id, 'attr_data':{'type':attr_input_type, 'description':attr_desc, 'default_value':attr_default_value} } );
       break;
 
     case VIA_ATTRIBUTE_TYPE.RADIO:    // fallback
@@ -298,144 +438,79 @@ function _via_test_create_rand_attributes(attr_type, attr_input_type) {
     case VIA_ATTRIBUTE_TYPE.CHECKBOX: // fallback
       var i, n;
       var option_id_list = [];
+      var options = {};
+      var option_defaults = {};
+
       n = 2 + _via_test_rand_int(4);
       //n = 1;
       for ( i = 0; i < n; ++i ) {
-        var oi_id = _via_test_rand_strn();
-        _via_test_input_text_value('_via_attribute_new_option_id', oi_id);
-        _via_test_simulate_input_text_onchange('_via_attribute_new_option_id');
-        option_id_list.push(oi_id);
+        var option_id = _via_test_rand_strn();
+        var option_id_test = attribute_property_option_id_is_valid(attr_id, option_id);
+        // ensure that a unique option_id is obtained
+        while ( ! option_id_test.is_valid ) {
+          option_id = _via_test_rand_strn();
+          option_id_test = attribute_property_option_id_is_valid(attr_id, option_id);
+        }
 
-        var oi_desc_id = '_via_attribute_option_description_' + oi_id;
-        var oi_desc_value;
+        var r = await _via_test_input_text_value('_via_attribute_new_option_id', option_id, attr_id);
+        if ( r !== option_id ) {
+          err_callback();
+          return;
+        }
+
+        var r = await _via_test_simulate_input_text_onchange('_via_attribute_new_option_id', attr_id);
+        if ( r ) {
+          err_callback();
+          return;
+        }
+
+        option_id_list.push(option_id);
+
+        var option_desc_id = '_via_attribute_option_description_' + option_id;
+        var option_desc_value;
         //var oi_desc = _via_test_input_text_value(oi_desc_id, _via_test_rand_str());
         if ( attr_input_type === VIA_ATTRIBUTE_TYPE.IMAGE ) {
-          oi_desc_value = _via_test_option_img_url[ _via_test_rand_int(_via_test_option_img_url.length) ];
+          option_desc_value = _via_test_option_img_url[ _via_test_rand_int(_via_test_option_img_url.length) ];
         } else {
-          oi_desc_value = _via_test_rand_str();
+          option_desc_value = _via_test_rand_str();
         }
-        _via_test_input_text_value(oi_desc_id, oi_desc_value);
-        _via_test_simulate_input_text_onchange(oi_desc_id);
+        var r = await _via_test_input_text_value(option_desc_id, option_desc_value, attr_id);
+        if ( r !== option_desc_value ) {
+          err_callback();
+          return;
+        }
+        var r = await _via_test_simulate_input_text_onchange(option_desc_id);
+        if ( r ) {
+          err_callback();
+          return;
+        }
+
+        options[option_id] = option_desc_value;
 
         if ( _via_test_rand_int(2) ) {
           // add this as default option
-          var oi_default_id = '_via_attribute_option_default_' + oi_id;
-          _via_test_input_checkbox_checked(oi_default_id, true);
+          var option_default_id = '_via_attribute_option_default_' + option_id;
+          var r = await _via_test_input_checkbox_checked(option_default_id, true);
+          if ( r ) {
+            err_callback();
+            return;
+          }
+
+          if ( attr_input_type !== VIA_ATTRIBUTE_TYPE.CHECKBOX ) {
+            option_defaults = {};
+          }
+          option_defaults[option_id] = true;
         }
       }
+      ok_callback( { 'attr_id':attr_id, 'attr_data':{'type':attr_input_type, 'description':attr_desc, 'options':options, 'default_options':option_defaults} } );
       break;
     }
 
     // assert that attribute was added successfully
-    if ( _via_attributes[attr_type].hasOwnProperty(attr_id) ) {
-      ok_callback( {'attr_type':attr_type, 'attr_input_type':attr_input_type, 'attr_id':attr_id} );
-    } else {
-      err_callback( {'attr_type':attr_type, 'attr_input_type':attr_input_type, 'attr_id':attr_id} );
+    if ( ! _via_attributes[attr_type].hasOwnProperty(attr_id) ) {
+      err_callback();
+      return;
     }
-
-    /*
-    switch(type) {
-    default: // fallback
-    case VIA_ATTRIBUTE_TYPE.TEXT:
-      var attr_default = await _via_test_input_text_value('attribute_default_value', _via_test_rand_str());
-      await _via_test_simulate_input_text_blur('attribute_default_value');
-      ok_callback({'attr_id':attr_id, 'attr_desc':attr_desc, 'attr_default':attr_default});
-      break;
-
-    case VIA_ATTRIBUTE_TYPE.RADIO:    // fallback
-    case VIA_ATTRIBUTE_TYPE.IMAGE:    // fallback
-    case VIA_ATTRIBUTE_TYPE.DROPDOWN: // fallback
-    case VIA_ATTRIBUTE_TYPE.CHECKBOX: // fallback
-      var i, n;
-      var option_id_list = [];
-      //n = 2 + _via_test_rand_int(4);
-      n = 1;
-      for ( i = 0; i < n; ++i ) {
-        var oi_id = await _via_test_input_text_value('_via_attribute_new_option_id', _via_test_rand_strn());
-        await _via_test_simulate_input_text_blur('_via_attribute_new_option_id');
-        option_id_list.push(oi_id);
-
-        var oi_desc_id = '_via_attribute_option_description_' + oi_id;
-        var oi_desc;
-        //var oi_desc = _via_test_input_text_value(oi_desc_id, _via_test_rand_str());
-        if ( type === VIA_ATTRIBUTE_TYPE.IMAGE ) {
-          var url = _via_test_option_img_url[ _via_test_rand_int(_via_test_option_img_url.length) ];
-          oi_desc = _via_test_input_text_value(oi_desc_id, url);
-        }
-        await _via_test_simulate_input_text_blur(oi_desc_id);
-
-        if ( _via_test_rand_int(2) ) {
-          // add this as default option
-          var oi_default_id = '_via_attribute_option_default_' + oi_id;
-          await _via_test_input_checkbox_checked(oi_default_id, true);
-        }
-
-      }
-      ok_callback({'attr_id':attr_id, 'attr_desc':attr_desc, 'attr_type':type, 'option_id_list':option_id_list});
-      break;
-    }
-*/
-    /*
-    if ( document.getElementById('attributes_editor_panel_title').classList.contains('active') ) {
-      _via_test_simulate_htmlelement_click( ['button_show_region_attributes',
-                                             'user_input_attribute_id'
-                                            ], 2);
-    } else {
-      _via_test_simulate_htmlelement_click( ['attributes_editor_panel_title',
-                                             'button_show_region_attributes',
-                                             'user_input_attribute_id'
-                                            ], 2);
-    }
-
-    var attr_id = _via_test_input_text_value('user_input_attribute_id', _via_test_rand_strn());
-    await _via_test_simulate_htmlelement_click( ['button_add_new_attribute'] );
-    await _via_test_simulate_dropdown_select('attribute_type', type, 1);
-
-
-    var attr_desc = await _via_test_input_text_value('attribute_description', _via_test_rand_str());
-    await _via_test_simulate_input_text_blur('attribute_description');
-
-    switch(type) {
-    default: // fallback
-    case VIA_ATTRIBUTE_TYPE.TEXT:
-      var attr_default = _via_test_input_text_value('attribute_default_value', _via_test_rand_str());
-      _via_test_simulate_input_text_blur('attribute_default_value');
-
-      ok_callback({'attr_id':attr_id, 'attr_desc':attr_desc, 'attr_default':attr_default});
-      break;
-
-    case VIA_ATTRIBUTE_TYPE.RADIO:    // fallback
-    case VIA_ATTRIBUTE_TYPE.IMAGE:    // fallback
-    case VIA_ATTRIBUTE_TYPE.DROPDOWN: // fallback
-    case VIA_ATTRIBUTE_TYPE.CHECKBOX: // fallback
-      var i, n;
-      var option_id_list = [];
-      var promises = [];
-      n = 2 + _via_test_rand_int(4);
-      for ( i = 0; i < n; ++i ) {
-        var oi_id = _via_test_input_text_value('_via_attribute_new_option_id', _via_test_rand_strn());
-        _via_test_simulate_input_text_blur('_via_attribute_new_option_id');
-        option_id_list.push(oi_id);
-
-        var oi_desc_id = '_via_attribute_option_description_' + oi_id;
-        var oi_desc;
-        //var oi_desc = _via_test_input_text_value(oi_desc_id, _via_test_rand_str());
-        if ( type === VIA_ATTRIBUTE_TYPE.IMAGE ) {
-          var url = _via_test_option_img_url[ _via_test_rand_int(_via_test_option_img_url.length) ];
-          oi_desc = _via_test_input_text_value(oi_desc_id, url);
-        }
-        _via_test_simulate_input_text_blur(oi_desc_id);
-
-        if ( _via_test_rand_int(2) ) {
-          // add this as default option
-          var oi_default_id = '_via_attribute_option_default_' + oi_id;
-          _via_test_input_checkbox_checked(oi_default_id, true);
-        }
-      }
-      ok_callback({'attr_id':attr_id, 'attr_desc':attr_desc, 'attr_type':type, 'option_id_list':option_id_list});
-      break;
-    }
-*/
   });
 }
 
@@ -454,11 +529,29 @@ function _via_test_del_attributes(attr_id) {
 
 
 function _via_test_draw_rand_region(shape) {
-  return new Promise( function(ok_callback, err_callback) {
-    _via_test_simulate_htmlelement_click(['region_shape_' + shape], 0);
+  return new Promise( async function(ok_callback, err_callback) {
+    //console.log('---------------------------[ drawing region ' + shape + ' ]---------------------------------');
+
+    var region_shape_id = 'region_shape_' + shape;
+    var r = await _via_test_simulate_htmlelement_click(region_shape_id);
+    if ( r ) {
+      err_callback();
+      return;
+    }
+
     var rc = document.getElementById('region_canvas');
+    if ( ! rc ) {
+      err_callback();
+      return;
+    }
+
     var w = rc.width;
     var h = rc.height;
+    if ( w === 1 && h === 1 ) {
+      err_callback();
+      return;
+    }
+
     var r;
 
     switch(shape) {
@@ -468,16 +561,27 @@ function _via_test_draw_rand_region(shape) {
       var x = _via_test_rand_int_array(w, 2);
       var y = _via_test_rand_int_array(h, 2);
 
-      if ( _via_test_is_inside_any_region(x[0], y[0]) ) {
-        var region_id = is_inside_region(x[0], y[0]);
-        if ( _via_region_selected_flag[region_id] ) {
-          // the region is selected, hence we need to remove selection
-          // in order to draw a new nested region
-          _via_test_simulate_canvas_click(x[0], y[0]); // unselect existing region
-        }
+      if ( _via_is_region_selected ) {
+        await _via_test_click_region_until_all_unselect(x[0], y[0]);
       }
-      _via_test_simulate_canvas_mousedown(x[0], y[0]);
-      _via_test_simulate_canvas_mouseup(x[1], y[1]);
+
+      var dx = x[1] - x[0];
+      var dy = y[1] - y[0];
+      if ( dx <= VIA_REGION_MIN_DIM || dy <= VIA_REGION_MIN_DIM ) {
+        x[1] = x[0] + 2*VIA_REGION_MIN_DIM + _via_test_rand_int(30);
+        y[1] = y[0] + 2*VIA_REGION_MIN_DIM + _via_test_rand_int(20);
+      }
+      var e = await _via_test_simulate_canvas_mousedown(x[0], y[0]);
+      if ( e ) {
+        err_callback();
+        return;
+      }
+
+      var e = await _via_test_simulate_canvas_mouseup(x[1], y[1]);
+      if ( e ) {
+        err_callback();
+        return;
+      }
 
       r = new _via_region(shape, '', [ x[0], y[0], x[1], y[1] ], 1, 0, 0);
       break;
@@ -485,36 +589,49 @@ function _via_test_draw_rand_region(shape) {
     case VIA_REGION_SHAPE.POINT:
       var x = _via_test_rand_int(w);
       var y = _via_test_rand_int(h);
-
-      _via_test_simulate_canvas_click(x, y);
-      if ( _via_test_is_inside_any_region(x, y) ) {
-        // (x,y) falls inside an existing region and therefore
-        // we need to click again to unselect existing region and draw this new region
-        _via_test_simulate_canvas_click(x, y);
+      var e = await _via_test_click_region_first_point(x, y);
+      if ( e ) {
+        err_callback();
+        return;
       }
-
       r = new _via_region(shape, '', [ x, y ], 1, 0, 0);
       break;
 
     case VIA_REGION_SHAPE.POLYGON:
     case VIA_REGION_SHAPE.POLYLINE:
       var n = 3 + _via_test_rand_int(10);
+      //var n = 3;
       var x = _via_test_rand_int_array(w, n);
       var y = _via_test_rand_int_array(h, n);
       var d = [];
-      var i;
-      for ( i = 0; i < n; ++i ) {
-        if ( _via_test_is_inside_any_region(x[i], y[i]) ) {
-          // the region is selected, hence we need to remove selection
-          // in order to draw a new nested region
-          _via_test_simulate_canvas_click(x[i], y[i]);
-        }
 
-        _via_test_simulate_canvas_click(x[i], y[i]);
+      var e = await _via_test_click_region_first_point(x[0], y[0]);
+      if ( e ) {
+        err_callback();
+        return;
+      }
+      d.push(x[0]);
+      d.push(y[0]);
+
+      var i;
+      for ( i = 1; i < n; ++i ) {
+        // keep clicking to add vertices
+        var e = await _via_test_simulate_canvas_click(x[i], y[i]);
+        if ( e ) {
+          err_callback();
+          return;
+        }
         d.push(x[i]);
         d.push(y[i]);
       }
-      _via_test_simulate_canvas_keyevent('keydown')
+
+      // signal end of polygon/polyline drawing by pressing Enter key
+      var e = await _via_test_simulate_canvas_keyevent_enter();
+      if ( e ) {
+        err_callback();
+        return;
+      }
+
       r = new _via_region(shape, '', d, 1, 0, 0);
       break;
     }
@@ -526,28 +643,183 @@ function _via_test_draw_rand_region(shape) {
       attr = r.svg_attributes[i];
       rshape[attr] = r[attr];
     }
+    //console.log(JSON.stringify(rshape))
     ok_callback(rshape)
+  });
+}
+
+function _via_test_show_img(img_index) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( _via_buffer_img_index_list.includes(img_index) ) {
+      _via_show_img_from_buffer(img_index).then( function(ok_img_index) {
+        ok_callback(ok_img_index);
+      }, function(err_img_index) {
+        err_callback(err_img_index);
+      });
+    } else {
+      // first, add image to buffer then show image
+      _via_img_buffer_add_image(img_index).then( function(ok_buffer_img_index) {
+        // now show image from buffer
+        _via_show_img_from_buffer(ok_buffer_img_index).then( function(ok_img_index) {
+          ok_callback(ok_img_index);
+        }, function(err_img_index) {
+          err_callback(err_img_index);
+        });
+      }, function(err_buffer_img_index) {
+        err_callback(err_buffer_img_index)
+      });
+    }
   });
 }
 
 //
 // unit test console
 //
-function _via_test_init_console() {
-  var window_features = 'toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no';
-  window_features += ',width=800,height=1080';
-  _via_test_console_window = window.open('', 'Annotations (preview) ', window_features);
-  _via_test_console_window.document.body.innerHTML = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>VIA Unit Tests</title></head><body><h1>VIA Unit Tests Result</h1><pre id="_via_test_console"></pre></body></html>';
+function _via_test_log_init() {
+  _via_test_log_data = [];
 }
 
-function _via_test_print(data, is_new_line) {
-  if ( typeof(is_new_line) === 'undefined' || is_new_line === true ) {
-    _via_test_console_window.document.getElementById('_via_test_console').innerHTML += '\n' + Date.now() + ' : ' + data;
-  } else {
-    _via_test_console_window.document.getElementById('_via_test_console').innerHTML += data;
-  }
+function _via_test_log(msg) {
+  var ts = Date.now();
+  _via_test_log_data.push({'timestamp':ts, 'message':msg});
+  console.log( ts + ':' + msg );
 }
 
-function _via_test_console_clear() {
-  _via_test_console_window.document.getElementById('_via_test_console').innerHTML = '';
+async function _via_test_sleep(ms) {
+  return new Promise( function(ok_callback, err_callback) {
+    setTimeout( function() {
+      ok_callback();
+    }, ms);
+  });
+}
+
+function _via_test_click_region_until_all_unselect(x, y) {
+  return new Promise( async function(ok_callback, err_callback) {
+    while ( _via_is_region_selected ) {
+      //console.log('clicking (' + x +','+y+') until _via_is_region_selected='+_via_is_region_selected);
+      var e = await _via_test_simulate_canvas_click(x, y);
+      if ( e ) {
+        err_callback();
+        return;
+      }
+      await _via_test_sleep(2);
+      // for some reason, this mousemove event is sometimes needed
+      // to break the never ending loop
+      await _via_test_simulate_canvas_mousemove(x,y);
+    }
+    ok_callback();
+  });
+}
+
+function _via_test_click_region_first_point(x, y) {
+  return new Promise( async function(ok_callback, err_callback) {
+    // first click
+    // Note: it is important to simulate first click in exactly the same manner as
+    // a user would perform when manually defining regions.
+    if ( _via_is_region_selected ) {
+      // check if we are going to click inside an existing region
+      var region_id = is_inside_region(x, y);
+      if ( region_id >= 0 ) {
+        //console.log('******************* _via_user_sel_region_id='+_via_user_sel_region_id+', region_id='+region_id)
+        if ( _via_user_sel_region_id === region_id) {
+          // click inside selected region
+
+          // sometimes, a click inside nested region results in selection
+          // of another nested region. Therefore, we need to keep clicking
+          // until all regions get unselected.
+          if ( _via_is_region_selected ) {
+            await _via_test_click_region_until_all_unselect(x, y);
+          }
+        } else {
+          // click inside non-selected region
+          // we need to do two clicks:
+          // first click to unselect existing selected region
+          // second click to actually define the vertex of new region
+
+          // first click
+          var e = await _via_test_simulate_canvas_click(x, y);
+          if ( e ) {
+            err_callback(1);
+            return;
+          }
+
+
+          // sometimes, a click inside nested region results in selection
+          // of another nested region. Therefore, we need to keep clicking
+          // until all regions get unselected.
+          if ( _via_is_region_selected ) {
+            await _via_test_click_region_until_all_unselect(x, y);
+          } else {
+            // second click
+            var e = await _via_test_simulate_canvas_click(x, y);
+            if ( e ) {
+              err_callback(1);
+              return;
+            }
+          }
+        }
+      } else {
+        // click outside any selected regions
+        // again, we need to do two clicks:
+        // first click to unselect existing selected region
+        // second click to actually define the vertex of new region
+
+        // first click
+        var e = await _via_test_simulate_canvas_click(x, y);
+        if ( e ) {
+          err_callback(1);
+          return;
+        }
+
+        // sometimes, a click inside nested region results in selection
+        // of another nested region. Therefore, we need to keep clicking
+        // until all regions get unselected.
+        if ( _via_is_region_selected ) {
+          await _via_test_click_region_until_all_unselect(x, y);
+        } else {
+          // second click
+          var e = await _via_test_simulate_canvas_click(x, y);
+          if ( e ) {
+            err_callback(1);
+            return;
+          }
+        }
+      }
+    } else {
+      // check if the point we are about to click falls inside any existing region
+      var region_id = is_inside_region(x, y);
+      if ( region_id >= 0 ) {
+        // we are about to click inside an existing region, so we need two clicks
+        // first click to select existing region
+        // second click to unselect the region and define the vertex of new region
+
+        // first click
+        var e = await _via_test_simulate_canvas_click(x, y);
+        if ( e ) {
+          err_callback(1);
+          return;
+        }
+        // second click
+        var e = await _via_test_simulate_canvas_click(x, y);
+        if ( e ) {
+          err_callback(1);
+          return;
+        }
+
+        // sometimes, a click inside nested region results in selection
+        // of another nested region. Therefore, we need to keep clicking
+        // until all regions get unselected.
+        if ( _via_is_region_selected ) {
+          await _via_test_click_region_until_all_unselect(x, y);
+        }
+      } else {
+        var e = await _via_test_simulate_canvas_click(x, y);
+        if ( e ) {
+          err_callback(1);
+          return;
+        }
+      }
+    }
+    ok_callback(0);
+  });
 }

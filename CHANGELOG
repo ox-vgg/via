@@ -1,6 +1,7 @@
 ## [2.0.0] - Not release yet!
  * rectangles can now be resized from edges (issue 120)
  * added POLYLINE shape
+   - polygon region shape coordinates set does not end with the first coordinate (closed loop is defined by the shape: polygon, polyline)
  * renamed many methods and variables
  * attributes editor
    - added _via_attributes{'region','file'} and removed _via_region_attributes, _via_file_attributes
@@ -40,7 +41,8 @@
    - move multiple selected regions
    - {polygon, polyline, point} regions can now be drawn inside existing regions (i.e. nested regions)
    - both polygon and polyline shape drawing operation is now ended by pressing [Enter] key
- * updated VIA unit tests for 1.1.x
+   - when region is selected, mouse wheel can be used to change the region label
+ * updated regression test cases
 
 ## [1.0.5] - January 16, 2017
  * (code contributions from Stefan Mihaila) via.js codebase improvement, wider web browser support (IE 10, IE 11 and Opera 12)

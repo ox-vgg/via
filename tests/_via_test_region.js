@@ -6,94 +6,53 @@
 */
 
 
-async function _via_test_case_region_create() {
-  await _via_show_img(0);
-  var added_regions = [];
-  console.log('start')
-  added_regions.push( await _via_test_draw_rand_region('ellipse') );
-  added_regions.push( await _via_test_draw_rand_region('rect') );
-  added_regions.push( await _via_test_draw_rand_region('circle') );
-  added_regions.push( await _via_test_draw_rand_region('ellipse') );
-  added_regions.push( await _via_test_draw_rand_region('rect') );
-  added_regions.push( await _via_test_draw_rand_region('circle') );
+function _via_test_case_regions_create() {
+  return new Promise( async function(ok_callback, err_callback) {
+    var file_count = _via_image_filename_list.length;
+    var img_index = _via_test_rand_int(file_count);
+    _via_test_show_img(img_index).then( async function(ok_img_index) {
+      var added_regions = [];
+      var failed_count = 0;
+      var i, shape, region;
 
-  added_regions.push( await _via_test_draw_rand_region('point') );
-  added_regions.push( await _via_test_draw_rand_region('point') );
-  added_regions.push( await _via_test_draw_rand_region('point') );
-  added_regions.push( await _via_test_draw_rand_region('point') );
-  added_regions.push( await _via_test_draw_rand_region('point') );
+      //await _via_test_draw_rand_region( 'point' )
 
-  added_regions.push( await _via_test_draw_rand_region('polyline') );
-  added_regions.push( await _via_test_draw_rand_region('polygon') );
-  added_regions.push( await _via_test_draw_rand_region('polyline') );
-  added_regions.push( await _via_test_draw_rand_region('polygon') );
-  console.log('done')
-
-}
-
-async function _via_test_cae_region_create() {
-  await _via_show_img(0);
-  setTimeout( async function() {
-    var added_regions = [];
-    added_regions.push( await _via_test_draw_rand_region('ellipse') );
-    added_regions.push( await _via_test_draw_rand_region('rect') );
-    added_regions.push( await _via_test_draw_rand_region('circle') );
-    added_regions.push( await _via_test_draw_rand_region('ellipse') );
-    added_regions.push( await _via_test_draw_rand_region('rect') );
-    added_regions.push( await _via_test_draw_rand_region('circle') );
-
-    added_regions.push( await _via_test_draw_rand_region('point') );
-    added_regions.push( await _via_test_draw_rand_region('point') );
-    added_regions.push( await _via_test_draw_rand_region('point') );
-    added_regions.push( await _via_test_draw_rand_region('point') );
-    added_regions.push( await _via_test_draw_rand_region('point') );
-
-    added_regions.push( await _via_test_draw_rand_region('polyline') );
-    added_regions.push( await _via_test_draw_rand_region('polygon') );
-    added_regions.push( await _via_test_draw_rand_region('polyline') );
-    added_regions.push( await _via_test_draw_rand_region('polygon') );
-
-    // assert each region's attribute is set to default value
-    var json = JSON.parse( pack_via_metadata('json') );
-    var csv  = pack_via_metadata('csv');
-    console.log(json);
-    console.log(_via_attributes);
-
-
-    var img_id;
-    var rid, n, i;
-    var option;
-    var x, y;
-    var match, options_valid;
-    var test_total = 0;
-    var test_pass  = 0;
-    for ( img_id in json ) {
-      n = json[img_id].regions.length;
+      var n = 2 + _via_test_rand_int(10);
       for ( i = 0; i < n; ++i ) {
-        for ( rid in json[img_id].regions[i].region_attributes ) {
-          x = json[img_id].regions[i].region_attributes[rid];
-          match = false;
-          switch( _via_attributes['region'][rid].type ) {
-          case 'text':
-            match = ( x === _via_attributes['region'][rid].default_value );
-            break;
-          case 'radio':
-          case 'dropdown':
-          case 'image':
-            y = Object.keys(_via_attributes['region'][rid].default_options)[0];
-            match = ( x === y );
-            break;
-          case 'checkbox':
-            y = _via_attributes['region'][rid].default_options;
-            match = ( JSON.stringify(x) === JSON.stringify(y) );
-            break;
-          }
-          test_total += 1;
-          if ( match ) {
-            test_pass += 1;
-          }
+        for ( shape in VIA_REGION_SHAPE ) {
+          await _via_test_draw_rand_region( VIA_REGION_SHAPE[shape] ).then( function(ok_region) {
+            added_regions.push(ok_region);
+          }, function(err) {
+            failed_count += 1;
+          });
         }
       }
-    }
-  }, 1000);
+
+
+      if ( failed_count ) {
+        err_callback({'has_passed':false,
+                      'name':_via_test_case_regions_create.name,
+                      'message':'failed to add ' + failed_count + ' regions and could add only ' +
+                      added_regions.length + ' regions to image [' +
+                      img_index + '] ' + _via_image_filename_list[img_index]
+                     });
+      } else {
+        // assert that the annotations exported by VIA matches the annotations
+        console.log(added_regions)
+        var img_id = _via_image_id_list[img_index];
+        console.log( _via_img_metadata[img_id].regions)
+        ok_callback({'has_passed':true,
+                     'name':_via_test_case_regions_create.name,
+                     'message':'added ' + added_regions.length + ' regions to image [' +
+                     img_index + '] ' + _via_image_filename_list[img_index]
+                    });
+      }
+    }, function(err_img_index) {
+      err_callback({'has_passed':false,
+                     'name':_via_test_case_regions_create.name,
+                     'message':'failed to load image [' +
+                     img_index + '] ' + _via_image_filename_list[img_index]
+                    });
+    });
+  });
 }
