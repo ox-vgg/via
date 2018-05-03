@@ -583,14 +583,52 @@ function _via_test_draw_rand_region(shape) {
         return;
       }
 
-      var r = new _via_region(shape, '', [ x[0], y[0], x[1], y[1] ], 1, 0, 0);
-      var i, n, attr;
-      n = r.svg_attributes.length;
-      for ( i = 0; i < n; ++i ) {
-        attr = r.svg_attributes[i];
-        rshape[attr] = r[attr];
-      }
+      switch(shape) {
+      case VIA_REGION_SHAPE.RECT:
+        // we must add the canvas coordinates in the same way as VIA does
+        var x0, y0, x1, y1;
+        // ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
+        if ( x[0] < x[1] ) {
+          x0 = x[0];
+          x1 = x[1];
+        } else {
+          x0 = x[1];
+          x1 = x[0];
+        }
+        if ( y[0] < y[1] ) {
+          y0 = y[0];
+          y1 = y[1];
+        } else {
+          y0 = y[1];
+          y1 = y[0];
+        }
+        var dx = x1 - x0;
+        var dy = y1 - y0;
 
+        rshape.x = Math.round(x0 * _via_canvas_scale);
+        rshape.y = Math.round(y0 * _via_canvas_scale);
+        rshape.width  = Math.round(dx * _via_canvas_scale);
+        rshape.height = Math.round(dy * _via_canvas_scale);
+        break;
+      case VIA_REGION_SHAPE.CIRCLE:
+        var dx = x[1] - x[0];
+        var dy = y[1] - y[0];
+
+        rshape.cx = Math.round(x[0] * _via_canvas_scale);
+        rshape.cy = Math.round(y[0] * _via_canvas_scale);
+        rshape.r  = Math.round( Math.sqrt(dx*dx + dy*dy) * _via_canvas_scale );
+        break;
+
+      case VIA_REGION_SHAPE.ELLIPSE:
+        var dx = x[1] - x[0];
+        var dy = y[1] - y[0];
+
+        rshape.cx = Math.round(x[0] * _via_canvas_scale);
+        rshape.cy = Math.round(y[0] * _via_canvas_scale);
+        rshape.rx = Math.round(dx * _via_canvas_scale);
+        rshape.ry = Math.round(dy * _via_canvas_scale);
+        break;
+      }
       break;
 
     case VIA_REGION_SHAPE.POINT:
@@ -601,8 +639,9 @@ function _via_test_draw_rand_region(shape) {
         err_callback();
         return;
       }
-      rshape.cx = x;
-      rshape.cy = y;
+
+      rshape.cx = Math.round(x * _via_canvas_scale);;
+      rshape.cy = Math.round(y * _via_canvas_scale);
       break;
 
     case VIA_REGION_SHAPE.POLYGON:
@@ -611,8 +650,8 @@ function _via_test_draw_rand_region(shape) {
       //var n = 3;
       var x = _via_test_rand_int_array(w, n);
       var y = _via_test_rand_int_array(h, n);
-      rshape.all_points_x = [];
-      rshape.all_points_y = [];
+      var all_points_x = [];
+      var all_points_y = [];
       var d = [];
 
       var e = await _via_test_click_region_first_point(x[0], y[0]);
@@ -620,8 +659,8 @@ function _via_test_draw_rand_region(shape) {
         err_callback();
         return;
       }
-      rshape.all_points_x.push(x[0]);
-      rshape.all_points_y.push(y[0]);
+      all_points_x.push(x[0]);
+      all_points_y.push(y[0]);
 
       var i;
       for ( i = 1; i < n; ++i ) {
@@ -631,8 +670,8 @@ function _via_test_draw_rand_region(shape) {
           err_callback();
           return;
         }
-        rshape.all_points_x.push(x[i]);
-        rshape.all_points_y.push(y[i]);
+        all_points_x.push(x[i]);
+        all_points_y.push(y[i]);
       }
 
       // signal end of polygon/polyline drawing by pressing Enter key
@@ -640,6 +679,15 @@ function _via_test_draw_rand_region(shape) {
       if ( e ) {
         err_callback();
         return;
+      }
+
+      var i, n;
+      n = all_points_x.length;
+      rshape.all_points_x = [];
+      rshape.all_points_y = [];
+      for ( i = 0; i < n; ++i ) {
+        rshape.all_points_x[i] = Math.round( all_points_x[i] * _via_canvas_scale );
+        rshape.all_points_y[i] = Math.round( all_points_y[i] * _via_canvas_scale );
       }
       break;
     }

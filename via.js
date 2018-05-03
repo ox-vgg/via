@@ -1532,23 +1532,10 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
   // indicates that user has finished drawing a new region
   if ( _via_is_user_drawing_region ) {
     _via_is_user_drawing_region = false;
-    var region_x0, region_y0, region_x1, region_y1;
-    // ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
-    if ( _via_click_x0 < _via_click_x1 ) {
-      region_x0 = _via_click_x0;
-      region_x1 = _via_click_x1;
-    } else {
-      region_x0 = _via_click_x1;
-      region_x1 = _via_click_x0;
-    }
-
-    if ( _via_click_y0 < _via_click_y1 ) {
-      region_y0 = _via_click_y0;
-      region_y1 = _via_click_y1;
-    } else {
-      region_y0 = _via_click_y1;
-      region_y1 = _via_click_y0;
-    }
+    var region_x0 = _via_click_x0;
+    var region_y0 = _via_click_y0;
+    var region_x1 = _via_click_x1;
+    var region_y1 = _via_click_y1;
 
     var original_img_region = new file_region();
     var canvas_img_region = new file_region();
@@ -1559,6 +1546,23 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
     if ( region_dx > VIA_REGION_MIN_DIM && region_dy > VIA_REGION_MIN_DIM ) { // avoid regions with 0 dim
       switch(_via_current_shape) {
       case VIA_REGION_SHAPE.RECT:
+        // ensure that (x0,y0) is top-left and (x1,y1) is bottom-right
+        if ( _via_click_x0 < _via_click_x1 ) {
+          region_x0 = _via_click_x0;
+          region_x1 = _via_click_x1;
+        } else {
+          region_x0 = _via_click_x1;
+          region_x1 = _via_click_x0;
+        }
+
+        if ( _via_click_y0 < _via_click_y1 ) {
+          region_y0 = _via_click_y0;
+          region_y1 = _via_click_y1;
+        } else {
+          region_y0 = _via_click_y1;
+          region_y1 = _via_click_y0;
+        }
+
         var x = Math.round(region_x0 * _via_canvas_scale);
         var y = Math.round(region_y0 * _via_canvas_scale);
         var width  = Math.round(region_dx * _via_canvas_scale);
@@ -1643,6 +1647,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         //console.assert(n1 === n2, '_via_img_metadata.regions and _via_canvas_regions count mismatch');
         var new_region_id = n1 - 1;
 
+        console.log('added region: ' + JSON.stringify(_via_img_metadata[_via_image_id].regions[new_region_id].shape_attributes));
         //console.log('added region: ' + JSON.stringify(canvas_img_region.shape_attributes));
         set_region_annotations_to_default_value( new_region_id );
         annotation_editor_add_row( new_region_id );
@@ -1740,30 +1745,32 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
       _via_reg_ctx.clearRect(0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
     }
 
-    var region_x0, region_y0;
+    var region_x0 = _via_click_x0;
+    var region_y0 = _via_click_y0;;
 
-    if ( _via_click_x0 < _via_current_x ) {
-      if ( _via_click_y0 < _via_current_y ) {
-        region_x0 = _via_click_x0;
-        region_y0 = _via_click_y0;
-      } else {
-        region_x0 = _via_click_x0;
-        region_y0 = _via_current_y;
-      }
-    } else {
-      if ( _via_click_y0 < _via_current_y ) {
-        region_x0 = _via_current_x;
-        region_y0 = _via_click_y0;
-      } else {
-        region_x0 = _via_current_x;
-        region_y0 = _via_current_y;
-      }
-    }
     var dx = Math.round(Math.abs(_via_current_x - _via_click_x0));
     var dy = Math.round(Math.abs(_via_current_y - _via_click_y0));
 
     switch (_via_current_shape ) {
     case VIA_REGION_SHAPE.RECT:
+      if ( _via_click_x0 < _via_current_x ) {
+        if ( _via_click_y0 < _via_current_y ) {
+          region_x0 = _via_click_x0;
+          region_y0 = _via_click_y0;
+        } else {
+          region_x0 = _via_click_x0;
+          region_y0 = _via_current_y;
+        }
+      } else {
+        if ( _via_click_y0 < _via_current_y ) {
+          region_x0 = _via_current_x;
+          region_y0 = _via_click_y0;
+        } else {
+          region_x0 = _via_current_x;
+          region_y0 = _via_current_y;
+        }
+      }
+
       _via_draw_rect_region(region_x0, region_y0, dx, dy, false);
       break;
 

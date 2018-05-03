@@ -42,6 +42,7 @@
    - {polygon, polyline, point} regions can now be drawn inside existing regions (i.e. nested regions)
    - both polygon and polyline shape drawing operation is now ended by pressing [Enter] key
    - when region is selected, mouse wheel can be used to change the region label
+   - center of circle and ellipse shapes remain fixed to mousedown location (major issue in 1.0.x versions)
  * updated regression test cases
 
 ## [1.0.5] - January 16, 2017

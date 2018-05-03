@@ -18,7 +18,7 @@ function _via_test_case_regions_create() {
 
       //await _via_test_draw_rand_region( 'point' )
 
-      var n = 2 + _via_test_rand_int(6);
+      var n = 4 + _via_test_rand_int(0);
       for ( i = 0; i < n; ++i ) {
         for ( shape in VIA_REGION_SHAPE ) {
           await _via_test_draw_rand_region( VIA_REGION_SHAPE[shape] ).then( function(ok_region) {
@@ -39,32 +39,30 @@ function _via_test_case_regions_create() {
       } else {
         // assert that the annotations exported by VIA matches the annotations
         console.log(added_regions);
-        console.log( _via_canvas_regions );
+        console.log( _via_img_metadata[img_id].regions );
         var i, n;
         n = added_regions.length;
 
         console.log(img_id)
         console.log(n)
-        console.log(_via_canvas_regions.length)
         console.log(_via_img_metadata[img_id].regions.length)
         // assert that all added regions were stored
-        if ( n === _via_img_metadata[img_id].regions.length &&
-             n === _via_canvas_regions.length ) {
+        if ( n === _via_img_metadata[img_id].regions.length ) {
           var all_matched = true;
           var added_shape, stored_shape;
           for ( i = 0; i < n; ++i ) {
             console.log('checking ' + i);
             added_shape  = JSON.stringify(added_regions[i]);
-            // we compare canvas space coordinates
-            // with some effort, we can also compare image space coordinates
-            //stored_shape = JSON.stringify(_via_img_metadata[img_id].regions[i].shape_attributes);
-            stored_shape = JSON.stringify(_via_canvas_regions[i].shape_attributes);
+            // we compare image space coordinates
+            stored_shape = JSON.stringify(_via_img_metadata[img_id].regions[i].shape_attributes);
 
             if ( added_shape !== stored_shape ) {
               all_matched = false;
               console.log('mismatched')
               console.log(added_shape)
               console.log(stored_shape)
+              console.log(added_regions[i])
+              console.log(_via_img_metadata[img_id].regions[i].shape_attributes)
               break;
             }
           }
