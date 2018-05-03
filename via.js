@@ -1318,10 +1318,6 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
           canvas_polygon_region.shape_attributes['all_points_y'] = [Math.round(_via_click_y0)];
           var new_length = _via_canvas_regions.push(canvas_polygon_region);
           _via_current_polygon_region_id = new_length - 1;
-
-          var debug_x = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_x'][0];
-          var debug_y = _via_canvas_regions[_via_current_polygon_region_id].shape_attributes['all_points_y'][0];
-          //console.log('************************************************************ (_via_is_user_moving_region) starting to draw polygon: first point at (' + debug_x + ',' + debug_y + ')')
           break;
 
         case VIA_REGION_SHAPE.POINT:

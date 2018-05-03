@@ -552,7 +552,7 @@ function _via_test_draw_rand_region(shape) {
       return;
     }
 
-    var r;
+    var rshape = { 'name':shape };
 
     switch(shape) {
     case VIA_REGION_SHAPE.RECT:
@@ -583,7 +583,14 @@ function _via_test_draw_rand_region(shape) {
         return;
       }
 
-      r = new _via_region(shape, '', [ x[0], y[0], x[1], y[1] ], 1, 0, 0);
+      var r = new _via_region(shape, '', [ x[0], y[0], x[1], y[1] ], 1, 0, 0);
+      var i, n, attr;
+      n = r.svg_attributes.length;
+      for ( i = 0; i < n; ++i ) {
+        attr = r.svg_attributes[i];
+        rshape[attr] = r[attr];
+      }
+
       break;
 
     case VIA_REGION_SHAPE.POINT:
@@ -594,7 +601,8 @@ function _via_test_draw_rand_region(shape) {
         err_callback();
         return;
       }
-      r = new _via_region(shape, '', [ x, y ], 1, 0, 0);
+      rshape.cx = x;
+      rshape.cy = y;
       break;
 
     case VIA_REGION_SHAPE.POLYGON:
@@ -603,6 +611,8 @@ function _via_test_draw_rand_region(shape) {
       //var n = 3;
       var x = _via_test_rand_int_array(w, n);
       var y = _via_test_rand_int_array(h, n);
+      rshape.all_points_x = [];
+      rshape.all_points_y = [];
       var d = [];
 
       var e = await _via_test_click_region_first_point(x[0], y[0]);
@@ -610,8 +620,8 @@ function _via_test_draw_rand_region(shape) {
         err_callback();
         return;
       }
-      d.push(x[0]);
-      d.push(y[0]);
+      rshape.all_points_x.push(x[0]);
+      rshape.all_points_y.push(y[0]);
 
       var i;
       for ( i = 1; i < n; ++i ) {
@@ -621,8 +631,8 @@ function _via_test_draw_rand_region(shape) {
           err_callback();
           return;
         }
-        d.push(x[i]);
-        d.push(y[i]);
+        rshape.all_points_x.push(x[i]);
+        rshape.all_points_y.push(y[i]);
       }
 
       // signal end of polygon/polyline drawing by pressing Enter key
@@ -631,19 +641,9 @@ function _via_test_draw_rand_region(shape) {
         err_callback();
         return;
       }
-
-      r = new _via_region(shape, '', d, 1, 0, 0);
       break;
     }
-
-    var rshape = { 'name':shape };
-    var i, n, attr;
-    n = r.svg_attributes.length;
-    for ( i = 0; i < n; ++i ) {
-      attr = r.svg_attributes[i];
-      rshape[attr] = r[attr];
-    }
-    //console.log(JSON.stringify(rshape))
+    console.log(JSON.stringify(rshape))
     ok_callback(rshape)
   });
 }
@@ -702,7 +702,7 @@ function _via_test_click_region_until_all_unselect(x, y) {
         err_callback();
         return;
       }
-      await _via_test_sleep(2);
+      await _via_test_sleep(5);
       // for some reason, this mousemove event is sometimes needed
       // to break the never ending loop
       await _via_test_simulate_canvas_mousemove(x,y);
