@@ -97,9 +97,9 @@ def voc_xml_to_json(fn):
 
     return js
 
-outjson_fn = '/data/datasets/via/import/pascal_voc/via_project_pascal_voc2012.json'
+outjson_fn = '/data/datasets/via/import/pascal_voc/_via_project_pascal_voc2012_import.js'
 outjson_f = open(outjson_fn, 'w')
-outjson_f.write('{"_via_settings":{}, "_via_attributes":{}, "_via_img_metadata":{')
+outjson_f.write('var via_project_pascal_voc2012 = \'{"_via_settings":{}, "_via_attributes":{}, "_via_img_metadata":{')
 first = True
 
 for file in os.listdir(ann_dir):
@@ -114,4 +114,6 @@ for file in os.listdir(ann_dir):
 
     outjson_f.write( js_str[1:-1] ) # remove first and last curley braces
 
-outjson_f.write("}}")
+outjson_f.write("}}\';")
+outjson_f.close()
+print('\nWritten everything to {}'.format(outjson_fn))

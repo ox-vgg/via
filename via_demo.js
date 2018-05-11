@@ -27,37 +27,122 @@
 */
 
 function _via_load_submodules() {
-  start_demo_session();
+  _via_demo_load_files();
+
+  //start_demo_session();
+  //test_via_project_import_pascal();
+  //test_image_grid();
+  //test_file_resolve();
+
+  //test_sherlock_annotations_grid();
 }
 
-function start_demo_session() {
-  var demo_img_base64_data = [];
-  demo_img_base64_data[0] = new ImageMetadata('', 'swan_in_geneve.jpg', 62201);
-  demo_img_base64_data[1] = new ImageMetadata('', 'death_of_socrates_by_david.jpg', 71862);
-  demo_img_base64_data[2] = new ImageMetadata('', 'various_shapes.jpg', 21513);
-
-  var img_order = [0,1,2];
-  for (var i=0; i<demo_img_base64_data.length; ++i) {
-    var idx = img_order[i];
-    demo_img_base64_data[idx].base64_img_data = demo_images[idx];
-    var filename = demo_img_base64_data[idx].filename;
-    var size = demo_img_base64_data[idx].size;
-    var img_id = _via_get_image_id(filename, size);
-
-    _via_img_metadata[img_id] = demo_img_base64_data[idx];
-    _via_image_id_list.push(img_id);
-    _via_loaded_img_fn_list.push(filename);
-    _via_img_count += 1;
-    _via_reload_img_table = true;
+function _via_demo_load_files() {
+  // add files
+  var i, n;
+  var file_count = 0;
+  n = _via_test_img_base64.length;
+  for ( i = 0; i < n; ++i ) {
+    project_file_add_base64( 'base64_file_' + (i+1) + '.jpg', _via_test_img_base64[i] );
+    file_count += 1;
   }
-  //show_image(0);
+  n = _via_test_img_url.length;
+  for ( i = 0; i < n; ++i ) {
+    project_file_add_url(_via_test_img_url[i]);
+    file_count += 1;
+  }
+  n = _via_test_img_local.length;
+  for ( i = 0; i < n; ++i ) {
+    project_file_add_url(_via_test_img_local[i]);
+    file_count += 1;
+  }
+  update_img_fn_list();
+}
 
+function test_sherlock_annotations_grid() {
+  //console.log(sherlock_annotations_json);
+  import_annotations_from_json(sherlock_annotations_json);
+  update_img_fn_list();
+  toggle_img_fn_list_visibility();
+  setTimeout( function() {
+    image_grid_toggle();
+  }, 500);
+  setTimeout( function() {
+    toggle_annotation_editor();
+    toggle_attributes_editor();
+  }, 1500);
+
+/*
+  setTimeout( function() {
+    image_grid_group_by('file', 'shot');
+  }, 500);
+
+  setTimeout( function() {
+    image_grid_group_by('region', 'track');
+  }, 1000);
+
+  setTimeout( function() {
+    image_grid_group_by('region', 'trackconf');
+  }, 1500);
+*/
+  /*
+  setTimeout( function() {
+    image_grid_jump_to_group(0, 14);
+    image_grid_set_content_to_current_group();
+  }, 2000);
+*/
+}
+
+function test_file_resolve() {
+  project_file_add_url('unit_test_img1.jpg');
+  project_file_add_url('unit_test_img2.jpg');
+  project_file_add_url('unit_test_img3.jpg');
+  project_file_add_url('https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Cirrus_front_over_Austnesfjorden%2C_Austv%C3%A5g%C3%B8ya%2C_Lofoten%2C_Norway%2C_2015_April.jpg/DEBUG_640px-Cirrus_front_over_Austnesfjorden%2C_Austv%C3%A5g%C3%B8ya%2C_Lofoten%2C_Norway%2C_2015_April.jpg');
+  project_file_add_url('sherlock1.png');
+
+  _via_file_resolve_all();
+  update_img_fn_list();
+  toggle_img_fn_list_visibility();
+  setTimeout( function() {
+    _via_show_img(1);
+  }, 500);
+
+  //show_home_panel();
+  //_via_show_img(0);
+}
+
+function test_via_project_import_pascal() {
+  _via_settings.core.default_filepath = '/data/datasets/voc2012/VOCdevkit/VOC2012/JPEGImages/';
+  project_open_parse_json_file(via_project_pascal_voc2012);
   _via_image_index = 0;
-  _via_image_id = _via_image_id_list[_via_image_index];
+  //import_annotations_from_json(demo_region_data2);
+  update_img_fn_list();
 
-  console.log(JSON.parse(demo_region_data2));
+  setTimeout( function() {
+    //show_image_grid_view();
+  }, 400);
+
+  setTimeout( function() {
+    //image_grid_group_by('region', 'name');
+  }, 1500);
+
+}
+
+function test_image_grid() {
+  add_default_region_attr();
+  for ( i = 0; i < ox5k_img_list.length; ++i ) {
+  //for ( i = 0; i < 3; ++i ) {
+    project_file_add_url(ox5k_img_list[i]);
+  }
+  _via_show_img(0);
   import_annotations_from_json(demo_region_data2);
+  update_img_fn_list();
+  setTimeout( function() {
+    show_image_grid_view();
+  }, 400);
+}
 
+function add_default_region_attr() {
   _via_attributes['region'] = {};
   _via_attributes['region']['name'] = {};
   _via_attributes['region']['name'].type = 'text';
@@ -75,6 +160,28 @@ function start_demo_session() {
   _via_attributes['region']['properties'].description = 'Visual properties of object';
   _via_attributes['region']['properties'].options = { 'full_object':'Full Object is visible', 'sharp_image':'Image is sharp', 'good_illumination':'Object is properly illuminated', 'frontal_view':'Frontal view of object is visible' };
   _via_attributes['region']['properties'].default_options = { 'full_object':true, 'good_illumination':true};
+
+  _via_attributes['region']['visual_name'] = {};
+  _via_attributes['region']['visual_name'].type = 'image';
+  _via_attributes['region']['visual_name'].description = 'Visual name of object';
+  _via_attributes['region']['visual_name'].options = {
+    'swan':'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Cygnus_bewickii_01.jpg/320px-Cygnus_bewickii_01.jpg',
+    'elephant':'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Asian_elephant_-_melbourne_zoo.jpg/320px-Asian_elephant_-_melbourne_zoo.jpg',
+    'dog':'https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Rottweiler_standing_facing_left.jpg/316px-Rottweiler_standing_facing_left.jpg',
+    'cat':'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Gatos_cats_7_cropped.jpg/180px-Gatos_cats_7_cropped.jpg',
+    'cow':'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Koe_in_weiland_bij_Gorssel.JPG/319px-Koe_in_weiland_bij_Gorssel.JPG',
+    'horse':'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Wild_Horses_of_the_Outer_Banks.jpg/320px-Wild_Horses_of_the_Outer_Banks.jpg',
+    'fish':'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Gullfiskur.jpg/316px-Gullfiskur.jpg',
+    'giraffe':'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Namibie_Etosha_Girafe_04.jpg/290px-Namibie_Etosha_Girafe_04.jpg',
+
+    'tiger':'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/P.t.altaica_Tomak_Male.jpg/320px-P.t.altaica_Tomak_Male.jpg',
+    'rhino':'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/RhinoAtSDZ.jpg/320px-RhinoAtSDZ.jpg',
+    'duck':'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Brown_Teal_Male.JPG/320px-Brown_Teal_Male.JPG',
+    'butterfly':'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Poecile_checkerspot_%28Chlosyne_poecile%29.jpg/320px-Poecile_checkerspot_%28Chlosyne_poecile%29.jpg',
+    'lion':'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Lion_baring_teeth.jpg/320px-Lion_baring_teeth.jpg',
+    'monkey':'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Allens_swamp_monkey.jpg/320px-Allens_swamp_monkey.jpg',
+  };
+  _via_attributes['region']['visual_name'].default_options = { 'swan':true};
 
   _via_attributes['file'] = {};
   _via_attributes['file']['caption'] = {};
@@ -94,10 +201,142 @@ function start_demo_session() {
   _via_attributes['file']['is_photo'].default_options = {'1':true};
 
   update_attributes_update_panel();
-  document.getElementById('attributes_name_list').selectedIndex = 2;
   update_attributes_update_panel();
   update_annotation_editor();
-  toggle_annotation_editor();
+}
+
+function start_demo_session() {
+  var demo_img_base64_data = [];
+  demo_img_base64_data[0] = new ImageMetadata('', 'swan_in_geneve.jpg', 62201);
+  demo_img_base64_data[1] = new ImageMetadata('', 'death_of_socrates_by_david.jpg', 71862);
+  demo_img_base64_data[2] = new ImageMetadata('', 'various_shapes.jpg', 21513);
+
+  var img_order = [0,1,2];
+  for (var i=0; i<demo_img_base64_data.length; ++i) {
+    var idx = img_order[i];
+    demo_img_base64_data[idx].base64_img_data = demo_images[idx];
+    var filename = demo_img_base64_data[idx].filename;
+    var size = demo_img_base64_data[idx].size;
+    var img_id = _via_get_image_id(filename, size);
+
+    _via_img_metadata[img_id] = demo_img_base64_data[idx];
+    _via_image_id_list.push(img_id);
+    _via_image_filename_list.push(filename);
+    _via_img_count += 1;
+    _via_reload_img_table = true;
+  }
+
+  // add image grid test data from via_image_grid_test_data.js
+  project_file_add_url('/data/datasets/via/annotation_size_limit_issue/Dryas_1_20images/Dryas_1_000001.JPG');
+  project_file_add_url('https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Mezquita_de_Agha_Bozorg%2C_Kashan%2C_Ir%C3%A1n%2C_2016-09-19%2C_DD_81.jpg/1024px-Mezquita_de_Agha_Bozorg%2C_Kashan%2C_Ir%C3%A1n%2C_2016-09-19%2C_DD_81.jpg');
+  var i;
+  //for ( i = 0; i < ox5k_img_list.length; ++i ) {
+  for ( i = 0; i < 10; ++i ) {
+    project_file_add_url(ox5k_img_list[i]);
+  }
+
+  project_file_add_url('/home/xyz/p.jpg');
+  project_file_add_url('https://commons.wikimedia.org/wiki/Main_Page');
+  for ( i = 100; i < 403; ++i ) {
+    project_file_add_url(ox5k_img_list[i]);
+  }
+  project_file_add_url('/home/xyz/pqr.jpg');
+
+  //_via_show_img(0);
+  _via_image_index = 0;
+  import_annotations_from_json(demo_region_data2);
+  update_img_fn_list();
+
+
+  /*
+  // add images from wikimedia commons featured images list
+  console.log('total images = ' + wikimedia_commons_featured_img_list.length);
+
+  project_file_add_url( wikimedia_commons_featured_img_list[0] );
+  project_file_add_url( wikimedia_commons_featured_img_list[1] );
+  project_file_add_url( 'http://www.some-url-that-does.com/not/exist.jpg' );
+
+  var i;
+  //for ( i = 2 ; i < wikimedia_commons_featured_img_list.length; ++i ) {
+  for ( i = 0 ; i < 20; ++i ) {
+    var url = wikimedia_commons_featured_img_list[i];
+    project_file_add_url( url );
+  }
+  update_img_fn_list();
+  _via_show_img(0);
+  */
+
+  _via_attributes['region'] = {};
+  _via_attributes['region']['name'] = {};
+  _via_attributes['region']['name'].type = 'text';
+  _via_attributes['region']['name'].description = 'Name of object';
+  _via_attributes['region']['name'].default_value = '_unknown_name_';
+
+  _via_attributes['region']['color'] = {};
+  _via_attributes['region']['color'].type = 'radio';
+  _via_attributes['region']['color'].description = 'Color of object';
+  _via_attributes['region']['color'].options = { 'red':'Red', 'green':'Green', 'blue':'Blue', 'white':'White', 'unknown':'Unknown' };
+  _via_attributes['region']['color'].default_options = { 'unknown':true };
+
+  _via_attributes['region']['properties'] = {};
+  _via_attributes['region']['properties'].type = 'checkbox';
+  _via_attributes['region']['properties'].description = 'Visual properties of object';
+  _via_attributes['region']['properties'].options = { 'full_object':'Full Object is visible', 'sharp_image':'Image is sharp', 'good_illumination':'Object is properly illuminated', 'frontal_view':'Frontal view of object is visible' };
+  _via_attributes['region']['properties'].default_options = { 'full_object':true, 'good_illumination':true};
+
+  _via_attributes['region']['visual_name'] = {};
+  _via_attributes['region']['visual_name'].type = 'image';
+  _via_attributes['region']['visual_name'].description = 'Visual name of object';
+  _via_attributes['region']['visual_name'].options = {
+    'swan':'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Cygnus_bewickii_01.jpg/320px-Cygnus_bewickii_01.jpg',
+    'elephant':'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Asian_elephant_-_melbourne_zoo.jpg/320px-Asian_elephant_-_melbourne_zoo.jpg',
+    'dog':'https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Rottweiler_standing_facing_left.jpg/316px-Rottweiler_standing_facing_left.jpg',
+    'cat':'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Gatos_cats_7_cropped.jpg/180px-Gatos_cats_7_cropped.jpg',
+    'cow':'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Koe_in_weiland_bij_Gorssel.JPG/319px-Koe_in_weiland_bij_Gorssel.JPG',
+    'horse':'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Wild_Horses_of_the_Outer_Banks.jpg/320px-Wild_Horses_of_the_Outer_Banks.jpg',
+    'fish':'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Gullfiskur.jpg/316px-Gullfiskur.jpg',
+    'giraffe':'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Namibie_Etosha_Girafe_04.jpg/290px-Namibie_Etosha_Girafe_04.jpg',
+
+    'tiger':'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/P.t.altaica_Tomak_Male.jpg/320px-P.t.altaica_Tomak_Male.jpg',
+    'rhino':'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/RhinoAtSDZ.jpg/320px-RhinoAtSDZ.jpg',
+    'duck':'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Brown_Teal_Male.JPG/320px-Brown_Teal_Male.JPG',
+    'butterfly':'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Poecile_checkerspot_%28Chlosyne_poecile%29.jpg/320px-Poecile_checkerspot_%28Chlosyne_poecile%29.jpg',
+    'lion':'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Lion_baring_teeth.jpg/320px-Lion_baring_teeth.jpg',
+    'monkey':'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Allens_swamp_monkey.jpg/320px-Allens_swamp_monkey.jpg',
+  };
+  _via_attributes['region']['visual_name'].default_options = { 'swan':true};
+
+  _via_attributes['file'] = {};
+  _via_attributes['file']['caption'] = {};
+  _via_attributes['file']['caption'].type = 'text';
+  _via_attributes['file']['caption'].description = 'Image caption';
+  _via_attributes['file']['caption'].default_value = '';
+
+  _via_attributes['file']['license'] = {};
+  _via_attributes['file']['license'].type = 'radio';
+  _via_attributes['file']['license'].description = 'What is the License for this image?';
+  _via_attributes['file']['license'].options = { 'cc':'Creative Commons', 'rm':'Rights Managed', 'rf':'Royalty Free' };
+  _via_attributes['file']['license'].default_options = {'rm':true};
+  _via_attributes['file']['is_photo'] = {};
+  _via_attributes['file']['is_photo'].type = 'checkbox';
+  _via_attributes['file']['is_photo'].description = 'This is a photograph and not an image generated by computer';
+  _via_attributes['file']['is_photo'].options = {'1':'Yes'};
+  _via_attributes['file']['is_photo'].default_options = {'1':true};
+
+  update_attributes_update_panel();
+  document.getElementById('attributes_name_list').selectedIndex = 3;
+  update_attributes_update_panel();
+  update_annotation_editor();
+  //toggle_annotation_editor();
+  toggle_img_fn_list_visibility();
+
+  //paste_sel_regions_with_confirm();
+  //del_sel_regions_with_confirm();
+
+  setTimeout( function() {
+    //show_image_grid_view();
+    image_grid_toggle();
+  }, 500);
 }
 
 

@@ -46,12 +46,12 @@
 
     <!-- CSS style definition -->
     <style type="text/css">
-      body { min-width:800px; padding:0; margin:0; font-family:sans-serif; }
+      body { min-width:200px; padding:0; margin:0; font-family:sans-serif; }
       * { box-sizing: border-box; }
       input[type=text] { border:1px solid #cccccc; margin:0.6rem 0; padding:0.2rem 0.4rem; }
 
       /* Top panel : #navbar, #toolbar */
-      .top_panel { font-size:0.9rem; position:fixed; top:0; left:0; right:0; display:block; background-color:#212121; color:#ffffff; z-index:1001; width:100%;}
+      .top_panel { font-size:0.9rem; display:block; background-color:#212121; color:#ffffff; z-index:1001; margin-bottom:1rem;}
 
       /* Navigation menu bar that appear at the top */
       .menubar { display:inline-block; height:1.8rem; } /* height needed to avoid extra bottom border */
@@ -77,8 +77,8 @@
       .toolbar li:hover { color:red; cursor:pointer; }
 
       /* Middle panel: containing #image_panel, #leftsidebar */
-      .middle_panel { position:relative; display:table; table-layout:fixed; width:100%; z-index:1; padding:0; top:3em; }
-      #leftsidebar { display:table-cell; z-index:10; vertical-align:top; }
+      .middle_panel { display:table; table-layout:fixed; width:100%; z-index:1; padding:0;}
+      #leftsidebar { display:table-cell; z-index:10; vertical-align:top;}
       #display_area { display:table-cell; width:100%; z-index:1; margin:0; padding-left:1em; vertical-align:top; }
       /* layers of canvas */
       #image_panel        { position:relative; outline:none; }
@@ -204,7 +204,7 @@
       /* Loaded image list shown in leftsidebar panel */
       #img_fn_list    { font-size:small; overflow:scroll; min-height:10rem; max-height:25rem; }
       #img_fn_list ul { position:relative; line-height:1.3em; margin:0; padding:0; list-style-type:none;}
-      #img_fn_list li { white-space:nowrap; display:inline-block; padding:0 0.4rem; }
+      #img_fn_list li { white-space:nowrap; display:block; padding:0 0.4rem; }
       #img_fn_list li:hover   { background-color:#d5e5ff; cursor:pointer; }
       #img_fn_list .error     { color:red; }
       #img_fn_list .sel       { border-left:0.2rem solid black !important; font-weight:bold; }
@@ -380,16 +380,16 @@
             <ul>
               <li onclick="project_open_select_project_file()" title="Load a VIA project (from a JSON file)">Load</li>
               <li onclick="project_save_with_confirm()" title="Save this VIA project (as a JSON file)">Save</li>
-              <li onclick="" title="Show/edit project settings">Settings</li>
+              <li onclick="settings_panel_toggle()" title="Show/edit project settings">Settings</li>
               <li class="submenu_divider"></li>
               <li onclick="sel_local_images()" title="Add images locally stored in this computer">Add local files</li>
               <li onclick="project_file_add_url_with_input()" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)">Add files from URL</li>
-              <li onclick="sel_local_data_file('files_url')" title="Add images from a list of web url or absolute path stored in a text file (one url or path per line)">Add url or path from text file</li>
               <li onclick="project_file_add_abs_path_with_input()" title="Add images using absolute path of file (e.g. /home/abhishek/image1.jpg)">Add file using absolute path</li>
+              <li onclick="sel_local_data_file('files_url')" title="Add images from a list of web url or absolute path stored in a text file (one url or path per line)">Add url or path from text file</li>
               <li onclick="project_file_remove_with_confirm()" title="Remove selected file (i.e. file currently being shown)">Remove file</li>
               <li class="submenu_divider"></li>
-              <li onclick="" title="Import region and file attributes from a JSON file">Import region/file attributes</li>
-              <li onclick="" title="Export region and file attributes to a JSON file">Export region/file attributes</li>
+              <li onclick="sel_local_data_file('attributes')" title="Import region and file attributes from a JSON file">Import region/file attributes</li>
+              <li onclick="project_save_attributes()" title="Export region and file attributes to a JSON file">Export region/file attributes</li>
             </ul>
           </li>
 
@@ -466,14 +466,14 @@
     <div class="middle_panel">
       <!-- this panel contains a button to shows the left side bar -->
       <div id="leftsidebar_collapse_panel">
-        <div onclick="leftsidebar_toggle()" id="leftsidebar_show_button" title="Show left side toolbar">&rtrif;</div>
+        <span class="text_button" onclick="leftsidebar_toggle()" title="Show left sidebar">&rtrif;</span>
       </div>
 
       <div id="leftsidebar">
         <div class="leftsidebar_accordion_panel show" style="float:right; border:2px solid #f2f2f2;">
-          <span class="text_button" onclick="leftsidebar_decrease_width()" title="Reduce width of this toolbar panel">&minus;</span>
-          <span class="text_button" onclick="leftsidebar_increase_width()" title="Increase width of this toolbar panel">&plus;</span>
-          <span class="text_button" onclick="leftsidebar_toggle()" title="Show/hide this toolbar panel">&times;</span>
+          <span class="text_button" onclick="leftsidebar_decrease_width()" title="Reduce width of this toolbar panel">&larr;</span>
+          <span class="text_button" onclick="leftsidebar_increase_width()" title="Increase width of this toolbar panel">&rarr;</span>
+          <span class="text_button" onclick="leftsidebar_toggle()" title="Show/hide this toolbar panel">&ltrif;</span>
         </div>
 
         <button class="leftsidebar_accordion active">Region Shape</button>
@@ -540,8 +540,6 @@
             <div id="attribute_options"></div>
             <p style="text-align:center">
               <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor()">Toggle Annotation Editor</span>
-              <!--
-                  |<span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="">Save Attributes</span>-->
             </p>
           </div>
         </div>
@@ -584,10 +582,6 @@
             <tr>
               <td>Ctrl + s</td>
               <td>Download annotations</td>
-            </tr>
-            <tr>
-              <td>Spacebar</td>
-              <td>Toggle image list</td>
             </tr>
           </table>
         </div>
@@ -727,11 +721,14 @@
             <li>Remember to <span class="text_button" onclick="project_save_with_confirm()">save</span> your project before closing this application so that you can <span class="text_button" onclick="project_open_select_project_file()">load</span> it later to continue annotation.</li>
             <li>For help, see the <span class="text_button" onclick="">User Guide</span> and pre-loaded demo: <span class="text_button" onclick="">face annotation</span>, <span class="text_button" onclick="">general image annotation</span>.</li>
           </ul>
+          <!--
+          <p style="color:red">This is a beta release is intended for testing only. Please do not use this version for any critical work.</p>
+          -->
         </div>
 
         <div id="page_about" class="display_area_content">
           <p style="font-size: 2em;">VGG Image Annotator</p>
-          <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">2.0.0</a></p>
+          <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">2.0.0-beta</a></p>
           <p>
             VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
             developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
@@ -796,8 +793,9 @@
       //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
     </script>
 
-    <!--    -->
+    <!---->
     <script src="via.js"></script>
+    <script src="./demo/_via_basic_demo.js"></script>
 
     <!--
         <script src="via_demo.js"></script>
@@ -808,12 +806,11 @@
         -->
 
     <!-- Regression Tests    -->
-    <!--    -->
+    <!--
     <script src="./tests/_via_test_data.js"></script>
     <script src="./tests/_via_test.js"></script>
-
     <script src="./tests/_via_test_region.js"></script>
-
+    -->
     <!--
     <script src="./tests/via_test_fileio.js"></script>
     -->

@@ -19,7 +19,7 @@ var _via_test_unit_test_complete_event = new Event('_via_test_test_done');
 async function _via_load_submodules() {
   _via_test_log_init();
   await _via_test_init_regression_tests();
-  await _via_test_run_regression_tests();
+  //await _via_test_run_regression_tests();
 }
 
 async function _via_test_init_regression_tests() {
@@ -761,12 +761,18 @@ function _via_test_click_region_until_all_unselect(x, y) {
 
 function _via_test_click_region_first_point(x, y) {
   return new Promise( async function(ok_callback, err_callback) {
+    //
+    // @todo: avoid clicking on region edge if region is selected
+    // as this will trigger region resize
+    //
+
     // first click
     // Note: it is important to simulate first click in exactly the same manner as
     // a user would perform when manually defining regions.
     if ( _via_is_region_selected ) {
       // check if we are going to click inside an existing region
       var region_id = is_inside_region(x, y);
+
       if ( region_id >= 0 ) {
         //console.log('******************* _via_user_sel_region_id='+_via_user_sel_region_id+', region_id='+region_id)
         if ( _via_user_sel_region_id === region_id) {

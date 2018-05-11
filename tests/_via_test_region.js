@@ -18,7 +18,7 @@ function _via_test_case_regions_create() {
 
       //await _via_test_draw_rand_region( 'point' )
 
-      var n = 4 + _via_test_rand_int(0);
+      var n = 1 + _via_test_rand_int(0);
       for ( i = 0; i < n; ++i ) {
         for ( shape in VIA_REGION_SHAPE ) {
           await _via_test_draw_rand_region( VIA_REGION_SHAPE[shape] ).then( function(ok_region) {
