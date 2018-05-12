@@ -4773,7 +4773,7 @@ function setup_user_input_panel(ok_handler, input, config, cancel_handler) {
                 'type="checkbox" id="' + key + '"></span>');
       break;
     case 'text':
-      var size = '';
+      var size = '50';
       if ( _via_user_input_data[key].size ) {
         size = _via_user_input_data[key].size;
       }
@@ -4790,6 +4790,29 @@ function setup_user_input_panel(ok_handler, input, config, cancel_handler) {
                 'type="text" id="' + key + '"></span>');
 
       break;
+    case 'textarea':
+      var rows = '5';
+			var cols = '50'
+      if ( _via_user_input_data[key].rows ) {
+        rows = _via_user_input_data[key].rows;
+      }
+      if ( _via_user_input_data[key].cols ) {
+        cols = _via_user_input_data[key].cols;
+      }
+      var placeholder = '';
+      if ( _via_user_input_data[key].placeholder ) {
+        placeholder = _via_user_input_data[key].placeholder;
+      }
+      html.push('<span class="cell">' +
+                '<textarea class="_via_user_input_variable" ' +
+                disabled_html + ' ' +
+                'rows="' + rows + '" ' +
+                'cols="' + cols + '" ' +
+                'placeholder="' + placeholder + '" ' +
+                'id="' + key + '">' + value_html + '</textarea></span>');
+
+      break;
+
     }
     html.push('</div>'); // end of row
   }
@@ -5801,38 +5824,54 @@ function project_file_add_local(event) {
 
 function project_file_add_abs_path_with_input() {
   var config = {'title':'Add File using Absolute Path' };
-  var input = { 'absolute_path': { type:'text', name:'Absolute path', placeholder:'/home/abhishek/image1.jpg', disabled:false, size:50 }
+  var input = { 'absolute_path': { type:'text', name:'add one absolute path', placeholder:'/home/abhishek/image1.jpg', disabled:false, size:50 },
+								'absolute_path_list': { type:'textarea', name:'or, add multiple paths (one path per line)', placeholder:'/home/abhishek/image1.jpg\n/home/abhishek/image2.jpg\n/home/abhishek/image3.png', disabled:false, rows:5, cols:80 }
               };
 
   invoke_with_user_inputs(project_file_add_abs_path_input_done, input, config);
 }
 
 function project_file_add_abs_path_input_done(input) {
-  var abs_path  = input.absolute_path.value.trim();
-  var img_id    = project_file_add_url(abs_path);
-  var img_index = _via_image_id_list.indexOf(img_id);
-  show_message('Added file at absolute path [' + abs_path + ']');
-  update_img_fn_list();
-  _via_show_img(img_index);
-  user_input_default_cancel_handler();
+	if ( input.absolute_path.value !== '' ) {
+		var abs_path  = input.absolute_path.value.trim();
+		var img_id    = project_file_add_url(abs_path);
+		var img_index = _via_image_id_list.indexOf(img_id);
+	  _via_show_img(img_index);
+		show_message('Added file at absolute path [' + abs_path + ']');
+		update_img_fn_list();
+		user_input_default_cancel_handler();
+	} else {
+		if ( input.absolute_path_list.value !== '' ) {
+			var absolute_path_list_str = input.absolute_path_list.value;
+			import_files_url_from_csv(absolute_path_list_str);
+		}
+	}
 }
 
 function project_file_add_url_with_input() {
   var config = {'title':'Add File using URL' };
-  var input = { 'url': { type:'text', name:'URL', placeholder:'http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg', disabled:false, size:50 }
+  var input = { 'url': { type:'text', name:'add one URL', placeholder:'http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg', disabled:false, size:50 },
+								'url_list': { type:'textarea', name:'or, add multiple URL (one url per line)', placeholder:'http://www.example.com/image1.jpg\nhttp://www.example.com/image2.jpg\nhttp://www.example.com/image3.png', disabled:false, rows:5, cols:80 }
               };
 
   invoke_with_user_inputs(project_file_add_url_input_done, input, config);
 }
 
 function project_file_add_url_input_done(input) {
-  var url = input.url.value.trim();
-  var img_id    = project_file_add_url(url);
-  var img_index = _via_image_id_list.indexOf(img_id);
-  show_message('Added file at url [' + url + ']');
-  update_img_fn_list();
-  _via_show_img(img_index);
-  user_input_default_cancel_handler();
+	if ( input.url.value !== '' ) {
+		var url = input.url.value.trim();
+		var img_id    = project_file_add_url(url);
+		var img_index = _via_image_id_list.indexOf(img_id);
+		show_message('Added file at url [' + url + ']');
+		update_img_fn_list();
+		_via_show_img(img_index);
+		user_input_default_cancel_handler();
+	} else {
+		if ( input.url_list.value !== '' ) {
+			var url_list_str = input.url_list.value;
+			import_files_url_from_csv(url_list_str);
+		}
+	}
 }
 
 function project_file_add_url(url) {
