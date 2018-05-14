@@ -3829,10 +3829,17 @@ function img_fn_list_ith_entry_remove_css_class(img_index, classname) {
 
 function img_fn_list_clear_all_style() {
   var cn = document.getElementById('img_fn_list').childNodes[0].childNodes;
-  var i;
+  var i, j;
   var n = cn.length;
+  var nclass;
   for ( i = 0; i < n; ++i ) {
-    cn[i].classList = [];
+    //cn[i].classList = []; // throws error in Edge browser
+    nclass = cn[i].classList.length;
+    if ( nclass ) {
+      for ( j = 0; j < nclass; ++j ) {
+        cn[i].classList.remove( cn[i].classList.item(j) );
+      }
+    }
   }
 }
 
