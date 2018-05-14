@@ -1,3 +1,8 @@
+# Contributors to VIA project
+We welcome all forms of contributions (code update, documentation, etc) from users. 
+These contributions must adhere to the existing [license](LICENSE) of VIA project.
+Here is the list of current contributions to VIA project.
+
 * Stefan Mihaila (@smihaila, 01 Feb. 2018, updates to via-1.0.5)
   01. a patch from Stefan Mihaila which requires polygon shape to have at least 3 points.
 

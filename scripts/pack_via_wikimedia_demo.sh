@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 
 VIA_JS_FILE=../via.js
-VIA_DEMO_JS_FILE=../demo/_via_basic_demo.js
+VIA_DEMO_JS_FILE=../demo/_via_wikimedia_demo.js
 TEMPLATE_HTML_FILE=../index.html
-TARGET_HTML_FILE=../via_demo.html
+TARGET_HTML_FILE=../via_wikimedia_demo.html
 GOOGLE_ANALYTICS_JS_FILE=../via_google_analytics.js
 
 TMP_FILE1=temp_file1.html

@@ -3,6 +3,9 @@ Code Documentation for VGG Image Annotator 1.0
 
 Author: [Abhishek Dutta](mailto:adutta_REMOVE_@robots.ox.ac.uk)
 
+> This code documentation is based on VIA-1.0.x version codebase. There are some 
+> major differences between VIA-1.0.x and VIA-2.0.y codebase.
+
 VGG Image Annotator (VIA) application is contained in a single html file
 with definitions of CSS style and Javascript code blocks.
 
