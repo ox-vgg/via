@@ -609,8 +609,8 @@
           <div id="img_fn_list"></div>
         </div>
 
-        <button class="leftsidebar_accordion">Attributes</button>
-        <div class="leftsidebar_accordion_panel" id="attributes_panel"></div>
+        <button onclick="toggle_reg_attr_panel()" class="leftsidebar_accordion" id="reg_attr_panel_button">Region Attributes</button>
+        <button onclick="toggle_file_attr_panel()" class="leftsidebar_accordion" id="file_attr_panel_button">File Attributes</button>
 
         <button class="leftsidebar_accordion">Keyboard Shortcuts</button>
         <div class="leftsidebar_accordion_panel">
@@ -719,7 +719,7 @@
 
           <div class="text_panel" id="license_panel">
             <pre>
-              Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
+              Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University.
               All rights reserved.
 
               Redistribution and use in source and binary forms, with or without
@@ -4674,15 +4674,19 @@ function init_leftsidebar_accordion() {
   var acc = document.getElementsByClassName('leftsidebar_accordion');
   var i;
   for ( i = 0; i < acc.length; ++i ) {
-    acc[i].addEventListener('click', function() {
-      this.classList.toggle('active');
-      var panel = this.nextElementSibling;
-      if ( panel.classList.contains('show') ) {
-        panel.classList.remove('show');
-      } else {
-        panel.classList.add('show');
-      }
-    });
+    if ( acc[i].id !== 'reg_attr_panel_button' &&
+         acc[i].id !== 'file_attr_panel_button' ) {
+
+      acc[i].addEventListener('click', function() {
+        this.classList.toggle('active');
+        var panel = this.nextElementSibling;
+        if ( panel.classList.contains('show') ) {
+          panel.classList.remove('show');
+        } else {
+          panel.classList.add('show');
+        }
+      });
+    }
   }
 }
 

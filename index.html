@@ -601,8 +601,8 @@
           <div id="img_fn_list"></div>
         </div>
 
-        <button class="leftsidebar_accordion">Attributes</button>
-        <div class="leftsidebar_accordion_panel" id="attributes_panel"></div>
+        <button onclick="toggle_reg_attr_panel()" class="leftsidebar_accordion" id="reg_attr_panel_button">Region Attributes</button>
+        <button onclick="toggle_file_attr_panel()" class="leftsidebar_accordion" id="file_attr_panel_button">File Attributes</button>
 
         <button class="leftsidebar_accordion">Keyboard Shortcuts</button>
         <div class="leftsidebar_accordion_panel">
@@ -711,7 +711,7 @@
 
           <div class="text_panel" id="license_panel">
             <pre>
-              Copyright (c) 2016-2017, Abhishek Dutta, Visual Geometry Group, Oxford University.
+              Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University.
               All rights reserved.
 
               Redistribution and use in source and binary forms, with or without

@@ -3836,15 +3836,19 @@ function init_leftsidebar_accordion() {
   var acc = document.getElementsByClassName('leftsidebar_accordion');
   var i;
   for ( i = 0; i < acc.length; ++i ) {
-    acc[i].addEventListener('click', function() {
-      this.classList.toggle('active');
-      var panel = this.nextElementSibling;
-      if ( panel.classList.contains('show') ) {
-        panel.classList.remove('show');
-      } else {
-        panel.classList.add('show');
-      }
-    });
+    if ( acc[i].id !== 'reg_attr_panel_button' &&
+         acc[i].id !== 'file_attr_panel_button' ) {
+
+      acc[i].addEventListener('click', function() {
+        this.classList.toggle('active');
+        var panel = this.nextElementSibling;
+        if ( panel.classList.contains('show') ) {
+          panel.classList.remove('show');
+        } else {
+          panel.classList.add('show');
+        }
+      });
+    }
   }
 }
 
