@@ -61,6 +61,7 @@ function _via_load_test_img() {
     // initial state
     _via_img_metadata = {};
     _via_image_id_list = [];
+    _via_loaded_img_fn_list = [];
     _via_img_count = 0;
     _via_reload_img_table = false;
 
@@ -81,6 +82,7 @@ function _via_load_test_img() {
 
         _via_img_metadata[img_id] = _via_test_img_metadata[idx];
         _via_image_id_list.push(img_id);
+        _via_loaded_img_fn_list.push(_via_test_img_metadata[i].filename);
         _via_img_count += 1;
         _via_reload_img_table = true;
     }

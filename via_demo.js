@@ -38,20 +38,22 @@ function start_demo_session() {
 
     var img_order = [0,1,2];
     for (var i=0; i<demo_img_base64_data.length; ++i) {
-	var idx = img_order[i];
-	demo_img_base64_data[idx].base64_img_data = demo_images[idx];
-	var filename = demo_img_base64_data[idx].filename;
-	var size = demo_img_base64_data[idx].size;
-	var img_id = _via_get_image_id(filename, size);
+	    var idx = img_order[i];
+	    demo_img_base64_data[idx].base64_img_data = demo_images[idx];
+	    var filename = demo_img_base64_data[idx].filename;
+	    var size = demo_img_base64_data[idx].size;
+	    var img_id = _via_get_image_id(filename, size);
 
-	_via_img_metadata[img_id] = demo_img_base64_data[idx];
-	_via_image_id_list.push(img_id);
-	_via_img_count += 1;
-	_via_reload_img_table = true;
+	    _via_img_metadata[img_id] = demo_img_base64_data[idx];
+	    _via_image_id_list.push(img_id);
+      _via_loaded_img_fn_list.push(demo_img_base64_data[i].filename);
+	    _via_img_count += 1;
+	    _via_reload_img_table = true;
     }
 
     _via_image_index = 0;
     import_annotations_from_json(demo_region_data);
+    update_img_fn_list();
 }
 
 
