@@ -83,7 +83,7 @@
 
       /* Middle panel: containing #image_panel, #leftsidebar */
       .middle_panel { display:table; table-layout:fixed; width:100%; z-index:1; padding:0;}
-      #leftsidebar { display:table-cell; z-index:10; vertical-align:top;}
+      #leftsidebar { display:none; z-index:10; vertical-align:top;}
       #display_area { display:table-cell; width:100%; z-index:1; margin:0; padding-left:1em; vertical-align:top; }
       /* layers of canvas */
       #image_panel        { position:relative; outline:none; }
@@ -207,7 +207,7 @@
       ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
 
       /* Loaded image list shown in leftsidebar panel */
-      #img_fn_list    { font-size:small; overflow:scroll; min-height:10rem; max-height:25rem; }
+      #img_fn_list    { display:none; font-size:small; overflow:scroll; min-height:10rem; max-height:25rem; }
       #img_fn_list ul { position:relative; line-height:1.3em; margin:0; padding:0; list-style-type:none;}
       #img_fn_list li { white-space:nowrap; display:block; padding:0 0.4rem; }
       #img_fn_list li:hover   { background-color:#d5e5ff; cursor:pointer; }
@@ -235,7 +235,7 @@
       .display_block { display:block !important; }
 
       /* project settings */
-      #settings_panel { display:table; font-size:1rem; border-collapse:collapse; width:95%;}
+      #settings_panel { display:none; font-size:1rem; border-collapse:collapse; width:95%;}
       #settings_panel a { border: 1px solid #f2f2f2; }
       #settings_panel .row { display:table-row; border-bottom:1px solid #f2f2f2;}
       #settings_panel .variable { display:table-cell; width:60%; padding:0.5rem 0.5rem;}
@@ -615,13 +615,13 @@
 
       <!-- Main display area: contains image canvas, ... -->
       <div id="display_area">
-        <div id="image_panel" class="display_area_content">
+        <div id="image_panel" class="display_area_content display_none">
           <!-- buffer images using <img> element will be added here -->
 
           <!-- @todo: in future versions, this canvas will be replaced by a <svg> element -->
           <canvas id="region_canvas" width="1" height="1" tabindex="1">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
         </div>
-        <div id="image_grid_panel" class="display_area_content">
+        <div id="image_grid_panel" class="display_area_content display_none">
 
           <div id="image_grid_group_panel">
             <span class="tool">Group by&nbsp; <select id="image_grid_toolbar_group_by_select" onchange="image_grid_toolbar_onchange_group_by_select(this)"></select></span>
@@ -658,7 +658,7 @@
           </div>
         </div> <!-- end of image grid panel -->
 
-        <div id="settings_panel" class="display_area_content">
+        <div id="settings_panel" class="display_area_content display_none">
           <h2>Settings</h2>
           <div class="row">
             <div class="variable">
@@ -730,7 +730,7 @@
           </div>
         </div> <!-- end of settings panel -->
 
-        <div id="page_404" class="display_area_content">
+        <div id="page_404" class="display_area_content display_none">
           <h2>File Not Found</h2>
           <p>Filename: <span style="font-family:Mono;" id="page_404_filename"></span></p>
 
@@ -739,7 +739,7 @@
           <p>A temporary fix is to use <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">browser's file selector</span> to manually locate and add this file. We do not recommend this approach because it requires you to repeat this process every time your load this project in the VIA application.</p>
         </div> <!-- end of file not found panel -->
 
-        <div id="page_start_info" class="display_area_content">
+        <div id="page_start_info" class="display_area_content display_none">
           <ul>
             <li>To start annotation, <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">select images</span> (or, add images from <span class="text_button" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)" onclick="project_file_add_url_with_input()">URL</span> or <span class="text_button" title="Add images using absolute path of file (e.g. /home/abhishek/image1.jpg)" onclick="project_file_add_abs_path_with_input()">absolute path</span>) and draw regions</li>
             <li>Use <span class="text_button" title="Toggle attributes editor panel" onclick="toggle_attributes_editor()">attribute editor</span> to define attributes (e.g. name) and <span class="text_button" title="Toggle annotations editor panel" onclick="toggle_annotation_editor()">annotation editor</span> to describe each region (e.g. cat) using these attributes.</li>
@@ -749,7 +749,7 @@
 
         </div>
 
-        <div id="page_getting_started" class="display_area_content">
+        <div id="page_getting_started" class="display_area_content display_none">
           <p>A more detailed user guide (with screenshots and descriptions) is <a href="http://www.robots.ox.ac.uk/~vgg/software/via/docs/user_guide.html">available here</a>.</p>
           <ol>
             <li><strong>Load Images</strong>: The first step is to load all the images that you wish to annotate. There are multiple ways to add images to a VIA project. Choose the method that suits your use case.
@@ -815,7 +815,18 @@
           </ol>
         </div>
 
-        <div id="page_about" class="display_area_content" style="width:40rem !important">
+        <div id="page_load_ongoing" class="display_area_content">
+          <div style="text-align:center">
+            <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">
+              <svg height="160" viewbox="0 0 400 160" style="background-color:#212121;">
+                <use xlink:href="#via_logo"></use>
+              </svg>
+            </a>
+            <div style="margin-top:4rem">Loading ...</div>
+          </div>
+        </div>
+
+        <div id="page_about" class="display_area_content display_none" style="width:40rem !important">
           <div style="text-align:center">
             <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">
               <svg height="160" viewbox="0 0 400 160" style="background-color:#212121;">
@@ -840,7 +851,7 @@
           <p>Copyright &copy; 2016-2018, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a> (Visual Geometry Group, Oxford University)</p>
         </div> <!-- end of page_about -->
 
-        <div id="page_license" class="display_area_content">
+        <div id="page_license" class="display_area_content display_none">
           <pre>
 Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University.
 All rights reserved.
@@ -869,6 +880,10 @@ POSSIBILITY OF SUCH DAMAGE.
       </div> <!-- end of display_area -->
     </div> <!-- end of middle_panel -->
 
+    <!-- this vertical spacer is needed to allow scrollbar to show
+         items like Keyboard Shortcut hidden under the attributes panel -->
+    <div style="width: 100%;" id="vertical_space"></div>
+
     <script type="text/javascript">
       //<!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
     </script>
@@ -879,9 +894,8 @@ POSSIBILITY OF SUCH DAMAGE.
       //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
     </script>
 
-    <!-- for code debugging    -->
+    <!-- for code debugging
     <script src="via.js"></script>
-    <!--
     <script src="./demo/_via_basic_demo.js"></script>
     -->
 

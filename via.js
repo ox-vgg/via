@@ -310,6 +310,9 @@ function _via_init() {
   show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION +
                '. Ready !', 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
 
+  document.getElementById('img_fn_list').style.display = 'block';
+  document.getElementById('leftsidebar').style.display = 'table-cell';
+
   // initialize default project
   project_init_default_project();
 
@@ -3635,6 +3638,7 @@ function init_leftsidebar_accordion() {
   var i;
   for ( i = 0; i < acc.length; ++i ) {
     acc[i].addEventListener('click', function() {
+      update_vertical_space();
       this.classList.toggle('active');
       this.nextElementSibling.classList.toggle('show');
 
@@ -3918,6 +3922,14 @@ function toggle_attributes_editor() {
   leftsidebar_show();
   document.getElementById('attributes_editor_panel').classList.toggle('show');
   document.getElementById('attributes_editor_panel_title').classList.toggle('active');
+}
+
+// this vertical spacer is needed to allow scrollbar to show
+// items like Keyboard Shortcut hidden under the attributes panel
+function update_vertical_space() {
+  var panel = document.getElementById('vertical_space');
+  var aepanel = document.getElementById('annotation_editor_panel');
+  panel.style.height = aepanel.offsetHeight + 'px';
 }
 
 //
