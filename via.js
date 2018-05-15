@@ -55,7 +55,7 @@
 
 "use strict";
 
-var VIA_VERSION      = '2.0.0-beta';
+var VIA_VERSION      = '2.0.0';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -78,6 +78,7 @@ var VIA_DISPLAY_AREA_CONTENT_NAME = {IMAGE:'image_panel',
                                      SETTINGS:'settings_panel',
                                      PAGE_404:'page_404',
                                      PAGE_USER_GUIDE:'page_user_guide',
+                                     PAGE_GETTING_STARTED:'page_getting_started',
                                      PAGE_ABOUT:'page_about',
                                      PAGE_START_INFO:'page_start_info',
                                      PAGE_LICENSE:'page_license'
@@ -329,6 +330,7 @@ function _via_init() {
       await _via_load_submodules();
     }, 100);
   }
+
 }
 
 //

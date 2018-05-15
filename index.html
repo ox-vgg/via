@@ -443,7 +443,7 @@
 
           <li>Help
             <ul>
-              <li onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_USER_GUIDE)" title="Shows a guide for using this application">User Guide</li>
+              <li onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_GETTING_STARTED)" title="Show a guide to get started with this application">Getting Started</li>
               <li title="Visit the project page for this application"><a href="https://gitlab.com/vgg/via" target="_blank">Project Page</a></li>
               <li onclick="" title="Report an issue to the developers of this application (requires an account at gitlab.com)"><a href="https://gitlab.com/vgg/via/issues" target="_blank">Report issues</a></li>
               <li class="submenu_divider"></li>
@@ -744,17 +744,39 @@
             <li>To start annotation, <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">select images</span> (or, add images from <span class="text_button" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)" onclick="project_file_add_url_with_input()">URL</span> or <span class="text_button" title="Add images using absolute path of file (e.g. /home/abhishek/image1.jpg)" onclick="project_file_add_abs_path_with_input()">absolute path</span>) and draw regions</li>
             <li>Use <span class="text_button" title="Toggle attributes editor panel" onclick="toggle_attributes_editor()">attribute editor</span> to define attributes (e.g. name) and <span class="text_button" title="Toggle annotations editor panel" onclick="toggle_annotation_editor()">annotation editor</span> to describe each region (e.g. cat) using these attributes.</li>
             <li>Remember to <span class="text_button" onclick="project_save_with_confirm()">save</span> your project before closing this application so that you can <span class="text_button" onclick="project_open_select_project_file()">load</span> it later to continue annotation.</li>
-            <li>For help, see the <span class="text_button" onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_USER_GUIDE)">User Guide</span> and pre-loaded demo: <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html">image annotation</a> and <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_face_demo.html">face annotation</a>.</li>
+            <li>For help, see the <span class="text_button" onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_GETTING_STARTED)">Getting Started</span> page and pre-loaded demo: <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html">image annotation</a> and <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_face_demo.html">face annotation</a>.</li>
           </ul>
-
-          <p style="color:red; text-align:center;">This beta version is intended for testing purpose only.</p>
 
         </div>
 
-        <div id="page_user_guide" class="display_area_content">
+        <div id="page_getting_started" class="display_area_content">
           <p>A more detailed user guide (with screenshots and descriptions) is <a href="http://www.robots.ox.ac.uk/~vgg/software/via/docs/user_guide.html">available here</a>.</p>
-          <ul>
-            <li><strong>Drawing Regions</strong>:
+          <ol>
+            <li><strong>Load Images</strong>: The first step is to load all the images that you wish to annotate. There are multiple ways to add images to a VIA project. Choose the method that suits your use case.
+              <ul>
+                <li>Method 1: Selecting local files using browser's file selector
+                  <ol>
+                    <li>Click <span class="text_button" title="Load or Add Images" onclick="sel_local_images()"><code>Project &rarr; Add local files</code></span></li>
+                    <li>Select desired images and click <code>Open</code></li>
+                  </ol>
+                </li>
+                <li>Method 2: Adding files from URL or absolute path
+                  <ol>
+                    <li>Click <span class="text_button" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)" onclick="project_file_add_url_with_input()"><code>Project &rarr; Add files from URL</code></span></li>
+                    <li>Enter URL and click <code>OK</code></li>
+                  </ol>
+                </li>
+                <li>Method 3: Adding files from list of url or absolute path stored in text file
+                  <ol>
+                    <li>Create a text file containing URL and absolute path (one per line)</li>
+                    <li>Click <span class="text_button" title="Add images from a list of web url or absolute path stored in a text file (one url or path per line)" onclick="sel_local_data_file('files_url')"><code>Project &rarr; Add url or path from text file</code></span></li>
+                    <li>Select the text file and click <code>Open</code></li>
+                  </ol>
+                </li>
+              </ul>
+            </li>
+            <li><strong>Draw Regions</strong>: Select a region shape (<span class="text_button" onclick="select_region_shape('rect')">rectangle</span>, <span class="text_button" onclick="select_region_shape('circle')">circle</span>, <span class="text_button" onclick="select_region_shape('ellipse')">ellipse</span>, <span class="text_button" onclick="select_region_shape('polygon')">polygon</span>, <span class="text_button" onclick="select_region_shape('point')">point</span>, <span class="text_button" onclick="select_region_shape('polyline')">polyline</span>) from the left sidebar and draw regions as follows:
+
               <ul>
                 <li>Rectangle, Circle and Ellipse
                   <ul>
@@ -775,7 +797,6 @@
                 </li>
               </ul>
 
-
               <ul>
                 <li>Polygon and Polyline
                   <ul>
@@ -786,42 +807,12 @@
                   </ul>
                 </li>
               </ul>
-            <li><strong>Adding Images</strong>: There are multiple methods of adding images to a VIA project. Choose the method that suits your use case.
-              <ul>
-                <li>Method 1: Selecting local files using browser's file selector
-                  <ol>
-                    <li>Click <code>Project &rarr; Add local files</code></li>
-                    <li>Select desired images and click <code>Open</code></li>
-                  </ol>
-                </li>
-                <li>Method 2: Adding files from URL or absolute path
-                  <ol>
-                    <li>Click <code>Project &rarr; Add files from URL</code></li>
-                    <li>Enter URL and click <code>OK</code></li>
-                  </ol>
-                </li>
-                <li>Method 3: Adding files from list of url or absolute path stored in text file
-                  <ol>
-                    <li>Create a text file containing URL and absolute path (one per line)</li>
-                    <li>Click <code>Project &rarr; Add url or path from text file</code></li>
-                    <li>Select the text file and click <code>Open</code></li>
-                  </ol>
-                </li>
-              </ul>
             </li>
-            <li><strong>Importing and Exporting Annotations</strong>:
-              <ul>
-                <li>Click <code>Annotations &rarr; Export annotations</code> in top menubar (choose csv or json option)</li>
-                <li>Click <code>Annotations &rarr; Import annotations</code> in top menubar and select the file (csv or json) containing annotations.</li>
-              </ul>
-            </li>
-            <li><strong>Saving and Loading a Project</strong>:
-              <ul>
-                <li>Click <code>Project &rarr; Save</code> in top menubar</li>
-                <li>Click <code>Project &rarr; Load</code> in top menubar and select the json file containing VIA project.</li>
-              </ul>
-            </li>
-          </ul>
+
+            <li><strong>Create Annotations</strong>: For a more detailed description of this step, see <a href="http://www.robots.ox.ac.uk/~vgg/software/via/docs/creating_annotations.html">Creating Annotations : VIA User Guide</a>. Click the <span class="text_button" onclick="toggle_annotation_editor()"><code>View &rarr; Toggle attributes editor</code></span> to show attributes editor panel in left sidebar and add the desired file or region attributes (e.g. name). Now click <span class="text_button" onclick="toggle_annotation_editor()"><code>View &rarr; Toggle annotations editor</code></span> to show the annotation editor panel in the bottom side. Update the annotations for each region.</li>
+            <li><strong>Export Annotations</strong>: To export the annotations in json or csv format, click <span class="text_button" onclick="download_all_region_data('csv')"><code>Annotation &rarr; Export annotations</code></span> in top menubar.</li>
+            <li><strong>Save Project</strong>: To save the project, click <span class="text_button" onclick="project_save_with_confirm()"><code>Project &rarr; Save</code></span> in top menubar.</li>
+          </ol>
         </div>
 
         <div id="page_about" class="display_area_content" style="width:40rem !important">
@@ -833,7 +824,7 @@
             </a>
           </div>
 
-          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.0-beta</a></p>
+          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.0</a></p>
           <p>VGG Image Annotator (VIA) is an image annotation tool that can be used to define regions in an image and create textual descriptions of those regions. VIA is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.</p>
           <p>Here is a list of some salient features of VIA:
             <ul>
