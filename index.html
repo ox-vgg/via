@@ -257,6 +257,24 @@
       -->
     <svg style="display:none;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
+        <symbol id="via_logo">
+          <!-- Logo designed by Abhishek Dutta <adutta@robots.ox.ac.uk>, May 2018 -->
+          <title>VGG Image Annotator Logo</title>
+          <rect width="400" height="160" x="0" y="0" fill="#212121"></rect>
+
+          <text x="56" y="130" font-family="Serif" font-size="100" fill="white">V</text>
+          <text x="180" y="130" font-family="Serif" font-size="100" fill="white">I</text>
+          <text x="270" y="130" font-family="Serif" font-size="100" fill="white">A</text>
+
+          <rect width="80" height="100" x="52" y="40" stroke="yellow" fill="none" stroke-width="2"></rect>
+          <text x="72" y="30" font-family="'Comic Sans MS', cursive, sans-serif" font-size="18" fill="yellow">VGG</text>
+
+          <rect width="50" height="100" x="175" y="45" stroke="yellow" fill="none" stroke-width="2"></rect>
+          <text x="175" y="35" font-family="'Comic Sans MS', cursive, sans-serif" font-size="18" fill="yellow">Image</text>
+
+          <rect width="80" height="100" x="265" y="40" stroke="yellow" fill="none" stroke-width="2"></rect>
+          <text x="265" y="30" font-family="'Comic Sans MS', cursive, sans-serif" font-size="18" fill="yellow">Annotator</text>
+        </symbol>
         <symbol id="shape_rectangle">
           <title>Rectangular region shape</title>
           <rect width="20" height="12" x="6" y="10" stroke-width="2"/>
@@ -807,8 +825,15 @@
         </div>
 
         <div id="page_about" class="display_area_content" style="width:40rem !important">
-          <h2>VGG Image Annotator</h2>
-          <p style="font-family:mono; font-size:0.8em;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.0-beta</a></p>
+          <div style="text-align:center">
+            <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">
+              <svg height="160" viewbox="0 0 400 160" style="background-color:#212121;">
+                <use xlink:href="#via_logo"></use>
+              </svg>
+            </a>
+          </div>
+
+          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.0-beta</a></p>
           <p>VGG Image Annotator (VIA) is an image annotation tool that can be used to define regions in an image and create textual descriptions of those regions. VIA is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.</p>
           <p>Here is a list of some salient features of VIA:
             <ul>
@@ -865,7 +890,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
     <!-- for code debugging    -->
     <script src="via.js"></script>
+    <!--
     <script src="./demo/_via_basic_demo.js"></script>
+    -->
 
 
     <!-- for regression tests
