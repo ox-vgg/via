@@ -222,6 +222,7 @@ var _via_image_grid_page_img_index_list     = []; // list of all image index in 
 var _via_image_grid_mousedown_img_index     = -1;
 var _via_image_grid_mouseup_img_index       = -1;
 var _via_image_grid_img_index_list          = []; // list of all image index in the image grid
+var _via_image_grid_region_index_list          = []; // list of all image index in the image grid
 var _via_image_grid_group                   = {}; // {'value':[image_index_list]}
 var _via_image_grid_group_var               = []; // {type, name, value}
 var _via_image_grid_group_show_all          = false;
@@ -401,7 +402,7 @@ function show_image_grid_view() {
     p.firstChild.setAttribute('xlink:href', '#icon_gridoff');
     p.childNodes[1].innerHTML = 'Switch to Single Image View';
 
-    edit_file_metadata_in_annotation_editor();
+    //edit_file_metadata_in_annotation_editor();
   } else {
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_START_INFO);
   }
@@ -5012,13 +5013,8 @@ function update_annotation_editor() {
         annotation_editor_update_metadata_html();
       }
       if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
-        if ( _via_metadata_being_updated === 'region' ) {
-          ae.innerHTML = '<p>Region annotations cannot be updated in image grid view. ' +
-            'Switch to <span class="text_button" onclick="show_single_image_view()">single image view</span> to update region annotations.</p>';
-        } else {
-          annotation_editor_update_header_html();
-          annotation_editor_update_metadata_html();
-        }
+        annotation_editor_update_header_html();
+        annotation_editor_update_metadata_html();
       }
     }
     ok_callback();
@@ -5115,8 +5111,17 @@ function annotation_editor_get_metadata_row_html(row_id) {
 
   if ( _via_metadata_being_updated === 'region' ) {
     var rid = document.createElement('span');
-    rid.setAttribute('class', 'col id');
-    rid.innerHTML = (row_id + 1);
+
+    switch(_via_display_area_content_name) {
+    case VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID:
+      rid.setAttribute('class', 'col');
+      rid.innerHTML = 'Grouped regions in ' + _via_image_grid_img_index_list.length + ' files';
+      break;
+    case VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE:
+      rid.setAttribute('class', 'col id');
+      rid.innerHTML = (row_id + 1);
+      break;
+    }
     row.appendChild(rid);
   }
 
@@ -5163,7 +5168,16 @@ function annotation_editor_get_metadata_row_html(row_id) {
     }
 
     if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
-      var attr_metadata_stat = _via_get_file_metadata_stat(_via_image_grid_img_index_list, attr_id);
+      var attr_metadata_stat;
+      switch(_via_metadata_being_updated) {
+      case 'region':
+        attr_metadata_stat = _via_get_region_metadata_stat(_via_image_grid_img_index_list, attr_id);
+        break;
+      case 'file':
+        attr_metadata_stat = _via_get_file_metadata_stat(_via_image_grid_img_index_list, attr_id);
+        break;
+      }
+
       switch ( attr_type ) {
       case 'text':
         if ( attr_metadata_stat.hasOwnProperty(attr_id) ) {
@@ -5454,47 +5468,94 @@ function _via_get_file_metadata_stat(img_index_list, attr_id) {
   return stat;
 }
 
+function _via_get_region_metadata_stat(img_index_list, attr_id) {
+  var stat = {};
+  stat[attr_id] = {};
+  var i, n, img_id, img_index, value;
+  var j, m;
+  n = img_index_list.length;
+  for ( i = 0; i < n; ++i ) {
+    img_index = img_index_list[i];
+    img_id = _via_image_id_list[img_index];
+    m = _via_img_metadata[img_id].regions.length;
+    for ( j = 0; j < m; ++j ) {
+      if ( ! image_grid_is_region_in_current_group( _via_img_metadata[img_id].regions[j].region_attributes ) ) {
+        // skip region not in current group
+        continue;
+      }
+      value = _via_img_metadata[img_id].regions[j].region_attributes[attr_id];
+      if ( typeof(value) === 'object' ) {
+        // checkbox has multiple values and hence is object
+        var key;
+        for ( key in value ) {
+          if ( stat[attr_id].hasOwnProperty(key) ) {
+            stat[attr_id][key] += 1;
+          } else {
+            stat[attr_id][key] = 1;
+          }
+        }
+      } else {
+        if ( stat[attr_id].hasOwnProperty(value) ) {
+          stat[attr_id][value] += 1;
+        } else {
+          stat[attr_id][value] = 1;
+        }
+      }
+    }
+  }
+  return stat;
+}
+
+
 // invoked when the user updates annotations using the annotation editor
 function annotation_editor_on_metadata_update(p) {
   var pid       = annotation_editor_extract_html_id_components(p.id);
   var img_id    = _via_image_id;
 
-  if ( _via_metadata_being_updated === 'region' ) {
-    annotation_editor_update_region_metadata(img_id, pid.row_id, pid.attr_id, p.value, p.checked);
-    _via_redraw_reg_canvas();
-    return;
+  var img_index_list = [ _via_image_index ];
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    img_index_list = _via_image_grid_img_index_list.slice(0);
   }
 
   if ( _via_metadata_being_updated === 'file' ) {
-    var img_index_list = [ _via_image_index ];
-    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
-      img_index_list = _via_image_grid_img_index_list.slice(0);
-    }
     annotation_editor_update_file_metadata(img_index_list, pid.attr_id, p.value, p.checked).then( function(update_count) {
-      show_message('Updated file attributes of ' + update_count + ' files');
-      // check if the updated attribute is one of the group variables
-      var i, n, type, attr_id;
-      n = _via_image_grid_group_var.length;
-      var clear_all_group = false;
-      for ( i = 0; i < n; ++i ) {
-        type = _via_image_grid_group_var[i].type;
-        name = _via_image_grid_group_var[i].name;
-        if ( type === 'file' && name === pid.attr_id ) {
-          clear_all_group = true;
-          break;
-        }
-      }
-
-      // @todo: it is wasteful to cancel the full set of groups.
-      // we should only cancel the groups that are affected by this update.
-      if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
-        if ( clear_all_group ) {
-          image_grid_show_all_project_images();
-        }
-      }
+      annotation_editor_on_metadata_update_done('file', pid.attr_id, update_count);
     }, function(err) {
       show_message('Failed to update file attributes! ');
     });
+    return;
+  }
+
+  if ( _via_metadata_being_updated === 'region' ) {
+    annotation_editor_update_region_metadata(img_index_list, pid.attr_id, p.value, p.checked).then( function(update_count) {
+      annotation_editor_on_metadata_update_done('region', pid.attr_id, update_count);
+    }, function(err) {
+      show_message('Failed to update region attributes! ');
+    });
+    return;
+  }
+}
+
+function annotation_editor_on_metadata_update_done(type, attr_id, update_count) {
+  show_message('Updated ' + type + ' attributes of ' + update_count + ' files');
+  // check if the updated attribute is one of the group variables
+  var i, n, type, attr_id;
+  n = _via_image_grid_group_var.length;
+  var clear_all_group = false;
+  for ( i = 0; i < n; ++i ) {
+    if ( _via_image_grid_group_var[i].type === type &&
+         _via_image_grid_group_var[i].name === attr_id ) {
+      clear_all_group = true;
+      break;
+    }
+  }
+
+  // @todo: it is wasteful to cancel the full set of groups.
+  // we should only cancel the groups that are affected by this update.
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    if ( clear_all_group ) {
+      image_grid_show_all_project_images();
+    }
   }
 }
 
@@ -5536,28 +5597,49 @@ function annotation_editor_update_file_metadata(img_index_list, attr_id, new_val
   });
 }
 
-function annotation_editor_update_region_metadata(img_id, region_id, attr_id, new_value, new_checked) {
-  switch(  _via_attributes['region'][attr_id].type ) {
-  case 'text':  // fallback
-  case 'dropdown': // fallback
-  case 'radio': // fallback
-  case 'image':
-    _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id] = new_value;
-    break;
-  case 'checkbox':
-    var option_id = new_value;
-    if ( ! _via_img_metadata[img_id].regions[region_id].region_attributes.hasOwnProperty(attr_id) ) {
-      _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id] = {};
-    }
+function annotation_editor_update_region_metadata(img_index_list, attr_id, new_value, new_checked) {
+  return new Promise( function(ok_callback, err_callback) {
+    var i, n, img_id, img_index;
+    n = img_index_list.length;
+    var update_count = 0;
+    var j, m;
+    for ( i = 0; i < n; ++i ) {
+      img_index = img_index_list[i];
+      img_id = _via_image_id_list[img_index];
 
-    if ( new_checked ) {
-      _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id][option_id] = true;
-    } else {
-      // false option values are not stored
-      delete _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id][option_id];
+      m = _via_img_metadata[img_id].regions.length;
+      for ( j = 0; j < m; ++j ) {
+        if ( ! image_grid_is_region_in_current_group( _via_img_metadata[img_id].regions[j].region_attributes ) ) {
+          continue;
+        }
+
+        switch(  _via_attributes['region'][attr_id].type ) {
+        case 'text':  // fallback
+        case 'dropdown': // fallback
+        case 'radio': // fallback
+        case 'image':
+          _via_img_metadata[img_id].regions[j].region_attributes[attr_id] = new_value;
+          update_count += 1;
+          break;
+        case 'checkbox':
+          var option_id = new_value;
+          if ( ! _via_img_metadata[img_id].regions[j].region_attributes.hasOwnProperty(attr_id) ) {
+            _via_img_metadata[img_id].regions[j].region_attributes[attr_id] = {};
+          }
+
+          if ( new_checked ) {
+            _via_img_metadata[img_id].regions[j].region_attributes[attr_id][option_id] = true;
+          } else {
+            // false option values are not stored
+            delete _via_img_metadata[img_id].regions[j].region_attributes[attr_id][option_id];
+          }
+          update_count += 1;
+          break;
+        }
+      }
     }
-    break;
-  }
+    ok_callback(update_count);
+  });
 }
 
 function set_region_annotations_to_default_value(rid) {
@@ -6461,10 +6543,8 @@ function image_grid_is_region_in_current_group(r) {
 
   for ( i = 0; i < n; ++i ) {
     if ( _via_image_grid_group_var[i].type === 'region' ) {
-      var region_attr = _via_image_grid_group_var[i].name;
       var group_value = _via_image_grid_group_var[i].values[ _via_image_grid_group_var[i].current_value_index ];
-      var region_value = r[region_attr];
-      if ( region_value != group_value ) {
+      if ( r[_via_image_grid_group_var[i].name] != group_value ) {
         return false;
       }
     }
