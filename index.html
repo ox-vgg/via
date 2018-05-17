@@ -215,7 +215,7 @@
       #img_fn_list .sel       { border-left:0.2rem solid black !important; font-weight:bold; }
       #img_fn_list .buffered  { border-left:0.2rem solid #cccccc; }
 
-      #message_panel         { display:block; width:100%; position:fixed; bottom:0px; z-index:1000; text-align:center; }
+      #message_panel         { display:block; width:100%; position:fixed; bottom:0px; z-index:9999; text-align:center; }
       #message_panel .content { display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}
 
       .text_panel    { display:none; margin:auto; font-size:medium; line-height:1.3em; margin: 0; max-width:700px; }
@@ -235,7 +235,7 @@
       .display_block { display:block !important; }
 
       /* project settings */
-      #settings_panel { display:none; font-size:1rem; border-collapse:collapse; width:95%;}
+      #settings_panel { font-size:1rem; border-collapse:collapse; width:95%;}
       #settings_panel a { border: 1px solid #f2f2f2; }
       #settings_panel .row { display:table-row; border-bottom:1px solid #f2f2f2;}
       #settings_panel .variable { display:table-cell; width:60%; padding:0.5rem 0.5rem;}
@@ -894,11 +894,15 @@ POSSIBILITY OF SUCH DAMAGE.
       //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
     </script>
 
-    <!-- for code debugging
+    <!-- for code debugging    -->
     <script src="via.js"></script>
+    <!---->
+    <script src="/home/tlm/dev/vgg_software/via/docs/data/face_track_annotation/data/sherlock_ep01_tracks_FRCNN.js"></script>
+    <script src="./demo/_via_face_track_annotation_demo.js"></script>
+
+    <!--
     <script src="./demo/_via_basic_demo.js"></script>
     -->
-
 
     <!-- for regression tests
     <script src="./tests/_via_test_data.js"></script>
