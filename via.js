@@ -392,11 +392,11 @@ function show_image_grid_view() {
     img_fn_list_clear_all_style();
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID);
     image_grid_toolbar_update_group_by_select();
-    update_annotation_editor();
 
     if ( _via_image_grid_group_var.length === 0 ) {
       image_grid_show_all_project_images();
     }
+    update_annotation_editor();
 
     var p = document.getElementById('toolbar_image_grid_toggle');
     p.firstChild.setAttribute('xlink:href', '#icon_gridoff');
@@ -2911,15 +2911,26 @@ function rect_update_corner(corner_id, d, x, y, preserve_aspect_ratio) {
 }
 
 function _via_update_ui_components() {
-  if ( !_via_is_window_resized && _via_current_image_loaded ) {
-    _via_is_window_resized = true;
-    show_single_image_view();
-    _via_show_img(_via_image_index);
+  if ( ! _via_current_image_loaded ) {
+    return;
+  }
 
-    if (_via_is_canvas_zoomed) {
-      reset_zoom_level();
+  show_message('Updating user interface components.');
+  switch(_via_display_area_content_name) {
+  case VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID:
+    image_grid_set_content_panel_height_fixed();
+    image_grid_set_content_to_current_group();
+    break;
+  case VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE:
+    if ( !_via_is_window_resized && _via_current_image_loaded ) {
+      _via_is_window_resized = true;
+      _via_show_img(_via_image_index);
+
+      if (_via_is_canvas_zoomed) {
+        reset_zoom_level();
+      }
     }
-    show_message('Browser window resized. Updated user interface components.');
+    break;
   }
 }
 
@@ -2928,13 +2939,6 @@ function _via_update_ui_components() {
 //
 
 _via_reg_canvas.addEventListener('keyup', function(e) {
-  if (_via_is_user_updating_attribute_value ||
-      _via_is_user_updating_attribute_name  ||
-      _via_is_user_adding_attribute_name) {
-
-    return;
-  }
-
   if ( e.which === 17 ) { // Ctrl key
     _via_is_ctrl_pressed = false;
   }
@@ -3646,14 +3650,12 @@ function leftsidebar_toggle() {
   var leftsidebar = document.getElementById('leftsidebar');
   if ( leftsidebar.style.display === 'none' ) {
     leftsidebar.style.display = 'table-cell';
-    if ( _via_current_image_loaded ) {
-      _via_show_img(_via_image_index);
-    }
     document.getElementById('leftsidebar_collapse_panel').style.display = 'none';
   } else {
     leftsidebar.style.display = 'none';
     document.getElementById('leftsidebar_collapse_panel').style.display = 'table-cell';
   }
+  _via_update_ui_components();
 }
 
 function leftsidebar_increase_width() {
@@ -5008,14 +5010,8 @@ function update_annotation_editor() {
     if ( p.classList.contains('display_block') ) {
       var ae = document.getElementById('annotation_editor');
       ae.innerHTML = '';
-      if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE ) {
-        annotation_editor_update_header_html();
-        annotation_editor_update_metadata_html();
-      }
-      if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
-        annotation_editor_update_header_html();
-        annotation_editor_update_metadata_html();
-      }
+      annotation_editor_update_header_html();
+      annotation_editor_update_metadata_html();
     }
     ok_callback();
   });
@@ -5066,19 +5062,29 @@ function annotation_editor_update_header_html() {
 }
 
 function annotation_editor_update_metadata_html() {
+  if ( ! _via_img_count ) {
+    return;
+  }
+
   var ae = document.getElementById('annotation_editor');
   switch ( _via_metadata_being_updated ) {
   case 'region':
     var rindex;
-    for ( rindex = 0; rindex < _via_img_metadata[_via_image_id].regions.length; ++rindex ) {
-      ae.appendChild( annotation_editor_get_metadata_row_html(rindex) );
+    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+      ae.appendChild( annotation_editor_get_metadata_row_html(0) );
+    } else {
+      if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE ) {
+        for ( rindex = 0; rindex < _via_img_metadata[_via_image_id].regions.length; ++rindex ) {
+          ae.appendChild( annotation_editor_get_metadata_row_html(rindex) );
+        }
+      }
     }
     break;
+
   case 'file':
     ae.appendChild( annotation_editor_get_metadata_row_html(0) );
     break;
   }
-
 }
 
 function annotation_editor_update_row(row_id) {
@@ -5537,7 +5543,7 @@ function annotation_editor_on_metadata_update(p) {
 }
 
 function annotation_editor_on_metadata_update_done(type, attr_id, update_count) {
-  show_message('Updated ' + type + ' attributes of ' + update_count + ' files');
+  show_message('Updated ' + type + ' attributes of ' + update_count + ' ' + type + 's');
   // check if the updated attribute is one of the group variables
   var i, n, type, attr_id;
   n = _via_image_grid_group_var.length;
@@ -7132,21 +7138,24 @@ function image_grid_jump_to_group(group_index, value_index) {
 }
 
 function image_grid_set_content_to_current_group() {
+  var n = _via_image_grid_group_var.length;
+  if ( n === 0 ) {
+    image_grid_show_all_project_images();
+  } else {
   var group_img_index_list = [];
   var img_index_list = _via_image_grid_group;
   var i, n, value, current_value_index;
-  n = _via_image_grid_group_var.length;
-  for ( i = 0; i < n; ++i ) {
-    value = _via_image_grid_group_var[i].values[ _via_image_grid_group_var[i].current_value_index ];
-    img_index_list = img_index_list[ value ];
-  }
+    for ( i = 0; i < n; ++i ) {
+      value = _via_image_grid_group_var[i].values[ _via_image_grid_group_var[i].current_value_index ];
+      img_index_list = img_index_list[ value ];
+    }
 
-  if ( Array.isArray(img_index_list) ) {
-    image_grid_set_content(img_index_list);
-  } else {
-    console.log('image_grid_set_content_to_current_group(): expected array while got ' + typeof(img_index_list));
+    if ( Array.isArray(img_index_list) ) {
+      image_grid_set_content(img_index_list);
+    } else {
+      console.log('Error: image_grid_set_content_to_current_group(): expected array while got ' + typeof(img_index_list));
+    }
   }
-
   update_annotation_editor();
 }
 
@@ -7181,9 +7190,6 @@ function image_grid_page_nav_show_cancel() {
 
 function image_grid_cancel_load_ongoing() {
   _via_image_grid_load_ongoing = false;
-}
-
-function image_grid_jump_to_page_with_first_img_index(img_index) {
 }
 
 //

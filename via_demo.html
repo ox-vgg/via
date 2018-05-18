@@ -61,6 +61,7 @@
       * { box-sizing: border-box; }
       input[type=text] { border:1px solid #cccccc; margin:0.6rem 0; padding:0.2rem 0.4rem; }
       a { text-decoration:none; }
+      textarea { border:1px solid #cccccc; margin:0.6rem 0; padding:0.2rem 0.4rem; }
 
       /* Top panel : #navbar, #toolbar */
       .top_panel { font-size:0.9rem; display:block; background-color:#212121; color:#ffffff; z-index:1001; margin-bottom:1rem;}
@@ -90,7 +91,7 @@
 
       /* Middle panel: containing #image_panel, #leftsidebar */
       .middle_panel { display:table; table-layout:fixed; width:100%; z-index:1; padding:0;}
-      #leftsidebar { display:table-cell; z-index:10; vertical-align:top;}
+      #leftsidebar { display:none; z-index:10; vertical-align:top;}
       #display_area { display:table-cell; width:100%; z-index:1; margin:0; padding-left:1em; vertical-align:top; }
       /* layers of canvas */
       #image_panel        { position:relative; outline:none; }
@@ -214,7 +215,7 @@
       ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
 
       /* Loaded image list shown in leftsidebar panel */
-      #img_fn_list    { font-size:small; overflow:scroll; min-height:10rem; max-height:25rem; }
+      #img_fn_list    { display:none; font-size:small; overflow:scroll; min-height:10rem; max-height:25rem; }
       #img_fn_list ul { position:relative; line-height:1.3em; margin:0; padding:0; list-style-type:none;}
       #img_fn_list li { white-space:nowrap; display:block; padding:0 0.4rem; }
       #img_fn_list li:hover   { background-color:#d5e5ff; cursor:pointer; }
@@ -222,7 +223,7 @@
       #img_fn_list .sel       { border-left:0.2rem solid black !important; font-weight:bold; }
       #img_fn_list .buffered  { border-left:0.2rem solid #cccccc; }
 
-      #message_panel         { display:block; width:100%; position:fixed; bottom:0px; z-index:1000; text-align:center; }
+      #message_panel         { display:block; width:100%; position:fixed; bottom:0px; z-index:9999; text-align:center; }
       #message_panel .content { display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}
 
       .text_panel    { display:none; margin:auto; font-size:medium; line-height:1.3em; margin: 0; max-width:700px; }
@@ -242,7 +243,7 @@
       .display_block { display:block !important; }
 
       /* project settings */
-      #settings_panel { display:table; font-size:1rem; border-collapse:collapse; width:95%;}
+      #settings_panel { font-size:1rem; border-collapse:collapse; width:95%;}
       #settings_panel a { border: 1px solid #f2f2f2; }
       #settings_panel .row { display:table-row; border-bottom:1px solid #f2f2f2;}
       #settings_panel .variable { display:table-cell; width:60%; padding:0.5rem 0.5rem;}
@@ -264,6 +265,24 @@
       -->
     <svg style="display:none;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
+        <symbol id="via_logo">
+          <!-- Logo designed by Abhishek Dutta <adutta@robots.ox.ac.uk>, May 2018 -->
+          <title>VGG Image Annotator Logo</title>
+          <rect width="400" height="160" x="0" y="0" fill="#212121"></rect>
+
+          <text x="56" y="130" font-family="Serif" font-size="100" fill="white">V</text>
+          <text x="180" y="130" font-family="Serif" font-size="100" fill="white">I</text>
+          <text x="270" y="130" font-family="Serif" font-size="100" fill="white">A</text>
+
+          <rect width="80" height="100" x="52" y="40" stroke="yellow" fill="none" stroke-width="2"></rect>
+          <text x="72" y="30" font-family="'Comic Sans MS', cursive, sans-serif" font-size="18" fill="yellow">VGG</text>
+
+          <rect width="50" height="100" x="175" y="45" stroke="yellow" fill="none" stroke-width="2"></rect>
+          <text x="175" y="35" font-family="'Comic Sans MS', cursive, sans-serif" font-size="18" fill="yellow">Image</text>
+
+          <rect width="80" height="100" x="265" y="40" stroke="yellow" fill="none" stroke-width="2"></rect>
+          <text x="265" y="30" font-family="'Comic Sans MS', cursive, sans-serif" font-size="18" fill="yellow">Annotator</text>
+        </symbol>
         <symbol id="shape_rectangle">
           <title>Rectangular region shape</title>
           <rect width="20" height="12" x="6" y="10" stroke-width="2"/>
@@ -413,17 +432,18 @@
               <li onclick="sel_local_data_file('annotations')" title="Import annotations from a CSV file">Import Annotations (from csv)</li>
               <li onclick="sel_local_data_file('annotations')" title="Import annotations from a JSON file">Import Annotations (from json)</li>
               <li class="submenu_divider"></li>
-              <li onclick="toggle_annotation_editor()" title="Toggle annotation editor panel">Toggle Annotation Editor Panel</li>
-              <li onclick="show_annotation_data()" title="Show a preview of annotations (opens in a new browser windows)">Preview Annotations (new window)</li>
+              <li onclick="show_annotation_data()" title="Show a preview of annotations (opens in a new browser windows)">Preview Annotations</li>
             </ul>
           </li>
 
           <li>View
             <ul>
+              <li onclick="image_grid_toggle()" title="Toggle between single image view and image grid view">Toggle image grid view</li>
               <li onclick="leftsidebar_toggle()" title="Show or hide the sidebar shown in left hand side">Toggle left sidebar</li>
+<li onclick="toggle_img_fn_list_visibility()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle image filename list</li>
+              <li class="submenu_divider"></li>
               <li onclick="toggle_attributes_editor()" title="Show or hide a panel to update file and region attributes">Toggle attributes editor</li>
               <li onclick="toggle_annotation_editor()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle annotation editor</li>
-              <li onclick="toggle_img_fn_list_visibility()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle image filename list</li>
               <li class="submenu_divider"></li>
               <li onclick="toggle_region_boundary_visibility()" title="Show or hide the region boundaries">Show/hide region boundaries</li>
               <li onclick="toggle_region_id_visibility()" title="Show or hide the region id labels">Show/hide region labels</li>
@@ -432,7 +452,7 @@
 
           <li>Help
             <ul>
-              <li onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_USER_GUIDE)" title="Shows a guide for using this application">User Guide</li>
+              <li onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_GETTING_STARTED)" title="Show a guide to get started with this application">Getting Started</li>
               <li title="Visit the project page for this application"><a href="https://gitlab.com/vgg/via" target="_blank">Project Page</a></li>
               <li onclick="" title="Report an issue to the developers of this application (requires an account at gitlab.com)"><a href="https://gitlab.com/vgg/via/issues" target="_blank">Report issues</a></li>
               <li class="submenu_divider"></li>
@@ -604,13 +624,13 @@
 
       <!-- Main display area: contains image canvas, ... -->
       <div id="display_area">
-        <div id="image_panel" class="display_area_content">
+        <div id="image_panel" class="display_area_content display_none">
           <!-- buffer images using <img> element will be added here -->
 
           <!-- @todo: in future versions, this canvas will be replaced by a <svg> element -->
           <canvas id="region_canvas" width="1" height="1" tabindex="1">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
         </div>
-        <div id="image_grid_panel" class="display_area_content">
+        <div id="image_grid_panel" class="display_area_content display_none">
 
           <div id="image_grid_group_panel">
             <span class="tool">Group by&nbsp; <select id="image_grid_toolbar_group_by_select" onchange="image_grid_toolbar_onchange_group_by_select(this)"></select></span>
@@ -647,7 +667,7 @@
           </div>
         </div> <!-- end of image grid panel -->
 
-        <div id="settings_panel" class="display_area_content">
+        <div id="settings_panel" class="display_area_content display_none">
           <h2>Settings</h2>
           <div class="row">
             <div class="variable">
@@ -719,7 +739,7 @@
           </div>
         </div> <!-- end of settings panel -->
 
-        <div id="page_404" class="display_area_content">
+        <div id="page_404" class="display_area_content display_none">
           <h2>File Not Found</h2>
           <p>Filename: <span style="font-family:Mono;" id="page_404_filename"></span></p>
 
@@ -728,22 +748,44 @@
           <p>A temporary fix is to use <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">browser's file selector</span> to manually locate and add this file. We do not recommend this approach because it requires you to repeat this process every time your load this project in the VIA application.</p>
         </div> <!-- end of file not found panel -->
 
-        <div id="page_start_info" class="display_area_content">
+        <div id="page_start_info" class="display_area_content display_none">
           <ul>
             <li>To start annotation, <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">select images</span> (or, add images from <span class="text_button" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)" onclick="project_file_add_url_with_input()">URL</span> or <span class="text_button" title="Add images using absolute path of file (e.g. /home/abhishek/image1.jpg)" onclick="project_file_add_abs_path_with_input()">absolute path</span>) and draw regions</li>
             <li>Use <span class="text_button" title="Toggle attributes editor panel" onclick="toggle_attributes_editor()">attribute editor</span> to define attributes (e.g. name) and <span class="text_button" title="Toggle annotations editor panel" onclick="toggle_annotation_editor()">annotation editor</span> to describe each region (e.g. cat) using these attributes.</li>
             <li>Remember to <span class="text_button" onclick="project_save_with_confirm()">save</span> your project before closing this application so that you can <span class="text_button" onclick="project_open_select_project_file()">load</span> it later to continue annotation.</li>
-            <li>For help, see the <span class="text_button" onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_USER_GUIDE)">User Guide</span> and pre-loaded demo: <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html">image annotation</a> and <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_face_demo.html">face annotation</a>.</li>
+            <li>For help, see the <span class="text_button" onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_GETTING_STARTED)">Getting Started</span> page and pre-loaded demo: <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html">image annotation</a> and <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_face_demo.html">face annotation</a>.</li>
           </ul>
-
-          <p style="color:red; text-align:center;">This beta version is intended for testing purpose only.</p>
 
         </div>
 
-        <div id="page_user_guide" class="display_area_content">
+        <div id="page_getting_started" class="display_area_content display_none">
           <p>A more detailed user guide (with screenshots and descriptions) is <a href="http://www.robots.ox.ac.uk/~vgg/software/via/docs/user_guide.html">available here</a>.</p>
-          <ul>
-            <li><strong>Drawing Regions</strong>:
+          <ol>
+            <li><strong>Load Images</strong>: The first step is to load all the images that you wish to annotate. There are multiple ways to add images to a VIA project. Choose the method that suits your use case.
+              <ul>
+                <li>Method 1: Selecting local files using browser's file selector
+                  <ol>
+                    <li>Click <span class="text_button" title="Load or Add Images" onclick="sel_local_images()"><code>Project &rarr; Add local files</code></span></li>
+                    <li>Select desired images and click <code>Open</code></li>
+                  </ol>
+                </li>
+                <li>Method 2: Adding files from URL or absolute path
+                  <ol>
+                    <li>Click <span class="text_button" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)" onclick="project_file_add_url_with_input()"><code>Project &rarr; Add files from URL</code></span></li>
+                    <li>Enter URL and click <code>OK</code></li>
+                  </ol>
+                </li>
+                <li>Method 3: Adding files from list of url or absolute path stored in text file
+                  <ol>
+                    <li>Create a text file containing URL and absolute path (one per line)</li>
+                    <li>Click <span class="text_button" title="Add images from a list of web url or absolute path stored in a text file (one url or path per line)" onclick="sel_local_data_file('files_url')"><code>Project &rarr; Add url or path from text file</code></span></li>
+                    <li>Select the text file and click <code>Open</code></li>
+                  </ol>
+                </li>
+              </ul>
+            </li>
+            <li><strong>Draw Regions</strong>: Select a region shape (<span class="text_button" onclick="select_region_shape('rect')">rectangle</span>, <span class="text_button" onclick="select_region_shape('circle')">circle</span>, <span class="text_button" onclick="select_region_shape('ellipse')">ellipse</span>, <span class="text_button" onclick="select_region_shape('polygon')">polygon</span>, <span class="text_button" onclick="select_region_shape('point')">point</span>, <span class="text_button" onclick="select_region_shape('polyline')">polyline</span>) from the left sidebar and draw regions as follows:
+
               <ul>
                 <li>Rectangle, Circle and Ellipse
                   <ul>
@@ -764,7 +806,6 @@
                 </li>
               </ul>
 
-
               <ul>
                 <li>Polygon and Polyline
                   <ul>
@@ -775,47 +816,35 @@
                   </ul>
                 </li>
               </ul>
-            <li><strong>Adding Images</strong>: There are multiple methods of adding images to a VIA project. Choose the method that suits your use case.
-              <ul>
-                <li>Method 1: Selecting local files using browser's file selector
-                  <ol>
-                    <li>Click <code>Project &rarr; Add local files</code></li>
-                    <li>Select desired images and click <code>Open</code></li>
-                  </ol>
-                </li>
-                <li>Method 2: Adding files from URL or absolute path
-                  <ol>
-                    <li>Click <code>Project &rarr; Add files from URL</code></li>
-                    <li>Enter URL and click <code>OK</code></li>
-                  </ol>
-                </li>
-                <li>Method 3: Adding files from list of url or absolute path stored in text file
-                  <ol>
-                    <li>Create a text file containing URL and absolute path (one per line)</li>
-                    <li>Click <code>Project &rarr; Add url or path from text file</code></li>
-                    <li>Select the text file and click <code>Open</code></li>
-                  </ol>
-                </li>
-              </ul>
             </li>
-            <li><strong>Importing and Exporting Annotations</strong>:
-              <ul>
-                <li>Click <code>Annotations &rarr; Export annotations</code> in top menubar (choose csv or json option)</li>
-                <li>Click <code>Annotations &rarr; Import annotations</code> in top menubar and select the file (csv or json) containing annotations.</li>
-              </ul>
-            </li>
-            <li><strong>Saving and Loading a Project</strong>:
-              <ul>
-                <li>Click <code>Project &rarr; Save</code> in top menubar</li>
-                <li>Click <code>Project &rarr; Load</code> in top menubar and select the json file containing VIA project.</li>
-              </ul>
-            </li>
-          </ul>
+
+            <li><strong>Create Annotations</strong>: For a more detailed description of this step, see <a href="http://www.robots.ox.ac.uk/~vgg/software/via/docs/creating_annotations.html">Creating Annotations : VIA User Guide</a>. Click the <span class="text_button" onclick="toggle_annotation_editor()"><code>View &rarr; Toggle attributes editor</code></span> to show attributes editor panel in left sidebar and add the desired file or region attributes (e.g. name). Now click <span class="text_button" onclick="toggle_annotation_editor()"><code>View &rarr; Toggle annotations editor</code></span> to show the annotation editor panel in the bottom side. Update the annotations for each region.</li>
+            <li><strong>Export Annotations</strong>: To export the annotations in json or csv format, click <span class="text_button" onclick="download_all_region_data('csv')"><code>Annotation &rarr; Export annotations</code></span> in top menubar.</li>
+            <li><strong>Save Project</strong>: To save the project, click <span class="text_button" onclick="project_save_with_confirm()"><code>Project &rarr; Save</code></span> in top menubar.</li>
+          </ol>
         </div>
 
-        <div id="page_about" class="display_area_content" style="width:40rem !important">
-          <h2>VGG Image Annotator</h2>
-          <p style="font-family:mono; font-size:0.8em;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.0-beta</a></p>
+        <div id="page_load_ongoing" class="display_area_content">
+          <div style="text-align:center">
+            <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">
+              <svg height="160" viewbox="0 0 400 160" style="background-color:#212121;">
+                <use xlink:href="#via_logo"></use>
+              </svg>
+            </a>
+            <div style="margin-top:4rem">Loading ...</div>
+          </div>
+        </div>
+
+        <div id="page_about" class="display_area_content display_none" style="width:40rem !important">
+          <div style="text-align:center">
+            <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">
+              <svg height="160" viewbox="0 0 400 160" style="background-color:#212121;">
+                <use xlink:href="#via_logo"></use>
+              </svg>
+            </a>
+          </div>
+
+          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.0</a></p>
           <p>VGG Image Annotator (VIA) is an image annotation tool that can be used to define regions in an image and create textual descriptions of those regions. VIA is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.</p>
           <p>Here is a list of some salient features of VIA:
             <ul>
@@ -831,7 +860,7 @@
           <p>Copyright &copy; 2016-2018, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a> (Visual Geometry Group, Oxford University)</p>
         </div> <!-- end of page_about -->
 
-        <div id="page_license" class="display_area_content">
+        <div id="page_license" class="display_area_content display_none">
           <pre>
 Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University.
 All rights reserved.
@@ -859,6 +888,10 @@ POSSIBILITY OF SUCH DAMAGE.
         </div>
       </div> <!-- end of display_area -->
     </div> <!-- end of middle_panel -->
+
+    <!-- this vertical spacer is needed to allow scrollbar to show
+         items like Keyboard Shortcut hidden under the attributes panel -->
+    <div style="width: 100%;" id="vertical_space"></div>
 
     <script type="text/javascript">
       //<!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
@@ -895,6 +928,11 @@ function _via_load_submodules() {
   //_via_basic_demo_draw_default_regions();
   _via_basic_demo_define_attributes();
   _via_basic_demo_define_annotations();
+
+  toggle_attributes_editor();
+  update_attributes_update_panel();
+
+  toggle_annotation_editor();
 }
 
 function _via_basic_demo_load_img() {
@@ -971,7 +1009,7 @@ _via_basic_demo_img.push('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/4QD
 /*
   See Contributors.md file for a list of developers who have contributed code
   to VIA codebase.
-/*
+  /*
 
   This source code (version 1.0.x) is organized in the following groups:
 
@@ -997,7 +1035,7 @@ _via_basic_demo_img.push('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/4QD
 
 "use strict";
 
-var VIA_VERSION      = '2.0.0-beta';
+var VIA_VERSION      = '2.0.0';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -1020,6 +1058,7 @@ var VIA_DISPLAY_AREA_CONTENT_NAME = {IMAGE:'image_panel',
                                      SETTINGS:'settings_panel',
                                      PAGE_404:'page_404',
                                      PAGE_USER_GUIDE:'page_user_guide',
+                                     PAGE_GETTING_STARTED:'page_getting_started',
                                      PAGE_ABOUT:'page_about',
                                      PAGE_START_INFO:'page_start_info',
                                      PAGE_LICENSE:'page_license'
@@ -1163,6 +1202,7 @@ var _via_image_grid_page_img_index_list     = []; // list of all image index in 
 var _via_image_grid_mousedown_img_index     = -1;
 var _via_image_grid_mouseup_img_index       = -1;
 var _via_image_grid_img_index_list          = []; // list of all image index in the image grid
+var _via_image_grid_region_index_list          = []; // list of all image index in the image grid
 var _via_image_grid_group                   = {}; // {'value':[image_index_list]}
 var _via_image_grid_group_var               = []; // {type, name, value}
 var _via_image_grid_group_show_all          = false;
@@ -1251,6 +1291,9 @@ function _via_init() {
   show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION +
                '. Ready !', 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
 
+  document.getElementById('img_fn_list').style.display = 'block';
+  document.getElementById('leftsidebar').style.display = 'table-cell';
+
   // initialize default project
   project_init_default_project();
 
@@ -1271,6 +1314,7 @@ function _via_init() {
       await _via_load_submodules();
     }, 100);
   }
+
 }
 
 //
@@ -1317,7 +1361,7 @@ function show_single_image_view() {
 
     var p = document.getElementById('toolbar_image_grid_toggle');
     p.firstChild.setAttribute('xlink:href', '#icon_gridon');
-    p.childNodes[1].innerHTML = 'Switch to Single Image View';
+    p.childNodes[1].innerHTML = 'Switch to Image Grid View';
   } else {
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_START_INFO);
   }
@@ -1328,15 +1372,17 @@ function show_image_grid_view() {
     img_fn_list_clear_all_style();
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID);
     image_grid_toolbar_update_group_by_select();
-    update_annotation_editor();
 
     if ( _via_image_grid_group_var.length === 0 ) {
       image_grid_show_all_project_images();
     }
+    update_annotation_editor();
 
     var p = document.getElementById('toolbar_image_grid_toggle');
     p.firstChild.setAttribute('xlink:href', '#icon_gridoff');
-    p.childNodes[1].innerHTML = 'Switch to Image Grid View';
+    p.childNodes[1].innerHTML = 'Switch to Single Image View';
+
+    //edit_file_metadata_in_annotation_editor();
   } else {
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_START_INFO);
   }
@@ -1616,10 +1662,13 @@ function import_annotations_from_json(data) {
       }
 
       // copy file attributes
-      for (var key in d[img_id].file_attributes) {
-        if ( !_via_img_metadata[img_id].file_attributes[key] ) {
-          _via_img_metadata[img_id].file_attributes[key] = d[img_id].file_attributes[key];
+      var key;
+      for ( key in d[img_id].file_attributes ) {
+        if ( key === '' ) {
+          continue;
         }
+
+        _via_img_metadata[img_id].file_attributes[key] = d[img_id].file_attributes[key];
 
         // add this file attribute to _via_attributes
         if ( ! _via_attributes['file'].hasOwnProperty(key) ) {
@@ -1629,12 +1678,17 @@ function import_annotations_from_json(data) {
 
       // copy regions
       var regions = d[img_id].regions;
-      for ( var i in regions ) {
+      var key, i;
+      for ( i in regions ) {
         var region_i = new file_region();
-        for ( var key in regions[i].shape_attributes ) {
+        for ( key in regions[i].shape_attributes ) {
           region_i.shape_attributes[key] = regions[i].shape_attributes[key];
         }
         for ( var key in regions[i].region_attributes ) {
+          if ( key === '' ) {
+            continue;
+          }
+
           region_i.region_attributes[key] = regions[i].region_attributes[key];
 
           // add this region attribute to _via_attributes
@@ -2093,9 +2147,9 @@ function jump_to_image(image_index) {
   switch(_via_display_area_content_name) {
   case VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID:
     if ( image_index >= 0 && image_index < _via_img_count) {
-      console.log('setting img content' + image_index);
-      img_fn_list_clear_css_classname('sel');
-      image_grid_jump_to_page_with_first_img_index( image_index );
+      // @todo: jump to image grid page view with the given first image index
+      show_single_image_view();
+      _via_show_img(image_index);
     }
     break;
   default:
@@ -3837,15 +3891,26 @@ function rect_update_corner(corner_id, d, x, y, preserve_aspect_ratio) {
 }
 
 function _via_update_ui_components() {
-  if ( !_via_is_window_resized && _via_current_image_loaded ) {
-    _via_is_window_resized = true;
-    show_single_image_view();
-    _via_show_img(_via_image_index);
+  if ( ! _via_current_image_loaded ) {
+    return;
+  }
 
-    if (_via_is_canvas_zoomed) {
-      reset_zoom_level();
+  show_message('Updating user interface components.');
+  switch(_via_display_area_content_name) {
+  case VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID:
+    image_grid_set_content_panel_height_fixed();
+    image_grid_set_content_to_current_group();
+    break;
+  case VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE:
+    if ( !_via_is_window_resized && _via_current_image_loaded ) {
+      _via_is_window_resized = true;
+      _via_show_img(_via_image_index);
+
+      if (_via_is_canvas_zoomed) {
+        reset_zoom_level();
+      }
     }
-    show_message('Browser window resized. Updated user interface components.');
+    break;
   }
 }
 
@@ -3854,13 +3919,6 @@ function _via_update_ui_components() {
 //
 
 _via_reg_canvas.addEventListener('keyup', function(e) {
-  if (_via_is_user_updating_attribute_value ||
-      _via_is_user_updating_attribute_name  ||
-      _via_is_user_adding_attribute_name) {
-
-    return;
-  }
-
   if ( e.which === 17 ) { // Ctrl key
     _via_is_ctrl_pressed = false;
   }
@@ -4102,6 +4160,10 @@ function add_new_polygon(img_id, region_shape, region_id) {
 }
 
 function del_sel_regions() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    return;
+  }
+
   if ( !_via_current_image_loaded ) {
     show_message('First load some images!');
     return;
@@ -4151,6 +4213,10 @@ function del_sel_regions() {
 }
 
 function sel_all_regions() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    return;
+  }
+
   if (!_via_current_image_loaded) {
     show_message('First load some images!');
     return;
@@ -4162,6 +4228,10 @@ function sel_all_regions() {
 }
 
 function copy_sel_regions() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    return;
+  }
+
   if (!_via_current_image_loaded) {
     show_message('First load some images!');
     return;
@@ -4185,6 +4255,10 @@ function copy_sel_regions() {
 }
 
 function paste_sel_regions_in_current_image() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    return;
+  }
+
   if ( !_via_current_image_loaded ) {
     show_message('First load some images!');
     return;
@@ -4215,6 +4289,10 @@ function paste_sel_regions_in_current_image() {
 }
 
 function paste_to_multiple_images_with_confirm() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    return;
+  }
+
   if ( _via_copied_image_regions.length === 0 ) {
     show_message('First copy some regions!');
     return;
@@ -4269,6 +4347,10 @@ function paste_regions(img_index) {
 
 
 function del_sel_regions_with_confirm() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    return;
+  }
+
   if ( _via_copied_image_regions.length === 0 ) {
     show_message('First copy some regions!');
     return;
@@ -4332,6 +4414,10 @@ function delete_regions(img_index) {
 }
 
 function move_to_prev_image() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    return;
+  }
+
   if (_via_img_count > 0) {
     _via_is_region_selected = false;
     _via_user_sel_region_id = -1;
@@ -4360,6 +4446,10 @@ function move_to_prev_image() {
 }
 
 function move_to_next_image() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    return;
+  }
+
   if (_via_img_count > 0) {
     _via_is_region_selected = false;
     _via_user_sel_region_id = -1;
@@ -4408,6 +4498,10 @@ function set_zoom(zoom_level_index) {
 }
 
 function reset_zoom_level() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    return;
+  }
+
   if (!_via_current_image_loaded) {
     show_message('First load some images!');
     return;
@@ -4421,6 +4515,10 @@ function reset_zoom_level() {
 }
 
 function zoom_in() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    return;
+  }
+
   if (!_via_current_image_loaded) {
     show_message('First load some images!');
     return;
@@ -4436,6 +4534,10 @@ function zoom_in() {
 }
 
 function zoom_out() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    return;
+  }
+
   if (!_via_current_image_loaded) {
     show_message('First load some images!');
     return;
@@ -4528,14 +4630,12 @@ function leftsidebar_toggle() {
   var leftsidebar = document.getElementById('leftsidebar');
   if ( leftsidebar.style.display === 'none' ) {
     leftsidebar.style.display = 'table-cell';
-    if ( _via_current_image_loaded ) {
-      _via_show_img(_via_image_index);
-    }
     document.getElementById('leftsidebar_collapse_panel').style.display = 'none';
   } else {
     leftsidebar.style.display = 'none';
     document.getElementById('leftsidebar_collapse_panel').style.display = 'table-cell';
   }
+  _via_update_ui_components();
 }
 
 function leftsidebar_increase_width() {
@@ -4575,6 +4675,7 @@ function init_leftsidebar_accordion() {
   var i;
   for ( i = 0; i < acc.length; ++i ) {
     acc[i].addEventListener('click', function() {
+      update_vertical_space();
       this.classList.toggle('active');
       this.nextElementSibling.classList.toggle('show');
 
@@ -4771,10 +4872,17 @@ function img_fn_list_ith_entry_remove_css_class(img_index, classname) {
 
 function img_fn_list_clear_all_style() {
   var cn = document.getElementById('img_fn_list').childNodes[0].childNodes;
-  var i;
+  var i, j;
   var n = cn.length;
+  var nclass;
   for ( i = 0; i < n; ++i ) {
-    cn[i].classList = [];
+    //cn[i].classList = []; // throws error in Edge browser
+    nclass = cn[i].classList.length;
+    if ( nclass ) {
+      for ( j = 0; j < nclass; ++j ) {
+        cn[i].classList.remove( cn[i].classList.item(j) );
+      }
+    }
   }
 }
 
@@ -4853,6 +4961,14 @@ function toggle_attributes_editor() {
   document.getElementById('attributes_editor_panel_title').classList.toggle('active');
 }
 
+// this vertical spacer is needed to allow scrollbar to show
+// items like Keyboard Shortcut hidden under the attributes panel
+function update_vertical_space() {
+  var panel = document.getElementById('vertical_space');
+  var aepanel = document.getElementById('annotation_editor_panel');
+  panel.style.height = aepanel.offsetHeight + 'px';
+}
+
 //
 // region and file attributes update panel
 //
@@ -4867,31 +4983,28 @@ function attribute_update_panel_set_active_button() {
 }
 
 function show_region_attributes_update_panel() {
-  if ( _via_attribute_being_updated !== 'region' ) {
-    _via_attribute_being_updated = 'region';
-    var rattr_list = Object.keys(_via_attributes['region']);
-    if ( rattr_list.length ) {
-      _via_current_attribute_id = rattr_list[0];
-    } else {
-      _via_current_attribute_id = '';
-    }
-    update_attributes_update_panel();
-    attribute_update_panel_set_active_button();
+  _via_attribute_being_updated = 'region';
+  var rattr_list = Object.keys(_via_attributes['region']);
+  if ( rattr_list.length ) {
+    _via_current_attribute_id = rattr_list[0];
+  } else {
+    _via_current_attribute_id = '';
   }
+  update_attributes_update_panel();
+  attribute_update_panel_set_active_button();
+
 }
 
 function show_file_attributes_update_panel() {
-  if ( _via_attribute_being_updated !== 'file' ) {
-    _via_attribute_being_updated = 'file';
-    var fattr_list = Object.keys(_via_attributes['file']);
-    if ( fattr_list.length ) {
-      _via_current_attribute_id = fattr_list[0];
-    } else {
-      _via_current_attribute_id = '';
-    }
-    update_attributes_update_panel();
-    attribute_update_panel_set_active_button();
+  _via_attribute_being_updated = 'file';
+  var fattr_list = Object.keys(_via_attributes['file']);
+  if ( fattr_list.length ) {
+    _via_current_attribute_id = fattr_list[0];
+  } else {
+    _via_current_attribute_id = '';
   }
+  update_attributes_update_panel();
+  attribute_update_panel_set_active_button();
 }
 
 function update_attributes_name_list() {
@@ -4931,6 +5044,10 @@ function show_attribute_properties() {
 
   if ( attr_list.options.length === 0 ) {
     return;
+  }
+
+  if ( typeof(_via_current_attribute_id) === 'undefined' || _via_current_attribute_id === '' ) {
+    _via_current_attribute_id = attr_list.options[0].value;
   }
 
   var attr_id = _via_current_attribute_id;
@@ -5194,7 +5311,9 @@ function attribute_property_on_update(p) {
       var i;
       for ( i = 0; i < attr_values.length; ++i ) {
         var attr_val = attr_values[i];
-        _via_attributes[attr_type][attr_id].options[attr_val] = attr_val;
+        if ( attr_val !== '' ) {
+          _via_attributes[attr_type][attr_id].options[attr_val] = attr_val;
+        }
       }
     }
     show_attribute_properties();
@@ -5589,7 +5708,7 @@ function update_attribute_option(is_delete, attr_type, attr_id, option_id, new_o
 
     break;
   case 'file':
-    update_file_attribute_option_from_all_metadata(attr_id, option_id);
+    update_file_attribute_option_in_all_metadata(attr_id, option_id);
     if ( ! is_delete ) {
       Object.defineProperty(_via_attributes[attr_type][attr_id].options,
                             new_option_id,
@@ -5601,15 +5720,27 @@ function update_attribute_option(is_delete, attr_type, attr_id, option_id, new_o
   }
 }
 
-function update_region_attribute_option_in_all_metadata(is_delete, attr_id, option_id, new_option_id) {
+function update_file_attribute_option_in_all_metadata(is_delete, attr_id, option_id, new_option_id) {
   var image_id;
   for ( image_id in _via_img_metadata ) {
-    if ( _via_img_metadata.hasOwnProperty(image_id) ) {
-      update_region_attribute_option_from_metadata(image_id, is_delete, attr_id, option_id, new_option_id);
+    if ( _via_img_metadata[image_id].file_attributes.hasOwnProperty(attr_id) ) {
+      if ( _via_img_metadata[image_id].file_attributes[attr_id].hasOwnProperty(option_id) ) {
+        Object.defineProperty(_via_img_metadata[image_id].file_attributes[attr_id],
+                              new_option_id,
+                              Object.getOwnPropertyDescriptor(_via_img_metadata[image_id].file_attributes[attr_id], option_id));
+        delete _via_img_metadata[image_id].file_attributes[attr_id][option_id];
+      }
     }
   }
 }
-1
+
+function update_region_attribute_option_in_all_metadata(is_delete, attr_id, option_id, new_option_id) {
+  var image_id;
+  for ( image_id in _via_img_metadata ) {
+    update_region_attribute_option_from_metadata(image_id, is_delete, attr_id, option_id, new_option_id);
+  }
+}
+
 function update_region_attribute_option_from_metadata(image_id, is_delete, attr_id, option_id, new_option_id) {
   var i;
   for ( i = 0; i < _via_img_metadata[image_id].regions.length; ++i ) {
@@ -5706,7 +5837,7 @@ function setup_user_input_panel(ok_handler, input, config, cancel_handler) {
                 'type="checkbox" id="' + key + '"></span>');
       break;
     case 'text':
-      var size = '';
+      var size = '50';
       if ( _via_user_input_data[key].size ) {
         size = _via_user_input_data[key].size;
       }
@@ -5723,6 +5854,29 @@ function setup_user_input_panel(ok_handler, input, config, cancel_handler) {
                 'type="text" id="' + key + '"></span>');
 
       break;
+    case 'textarea':
+      var rows = '5';
+      var cols = '50'
+      if ( _via_user_input_data[key].rows ) {
+        rows = _via_user_input_data[key].rows;
+      }
+      if ( _via_user_input_data[key].cols ) {
+        cols = _via_user_input_data[key].cols;
+      }
+      var placeholder = '';
+      if ( _via_user_input_data[key].placeholder ) {
+        placeholder = _via_user_input_data[key].placeholder;
+      }
+      html.push('<span class="cell">' +
+                '<textarea class="_via_user_input_variable" ' +
+                disabled_html + ' ' +
+                'rows="' + rows + '" ' +
+                'cols="' + cols + '" ' +
+                'placeholder="' + placeholder + '" ' +
+                'id="' + key + '">' + value_html + '</textarea></span>');
+
+      break;
+
     }
     html.push('</div>'); // end of row
   }
@@ -5831,24 +5985,16 @@ function toggle_annotation_editor() {
 }
 
 function update_annotation_editor() {
-  var p = document.getElementById('annotation_editor_panel');
-  if ( p.classList.contains('display_block') ) {
-    var ae = document.getElementById('annotation_editor');
-    ae.innerHTML = '';
-    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE ) {
+  return new Promise( function(ok_callback, err_callback) {
+    var p = document.getElementById('annotation_editor_panel');
+    if ( p.classList.contains('display_block') ) {
+      var ae = document.getElementById('annotation_editor');
+      ae.innerHTML = '';
       annotation_editor_update_header_html();
       annotation_editor_update_metadata_html();
     }
-    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
-      if ( _via_metadata_being_updated === 'region' ) {
-        ae.innerHTML = '<p>Region annotations cannot be updated in image grid view. ' +
-          'Switch to <span class="text_button" onclick="show_single_image_view()">single image view</span> to update region annotations.</p>';
-      } else {
-        annotation_editor_update_header_html();
-        annotation_editor_update_metadata_html();
-      }
-    }
-  }
+    ok_callback();
+  });
 }
 
 function annotation_editor_update_header_html() {
@@ -5896,19 +6042,29 @@ function annotation_editor_update_header_html() {
 }
 
 function annotation_editor_update_metadata_html() {
+  if ( ! _via_img_count ) {
+    return;
+  }
+
   var ae = document.getElementById('annotation_editor');
   switch ( _via_metadata_being_updated ) {
   case 'region':
     var rindex;
-    for ( rindex = 0; rindex < _via_img_metadata[_via_image_id].regions.length; ++rindex ) {
-      ae.appendChild( annotation_editor_get_metadata_row_html(rindex) );
+    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+      ae.appendChild( annotation_editor_get_metadata_row_html(0) );
+    } else {
+      if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE ) {
+        for ( rindex = 0; rindex < _via_img_metadata[_via_image_id].regions.length; ++rindex ) {
+          ae.appendChild( annotation_editor_get_metadata_row_html(rindex) );
+        }
+      }
     }
     break;
+
   case 'file':
     ae.appendChild( annotation_editor_get_metadata_row_html(0) );
     break;
   }
-
 }
 
 function annotation_editor_update_row(row_id) {
@@ -5941,8 +6097,17 @@ function annotation_editor_get_metadata_row_html(row_id) {
 
   if ( _via_metadata_being_updated === 'region' ) {
     var rid = document.createElement('span');
-    rid.setAttribute('class', 'col id');
-    rid.innerHTML = (row_id + 1);
+
+    switch(_via_display_area_content_name) {
+    case VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID:
+      rid.setAttribute('class', 'col');
+      rid.innerHTML = 'Grouped regions in ' + _via_image_grid_img_index_list.length + ' files';
+      break;
+    case VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE:
+      rid.setAttribute('class', 'col id');
+      rid.innerHTML = (row_id + 1);
+      break;
+    }
     row.appendChild(rid);
   }
 
@@ -5958,7 +6123,6 @@ function annotation_editor_get_metadata_row_html(row_id) {
       break;
     }
 
-    _via_image_grid_img_index_list
     row.appendChild(rid);
   }
 
@@ -5990,8 +6154,18 @@ function annotation_editor_get_metadata_row_html(row_id) {
     }
 
     if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
-      if ( attr_type === 'text' ) {
-        var attr_metadata_stat = _via_get_file_metadata_stat(_via_image_grid_img_index_list, attr_id);
+      var attr_metadata_stat;
+      switch(_via_metadata_being_updated) {
+      case 'region':
+        attr_metadata_stat = _via_get_region_metadata_stat(_via_image_grid_img_index_list, attr_id);
+        break;
+      case 'file':
+        attr_metadata_stat = _via_get_file_metadata_stat(_via_image_grid_img_index_list, attr_id);
+        break;
+      }
+
+      switch ( attr_type ) {
+      case 'text':
         if ( attr_metadata_stat.hasOwnProperty(attr_id) ) {
           var attr_value_set = Object.keys(attr_metadata_stat[attr_id]);
           if ( attr_value_set.length === 1 ) {
@@ -6005,6 +6179,47 @@ function annotation_editor_get_metadata_row_html(row_id) {
           attr_value = '';
           attr_placeholder = 'not defined yet!';
         }
+        break;
+      case 'radio':
+      case 'dropdown':
+      case 'image':
+        if ( attr_metadata_stat.hasOwnProperty(attr_id) ) {
+          var attr_value_set = Object.keys(attr_metadata_stat[attr_id]);
+          if ( attr_value_set.length === 1 ) {
+            attr_value = attr_value_set[0];
+          } else {
+            attr_value = '';
+          }
+        } else {
+          attr_value = '';
+        }
+        break;
+
+      case 'checkbox':
+        attr_value = {};
+        if ( attr_metadata_stat.hasOwnProperty(attr_id) ) {
+          var attr_value_set = Object.keys(attr_metadata_stat[attr_id]);
+          var same_count = true;
+          var i, n;
+          var attr_value_curr, attr_value_next;
+          n = attr_value_set.length;
+          for ( i = 0; i < n - 1; ++i ) {
+            attr_value_curr = attr_value_set[i];
+            attr_value_next = attr_value_set[i+1];
+
+            if ( attr_metadata_stat[attr_id][attr_value_curr] !== attr_metadata_stat[attr_id][attr_value_next] ) {
+              same_count = false;
+              break;
+            }
+          }
+          if ( same_count ) {
+            var attr_value_i;
+            for ( attr_value_i in attr_metadata_stat[attr_id] ) {
+              attr_value[attr_value_i] = true;
+            }
+          }
+        }
+        break;
       }
     }
 
@@ -6208,20 +6423,30 @@ function annotation_editor_extract_html_id_components(html_id) {
 
 function _via_get_file_metadata_stat(img_index_list, attr_id) {
   var stat = {};
+  stat[attr_id] = {};
   var i, n, img_id, img_index, value;
   n = img_index_list.length;
   for ( i = 0; i < n; ++i ) {
     img_index = img_index_list[i];
-    img_id = _via_image_id_list[i];
+    img_id = _via_image_id_list[img_index];
     if ( _via_img_metadata[img_id].file_attributes.hasOwnProperty(attr_id) ) {
       value = _via_img_metadata[img_id].file_attributes[attr_id];
-      if ( ! stat.hasOwnProperty(attr_id) ) {
-        stat[attr_id] = {};
-      }
-      if ( stat[attr_id].hasOwnProperty(value) ) {
-        stat[attr_id][value] += 1;
+      if ( typeof(value) === 'object' ) {
+        // checkbox has multiple values and hence is object
+        var key;
+        for ( key in value ) {
+          if ( stat[attr_id].hasOwnProperty(key) ) {
+            stat[attr_id][key] += 1;
+          } else {
+            stat[attr_id][key] = 1;
+          }
+        }
       } else {
-        stat[attr_id][value] = 1;
+        if ( stat[attr_id].hasOwnProperty(value) ) {
+          stat[attr_id][value] += 1;
+        } else {
+          stat[attr_id][value] = 1;
+        }
       }
     }
 
@@ -6229,32 +6454,94 @@ function _via_get_file_metadata_stat(img_index_list, attr_id) {
   return stat;
 }
 
+function _via_get_region_metadata_stat(img_index_list, attr_id) {
+  var stat = {};
+  stat[attr_id] = {};
+  var i, n, img_id, img_index, value;
+  var j, m;
+  n = img_index_list.length;
+  for ( i = 0; i < n; ++i ) {
+    img_index = img_index_list[i];
+    img_id = _via_image_id_list[img_index];
+    m = _via_img_metadata[img_id].regions.length;
+    for ( j = 0; j < m; ++j ) {
+      if ( ! image_grid_is_region_in_current_group( _via_img_metadata[img_id].regions[j].region_attributes ) ) {
+        // skip region not in current group
+        continue;
+      }
+      value = _via_img_metadata[img_id].regions[j].region_attributes[attr_id];
+      if ( typeof(value) === 'object' ) {
+        // checkbox has multiple values and hence is object
+        var key;
+        for ( key in value ) {
+          if ( stat[attr_id].hasOwnProperty(key) ) {
+            stat[attr_id][key] += 1;
+          } else {
+            stat[attr_id][key] = 1;
+          }
+        }
+      } else {
+        if ( stat[attr_id].hasOwnProperty(value) ) {
+          stat[attr_id][value] += 1;
+        } else {
+          stat[attr_id][value] = 1;
+        }
+      }
+    }
+  }
+  return stat;
+}
+
+
 // invoked when the user updates annotations using the annotation editor
 function annotation_editor_on_metadata_update(p) {
   var pid       = annotation_editor_extract_html_id_components(p.id);
   var img_id    = _via_image_id;
 
-  if ( _via_metadata_being_updated === 'region' ) {
-    annotation_editor_update_region_metadata(img_id, pid.row_id, pid.attr_id, p.value, p.checked);
-    _via_redraw_reg_canvas();
-    return;
+  var img_index_list = [ _via_image_index ];
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    img_index_list = _via_image_grid_img_index_list.slice(0);
   }
 
   if ( _via_metadata_being_updated === 'file' ) {
-    var img_index_list = [ _via_image_index ];
-    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
-      img_index_list = _via_image_grid_img_index_list.slice(0);
-    }
     annotation_editor_update_file_metadata(img_index_list, pid.attr_id, p.value, p.checked).then( function(update_count) {
-      show_message('Updated file attributes of ' + update_count + ' files');
-      // @todo: it is wasteful to cancel the full set of groups.
-      // we should only cancel the groups that are affected by this update.
-      if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
-        image_grid_show_all_project_images();
-      }
+      annotation_editor_on_metadata_update_done('file', pid.attr_id, update_count);
     }, function(err) {
       show_message('Failed to update file attributes! ');
     });
+    return;
+  }
+
+  if ( _via_metadata_being_updated === 'region' ) {
+    annotation_editor_update_region_metadata(img_index_list, pid.attr_id, p.value, p.checked).then( function(update_count) {
+      annotation_editor_on_metadata_update_done('region', pid.attr_id, update_count);
+    }, function(err) {
+      show_message('Failed to update region attributes! ');
+    });
+    return;
+  }
+}
+
+function annotation_editor_on_metadata_update_done(type, attr_id, update_count) {
+  show_message('Updated ' + type + ' attributes of ' + update_count + ' ' + type + 's');
+  // check if the updated attribute is one of the group variables
+  var i, n, type, attr_id;
+  n = _via_image_grid_group_var.length;
+  var clear_all_group = false;
+  for ( i = 0; i < n; ++i ) {
+    if ( _via_image_grid_group_var[i].type === type &&
+         _via_image_grid_group_var[i].name === attr_id ) {
+      clear_all_group = true;
+      break;
+    }
+  }
+
+  // @todo: it is wasteful to cancel the full set of groups.
+  // we should only cancel the groups that are affected by this update.
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    if ( clear_all_group ) {
+      image_grid_show_all_project_images();
+    }
   }
 }
 
@@ -6296,28 +6583,49 @@ function annotation_editor_update_file_metadata(img_index_list, attr_id, new_val
   });
 }
 
-function annotation_editor_update_region_metadata(img_id, region_id, attr_id, new_value, new_checked) {
-  switch(  _via_attributes['region'][attr_id].type ) {
-  case 'text':  // fallback
-  case 'dropdown': // fallback
-  case 'radio': // fallback
-  case 'image':
-    _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id] = new_value;
-    break;
-  case 'checkbox':
-    var option_id = new_value;
-    if ( ! _via_img_metadata[img_id].regions[region_id].region_attributes.hasOwnProperty(attr_id) ) {
-      _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id] = {};
-    }
+function annotation_editor_update_region_metadata(img_index_list, attr_id, new_value, new_checked) {
+  return new Promise( function(ok_callback, err_callback) {
+    var i, n, img_id, img_index;
+    n = img_index_list.length;
+    var update_count = 0;
+    var j, m;
+    for ( i = 0; i < n; ++i ) {
+      img_index = img_index_list[i];
+      img_id = _via_image_id_list[img_index];
 
-    if ( new_checked ) {
-      _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id][option_id] = true;
-    } else {
-      // false option values are not stored
-      delete _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id][option_id];
+      m = _via_img_metadata[img_id].regions.length;
+      for ( j = 0; j < m; ++j ) {
+        if ( ! image_grid_is_region_in_current_group( _via_img_metadata[img_id].regions[j].region_attributes ) ) {
+          continue;
+        }
+
+        switch(  _via_attributes['region'][attr_id].type ) {
+        case 'text':  // fallback
+        case 'dropdown': // fallback
+        case 'radio': // fallback
+        case 'image':
+          _via_img_metadata[img_id].regions[j].region_attributes[attr_id] = new_value;
+          update_count += 1;
+          break;
+        case 'checkbox':
+          var option_id = new_value;
+          if ( ! _via_img_metadata[img_id].regions[j].region_attributes.hasOwnProperty(attr_id) ) {
+            _via_img_metadata[img_id].regions[j].region_attributes[attr_id] = {};
+          }
+
+          if ( new_checked ) {
+            _via_img_metadata[img_id].regions[j].region_attributes[attr_id][option_id] = true;
+          } else {
+            // false option values are not stored
+            delete _via_img_metadata[img_id].regions[j].region_attributes[attr_id][option_id];
+          }
+          update_count += 1;
+          break;
+        }
+      }
     }
-    break;
-  }
+    ok_callback(update_count);
+  });
 }
 
 function set_region_annotations_to_default_value(rid) {
@@ -6727,38 +7035,54 @@ function project_file_add_local(event) {
 
 function project_file_add_abs_path_with_input() {
   var config = {'title':'Add File using Absolute Path' };
-  var input = { 'absolute_path': { type:'text', name:'Absolute path', placeholder:'/home/abhishek/image1.jpg', disabled:false, size:50 }
+  var input = { 'absolute_path': { type:'text', name:'add one absolute path', placeholder:'/home/abhishek/image1.jpg', disabled:false, size:50 },
+		'absolute_path_list': { type:'textarea', name:'or, add multiple paths (one path per line)', placeholder:'/home/abhishek/image1.jpg\n/home/abhishek/image2.jpg\n/home/abhishek/image3.png', disabled:false, rows:5, cols:80 }
               };
 
   invoke_with_user_inputs(project_file_add_abs_path_input_done, input, config);
 }
 
 function project_file_add_abs_path_input_done(input) {
-  var abs_path  = input.absolute_path.value.trim();
-  var img_id    = project_file_add_url(abs_path);
-  var img_index = _via_image_id_list.indexOf(img_id);
-  show_message('Added file at absolute path [' + abs_path + ']');
-  update_img_fn_list();
-  _via_show_img(img_index);
-  user_input_default_cancel_handler();
+  if ( input.absolute_path.value !== '' ) {
+    var abs_path  = input.absolute_path.value.trim();
+    var img_id    = project_file_add_url(abs_path);
+    var img_index = _via_image_id_list.indexOf(img_id);
+    _via_show_img(img_index);
+    show_message('Added file at absolute path [' + abs_path + ']');
+    update_img_fn_list();
+    user_input_default_cancel_handler();
+  } else {
+    if ( input.absolute_path_list.value !== '' ) {
+      var absolute_path_list_str = input.absolute_path_list.value;
+      import_files_url_from_csv(absolute_path_list_str);
+    }
+  }
 }
 
 function project_file_add_url_with_input() {
   var config = {'title':'Add File using URL' };
-  var input = { 'url': { type:'text', name:'URL', placeholder:'http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg', disabled:false, size:50 }
+  var input = { 'url': { type:'text', name:'add one URL', placeholder:'http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg', disabled:false, size:50 },
+		'url_list': { type:'textarea', name:'or, add multiple URL (one url per line)', placeholder:'http://www.example.com/image1.jpg\nhttp://www.example.com/image2.jpg\nhttp://www.example.com/image3.png', disabled:false, rows:5, cols:80 }
               };
 
   invoke_with_user_inputs(project_file_add_url_input_done, input, config);
 }
 
 function project_file_add_url_input_done(input) {
-  var url = input.url.value.trim();
-  var img_id    = project_file_add_url(url);
-  var img_index = _via_image_id_list.indexOf(img_id);
-  show_message('Added file at url [' + url + ']');
-  update_img_fn_list();
-  _via_show_img(img_index);
-  user_input_default_cancel_handler();
+  if ( input.url.value !== '' ) {
+    var url = input.url.value.trim();
+    var img_id    = project_file_add_url(url);
+    var img_index = _via_image_id_list.indexOf(img_id);
+    show_message('Added file at url [' + url + ']');
+    update_img_fn_list();
+    _via_show_img(img_index);
+    user_input_default_cancel_handler();
+  } else {
+    if ( input.url_list.value !== '' ) {
+      var url_list_str = input.url_list.value;
+      import_files_url_from_csv(url_list_str);
+    }
+  }
 }
 
 function project_file_add_url(url) {
@@ -6863,27 +7187,18 @@ function project_import_attributes_from_json(data) {
   try {
     var d = JSON.parse(data);
     var attr;
-    var skip_count = 0;
     var fattr_count = 0;
     var rattr_count = 0;
     // process file attributes
     for ( attr in d['file'] ) {
-      if ( ! _via_attributes['file'].hasOwnProperty(attr) ) {
-        _via_attributes['file'][attr] = JSON.parse( JSON.stringify( d['file'][attr] ) );
-        fattr_count += 1;
-      } else {
-        skip_count += 1;
-      }
+      _via_attributes['file'][attr] = JSON.parse( JSON.stringify( d['file'][attr] ) );
+      fattr_count += 1;
     }
 
     // process region attributes
     for ( attr in d['region'] ) {
-      if ( ! _via_attributes['region'].hasOwnProperty(attr) ) {
-        _via_attributes['region'][attr] = JSON.parse( JSON.stringify( d['region'][attr] ) );
-        rattr_count += 1;
-      } else {
-        skip_count += 1;
-      }
+      _via_attributes['region'][attr] = JSON.parse( JSON.stringify( d['region'][attr] ) );
+      rattr_count += 1;
     }
 
     if ( fattr_count > 0 || rattr_count > 0 ) {
@@ -6898,13 +7213,12 @@ function project_import_attributes_from_json(data) {
           _via_current_attribute_id = fattr_id_list[0];
         }
       }
-
+      attribute_update_panel_set_active_button();
       update_attributes_update_panel();
       update_annotation_editor();
     }
     show_message('Imported ' + fattr_count + ' file attributes and '
-                 + rattr_count + ' region attributes' +
-                 ' (skipped ' + skip_count + ')');
+                 + rattr_count + ' region attributes');
   } catch (error) {
     show_message('Failed to import attributes: [' + error + ']');
   }
@@ -7117,8 +7431,11 @@ function image_grid_add_img_if_possible(img) {
     if ( _via_image_grid_stack_prev_page.length ) {
       html.push('<span class="text_button left" onclick="image_grid_page_prev()">Prev</span>');
     }
-    html.push('<span>Showing ' + (_via_image_grid_page_first_index + 1) +
-              ' to ' + _via_image_grid_page_last_index + '</span>');
+
+    var first_index = _via_image_grid_page_first_index;
+    var last_index  = _via_image_grid_page_last_index - 1;
+    html.push('<span>Showing ' + (first_index + 1) +
+              ' to ' + (last_index + 1) + '</span>');
     html.push('<span class="text_button right" onclick="image_grid_page_next()">Next</span');
     info.innerHTML = html.join('');
   } else {
@@ -7157,8 +7474,11 @@ function image_grid_add_img_if_possible(img) {
       if ( _via_image_grid_stack_prev_page.length ) {
         html.push('<span class="text_button left" onclick="image_grid_page_prev()">Prev</span>');
       }
-      html.push('<span>Showing ' + (_via_image_grid_page_first_index + 1) +
-                ' to ' + _via_image_grid_page_last_index + '</span>');
+
+      var first_index = _via_image_grid_page_first_index;
+      var last_index  = _via_image_grid_page_last_index;
+      html.push('<span>Showing ' + (first_index + 1) +
+                ' to ' + (last_index + 1) + ' (end)</span>');
       info.innerHTML = html.join('');
     }
   }
@@ -7200,11 +7520,36 @@ function image_grid_page_show_all_regions() {
   }
 }
 
+function image_grid_is_region_in_current_group(r) {
+  var i, n;
+  n = _via_image_grid_group_var.length;
+  if ( n === 0 ) {
+    return true;
+  }
+
+  for ( i = 0; i < n; ++i ) {
+    if ( _via_image_grid_group_var[i].type === 'region' ) {
+      var group_value = _via_image_grid_group_var[i].values[ _via_image_grid_group_var[i].current_value_index ];
+      if ( r[_via_image_grid_group_var[i].name] != group_value ) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 function image_grid_show_region_shape(img_index, img_param) {
   return new Promise( function(ok_callback, err_callback) {
     var i;
     var img_id = _via_image_id_list[img_index];
-    for ( i = 0; i < _via_img_metadata[img_id].regions.length; ++i ) {
+    var n = _via_img_metadata[img_id].regions.length;
+    var is_in_group = false;
+    for ( i = 0; i < n; ++i ) {
+      if ( ! image_grid_is_region_in_current_group( _via_img_metadata[img_id].regions[i].region_attributes ) ) {
+        // skip drawing this region which is not in current group
+        continue;
+      }
+
       var r = _via_img_metadata[img_id].regions[i].shape_attributes;
       var dimg; // region coordinates in original image space
       switch( r.name ) {
@@ -7546,7 +7891,7 @@ function image_grid_group_by(type, name) {
     _via_image_grid_group = image_grid_split_array_to_group(img_index_array, type, name);
     var new_group_values = Object.keys(_via_image_grid_group);
     _via_image_grid_group_var = [];
-    _via_image_grid_group_var.push( { 'type':type, 'name':name, 'current_value_index':2, 'values':new_group_values, 'group_index':0 } );
+    _via_image_grid_group_var.push( { 'type':type, 'name':name, 'current_value_index':0, 'values':new_group_values, 'group_index':0 } );
     image_grid_add_html_group_panel(_via_image_grid_group_var[0]);
   } else {
     image_grid_group_split_all_arrays( _via_image_grid_group, type, name );
@@ -7705,7 +8050,7 @@ function image_grid_group_prev(p) {
       prev_index = n + prev_index;
       image_grid_jump_to_group(group_index, prev_index);
     } else {
-      // next of parent group
+      // prev of parent group
       var parent_group_index = group_index - 1;
       var parent_current_val_index = _via_image_grid_group_var[parent_group_index].current_value_index;
       var parent_prev_val_index = parent_current_val_index - 1;
@@ -7720,7 +8065,7 @@ function image_grid_group_prev(p) {
       }
 
       if ( parent_prev_val_index < 0 ) {
-        parent_prev_val_index = 0;
+        parent_prev_val_index = _via_image_grid_group_var[parent_group_index].values.length - 1;
       }
       image_grid_jump_to_group(parent_group_index, parent_prev_val_index);
     }
@@ -7773,20 +8118,25 @@ function image_grid_jump_to_group(group_index, value_index) {
 }
 
 function image_grid_set_content_to_current_group() {
+  var n = _via_image_grid_group_var.length;
+  if ( n === 0 ) {
+    image_grid_show_all_project_images();
+  } else {
   var group_img_index_list = [];
   var img_index_list = _via_image_grid_group;
   var i, n, value, current_value_index;
-  n = _via_image_grid_group_var.length;
-  for ( i = 0; i < n; ++i ) {
-    value = _via_image_grid_group_var[i].values[ _via_image_grid_group_var[i].current_value_index ];
-    img_index_list = img_index_list[ value ];
-  }
+    for ( i = 0; i < n; ++i ) {
+      value = _via_image_grid_group_var[i].values[ _via_image_grid_group_var[i].current_value_index ];
+      img_index_list = img_index_list[ value ];
+    }
 
-  if ( Array.isArray(img_index_list) ) {
-    image_grid_set_content(img_index_list);
-  } else {
-    console.log('image_grid_set_content_to_current_group(): expected array while got ' + typeof(img_index_list));
+    if ( Array.isArray(img_index_list) ) {
+      image_grid_set_content(img_index_list);
+    } else {
+      console.log('Error: image_grid_set_content_to_current_group(): expected array while got ' + typeof(img_index_list));
+    }
   }
+  update_annotation_editor();
 }
 
 function image_grid_page_next() {
@@ -8677,7 +9027,6 @@ function settings_save() {
 
   show_message('Settings saved.');
   settings_panel_toggle();
-  console.log('settings_panel_toggle() done');
 }
 
 function settings_show_current_value() {
@@ -9013,6 +9362,9 @@ function generate_img_index_list(input) {
 
     <!-- for code debugging
     <script src="via.js"></script>
+    -->
+
+    <!--
     <script src="./demo/_via_basic_demo.js"></script>
     -->
 

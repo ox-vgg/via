@@ -31,6 +31,11 @@ function _via_load_submodules() {
   //_via_basic_demo_draw_default_regions();
   _via_basic_demo_define_attributes();
   _via_basic_demo_define_annotations();
+
+  toggle_attributes_editor();
+  update_attributes_update_panel();
+
+  toggle_annotation_editor();
 }
 
 function _via_basic_demo_load_img() {

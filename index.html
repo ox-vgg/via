@@ -424,17 +424,18 @@
               <li onclick="sel_local_data_file('annotations')" title="Import annotations from a CSV file">Import Annotations (from csv)</li>
               <li onclick="sel_local_data_file('annotations')" title="Import annotations from a JSON file">Import Annotations (from json)</li>
               <li class="submenu_divider"></li>
-              <li onclick="toggle_annotation_editor()" title="Toggle annotation editor panel">Toggle Annotation Editor Panel</li>
-              <li onclick="show_annotation_data()" title="Show a preview of annotations (opens in a new browser windows)">Preview Annotations (new window)</li>
+              <li onclick="show_annotation_data()" title="Show a preview of annotations (opens in a new browser windows)">Preview Annotations</li>
             </ul>
           </li>
 
           <li>View
             <ul>
+              <li onclick="image_grid_toggle()" title="Toggle between single image view and image grid view">Toggle image grid view</li>
               <li onclick="leftsidebar_toggle()" title="Show or hide the sidebar shown in left hand side">Toggle left sidebar</li>
+<li onclick="toggle_img_fn_list_visibility()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle image filename list</li>
+              <li class="submenu_divider"></li>
               <li onclick="toggle_attributes_editor()" title="Show or hide a panel to update file and region attributes">Toggle attributes editor</li>
               <li onclick="toggle_annotation_editor()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle annotation editor</li>
-              <li onclick="toggle_img_fn_list_visibility()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle image filename list</li>
               <li class="submenu_divider"></li>
               <li onclick="toggle_region_boundary_visibility()" title="Show or hide the region boundaries">Show/hide region boundaries</li>
               <li onclick="toggle_region_id_visibility()" title="Show or hide the region id labels">Show/hide region labels</li>
@@ -894,11 +895,9 @@ POSSIBILITY OF SUCH DAMAGE.
       //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
     </script>
 
-    <!-- for code debugging    -->
+    <!-- for code debugging
     <script src="via.js"></script>
-    <!--    -->
-    <script src="/home/tlm/dev/vgg_software/via/docs/data/face_track_annotation/data/sherlock_ep01_tracks_FRCNN.js"></script>
-    <script src="./demo/_via_face_track_annotation_demo.js"></script>
+    -->
 
     <!--
     <script src="./demo/_via_basic_demo.js"></script>
