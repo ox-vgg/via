@@ -3485,7 +3485,7 @@ function move_to_next_image() {
       _via_show_img(next_img_index);
     } else {
       if ( _via_img_fn_list_img_index_list.length === 0 ) {
-        show_message('Filtered file list does not any files!');
+        show_message('Filtered file list does not contain any files!');
       } else {
         _via_show_img( _via_img_fn_list_img_index_list[0] );
       }
@@ -4574,13 +4574,7 @@ function delete_existing_attribute_with_confirm() {
   if ( attribute_property_id_exists(attr_id) ) {
     var config = {'title':'Delete ' + _via_attribute_being_updated + ' attribute [' + attr_id + ']' };
     var input = { 'attr_type':{'type':'text', 'name':'Attribute Type', 'value':_via_attribute_being_updated, 'disabled':true},
-                  'attr_id':{'type':'text', 'name':'Attribute Id', 'value':attr_id, 'disabled':true},
-                  'confirm':
-                  {
-                    type:'checkbox',
-                    name:'Confirm (by checking box) that you understand that deleting an attribute will delete all annotations associated with this attribute across all the files. <span class="warning">These deleted content cannot be recovered.</span>',
-                    value:false
-                  }
+                  'attr_id':{'type':'text', 'name':'Attribute Id', 'value':attr_id, 'disabled':true}
                 };
     invoke_with_user_inputs(delete_existing_attribute_confirmed, input, config);
   } else {
@@ -4590,15 +4584,11 @@ function delete_existing_attribute_with_confirm() {
 }
 
 function delete_existing_attribute_confirmed(input) {
-  if ( input.confirm.value ) {
-    var attr_type = input.attr_type.value;
-    var attr_id   = input.attr_id.value;
-    delete_existing_attribute(attr_type, attr_id);
-    document.getElementById('user_input_attribute_id').value = '';
-    show_message('Deleted ' + attr_type + ' attribute [' + attr_id + ']');
-  } else {
-    show_message('You must tick the checkbox to confirm deletion of attribute.');
-  }
+  var attr_type = input.attr_type.value;
+  var attr_id   = input.attr_id.value;
+  delete_existing_attribute(attr_type, attr_id);
+  document.getElementById('user_input_attribute_id').value = '';
+  show_message('Deleted ' + attr_type + ' attribute [' + attr_id + ']');
   user_input_default_cancel_handler();
 }
 
@@ -4617,6 +4607,7 @@ function delete_existing_attribute(attribute_type, attribute_id) {
     }
     delete _via_attributes[attribute_type][attribute_id];
     update_attributes_update_panel();
+    update_annotation_editor();
   }
 }
 
@@ -4671,15 +4662,9 @@ function update_attribute_option_id_with_confirm(attr_type, attr_id, option_id, 
 
   if ( is_delete ) {
     input['option_id'] = {'type':'text', 'name':'Attribute Option', 'value':option_id, 'disabled':true};
-    input['confirm'] = {'type':'checkbox',
-                        'name':'Confirm (by checking box) that you understand the following: Deleting an option in ' + attr_type + ' attribute will delete all annotations with this option. <span class="warning">WARNING: this process cannot be undone.</span>',
-                        'value':false};
   } else {
     input['option_id']     = {'type':'text', 'name':'Attribute Option (old)', 'value':option_id, 'disabled':true},
     input['new_option_id'] = {'type':'text', 'name':'Attribute Option (new)', 'value':new_option_id, 'disabled':true};
-    input['confirm'] = {'type':'checkbox',
-                        'name':'Confirm (by checking box) that you understand the following: Renaming an option in ' + attr_type + ' attribute will rename all annotations with this option. <span class="warning">WARNING: this process cannot be undone.</span>',
-                        'value':false};
   }
 
   invoke_with_user_inputs(update_attribute_option_id_confirmed, input, config, update_attribute_option_id_cancel);
@@ -5979,51 +5964,63 @@ function project_file_remove_with_confirm() {
   var region_count = _via_img_metadata[img_id].regions.length;
 
   var config = {'title':'Remove File from Project' };
-  var input = { 'img_index': { type:'text', name:'File Id', value:(_via_image_index+1), disabled:true },
+  var input = { 'img_index': { type:'text', name:'File Id', value:(_via_image_index+1), disabled:true, size:8 },
                 'filename':{ type:'text', name:'Filename', value:filename, disabled:true, size:30},
-                'region_count':{ type:'text', name:'Number of regions', disabled:true, value:region_count},
-                'confirm':{ type:'checkbox', name:'Confirm (by checking box) that you understand the following: <span class="warning">Removing a file from this project will remove all the region and file annotations associated with this file.</span>', checked:false},
+                'region_count':{ type:'text', name:'Number of regions', disabled:true, value:region_count, size:8}
               };
 
   invoke_with_user_inputs(project_file_remove_confirmed, input, config);
 }
 
 function project_file_remove_confirmed(input) {
-  if ( input.confirm.value ) {
-    var img_index = input.img_index.value - 1;
-    var img_id = _via_image_id_list[img_index];
-    var filename = _via_img_metadata[img_id].filename;
+  var img_index = input.img_index.value - 1;
+  project_remove_file(img_index);
 
-    var old_via_image_id_list = _via_image_id_list.slice(0);
-    var old_via_image_filename_list = _via_image_filename_list.slice(0);
-
-    _via_image_id_list = [];
-    _via_image_filename_list = [];
-    _via_img_count = 0;
-    var i;
-    for ( i = 0; i < old_via_image_id_list.length; ++i ) {
-      var img_id_i = old_via_image_id_list[i];
-      if ( img_id_i !== img_id ) {
-        _via_image_id_list.push( img_id_i );
-        _via_image_filename_list.push( _via_img_metadata[img_id_i].filename );
-        _via_img_count += 1;
-      }
-    }
-    _via_reload_img_fn_list_table = true;
-    update_img_fn_list();
+  if ( img_index === _via_img_count ) {
     if ( _via_img_count === 0 ) {
       _via_current_image_loaded = false;
       show_home_panel();
     } else {
-      console.log(_via_image_id)
-      move_to_next_image();
+      _via_show_img(img_index - 1);
     }
-
-    delete _via_img_metadata[img_id];
-
-    show_message('Removed file [' + filename + '] from project');
+  } else {
+    _via_show_img(img_index);
   }
+  _via_reload_img_fn_list_table = true;
+  update_img_fn_list();
+  show_message('Removed file [' + filename + '] from project');
   user_input_default_cancel_handler();
+}
+
+
+function project_remove_file(img_index) {
+  if ( img_index < 0 || img_index >= _via_img_count ) {
+    console.log('project_remove_file(): invalid img_index ' + img_index);
+    return;
+  }
+  var img_id = _via_image_id_list[img_index];
+
+  // remove img_index from all array
+  // this invalidates all image_index > img_index
+  _via_image_id_list.splice( img_index, 1 );
+  _via_image_filename_list.splice( img_index, 1 );
+
+  var img_fn_list_index = _via_img_fn_list_img_index_list.indexOf(img_index);
+  if ( img_fn_list_index !== -1 ) {
+    _via_img_fn_list_img_index_list.splice( img_fn_list_index, 1 );
+  }
+
+  // clear all buffer
+  // @todo: it is wasteful to clear all the buffer instead of removing a single image
+  _via_buffer_remove_all();
+  img_fn_list_clear_css_classname('buffered');
+
+  _via_clear_reg_canvas();
+  delete _via_img_metadata[img_id];
+  delete _via_img_src[img_id];
+  delete _via_img_fileref[img_id];
+
+  _via_img_count -= 1;
 }
 
 function project_add_new_file(filename, size) {
@@ -7588,6 +7585,12 @@ function _via_show_img(img_index) {
 
   var img_id = _via_image_id_list[img_index];
 
+  if ( ! _via_img_metadata.hasOwnProperty(img_id) ) {
+    console.log('_via_show_img(): [' + img_index + '] ' + img_id + ' does not exist!')
+    show_message('The requested image does not exist!')
+    return;
+  }
+
   // file_resolve() is not necessary for files selected using browser's file selector
   if ( typeof(_via_img_fileref[img_id]) === 'undefined' || ! _via_img_fileref[img_id] instanceof File ) {
     // try preload from local file or url
@@ -7933,17 +7936,27 @@ function _via_buffer_remove( buffer_index ) {
   var bimg_html_id = _via_img_buffer_get_html_id(img_index);
   var bimg = document.getElementById(bimg_html_id);
   if ( bimg ) {
-    if ( bimg.classList.contains('visible') ) {
-      // safety check: never remove visible elements
-      return;
-    } else {
-      _via_buffer_img_index_list.splice(buffer_index, 1);
-      _via_buffer_img_shown_timestamp.splice(buffer_index, 1);
-      _via_img_panel.removeChild(bimg);
+    _via_buffer_img_index_list.splice(buffer_index, 1);
+    _via_buffer_img_shown_timestamp.splice(buffer_index, 1);
+    _via_img_panel.removeChild(bimg);
 
-      img_fn_list_ith_entry_remove_css_class(img_index, 'buffered')
+    img_fn_list_ith_entry_remove_css_class(img_index, 'buffered')
+  }
+}
+
+function _via_buffer_remove_all() {
+  var i, n;
+  n = _via_buffer_img_index_list.length;
+  for ( i = 0 ; i < n; ++i ) {
+    var img_index = _via_buffer_img_index_list[i];
+    var bimg_html_id = _via_img_buffer_get_html_id(img_index);
+    var bimg = document.getElementById(bimg_html_id);
+    if ( bimg ) {
+      _via_img_panel.removeChild(bimg);
     }
   }
+  _via_buffer_img_index_list = [];
+  _via_buffer_img_shown_timestamp = [];
 }
 
 function _via_buffer_get_oldest_in_list(not_in_preload_list) {
