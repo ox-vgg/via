@@ -5001,6 +5001,7 @@ function toggle_annotation_editor() {
     p.style.height = _via_settings.ui.annotation_editor_height + '%';
     p.style.fontSize = _via_settings.ui.annotation_editor_fontsize + 'rem';
     update_annotation_editor();
+    update_vertical_space();
   }
 }
 
@@ -5165,10 +5166,14 @@ function annotation_editor_get_metadata_row_html(row_id) {
       case 'region':
         if ( _via_img_metadata[_via_image_id].regions[row_id].region_attributes.hasOwnProperty(attr_id) ) {
           attr_value = _via_img_metadata[_via_image_id].regions[row_id].region_attributes[attr_id];
+        } else {
+          attr_placeholder = 'not defined yet!';
         }
       case 'file':
         if ( _via_img_metadata[_via_image_id].file_attributes.hasOwnProperty(attr_id) ) {
           attr_value = _via_img_metadata[_via_image_id].file_attributes[attr_id];
+        } else {
+          attr_placeholder = 'not defined yet!';
         }
       }
     }
@@ -5519,8 +5524,10 @@ function annotation_editor_on_metadata_update(p) {
   var img_id    = _via_image_id;
 
   var img_index_list = [ _via_image_index ];
+  var region_id = pid.row_id;
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
     img_index_list = _via_image_grid_img_index_list.slice(0);
+    region_id = -1; // this flag denotes that we want to update all regions
   }
 
   if ( _via_metadata_being_updated === 'file' ) {
@@ -5533,7 +5540,7 @@ function annotation_editor_on_metadata_update(p) {
   }
 
   if ( _via_metadata_being_updated === 'region' ) {
-    annotation_editor_update_region_metadata(img_index_list, pid.attr_id, p.value, p.checked).then( function(update_count) {
+    annotation_editor_update_region_metadata(img_index_list, region_id, pid.attr_id, p.value, p.checked).then( function(update_count) {
       annotation_editor_on_metadata_update_done('region', pid.attr_id, update_count);
     }, function(err) {
       show_message('Failed to update region attributes! ');
@@ -5603,41 +5610,77 @@ function annotation_editor_update_file_metadata(img_index_list, attr_id, new_val
   });
 }
 
-function annotation_editor_update_region_metadata(img_index_list, attr_id, new_value, new_checked) {
+function annotation_editor_update_region_metadata(img_index_list, region_id, attr_id, new_value, new_checked) {
   return new Promise( function(ok_callback, err_callback) {
     var i, n, img_id, img_index;
     n = img_index_list.length;
     var update_count = 0;
+    var region_list = [];
     var j, m;
-    for ( i = 0; i < n; ++i ) {
-      img_index = img_index_list[i];
-      img_id = _via_image_id_list[img_index];
 
-      m = _via_img_metadata[img_id].regions.length;
-      for ( j = 0; j < m; ++j ) {
-        if ( ! image_grid_is_region_in_current_group( _via_img_metadata[img_id].regions[j].region_attributes ) ) {
-          continue;
+    if ( region_id === -1 ) {
+      // update all regions on a file (for image grid view)
+      for ( i = 0; i < n; ++i ) {
+        img_index = img_index_list[i];
+        img_id = _via_image_id_list[img_index];
+
+        m = _via_img_metadata[img_id].regions.length;
+        for ( j = 0; j < m; ++j ) {
+          if ( ! image_grid_is_region_in_current_group( _via_img_metadata[img_id].regions[j].region_attributes ) ) {
+            continue;
+          }
+
+          switch( _via_attributes['region'][attr_id].type ) {
+          case 'text':  // fallback
+          case 'dropdown': // fallback
+          case 'radio': // fallback
+          case 'image':
+            _via_img_metadata[img_id].regions[j].region_attributes[attr_id] = new_value;
+            update_count += 1;
+            break;
+          case 'checkbox':
+            var option_id = new_value;
+            if ( ! _via_img_metadata[img_id].regions[j].region_attributes.hasOwnProperty(attr_id) ) {
+              _via_img_metadata[img_id].regions[j].region_attributes[attr_id] = {};
+            }
+
+            if ( new_checked ) {
+              _via_img_metadata[img_id].regions[j].region_attributes[attr_id][option_id] = true;
+            } else {
+              // false option values are not stored
+              delete _via_img_metadata[img_id].regions[j].region_attributes[attr_id][option_id];
+            }
+            update_count += 1;
+            break;
+          }
         }
+      }
+    } else {
+      // update a single region in a file (for single image view)
+      // update all regions on a file (for image grid view)
+      for ( i = 0; i < n; ++i ) {
+        img_index = img_index_list[i];
+        img_id = _via_image_id_list[img_index];
 
-        switch(  _via_attributes['region'][attr_id].type ) {
+        switch( _via_attributes['region'][attr_id].type ) {
         case 'text':  // fallback
         case 'dropdown': // fallback
         case 'radio': // fallback
         case 'image':
-          _via_img_metadata[img_id].regions[j].region_attributes[attr_id] = new_value;
+          _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id] = new_value;
           update_count += 1;
           break;
         case 'checkbox':
           var option_id = new_value;
-          if ( ! _via_img_metadata[img_id].regions[j].region_attributes.hasOwnProperty(attr_id) ) {
-            _via_img_metadata[img_id].regions[j].region_attributes[attr_id] = {};
+          if ( ! _via_img_metadata[img_id].regions[region_id].region_attributes.hasOwnProperty(attr_id) ) {
+            _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id] = {};
           }
 
           if ( new_checked ) {
-            _via_img_metadata[img_id].regions[j].region_attributes[attr_id][option_id] = true;
+            _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id][option_id] = true;
           } else {
             // false option values are not stored
-            delete _via_img_metadata[img_id].regions[j].region_attributes[attr_id][option_id];
+            delete _via_img_metadata[img_id].regions[region_id].region_attributes[attr_id][option_id];
           }
           update_count += 1;
           break;

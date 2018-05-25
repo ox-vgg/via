@@ -12,3 +12,17 @@ If you have cited VIA in your work (research paper, blog, report, presentation, 
 > The VIA tool saves the annotations in a JSON file, and each mask is a set of polygon points. I didn’t find documentation for the format, but it’s pretty easy to figure out by looking at the generated JSON.
 
 * Dondi, C. (2017) [15cBOOKTRADE Project: An evidence-based assessment and visualisation of the distribution, sale, and reception of books in the Renaissance](https://www.cerl.org/_media/services/seminars/dondi_yale_2017_revised.pdf). Accessed: 14 May 2018.
+
+* https://stackoverflow.com/questions/8317787/image-labelling-and-annotation-tool/43208409#43208409
+
+> I just wanted to congratulate you for the great work on this annotation tool. I absolutely love it! Thanks! – Darien Pardinas Jul 26 at 0:17 
+
+* https://gitlab.com/vgg/via/issues/99
+
+> Thank for very much for this wonderful tool
+
+* Email from Mark Mazumder <mazumder@csail.mit.edu> on 29 Aug. 2017
+
+> Thanks for developing and supporting VIA, it's the best labeling tool I've used, and several people on my team have concurred after I suggested they try it! 
+
+
