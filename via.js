@@ -6512,6 +6512,7 @@ function image_grid_set_content(img_index_list) {
   _via_image_grid_page_first_index    = 0;
   _via_image_grid_page_last_index     = null;
   _via_image_grid_stack_prev_page     = [];
+  _via_image_grid_page_img_index_list = [];
 
   image_grid_clear_content();
   image_grid_set_content_panel_height_fixed();
