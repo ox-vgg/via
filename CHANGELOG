@@ -1,4 +1,4 @@
-## [2.0.0] - Not release yet!
+## [2.0.0] - July 15, 2018
  * rectangles can now be resized from edges (issue 120)
  * added POLYLINE shape
    - polygon region shape coordinates set does not end with the first coordinate (closed loop is defined by the shape: polygon, polyline)
@@ -44,8 +44,9 @@
    - when region is selected, mouse wheel can be used to change the region label
    - center of circle and ellipse shapes remain fixed to mousedown location (major issue in 1.0.x versions)
  * updated regression test cases
+ * polygon vertex can be added and removed (issue 134)
 
-## [1.0.5] - January 16, 2017
+## [1.0.5] - January 16, 2018
  * (code contributions from Stefan Mihaila) via.js codebase improvement, wider web browser support (IE 10, IE 11 and Opera 12)
  * added Contributors.md file to record contributions to VIA codebase
  * removed 'localStorage.clear()' to avoid SecurityError in Safari browser (issue 85 and 108)

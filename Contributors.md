@@ -3,6 +3,11 @@ We welcome all forms of contributions (code update, documentation, etc) from use
 These contributions must adhere to the existing [license](LICENSE) of VIA project.
 Here is the list of current contributions to VIA project.
 
+* Testers of via-2.0.0 preview version (https://gitlab.com/vgg/via/issues/135, May 18, 2018)
+  * Carlos Ricolfe Viala
+  * Kai Han
+  * Ankush Gupta
+
 * Stefan Mihaila (@smihaila, 01 Feb. 2018, updates to via-1.0.5)
   01. a patch from Stefan Mihaila which requires polygon shape to have at least 3 points.
 

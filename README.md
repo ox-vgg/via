@@ -20,7 +20,7 @@ Visit the [VGG software page](http://www.robots.ox.ac.uk/~vgg/software/via/) for
 See http://www.robots.ox.ac.uk/~vgg/software/via/
 
 ## Docs
- * User Guide : this can be accessed by pressing F1 key in the VIA application.
+ * User Guide : this can be accessed from the menubar "Help -> Getting Started"
  * [VIA Software page @ VGG](http://www.robots.ox.ac.uk/~vgg/software/via/)
  * [VIA Wikipedia page](https://en.wikipedia.org/wiki/VGG_Image_Annotator)
 
