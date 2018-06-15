@@ -8577,3 +8577,16 @@ function generate_img_index_list(input) {
   var intersect = array_intersect(all_img_index_list);
   return intersect;
 }
+
+// warn user of possible loss of data
+window.onbeforeunload = function (e) {
+    e = e || window.event;
+
+    // For IE and Firefox prior to version 4
+    if (e) {
+        e.returnValue = 'Did you save your data?';
+    }
+
+    // For Safari
+    return 'Did you save your data?';
+};
