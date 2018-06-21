@@ -3756,11 +3756,13 @@ _via_reg_canvas.addEventListener('wheel', function(e) {
       region_label_update(-1);
     }
   } else {
-    // perform zoom
-    if (e.deltaY < 0) {
-      zoom_in();
-    } else {
-      zoom_out();
+    if ( e.ctrlKey ) {
+      // perform zoom
+      if (e.deltaY < 0) {
+        zoom_in();
+      } else {
+        zoom_out();
+      }
     }
   }
 });
