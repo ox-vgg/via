@@ -2653,6 +2653,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
           annotation_editor_clear_row_highlight();
           annotation_editor_highlight_row( new_region_id );
           select_only_region(new_region_id);
+
         }
       }
       _via_redraw_reg_canvas();
@@ -6142,11 +6143,20 @@ function annotation_editor_add_row(row_id) {
     }
   }
 }
-
+function row_click_handler(e)
+{
+  var id = e.target.id;
+  var row_id = id.slice(-1);
+  console.log(row_id);
+  select_only_region(row_id);
+  _via_redraw_reg_canvas();
+}
 function annotation_editor_get_metadata_row_html(row_id) {
   var row = document.createElement('div');
   row.setAttribute('class', 'row');
   row.setAttribute('id', 'ae_' + _via_metadata_being_updated + '_' + row_id);
+  // row.setAttribute('onclick', 'select_only_region('+row_id+')');
+  row.addEventListener('click', row_click_handler);
 
   if ( _via_metadata_being_updated === 'region' ) {
     var rid = document.createElement('span');
