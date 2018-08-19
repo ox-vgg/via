@@ -6146,8 +6146,7 @@ function annotation_editor_add_row(row_id) {
 function row_click_handler(e)
 {
   var id = e.target.id;
-  var row_id = id.slice(-1);
-  console.log(row_id);
+  var row_id = id.slice(id.search("[0-9]"));
   select_only_region(row_id);
   _via_redraw_reg_canvas();
 }
