@@ -9461,7 +9461,6 @@ function generate_img_index_list(input) {
     all_img_index_list.push(expr_img_index_list);
   }
 
-  // add tests
   // condition: regular expression
   var regex_img_index_list = [];
   if ( input.regex.value !== '' ) {
@@ -9480,6 +9479,7 @@ function generate_img_index_list(input) {
   var intersect = array_intersect(all_img_index_list);
   return intersect;
 }
+// add tests test
 
 // warn user of possible loss of data
 window.onbeforeunload = function (e) {
