@@ -6136,7 +6136,7 @@ function project_file_remove_confirmed(input) {
   }
   _via_reload_img_fn_list_table = true;
   update_img_fn_list();
-  show_message('Removed file [' + filename + '] from project');
+  show_message('Removed file [' + input.filename.value + '] from project');
   user_input_default_cancel_handler();
 }
 
