@@ -1,7 +1,9 @@
 ## [2.0.1] - not released yet
- * clicking or selecting a row in annotation editor (at bottom) should select the corresponding region.
+ * clicking or selecting a row in annotation editor (at bottom) should select the corresponding region. (issue 137)
  * converted svg logo to use standard font
  * zoom is enabled with [Ctrl] + mouse wheel (issue 143)
+ * fixed polygon first vertex resize issue (issue 146)
+ * annotations overlaid on image can now be downloaded as an image (issue 24)
  * bounding boxes can now be drawn using touchscreen in mobile devices ** @todo **
  * video annotation ** @todo **
  * save image and annotations as JPG ** @todo **
