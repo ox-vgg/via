@@ -435,6 +435,7 @@
               <li onclick="sel_local_data_file('annotations')" title="Import annotations from a JSON file">Import Annotations (from json)</li>
               <li class="submenu_divider"></li>
               <li onclick="show_annotation_data()" title="Show a preview of annotations (opens in a new browser windows)">Preview Annotations</li>
+              <li onclick="download_as_image()" title="Download an image containing the annotations">Download as Image</li>
             </ul>
           </li>
 
@@ -592,7 +593,7 @@
               <td>Zoom in/out/reset</td>
             </tr>
             <tr>
-              <td>Mouse wheel</td>
+              <td>Ctrl + Mouse wheel</td>
               <td>Zoom or change region label</td>
             </tr>
             <tr>
@@ -846,7 +847,7 @@
             </a>
           </div>
 
-          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.0</a></p>
+          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.1</a></p>
           <p>VGG Image Annotator (VIA) is an image annotation tool that can be used to define regions in an image and create textual descriptions of those regions. VIA is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.</p>
           <p>Here is a list of some salient features of VIA:
             <ul>
@@ -1037,7 +1038,7 @@ _via_basic_demo_img.push('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/4QD
 
 "use strict";
 
-var VIA_VERSION      = '2.0.0';
+var VIA_VERSION      = '2.0.1';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -1299,6 +1300,9 @@ function _via_init() {
   // initialize default project
   project_init_default_project();
 
+  // handles drawing of regions by user over the image
+  init_reg_canvas_handlers();
+
   // initialize image grid
   image_grid_init();
 
@@ -1317,6 +1321,68 @@ function _via_init() {
     }, 100);
   }
 
+}
+
+// handles drawing of regions over image by the user
+function init_reg_canvas_handlers() {
+  _via_reg_canvas.addEventListener('dblclick', _via_reg_canvas_dblclick_handler, false);
+  _via_reg_canvas.addEventListener('mousedown', _via_reg_canvas_mousedown_handler, false);
+  _via_reg_canvas.addEventListener('mouseup', _via_reg_canvas_mouseup_handler, false);
+  _via_reg_canvas.addEventListener('mouseover', _via_reg_canvas_mouseover_handler, false);
+  _via_reg_canvas.addEventListener('mousemove', _via_reg_canvas_mousemove_handler, false);
+
+  // touch screen event handlers
+  // @todo: adapt for mobile users
+  _via_reg_canvas.addEventListener('touchstart', _via_reg_canvas_mousedown_handler, false);
+  _via_reg_canvas.addEventListener('touchend', _via_reg_canvas_mouseup_handler, false);
+  _via_reg_canvas.addEventListener('touchmove', _via_reg_canvas_mousemove_handler, false);
+}
+
+//
+// Download image with annotations
+//
+
+function download_as_image() {
+  if ( _via_display_area_content_name !== VIA_DISPLAY_AREA_CONTENT_NAME['IMAGE'] ) {
+    show_message('This functionality is only available in single image view mode');
+    return;
+  } else {
+    var c = document.createElement('canvas');
+    c.width  = _via_current_image_width;
+    c.height = _via_current_image_height;
+
+    var ct = c.getContext('2d');
+    // draw current image
+    ct.drawImage(_via_current_image, 0, 0);
+    // draw current regions
+    ct.drawImage(_via_reg_canvas, 0, 0);
+
+    var cur_img_mime = 'image/jpeg';
+    if ( _via_current_image.src.startsWith('data:') )  {
+      var c1 = _via_current_image.src.indexOf(':', 0);
+      var c2 = _via_current_image.src.indexOf(';', c1);
+      cur_img_mime = _via_current_image.src.substring(c1 + 1, c2);
+    }
+
+    // extract image data from canvas
+    var saved_img = c.toDataURL(cur_img_mime);
+    saved_img.replace(cur_img_mime, "image/octet-stream");
+
+    // simulate user click to trigger download of image
+    var a      = document.createElement('a');
+    a.href     = saved_img;
+    a.target   = '_blank';
+    a.download = _via_current_image_filename;
+
+    // simulate a mouse click event
+    var event = new MouseEvent('click', {
+      view: window,
+      bubbles: true,
+      cancelable: true
+    });
+
+    a.dispatchEvent(event);
+  }
 }
 
 //
@@ -2208,7 +2274,7 @@ function show_annotation_data() {
 //
 
 // enter annotation mode on double click
-_via_reg_canvas.addEventListener('dblclick', function(e) {
+function _via_reg_canvas_dblclick_handler(e) {
   e.stopPropagation();
   _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
   var region_id = is_inside_region(_via_click_x0, _via_click_y0);
@@ -2249,10 +2315,10 @@ _via_reg_canvas.addEventListener('dblclick', function(e) {
     _via_reg_canvas.focus();
     return;
   }
-}, false);
+}
 
 // user clicks on the canvas
-_via_reg_canvas.addEventListener('mousedown', function(e) {
+function _via_reg_canvas_mousedown_handler(e) {
   e.stopPropagation();
   _via_click_x0 = e.offsetX; _via_click_y0 = e.offsetY;
   _via_region_edge = is_on_region_corner(_via_click_x0, _via_click_y0);
@@ -2303,12 +2369,12 @@ _via_reg_canvas.addEventListener('mousedown', function(e) {
       _via_is_user_drawing_region = true;
     }
   }
-}, false);
+}
 
 // implements the following functionalities:
 //  - new region drawing (including polygon)
 //  - moving/resizing/select/unselect existing region
-_via_reg_canvas.addEventListener('mouseup', function(e) {
+function _via_reg_canvas_mouseup_handler(e) {
   e.stopPropagation();
   _via_click_x1 = e.offsetX; _via_click_y1 = e.offsetY;
 
@@ -2517,19 +2583,9 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         image_attr['all_points_y'][moved_vertex_id] = imy;
         canvas_attr['all_points_x'][moved_vertex_id] = Math.round( imx / _via_canvas_scale );
         canvas_attr['all_points_y'][moved_vertex_id] = Math.round( imy / _via_canvas_scale );
-
-        if (moved_vertex_id === 0 && canvas_attr['name'] === VIA_REGION_SHAPE.POLYGON) {
-          // move both first and last vertex because we
-          // the initial point at the end to close path
-          var n = canvas_attr['all_points_x'].length;
-          image_attr['all_points_x'][n-1] = imx;
-          image_attr['all_points_y'][n-1] = imy;
-          canvas_attr['all_points_x'][n-1] = Math.round( imx / _via_canvas_scale );
-          canvas_attr['all_points_y'][n-1] = Math.round( imy / _via_canvas_scale );
-        }
-        break;
       }
-    }
+      break;
+    } // end of switch()
     _via_redraw_reg_canvas();
     _via_reg_canvas.focus();
     return;
@@ -2742,15 +2798,15 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
     }
     return;
   }
-});
+}
 
-_via_reg_canvas.addEventListener("mouseover", function(e) {
+function _via_reg_canvas_mouseover_handler(e) {
   // change the mouse cursor icon
   _via_redraw_reg_canvas();
   _via_reg_canvas.focus();
-});
+}
 
-_via_reg_canvas.addEventListener('mousemove', function(e) {
+function _via_reg_canvas_mousemove_handler(e) {
   if ( !_via_current_image_loaded ) {
     return;
   }
@@ -3033,7 +3089,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
     var line_y = [all_points_y.slice(npts-1), _via_current_y];
     _via_draw_polygon_region(line_x, line_y, false, attr['name']);
   }
-});
+}
 
 function _via_move_selected_regions(move_x, move_y) {
   var i, n;
@@ -4728,7 +4784,6 @@ _via_reg_canvas.addEventListener('wheel', function(e) {
   if (!_via_current_image_loaded) {
     return;
   }
-  e.preventDefault();
 
   if ( _via_is_region_selected || _via_is_all_region_selected ) {
     // move through region label selection
@@ -4737,12 +4792,16 @@ _via_reg_canvas.addEventListener('wheel', function(e) {
     } else {
       region_label_update(-1);
     }
+    e.preventDefault();
   } else {
-    // perform zoom
-    if (e.deltaY < 0) {
-      zoom_in();
-    } else {
-      zoom_out();
+    if ( e.ctrlKey ) {
+      // perform zoom
+      if (e.deltaY < 0) {
+        zoom_in();
+      } else {
+        zoom_out();
+      }
+      e.preventDefault();
     }
   }
 });
@@ -6364,6 +6423,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
     case 'text':
       col.innerHTML = '<textarea ' +
         'onchange="annotation_editor_on_metadata_update(this)" ' +
+        'onfocus="annotation_editor_on_metadata_focus(this)" ' +
         'title="' + attr_desc + '" ' +
         'placeholder="' + attr_placeholder + '" ' +
         'id="' + attr_html_id + '">' + attr_value + '</textarea>';
@@ -6377,6 +6437,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
         option.setAttribute('type', 'checkbox');
         option.setAttribute('value', option_id);
         option.setAttribute('id', option_html_id);
+        option.setAttribute('onfocus', 'annotation_editor_on_metadata_focus(this)');
         option.setAttribute('onchange', 'annotation_editor_on_metadata_update(this)');
 
         var option_desc  = _via_attributes[_via_metadata_being_updated][attr_id].options[option_id];
@@ -6411,6 +6472,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
         option.setAttribute('name', attr_html_id);
         option.setAttribute('value', option_id);
         option.setAttribute('id', option_html_id);
+        option.setAttribute('onfocus', 'annotation_editor_on_metadata_focus(this)');
         option.setAttribute('onchange', 'annotation_editor_on_metadata_update(this)');
 
         var option_desc  = _via_attributes[_via_metadata_being_updated][attr_id].options[option_id];
@@ -6451,6 +6513,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
         option.setAttribute('name', attr_html_id);
         option.setAttribute('value', option_id);
         option.setAttribute('id', option_html_id);
+        option.setAttribute('onfocus', 'annotation_editor_on_metadata_focus(this)');
         option.setAttribute('onchange', 'annotation_editor_on_metadata_update(this)');
 
         var option_desc  = _via_attributes[_via_metadata_being_updated][attr_id].options[option_id];
@@ -6477,6 +6540,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
     case 'dropdown':
       var sel = document.createElement('select');
       sel.setAttribute('id', attr_html_id);
+      sel.setAttribute('onfocus', 'annotation_editor_on_metadata_focus(this)');
       sel.setAttribute('onchange', 'annotation_editor_on_metadata_update(this)');
       var option_id;
       var option_selected = false;
@@ -6629,6 +6693,20 @@ function _via_get_region_metadata_stat(img_index_list, attr_id) {
   return stat;
 }
 
+// invoked when the input entry in annotation editor receives focus
+function annotation_editor_on_metadata_focus(p) {
+  var pid       = annotation_editor_extract_html_id_components(p.id);
+  var region_id = pid.row_id;
+  // clear existing highlights (if any)
+  toggle_all_regions_selection(false);
+  annotation_editor_clear_row_highlight();
+  // set new selection highlights
+  set_region_select_state(region_id, true);
+  annotation_editor_scroll_to_row(region_id);
+  annotation_editor_highlight_row(region_id);
+
+  _via_redraw_reg_canvas();
+}
 
 // invoked when the user updates annotations using the annotation editor
 function annotation_editor_on_metadata_update(p) {
@@ -7116,7 +7194,7 @@ function project_file_remove_confirmed(input) {
   }
   _via_reload_img_fn_list_table = true;
   update_img_fn_list();
-  show_message('Removed file [' + filename + '] from project');
+  show_message('Removed file [' + input.filename.value + '] from project');
   user_input_default_cancel_handler();
 }
 

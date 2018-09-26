@@ -3,7 +3,7 @@ We welcome all forms of contributions (code update, documentation, etc) from use
 These contributions must adhere to the existing [license](LICENSE) of VIA project.
 Here is the list of current contributions to VIA project.
 
-* Chiu Yue Chun (https://gitlab.com/vgg/via/merge_requests/7, 06 Sep. 2018)
+* Chiu Yue Chun in via-2.0.1 (https://gitlab.com/vgg/via/merge_requests/7, 06 Sep. 2018)
  * fixed display message when an image is removed from VIA project (https://gitlab.com/vgg/via/commit/7b1d4ec02bb4d4bade045c7b0931c389bafb5159)
 
 

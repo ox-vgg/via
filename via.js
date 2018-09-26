@@ -3801,7 +3801,6 @@ _via_reg_canvas.addEventListener('wheel', function(e) {
   if (!_via_current_image_loaded) {
     return;
   }
-  e.preventDefault();
 
   if ( _via_is_region_selected || _via_is_all_region_selected ) {
     // move through region label selection
@@ -3810,6 +3809,7 @@ _via_reg_canvas.addEventListener('wheel', function(e) {
     } else {
       region_label_update(-1);
     }
+    e.preventDefault();
   } else {
     if ( e.ctrlKey ) {
       // perform zoom
@@ -3818,6 +3818,7 @@ _via_reg_canvas.addEventListener('wheel', function(e) {
       } else {
         zoom_out();
       }
+      e.preventDefault();
     }
   }
 });

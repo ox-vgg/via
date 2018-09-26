@@ -1,15 +1,17 @@
-## [2.0.1] - not released yet
+## [2.0.2] - not released yet
+ * bounding boxes can now be drawn using touchscreen in mobile devices ** @todo **
+ * video annotation ** @todo **
+ * magnifying glass based image zoom ** @todo **
+ * settings for label width, region shape style, etc ** @todo **
+
+## [2.0.1] - September 26, 2018
  * clicking or selecting a row in annotation editor (at bottom) should select the corresponding region. (issue 137)
  * converted svg logo to use standard font
  * zoom is enabled with [Ctrl] + mouse wheel (issue 143)
  * fixed polygon first vertex resize issue (issue 146)
- * annotations overlaid on image can now be downloaded as an image (issue 24)
- * bounding boxes can now be drawn using touchscreen in mobile devices ** @todo **
- * video annotation ** @todo **
- * save image and annotations as JPG ** @todo **
- * magnifying glass based image zoom ** @todo **
- * settings for label width, region shape style, etc ** @todo **
+ * annotations overlaid on image can now be downloaded as an image (issue 24); does not work with images added as URL (browser security)
  * import annotations: handle entries for which file_size = -1 (i.e. unknown)
+ * When zoom is active, Shift + mouse wheel moves horizontal scroll bar
 
 ## [2.0.0] - July 15, 2018
  * rectangles can now be resized from edges (issue 120)
