@@ -1535,19 +1535,9 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         image_attr['all_points_y'][moved_vertex_id] = imy;
         canvas_attr['all_points_x'][moved_vertex_id] = Math.round( imx / _via_canvas_scale );
         canvas_attr['all_points_y'][moved_vertex_id] = Math.round( imy / _via_canvas_scale );
-
-        if (moved_vertex_id === 0 && canvas_attr['name'] === VIA_REGION_SHAPE.POLYGON) {
-          // move both first and last vertex because we
-          // the initial point at the end to close path
-          var n = canvas_attr['all_points_x'].length;
-          image_attr['all_points_x'][n-1] = imx;
-          image_attr['all_points_y'][n-1] = imy;
-          canvas_attr['all_points_x'][n-1] = Math.round( imx / _via_canvas_scale );
-          canvas_attr['all_points_y'][n-1] = Math.round( imy / _via_canvas_scale );
-        }
-        break;
       }
-    }
+      break;
+    } // end of switch()
     _via_redraw_reg_canvas();
     _via_reg_canvas.focus();
     return;
@@ -5384,6 +5374,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
     case 'text':
       col.innerHTML = '<textarea ' +
         'onchange="annotation_editor_on_metadata_update(this)" ' +
+        'onfocus="annotation_editor_on_metadata_focus(this)" ' +
         'title="' + attr_desc + '" ' +
         'placeholder="' + attr_placeholder + '" ' +
         'id="' + attr_html_id + '">' + attr_value + '</textarea>';
@@ -5397,6 +5388,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
         option.setAttribute('type', 'checkbox');
         option.setAttribute('value', option_id);
         option.setAttribute('id', option_html_id);
+        option.setAttribute('onfocus', 'annotation_editor_on_metadata_focus(this)');
         option.setAttribute('onchange', 'annotation_editor_on_metadata_update(this)');
 
         var option_desc  = _via_attributes[_via_metadata_being_updated][attr_id].options[option_id];
@@ -5431,6 +5423,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
         option.setAttribute('name', attr_html_id);
         option.setAttribute('value', option_id);
         option.setAttribute('id', option_html_id);
+        option.setAttribute('onfocus', 'annotation_editor_on_metadata_focus(this)');
         option.setAttribute('onchange', 'annotation_editor_on_metadata_update(this)');
 
         var option_desc  = _via_attributes[_via_metadata_being_updated][attr_id].options[option_id];
@@ -5471,6 +5464,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
         option.setAttribute('name', attr_html_id);
         option.setAttribute('value', option_id);
         option.setAttribute('id', option_html_id);
+        option.setAttribute('onfocus', 'annotation_editor_on_metadata_focus(this)');
         option.setAttribute('onchange', 'annotation_editor_on_metadata_update(this)');
 
         var option_desc  = _via_attributes[_via_metadata_being_updated][attr_id].options[option_id];
@@ -5497,6 +5491,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
     case 'dropdown':
       var sel = document.createElement('select');
       sel.setAttribute('id', attr_html_id);
+      sel.setAttribute('onfocus', 'annotation_editor_on_metadata_focus(this)');
       sel.setAttribute('onchange', 'annotation_editor_on_metadata_update(this)');
       var option_id;
       var option_selected = false;
@@ -5649,6 +5644,20 @@ function _via_get_region_metadata_stat(img_index_list, attr_id) {
   return stat;
 }
 
+// invoked when the input entry in annotation editor receives focus
+function annotation_editor_on_metadata_focus(p) {
+  var pid       = annotation_editor_extract_html_id_components(p.id);
+  var region_id = pid.row_id;
+  // clear existing highlights (if any)
+  toggle_all_regions_selection(false);
+  annotation_editor_clear_row_highlight();
+  // set new selection highlights
+  set_region_select_state(region_id, true);
+  annotation_editor_scroll_to_row(region_id);
+  annotation_editor_highlight_row(region_id);
+
+  _via_redraw_reg_canvas();
+}
 
 // invoked when the user updates annotations using the annotation editor
 function annotation_editor_on_metadata_update(p) {
