@@ -3,13 +3,19 @@ We welcome all forms of contributions (code update, documentation, etc) from use
 These contributions must adhere to the existing [license](LICENSE) of VIA project.
 Here is the list of current contributions to VIA project.
 
+* Chiu Yue Chun (https://gitlab.com/vgg/via/merge_requests/7, 06 Sep. 2018)
+ * fixed display message when an image is removed from VIA project (https://gitlab.com/vgg/via/commit/7b1d4ec02bb4d4bade045c7b0931c389bafb5159)
+
+
 * Testers of via-2.0.0 preview version (https://gitlab.com/vgg/via/issues/135, May 18, 2018)
   * Carlos Ricolfe Viala
   * Kai Han
   * Ankush Gupta
 
+
 * Stefan Mihaila (@smihaila, 01 Feb. 2018, updates to via-1.0.5)
   01. a patch from Stefan Mihaila which requires polygon shape to have at least 3 points.
+
 
 * Stefan Mihaila (@smihaila, 15 Jan. 2018, updates to via-1.0.4)
   01. Added "use strict";
