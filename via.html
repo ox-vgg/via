@@ -592,7 +592,7 @@
               <td>Zoom in/out/reset</td>
             </tr>
             <tr>
-              <td>Mouse wheel</td>
+              <td>Ctrl + Mouse wheel</td>
               <td>Zoom or change region label</td>
             </tr>
             <tr>
@@ -4658,11 +4658,14 @@ _via_reg_canvas.addEventListener('wheel', function(e) {
       region_label_update(-1);
     }
   } else {
-    // perform zoom
-    if (e.deltaY < 0) {
-      zoom_in();
-    } else {
-      zoom_out();
+    if ( e.ctrlKey ) {
+      // perform zoom
+      if (e.deltaY < 0) {
+        zoom_in();
+      } else {
+        zoom_out();
+      }
+      e.preventDefault();
     }
   }
 });

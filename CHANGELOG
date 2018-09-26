@@ -1,3 +1,14 @@
+## [2.0.1] - not released yet
+ * clicking or selecting a row in annotation editor (at bottom) should select the corresponding region.
+ * converted svg logo to use standard font
+ * zoom is enabled with [Ctrl] + mouse wheel (issue 143)
+ * bounding boxes can now be drawn using touchscreen in mobile devices ** @todo **
+ * video annotation ** @todo **
+ * save image and annotations as JPG ** @todo **
+ * magnifying glass based image zoom ** @todo **
+ * settings for label width, region shape style, etc ** @todo **
+ * import annotations: handle entries for which file_size = -1 (i.e. unknown)
+
 ## [2.0.0] - July 15, 2018
  * rectangles can now be resized from edges (issue 120)
  * added POLYLINE shape
