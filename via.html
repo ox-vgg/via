@@ -98,6 +98,7 @@
       #image_panel img    { visibility:hidden; opacity:0; position:absolute; top:0px; left:0px; width:100%; height:100%; outline:none; }
       #image_panel canvas { position:absolute; top:0px; left:0px; outline:none;}
       #image_panel .visible { visibility:visible !important; opacity:1 !important; }
+      #image_panel label>img { visibility:visible; opacity:1; position:relative; width:auto; height:4em; outline:none; }
 
       /* image buffer
       #image_panel .fadein { visibility:visible; opacity:1; transition: visibility 0s linear 0s, opacity 300ms; }
@@ -180,7 +181,7 @@
 
       /* Attribute editor */
       #annotation_editor_panel { position:fixed; display:none; width:100%; left:0; bottom:0; background-color:white; border-top:2px solid #cccccc; padding:0.2em 1em; overflow:auto; z-index:1001; box-shadow: 0 0 1em #cccccc;}
-      #annotation_editor { display:table; margin-bottom:3em; border-collapse:collapse; font-size:inherit; }
+      #annotation_editor { display:table; margin-bottom:3em; border-collapse:collapse; font-size:inherit; position: absolute;}
       #annotation_editor .row { display:table-row; }
       #annotation_editor .highlight .col { background-color:#e6e6e6;}
 
@@ -2103,6 +2104,7 @@ function toggle_all_regions_selection(is_selected) {
     _via_region_selected_flag[i] = is_selected;
   }
   _via_is_all_region_selected = is_selected;
+  remove_annotation_editor_on_canvas()
 }
 function select_only_region(region_id) {
   toggle_all_regions_selection(false);
@@ -2308,6 +2310,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         update_annotation_editor();
       }
     }
+    show_annotation_editor_on_canvas(_via_user_sel_region_id) // moving
     _via_redraw_reg_canvas();
     _via_reg_canvas.focus();
     return;
@@ -2450,6 +2453,8 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         break;
       }
     }
+    select_only_region(_via_user_sel_region_id)
+    show_annotation_editor_on_canvas(_via_user_sel_region_id) // resizing
     _via_redraw_reg_canvas();
     _via_reg_canvas.focus();
     return;
@@ -2487,6 +2492,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
         }
         set_region_select_state(region_id, true);
         annotation_editor_scroll_to_row(region_id);
+        show_annotation_editor_on_canvas(region_id); // selected 
         annotation_editor_highlight_row(region_id);
         show_message('Region selected. If you intended to draw a region, click again inside the selected region to start drawing a region.')
       } else {
@@ -2530,7 +2536,7 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
             update_annotation_editor();
             break;
           }
-        }
+        }        
       }
     }
     _via_redraw_reg_canvas();
@@ -2651,8 +2657,9 @@ _via_reg_canvas.addEventListener('mouseup', function(e) {
           annotation_editor_add_row( new_region_id );
           annotation_editor_scroll_to_row( new_region_id );
           annotation_editor_clear_row_highlight();
-          annotation_editor_highlight_row( new_region_id );
           select_only_region(new_region_id);
+          show_annotation_editor_on_canvas(new_region_id); // drawing
+          annotation_editor_highlight_row( new_region_id );
         }
       }
       _via_redraw_reg_canvas();
@@ -2733,6 +2740,8 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
         }
 
       }
+    } else {
+        remove_annotation_editor_on_canvas() // resizing
     }
   }
 
@@ -2939,6 +2948,7 @@ _via_reg_canvas.addEventListener('mousemove', function(e) {
       break;
     }
     _via_reg_canvas.focus();
+    remove_annotation_editor_on_canvas() // moving
     return;
   }
 
@@ -3654,7 +3664,7 @@ function is_left(x0, y0, x1, y1, x2, y2) {
 
 function is_on_region_corner(px, py) {
   var _via_region_edge = [-1, -1]; // region_id, corner_id [top-left=1,top-right=2,bottom-right=3,bottom-left=4]
-
+  
   for ( var i = 0; i < _via_canvas_regions.length; ++i ) {
     var attr = _via_canvas_regions[i].shape_attributes;
     var result = false;
@@ -6190,7 +6200,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
       attr_desc = '';
     }
     var attr_html_id = attr_id + '__' + row_id;
-
+    
     var attr_value = '';
     var attr_placeholder = '';
     if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE ) {
@@ -6574,6 +6584,7 @@ function annotation_editor_on_metadata_update(p) {
   if ( _via_metadata_being_updated === 'region' ) {
     annotation_editor_update_region_metadata(img_index_list, region_id, pid.attr_id, p.value, p.checked).then( function(update_count) {
       annotation_editor_on_metadata_update_done('region', pid.attr_id, update_count);
+      refresh_annotation_editor_on_canvas(region_id)
     }, function(err) {
       show_message('Failed to update region attributes! ');
     });
@@ -6595,7 +6606,7 @@ function annotation_editor_on_metadata_update_done(type, attr_id, update_count) 
     }
   }
   _via_redraw_reg_canvas();
-
+  
   // @todo: it is wasteful to cancel the full set of groups.
   // we should only cancel the groups that are affected by this update.
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
@@ -9493,6 +9504,106 @@ window.onbeforeunload = function (e) {
     // For Safari
     return 'Did you save your data?';
 };
+
+// RKY ADDED 
+function refresh_annotation_editor() {  
+  toggle_annotation_editor();
+  toggle_annotation_editor();
+}
+
+function refresh_annotation_editor_on_canvas(region_id) {
+  remove_annotation_editor_on_canvas();
+  show_annotation_editor_on_canvas(region_id);
+  annotation_editor_highlight_row(region_id);
+}
+
+function remove_annotation_editor_on_canvas() {
+  var elements = document.getElementsByClassName("annotation_editor_on_canvas");
+  while(elements.length > 0){
+      elements[0].parentNode.removeChild(elements[0]);
+  }
+}
+
+function show_annotation_editor_on_canvas(region_id) {
+  refresh_annotation_editor()
+  remove_annotation_editor_on_canvas()
+  // Background is selected 
+  // Polygon or Polyline is being drawn
+  var selected_region_count = _via_region_selected_flag.filter(Boolean).length
+  if (region_id < 0 || !(region_id in _via_canvas_regions) || selected_region_count > 1) {
+    return;
+  }
+  // Copy annotation_editor
+  var region = _via_canvas_regions[region_id]['shape_attributes'];
+  var annotation_editor = document.getElementById("annotation_editor");
+  var annotation_editor_clone = annotation_editor.cloneNode(true);
+  // Place annotation_editor_clone
+  annotation_editor_clone.setAttribute('class', "annotation_editor_on_canvas");
+  var shape = region['name']
+  switch (shape) {
+    case 'rect':
+    annotation_editor_clone.style.top = region['y'] + region['height'] + "px";
+    annotation_editor_clone.style.left = region['x'] + region['width'] + "px";
+    break;
+  case 'circle':
+    annotation_editor_clone.style.top = region['cy'] + "px";
+    annotation_editor_clone.style.left = region['cx'] + region['r'] +"px";
+    break;
+  case 'ellipse':
+    annotation_editor_clone.style.top = region['cy'] + "px";
+    annotation_editor_clone.style.left = region['cx'] + region['rx'] +"px";
+    break;
+  case 'polygon':
+  case 'polyline':
+    var most_left = 
+      Object.keys(region['all_points_x']).reduce(function(a, b){ 
+        return region['all_points_x'][a] > region['all_points_x'][b] ? a : b });
+    annotation_editor_clone.style.top = Math.max(region['all_points_y'][most_left]) + "px";
+    annotation_editor_clone.style.left = Math.max(region['all_points_x'][most_left]) + "px";
+    break;
+  case 'point':
+    annotation_editor_clone.style.top = region['cy'] + "px";
+    annotation_editor_clone.style.left = region['cx'] + "px";
+    break;
+  }
+  annotation_editor_clone.style.backgroundColor = "rgba(255, 255, 255, 1)";
+  var ae_regions_clone = annotation_editor_clone.childNodes; // all ae_regions
+  for(var i = 0; i < ae_regions_clone.length-1; i++) {
+    clone_annotation_editors_change(i, ae_regions_clone[i+1])
+    if (i != region_id) { 
+      ae_regions_clone[i+1].style.display = 'none';
+    }  
+  }
+  var image_panel = document.getElementById("image_panel");
+  image_panel.appendChild(annotation_editor_clone);
+}
+
+function clone_annotation_editors_change(region_id, ae_region_clone) {
+  for ( var attr_id in _via_attributes['region'] ) {
+    var name = attr_id + '__' + region_id;
+    var clone_name = 'clone_' + name;
+    var options = _via_attributes['region'][attr_id].options;
+    var type = _via_attributes['region'][attr_id].type
+    switch(type){
+      case 'radio':
+      case 'checkbox':
+      case 'image':
+        // Change name attribute
+        for ( var option_id in options ) {
+          var id = name + '__' + option_id
+          var clone_id = 'clone_' + id
+          var input = ae_region_clone.querySelector('#'+id)
+          input.setAttribute('name', clone_name)
+        }
+        break;
+      case 'text':
+      case 'dropdown':
+      default:
+        break;
+    }
+  }
+}
+
     </script>
     <script type="text/javascript">
       //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
