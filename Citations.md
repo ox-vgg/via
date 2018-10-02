@@ -28,3 +28,8 @@ If you have cited VIA in your work (research paper, blog, report, presentation, 
 * Tweet from @datasavyguy (https://twitter.com/datasavyguy/status/1044460850931789824) on 24 Sep. 2018
 > This awesome annotations tool, my team @shell use it on daily basis, I highly recommend it.
 
+* Dr. Donald Kinghorn, Scientific Computing Advisor at Puget Systems,  29 June 2018, (https://www.pugetsystems.com/labs/hpc/Easy-Image-Bounding-Box-Annotation-with-a-Simple-Mod-to-VGG-Image-Annotator-1191/)
+> It turned out that it was difficult finding any annotation tool that could meet those requirements. I did find one that was "almost great". This post is about truning that "almost great" into "great" (for my use case).
+> With this simple modification I found I could do bounding-boxs and labels with 3 classes at a rate of 15-20 images per minute.
+> VIA 1.0.6 is contained in a single html file that does not load any external javascript libraries. It is nearly 5000 lines of mostly javascript. It did take me awhile to figure out how add the functionality that I wanted. What I did is not elegant or representative of good coding practice. It's just a simple quick "hack" to make it do what I want.
+> I'll end with a thank you to the VGG group for all of the great software they are making available to the community.
