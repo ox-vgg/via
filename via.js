@@ -1266,6 +1266,7 @@ function toggle_all_regions_selection(is_selected) {
     _via_region_selected_flag[i] = is_selected;
   }
   _via_is_all_region_selected = is_selected;
+  remove_annotation_editor_on_canvas()
 }
 function select_only_region(region_id) {
   toggle_all_regions_selection(false);
@@ -1471,6 +1472,7 @@ function _via_reg_canvas_mouseup_handler(e) {
         update_annotation_editor();
       }
     }
+    show_annotation_editor_on_canvas(_via_user_sel_region_id) // moving
     _via_redraw_reg_canvas();
     _via_reg_canvas.focus();
     return;
@@ -1640,6 +1642,7 @@ function _via_reg_canvas_mouseup_handler(e) {
         }
         set_region_select_state(region_id, true);
         annotation_editor_scroll_to_row(region_id);
+        show_annotation_editor_on_canvas(region_id); // selected 
         annotation_editor_highlight_row(region_id);
         show_message('Region selected. If you intended to draw a region, click again inside the selected region to start drawing a region.')
       } else {
@@ -1804,8 +1807,9 @@ function _via_reg_canvas_mouseup_handler(e) {
           annotation_editor_add_row( new_region_id );
           annotation_editor_scroll_to_row( new_region_id );
           annotation_editor_clear_row_highlight();
-          annotation_editor_highlight_row( new_region_id );
           select_only_region(new_region_id);
+          show_annotation_editor_on_canvas(new_region_id); // drawing
+          annotation_editor_highlight_row( new_region_id );
         }
       }
       _via_redraw_reg_canvas();
@@ -1886,6 +1890,8 @@ function _via_reg_canvas_mousemove_handler(e) {
         }
 
       }
+    } else {
+        remove_annotation_editor_on_canvas() // resizing
     }
   }
 
@@ -2092,6 +2098,7 @@ function _via_reg_canvas_mousemove_handler(e) {
       break;
     }
     _via_reg_canvas.focus();
+    remove_annotation_editor_on_canvas() // moving
     return;
   }
 
@@ -3801,6 +3808,7 @@ _via_reg_canvas.addEventListener('wheel', function(e) {
   if (!_via_current_image_loaded) {
     return;
   }
+  e.preventDefault();
 
   if ( _via_is_region_selected || _via_is_all_region_selected ) {
     // move through region label selection
@@ -5749,6 +5757,7 @@ function annotation_editor_on_metadata_update(p) {
   if ( _via_metadata_being_updated === 'region' ) {
     annotation_editor_update_region_metadata(img_index_list, region_id, pid.attr_id, p.value, p.checked).then( function(update_count) {
       annotation_editor_on_metadata_update_done('region', pid.attr_id, update_count);
+      refresh_annotation_editor_on_canvas(region_id)
     }, function(err) {
       show_message('Failed to update region attributes! ');
     });
