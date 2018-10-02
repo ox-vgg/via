@@ -55,7 +55,7 @@
 
 "use strict";
 
-var VIA_VERSION      = '2.0.1';
+var VIA_VERSION      = '2.0.2';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -1266,7 +1266,7 @@ function toggle_all_regions_selection(is_selected) {
     _via_region_selected_flag[i] = is_selected;
   }
   _via_is_all_region_selected = is_selected;
-  remove_annotation_editor_on_canvas()
+  remove_annotation_editor_on_canvas();
 }
 function select_only_region(region_id) {
   toggle_all_regions_selection(false);
@@ -1642,7 +1642,7 @@ function _via_reg_canvas_mouseup_handler(e) {
         }
         set_region_select_state(region_id, true);
         annotation_editor_scroll_to_row(region_id);
-        show_annotation_editor_on_canvas(region_id); // selected 
+        show_annotation_editor_on_canvas(region_id); // selected
         annotation_editor_highlight_row(region_id);
         show_message('Region selected. If you intended to draw a region, click again inside the selected region to start drawing a region.')
       } else {
@@ -8667,13 +8667,114 @@ function generate_img_index_list(input) {
 
 // warn user of possible loss of data
 window.onbeforeunload = function (e) {
-    e = e || window.event;
+  e = e || window.event;
 
-    // For IE and Firefox prior to version 4
-    if (e) {
-        e.returnValue = 'Did you save your data?';
-    }
+  // For IE and Firefox prior to version 4
+  if (e) {
+    e.returnValue = 'Did you save your data?';
+  }
 
-    // For Safari
-    return 'Did you save your data?';
+  // For Safari
+  return 'Did you save your data?';
 };
+
+//
+// on-image update of annotations
+//
+function refresh_annotation_editor() {
+  toggle_annotation_editor();
+  toggle_annotation_editor();
+}
+
+function refresh_annotation_editor_on_canvas(region_id) {
+  remove_annotation_editor_on_canvas();
+  show_annotation_editor_on_canvas(region_id);
+  annotation_editor_highlight_row(region_id);
+}
+
+function remove_annotation_editor_on_canvas() {
+  var elements = document.getElementsByClassName("annotation_editor_on_canvas");
+  while(elements.length > 0){
+      elements[0].parentNode.removeChild(elements[0]);
+  }
+}
+
+function show_annotation_editor_on_canvas(region_id) {
+  refresh_annotation_editor()
+  remove_annotation_editor_on_canvas()
+  // Background is selected
+  // Polygon or Polyline is being drawn
+  var selected_region_count = _via_region_selected_flag.filter(Boolean).length
+  if (region_id < 0 || !(region_id in _via_canvas_regions) || selected_region_count > 1) {
+    return;
+  }
+  // Copy annotation_editor
+  var region = _via_canvas_regions[region_id]['shape_attributes'];
+  var annotation_editor = document.getElementById("annotation_editor");
+  var annotation_editor_clone = annotation_editor.cloneNode(true);
+  // Place annotation_editor_clone
+  annotation_editor_clone.setAttribute('class', "annotation_editor_on_canvas");
+  var shape = region['name']
+  switch (shape) {
+    case 'rect':
+    annotation_editor_clone.style.top = region['y'] + region['height'] + "px";
+    annotation_editor_clone.style.left = region['x'] + region['width'] + "px";
+    break;
+  case 'circle':
+    annotation_editor_clone.style.top = region['cy'] + "px";
+    annotation_editor_clone.style.left = region['cx'] + region['r'] +"px";
+    break;
+  case 'ellipse':
+    annotation_editor_clone.style.top = region['cy'] + "px";
+    annotation_editor_clone.style.left = region['cx'] + region['rx'] +"px";
+    break;
+  case 'polygon':
+  case 'polyline':
+    var most_left =
+      Object.keys(region['all_points_x']).reduce(function(a, b){
+        return region['all_points_x'][a] > region['all_points_x'][b] ? a : b });
+    annotation_editor_clone.style.top = Math.max(region['all_points_y'][most_left]) + "px";
+    annotation_editor_clone.style.left = Math.max(region['all_points_x'][most_left]) + "px";
+    break;
+  case 'point':
+    annotation_editor_clone.style.top = region['cy'] + "px";
+    annotation_editor_clone.style.left = region['cx'] + "px";
+    break;
+  }
+  annotation_editor_clone.style.backgroundColor = "rgba(255, 255, 255, 1)";
+  var ae_regions_clone = annotation_editor_clone.childNodes; // all ae_regions
+  for(var i = 0; i < ae_regions_clone.length-1; i++) {
+    clone_annotation_editors_change(i, ae_regions_clone[i+1])
+    if (i != region_id) {
+      ae_regions_clone[i+1].style.display = 'none';
+    }
+  }
+  var image_panel = document.getElementById("image_panel");
+  image_panel.appendChild(annotation_editor_clone);
+}
+
+function clone_annotation_editors_change(region_id, ae_region_clone) {
+  for ( var attr_id in _via_attributes['region'] ) {
+    var name = attr_id + '__' + region_id;
+    var clone_name = 'clone_' + name;
+    var options = _via_attributes['region'][attr_id].options;
+    var type = _via_attributes['region'][attr_id].type
+    switch(type){
+      case 'radio':
+      case 'checkbox':
+      case 'image':
+        // Change name attribute
+        for ( var option_id in options ) {
+          var id = name + '__' + option_id
+          var clone_id = 'clone_' + id
+          var input = ae_region_clone.querySelector('#'+id)
+          input.setAttribute('name', clone_name)
+        }
+        break;
+      case 'text':
+      case 'dropdown':
+      default:
+        break;
+    }
+  }
+}
