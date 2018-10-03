@@ -84,6 +84,9 @@ var VIA_DISPLAY_AREA_CONTENT_NAME = {IMAGE:'image_panel',
                                      PAGE_LICENSE:'page_license'
                                     };
 
+var VIA_ANNOTATION_EDITOR_MODE    = {SINGLE_REGION:'single_region',
+                                     ALL_REGIONS:'all_regions'}
+
 var VIA_REGION_EDGE_TOL           = 5;   // pixel
 var VIA_REGION_CONTROL_POINT_SIZE = 2;
 var VIA_REGION_POINT_RADIUS       = 3;
@@ -125,9 +128,10 @@ var _via_current_image_width;
 var _via_current_image_height;
 
 // image canvas
-var _via_img_panel   = document.getElementById("image_panel");
-var _via_reg_canvas  = document.getElementById("region_canvas");
-var _via_reg_ctx     = _via_reg_canvas.getContext("2d");
+var _via_display_area = document.getElementById('display_area');
+var _via_img_panel    = document.getElementById('image_panel');
+var _via_reg_canvas   = document.getElementById('region_canvas');
+var _via_reg_ctx      = _via_reg_canvas.getContext('2d');
 var _via_canvas_width, _via_canvas_height;
 
 // canvas zoom
@@ -185,7 +189,9 @@ var _via_user_input_cancel_handler = null;
 var _via_user_input_data           = {};
 
 // annotation editor
+var _via_annotaion_editor_panel     = document.getElementById('annotation_editor_panel');
 var _via_metadata_being_updated     = 'region'; // {region, file}
+var _via_annotation_editor_mode     = VIA_ANNOTATION_EDITOR_MODE.SINGLE_REGION;
 
 // persistence to local storage
 var _via_is_local_storage_available = false;
@@ -442,7 +448,7 @@ function show_single_image_view() {
     img_fn_list_clear_all_style();
     _via_show_img(_via_image_index);
     set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE);
-    update_annotation_editor();
+    annotation_editor_update_content();
 
     var p = document.getElementById('toolbar_image_grid_toggle');
     p.firstChild.setAttribute('xlink:href', '#icon_gridon');
@@ -461,7 +467,7 @@ function show_image_grid_view() {
     if ( _via_image_grid_group_var.length === 0 ) {
       image_grid_show_all_project_images();
     }
-    update_annotation_editor();
+    annotation_editor_update_content();
 
     var p = document.getElementById('toolbar_image_grid_toggle');
     p.firstChild.setAttribute('xlink:href', '#icon_gridoff');
@@ -682,7 +688,7 @@ function import_annotations_from_csv(data) {
     if ( _via_current_image_loaded ) {
       if ( region_import_count ) {
         update_attributes_update_panel();
-        update_annotation_editor();
+        annotation_editor_update_content();
         _via_load_canvas_regions(); // image to canvas space transform
         _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
@@ -801,7 +807,7 @@ function import_annotations_from_json(data) {
     if ( _via_current_image_loaded ) {
       if ( region_import_count ) {
         update_attributes_update_panel();
-        update_annotation_editor();
+        annotation_editor_update_content();
         _via_load_canvas_regions(); // image to canvas space transform
         _via_redraw_reg_canvas();
         _via_reg_canvas.focus();
@@ -1266,8 +1272,12 @@ function toggle_all_regions_selection(is_selected) {
     _via_region_selected_flag[i] = is_selected;
   }
   _via_is_all_region_selected = is_selected;
-  remove_annotation_editor_on_canvas();
+  annotation_editor_hide();
+  if ( _via_annotation_editor_mode === VIA_ANNOTATION_EDITOR_MODE.ALL_REGIONS ) {
+    annotation_editor_clear_row_highlight();
+  }
 }
+
 function select_only_region(region_id) {
   toggle_all_regions_selection(false);
   set_region_select_state(region_id, true);
@@ -1432,7 +1442,7 @@ function _via_reg_canvas_mouseup_handler(e) {
           toggle_all_regions_selection(false);
         }
         set_region_select_state(nested_region_id, true);
-        update_annotation_editor();
+        annotation_editor_update_content();
       } else {
         // user clicking inside an already selected region
         // indicates that the user intends to draw a nested region
@@ -1469,7 +1479,7 @@ function _via_reg_canvas_mouseup_handler(e) {
           _via_canvas_regions.push(canvas_point_region);
           break;
         }
-        update_annotation_editor();
+        annotation_editor_update_content();
       }
     }
     show_annotation_editor_on_canvas(_via_user_sel_region_id) // moving
@@ -1641,9 +1651,8 @@ function _via_reg_canvas_mouseup_handler(e) {
           toggle_all_regions_selection(false);
         }
         set_region_select_state(region_id, true);
-        annotation_editor_scroll_to_row(region_id);
-        show_annotation_editor_on_canvas(region_id); // selected
-        annotation_editor_highlight_row(region_id);
+
+        annotation_editor_show();
         show_message('Region selected. If you intended to draw a region, click again inside the selected region to start drawing a region.')
       } else {
         if ( _via_is_user_drawing_region ) {
@@ -1651,7 +1660,7 @@ function _via_reg_canvas_mouseup_handler(e) {
           _via_is_user_drawing_region = false;
           _via_is_region_selected     = false;
           toggle_all_regions_selection(false);
-          annotation_editor_clear_row_highlight();
+          annotation_editor_hide();
         } else {
           switch (_via_current_shape) {
           case VIA_REGION_SHAPE.POLYLINE: // handled by case for POLYGON
@@ -1683,7 +1692,7 @@ function _via_reg_canvas_mouseup_handler(e) {
             canvas_point_region.shape_attributes['cy'] = Math.round(_via_click_y0);
             _via_canvas_regions.push(canvas_point_region);
 
-            update_annotation_editor();
+            annotation_editor_update_content();
             break;
           }
         }
@@ -3423,7 +3432,7 @@ function del_sel_regions() {
     _via_redraw_reg_canvas();
   }
   _via_reg_canvas.focus();
-  update_annotation_editor();
+  annotation_editor_update_content();
 
   show_message('Deleted ' + del_region_count + ' selected regions');
 }
@@ -4507,18 +4516,18 @@ function attribute_property_on_update(p) {
 
       delete _via_attributes[attr_type][attr_id];
       update_attributes_update_panel();
-      update_annotation_editor();
+      annotation_editor_update_content();
     }
     break;
   case 'attribute_description':
     _via_attributes[attr_type][attr_id].description = attr_value;
     update_attributes_update_panel();
-    update_annotation_editor();
+    annotation_editor_update_content();
     break;
   case 'attribute_default_value':
     _via_attributes[attr_type][attr_id].default_value = attr_value;
     update_attributes_update_panel();
-    update_annotation_editor();
+    annotation_editor_update_content();
     break;
   case 'attribute_type':
     _via_attributes[attr_type][attr_id].type = attr_value;
@@ -4549,7 +4558,7 @@ function attribute_property_on_update(p) {
     }
     show_attribute_properties();
     show_attribute_options();
-    update_annotation_editor();
+    annotation_editor_update_content();
     break;
   }
 }
@@ -4614,7 +4623,7 @@ function attribute_property_on_option_update(p) {
     if ( new_value !== old_value ) {
       _via_attributes[_via_attribute_being_updated][attr_id].options[key] = new_value;
       show_attribute_properties();
-      update_annotation_editor();
+      annotation_editor_update_content();
     }
   }
 
@@ -4644,7 +4653,7 @@ function attribute_property_on_option_update(p) {
                                                 attr_id,
                                                 new_default_option_id).then( function() {
                                                   show_attribute_properties();
-                                                  update_annotation_editor();
+                                                  annotation_editor_update_content();
                                                 });
   }
 }
@@ -4691,7 +4700,7 @@ function attribute_property_on_option_add(p) {
     if ( option_id_test.is_valid ) {
       _via_attributes[_via_attribute_being_updated][attr_id].options[option_id] = '';
       show_attribute_options();
-      update_annotation_editor();
+      annotation_editor_update_content();
     } else {
       show_message( option_id_test.message );
       attribute_property_reset_new_entry_inputs();
@@ -4818,7 +4827,7 @@ function delete_existing_attribute(attribute_type, attribute_id) {
     }
     delete _via_attributes[attribute_type][attribute_id];
     update_attributes_update_panel();
-    update_annotation_editor();
+    annotation_editor_update_content();
   }
 }
 
@@ -4835,7 +4844,7 @@ function add_new_attribute_from_user_input() {
     _via_current_attribute_id = attr_id;
     add_new_attribute(attr_id);
     update_attributes_update_panel();
-    update_annotation_editor();
+    annotation_editor_update_content();
     show_message('Added ' + _via_attribute_being_updated + ' attribute [' + attr_id + '].');
   }
 }
@@ -4907,7 +4916,7 @@ function update_attribute_option_id_confirmed(input) {
     show_message('Renamed option [' + option_id + '] to [' + new_option_id + '] for ' + attr_type + ' attribute [' + attr_id + '].');
   }
   update_attribute_properties_panel();
-  update_annotation_editor();
+  annotation_editor_update_content();
   user_input_default_cancel_handler();
 }
 
@@ -5163,6 +5172,120 @@ function hide_user_input_panel() {
 //
 // annotations editor panel
 //
+function annotation_editor_show() {
+  // remove existing annotation editor (if any)
+  annotation_editor_remove();
+
+  // create new container of annotation editor
+  var ae = document.createElement('div');
+  ae.setAttribute('id', 'annotation_editor');
+
+  if ( _via_annotation_editor_mode === VIA_ANNOTATION_EDITOR_MODE.SINGLE_REGION ) {
+    if ( _via_is_region_selected ) {
+      ae.classList.add('force_small_font');
+      // add annotation editor to image_panel
+      var html_position = annotation_editor_get_placement(_via_user_sel_region_id);
+      ae.style.top = html_position.top;
+      ae.style.left = html_position.left;
+      _via_display_area.appendChild(ae);
+      annotation_editor_update_content();
+      update_vertical_space();
+    }
+  } else {
+    // show annotation editor in a separate panel at the bottom
+    _via_annotaion_editor_panel.appendChild(ae);
+    annotation_editor_update_content();
+    update_vertical_space();
+
+    if ( _via_is_region_selected ) {
+      // highlight entry for region_id in annotation editor panel
+      annotation_editor_scroll_to_row(_via_user_sel_region_id);
+      annotation_editor_highlight_row(_via_user_sel_region_id);
+    }
+  }
+}
+
+function annotation_editor_hide() {
+  if ( _via_annotation_editor_mode === VIA_ANNOTATION_EDITOR_MODE.SINGLE_REGION ) {
+    // remove existing annotation editor (if any)
+    annotation_editor_remove();
+  } else {
+    annotation_editor_clear_row_highlight();
+  }
+}
+
+function annotation_editor_update_content() {
+  return new Promise( function(ok_callback, err_callback) {
+    var ae = document.getElementById('annotation_editor');
+    if (ae ) {
+      ae.innerHTML = '';
+      annotation_editor_update_header_html();
+      annotation_editor_update_metadata_html();
+    }
+    ok_callback();
+  });
+}
+
+function annotation_editor_get_placement(region_id) {
+  var html_position = {};
+  var r = _via_canvas_regions[region_id]['shape_attributes'];
+  var shape = r['name'];
+  switch( shape ) {
+  case 'rect':
+    html_position.top = r['y'] + r['height'];
+    html_position.left = r['x'] + r['width'];
+    break;
+  case 'circle':
+    html_position.top = r['cy'] + r['r'];
+    html_position.left = r['cx'];
+    break;
+  case 'ellipse':
+    html_position.top = r['cy'] + r['ry'];
+    html_position.left = r['cx'];
+    break;
+  case 'polygon':
+  case 'polyline':
+    var most_left =
+      Object.keys(r['all_points_x']).reduce(function(a, b){
+        return r['all_points_x'][a] > r['all_points_x'][b] ? a : b });
+    html_position.top  = Math.max( r['all_points_y'][most_left] );
+    html_position.left = Math.max( r['all_points_x'][most_left] );
+    break;
+  case 'point':
+    html_position.top = r['cy'];
+    html_position.left = r['cx'];
+    break;
+  }
+  html_position.top  = html_position.top + _via_img_panel.offsetTop + VIA_REGION_EDGE_TOL + 'px';
+  html_position.left = html_position.left + _via_img_panel.offsetLeft + VIA_REGION_EDGE_TOL + 'px';
+  return html_position;
+}
+
+function annotation_editor_remove() {
+  var p = document.getElementById('annotation_editor');
+  if ( p ) {
+    p.remove();
+  }
+}
+
+function is_annotation_editor_visible() {
+  return document.getElementById('annotation_editor_panel').classList.contains('display_block');
+}
+
+function annotation_editor_toggle_all_regions_editor() {
+  var p = document.getElementById('annotation_editor_panel');
+  if ( p.classList.contains('display_block') ) {
+    p.classList.remove('display_block');
+    _via_annotation_editor_mode = VIA_ANNOTATION_EDITOR_MODE.SINGLE_REGION;
+  } else {
+    _via_annotation_editor_mode = VIA_ANNOTATION_EDITOR_MODE.ALL_REGIONS;
+    p.classList.add('display_block');
+    p.style.height = _via_settings.ui.annotation_editor_height + '%';
+    p.style.fontSize = _via_settings.ui.annotation_editor_fontsize + 'rem';
+    annotation_editor_show();
+  }
+}
+
 function annotation_editor_set_active_button() {
   var attribute_type;
   for ( attribute_type in _via_attributes ) {
@@ -5176,42 +5299,12 @@ function annotation_editor_set_active_button() {
 function edit_region_metadata_in_annotation_editor() {
   _via_metadata_being_updated = 'region';
   annotation_editor_set_active_button();
-  update_annotation_editor();
+  annotation_editor_update_content();
 }
 function edit_file_metadata_in_annotation_editor() {
   _via_metadata_being_updated = 'file';
   annotation_editor_set_active_button();
-  update_annotation_editor();
-}
-
-function is_annotation_editor_visible() {
-  return document.getElementById('annotation_editor_panel').classList.contains('display_block');
-}
-
-function toggle_annotation_editor() {
-  var p = document.getElementById('annotation_editor_panel');
-  if ( p.classList.contains('display_block') ) {
-    p.classList.remove('display_block');
-  } else {
-    p.classList.add('display_block');
-    p.style.height = _via_settings.ui.annotation_editor_height + '%';
-    p.style.fontSize = _via_settings.ui.annotation_editor_fontsize + 'rem';
-    update_annotation_editor();
-    update_vertical_space();
-  }
-}
-
-function update_annotation_editor() {
-  return new Promise( function(ok_callback, err_callback) {
-    var p = document.getElementById('annotation_editor_panel');
-    if ( p.classList.contains('display_block') ) {
-      var ae = document.getElementById('annotation_editor');
-      ae.innerHTML = '';
-      annotation_editor_update_header_html();
-      annotation_editor_update_metadata_html();
-    }
-    ok_callback();
-  });
+  annotation_editor_update_content();
 }
 
 function annotation_editor_update_header_html() {
@@ -5271,8 +5364,12 @@ function annotation_editor_update_metadata_html() {
       ae.appendChild( annotation_editor_get_metadata_row_html(0) );
     } else {
       if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE ) {
-        for ( rindex = 0; rindex < _via_img_metadata[_via_image_id].regions.length; ++rindex ) {
-          ae.appendChild( annotation_editor_get_metadata_row_html(rindex) );
+        if ( _via_annotation_editor_mode === VIA_ANNOTATION_EDITOR_MODE.SINGLE_REGION ) {
+          ae.appendChild( annotation_editor_get_metadata_row_html(_via_user_sel_region_id) );
+        } else {
+          for ( rindex = 0; rindex < _via_img_metadata[_via_image_id].regions.length; ++rindex ) {
+            ae.appendChild( annotation_editor_get_metadata_row_html(rindex) );
+          }
         }
       }
     }
@@ -5720,17 +5817,19 @@ function _via_get_region_metadata_stat(img_index_list, attr_id) {
 
 // invoked when the input entry in annotation editor receives focus
 function annotation_editor_on_metadata_focus(p) {
-  var pid       = annotation_editor_extract_html_id_components(p.id);
-  var region_id = pid.row_id;
-  // clear existing highlights (if any)
-  toggle_all_regions_selection(false);
-  annotation_editor_clear_row_highlight();
-  // set new selection highlights
-  set_region_select_state(region_id, true);
-  annotation_editor_scroll_to_row(region_id);
-  annotation_editor_highlight_row(region_id);
+  if ( _via_annotation_editor_mode === VIA_ANNOTATION_EDITOR_MODE.ALL_REGIONS ) {
+    var pid       = annotation_editor_extract_html_id_components(p.id);
+    var region_id = pid.row_id;
+    // clear existing highlights (if any)
+    toggle_all_regions_selection(false);
+    annotation_editor_clear_row_highlight();
+    // set new selection highlights
+    set_region_select_state(region_id, true);
+    annotation_editor_scroll_to_row(region_id);
+    annotation_editor_highlight_row(region_id);
 
-  _via_redraw_reg_canvas();
+    _via_redraw_reg_canvas();
+  }
 }
 
 // invoked when the user updates annotations using the annotation editor
@@ -5757,7 +5856,6 @@ function annotation_editor_on_metadata_update(p) {
   if ( _via_metadata_being_updated === 'region' ) {
     annotation_editor_update_region_metadata(img_index_list, region_id, pid.attr_id, p.value, p.checked).then( function(update_count) {
       annotation_editor_on_metadata_update_done('region', pid.attr_id, update_count);
-      refresh_annotation_editor_on_canvas(region_id)
     }, function(err) {
       show_message('Failed to update region attributes! ');
     });
@@ -6507,7 +6605,7 @@ function project_import_attributes_from_json(data) {
       }
       attribute_update_panel_set_active_button();
       update_attributes_update_panel();
-      update_annotation_editor();
+      annotation_editor_update_content();
     }
     show_message('Imported ' + fattr_count + ' file attributes and '
                  + rattr_count + ' region attributes');
@@ -7429,7 +7527,7 @@ function image_grid_set_content_to_current_group() {
       console.log('Error: image_grid_set_content_to_current_group(): expected array while got ' + typeof(img_index_list));
     }
   }
-  update_annotation_editor();
+  annotation_editor_update_content();
 }
 
 function image_grid_page_next() {
@@ -7966,7 +8064,7 @@ function _via_show_img_from_buffer(img_index) {
     img_fn_list_scroll_to_file(img_index);
 
     // refresh the annotations panel
-    update_annotation_editor();
+    annotation_editor_update_content();
 
     _via_load_canvas_regions(); // image to canvas space transform
     _via_redraw_reg_canvas();
@@ -8677,104 +8775,3 @@ window.onbeforeunload = function (e) {
   // For Safari
   return 'Did you save your data?';
 };
-
-//
-// on-image update of annotations
-//
-function refresh_annotation_editor() {
-  toggle_annotation_editor();
-  toggle_annotation_editor();
-}
-
-function refresh_annotation_editor_on_canvas(region_id) {
-  remove_annotation_editor_on_canvas();
-  show_annotation_editor_on_canvas(region_id);
-  annotation_editor_highlight_row(region_id);
-}
-
-function remove_annotation_editor_on_canvas() {
-  var elements = document.getElementsByClassName("annotation_editor_on_canvas");
-  while(elements.length > 0){
-      elements[0].parentNode.removeChild(elements[0]);
-  }
-}
-
-function show_annotation_editor_on_canvas(region_id) {
-  refresh_annotation_editor()
-  remove_annotation_editor_on_canvas()
-  // Background is selected
-  // Polygon or Polyline is being drawn
-  var selected_region_count = _via_region_selected_flag.filter(Boolean).length
-  if (region_id < 0 || !(region_id in _via_canvas_regions) || selected_region_count > 1) {
-    return;
-  }
-  // Copy annotation_editor
-  var region = _via_canvas_regions[region_id]['shape_attributes'];
-  var annotation_editor = document.getElementById("annotation_editor");
-  var annotation_editor_clone = annotation_editor.cloneNode(true);
-  // Place annotation_editor_clone
-  annotation_editor_clone.setAttribute('class', "annotation_editor_on_canvas");
-  var shape = region['name']
-  switch (shape) {
-    case 'rect':
-    annotation_editor_clone.style.top = region['y'] + region['height'] + "px";
-    annotation_editor_clone.style.left = region['x'] + region['width'] + "px";
-    break;
-  case 'circle':
-    annotation_editor_clone.style.top = region['cy'] + "px";
-    annotation_editor_clone.style.left = region['cx'] + region['r'] +"px";
-    break;
-  case 'ellipse':
-    annotation_editor_clone.style.top = region['cy'] + "px";
-    annotation_editor_clone.style.left = region['cx'] + region['rx'] +"px";
-    break;
-  case 'polygon':
-  case 'polyline':
-    var most_left =
-      Object.keys(region['all_points_x']).reduce(function(a, b){
-        return region['all_points_x'][a] > region['all_points_x'][b] ? a : b });
-    annotation_editor_clone.style.top = Math.max(region['all_points_y'][most_left]) + "px";
-    annotation_editor_clone.style.left = Math.max(region['all_points_x'][most_left]) + "px";
-    break;
-  case 'point':
-    annotation_editor_clone.style.top = region['cy'] + "px";
-    annotation_editor_clone.style.left = region['cx'] + "px";
-    break;
-  }
-  annotation_editor_clone.style.backgroundColor = "rgba(255, 255, 255, 1)";
-  var ae_regions_clone = annotation_editor_clone.childNodes; // all ae_regions
-  for(var i = 0; i < ae_regions_clone.length-1; i++) {
-    clone_annotation_editors_change(i, ae_regions_clone[i+1])
-    if (i != region_id) {
-      ae_regions_clone[i+1].style.display = 'none';
-    }
-  }
-  var image_panel = document.getElementById("image_panel");
-  image_panel.appendChild(annotation_editor_clone);
-}
-
-function clone_annotation_editors_change(region_id, ae_region_clone) {
-  for ( var attr_id in _via_attributes['region'] ) {
-    var name = attr_id + '__' + region_id;
-    var clone_name = 'clone_' + name;
-    var options = _via_attributes['region'][attr_id].options;
-    var type = _via_attributes['region'][attr_id].type
-    switch(type){
-      case 'radio':
-      case 'checkbox':
-      case 'image':
-        // Change name attribute
-        for ( var option_id in options ) {
-          var id = name + '__' + option_id
-          var clone_id = 'clone_' + id
-          var input = ae_region_clone.querySelector('#'+id)
-          input.setAttribute('name', clone_name)
-        }
-        break;
-      case 'text':
-      case 'dropdown':
-      default:
-        break;
-    }
-  }
-}

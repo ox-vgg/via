@@ -1,5 +1,7 @@
 ## [2.0.2] - not released yet
- * bounding boxes can now be drawn using touchscreen in mobile devices ** @todo **
+ * bounding boxes can now be drawn using touchscreen in mobile devices (more tests needed)
+ * annotation editor now supports single region on-image editor (contributed by GYOUNG-YOON RYOO)
+ * export image file statistics  ** @todo **
  * video annotation ** @todo **
  * magnifying glass based image zoom ** @todo **
  * settings for label width, region shape style, etc ** @todo **
