@@ -238,18 +238,19 @@
       .display_block { display:block !important; }
 
       /* project settings */
-      #settings_panel { font-size:1rem; border-collapse:collapse; width:95%;}
+      #settings_panel { font-size:1rem; border-collapse:collapse; width:95%; }
       #settings_panel a { border: 1px solid #f2f2f2; }
-      #settings_panel .row { display:table-row; border-bottom:1px solid #f2f2f2;}
-      #settings_panel .variable { display:table-cell; width:60%; padding:0.5rem 0.5rem;}
-      #settings_panel .variable div { display:block;}
+      #settings_panel .row { display:table-row; border-bottom:1px solid #f2f2f2; }
+      #settings_panel .variable { display:table-cell; width:60%; padding:0.5rem 0.5rem; }
+      #settings_panel .variable div { display:block; }
       #settings_panel .variable .name { }
-      #settings_panel .variable .desc { font-size:0.7em; color:#808080; padding:0.2rem 0rem;}
-      #settings_panel .value { display:table-cell; vertical-align:middle; padding-left:1rem;}
+      #settings_panel .variable .desc { font-size:0.7em; color:#808080; padding:0.2rem 0rem; }
+      #settings_panel .value { display:table-cell; vertical-align:middle; padding-left:1rem; }
 
-      /* page {about, help, file not found, etc.}*/
-      .display_area_content { font-size:0.9rem; width:60%; }
-      .display_area_content li { margin: 0.4rem 0; }
+      /* page {about, help, file not found, etc.} */
+      .display_area_content { } /* this class is used to clear the display area content */
+      .narrow_page_content li { font-size:0.9rem; margin: 0.4rem 0; }
+      .narrow_page_content { width:60%; }
 
       .force_small_font { font-size:small !important; }
     </style>
@@ -733,13 +734,28 @@
             </div>
           </div>
 
+          <div class="row">
+            <div class="variable">
+              <div class="name">On-image Annotation Editor</div>
+              <div class="desc">When a single region is selected, the on-image annotation editor is gets activated which the user to update annotations of this region. By default, this on-image annotation editor is placed near the selected region.</div>
+            </div>
+
+            <div class="value">
+              <select id="_via_settings.ui.image.on_image_annotation_editor_placement">
+                <option value="NEAR_REGION">close to selected region</option>
+                <option value="IMAGE_BOTTOM">at the bottom of image being annotated</option>
+                <option value="DISABLE">DISABLE on-image annotation editor</option>
+              </select>
+            </div>
+          </div>
+
           <div class="row" style="border:none;">
             <button onclick="settings_save()" value="save_settings" style="margin-top:2rem">Save</button>
             <button onclick="settings_panel_toggle()" value="cancel_settings" style="margin-left:2rem;">Cancel</button>
           </div>
         </div> <!-- end of settings panel -->
 
-        <div id="page_404" class="display_area_content display_none">
+        <div id="page_404" class="display_area_content display_none narrow_page_content">
           <h2>File Not Found</h2>
           <p>Filename: <span style="font-family:Mono;" id="page_404_filename"></span></p>
 
@@ -748,7 +764,7 @@
           <p>A temporary fix is to use <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">browser's file selector</span> to manually locate and add this file. We do not recommend this approach because it requires you to repeat this process every time your load this project in the VIA application.</p>
         </div> <!-- end of file not found panel -->
 
-        <div id="page_start_info" class="display_area_content display_none">
+        <div id="page_start_info" class="display_area_content display_none narrow_page_content">
           <ul>
             <li>To start annotation, <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">select images</span> (or, add images from <span class="text_button" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)" onclick="project_file_add_url_with_input()">URL</span> or <span class="text_button" title="Add images using absolute path of file (e.g. /home/abhishek/image1.jpg)" onclick="project_file_add_abs_path_with_input()">absolute path</span>) and draw regions</li>
             <li>Use <span class="text_button" title="Toggle attributes editor panel" onclick="toggle_attributes_editor()">attribute editor</span> to define attributes (e.g. name) and <span class="text_button" title="Toggle annotations editor panel" onclick="toggle_annotation_editor()">annotation editor</span> to describe each region (e.g. cat) using these attributes.</li>
@@ -758,7 +774,7 @@
 
         </div>
 
-        <div id="page_getting_started" class="display_area_content display_none">
+        <div id="page_getting_started" class="display_area_content display_none narrow_page_content">
           <p>A more detailed user guide (with screenshots and descriptions) is <a href="http://www.robots.ox.ac.uk/~vgg/software/via/docs/user_guide.html">available here</a>.</p>
           <ol>
             <li><strong>Load Images</strong>: The first step is to load all the images that you wish to annotate. There are multiple ways to add images to a VIA project. Choose the method that suits your use case.
@@ -824,7 +840,7 @@
           </ol>
         </div>
 
-        <div id="page_load_ongoing" class="display_area_content">
+        <div id="page_load_ongoing" class="display_area_content narrow_page_content">
           <div style="text-align:center">
             <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">
               <svg height="160" viewbox="0 0 400 160" style="background-color:#212121;">
@@ -860,7 +876,7 @@
           <p>Copyright &copy; 2016-2018, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>,Visual Geometry Group, Oxford University and <a target="_blank" href="https://gitlab.com/vgg/via/blob/master/Contributors.md">Contributors</a>.</p>
         </div> <!-- end of page_about -->
 
-        <div id="page_license" class="display_area_content display_none">
+        <div id="page_license" class="display_area_content display_none narrow_page_content">
           <pre>
 Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University and Contributors.
 All rights reserved.
@@ -903,9 +919,9 @@ POSSIBILITY OF SUCH DAMAGE.
       //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
     </script>
 
-    <!-- scripts code debugging    -->
-    <!--<script src="via.js"></script>-->
-
+    <!-- scripts code debugging
+    <script src="via.js"></script>
+    -->
     <!--<script src="./demo/_via_basic_demo.js"></script>-->
     <!--<script src="./demo/_via_face_demo.js"></script>-->
     <!--<script src="./demo/_via_face_track_annotation_demo.js"></script>-->

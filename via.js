@@ -85,7 +85,10 @@ var VIA_DISPLAY_AREA_CONTENT_NAME = {IMAGE:'image_panel',
                                     };
 
 var VIA_ANNOTATION_EDITOR_MODE    = {SINGLE_REGION:'single_region',
-                                     ALL_REGIONS:'all_regions'}
+                                     ALL_REGIONS:'all_regions'};
+var VIA_ANNOTATION_EDITOR_PLACEMENT = {NEAR_REGION:'NEAR_REGION',
+                                       IMAGE_BOTTOM:'IMAGE_BOTTOM',
+                                       DISABLE:'DISABLE'};
 
 var VIA_REGION_EDGE_TOL           = 5;   // pixel
 var VIA_REGION_CONTROL_POINT_SIZE = 2;
@@ -261,6 +264,7 @@ _via_settings.ui.image_grid.show_image_policy   = 'all';
 _via_settings.ui.image = {};
 _via_settings.ui.image.region_label      = 'region_id'; // default: region_id
 _via_settings.ui.image.region_label_font = '10px Sans';
+_via_settings.ui.image.on_image_annotation_editor_placement = VIA_ANNOTATION_EDITOR_PLACEMENT.NEAR_REGION;
 
 _via_settings.core                  = {};
 _via_settings.core.buffer_size      = 4*VIA_IMG_PRELOAD_COUNT + 2;
@@ -1482,7 +1486,6 @@ function _via_reg_canvas_mouseup_handler(e) {
         annotation_editor_update_content();
       }
     }
-    show_annotation_editor_on_canvas(_via_user_sel_region_id) // moving
     _via_redraw_reg_canvas();
     _via_reg_canvas.focus();
     return;
@@ -1812,12 +1815,12 @@ function _via_reg_canvas_mouseup_handler(e) {
         var new_region_id = n1 - 1;
 
         set_region_annotations_to_default_value( new_region_id );
-        if ( _via_metadata_being_updated === 'region' ) {
+        if ( _via_annotation_editor_mode === VIA_ANNOTATION_EDITOR_MODE.ALL_REGIONS &&
+             _via_metadata_being_updated === 'region' ) {
           annotation_editor_add_row( new_region_id );
           annotation_editor_scroll_to_row( new_region_id );
           annotation_editor_clear_row_highlight();
           select_only_region(new_region_id);
-          show_annotation_editor_on_canvas(new_region_id); // drawing
           annotation_editor_highlight_row( new_region_id );
         }
       }
@@ -3720,6 +3723,7 @@ function set_zoom(zoom_level_index) {
   _via_load_canvas_regions(); // image to canvas space transform
   _via_redraw_reg_canvas();
   _via_reg_canvas.focus();
+  update_vertical_space();
 }
 
 function reset_zoom_level() {
@@ -3738,6 +3742,7 @@ function reset_zoom_level() {
   } else {
     show_message('Cannot reset zoom because image zoom has not been applied!');
   }
+  update_vertical_space();
 }
 
 function zoom_in() {
@@ -5179,17 +5184,34 @@ function annotation_editor_show() {
   // create new container of annotation editor
   var ae = document.createElement('div');
   ae.setAttribute('id', 'annotation_editor');
+  console.log(_via_settings.ui.image.on_image_annotation_editor_placement)
 
   if ( _via_annotation_editor_mode === VIA_ANNOTATION_EDITOR_MODE.SINGLE_REGION ) {
     if ( _via_is_region_selected ) {
-      ae.classList.add('force_small_font');
-      // add annotation editor to image_panel
-      var html_position = annotation_editor_get_placement(_via_user_sel_region_id);
-      ae.style.top = html_position.top;
-      ae.style.left = html_position.left;
-      _via_display_area.appendChild(ae);
-      annotation_editor_update_content();
-      update_vertical_space();
+      if ( _via_settings.ui.image.on_image_annotation_editor_placement !== VIA_ANNOTATION_EDITOR_PLACEMENT.DISABLE ) {
+
+        ae.classList.add('force_small_font');
+        ae.classList.add('display_area_content'); // to enable automatic hiding of this content
+        // add annotation editor to image_panel
+        if ( _via_settings.ui.image.on_image_annotation_editor_placement === VIA_ANNOTATION_EDITOR_PLACEMENT.NEAR_REGION ) {
+          var html_position = annotation_editor_get_placement(_via_user_sel_region_id);
+          ae.style.top = html_position.top;
+          ae.style.left = html_position.left;
+        }
+        _via_display_area.appendChild(ae);
+        annotation_editor_update_content();
+        update_vertical_space();
+/*
+        var cell = document.getElementById('annotation_editor_header');
+        //p.firstChild.innerHTML = '&times;'
+        var p = document.createElement('span');
+        p.classList.add('text_button');
+        p.innerHTML = '&times;';
+        p.setAttribute('onclick', 'annotation_editor_disable_on_image_editor()');
+        p.setAttribute('title', 'Disable on-image annotation editor');
+        cell.firstChild.appendChild(p);
+*/
+      }
     }
   } else {
     // show annotation editor in a separate panel at the bottom
@@ -5212,6 +5234,11 @@ function annotation_editor_hide() {
   } else {
     annotation_editor_clear_row_highlight();
   }
+}
+
+function annotation_editor_disable_on_image_editor() {
+  _via_settings.ui.image.on_image_annotation_editor_placement = VIA_ANNOTATION_EDITOR_PLACEMENT.DISABLE;
+  annotation_editor_hide();
 }
 
 function annotation_editor_update_content() {
@@ -8763,6 +8790,7 @@ function generate_img_index_list(input) {
   return intersect;
 }
 
+/*
 // warn user of possible loss of data
 window.onbeforeunload = function (e) {
   e = e || window.event;
@@ -8775,3 +8803,4 @@ window.onbeforeunload = function (e) {
   // For Safari
   return 'Did you save your data?';
 };
+*/

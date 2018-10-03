@@ -35,7 +35,7 @@ function _via_load_submodules() {
   toggle_attributes_editor();
   update_attributes_update_panel();
 
-  toggle_annotation_editor();
+  annotation_editor_show();
 }
 
 function _via_basic_demo_load_img() {
