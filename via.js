@@ -1903,7 +1903,7 @@ function _via_reg_canvas_mousemove_handler(e) {
 
       }
     } else {
-        remove_annotation_editor_on_canvas() // resizing
+        annotation_editor_hide() // resizing
     }
   }
 
@@ -2110,7 +2110,7 @@ function _via_reg_canvas_mousemove_handler(e) {
       break;
     }
     _via_reg_canvas.focus();
-    remove_annotation_editor_on_canvas() // moving
+    annotation_editor_hide() // moving
     return;
   }
 
