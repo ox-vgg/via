@@ -375,12 +375,14 @@ function download_as_image() {
     return;
   } else {
     var c = document.createElement('canvas');
-    c.width  = _via_current_image_width;
-    c.height = _via_current_image_height;
+
+    // ensures that downloaded image is scaled at current zoom level
+    c.width  = _via_reg_canvas.width;
+    c.height = _via_reg_canvas.height;
 
     var ct = c.getContext('2d');
     // draw current image
-    ct.drawImage(_via_current_image, 0, 0);
+    ct.drawImage(_via_current_image, 0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
     // draw current regions
     ct.drawImage(_via_reg_canvas, 0, 0);
 
