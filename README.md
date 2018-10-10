@@ -14,7 +14,7 @@ Visit the [VGG software page](http://www.robots.ox.ac.uk/~vgg/software/via/) for
   * requires nothing more than a modern web browser (tested on Firefox, Chrome and Safari)
   * supported region shapes: rectangle, circle, ellipse, polygon and point
   * import/export of region data in csv and json file format
-
+  * quick update of annotations using on-image annotation editor
 
 ## Downloads
 See http://www.robots.ox.ac.uk/~vgg/software/via/
@@ -25,7 +25,7 @@ See http://www.robots.ox.ac.uk/~vgg/software/via/
  * [VIA Wikipedia page](https://en.wikipedia.org/wiki/VGG_Image_Annotator)
 
 ## Developer Resources
-** Please send all pull requests to `develop` branch. All contributions made to VIA code repository will be licensed under the [BSD-2 clause license](https://gitlab.com/vgg/via/blob/master/LICENSE). **
+**Please send all pull requests to `develop` branch. All contributions made to VIA code repository will be licensed under the [BSD-2 clause license](https://gitlab.com/vgg/via/blob/master/LICENSE).**
 
 For development, [via.js](https://gitlab.com/vgg/via/blob/develop/via.js) 
 contains the Javascript source code and 
