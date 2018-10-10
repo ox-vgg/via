@@ -25,6 +25,8 @@ See http://www.robots.ox.ac.uk/~vgg/software/via/
  * [VIA Wikipedia page](https://en.wikipedia.org/wiki/VGG_Image_Annotator)
 
 ## Developer Resources
+** Please send all pull requests to `develop` branch. All contributions made to VIA code repository will be licensed under the [BSD-2 clause license](https://gitlab.com/vgg/via/blob/master/LICENSE). **
+
 For development, [via.js](https://gitlab.com/vgg/via/blob/develop/via.js) 
 contains the Javascript source code and 
 [index.html](https://gitlab.com/vgg/via/blob/develop/index.html) contains the 

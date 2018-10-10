@@ -881,12 +881,12 @@
           </p>
           <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
           <p>&nbsp;</p>
-          <p>Copyright &copy; 2016-2018, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>,Visual Geometry Group, Oxford University and <a target="_blank" href="https://gitlab.com/vgg/via/blob/master/Contributors.md">Contributors</a>.</p>
+          <p>Copyright &copy; 2016-2018, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>,Visual Geometry Group, Oxford University and <a target="_blank" href="https://gitlab.com/vgg/via/blob/master/Contributors.md">VIA Contributors</a>.</p>
         </div> <!-- end of page_about -->
 
         <div id="page_license" class="display_area_content display_none narrow_page_content">
           <pre>
-Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University and Contributors.
+Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University and VIA Contributors.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -1299,12 +1299,14 @@ function download_as_image() {
     return;
   } else {
     var c = document.createElement('canvas');
-    c.width  = _via_current_image_width;
-    c.height = _via_current_image_height;
+
+    // ensures that downloaded image is scaled at current zoom level
+    c.width  = _via_reg_canvas.width;
+    c.height = _via_reg_canvas.height;
 
     var ct = c.getContext('2d');
     // draw current image
-    ct.drawImage(_via_current_image, 0, 0);
+    ct.drawImage(_via_current_image, 0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
     // draw current regions
     ct.drawImage(_via_reg_canvas, 0, 0);
 
@@ -9714,7 +9716,6 @@ function generate_img_index_list(input) {
   return intersect;
 }
 
-/*
 // warn user of possible loss of data
 window.onbeforeunload = function (e) {
   e = e || window.event;
@@ -9727,7 +9728,6 @@ window.onbeforeunload = function (e) {
   // For Safari
   return 'Did you save your data?';
 };
-*/
     </script>
     <script type="text/javascript">
       //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->

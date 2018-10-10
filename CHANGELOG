@@ -1,9 +1,12 @@
-## [2.0.2] - not released yet
- * bounding boxes can now be drawn using touchscreen in mobile devices (more tests needed)
- * annotation editor now supports single region on-image editor (contributed by GYOUNG-YOON RYOO)
+## [2.0.3] - not released yet  
  * video annotation ** @todo **
  * magnifying glass based image zoom ** @todo **
  * settings for label width, region shape style, etc ** @todo **
+
+## [2.0.2] - October 10, 2018
+ * bounding boxes can now be drawn using touchscreen in mobile devices (more tests needed)
+ * annotation editor now supports single region on-image editor (contributed by GYOUNG-YOON RYOO)
+ * anotations downloaded as image is now unaffected by current zoom level(issue 154)
 
 ## [2.0.1] - September 26, 2018
  * clicking or selecting a row in annotation editor (at bottom) should select the corresponding region. (issue 137)

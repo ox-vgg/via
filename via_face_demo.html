@@ -246,18 +246,19 @@
       .display_block { display:block !important; }
 
       /* project settings */
-      #settings_panel { font-size:1rem; border-collapse:collapse; width:95%;}
+      #settings_panel { font-size:1rem; border-collapse:collapse; width:95%; }
       #settings_panel a { border: 1px solid #f2f2f2; }
-      #settings_panel .row { display:table-row; border-bottom:1px solid #f2f2f2;}
-      #settings_panel .variable { display:table-cell; width:60%; padding:0.5rem 0.5rem;}
-      #settings_panel .variable div { display:block;}
+      #settings_panel .row { display:table-row; border-bottom:1px solid #f2f2f2; }
+      #settings_panel .variable { display:table-cell; width:60%; padding:0.5rem 0.5rem; }
+      #settings_panel .variable div { display:block; }
       #settings_panel .variable .name { }
-      #settings_panel .variable .desc { font-size:0.7em; color:#808080; padding:0.2rem 0rem;}
-      #settings_panel .value { display:table-cell; vertical-align:middle; padding-left:1rem;}
+      #settings_panel .variable .desc { font-size:0.7em; color:#808080; padding:0.2rem 0rem; }
+      #settings_panel .value { display:table-cell; vertical-align:middle; padding-left:1rem; }
 
-      /* page {about, help, file not found, etc.}*/
-      .display_area_content { font-size:0.9rem; width:60%; }
-      .display_area_content li { margin: 0.4rem 0; }
+      /* page {about, help, file not found, etc.} */
+      .display_area_content { } /* this class is used to clear the display area content */
+      .narrow_page_content li { font-size:0.9rem; margin: 0.4rem 0; }
+      .narrow_page_content { width:60%; }
 
       .force_small_font { font-size:small !important; }
     </style>
@@ -449,7 +450,7 @@
 <li onclick="toggle_img_fn_list_visibility()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle image filename list</li>
               <li class="submenu_divider"></li>
               <li onclick="toggle_attributes_editor()" title="Show or hide a panel to update file and region attributes">Toggle attributes editor</li>
-              <li onclick="toggle_annotation_editor()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle annotation editor</li>
+              <li onclick="annotation_editor_toggle_all_regions_editor()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle annotation editor</li>
               <li class="submenu_divider"></li>
               <li onclick="toggle_region_boundary_visibility()" title="Show or hide the region boundaries">Show/hide region boundaries</li>
               <li onclick="toggle_region_id_visibility()" title="Show or hide the region id labels">Show/hide region labels</li>
@@ -580,7 +581,7 @@
             <div id="attribute_properties"></div>
             <div id="attribute_options"></div>
             <p style="text-align:center">
-              <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="toggle_annotation_editor()">Toggle Annotation Editor</span>
+              <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="annotation_editor_toggle_all_regions_editor()">Toggle Annotation Editor</span>
             </p>
           </div>
         </div>
@@ -690,7 +691,7 @@
           <div class="row">
             <div class="variable">
               <div class="name">Default Path</div>
-              <div class="desc">If all images in your project are saved in a single folder, set the default path to the location of this folder. The VIA application will load images from this folder by default. Note: a default path of <code>"./"</code> indicates that the folder containing <code>via.html</code> application file also contains the images in this project. For example: <code>/datasets/VOC2012/JPEGImages/</code> (note the trailing <code>/</code>)</div>
+              <div class="desc">If all images in your project are saved in a single folder, set the default path to the location of this folder. The VIA application will load images from this folder by default. Note: a default path of <code>"./"</code> indicates that the folder containing <code>via.html</code> application file also contains the images in this project. For example: <code>/datasets/VOC2012/JPEGImages/</code> or <code>C:\Documents\data\</code>&nbsp;<strong>(note the trailing <code>/</code> and <code>\</code></strong>)</div>
             </div>
 
             <div class="value">
@@ -741,13 +742,28 @@
             </div>
           </div>
 
+          <div class="row">
+            <div class="variable">
+              <div class="name">On-image Annotation Editor</div>
+              <div class="desc">When a single region is selected, the on-image annotation editor is gets activated which the user to update annotations of this region. By default, this on-image annotation editor is placed near the selected region.</div>
+            </div>
+
+            <div class="value">
+              <select id="_via_settings.ui.image.on_image_annotation_editor_placement">
+                <option value="NEAR_REGION">close to selected region</option>
+                <option value="IMAGE_BOTTOM">at the bottom of image being annotated</option>
+                <option value="DISABLE">DISABLE on-image annotation editor</option>
+              </select>
+            </div>
+          </div>
+
           <div class="row" style="border:none;">
             <button onclick="settings_save()" value="save_settings" style="margin-top:2rem">Save</button>
             <button onclick="settings_panel_toggle()" value="cancel_settings" style="margin-left:2rem;">Cancel</button>
           </div>
         </div> <!-- end of settings panel -->
 
-        <div id="page_404" class="display_area_content display_none">
+        <div id="page_404" class="display_area_content display_none narrow_page_content">
           <h2>File Not Found</h2>
           <p>Filename: <span style="font-family:Mono;" id="page_404_filename"></span></p>
 
@@ -756,17 +772,17 @@
           <p>A temporary fix is to use <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">browser's file selector</span> to manually locate and add this file. We do not recommend this approach because it requires you to repeat this process every time your load this project in the VIA application.</p>
         </div> <!-- end of file not found panel -->
 
-        <div id="page_start_info" class="display_area_content display_none">
+        <div id="page_start_info" class="display_area_content display_none narrow_page_content">
           <ul>
             <li>To start annotation, <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">select images</span> (or, add images from <span class="text_button" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)" onclick="project_file_add_url_with_input()">URL</span> or <span class="text_button" title="Add images using absolute path of file (e.g. /home/abhishek/image1.jpg)" onclick="project_file_add_abs_path_with_input()">absolute path</span>) and draw regions</li>
-            <li>Use <span class="text_button" title="Toggle attributes editor panel" onclick="toggle_attributes_editor()">attribute editor</span> to define attributes (e.g. name) and <span class="text_button" title="Toggle annotations editor panel" onclick="toggle_annotation_editor()">annotation editor</span> to describe each region (e.g. cat) using these attributes.</li>
+            <li>Use <span class="text_button" title="Toggle attributes editor panel" onclick="toggle_attributes_editor()">attribute editor</span> to define attributes (e.g. name) and <span class="text_button" title="Toggle annotations editor panel" onclick="annotation_editor_toggle_all_regions_editor()">annotation editor</span> to describe each region (e.g. cat) using these attributes.</li>
             <li>Remember to <span class="text_button" onclick="project_save_with_confirm()">save</span> your project before closing this application so that you can <span class="text_button" onclick="project_open_select_project_file()">load</span> it later to continue annotation.</li>
             <li>For help, see the <span class="text_button" onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_GETTING_STARTED)">Getting Started</span> page and pre-loaded demo: <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html">image annotation</a> and <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_face_demo.html">face annotation</a>.</li>
           </ul>
 
         </div>
 
-        <div id="page_getting_started" class="display_area_content display_none">
+        <div id="page_getting_started" class="display_area_content display_none narrow_page_content">
           <p>A more detailed user guide (with screenshots and descriptions) is <a href="http://www.robots.ox.ac.uk/~vgg/software/via/docs/user_guide.html">available here</a>.</p>
           <ol>
             <li><strong>Load Images</strong>: The first step is to load all the images that you wish to annotate. There are multiple ways to add images to a VIA project. Choose the method that suits your use case.
@@ -826,13 +842,13 @@
               </ul>
             </li>
 
-            <li><strong>Create Annotations</strong>: For a more detailed description of this step, see <a href="http://www.robots.ox.ac.uk/~vgg/software/via/docs/creating_annotations.html">Creating Annotations : VIA User Guide</a>. Click the <span class="text_button" onclick="toggle_annotation_editor()"><code>View &rarr; Toggle attributes editor</code></span> to show attributes editor panel in left sidebar and add the desired file or region attributes (e.g. name). Now click <span class="text_button" onclick="toggle_annotation_editor()"><code>View &rarr; Toggle annotations editor</code></span> to show the annotation editor panel in the bottom side. Update the annotations for each region.</li>
+            <li><strong>Create Annotations</strong>: For a more detailed description of this step, see <a href="http://www.robots.ox.ac.uk/~vgg/software/via/docs/creating_annotations.html">Creating Annotations : VIA User Guide</a>. Click the <span class="text_button" onclick="annotation_editor_toggle_all_regions_editor()"><code>View &rarr; Toggle attributes editor</code></span> to show attributes editor panel in left sidebar and add the desired file or region attributes (e.g. name). Now click <span class="text_button" onclick="annotation_editor_toggle_all_regions_editor()"><code>View &rarr; Toggle annotations editor</code></span> to show the annotation editor panel in the bottom side. Update the annotations for each region.</li>
             <li><strong>Export Annotations</strong>: To export the annotations in json or csv format, click <span class="text_button" onclick="download_all_region_data('csv')"><code>Annotation &rarr; Export annotations</code></span> in top menubar.</li>
             <li><strong>Save Project</strong>: To save the project, click <span class="text_button" onclick="project_save_with_confirm()"><code>Project &rarr; Save</code></span> in top menubar.</li>
           </ol>
         </div>
 
-        <div id="page_load_ongoing" class="display_area_content">
+        <div id="page_load_ongoing" class="display_area_content narrow_page_content">
           <div style="text-align:center">
             <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">
               <svg height="160" viewbox="0 0 400 160" style="background-color:#212121;">
@@ -865,12 +881,12 @@
           </p>
           <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
           <p>&nbsp;</p>
-          <p>Copyright &copy; 2016-2018, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>,Visual Geometry Group, Oxford University and <a target="_blank" href="https://gitlab.com/vgg/via/blob/master/Contributors.md">Contributors</a>.</p>
+          <p>Copyright &copy; 2016-2018, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>,Visual Geometry Group, Oxford University and <a target="_blank" href="https://gitlab.com/vgg/via/blob/master/Contributors.md">VIA Contributors</a>.</p>
         </div> <!-- end of page_about -->
 
-        <div id="page_license" class="display_area_content display_none">
+        <div id="page_license" class="display_area_content display_none narrow_page_content">
           <pre>
-Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University and Contributors.
+Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University and VIA Contributors.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -940,7 +956,7 @@ function _via_load_submodules() {
   toggle_attributes_editor();
   update_attributes_update_panel();
 
-  //toggle_annotation_editor();
+  annotation_editor_show();
 }
 
 function _via_face_demo_load_img() {
@@ -1079,7 +1095,10 @@ var VIA_DISPLAY_AREA_CONTENT_NAME = {IMAGE:'image_panel',
                                     };
 
 var VIA_ANNOTATION_EDITOR_MODE    = {SINGLE_REGION:'single_region',
-                                     ALL_REGIONS:'all_regions'}
+                                     ALL_REGIONS:'all_regions'};
+var VIA_ANNOTATION_EDITOR_PLACEMENT = {NEAR_REGION:'NEAR_REGION',
+                                       IMAGE_BOTTOM:'IMAGE_BOTTOM',
+                                       DISABLE:'DISABLE'};
 
 var VIA_REGION_EDGE_TOL           = 5;   // pixel
 var VIA_REGION_CONTROL_POINT_SIZE = 2;
@@ -1255,6 +1274,7 @@ _via_settings.ui.image_grid.show_image_policy   = 'all';
 _via_settings.ui.image = {};
 _via_settings.ui.image.region_label      = 'region_id'; // default: region_id
 _via_settings.ui.image.region_label_font = '10px Sans';
+_via_settings.ui.image.on_image_annotation_editor_placement = VIA_ANNOTATION_EDITOR_PLACEMENT.NEAR_REGION;
 
 _via_settings.core                  = {};
 _via_settings.core.buffer_size      = 4*VIA_IMG_PRELOAD_COUNT + 2;
@@ -1365,12 +1385,14 @@ function download_as_image() {
     return;
   } else {
     var c = document.createElement('canvas');
-    c.width  = _via_current_image_width;
-    c.height = _via_current_image_height;
+
+    // ensures that downloaded image is scaled at current zoom level
+    c.width  = _via_reg_canvas.width;
+    c.height = _via_reg_canvas.height;
 
     var ct = c.getContext('2d');
     // draw current image
-    ct.drawImage(_via_current_image, 0, 0);
+    ct.drawImage(_via_current_image, 0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
     // draw current regions
     ct.drawImage(_via_reg_canvas, 0, 0);
 
@@ -2476,7 +2498,6 @@ function _via_reg_canvas_mouseup_handler(e) {
         annotation_editor_update_content();
       }
     }
-    show_annotation_editor_on_canvas(_via_user_sel_region_id) // moving
     _via_redraw_reg_canvas();
     _via_reg_canvas.focus();
     return;
@@ -2806,12 +2827,12 @@ function _via_reg_canvas_mouseup_handler(e) {
         var new_region_id = n1 - 1;
 
         set_region_annotations_to_default_value( new_region_id );
-        if ( _via_metadata_being_updated === 'region' ) {
+        if ( _via_annotation_editor_mode === VIA_ANNOTATION_EDITOR_MODE.ALL_REGIONS &&
+             _via_metadata_being_updated === 'region' ) {
           annotation_editor_add_row( new_region_id );
           annotation_editor_scroll_to_row( new_region_id );
           annotation_editor_clear_row_highlight();
           select_only_region(new_region_id);
-          show_annotation_editor_on_canvas(new_region_id); // drawing
           annotation_editor_highlight_row( new_region_id );
         }
       }
@@ -2894,7 +2915,7 @@ function _via_reg_canvas_mousemove_handler(e) {
 
       }
     } else {
-        remove_annotation_editor_on_canvas() // resizing
+        annotation_editor_hide() // resizing
     }
   }
 
@@ -3101,7 +3122,7 @@ function _via_reg_canvas_mousemove_handler(e) {
       break;
     }
     _via_reg_canvas.focus();
-    remove_annotation_editor_on_canvas() // moving
+    annotation_editor_hide() // moving
     return;
   }
 
@@ -4714,6 +4735,7 @@ function set_zoom(zoom_level_index) {
   _via_load_canvas_regions(); // image to canvas space transform
   _via_redraw_reg_canvas();
   _via_reg_canvas.focus();
+  update_vertical_space();
 }
 
 function reset_zoom_level() {
@@ -4732,6 +4754,7 @@ function reset_zoom_level() {
   } else {
     show_message('Cannot reset zoom because image zoom has not been applied!');
   }
+  update_vertical_space();
 }
 
 function zoom_in() {
@@ -6173,17 +6196,34 @@ function annotation_editor_show() {
   // create new container of annotation editor
   var ae = document.createElement('div');
   ae.setAttribute('id', 'annotation_editor');
+  console.log(_via_settings.ui.image.on_image_annotation_editor_placement)
 
   if ( _via_annotation_editor_mode === VIA_ANNOTATION_EDITOR_MODE.SINGLE_REGION ) {
     if ( _via_is_region_selected ) {
-      ae.classList.add('force_small_font');
-      // add annotation editor to image_panel
-      var html_position = annotation_editor_get_placement(_via_user_sel_region_id);
-      ae.style.top = html_position.top;
-      ae.style.left = html_position.left;
-      _via_display_area.appendChild(ae);
-      annotation_editor_update_content();
-      update_vertical_space();
+      if ( _via_settings.ui.image.on_image_annotation_editor_placement !== VIA_ANNOTATION_EDITOR_PLACEMENT.DISABLE ) {
+
+        ae.classList.add('force_small_font');
+        ae.classList.add('display_area_content'); // to enable automatic hiding of this content
+        // add annotation editor to image_panel
+        if ( _via_settings.ui.image.on_image_annotation_editor_placement === VIA_ANNOTATION_EDITOR_PLACEMENT.NEAR_REGION ) {
+          var html_position = annotation_editor_get_placement(_via_user_sel_region_id);
+          ae.style.top = html_position.top;
+          ae.style.left = html_position.left;
+        }
+        _via_display_area.appendChild(ae);
+        annotation_editor_update_content();
+        update_vertical_space();
+/*
+        var cell = document.getElementById('annotation_editor_header');
+        //p.firstChild.innerHTML = '&times;'
+        var p = document.createElement('span');
+        p.classList.add('text_button');
+        p.innerHTML = '&times;';
+        p.setAttribute('onclick', 'annotation_editor_disable_on_image_editor()');
+        p.setAttribute('title', 'Disable on-image annotation editor');
+        cell.firstChild.appendChild(p);
+*/
+      }
     }
   } else {
     // show annotation editor in a separate panel at the bottom
@@ -6206,6 +6246,11 @@ function annotation_editor_hide() {
   } else {
     annotation_editor_clear_row_highlight();
   }
+}
+
+function annotation_editor_disable_on_image_editor() {
+  _via_settings.ui.image.on_image_annotation_editor_placement = VIA_ANNOTATION_EDITOR_PLACEMENT.DISABLE;
+  annotation_editor_hide();
 }
 
 function annotation_editor_update_content() {
@@ -9774,9 +9819,9 @@ window.onbeforeunload = function (e) {
       //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
     </script>
 
-    <!-- scripts code debugging    -->
-    <!--<script src="via.js"></script>-->
-
+    <!-- scripts code debugging
+    <script src="via.js"></script>
+    -->
     <!--<script src="./demo/_via_basic_demo.js"></script>-->
     <!--<script src="./demo/_via_face_demo.js"></script>-->
     <!--<script src="./demo/_via_face_track_annotation_demo.js"></script>-->

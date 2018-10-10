@@ -8792,7 +8792,6 @@ function generate_img_index_list(input) {
   return intersect;
 }
 
-/*
 // warn user of possible loss of data
 window.onbeforeunload = function (e) {
   e = e || window.event;
@@ -8805,4 +8804,3 @@ window.onbeforeunload = function (e) {
   // For Safari
   return 'Did you save your data?';
 };
-*/
