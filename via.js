@@ -1288,6 +1288,7 @@ function select_only_region(region_id) {
   toggle_all_regions_selection(false);
   set_region_select_state(region_id, true);
   _via_is_region_selected = true;
+  _via_is_all_region_selected = false;
   _via_user_sel_region_id = region_id;
 }
 
@@ -1448,7 +1449,7 @@ function _via_reg_canvas_mouseup_handler(e) {
           toggle_all_regions_selection(false);
         }
         set_region_select_state(nested_region_id, true);
-        annotation_editor_update_content();
+        annotation_editor_show();
       } else {
         // user clicking inside an already selected region
         // indicates that the user intends to draw a nested region
@@ -1657,7 +1658,13 @@ function _via_reg_canvas_mouseup_handler(e) {
         }
         set_region_select_state(region_id, true);
 
-        annotation_editor_show();
+        // show annotation editor only when a single region is selected
+        if ( !e.shiftKey ) {
+          annotation_editor_show();
+        } else {
+          annotation_editor_hide();
+        }
+
         show_message('Region selected. If you intended to draw a region, click again inside the selected region to start drawing a region.')
       } else {
         if ( _via_is_user_drawing_region ) {
@@ -1817,14 +1824,15 @@ function _via_reg_canvas_mouseup_handler(e) {
         var new_region_id = n1 - 1;
 
         set_region_annotations_to_default_value( new_region_id );
+        select_only_region(new_region_id);
         if ( _via_annotation_editor_mode === VIA_ANNOTATION_EDITOR_MODE.ALL_REGIONS &&
              _via_metadata_being_updated === 'region' ) {
           annotation_editor_add_row( new_region_id );
           annotation_editor_scroll_to_row( new_region_id );
           annotation_editor_clear_row_highlight();
-          select_only_region(new_region_id);
           annotation_editor_highlight_row( new_region_id );
         }
+        annotation_editor_show();
       }
       _via_redraw_reg_canvas();
       _via_reg_canvas.focus();
@@ -3200,7 +3208,7 @@ _via_reg_canvas.addEventListener('keydown', function(e) {
       return;
     }
 
-    if ( e.which === 65 ) { // Ctrl + a
+    if ( e.key === 65 ) { // Ctrl + a
       sel_all_regions();
       e.preventDefault();
       return;
@@ -3438,7 +3446,7 @@ function del_sel_regions() {
     _via_redraw_reg_canvas();
   }
   _via_reg_canvas.focus();
-  annotation_editor_update_content();
+  annotation_editor_show();
 
   show_message('Deleted ' + del_region_count + ' selected regions');
 }
