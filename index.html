@@ -130,6 +130,10 @@
       .leftsidebar_accordion_panel { display:none; padding:0 0.5em; font-size:small; border-right:2px solid #f2f2f2; border-bottom:2px solid #f2f2f2; }
       .leftsidebar_accordion_panel.show { display:block; }
 
+      /* Keyboard shortcut panel */
+      .leftsidebar_accordion_panel table { border-collapse:collapse; }
+      .leftsidebar_accordion_panel td { border:1px solid #f2f2f2; padding:0.2rem 0.4rem; }
+
       /* buttons */
       .button_panel { display:inline-block; width:100%; margin:0.2rem 0; }
       .button_panel .text_button, .text_button { color: #0000ff; padding: 0.2rem 0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
@@ -442,10 +446,10 @@
 <li onclick="toggle_img_fn_list_visibility()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle image filename list</li>
               <li class="submenu_divider"></li>
               <li onclick="toggle_attributes_editor()" title="Show or hide a panel to update file and region attributes">Toggle attributes editor</li>
-              <li onclick="annotation_editor_toggle_all_regions_editor()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle annotation editor</li>
+              <li onclick="annotation_editor_toggle_all_regions_editor()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle annotation editor (Space)</li>
               <li class="submenu_divider"></li>
-              <li onclick="toggle_region_boundary_visibility()" title="Show or hide the region boundaries">Show/hide region boundaries</li>
-              <li onclick="toggle_region_id_visibility()" title="Show or hide the region id labels">Show/hide region labels</li>
+              <li onclick="toggle_region_boundary_visibility()" title="Show or hide the region boundaries">Show/hide region boundaries (b)</li>
+              <li onclick="toggle_region_id_visibility()" title="Show or hide the region id labels">Show/hide region labels (l)</li>
             </ul>
           </li>
 
@@ -513,12 +517,12 @@
         <button class="leftsidebar_accordion active">Region Shape</button>
         <div class="leftsidebar_accordion_panel show">
           <ul class="region_shape">
-            <li id="region_shape_rect" class="selected" onclick="select_region_shape('rect')" title="Rectangle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></li>
-            <li id="region_shape_circle" onclick="select_region_shape('circle')" title="Circle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></li>
-            <li id="region_shape_ellipse" onclick="select_region_shape('ellipse')" title="Ellipse"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></li>
-            <li id="region_shape_polygon" onclick="select_region_shape('polygon')" title="Polygon"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></li>
-            <li id="region_shape_point" onclick="select_region_shape('point')" title="Point"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_point"></use></svg></li>
-            <li id="region_shape_polyline" onclick="select_region_shape('polyline')" title="Polyline"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polyline"></use></svg></li>
+            <li id="region_shape_rect" class="selected" onclick="select_region_shape('rect')" title="Rectangle (Shortcut key 1)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></li>
+            <li id="region_shape_circle" onclick="select_region_shape('circle')" title="Circle (Shortcut key 2)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></li>
+            <li id="region_shape_ellipse" onclick="select_region_shape('ellipse')" title="Ellipse (Shortcut key 3)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></li>
+            <li id="region_shape_polygon" onclick="select_region_shape('polygon')" title="Polygon (Shortcut key 4)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></li>
+            <li id="region_shape_point" onclick="select_region_shape('point')" title="Point (Shortcut key 5)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_point"></use></svg></li>
+            <li id="region_shape_polyline" onclick="select_region_shape('polyline')" title="Polyline (Shortcut key 6)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polyline"></use></svg></li>
           </ul>
         </div>
 
@@ -578,44 +582,87 @@
           </div>
         </div>
 
-        <button class="leftsidebar_accordion">Keyboard Shortcuts</button>
-        <div class="leftsidebar_accordion_panel">
-          <table style="padding: 2em 0em;">
+        <button class="leftsidebar_accordion active">Keyboard Shortcuts</button>
+        <div class="leftsidebar_accordion_panel show">
+          <div style="display:block; text-align:center; padding:1rem;">Available only on image focus</div>
+          <table>
             <tr>
-              <td style="width: 6em;">n/p (&larr;/&rarr;)</td>
-              <td>Next/Previous image</td>
+              <td style="width: 8em;">Arrow Keys</td>
+              <td>Move selected region by 1 px (Shift to jump)</td>
+            </tr>
+            <tr>
+              <td>a</td>
+              <td>Select all regions</td>
+            </tr>
+
+            <tr>
+              <td>c</td>
+              <td>Copy selected regions</td>
+            </tr>
+            <tr>
+              <td>v</td>
+              <td>Paste selected regions</td>
+            </tr>
+            <tr>
+              <td>d</td>
+              <td>Delete selected regions</td>
+            </tr>
+            <tr>
+              <td>Ctrl + Mouse Wheel</td>
+              <td>Zoom in/out</td>
+            </tr>
+            <tr>
+              <td>l</td>
+              <td>Toggle region label</td>
+            </tr>
+            <tr>
+              <td>b</td>
+              <td>Toggle region boundary</td>
+            </tr>
+          </table>
+
+          <div style="display:block; text-align:center; padding:1rem;">Always Available</div>
+          <table>
+            <tr>
+              <td style="width: 8em;">&larr; / &rarr; [ p / n ]</td>
+              <td>Move to next/previous image</td>
+            </tr>
+            <tr>
+              <td style="width: 8em;">&uarr;/&darr;</td>
+              <td>Shuffle through region labels</td>
             </tr>
             <tr>
               <td>+&nbsp;/&nbsp;-&nbsp;/&nbsp;=</td>
               <td>Zoom in/out/reset</td>
             </tr>
             <tr>
-              <td>Ctrl + Mouse wheel</td>
-              <td>Zoom or change region label</td>
+              <td>1,2,3,...</td>
+              <td>Set shape to rectangle, circle, ellipse, ...</td>
             </tr>
             <tr>
-              <td>Ctrl + c</td>
-              <td>Copy sel. regions</td>
+              <td>Spacebar</td>
+              <td>Toggle annotation editor (Ctrl to toggle on image editor)</td>
             </tr>
             <tr>
-              <td>Ctrl + v</td>
-              <td>Paste sel. regions</td>
+              <td>Home [h]</td>
+              <td>Jump to first image</td>
             </tr>
             <tr>
-              <td>Ctrl + a</td>
-              <td>Select all regions</td>
+              <td>End [e]</td>
+              <td>Jump to last image</td>
             </tr>
             <tr>
-              <td>Del, Bkspc</td>
-              <td>Delete image region</td>
+              <td>PageUp [u]</td>
+              <td>Jump several images</td>
             </tr>
+            <tr>
+              <td>PageDown [d]</td>
+              <td>Jump several images</td>
+            </tr>
+
             <tr>
               <td>Esc</td>
-              <td>Cancel operation</td>
-            </tr>
-            <tr>
-              <td>Ctrl + s</td>
-              <td>Download annotations</td>
+              <td>Cancel ongoing task</td>
             </tr>
           </table>
         </div>
@@ -860,7 +907,7 @@
             </a>
           </div>
 
-          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.2</a></p>
+          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.3</a></p>
           <p>VGG Image Annotator (VIA) is an image annotation tool that can be used to define regions in an image and create textual descriptions of those regions. VIA is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.</p>
           <p>Here is a list of some salient features of VIA:
             <ul>
@@ -920,8 +967,8 @@ POSSIBILITY OF SUCH DAMAGE.
     </script>
 
     <!-- scripts code debugging
-    <script src="via.js"></script>
-    -->
+    <script src="via.js"></script>    -->
+
     <!--<script src="./demo/_via_basic_demo.js"></script>-->
     <!--<script src="./demo/_via_face_demo.js"></script>-->
     <!--<script src="./demo/_via_face_track_annotation_demo.js"></script>-->
