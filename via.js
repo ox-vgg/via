@@ -134,7 +134,7 @@ var _via_current_image_height;
 var _via_display_area = document.getElementById('display_area');
 var _via_img_panel    = document.getElementById('image_panel');
 var _via_reg_canvas   = document.getElementById('region_canvas');
-var _via_reg_ctx      = _via_reg_canvas.getContext('2d');
+var _via_reg_ctx; // initialized in _via_init()
 var _via_canvas_width, _via_canvas_height;
 
 // canvas zoom
@@ -326,10 +326,13 @@ function _via_init() {
   // initialize default project
   project_init_default_project();
 
+  // initialize region canvas 2D context
+  _via_init_reg_canvas_context();
+
   // initialize user input handlers (for both window and via_reg_canvas)
   // handles drawing of regions by user over the image
-  init_keyboard_handlers();
-  init_mouse_handlers();
+  _via_init_keyboard_handlers();
+  _via_init_mouse_handlers();
 
   // initialize image grid
   image_grid_init();
@@ -351,13 +354,17 @@ function _via_init() {
 
 }
 
-function init_keyboard_handlers() {
+function _via_init_reg_canvas_context() {
+  _via_reg_ctx  = _via_reg_canvas.getContext('2d');
+}
+
+function _via_init_keyboard_handlers() {
   window.addEventListener('keydown', _via_window_keydown_handler, false);
   _via_reg_canvas.addEventListener('keydown', _via_reg_canvas_keydown_handler, false);
 }
 
 // handles drawing of regions over image by the user
-function init_mouse_handlers() {
+function _via_init_mouse_handlers() {
   _via_reg_canvas.addEventListener('dblclick', _via_reg_canvas_dblclick_handler, false);
   _via_reg_canvas.addEventListener('mousedown', _via_reg_canvas_mousedown_handler, false);
   _via_reg_canvas.addEventListener('mouseup', _via_reg_canvas_mouseup_handler, false);
