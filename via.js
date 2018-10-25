@@ -1287,6 +1287,7 @@ function count_missing_file_attr(img_id) {
 function toggle_all_regions_selection(is_selected) {
   var n = _via_img_metadata[_via_image_id].regions.length;
   var i;
+  _via_region_selected_flag = [];
   for ( i = 0; i < n; ++i) {
     _via_region_selected_flag[i] = is_selected;
   }
