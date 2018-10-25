@@ -1926,7 +1926,7 @@ function _via_reg_canvas_mousemove_handler(e) {
 
       }
     } else {
-        annotation_editor_hide() // resizing
+      annotation_editor_hide() // resizing
     }
   }
 
@@ -4334,7 +4334,7 @@ function toggle_attributes_editor() {
 function update_vertical_space() {
   var panel = document.getElementById('vertical_space');
   var aepanel = document.getElementById('annotation_editor_panel');
-  panel.style.height = aepanel.offsetHeight + 'px';
+  panel.style.height = (aepanel.offsetHeight + 40) + 'px';
 }
 
 //
@@ -5309,21 +5309,27 @@ function annotation_editor_show() {
   ae.setAttribute('id', 'annotation_editor');
 
   if ( _via_annotation_editor_mode === VIA_ANNOTATION_EDITOR_MODE.SINGLE_REGION ) {
-    if ( _via_is_region_selected ) {
-      if ( _via_settings.ui.image.on_image_annotation_editor_placement !== VIA_ANNOTATION_EDITOR_PLACEMENT.DISABLE ) {
+    if ( _via_settings.ui.image.on_image_annotation_editor_placement === VIA_ANNOTATION_EDITOR_PLACEMENT.DISABLE ) {
+      return;
+    }
 
-        ae.classList.add('force_small_font');
-        ae.classList.add('display_area_content'); // to enable automatic hiding of this content
-        // add annotation editor to image_panel
-        if ( _via_settings.ui.image.on_image_annotation_editor_placement === VIA_ANNOTATION_EDITOR_PLACEMENT.NEAR_REGION ) {
-          var html_position = annotation_editor_get_placement(_via_user_sel_region_id);
-          ae.style.top = html_position.top;
-          ae.style.left = html_position.left;
-        }
-        _via_display_area.appendChild(ae);
-        annotation_editor_update_content();
-        update_vertical_space();
+    // only display on-image annotation editor if
+    // - region attribute are defined
+    // - region is selected
+    if ( _via_is_region_selected &&
+         Object.keys(_via_attributes['region']).length &&
+         _via_attributes['region'].constructor === Object ) {
+      ae.classList.add('force_small_font');
+      ae.classList.add('display_area_content'); // to enable automatic hiding of this content
+      // add annotation editor to image_panel
+      if ( _via_settings.ui.image.on_image_annotation_editor_placement === VIA_ANNOTATION_EDITOR_PLACEMENT.NEAR_REGION ) {
+        var html_position = annotation_editor_get_placement(_via_user_sel_region_id);
+        ae.style.top = html_position.top;
+        ae.style.left = html_position.left;
       }
+      _via_display_area.appendChild(ae);
+      annotation_editor_update_content();
+      update_vertical_space();
     }
   } else {
     // show annotation editor in a separate panel at the bottom
