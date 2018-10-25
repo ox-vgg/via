@@ -1,12 +1,13 @@
 ## [2.0.4] - not released yet
  * ...
 
-## [2.0.3] - not released yet
- * keyboard handling for zoom +/-/= changed e.which() to e.key() (merge request 10)
+## [2.0.3] - October 25, 2018
+ * keyboard handling for zoom +/-/= changed from e.which() to e.key() (merge request 10 contributed by @fredowski)
  * simplified and improved keyboard shortcut keys, global shortcut keys (like next/prev image) are active even when canvas is not in focus
  * fix issues with on-image annotation editor (issue 155)
  * on-image annotation editor shown automatically when a new region is drawn
  * fixed issue with attributes of type checkbox (issue 158)
+ * on image annotation editor is not shown if region attributes are not defined
 
 ## [2.0.2] - October 10, 2018
  * bounding boxes can now be drawn using touchscreen in mobile devices (more tests needed)
