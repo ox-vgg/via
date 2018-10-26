@@ -161,6 +161,7 @@ var _via_is_canvas_zoomed            = false;
 var _via_is_loading_current_image    = false;
 var _via_is_region_id_visible        = true;
 var _via_is_region_boundary_visible  = true;
+var _via_is_ctrl_pressed             = false;
 
 // region
 var _via_current_shape             = VIA_REGION_SHAPE.RECT;
@@ -361,6 +362,7 @@ function _via_init_reg_canvas_context() {
 function _via_init_keyboard_handlers() {
   window.addEventListener('keydown', _via_window_keydown_handler, false);
   _via_reg_canvas.addEventListener('keydown', _via_reg_canvas_keydown_handler, false);
+  _via_reg_canvas.addEventListener('keyup', _via_reg_canvas_keyup_handler, false);
 }
 
 // handles drawing of regions over image by the user
@@ -3361,7 +3363,17 @@ function _via_handle_global_keydown_event(e) {
   }
 }
 
+function _via_reg_canvas_keyup_handler(e) {
+  if ( e.ctrlKey ) {
+    _via_is_ctrl_pressed = false;
+  }
+}
+
 function _via_reg_canvas_keydown_handler(e) {
+  if ( e.ctrlKey ) {
+    _via_is_ctrl_pressed = true;
+  }
+
   if (_via_current_image_loaded) {
     if ( e.key === 'a' ) {
       sel_all_regions();
@@ -8957,7 +8969,7 @@ function generate_img_index_list(input) {
   return intersect;
 }
 
-/* for DEBUG
+/* comment this method during debugging sessions */
 // warn user of possible loss of data
 window.onbeforeunload = function (e) {
   e = e || window.event;
@@ -8970,4 +8982,3 @@ window.onbeforeunload = function (e) {
   // For Safari
   return 'Did you save your data?';
 };
-*/
