@@ -3742,6 +3742,11 @@ function delete_regions(img_index) {
 
 function show_first_image() {
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    if ( _via_image_grid_group_var.length ) {
+      image_grid_group_prev( { 'value':0 } ); // simulate button click
+    } else {
+      show_message('First, create groups by selecting items from "Group by" dropdown list');
+    }
     return;
   }
 
@@ -3752,6 +3757,11 @@ function show_first_image() {
 
 function show_last_image() {
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    if ( _via_image_grid_group_var.length ) {
+      image_grid_group_prev( { 'value':_via_image_grid_group_var.length-1 } ); // simulate button click
+    } else {
+      show_message('First, create groups by selecting items from "Group by" dropdown list');
+    }
     return;
   }
 
@@ -3762,6 +3772,10 @@ function show_last_image() {
 }
 
 function jump_to_next_image_block() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    return;
+  }
+
   var jump_count = Math.round( _via_img_fn_list_img_index_list.length / 20 );
   if ( jump_count > 1 ) {
     var current_img_index = _via_image_index;
@@ -3780,6 +3794,10 @@ function jump_to_next_image_block() {
 }
 
 function jump_to_prev_image_block() {
+  if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    return;
+  }
+
   var jump_count = Math.round( _via_img_fn_list_img_index_list.length / 20 );
   if ( jump_count > 1 ) {
     var current_img_index = _via_image_index;
@@ -3799,6 +3817,12 @@ function jump_to_prev_image_block() {
 
 function move_to_prev_image() {
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    if ( _via_image_grid_group_var.length ) {
+      var last_group_index = _via_image_grid_group_var.length - 1;
+      image_grid_group_prev( { 'value':last_group_index } ); // simulate button click
+    } else {
+      show_message('First, create groups by selecting items from "Group by" dropdown list');
+    }
     return;
   }
 
@@ -3828,6 +3852,12 @@ function move_to_prev_image() {
 
 function move_to_next_image() {
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    if ( _via_image_grid_group_var.length ) {
+      var last_group_index = _via_image_grid_group_var.length - 1;
+      image_grid_group_next( { 'value':last_group_index } ); // simulate button click
+    } else {
+      show_message('First, create groups by selecting items from "Group by" dropdown list');
+    }
     return;
   }
 
@@ -7380,6 +7410,7 @@ function image_grid_toolbar_onchange_group_by_select(p) {
   image_grid_group_by(attr_type, attr_name);
 
   image_grid_group_by_select_set_disabled(attr_type, attr_name, true);
+  p.blur(); // to avoid adding new groups using keyboard keys as dropdown is still in focus
 }
 
 function image_grid_remove_html_group_panel(d) {
