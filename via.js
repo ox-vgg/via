@@ -3878,6 +3878,8 @@ function set_zoom(zoom_level_index) {
 
 function reset_zoom_level() {
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    image_grid_image_size_reset();
+    show_message('Zoom reset');
     return;
   }
 
@@ -3897,6 +3899,8 @@ function reset_zoom_level() {
 
 function zoom_in() {
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    image_grid_image_size_increase();
+    show_message('Increased size of images shown in image grid');
     return;
   }
 
@@ -3920,6 +3924,8 @@ function zoom_in() {
 
 function zoom_out() {
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    image_grid_image_size_decrease();
+    show_message('Reduced size of images shown in image grid');
     return;
   }
 
@@ -7035,17 +7041,18 @@ function image_grid_add_img_if_possible(img) {
     _via_image_grid_page_last_index = index;
 
     // setup prev, next navigation
-    var info = document.getElementById('image_grid_info');
+    var info = document.getElementById('image_grid_nav');
     var html = [];
-    if ( _via_image_grid_stack_prev_page.length ) {
-      html.push('<span class="text_button left" onclick="image_grid_page_prev()">Prev</span>');
-    }
-
     var first_index = _via_image_grid_page_first_index;
     var last_index  = _via_image_grid_page_last_index - 1;
     html.push('<span>Showing ' + (first_index + 1) +
-              ' to ' + (last_index + 1) + '</span>');
-    html.push('<span class="text_button right" onclick="image_grid_page_next()">Next</span');
+              ' to ' + (last_index + 1) + '&nbsp;:</span>');
+    if ( _via_image_grid_stack_prev_page.length ) {
+      html.push('<span class="text_button" onclick="image_grid_page_prev()">Prev</span>');
+    } else {
+      html.push('<span>Prev</span>');
+    }
+    html.push('<span class="text_button" onclick="image_grid_page_next()">Next</span');
     info.innerHTML = html.join('');
   } else {
     // process this image and trigger addition of next image in sequence
@@ -7059,13 +7066,15 @@ function image_grid_add_img_if_possible(img) {
         // image grid load operation was cancelled
         _via_image_grid_page_last_index = _via_image_grid_page_first_index; // load this page again
 
-        var info = document.getElementById('image_grid_info');
+        var info = document.getElementById('image_grid_nav');
         var html = [];
+        html.push('<span>Cancelled&nbsp;:</span>');
         if ( _via_image_grid_stack_prev_page.length ) {
-          html.push('<span class="text_button left" onclick="image_grid_page_prev()">Prev</span>');
+          html.push('<span class="text_button" onclick="image_grid_page_prev()">Prev</span>');
+        } else {
+          html.push('<span>Prev</span>');
         }
-        html.push('<span>Cancelled</span>');
-        html.push('<span class="text_button right" onclick="image_grid_page_next()">Next</span');
+        html.push('<span class="text_button" onclick="image_grid_page_next()">Next</span');
         info.innerHTML = html.join('');
       }
     } else {
@@ -7079,27 +7088,22 @@ function image_grid_add_img_if_possible(img) {
       _via_image_grid_load_ongoing = false;
 
       // setup prev, next navigation
-      var info = document.getElementById('image_grid_info');
+      var info = document.getElementById('image_grid_nav');
       var html = [];
-      if ( _via_image_grid_stack_prev_page.length ) {
-        html.push('<span class="text_button left" onclick="image_grid_page_prev()">Prev</span>');
-      }
-
       var first_index = _via_image_grid_page_first_index;
       var last_index  = _via_image_grid_page_last_index;
-      html.push('<span>Showing ' + (first_index + 1) +
-                ' to ' + (last_index + 1) + ' (end)</span>');
+      html.push('<span>Showing' + (first_index + 1) +
+                ' to ' + (last_index + 1) + ' (end)&nbsp;</span>');
+      if ( _via_image_grid_stack_prev_page.length ) {
+        html.push('<span class="text_button" onclick="image_grid_page_prev()">Prev</span>');
+      } else {
+        html.push('<span>Prev</span>');
+      }
+      html.push('<span>Next</span');
+
       info.innerHTML = html.join('');
     }
   }
-}
-
-function image_grid_show_pagination() {
-  var p = document.getElementById('image_grid_info');
-  var html = [];
-  html.push('<span class="text_button">Prev</span>');
-  html.push('Showing 1 to 100');
-  html.push('<span class="text_button">Next</span>');
 }
 
 function image_grid_onchange_show_image_policy(p) {
@@ -7217,11 +7221,13 @@ function image_grid_image_size_decrease() {
   }
 }
 
-function image_grid_info(msg) {
-  document.getElementById('image_grid_info').innerHTML = msg;
-  setTimeout( function() {
-    document.getElementById('image_grid_info').innerHTML = '';
-  }, VIA_THEME_MESSAGE_TIMEOUT_MS);
+function image_grid_image_size_reset() {
+  var new_img_height = _via_settings.ui.image_grid.img_height;
+  if ( new_img_height > 1 ) {
+    _via_settings.ui.image_grid.img_height = new_img_height;
+    _via_image_grid_page_last_index = null;
+    image_grid_update();
+  }
 }
 
 function image_grid_mousedown_handler(e) {
@@ -7785,11 +7791,10 @@ function image_grid_page_prev() {
 }
 
 function image_grid_page_nav_show_cancel() {
-  var info = document.getElementById('image_grid_info');
+  var info = document.getElementById('image_grid_nav');
   var html = [];
-  html.push('Loading images ... ');
-  html.push('<span class="text_button left" onclick="image_grid_cancel_load_ongoing()">Cancel</span>');
-  html.push('<span class="text_button right" onclick="image_grid_cancel_load_ongoing()">Cancel</span>');
+  html.push('<span>Loading images ... </span>');
+  html.push('<span class="text_button" onclick="image_grid_cancel_load_ongoing()">Cancel</span>');
   info.innerHTML = html.join('');
 }
 
