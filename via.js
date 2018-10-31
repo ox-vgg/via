@@ -162,6 +162,7 @@ var _via_is_loading_current_image    = false;
 var _via_is_region_id_visible        = true;
 var _via_is_region_boundary_visible  = true;
 var _via_is_ctrl_pressed             = false;
+var _via_is_debug_mode               = true;
 
 // region
 var _via_current_shape             = VIA_REGION_SHAPE.RECT;
@@ -320,6 +321,10 @@ function _via_init() {
   console.log(VIA_NAME);
   show_message(VIA_NAME + ' (' + VIA_SHORT_NAME + ') version ' + VIA_VERSION +
                '. Ready !', 2*VIA_THEME_MESSAGE_TIMEOUT_MS);
+
+  if ( _via_is_debug_mode ) {
+    document.getElementById('ui_top_panel').innerHTML += '<span>DEBUG MODE</span>';
+  }
 
   document.getElementById('img_fn_list').style.display = 'block';
   document.getElementById('leftsidebar').style.display = 'table-cell';
@@ -6937,10 +6942,12 @@ function image_grid_set_content(img_index_list) {
   case 'gap25': // fallback
   case 'gap50': // fallback
     var del = parseInt( _via_settings.ui.image_grid.show_image_policy.substr( 'gap'.length ) );
+    console.log(del)
     var i;
     for ( i = 0; i < n; i = i + del ) {
-      _via_image_grid_page_img_index_list.push( i );
+      _via_image_grid_page_img_index_list.push(  _via_image_grid_img_index_list[i] );
     }
+    console.log(_via_image_grid_page_img_index_list)
     break;
   }
   image_grid_content_append_img( _via_image_grid_page_first_index );
@@ -7718,9 +7725,9 @@ function image_grid_set_content_to_current_group() {
   if ( n === 0 ) {
     image_grid_show_all_project_images();
   } else {
-  var group_img_index_list = [];
-  var img_index_list = _via_image_grid_group;
-  var i, n, value, current_value_index;
+    var group_img_index_list = [];
+    var img_index_list = _via_image_grid_group;
+    var i, n, value, current_value_index;
     for ( i = 0; i < n; ++i ) {
       value = _via_image_grid_group_var[i].values[ _via_image_grid_group_var[i].current_value_index ];
       img_index_list = img_index_list[ value ];
@@ -8969,16 +8976,17 @@ function generate_img_index_list(input) {
   return intersect;
 }
 
-/* comment this method during debugging sessions */
-// warn user of possible loss of data
-window.onbeforeunload = function (e) {
-  e = e || window.event;
+if ( ! _via_is_debug_mode ) {
+  // warn user of possible loss of data
+  window.onbeforeunload = function (e) {
+    e = e || window.event;
 
-  // For IE and Firefox prior to version 4
-  if (e) {
-    e.returnValue = 'Did you save your data?';
-  }
+    // For IE and Firefox prior to version 4
+    if (e) {
+      e.returnValue = 'Did you save your data?';
+    }
 
-  // For Safari
-  return 'Did you save your data?';
-};
+    // For Safari
+    return 'Did you save your data?';
+  };
+}
