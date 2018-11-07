@@ -55,7 +55,7 @@
 
 "use strict";
 
-var VIA_VERSION      = '2.0.3';
+var VIA_VERSION      = '2.0.3-beta3';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -238,6 +238,11 @@ var _via_image_grid_group                   = {}; // {'value':[image_index_list]
 var _via_image_grid_group_var               = []; // {type, name, value}
 var _via_image_grid_group_show_all          = false;
 var _via_image_grid_stack_prev_page         = []; // stack of first img index of every page navigated so far
+
+// fast annotation (quick update of annotation using keyboard shortcuts)
+var _via_is_fast_annotation_ongoing     = false;
+var _via_fast_annotation_stack          = [];
+var _via_fast_annotation_keys           = ['0','1','2','3','4','5','6','7','8','9'];
 
 // image buffer
 var VIA_IMG_PRELOAD_INDICES         = [1, -1, 2, 3, -2, 4]; // for any image, preload previous 2 and next 4 images
@@ -3288,17 +3293,17 @@ function _via_handle_global_keydown_event(e) {
     return;
   }
 
-  // check if user wants to update the region shape with numeric keys
-  var shape_index_list = {};
-  var count = 1;
-  for ( var shape in VIA_REGION_SHAPE ) {
-    shape_index_list[ String(count) ] = VIA_REGION_SHAPE[shape];
-    count = count + 1;
+  if ( _via_fast_annotation_keys.includes(e.key) ) {
+    // fast annotation mode
+    // @todo
+    console.log('@todo: fast annotation mode');
   }
-  if ( shape_index_list.hasOwnProperty(e.key) ) {
-    select_region_shape( shape_index_list[e.key] );
-    e.preventDefault();
-    return;
+
+  if ( e.key === 'a' ) {
+    if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+      // select all in image grid
+      image_grid_group_toggle_select_all();
+    }
   }
 
   if ( e.key === 'Escape' ) {
@@ -3541,6 +3546,7 @@ function del_sel_regions() {
 
 function sel_all_regions() {
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    image_grid_group_toggle_select_all();
     return;
   }
 
@@ -3771,12 +3777,36 @@ function show_last_image() {
   }
 }
 
+function jump_image_block_get_count() {
+  var n = _via_img_fn_list_img_index_list.length;
+  if ( n < 20 ) {
+    return 2;
+  }
+  if ( n < 100 ) {
+    return 10;
+  }
+  if ( n < 1000 ) {
+    return 25;
+  }
+  if ( n < 5000 ) {
+    return 50;
+  }
+  if ( n < 10000 ) {
+    return 100;
+  }
+  if ( n < 50000 ) {
+    return 500;
+  }
+
+  return Math.round( n / 50 );
+}
+
 function jump_to_next_image_block() {
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
     return;
   }
 
-  var jump_count = Math.round( _via_img_fn_list_img_index_list.length / 20 );
+  var jump_count = jump_image_block_get_count();
   if ( jump_count > 1 ) {
     var current_img_index = _via_image_index;
     if ( _via_img_fn_list_img_index_list.includes( current_img_index ) ) {
@@ -3798,7 +3828,7 @@ function jump_to_prev_image_block() {
     return;
   }
 
-  var jump_count = Math.round( _via_img_fn_list_img_index_list.length / 20 );
+  var jump_count = jump_image_block_get_count();
   if ( jump_count > 1 ) {
     var current_img_index = _via_image_index;
     if ( _via_img_fn_list_img_index_list.includes( current_img_index ) ) {
@@ -5684,10 +5714,10 @@ function annotation_editor_get_metadata_row_html(row_id) {
       var attr_metadata_stat;
       switch(_via_metadata_being_updated) {
       case 'region':
-        attr_metadata_stat = _via_get_region_metadata_stat(_via_image_grid_img_index_list, attr_id);
+        attr_metadata_stat = _via_get_region_metadata_stat(_via_image_grid_selected_img_index_list, attr_id);
         break;
       case 'file':
-        attr_metadata_stat = _via_get_file_metadata_stat(_via_image_grid_img_index_list, attr_id);
+        attr_metadata_stat = _via_get_file_metadata_stat(_via_image_grid_selected_img_index_list, attr_id);
         break;
       }
 
@@ -5695,21 +5725,35 @@ function annotation_editor_get_metadata_row_html(row_id) {
       case 'text':
         if ( attr_metadata_stat.hasOwnProperty(attr_id) ) {
           var attr_value_set = Object.keys(attr_metadata_stat[attr_id]);
-          if ( attr_value_set.length === 1 ) {
-            attr_value = attr_value_set[0];
-            attr_placeholder = '';
-          } else {
+          console.log(attr_metadata_stat[attr_id])
+          if ( attr_value_set.includes('undefined') ) {
             attr_value = '';
-            attr_placeholder = attr_value_set.length + ' different values';
+            attr_placeholder = 'includes ' + attr_metadata_stat[attr_id]['undefined'] + ' undefined values';
+          } else {
+            switch( attr_value_set.length ) {
+            case 0:
+              attr_value = '';
+              attr_placeholder = 'not applicable';
+              break;
+            case 1:
+              attr_value = attr_value_set[0];
+              attr_placeholder = '';
+              break;
+            default:
+              attr_value = '';
+              attr_placeholder = attr_value_set.length + ' different values: ' + JSON.stringify(attr_value_set).replace(/"/g,'\'');
+              console.log(JSON.stringify(attr_value_set))
+            }
           }
         } else {
           attr_value = '';
           attr_placeholder = 'not defined yet!';
         }
         break;
-      case 'radio':
-      case 'dropdown':
-      case 'image':
+
+      case 'radio':    // fallback
+      case 'dropdown': // fallback
+      case 'image':    // fallback
         if ( attr_metadata_stat.hasOwnProperty(attr_id) ) {
           var attr_value_set = Object.keys(attr_metadata_stat[attr_id]);
           if ( attr_value_set.length === 1 ) {
@@ -6001,6 +6045,7 @@ function _via_get_region_metadata_stat(img_index_list, attr_id) {
         // skip region not in current group
         continue;
       }
+
       value = _via_img_metadata[img_id].regions[j].region_attributes[attr_id];
       if ( typeof(value) === 'object' ) {
         // checkbox has multiple values and hence is object
@@ -6436,11 +6481,17 @@ function project_open_parse_json_file(project_file_data) {
     // import settings
     project_import_settings(d['_via_settings']);
 
-    // import image metadata
-    _via_img_metadata = d['_via_img_metadata'];
+    // clear existing data (if any)
     _via_image_id_list = [];
     _via_image_filename_list = [];
     _via_img_count = 0;
+    _via_img_metadata = {};
+    _via_img_fileref = {};
+    _via_img_src = {};
+    _via_buffer_remove_all();
+
+    // import image metadata
+    _via_img_metadata = d['_via_img_metadata'];
     var img_id;
     for ( img_id in _via_img_metadata ) {
       _via_image_id_list.push(img_id);
@@ -6894,6 +6945,7 @@ function image_grid_update() {
 function image_grid_toggle() {
   var p = document.getElementById('toolbar_image_grid_toggle');
   if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
+    image_grid_clear_all_groups();
     show_single_image_view();
   } else {
     show_image_grid_view();
@@ -6911,6 +6963,7 @@ function image_grid_show_all_project_images() {
 
   var p = document.getElementById('image_grid_toolbar_group_by_select');
   p.selectedIndex = 0;
+
   image_grid_set_content(all_img_index_list);
 }
 
@@ -6937,6 +6990,8 @@ function image_grid_set_content(img_index_list) {
   }
 
   _via_image_grid_img_index_list = img_index_list.slice(0);
+  _via_image_grid_selected_img_index_list = img_index_list.slice(0);
+
   document.getElementById('image_grid_group_by_img_count').innerHTML = _via_image_grid_img_index_list.length;
 
   _via_image_grid_page_first_index    = 0;
@@ -6984,14 +7039,17 @@ function image_grid_set_content(img_index_list) {
     }
     break;
   }
-  // select all images by default
-  _via_image_grid_selected_img_index_list = _via_image_grid_img_index_list.slice(0);
-  image_grid_update_sel_count_html();
 
   _via_image_grid_visible_img_index_list = [];
+
+  image_grid_update_sel_count_html();
+  annotation_editor_update_content();
+
   image_grid_content_append_img( _via_image_grid_page_first_index );
 
-  show_message('Click on image to toggle selection, [Ctrl/Shift] + click on image to toggle selection of all images to the left/right in current group.')
+  show_message('[Click] toggles selection, ' +
+               '[Shift + Click] selects everything a image, ' +
+               '[Click] or [Ctrl + Click] removes selection of all subsequent or preceeding images.');
 }
 
 function image_grid_clear_content() {
@@ -7075,7 +7133,7 @@ function image_grid_add_img_if_possible(img) {
     var html = [];
     var first_index = _via_image_grid_page_first_index;
     var last_index  = _via_image_grid_page_last_index - 1;
-    html.push('<span>Showing ' + (first_index + 1) +
+    html.push('<span>Showing&nbsp;' + (first_index + 1) +
               ' to ' + (last_index + 1) + '&nbsp;:</span>');
     if ( _via_image_grid_stack_prev_page.length ) {
       html.push('<span class="text_button" onclick="image_grid_page_prev()">Prev</span>');
@@ -7088,9 +7146,15 @@ function image_grid_add_img_if_possible(img) {
     // process this image and trigger addition of next image in sequence
     var img_fn_list_index = _via_image_grid_page_img_index_list.indexOf(img_index);
     var next_img_fn_list_index = img_fn_list_index + 1;
+
+    _via_image_grid_visible_img_index_list.push( img_index );
+    var is_selected = ( _via_image_grid_selected_img_index_list.indexOf(img_index) !== -1 );
+    if ( ! is_selected ) {
+      image_grid_update_img_select(img_index, 'unselect');
+    }
+
     if ( next_img_fn_list_index !==  _via_image_grid_page_img_index_list.length ) {
       if ( _via_image_grid_load_ongoing ) {
-        _via_image_grid_visible_img_index_list.push( img_index );
         image_grid_content_append_img( img_fn_list_index + 1 );
       } else {
         // image grid load operation was cancelled
@@ -7122,7 +7186,7 @@ function image_grid_add_img_if_possible(img) {
       var html = [];
       var first_index = _via_image_grid_page_first_index;
       var last_index  = _via_image_grid_page_last_index;
-      html.push('<span>Showing' + (first_index + 1) +
+      html.push('<span>Showing&nbsp;' + (first_index + 1) +
                 ' to ' + (last_index + 1) + ' (end)&nbsp;</span>');
       if ( _via_image_grid_stack_prev_page.length ) {
         html.push('<span class="text_button" onclick="image_grid_page_prev()">Prev</span>');
@@ -7186,6 +7250,7 @@ function image_grid_show_region_shape(img_index, img_param) {
   return new Promise( function(ok_callback, err_callback) {
     var i;
     var img_id = _via_image_id_list[img_index];
+    var html_img_id = image_grid_get_html_img_id(img_index);
     var n = _via_img_metadata[img_id].regions.length;
     var is_in_group = false;
     for ( i = 0; i < n; ++i ) {
@@ -7223,7 +7288,9 @@ function image_grid_show_region_shape(img_index, img_param) {
       var offset_x     = img_param[4];
       var offset_y     = img_param[5];
       var r2 = new _via_region( r.name, i, dimg, scale_factor, offset_x, offset_y);
-      var r2_svg = r2.get_svg_element()
+      var r2_svg = r2.get_svg_element();
+      r2_svg.setAttribute('id', image_grid_get_html_region_id(img_index, i));
+      r2_svg.setAttribute('class', html_img_id);
       r2_svg.setAttribute('fill',         _via_settings.ui.image_grid.rshape_fill);
       //r2_svg.setAttribute('fill-opacity', _via_settings.ui.image_grid.rshape_fill_opacity);
       r2_svg.setAttribute('stroke',       _via_settings.ui.image_grid.rshape_stroke);
@@ -7267,44 +7334,54 @@ function image_grid_mousedown_handler(e) {
 
 function image_grid_mouseup_handler(e) {
   e.preventDefault();
+  var last_mouseup_img_index = _via_image_grid_mouseup_img_index;
   _via_image_grid_mouseup_img_index = image_grid_parse_html_img_id(e.target.id);
+  if ( isNaN(_via_image_grid_mousedown_img_index) ||
+       isNaN(_via_image_grid_mouseup_img_index)) {
+    last_mouseup_img_index = _via_image_grid_img_index_list[0];
+    image_grid_group_select_none();
+    return;
+  }
+
+  var mousedown_img_arr_index = _via_image_grid_img_index_list.indexOf(_via_image_grid_mousedown_img_index);
+  var mouseup_img_arr_index = _via_image_grid_img_index_list.indexOf(_via_image_grid_mouseup_img_index);
 
   var start = -1;
   var end   = -1;
-  var operation = 'toggle'; // {'select', 'unselect', 'toggle'}
-  if ( _via_image_grid_mouseup_img_index === _via_image_grid_mousedown_img_index ) {
-    if ( ! e.shiftKey && ! e.ctrlKey ) {
-      // toggle selection of single image
-      start = _via_image_grid_mouseup_img_index;
-      end   = start;
+  var operation = 'select'; // {'select', 'unselect', 'toggle'}
+  if ( mousedown_img_arr_index === mouseup_img_arr_index ) {
+    if ( e.shiftKey ) {
+      // select all elements until this element
+      start = _via_image_grid_img_index_list.indexOf(last_mouseup_img_index) + 1;
+      end   = mouseup_img_arr_index + 1;
     } else {
-      if ( e.shiftKey ) {
-        // toggle selection of all images BEFORE mousedown image
-        start = _via_image_grid_mousedown_img_index + 1;
-        end   = _via_image_grid_img_index_list.length - 1;
-      } else {
-        // toggle selection of all images AFTER mousedown image
-        start = 0;
-        end   = _via_image_grid_mousedown_img_index - 1;
-      }
+      // toggle selection of single image
+      start = mousedown_img_arr_index;
+      end   = start + 1;
+      operation = 'toggle';
     }
   } else {
-    if ( _via_image_grid_mousedown_img_index < _via_image_grid_mouseup_img_index ) {
-      start = _via_image_grid_mousedown_img_index;
-      end   = _via_image_grid_mouseup_img_index;
+    if ( mousedown_img_arr_index < mouseup_img_arr_index ) {
+      start = mousedown_img_arr_index;
+      end   = mouseup_img_arr_index + 1;
     } else {
-      start = _via_image_grid_mouseup_img_index;
-      end   = _via_image_grid_mousedown_img_index;
+      start = mouseup_img_arr_index + 1;
+      end   = mousedown_img_arr_index;
     }
+    operation = 'toggle';
+  }
+
+  if ( start > end ) {
+    return;
   }
 
   var i, img_index;
-  for ( i = start; i <= end; ++i ) {
+  for ( i = start; i < end; ++i ) {
     img_index = _via_image_grid_img_index_list[i];
     image_grid_update_img_select(img_index, operation);
   }
-
   image_grid_update_sel_count_html();
+  annotation_editor_update_content();
 }
 
 function image_grid_update_sel_count_html() {
@@ -7313,8 +7390,9 @@ function image_grid_update_sel_count_html() {
 
 // state \in {'select', 'unselect', 'toggle'}
 function image_grid_update_img_select(img_index, state) {
+  var html_img_id = image_grid_get_html_img_id(img_index);
   var is_selected = ( _via_image_grid_selected_img_index_list.indexOf(img_index) !== -1 );
-  if ( state === 'toggle' ) {
+  if (state === 'toggle' ) {
     if ( is_selected ) {
       state = 'unselect';
     } else {
@@ -7322,18 +7400,54 @@ function image_grid_update_img_select(img_index, state) {
     }
   }
 
-  var html_img_id = image_grid_get_html_img_id(img_index);
-  if ( state === 'select' ) {
-    _via_image_grid_selected_img_index_list.push(img_index);
+  switch(state) {
+  case 'select':
+    if ( ! is_selected ) {
+      _via_image_grid_selected_img_index_list.push(img_index);
+    }
     if ( _via_image_grid_visible_img_index_list.indexOf(img_index) !== -1 ) {
       document.getElementById(html_img_id).classList.remove('not_sel');
     }
-  } else {
-    var arr_index = _via_image_grid_selected_img_index_list.indexOf(img_index);
-    _via_image_grid_selected_img_index_list.splice(arr_index, 1);
+    break;
+  case 'unselect':
+    if ( is_selected ) {
+      var arr_index = _via_image_grid_selected_img_index_list.indexOf(img_index);
+      _via_image_grid_selected_img_index_list.splice(arr_index, 1);
+    }
     if ( _via_image_grid_visible_img_index_list.indexOf(img_index) !== -1 ) {
       document.getElementById(html_img_id).classList.add('not_sel');
     }
+    break;
+  }
+}
+
+function image_grid_group_select_all() {
+  image_grid_group_set_all_selection_state('select');
+  image_grid_update_sel_count_html();
+  annotation_editor_update_content();
+  show_message('Selected all images in the current group');
+}
+
+function image_grid_group_select_none() {
+  image_grid_group_set_all_selection_state('unselect');
+  image_grid_update_sel_count_html();
+  annotation_editor_update_content();
+  show_message('Removed selection of all images in the current group');
+}
+
+function image_grid_group_set_all_selection_state(state) {
+  var i, img_index;
+  for ( i = 0; i < _via_image_grid_img_index_list.length; ++i ) {
+    img_index = _via_image_grid_img_index_list[i];
+    image_grid_update_img_select(img_index, state);
+  }
+}
+
+function image_grid_group_toggle_select_all() {
+  if ( _via_image_grid_selected_img_index_list.length === _via_image_grid_img_index_list.length ) {
+    image_grid_group_select_none();
+  } else {
+    image_grid_group_select_all();
   }
 }
 
@@ -7344,6 +7458,22 @@ function image_grid_parse_html_img_id(html_img_id) {
 
 function image_grid_get_html_img_id(img_index) {
   return 'im' + img_index;
+}
+
+function image_grid_parse_html_region_id(html_region_id) {
+  var chunks = html_region_id.split('_');
+  if ( chunks.length === 2 ) {
+    var img_index = parseInt(chunks[0].substr(2));
+    var region_id = parseInt(chunks[1].substr(2));
+    return {'img_index':img_index, 'region_id':region_id};
+  } else {
+    console.log('image_grid_parse_html_region_id(): invalid html_region_id');
+    return {};
+  }
+}
+
+function image_grid_get_html_region_id(img_index, region_id) {
+  return image_grid_get_html_img_id(img_index) + '_rs' + region_id;
 }
 
 function image_grid_dblclick_handler(e) {
@@ -7445,7 +7575,7 @@ function image_grid_add_html_group_panel(d) {
     value = d.values[i];
     var o = document.createElement('option');
     o.setAttribute('value', value);
-    o.innerHTML = '(' + (i+1) + '/' + n + ') ' + d.name + ' = ' + value;
+    o.innerHTML = (i+1) + '/' + n + ': ' + d.name + ' = ' + value;
     if ( value === current_value ) {
       o.setAttribute('selected', 'selected');
     }
@@ -7480,7 +7610,7 @@ function image_grid_group_panel_set_options(group_index) {
     value = _via_image_grid_group_var[group_index].values[i];
     var o = document.createElement('option');
     o.setAttribute('value', value);
-    o.innerHTML = '(' + (i+1) + '/' + n + ') ' + name + ' = ' + value;
+    o.innerHTML = (i+1) + '/' + n + ': ' + name + ' = ' + value;
     if ( value === current_value ) {
       o.setAttribute('selected', 'selected');
     }
@@ -7554,6 +7684,7 @@ function image_grid_group_by(type, name) {
     var new_group_values = Object.keys(_via_image_grid_group);
     _via_image_grid_group_var = [];
     _via_image_grid_group_var.push( { 'type':type, 'name':name, 'current_value_index':0, 'values':new_group_values, 'group_index':0 } );
+
     image_grid_add_html_group_panel(_via_image_grid_group_var[0]);
   } else {
     image_grid_group_split_all_arrays( _via_image_grid_group, type, name );
@@ -7781,6 +7912,7 @@ function image_grid_jump_to_group(group_index, value_index) {
 
 function image_grid_set_content_to_current_group() {
   var n = _via_image_grid_group_var.length;
+
   if ( n === 0 ) {
     image_grid_show_all_project_images();
   } else {
@@ -7798,7 +7930,6 @@ function image_grid_set_content_to_current_group() {
       console.log('Error: image_grid_set_content_to_current_group(): expected array while got ' + typeof(img_index_list));
     }
   }
-  annotation_editor_update_content();
 }
 
 function image_grid_page_next() {
