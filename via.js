@@ -1093,17 +1093,8 @@ function pack_via_metadata(return_type) {
 function save_data_to_local_file(data, filename) {
   var a      = document.createElement('a');
   a.href     = URL.createObjectURL(data);
-  a.target   = '_blank';
   a.download = filename;
-
-  // simulate a mouse click event
-  var event = new MouseEvent('click', {
-    view: window,
-    bubbles: true,
-    cancelable: true
-  });
-
-  a.dispatchEvent(event);
+  a.click();
 }
 
 //
