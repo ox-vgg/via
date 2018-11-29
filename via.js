@@ -162,7 +162,7 @@ var _via_is_loading_current_image    = false;
 var _via_is_region_id_visible        = true;
 var _via_is_region_boundary_visible  = true;
 var _via_is_ctrl_pressed             = false;
-var _via_is_debug_mode               = true;
+var _via_is_debug_mode               = false;
 
 // region
 var _via_current_shape             = VIA_REGION_SHAPE.RECT;

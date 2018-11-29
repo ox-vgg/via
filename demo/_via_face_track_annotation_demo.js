@@ -29,23 +29,23 @@
 function _via_load_submodules() {
   //toggle_attributes_editor();
   //update_attributes_update_panel();
-  annotation_editor_show();
+  //annotation_editor_show();
 
   _via_face_track_annotation_demo_define_attributes();
   _via_face_track_annotation_demo_import();
 
-/*
   setTimeout( function() {
     image_grid_toggle();
-  }, 1000);
+  }, 200);
+/*
+  setTimeout( function() {
+    image_grid_group_by('region', 'track');
+  }, 3000);
 
   setTimeout( function() {
     image_grid_group_by('file', 'shot');
   }, 2000);
 
-  setTimeout( function() {
-    image_grid_group_by('region', 'track');
-  }, 3000);
 */
 }
 

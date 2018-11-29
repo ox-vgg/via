@@ -33,3 +33,6 @@ If you have cited VIA in your work (research paper, blog, report, presentation, 
 > With this simple modification I found I could do bounding-boxs and labels with 3 classes at a rate of 15-20 images per minute.
 > VIA 1.0.6 is contained in a single html file that does not load any external javascript libraries. It is nearly 5000 lines of mostly javascript. It did take me awhile to figure out how add the functionality that I wanted. What I did is not elegant or representative of good coding practice. It's just a simple quick "hack" to make it do what I want.
 > I'll end with a thank you to the VGG group for all of the great software they are making available to the community.
+
+* Ajinkya Dharap (Tech Lead, Larsen & Toubro Infotech Ltd.) <Ajinkyajayant.Dharap@lntinfotech.com> on 16 Nov. 2018
+> Thanks a lot for your help. We already knew that this via tool could help in our work but with your help we are now able to integrate it with out local web app and we all really appreciate that. Thank you so much again.

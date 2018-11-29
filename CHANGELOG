@@ -1,7 +1,20 @@
-## [2.0.4] - not released yet
- * ...
+## [2.0.5] - not released yet
+ * fast annotation mode @todo
+    - keyboard input '123' denotes the following operation: select region 1, set 3 as the value of region attribute 2.
+    - if there is a single region attribute, the '13' sets 3 as the value of region 1
+    - if there are more than 9 regions, '1223' applies operation '23' to region '12'
+    - '0' is reserved to set the file attribute
+    - '023' assigns value 3 to the file attribute 2
+    - provide visual cues to the user when doing these operations (update bottom status bar as keys are pressed)
 
-## [2.0.3] - October 25, 2018
+## [2.0.4] - November 29, 2018
+ * fixed annotation download issue encountered in Safari browser (issue 162, thank you @fredowski)
+ * region selection state flag is now cleared and re-initialized when a new image is loaded (issue 159)
+ * fixed missing state variable `_via_is_ctrl_pressed` issue (issue 160)
+ * when drawing polyshape, [Enter] finishes drawing and [Backspace] deletes last vertex (issue 163, 164)
+ * improved subselection of images in a group (image grid view)
+
+## [2.0.3] - October 25, 2018 (REVOKED: Bug with region resize)
  * keyboard handling for zoom +/-/= changed from e.which() to e.key() (merge request 10 contributed by @fredowski)
  * simplified and improved keyboard shortcut keys, global shortcut keys (like next/prev image) are active even when canvas is not in focus
  * fix issues with on-image annotation editor (issue 155)
@@ -82,7 +95,7 @@
 ## [1.0.3] - August 07, 2017
  * CSV export now does not add extra comma to each line (issue 103)
 
-## [1.0.2] - August 04, 2017
+## [1.0.2] - August 04, 2017 (REVOKED: Broken CSV export)
  * removed free resize of ellipse from any edge (issue 100)
  * fixed free resize of rectangle (issue 101)
  * fixed 1-pixel bug (first set image space coordinate, then set canvas coordinate. see issue 96) for region resize and move

@@ -3,6 +3,9 @@ We welcome all forms of contributions (code update, documentation, etc) from use
 These contributions must adhere to the existing [license](LICENSE) of VIA project.
 Here is the list of current contributions to VIA project.
 
+* Friedrich Beckmann (@fredowski) in via-2.0.4 (https://gitlab.com/vgg/via/merge_requests/11, 24 Nov. 2018)
+  * fixed annotation download issue encountered in Safari browser (see https://gitlab.com/vgg/via/issues/162)
+
 * Friedrich Beckmann (@fredowski) in via-2.0.3 (https://gitlab.com/vgg/via/merge_requests/10, 11 Oct. 2018)
   * changed keyboard handling for zoom +/-/= from e.which() to e.key() because e.which() is deprecated
 
