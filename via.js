@@ -55,7 +55,7 @@
 
 "use strict";
 
-var VIA_VERSION      = '2.0.4';
+var VIA_VERSION      = '2.0.5';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -1094,7 +1094,19 @@ function save_data_to_local_file(data, filename) {
   var a      = document.createElement('a');
   a.href     = URL.createObjectURL(data);
   a.download = filename;
-  a.click();
+
+  // simulate a mouse click event
+  var event = new MouseEvent('click', {
+    view: window,
+    bubbles: true,
+    cancelable: true
+  });
+  a.dispatchEvent(event);
+
+  // @todo: replace a.dispatchEvent() with a.click()
+  // a.click() based trigger is supported in Chrome 70 and Safari 11/12 but **not** in Firefox 63
+  //a.click();
+
 }
 
 //
