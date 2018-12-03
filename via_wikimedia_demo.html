@@ -922,7 +922,7 @@
             </a>
           </div>
 
-          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.4</a></p>
+          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.5</a></p>
           <p>VGG Image Annotator (VIA) is an image annotation tool that can be used to define regions in an image and create textual descriptions of those regions. VIA is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.</p>
           <p>Here is a list of some salient features of VIA:
             <ul>
@@ -11044,7 +11044,7 @@ var _via_demo_wikimedia_commons_featured_img_list = ["https://upload.wikimedia.o
 
 "use strict";
 
-var VIA_VERSION      = '2.0.4';
+var VIA_VERSION      = '2.0.5';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -12083,7 +12083,19 @@ function save_data_to_local_file(data, filename) {
   var a      = document.createElement('a');
   a.href     = URL.createObjectURL(data);
   a.download = filename;
-  a.click();
+
+  // simulate a mouse click event
+  var event = new MouseEvent('click', {
+    view: window,
+    bubbles: true,
+    cancelable: true
+  });
+  a.dispatchEvent(event);
+
+  // @todo: replace a.dispatchEvent() with a.click()
+  // a.click() based trigger is supported in Chrome 70 and Safari 11/12 but **not** in Firefox 63
+  //a.click();
+
 }
 
 //
