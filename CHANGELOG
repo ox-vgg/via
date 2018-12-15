@@ -1,3 +1,13 @@
+## [3.0.0] - not released yet
+ * video annotator
+ * loadable modules that implement computer vision algorithms to support and speedup the manual annotation process
+    - kernelized correlation tracker to automatically track an object in subsequent frames
+    - cfnet based tracker
+    - ...
+ * collaborative annotation
+    - support a large number of people collaboratively annotating a large image and video dataset
+    - support for different data sink (local fossil/gitlab repository, remote gitlab repository, etc.)
+
 ## [2.0.6] - not released yet
  * fast annotation mode @todo
     - keyboard input '123' denotes the following operation: select region 1, set 3 as the value of region attribute 2.
