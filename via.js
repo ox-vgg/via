@@ -55,7 +55,7 @@
 
 "use strict";
 
-var VIA_VERSION      = '2.0.5';
+var VIA_VERSION      = '2.0.6';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -162,7 +162,7 @@ var _via_is_loading_current_image    = false;
 var _via_is_region_id_visible        = true;
 var _via_is_region_boundary_visible  = true;
 var _via_is_ctrl_pressed             = false;
-var _via_is_debug_mode               = false;
+var _via_is_debug_mode               = true;
 
 // region
 var _via_current_shape             = VIA_REGION_SHAPE.RECT;
