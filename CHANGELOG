@@ -1,4 +1,4 @@
-## [2.0.6] - not released yet
+## [2.0.7] - not released yet
  * fast annotation mode @todo
     - keyboard input '123' denotes the following operation: select region 1, set 3 as the value of region attribute 2.
     - if there is a single region attribute, the '13' sets 3 as the value of region 1
@@ -6,6 +6,9 @@
     - '0' is reserved to set the file attribute
     - '023' assigns value 3 to the file attribute 2
     - provide visual cues to the user when doing these operations (update bottom status bar as keys are pressed)
+
+## [2.0.6] - not released yet
+ * fixed wrong region location for high zoom levels for large images (Closes: #166, thank you @fredowski) 
  * image grid view
     - cancel ongoing image load process
     - add a "UNASSIGNED" group to denote all the files that do not have a value for the group variable
