@@ -17,8 +17,9 @@ function _via_manual_annotator(file, parent_html_element) {
   this.state.content_natural_height = 0;
   this.state.content_width = 0;
   this.state.content_height = 0;
-  this.state.content_scale = 1;
+  this.state.content_aspect_ratio = 1;
   this.state.content_duration = 0;
+  this.state.frame_preview = {'load_ongoing':false};
 
   this.config = {};
   this.config.layout = {};
@@ -44,8 +45,10 @@ function _via_manual_annotator(file, parent_html_element) {
 }
 
 _via_manual_annotator.prototype.init_via_manual_annotator = function() {
+  console.log('loading ...')
   this.load_content(this.file).then( function(content_html_element) {
     this.content = content_html_element;
+    console.log('load done')
 
     this.init_control(this.content).then( function(control_html_element) {
       this.control = control_html_element;
@@ -69,6 +72,7 @@ _via_manual_annotator.prototype.init_container = function() {
 // Content Panel
 //
 _via_manual_annotator.prototype.load_content = function(file) {
+  console.log(file)
   return new Promise( function(ok_callback, err_callback) {
     var el;
     if ( this.file.type === _via_file.prototype.FILE_TYPE.VIDEO ) {
@@ -97,6 +101,7 @@ _via_manual_annotator.prototype.load_content = function(file) {
         }
         this.state.content_width = cw;
         this.state.content_height = ch;
+        this.state.content_aspect_ratio = ch/cw;
         el.setAttribute('width', this.state.content_width);
         el.setAttribute('height', this.state.content_height);
         ok_callback(el);
@@ -121,11 +126,12 @@ _via_manual_annotator.prototype.init_control = function(content) {
     c.height = this.state.parent_height - this.state.content_height  - 2*this.config.layout.control_padding;
     c.setAttribute('style', this.config.style.control);
 
-    var ctx = c.getContext('2d');
+    var ctx = c.getContext('2d', { alpha: false });
     ctx.beginPath();
     ctx.strokeStyle = '#ffffff';
     ctx.fillStyle = '#ffffff';
     ctx.font = '12px sans';
+    ctx.lineWidth = 1;
 
     var char_width = ctx.measureText('M').width;
     var timepanel_x0 = char_width;
@@ -141,20 +147,83 @@ _via_manual_annotator.prototype.init_control = function(content) {
 
     // draw time gratings
     var grating = this.get_timepanel_gratings();
-    var N = grating.time_gratings.length;
+    var Ng = grating.time_gratings.length;
     var y0 = timepanel_y0;
     var y1 = timepanel_y0 + grating_height;
-    for ( var i = 0; i < N; ++i ) {
-      var x = Math.floor( timepanel_x0 + ( i * timepanel_width / (N-1) ) );
+    for ( var i = 0; i < Ng; ++i ) {
+      var x = Math.floor( timepanel_x0 + ( i * timepanel_width / (Ng-1) ) );
       ctx.moveTo(x, y0);
       ctx.lineTo(x, y1);
       ctx.fillText( String(grating.time_gratings[i]), x-char_width, y1+2*char_width );
     }
     ctx.fillText( grating.time_unit, timepanel_x0, y1+2*char_width );
+
+    // draw frame preview
+    var N = 10;
+    var df = char_width;
+    var fw = Math.floor( ( timepanel_width - (N - 1) * df ) / N );
+    var fh = Math.floor(fw * this.state.content_aspect_ratio);
+    console.log('N='+N+', df='+df+', fw='+fw+', fh='+fh);
+
+    var frame_y0 = c.height - 120;
+    var frame_y1 = frame_y0 + fh;
+    this.state.frame_preview = { 'time':[], 'x':[], 'y':[], 'fw':fw, 'fh':fh, 'now':0 };
+    for ( var i = 0; i < N; ++i ) {
+      var xfmid = Math.floor(fw/2) + i*(df + fw);
+      var ftime = Number.parseFloat(this.state.content_duration * xfmid / timepanel_width).toFixed(6);
+      var fx0 = timepanel_x0 + xfmid - fw/2;
+      var fy0 = frame_y0 - fh;
+      ctx.moveTo(timepanel_x0 + xfmid, frame_y0);
+      ctx.lineTo(timepanel_x0 + xfmid, frame_y1);
+      ctx.rect(fx0, fy0, fw, fh);
+      console.log('fx0='+fx0+', fy0='+fy0+', fw='+fw+', fh='+fh+', xfmid='+xfmid);
+      this.state.frame_preview.time[i] = ftime;this.state.frame_preview.time[this.state.frame_preview.now]
+      this.state.frame_preview.x[i]    = fx0;
+      this.state.frame_preview.y[i]    = fy0;
+    }
     ctx.stroke();
+
+    // trigger loading of frame_preview panel
+    this.state.frame_preview.load_ongoing = true;
+    this.state.frame_preview.now = 0;
+    this.content.pause();
+    this.content.addEventListener('seeked', this.on_video_seek_done.bind(this));
+    this.load_frame_preview();
 
     ok_callback(c);
   }.bind(this));
+}
+
+_via_manual_annotator.prototype.load_frame_preview = function() {
+  if ( this.state.frame_preview.now < this.state.frame_preview.time.length ) {
+    //this.content.pause();
+    this.content.currentTime = this.state.frame_preview.time[this.state.frame_preview.now];
+  } else {
+    // stop frame_preview load process
+    this.state.frame_preview.load_ongoing = false;
+    this.content.removeEventListener('seeked', this.on_video_seek_done.bind(this));
+  }
+}
+
+_via_manual_annotator.prototype.on_video_seek_done = function() {
+  if ( this.state.frame_preview.load_ongoing ) {
+    // draw the frame and trigger another seek
+    var ctx = this.control.getContext('2d', { alpha: false });
+    var fi = this.state.frame_preview.now;
+
+    ctx.drawImage( this.content,
+                   0, 0,
+                   this.state.content_natural_width,
+                   this.state.content_natural_height,
+                   this.state.frame_preview.x[fi],
+                   this.state.frame_preview.y[fi],
+                   this.state.frame_preview.fw,
+                   this.state.frame_preview.fh
+                 );
+    console.log('0,0,'+this.state.content_width+','+this.state.content_height+' : '+this.state.frame_preview.x[fi]+','+this.state.frame_preview.y[fi]+','+this.state.frame_preview.fw+','+this.state.frame_preview.fh)
+    this.state.frame_preview.now = this.state.frame_preview.now + 1;
+    this.load_frame_preview(); // keep loading remaining frames
+  }
 }
 
 _via_manual_annotator.prototype.get_timepanel_gratings = function() {
