@@ -3955,8 +3955,8 @@ function set_zoom(zoom_level_index) {
 
   var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
   set_all_canvas_scale(zoom_scale);
-  var canvas_w = _via_current_image.naturalWidth  * zoom_scale / _via_canvas_scale_without_zoom;
-  var canvas_h = _via_current_image.naturalHeight * zoom_scale / _via_canvas_scale_without_zoom;
+  var canvas_w = ( _via_current_image.naturalWidth  * zoom_scale ) / _via_canvas_scale_without_zoom;
+  var canvas_h = ( _via_current_image.naturalHeight * zoom_scale ) / _via_canvas_scale_without_zoom;
   set_all_canvas_size(canvas_w, canvas_h);
   _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
   _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
