@@ -15,6 +15,10 @@ function _via_file(uri, type) {
   }
 }
 
+_via_file.prototype.id = function() {
+  return this.uri;
+}
+
 _via_file.prototype.FILE_TYPE = { IMAGE:'image', VIDEO:'video', AUDIO:'audio' };
 
 _via_file.prototype.infer_file_type = function(uri) {

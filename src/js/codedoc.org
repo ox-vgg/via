@@ -1,0 +1,32 @@
+* Primitives
+  - _via_file.js
+  - _via_region.js
+  - _via_segment.js
+* View
+  - _via_file_annotator.js
+    - annotate a single file (image, video, audio)
+    - Events
+      - region_{add,del,update}
+      - segment_{add,del,update}
+    - Interface
+      - file_load()
+      - file_preload()
+      - add_event_listener()
+      - remove_event_listner()
+      - config(key,value)
+        - preload_cache_size
+        - ui_layout
+  - _via_filegroup_annotator.js
+    - annotate a group of files
+  - _via_filelist.js
+    - add_file()
+    - remove_file()
+    - group_by_filegroup()
+    - group_by_metadata()
+  - _via_annotation_editor.js
+    - show_metadata(file)
+    - show_file_group()
+    - show_metadata_group()
+
+* _via_controller.js
+* _via_model.js
