@@ -10,6 +10,11 @@
 <body>
   <h1>VGG Image Annotator 3.x.y</h1>
   <div>
+    <button onclick="ma.file_load_and_show( 'https://upload.wikimedia.org/wikipedia/commons/7/72/Red_fox_catches_a_mouse.webm' )">Demo 1: Fox and Mouse</button>
+    <button onclick="ma.file_load_and_show( 'https://upload.wikimedia.org/wikipedia/commons/2/29/Moon_transit_of_sun_large.ogv' )">Demo 2: Moon transit Sun</button>
+  </div>
+
+  <div>
     <input type="url" size="80" placeholder="https://upload.wikimedia.org/..." id="user_input_uri">
     <button onclick="ma.file_load_and_show( document.getElementById('user_input_uri').value )">Load Video</button>
   </div>
@@ -21,15 +26,19 @@
 var file1 = new _via_file('file:///data/svt/videos/Moon_transit_of_sun_large.mp4');
 var file2 = new _via_file('https://upload.wikimedia.org/wikipedia/commons/5/59/3D-map-of-the-human-corneal-endothelial-cell-srep29047-s2.ogv');
 
+
 var parent_container = document.getElementById('content_area');
 var ma = new _via_file_annotator(parent_container);
-var p1 = ma.file_load(file1);
+//var p1 = ma.file_load(file1);
 //var p2 = ma.file_load(file2);
+/*
 p1.then( function(ok) {
   ma.file_show(file1);
 }, function(err) {
   console.log('Error loading file')
+  console.log(err)
 });
+*/
   </script>
 </body>
 </html>
