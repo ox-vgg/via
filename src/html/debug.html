@@ -15,7 +15,7 @@
   </div>
 
   <div>
-    <input type="url" size="80" placeholder="https://upload.wikimedia.org/..." id="user_input_uri">
+    <input type="url" size="80" placeholder="file://c:/data/video.mp4 or https://upload.wikimedia.org/..." id="user_input_uri">
     <button onclick="ma.file_load_and_show( document.getElementById('user_input_uri').value )">Load Video</button>
   </div>
   <div style="margin-top:1em;" id="content_area"></div>
@@ -23,22 +23,25 @@
   <script src="../js/_via_file_annotator.js"></script>
 
   <script type="text/javascript">
-var file1 = new _via_file('file:///data/svt/videos/Moon_transit_of_sun_large.mp4');
-var file2 = new _via_file('https://upload.wikimedia.org/wikipedia/commons/5/59/3D-map-of-the-human-corneal-endothelial-cell-srep29047-s2.ogv');
+var uri_list = ['file:///data/datasets/via/debug_videos/bbb_sunflower_1080p_60fps_normal.mp4',
+                'file:///data/svt/videos/Moon_transit_of_sun_large.mp4',
+                'file:///data/datasets/via/debug_videos/Blue Planet II  - The Prequel-_38JDGnr0vA.mp4',
+                ''
+              ];
+var uri_index = 0;
 
-
+var file = new _via_file( uri_list[uri_index] );
 var parent_container = document.getElementById('content_area');
 var ma = new _via_file_annotator(parent_container);
-//var p1 = ma.file_load(file1);
-//var p2 = ma.file_load(file2);
-/*
-p1.then( function(ok) {
-  ma.file_show(file1);
+
+var p = ma.file_load(file);
+p.then( function(ok) {
+  ma.file_show(file);
 }, function(err) {
   console.log('Error loading file')
   console.log(err)
 });
-*/
+
   </script>
 </body>
 </html>

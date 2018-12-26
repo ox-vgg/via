@@ -14,6 +14,7 @@ function _via_file_annotator(parent_container) {
 
   this.preload = {};
   this.now = {};
+  this.anim = {};
 
   this.config = {};
   this.config.ui = {}
@@ -23,8 +24,7 @@ function _via_file_annotator(parent_container) {
   this.config.ui.style['content_preview'] = 'height:10%; padding:0; margin:0; background-color:green;';
   this.config.ui.style['content_scrubber'] = 'height:10%; padding:0; margin:0; background-color: yellow;';
   this.config.ui.style['segment_annotator'] = 'height:10%; padding:0; margin:0; background-color: green;';
-  this.config.ui.style['content'] = 'height:100%; padding:0; margin:0; border:1px solid #757575;';
-
+  this.config.ui.style['content'] = 'max-height:100%; max-width:100%; height:auto; width:auto; padding:0; margin:0; border:1px solid #757575;';
   this.config.panel_name_list = ['content_annotator', 'content_preview', 'content_scrubber', 'segment_annotator'];
 }
 
@@ -68,16 +68,18 @@ _via_file_annotator.prototype._preload_video_content = function(file) {
     this.preload[ file.id() ].backbuf.setAttribute('loop', 'false');
     this.preload[ file.id() ].backbuf.setAttribute('muted', 'true');
     this.preload[ file.id() ].backbuf.setAttribute('preload', 'auto');
-    this.preload[ file.id() ].backbuf.addEventListener('canplaythrough', function() {
-      this.preload[ file.id() ].backbuf.pause();
-      console.log('backbuffer active');
-    }.bind(this));
+    this.preload[ file.id() ].backbuf.addEventListener('play', function() {
+      this.pause(); // the back buffer should never play
+    });
 
     //// initialize content preview
     this.preload[ file.id() ].ref.content_preview = document.createElement('canvas');
 
     //// initialize content scrubber
     this.preload[ file.id() ].ref.content_scrubber = document.createElement('canvas');
+    this.preload[ file.id() ].ref.content_scrubber.addEventListener('wheel',
+                                                                    this._wheel_event_listener.bind(this),
+                                                                    false);
 
     //// initialize segment annotator
     this.preload[ file.id() ].ref.segment_annotator = document.createElement('canvas');
@@ -110,15 +112,12 @@ _via_file_annotator.prototype._preload_image_content = function(file) {
 // Panel management
 //
 _via_file_annotator.prototype._init_all_panels = function() {
-  this._reset_panel_content_range();
+  console.log('_init_all_panels(): start');
 
-  console.log('_init_all_panels()');
+  this._init_content_scrubber();
   this._init_content_preview();
-  console.log('_init_all_panels() end0');
-  //this._init_content_scrubber();
   //this._init_segment_annotator();
-  console.log('_init_all_panels() end1');
-  console.log('_init_all_panels() end2');
+  console.log('_init_all_panels(): end');
 }
 
 _via_file_annotator.prototype._init_content_preview = function() {
@@ -143,15 +142,15 @@ _via_file_annotator.prototype._init_content_preview = function() {
 
   var frame_y = 0;
   var frame_x, frame_center_x, frame_time;
+
   for ( var i = 0; i < frame_count; ++i ) {
     frame_x = i * ( frame_spacing + frame_width );
     frame_center_x = frame_x + (frame_width/2);
-    frame_time = Number.parseFloat(this.now.state.tend * frame_center_x / c.width).toFixed(6);
+    frame_time = this.now.state.content_scrubber.t0 + (this.now.state.content_scrubber.t1 - this.now.state.content_scrubber.t0) * (frame_center_x/c.width);
     if ( (frame_x + frame_width) <= canvas_width ) {
-      this.now.state.content_preview.time[i] = frame_time;
+      this.now.state.content_preview.time[i] = frame_time.toFixed(6);
       this.now.state.content_preview.x[i]    = frame_x;
       this.now.state.content_preview.y[i]    = frame_y;
-      console.log(frame_x+','+frame_y+','+frame_width+','+frame_height)
       ctx.rect(frame_x, frame_y, frame_width, frame_height);
     } else {
       break;
@@ -162,42 +161,30 @@ _via_file_annotator.prototype._init_content_preview = function() {
   ctx.stroke();
 }
 
+_via_file_annotator.prototype._init_content_scrubber = function() {
+  console.log('_init_content_scrubber()');
+  this.now.state.content_scrubber = { 'tick':[0, 0.25, 0.5, 0.75, 1],
+                                      'unit':'',
+                                      'factor':1.0,
+                                      'unit_precision':1,
+                                      'zoom_step':1/5,
+                                      'pan_step':1/5,
+                                      't0':0,
+                                      't1':this.preload[ this.now.file.id() ].ref.content_annotator.duration
+                                    };
+
+  var c = this.preload[ this.now.file.id() ].ref.content_scrubber;
+  c.width  = this.preload[ this.now.file.id() ].cref.content_scrubber.clientWidth;
+  c.height = this.preload[ this.now.file.id() ].cref.content_scrubber.clientHeight;
+}
+
 _via_file_annotator.prototype._update_all_panels = function() {
-  console.log('_update_all_panels()');
+  console.log('_update_all_panels(): start');
+
+  this._update_content_scrubber();
   this._update_content_preview();
-  //this._update_content_scrubber();
   //this._update_segment_annotator();
-}
-
-_via_file_annotator.prototype._reset_panel_content_range = function() {
-  switch( this.now.file.type ) {
-  case _via_file.prototype.FILE_TYPE.VIDEO:
-    var duration = this.preload[ this.now.file.id() ].ref.content_annotator.duration;
-    if ( isNaN(duration) || !Number.isFinite(duration) ) {
-      console.log('_via_file_annotator._reset_panel_content_range() : ' +
-                  'Unable to determine duration of video at ' +
-                  '[' + this.now.file.uri + ']');
-      return;
-    }
-    this.now.state.tstart = 0;
-    this.now.state.tend = duration;
-    break;
-  case _via_file.prototype.FILE_TYPE.AUDIO:
-    console.log('_via_file_annotator._reset_panel_content_range() : ' +
-                'not implemented');
-    break;
-  case _via_file.prototype.FILE_TYPE.IMAGE:
-    console.log('_via_file_annotator._reset_panel_content_range() : ' +
-                'not implemented');
-    break;
-  default:
-    return;
-  }
-}
-
-_via_file_annotator.prototype._set_panel_content_range = function(start, end) {
-  this.now.state = { 'tstart':start, 'tend':end };
-
+  console.log('_update_all_panels(): end');
 }
 
 //
@@ -214,7 +201,6 @@ _via_file_annotator.prototype._update_content_preview = function() {
 }
 
 _via_file_annotator.prototype._seqload_content_preview = function() {
-  console.log('_seqload_content_preview');
   if ( this.now.state.content_preview.current_index < this.now.state.content_preview.time.length ) {
     this.preload[ this.now.file.id() ].backbuf.currentTime = this.now.state.content_preview.time[this.now.state.content_preview.current_index];
   } else {
@@ -248,7 +234,163 @@ _via_file_annotator.prototype._backbuf_on_seek_done = function() {
 //
 // content scrubber
 //
-_via_file_annotator.prototype._update_content_scrubber = function(file) {
+_via_file_annotator.prototype._update_content_scrubber = function(t0, t1) {
+  if ( typeof(t0) !== 'undefined' && typeof(t1) !== 'undefined' ) {
+    this.now.state.content_scrubber.t0 = t0;
+    this.now.state.content_scrubber.t1 = t1;
+  }
+
+  this._draw_content_scrubber(this.now.state.content_scrubber.t0,
+                              this.now.state.content_scrubber.t1);
+}
+
+_via_file_annotator.prototype._draw_content_scrubber = function(t0, t1) {
+  //console.log('_draw_content_scrubber(): t0=' + t0 + ', t1=' + t1);
+  var dt = t1 - t0;
+  var unit, factor, tick_precision;
+  if ( dt < 120 ) {
+    unit = 'sec';
+    factor = 1;
+    tick_precision = 1;
+  } else {
+    if ( dt >= 120 && dt < 60*60) {
+      unit = 'min';
+      factor = 1 / 60;
+      tick_precision = 2;
+    } else {
+      unit = 'hrs';
+      factor = 1 / (60*60);
+      tick_precision = 2;
+    }
+  }
+
+  var c = this.preload[ this.now.file.id() ].ref.content_scrubber;
+  var ctx = c.getContext('2d', { alpha:false });
+  ctx.clearRect(0, 0, c.width, c.height);
+  ctx.beginPath();
+  ctx.strokeStyle = '#ffffff';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '12px sans';
+  ctx.lineWidth = 1;
+
+  var char_width = Math.floor(ctx.measureText('M').width);
+  var canvas_width = c.width;
+
+  // draw horizontal line
+  var line_y = 4*char_width;
+  var line_x0 = 0;
+  var line_x1 = canvas_width;
+  ctx.moveTo(line_x0, line_y);
+  ctx.lineTo(line_x1, line_y);
+
+  // draw ticks on horizontal line
+  var tick_x, tick_y0, tick_y1, tstr;
+  var N = 18;
+  var step = canvas_width / N;
+  for ( var i = 0; i < N; ++i ) {
+    tick_x = Math.floor(i * step);
+    tick_time = t0 + dt * (i/N);
+    tick_y0 = line_y - 5;
+    tick_y1 = line_y + 5;
+
+    ctx.moveTo(tick_x, tick_y0);
+    ctx.lineTo(tick_x, tick_y1);
+
+    if ( i % 3 === 0 ) {
+      tstr = String( (tick_time*factor).toFixed(tick_precision) );
+      ctx.fillText(tstr, tick_x, line_y + 2*char_width);
+    }
+  }
+
+  t0_str = String( (t0 * factor).toFixed(tick_precision) )
+  ctx.fillText( t0_str, 0, line_y + 2*char_width );
+
+  ctx.fillText( unit, 2, line_y - char_width );
+  ctx.stroke();
+}
+
+_via_file_annotator.prototype._wheel_event_listener = function(e) {
+  e.preventDefault();
+
+  // perform zoom
+  if ( e.shiftKey ) {
+    if (e.deltaY < 0) {
+      console.log('pan right');
+      this.content_scrubber_pan_right();
+    } else {
+      console.log('pan left');
+      this.content_scrubber_pan_left();
+    }
+  } else {
+    var mouse_norm_x = e.offsetX / e.target.clientWidth;
+    if (e.deltaY < 0) {
+      console.log('zoom in');
+      this.content_scrubber_zoom_in(mouse_norm_x);
+    } else {
+      console.log('zoom out');
+      this.content_scrubber_zoom_out(mouse_norm_x);
+    }
+  }
+}
+
+_via_file_annotator.prototype.content_scrubber_pan_left = function() {
+  if ( this.now.state.content_scrubber.t0 <= 0 ) {
+    return;
+  }
+  var total_time = this.now.state.content_scrubber.t1 - this.now.state.content_scrubber.t0;
+  var new_t0 = this.now.state.content_scrubber.t0 - total_time/6;
+  var new_t1 = this.now.state.content_scrubber.t1 - total_time/6;
+  if ( new_t0 < 0 ) {
+    new_t0 = 0;
+  }
+  this._update_content_scrubber(new_t0, new_t1);
+}
+
+_via_file_annotator.prototype.content_scrubber_pan_right = function() {
+  if ( this.now.state.content_scrubber.t1 >= this.preload[ this.now.file.id() ].ref.content_annotator.duration ) {
+    return;
+  }
+  var total_time = this.now.state.content_scrubber.t1 - this.now.state.content_scrubber.t0;
+  var new_t0 = this.now.state.content_scrubber.t0 + total_time/6;
+  var new_t1 = this.now.state.content_scrubber.t1 + total_time/6;
+  console.log('new: ' + new_t0 + ',' + new_t1)
+  if ( new_t1 > this.preload[ this.now.file.id() ].ref.content_annotator.duration ) {
+    new_t1 = this.preload[ this.now.file.id() ].ref.content_annotator.duration;
+  }
+  this._update_content_scrubber(new_t0, new_t1);
+}
+
+_via_file_annotator.prototype.content_scrubber_zoom_in = function(mouse_norm_x) {
+  var total_time = this.now.state.content_scrubber.t1 - this.now.state.content_scrubber.t0;
+  var anchor_time = this.now.state.content_scrubber.t0 + (mouse_norm_x * total_time);
+  var dt = Math.min( mouse_norm_x, 1.0 - mouse_norm_x) * total_time;
+
+  var new_t0 = anchor_time - dt;
+  var new_t1 = anchor_time + dt;
+  var new_total_time = (new_t1 - new_t0);
+  if ( new_total_time <= 5 ) {
+    console.log('Further zoom in not possible');
+    return;
+  }
+  this._update_content_scrubber(new_t0, new_t1);
+}
+
+_via_file_annotator.prototype.content_scrubber_zoom_out = function(mouse_norm_x) {
+  var total_time = this.now.state.content_scrubber.t1 - this.now.state.content_scrubber.t0;
+  var anchor_time = this.now.state.content_scrubber.t0 + (mouse_norm_x * total_time);
+  var dt = Math.max( mouse_norm_x, 1.0 - mouse_norm_x) * total_time;
+
+  var new_t0 = anchor_time - total_time;
+  var new_t1 = anchor_time + total_time;
+
+  if ( new_t0 < 0 ) {
+    new_t0 = 0;
+  }
+  if ( new_t1 > this.preload[ this.now.file.id() ].ref.content_annotator.duration ) {
+    new_t1 = this.preload[ this.now.file.id() ].ref.content_annotator.duration;
+  }
+
+  this._update_content_scrubber(new_t0, new_t1);
 }
 
 //
@@ -283,9 +425,7 @@ _via_file_annotator.prototype.file_show = function(file) {
     if ( this.preload[fid].view.style.display === 'none' ) {
       if ( fid === this.now.file.id() ) {
         this.preload[ this.now.file.id() ].view.style.display = 'block';
-        console.log('a')
         this._init_all_panels();
-        console.log('b')
         this._update_all_panels();
       }
     } else {

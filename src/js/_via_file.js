@@ -22,6 +22,7 @@ _via_file.prototype.id = function() {
 _via_file.prototype.FILE_TYPE = { IMAGE:'image', VIDEO:'video', AUDIO:'audio' };
 
 _via_file.prototype.infer_file_type = function(uri) {
+  uri = uri.toLowerCase();
   if ( uri.endsWith('mp4') ||
        uri.endsWith('avi') ||
        uri.endsWith('ogv') ||
