@@ -127,38 +127,15 @@ _via_file_annotator.prototype._init_content_preview = function() {
   c.width  = this.preload[ this.now.file.id() ].cref.content_preview.clientWidth;
   c.height = this.preload[ this.now.file.id() ].cref.content_preview.clientHeight;
   var ctx = c.getContext('2d', { alpha:false });
-  ctx.beginPath();
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 1;
 
-  var char_width = Math.floor(ctx.measureText('M').width);
-  var frame_spacing = char_width;
-  var aspect_ratio = this.preload[ this.now.file.id() ].backbuf.videoHeight / this.preload[ this.now.file.id() ].backbuf.videoWidth;
-  var frame_count = 10;
-  var canvas_width = c.width;
-  var frame_width  = Math.floor( (canvas_width - (frame_count - 1) * frame_spacing) / frame_count );
-  var frame_height = Math.floor( frame_width * aspect_ratio );
-  // @todo: what happens if frame_height > c.height
-
-  var frame_y = 0;
-  var frame_x, frame_center_x, frame_time;
-
-  for ( var i = 0; i < frame_count; ++i ) {
-    frame_x = i * ( frame_spacing + frame_width );
-    frame_center_x = frame_x + (frame_width/2);
-    frame_time = this.now.state.content_scrubber.t0 + (this.now.state.content_scrubber.t1 - this.now.state.content_scrubber.t0) * (frame_center_x/c.width);
-    if ( (frame_x + frame_width) <= canvas_width ) {
-      this.now.state.content_preview.time[i] = frame_time.toFixed(6);
-      this.now.state.content_preview.x[i]    = frame_x;
-      this.now.state.content_preview.y[i]    = frame_y;
-      ctx.rect(frame_x, frame_y, frame_width, frame_height);
-    } else {
-      break;
-    }
-  }
-  this.now.state.content_preview.frame_width  = frame_width;
-  this.now.state.content_preview.frame_height = frame_height;
-  ctx.stroke();
+  this.now.state.content_preview.char_width = Math.floor(ctx.measureText('M').width);
+  this.now.state.content_preview.frame_spacing = this.now.state.content_preview.char_width;
+  this.now.state.content_preview.aspect_ratio = this.preload[ this.now.file.id() ].backbuf.videoHeight / this.preload[ this.now.file.id() ].backbuf.videoWidth;;
+  this.now.state.content_preview.frame_count = 10;
+  this.now.state.content_preview.canvas_width = c.width;
+  this.now.state.content_preview.frame_width = Math.floor( (c.width - (this.now.state.content_preview.frame_count - 1) * this.now.state.content_preview.frame_spacing) / this.now.state.content_preview.frame_count );
+  this.now.state.content_preview.frame_height = Math.floor( this.now.state.content_preview.frame_width * this.now.state.content_preview.aspect_ratio );
+    // @todo: what happens if frame_height > c.height
 }
 
 _via_file_annotator.prototype._init_content_scrubber = function() {
@@ -182,7 +159,7 @@ _via_file_annotator.prototype._update_all_panels = function() {
   console.log('_update_all_panels(): start');
 
   this._update_content_scrubber();
-  this._update_content_preview();
+  //this._update_content_preview();
   //this._update_segment_annotator();
   console.log('_update_all_panels(): end');
 }
@@ -192,7 +169,36 @@ _via_file_annotator.prototype._update_all_panels = function() {
 //
 
 _via_file_annotator.prototype._update_content_preview = function() {
+  if ( this.now.state.content_preview.load_ongoing ) {
+    console.log('_update_content_preview() is already ongoing. Cancelling and restarting ...');
+    this.now.state.content_preview.load_ongoing = false;
+    this.preload[ this.now.file.id() ].backbuf.removeEventListener('seeked', this._backbuf_on_seek_done.bind(this));
+  }
   console.log('_update_content_preview()');
+
+  // computer time and coordinates for frame preview
+  var frame_width = this.now.state.content_preview.frame_width;
+  var frame_height = this.now.state.content_preview.frame_height;
+  var frame_spacing = this.now.state.content_preview.frame_spacing;
+  var frame_count = this.now.state.content_preview.frame_count;
+  var t0 = this.now.state.content_scrubber.t0;
+  var t1 = this.now.state.content_scrubber.t1;
+  this.now.state.content_preview.time = [];
+  this.now.state.content_preview.x = [];
+  this.now.state.content_preview.y = [];
+
+  var frame_x, frame_center_x, frame_time;
+  for ( var i = 0; i < frame_count; ++i ) {
+    frame_x = i * ( this.now.state.content_preview.frame_spacing + this.now.state.content_preview.frame_width );
+    frame_center_x = frame_x + (this.now.state.content_preview.frame_width/2);
+    frame_time = t0 + (t1 - t0) * (frame_center_x/this.now.state.content_preview.canvas_width);
+    if ( (frame_x + this.now.state.content_preview.frame_width) <= this.now.state.content_preview.canvas_width ) {
+      this.now.state.content_preview.time[i] = frame_time.toFixed(6);
+      this.now.state.content_preview.x[i]    = frame_x;
+      this.now.state.content_preview.y[i]    = 0;
+    }
+  }
+
   // trigger loading of frame_preview panel
   this.now.state.content_preview.load_ongoing = true;
   this.now.state.content_preview.current_index = 0;
@@ -242,6 +248,7 @@ _via_file_annotator.prototype._update_content_scrubber = function(t0, t1) {
 
   this._draw_content_scrubber(this.now.state.content_scrubber.t0,
                               this.now.state.content_scrubber.t1);
+  this._update_content_preview();
 }
 
 _via_file_annotator.prototype._draw_content_scrubber = function(t0, t1) {
