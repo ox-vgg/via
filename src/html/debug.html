@@ -20,6 +20,8 @@
   </div>
   <div style="margin-top:1em;" id="content_area"></div>
   <script src="../js/_via_file.js"></script>
+  <script src="../js/_via_media_annotator.js"></script>
+  <script src="../js/_via_segment_annotator.js"></script>
   <script src="../js/_via_file_annotator.js"></script>
 
   <script type="text/javascript">
@@ -28,19 +30,12 @@ var uri_list = ['file:///data/datasets/via/debug_videos/bbb_sunflower_1080p_60fp
                 'file:///data/datasets/via/debug_videos/Blue Planet II  - The Prequel-_38JDGnr0vA.mp4',
                 ''
               ];
-var uri_index = 0;
+var uri_index = 1;
 
 var file = new _via_file( uri_list[uri_index] );
-var parent_container = document.getElementById('content_area');
-var ma = new _via_file_annotator(parent_container);
-
-var p = ma.file_load(file);
-p.then( function(ok) {
-  ma.file_show(file);
-}, function(err) {
-  console.log('Error loading file')
-  console.log(err)
-});
+var html_container = document.getElementById('content_area');
+var ma = new _via_file_annotator(html_container);
+ma.file_load_and_show(uri_list[uri_index]);
 
   </script>
 </body>
