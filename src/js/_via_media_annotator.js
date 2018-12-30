@@ -109,15 +109,17 @@ _via_media_annotator.prototype.load_media = function() {
                                                   this.content);
 
       //// annotation editor
-      this.editor = document.createElement('div');
-      this.editor.setAttribute('class', 'annotation_editor');
-      this.editor.innerHTML = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
+      this.annotation_editor_view = document.createElement('div');
+      this.annotation_editor_view.setAttribute('class', 'annotation_editor');
+      var metadata = {};
+      this.annotation_editor = new _via_annotation_editor();
+      // @todo: create spreadsheet like editor for all annotations
 
       //// add everything to html view
       this.container.appendChild(this.segment_annotator_view);
       this.container.appendChild(this.annotator_container);
       this.container.appendChild(this.video_control_view);
-      this.container.appendChild(this.editor);
+      this.container.appendChild(this.annotation_editor_view);
       break;
 
     case _via_file.prototype.FILE_TYPE.IMAGE:

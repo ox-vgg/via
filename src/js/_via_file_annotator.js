@@ -6,6 +6,9 @@
  * @date 24 Dec. 2018
  *
  */
+
+'use strict';
+
 function _via_file_annotator(html_container) {
   // everything will be added to this contained
   this.html_container = html_container;

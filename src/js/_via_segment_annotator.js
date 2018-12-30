@@ -31,6 +31,17 @@ function _via_segment_annotator(container, media_element) {
   this.init();
 }
 
+_via_segment_annotator.prototype.is_media_time_valid = function(t) {
+  if ( typeof(t) === 'string' ) {
+    t = parseFloat(t);
+  }
+  if ( t >=0 && t < this.media_element.duration ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 _via_segment_annotator.prototype.init = function() {
   this.tstart = document.createElement('input');
   this.tstart.setAttribute('type', 'text');
@@ -38,12 +49,22 @@ _via_segment_annotator.prototype.init = function() {
   this.tstart.setAttribute('size', '5');
   this.tstart.setAttribute('placeholder', 'start time');
   this.tstart.setAttribute('title', 'Start time for video/audio segment');
+  this.tstart.addEventListener('change', function() {
+    if ( this.is_media_time_valid( this.tstart.value ) ) {
+      this.t[0] = parseFloat(this.tstart.value);
+      this.media_element.currentTime = this.t[0];
+    }
+  }.bind(this));
 
   this.bstart = document.createElement('button');
   this.bstart.setAttribute('value', 'segment_tstart');
   this.bstart.innerHTML = '&gt;';
   this.bstart.setAttribute('title', 'Use current frame time as start time');
-  this.bstart.addEventListener('click', this.on_define_start.bind(this))
+  this.bstart.addEventListener('click', function() {
+    this.t[0] = this.media_element.currentTime;
+    this.tstart.value = this.t[0];
+    this.bend.focus();
+  }.bind(this));
 
   var label = document.createElement('span');
   label.innerHTML = '&nbsp;to&nbsp;';
@@ -52,7 +73,10 @@ _via_segment_annotator.prototype.init = function() {
   this.bend.setAttribute('value', 'segment_tend');
   this.bend.setAttribute('title', 'Mark current frame as end of segment');
   this.bend.innerHTML = '&gt;';
-  this.bend.addEventListener('click', this.on_define_end.bind(this))
+  this.bend.addEventListener('click', function() {
+    this.t[1] = this.media_element.currentTime;
+    this.tend.value = this.t[1];
+  }.bind(this));
 
   this.tend = document.createElement('input');
   this.tend.setAttribute('type', 'text');
@@ -60,6 +84,12 @@ _via_segment_annotator.prototype.init = function() {
   this.tend.setAttribute('size', '5');
   this.tend.setAttribute('placeholder', 'end time');
   this.tend.setAttribute('title', 'End time for video/audio segment');
+  this.tend.addEventListener('change', function() {
+    if ( this.is_media_time_valid( this.tend.value ) ) {
+      this.t[1] = parseFloat(this.tend.value);
+      this.media_element.currentTime = this.t[1];
+    }
+  }.bind(this));
 
   this.bcreate = document.createElement('button');
   this.bcreate.setAttribute('value', 'segment_create');
@@ -83,17 +113,14 @@ _via_segment_annotator.prototype.on_define_start = function() {
 
 _via_segment_annotator.prototype.on_reset = function() {
   this.t = [];
-  this.state.is_segment_def_ongoing = false;
+  this.tstart.value = '';
+  this.tend.value = '';
 }
 
 _via_segment_annotator.prototype.on_create = function() {
+  console.log('create segment: ' + this.t)
 }
 
-_via_segment_annotator.prototype.on_define_end = function() {
-  this.t.push( this.media_element.duration );
-  // @todo: fire event 'seg_add'
-  this.state.is_segment_def_ongoing = false;
-}
 
 _via_segment_annotator.prototype.load = function(t) {
   this.t = t;

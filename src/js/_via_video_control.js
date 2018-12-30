@@ -19,13 +19,13 @@ function _via_video_control(container, media_element) {
 
 _via_video_control.prototype.init = function() {
   this.bplay = document.createElement('button');
-  if ( this.media_element.paused ) {
+  if ( this.media_element.paused || this.media_element.ended ) {
     this.bplay.innerHTML = 'Play&nbsp;';
   } else {
     this.bplay.innerHTML = 'Pause';
   }
   this.bplay.addEventListener('click', function() {
-    if ( this.media_element.paused ) {
+    if ( this.media_element.paused || this.media_element.ended ) {
       this.media_element.play();
       this.bplay.innerHTML = 'Pause';
     } else {
@@ -33,6 +33,11 @@ _via_video_control.prototype.init = function() {
       this.bplay.innerHTML = 'Play&nbsp;';
     }
   }.bind(this))
+  // @fixme: for some reason, 'ended' event does not fire
+  this.media_element.addEventListener('ended', function() {
+    console.log('ended')
+    this.bplay.innerHTML = 'Play&nbsp;';
+  }.bind(this));
 
   this.bspeed = document.createElement('select');
   var o1 = document.createElement('option');
@@ -72,11 +77,7 @@ _via_video_control.prototype.init = function() {
     }
   }.bind(this));
   this.media_element.addEventListener('timeupdate', function() {
-    this.bjump.value = this.media_element.currentTime;
-  }.bind(this));
-  this.media_element.addEventListener('ended', function() {
-    console.log('ended')
-    this.bplay.innerHTML = 'Play&nbsp;';
+    this.bjump.value = this.media_element.currentTime.toFixed(2);
   }.bind(this));
 
   this.sright = document.createElement('button');
@@ -87,10 +88,28 @@ _via_video_control.prototype.init = function() {
     }
   }.bind(this));
 
+  var annotate_frame_label = document.createElement('label');
+  annotate_frame_label.setAttribute('for', 'annotate_frame');
+  annotate_frame_label.innerHTML = '&nbsp;Draw Frame Regions';
+
+  this.bring_video_to_top = document.createElement('input');
+  this.bring_video_to_top.setAttribute('name', 'annotate_frame');
+  this.bring_video_to_top.setAttribute('type', 'checkbox');
+  this.bring_video_to_top.addEventListener('change', function() {
+    if ( this.bring_video_to_top.checked ) {
+      this.media_element.pause();
+      this.media_element.style.zIndex = 1; // move video to bottom of layer
+    } else {
+      this.media_element.style.zIndex = 1000; // move video to top of layer
+    }
+  }.bind(this));
+
   this.container.innerHTML = '';
   this.container.appendChild(this.bplay);
   this.container.appendChild(this.sleft);
   this.container.appendChild(this.bjump);
   this.container.appendChild(this.sright);
   this.container.appendChild(this.bspeed);
+  this.container.appendChild(annotate_frame_label);
+  this.container.appendChild(this.bring_video_to_top);
 }
