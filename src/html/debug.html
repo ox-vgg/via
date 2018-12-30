@@ -5,6 +5,7 @@
   <title>VGG Image Annotator</title>
   <meta name="author" content="Abhishek Dutta">
   <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 400 KB) that runs on most modern web browsers.">
+  <link rel="stylesheet" type="text/css" href="../css/via.css">
 </head>
 
 <body>
@@ -18,10 +19,11 @@
     <input type="url" size="80" placeholder="file://c:/data/video.mp4 or https://upload.wikimedia.org/..." id="user_input_uri">
     <button onclick="ma.file_load_and_show( document.getElementById('user_input_uri').value )">Load Video</button>
   </div>
-  <div style="margin-top:1em;" id="content_area"></div>
+  <div style="display:inline-block; margin-top:1em; width:800px; height:800px;" id="content_area"></div>
   <script src="../js/_via_file.js"></script>
   <script src="../js/_via_media_annotator.js"></script>
   <script src="../js/_via_segment_annotator.js"></script>
+  <script src="../js/_via_video_control.js"></script>
   <script src="../js/_via_file_annotator.js"></script>
 
   <script type="text/javascript">

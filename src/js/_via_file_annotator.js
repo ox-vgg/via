@@ -26,19 +26,17 @@ _via_file_annotator.prototype._preload_video_content = function(file) {
     this.preload[fid].file = file;
 
     //// initialize the media annotator
-    this.preload[fid].content_annotator_view = document.createElement('div');
+    this.preload[fid].view = document.createElement('div');
+    this.preload[fid].view.setAttribute('style', 'display:none');
+    this.preload[fid].view.setAttribute('id', fid);
+    this.preload[fid].view.setAttribute('class', 'file_annotator');
 
-    this.preload[fid].content_annotator = new _via_media_annotator(this.preload[fid].content_annotator_view, this.preload[fid].file);
+    this.preload[fid].content_annotator = new _via_media_annotator(this.preload[fid].view,
+                                                                   this.preload[fid].file);
 
     this.preload[fid].content_annotator.load_media().then( function(media_ok) {
       //// add assets to html view
-      this.preload[fid].view = document.createElement('div');
-      this.preload[fid].view.setAttribute('style', 'display:none');
-      this.preload[fid].view.setAttribute('id', fid);
-
-      this.preload[fid].view.appendChild(this.preload[fid].content_annotator_view);
       this.html_container.appendChild( this.preload[fid].view );
-
       ok_callback(file);
     }.bind(this), function(media_err) {
       console.log('load_media() failed')
@@ -75,6 +73,7 @@ _via_file_annotator.prototype.file_show = function(file) {
     if ( this.preload[fid].view.style.display === 'none' ) {
       if ( fid === this.now.file.id() ) {
         this.preload[fid].view.style.display = 'block';
+        this.preload[fid].content_annotator.update_layer_size();
       }
     } else {
       this.preload[fid].view.style.display = 'none';

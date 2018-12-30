@@ -27,28 +27,53 @@ function _via_segment_annotator(container, media_element) {
     console.log('throw')
     throw 'invalid html container or media element!';
   }
+
+  this.init();
 }
 
 _via_segment_annotator.prototype.init = function() {
+  this.tstart = document.createElement('input');
+  this.tstart.setAttribute('type', 'text');
+  this.tstart.setAttribute('id', 'segment_tstart');
+  this.tstart.setAttribute('size', '5');
+  this.tstart.setAttribute('placeholder', 'start time');
+  this.tstart.setAttribute('title', 'Start time for video/audio segment');
+
   this.bstart = document.createElement('button');
-  this.bstart.setAttribute('value', 'segment_start');
-  this.bstart.innerHTML = 'Mark Current Frame as Start of Segment';
+  this.bstart.setAttribute('value', 'segment_tstart');
+  this.bstart.innerHTML = '&gt;';
+  this.bstart.setAttribute('title', 'Use current frame time as start time');
   this.bstart.addEventListener('click', this.on_define_start.bind(this))
 
-  this.breset = document.createElement('button');
-  this.breset.setAttribute('value', 'segment_reset');
-  this.breset.innerHTML = 'Reset';
-  this.bstart.addEventListener('click', this.on_reset.bind(this))
+  var label = document.createElement('span');
+  label.innerHTML = '&nbsp;to&nbsp;';
 
   this.bend = document.createElement('button');
-  this.bend.setAttribute('value', 'segment_end');
-  this.bend.innerHTML = 'Mark Current Frame as End of Segment';
+  this.bend.setAttribute('value', 'segment_tend');
+  this.bend.setAttribute('title', 'Mark current frame as end of segment');
+  this.bend.innerHTML = '&gt;';
   this.bend.addEventListener('click', this.on_define_end.bind(this))
 
-  this.container.innerHTML = '';
+  this.tend = document.createElement('input');
+  this.tend.setAttribute('type', 'text');
+  this.tend.setAttribute('id', 'segment_tend');
+  this.tend.setAttribute('size', '5');
+  this.tend.setAttribute('placeholder', 'end time');
+  this.tend.setAttribute('title', 'End time for video/audio segment');
+
+  this.bcreate = document.createElement('button');
+  this.bcreate.setAttribute('value', 'segment_create');
+  this.bcreate.setAttribute('class', 'spaced_button');
+  this.bcreate.innerHTML = 'Create';
+  this.bcreate.addEventListener('click', this.on_create.bind(this))
+
+  this.container.innerHTML = '<span>Video segment from time&nbsp;</span>';
   this.container.appendChild(this.bstart);
-  this.container.appendChild(this.breset);
+  this.container.appendChild(this.tstart);
+  this.container.appendChild(label);
   this.container.appendChild(this.bend);
+  this.container.appendChild(this.tend);
+  this.container.appendChild(this.bcreate);
 }
 
 _via_segment_annotator.prototype.on_define_start = function() {
@@ -59,6 +84,9 @@ _via_segment_annotator.prototype.on_define_start = function() {
 _via_segment_annotator.prototype.on_reset = function() {
   this.t = [];
   this.state.is_segment_def_ongoing = false;
+}
+
+_via_segment_annotator.prototype.on_create = function() {
 }
 
 _via_segment_annotator.prototype.on_define_end = function() {
