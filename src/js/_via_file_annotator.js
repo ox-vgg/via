@@ -9,9 +9,9 @@
 
 'use strict';
 
-function _via_file_annotator(html_container) {
+function _via_file_annotator(container) {
   // everything will be added to this contained
-  this.html_container = html_container;
+  this.container = container;
 
   this.now = {};
   this.preload = {};
@@ -24,25 +24,25 @@ _via_file_annotator.prototype._preload_video_content = function(file) {
   return new Promise( function(ok_callback, err_callback) {
     console.log('loading video')
     // create all the panels that will be included in view
-    var fid = file.id();
+    var fid = file.id;
     this.preload[fid] = {};
     this.preload[fid].file = file;
 
     //// initialize the media annotator
     this.preload[fid].view = document.createElement('div');
-    this.preload[fid].view.setAttribute('style', 'display:none');
-    this.preload[fid].view.setAttribute('id', fid);
-    this.preload[fid].view.setAttribute('class', 'file_annotator');
+    this.preload[fid].view.setAttribute('id', 'fa_' + fid);
+    this.preload[fid].view.classList.add('file_annotator');
+    this.preload[fid].view.classList.add('hide'); // hidden by default
+    this.container.appendChild( this.preload[fid].view );
 
-    this.preload[fid].content_annotator = new _via_media_annotator(this.preload[fid].view,
-                                                                   this.preload[fid].file);
+    this.preload[fid].media_annotator = new _via_media_annotator(this.preload[fid].view,
+                                                                 this.preload[fid].file);
 
-    this.preload[fid].content_annotator.load_media().then( function(media_ok) {
-      //// add assets to html view
-      this.html_container.appendChild( this.preload[fid].view );
+    this.preload[fid].media_annotator.load_media().then( function(media_ok) {
+      this.preload[fid].media_annotator.init_static_content();
       ok_callback(file);
     }.bind(this), function(media_err) {
-      console.log('load_media() failed')
+      console.log('load_media() failed');
       err_callback(file);
     }.bind(this));
   }.bind(this));
@@ -73,13 +73,21 @@ _via_file_annotator.prototype.file_load_and_show = function(uri) {
 _via_file_annotator.prototype.file_show = function(file) {
   this.now.file = file;
   for ( var fid in this.preload ) {
-    if ( this.preload[fid].view.style.display === 'none' ) {
-      if ( fid === this.now.file.id() ) {
-        this.preload[fid].view.style.display = 'block';
-        this.preload[fid].content_annotator.update_layer_size();
+    if ( parseInt(fid) === this.now.file.id ) {
+      if ( this.preload[fid].view.classList.contains('hide') ) {
+        this.preload[fid].view.classList.remove('hide');
+        this.preload[fid].view.classList.add('show');
+        // @todo: automatically trigger init_dynamic_content() when
+        // the html view for this file is visible
+        setTimeout( this.preload[fid].media_annotator.init_dynamic_content.bind(this.preload[fid].media_annotator), 100);
       }
     } else {
-      this.preload[fid].view.style.display = 'none';
+      if ( this.preload[fid].view.classList.contains('show') ) {
+        this.preload[fid].view.classList.remove('show');
+      }
+      if ( !this.preload[fid].view.classList.contains('hide') ) {
+        this.preload[fid].view.classList.add('hide');
+      }
     }
   }
 }
@@ -87,7 +95,7 @@ _via_file_annotator.prototype.file_show = function(file) {
 _via_file_annotator.prototype.file_load = function(file) {
   return new Promise( function(ok_callback, err_callback) {
     // check if the file has already been loaded
-    if ( file.id() in this.preload ) {
+    if ( file.id in this.preload ) {
       ok_callback( file );
     } else {
       this.file_preload(file).then( function(preloaded_file) {
@@ -105,13 +113,13 @@ _via_file_annotator.prototype.file_preload = function(file) {
     console.log(file.type + ' file_preload()')
     var file_load_promise;
     switch( file.type ) {
-    case _via_file.prototype.FILE_TYPE.VIDEO:
+    case _via_file.prototype.TYPE.VIDEO:
       file_load_promise = this._preload_video_content(file);
       break;
-    case _via_file.prototype.FILE_TYPE.AUDIO:
+    case _via_file.prototype.TYPE.AUDIO:
       file_load_promise = this._preload_audio_content(file);
       break;
-    case _via_file.prototype.FILE_TYPE.IMAGE:
+    case _via_file.prototype.TYPE.IMAGE:
       file_load_promise = this._preload_image_content(file);
       break;
     default:

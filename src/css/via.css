@@ -1,0 +1,103 @@
+/*
+
+CSS style definitions for VGG Image Annotator (VIA)
+
+Theme: https://material.io/tools/color/#!/?view.left=0&view.right=0&primary.color=009688&secondary.color=FFEB3B
+Primary:  #009688
+  light:  #52c7b8  
+  dark:   #00675b
+Secondary: #ffeb3b
+  light:  #ffff72
+  dark:   #c8b900
+Text
+  primary:    #000000
+  secondary:  #000000
+
+
+
+Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
+Date: 29 Dec. 2018
+*/
+
+body {
+  padding:0; margin:0; font-family:sans-serif;
+}
+
+.hide { display:none; }
+.show { display:block; }
+
+.file_annotator {
+  box-sizing:border-box;
+  height:100%;
+  background-color:#f5f5f5;
+  border:1px solid #c2c2c2;
+}
+.file_annotator .segment_annotator {
+  display:block;
+  text-align:center;
+  padding:0.5em;
+}
+.file_annotator .segment_annotator .spaced_button {
+  margin:0 0.5em;
+}
+
+.file_annotator .video_control {
+  display:block;
+  text-align:center;
+  padding:0.5em;
+  font-size:small;
+}
+
+.file_annotator .video_control button {
+  font-size:small;
+  margin:0 0.5em;
+}
+
+.file_annotator .video_control input[type="checkbox"] {
+  vertical-align:middle;
+}
+
+.file_annotator .annotator_container {
+  display:block;
+  position:relative;
+  height:70%; 
+  text-align:center;
+}
+
+.file_annotator .annotator_container .layer_container {
+  display:inline-block;  
+  position:relative;
+}
+.file_annotator .annotator_container .layer_container .media {
+  display:block;
+  position:absolute; 
+  left:0; 
+  right:0;
+  padding:0; margin:0;
+  z-index:1000;
+}
+
+.file_annotator .annotator_container .layer_container .regions { 
+  display:block;
+  position:absolute; 
+  left:0; 
+  right:0;
+  padding:0; margin:0;
+  z-index:2;
+}
+
+.file_annotator .annotator_container .layer_container .input_handler {
+  display:block;
+  position:absolute; 
+  left:0; 
+  right:0;
+  padding:0; margin:0;
+  z-index:3;
+}
+ 
+.file_annotator .annotation_editor { 
+  height:15%;
+  overflow:auto;
+  padding:0.5em;
+  border:1px solid red;
+}

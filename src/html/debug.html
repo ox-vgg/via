@@ -26,20 +26,14 @@
   <script src="../js/_via_video_control.js"></script>
   <script src="../js/_via_annotation_editor.js"></script>
   <script src="../js/_via_file_annotator.js"></script>
+  <script src="../js/_via_attribute.js"></script>
+  <script src="../js/_via_data_model.js"></script>
+  <script src="../js/_via_controller.js"></script>
+  <script src="../js/_via.js"></script>
 
   <script type="text/javascript">
-var uri_list = ['file:///data/datasets/via/debug_videos/bbb_sunflower_1080p_60fps_normal.mp4',
-                'file:///data/svt/videos/Moon_transit_of_sun_large.mp4',
-                'file:///data/datasets/via/debug_videos/Blue Planet II  - The Prequel-_38JDGnr0vA.mp4',
-                ''
-              ];
-var uri_index = 1;
-
-var file = new _via_file( uri_list[uri_index] );
 var html_container = document.getElementById('content_area');
-var ma = new _via_file_annotator(html_container);
-ma.file_load_and_show(uri_list[uri_index]);
-
+var via_instance = new _via(html_container);
   </script>
 </body>
 </html>
