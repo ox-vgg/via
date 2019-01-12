@@ -9,9 +9,10 @@
 
 'use strict';
 
-function _via_file_annotator(container) {
+function _via_annotator(container, data) {
   // everything will be added to this contained
-  this.container = container;
+  this.c = container;
+  this.d = data;
 
   this.now = {};
   this.preload = {};
@@ -20,7 +21,7 @@ function _via_file_annotator(container) {
 //
 // File preload
 //
-_via_file_annotator.prototype._preload_video_content = function(file) {
+_via_annotator.prototype._preload_video_content = function(file) {
   return new Promise( function(ok_callback, err_callback) {
     console.log('loading video')
     // create all the panels that will be included in view
@@ -30,10 +31,10 @@ _via_file_annotator.prototype._preload_video_content = function(file) {
 
     //// initialize the media annotator
     this.preload[fid].view = document.createElement('div');
-    this.preload[fid].view.setAttribute('id', 'fa_' + fid);
-    this.preload[fid].view.classList.add('file_annotator');
+    this.preload[fid].view.setAttribute('data-fid', fid);
+    this.preload[fid].view.classList.add('annotator');
     this.preload[fid].view.classList.add('hide'); // hidden by default
-    this.container.appendChild( this.preload[fid].view );
+    this.c.appendChild( this.preload[fid].view );
 
     this.preload[fid].media_annotator = new _via_media_annotator(this.preload[fid].view,
                                                                  this.preload[fid].file);
@@ -48,32 +49,33 @@ _via_file_annotator.prototype._preload_video_content = function(file) {
   }.bind(this));
 }
 
-_via_file_annotator.prototype._preload_audio_content = function(file) {
+_via_annotator.prototype._preload_audio_content = function(file) {
   // @todo
 }
 
-_via_file_annotator.prototype._preload_image_content = function(file) {
+_via_annotator.prototype._preload_image_content = function(file) {
   // @todo
 }
 
 //
 // Public Interface
-// i.e. _via_file_annotator interacts with outside words using these methods
+// i.e. _via_annotator interacts with outside words using these methods
 //
 
-_via_file_annotator.prototype.file_load_and_show = function(uri) {
+_via_annotator.prototype.file_load_and_show = function(uri) {
   var file = new _via_file(uri);
   this.file_load(file).then( function(ok) {
     this.file_show(file);
   }.bind(this), function(err) {
-    console.log('_via_file_annotator.file_load_and_show(): failed for uri [' + uri + ']');
+    console.log('_via_annotator.file_load_and_show(): failed for uri [' + uri + ']');
   }.bind(this));
 }
 
-_via_file_annotator.prototype.file_show = function(file) {
+_via_annotator.prototype.file_show = function(file) {
   this.now.file = file;
   for ( var fid in this.preload ) {
     if ( parseInt(fid) === this.now.file.id ) {
+      console.log(this.preload[fid].view)
       if ( this.preload[fid].view.classList.contains('hide') ) {
         this.preload[fid].view.classList.remove('hide');
         this.preload[fid].view.classList.add('show');
@@ -92,7 +94,7 @@ _via_file_annotator.prototype.file_show = function(file) {
   }
 }
 
-_via_file_annotator.prototype.file_load = function(file) {
+_via_annotator.prototype.file_load = function(file) {
   return new Promise( function(ok_callback, err_callback) {
     // check if the file has already been loaded
     if ( file.id in this.preload ) {
@@ -108,7 +110,7 @@ _via_file_annotator.prototype.file_load = function(file) {
   }.bind(this) );
 }
 
-_via_file_annotator.prototype.file_preload = function(file) {
+_via_annotator.prototype.file_preload = function(file) {
   return new Promise( function(ok_callback, err_callback) {
     console.log(file.type + ' file_preload()')
     var file_load_promise;
@@ -123,7 +125,7 @@ _via_file_annotator.prototype.file_preload = function(file) {
       file_load_promise = this._preload_image_content(file);
       break;
     default:
-      console.log('_via_file_annotator.prototype.file_preload(): ' +
+      console.log('_via_annotator.prototype.file_preload(): ' +
                   'unknown file type ');
       console.log(file);
       err_callback(file);
@@ -137,11 +139,11 @@ _via_file_annotator.prototype.file_preload = function(file) {
   }.bind(this));
 }
 
-_via_file_annotator.prototype.add_event_listener = function(file) {
+_via_annotator.prototype.add_event_listener = function(file) {
 }
 
-_via_file_annotator.prototype.remove_event_listener = function(file) {
+_via_annotator.prototype.remove_event_listener = function(file) {
 }
 
-_via_file_annotator.prototype.config = function(key, value) {
+_via_annotator.prototype.config = function(key, value) {
 }

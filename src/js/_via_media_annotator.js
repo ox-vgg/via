@@ -28,7 +28,7 @@ _via_media_annotator.prototype.init_static_content = function() {
   this.input_handler.setAttribute('class', 'input_handler');
   // add all layers to annotation_container
   this.annotator_container_view = document.createElement('div');
-  this.annotator_container_view.setAttribute('class', 'annotator_container');
+  this.annotator_container_view.setAttribute('class', 'parent_container');
   this.layer_container = document.createElement('div');
   this.layer_container.setAttribute('class', 'layer_container');
   this.layer_container.appendChild(this.media); // loaded using _via_media_annotator.load_media()
@@ -40,16 +40,11 @@ _via_media_annotator.prototype.init_static_content = function() {
   this.video_control_view = document.createElement('div');
   this.video_control_view.setAttribute('class', 'video_control');
 
-  //// annotation editor
-  this.annotation_editor_view = document.createElement('div');
-  this.annotation_editor_view.setAttribute('class', 'annotation_editor');
-
   //// add everything to html view
   this.container.innerHTML = '';
   this.container.appendChild(this.segment_annotator_view);
   this.container.appendChild(this.annotator_container_view);
   this.container.appendChild(this.video_control_view);
-  this.container.appendChild(this.annotation_editor_view);
 }
 
 // the content that is created dynamically and hence should not be cached
@@ -57,7 +52,6 @@ _via_media_annotator.prototype.clear_dynamic_content = function() {
   this.segment_annotator_view.innerHTML = '';
   this.input_handler.innerHTML = '';
   this.video_control_view.innerHTML = '';
-  this.annotation_editor_view.innerHTML = '';
 
   // clear canvas
   var c = this.regions;
@@ -72,11 +66,6 @@ _via_media_annotator.prototype.init_dynamic_content = function() {
   //// video control panel
   this.video_control = new _via_video_control(this.video_control_view,
                                               this.media);
-
-  //// annotation editor
-  var metadata = {};
-  this.annotation_editor = new _via_annotation_editor();
-  // @todo: create spreadsheet like editor for all annotations
 }
 
 // this method ensures that all the layers have same size as that of the content

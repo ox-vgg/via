@@ -19,56 +19,99 @@ Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
 Date: 29 Dec. 2018
 */
 
-body {
-  padding:0; margin:0; font-family:sans-serif;
+html, body {
+  width: 100vw;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
-.hide { display:none; }
-.show { display:block; }
+.via_container {
+  display: grid;
+  height:100vh;
+  grid-template-rows: 3em auto 10em;
+  grid-template-columns: minmax(5em, 3fr) 9fr;
+  grid-template-areas:"menu_container menu_container"
+                      "lsidebar_container annotator_container"
+                      "editor_container editor_container";
+}
+.via_container > * { border:1px solid #cecece; }
+.via_container > .menu_container {
+  grid-area:menu_container;
+}
 
-.file_annotator {
+.via_container > .lsidebar_container {
+  grid-area:lsidebar_container;
+  display: grid;
+  grid-template-rows: 3em auto;
+  grid-template-areas:"toolbar_container"
+                      "filemanager_container";
+}
+.via_container > .lsidebar_container > .toolbar_container {
+  grid-area:toolbar_container;
+}
+.via_container > .lsidebar_container > .filemanager_container {
+  grid-area:filemanager_container;
+}
+
+.via_container > .annotator_container {
+  grid-area:annotator_container;
+}
+
+.via_container > .editor_container {
+  grid-area:editor_container;
+}
+
+/*
+ * Annotator
+ */
+.annotator_container .hide { display:none; }
+.annotator_container .show { display:block; }
+
+.annotator {
   box-sizing:border-box;
   height:100%;
   background-color:#f5f5f5;
   border:1px solid #c2c2c2;
 }
-.file_annotator .segment_annotator {
+
+.annotator .segment_annotator {
   display:block;
   text-align:center;
   padding:0.5em;
 }
-.file_annotator .segment_annotator .spaced_button {
+.annotator .segment_annotator .spaced_button {
   margin:0 0.5em;
 }
 
-.file_annotator .video_control {
+.annotator .video_control {
   display:block;
   text-align:center;
   padding:0.5em;
   font-size:small;
 }
 
-.file_annotator .video_control button {
+.annotator .video_control button {
   font-size:small;
   margin:0 0.5em;
 }
 
-.file_annotator .video_control input[type="checkbox"] {
+.annotator .video_control input[type="checkbox"] {
   vertical-align:middle;
 }
 
-.file_annotator .annotator_container {
+.annotator .parent_container {
   display:block;
   position:relative;
   height:70%; 
   text-align:center;
 }
 
-.file_annotator .annotator_container .layer_container {
+.annotator .parent_container .layer_container {
   display:inline-block;  
   position:relative;
 }
-.file_annotator .annotator_container .layer_container .media {
+.annotator .parent_container .layer_container .media {
   display:block;
   position:absolute; 
   left:0; 
@@ -77,7 +120,7 @@ body {
   z-index:1000;
 }
 
-.file_annotator .annotator_container .layer_container .regions { 
+.annotator .parent_container .layer_container .regions { 
   display:block;
   position:absolute; 
   left:0; 
@@ -86,18 +129,11 @@ body {
   z-index:2;
 }
 
-.file_annotator .annotator_container .layer_container .input_handler {
+.annotator .parent_container .layer_container .input_handler {
   display:block;
   position:absolute; 
   left:0; 
   right:0;
   padding:0; margin:0;
   z-index:3;
-}
- 
-.file_annotator .annotation_editor { 
-  height:15%;
-  overflow:auto;
-  padding:0.5em;
-  border:1px solid red;
 }

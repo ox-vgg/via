@@ -9,31 +9,25 @@
 </head>
 
 <body>
-  <h1>VGG Image Annotator 3.x.y</h1>
-  <div>
-    <button onclick="ma.file_load_and_show( 'https://upload.wikimedia.org/wikipedia/commons/7/72/Red_fox_catches_a_mouse.webm' )">Demo 1: Fox and Mouse</button>
-    <button onclick="ma.file_load_and_show( 'https://upload.wikimedia.org/wikipedia/commons/2/29/Moon_transit_of_sun_large.ogv' )">Demo 2: Moon transit Sun</button>
+<div class="via_container">
+  <div class="menu_container">Home | Project | Annotation | View | Help</div>
+  <div class="lsidebar_container">
+    <div id="toolbar_container" class="toolbar_container">Tool Bar</div>
+    <div id="filemanager_container" class="filemanager_container">File Manager<br/>File1<br/>File2<br/>File3<br/>File4<br/>File5<br/></div>
   </div>
+  <div id="annotator_container" class="annotator_container"></div>
+  <div id="editor_container" class="editor_container"></div>
+</div>
 
-  <div>
-    <input type="url" size="80" placeholder="file://c:/data/video.mp4 or https://upload.wikimedia.org/..." id="user_input_uri">
-    <button onclick="ma.file_load_and_show( document.getElementById('user_input_uri').value )">Load Video</button>
-  </div>
-  <div style="display:inline-block; margin-top:1em; width:800px; height:800px;" id="content_area"></div>
-  <script src="../js/_via_file.js"></script>
-  <script src="../js/_via_media_annotator.js"></script>
-  <script src="../js/_via_segment_annotator.js"></script>
-  <script src="../js/_via_video_control.js"></script>
-  <script src="../js/_via_annotation_editor.js"></script>
-  <script src="../js/_via_file_annotator.js"></script>
-  <script src="../js/_via_attribute.js"></script>
-  <script src="../js/_via_data_model.js"></script>
-  <script src="../js/_via_controller.js"></script>
-  <script src="../js/_via.js"></script>
-
-  <script type="text/javascript">
-var html_container = document.getElementById('content_area');
-var via_instance = new _via(html_container);
-  </script>
+<script src="../js/_via_file.js"></script>
+<script src="../js/_via_attribute.js"></script>
+<script src="../js/_via_data.js"></script>
+<script src="../js/_via_segment_annotator.js"></script>
+<script src="../js/_via_video_control.js"></script>
+<script src="../js/_via_media_annotator.js"></script>
+<script src="../js/_via_annotator.js"></script>
+<script src="../js/_via.js"></script>
+<script type="text/javascript">
+</script>
 </body>
 </html>
