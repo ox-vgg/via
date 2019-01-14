@@ -28,7 +28,7 @@ _via_media_annotator.prototype.init_static_content = function() {
   this.input_handler.setAttribute('class', 'input_handler');
   // add all layers to annotation_container
   this.annotator_container_view = document.createElement('div');
-  this.annotator_container_view.setAttribute('class', 'parent_container');
+  this.annotator_container_view.setAttribute('class', 'content_annotator');
   this.layer_container = document.createElement('div');
   this.layer_container.setAttribute('class', 'layer_container');
   this.layer_container.appendChild(this.media); // loaded using _via_media_annotator.load_media()
@@ -38,7 +38,7 @@ _via_media_annotator.prototype.init_static_content = function() {
 
   //// video control panel
   this.video_control_view = document.createElement('div');
-  this.video_control_view.setAttribute('class', 'video_control');
+  this.video_control_view.setAttribute('class', 'content_controls');
 
   //// add everything to html view
   this.container.innerHTML = '';
@@ -70,9 +70,10 @@ _via_media_annotator.prototype.init_dynamic_content = function() {
 
 // this method ensures that all the layers have same size as that of the content
 _via_media_annotator.prototype.init_layers_size = function() {
+
   // max. dimension of the container
-  var maxw = this.annotator_container_view.clientWidth;
-  var maxh = this.annotator_container_view.clientHeight;
+  var maxw = this.annotator_container_view.clientWidth - 20;
+  var maxh = this.annotator_container_view.clientHeight - 20;
 
   // original size of the content
   var cw0, ch0;

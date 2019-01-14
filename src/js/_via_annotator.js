@@ -32,8 +32,8 @@ _via_annotator.prototype._preload_video_content = function(file) {
     //// initialize the media annotator
     this.preload[fid].view = document.createElement('div');
     this.preload[fid].view.setAttribute('data-fid', fid);
-    this.preload[fid].view.classList.add('annotator');
     this.preload[fid].view.classList.add('hide'); // hidden by default
+    this.preload[fid].view.classList.add('annotator');
     this.c.appendChild( this.preload[fid].view );
 
     this.preload[fid].media_annotator = new _via_media_annotator(this.preload[fid].view,
@@ -73,22 +73,16 @@ _via_annotator.prototype.file_load_and_show = function(uri) {
 
 _via_annotator.prototype.file_show = function(file) {
   this.now.file = file;
-  for ( var fid in this.preload ) {
-    if ( parseInt(fid) === this.now.file.id ) {
-      console.log(this.preload[fid].view)
-      if ( this.preload[fid].view.classList.contains('hide') ) {
-        this.preload[fid].view.classList.remove('hide');
-        this.preload[fid].view.classList.add('show');
-        // @todo: automatically trigger init_dynamic_content() when
-        // the html view for this file is visible
-        setTimeout( this.preload[fid].media_annotator.init_dynamic_content.bind(this.preload[fid].media_annotator), 100);
-      }
+  var n = this.c.childNodes.length;
+  var i;
+  for ( i = 0; i < n; ++i ) {
+    if ( parseInt(this.c.childNodes[i].dataset.fid) === this.now.file.id ) {
+      this.c.childNodes[i].classList.remove('hide');
+      this.c.childNodes[i].classList.add('show');
+      this.preload[this.now.file.id].media_annotator.init_dynamic_content();
     } else {
-      if ( this.preload[fid].view.classList.contains('show') ) {
-        this.preload[fid].view.classList.remove('show');
-      }
-      if ( !this.preload[fid].view.classList.contains('hide') ) {
-        this.preload[fid].view.classList.add('hide');
+      if ( ! this.c.childNodes[i].classList.contains('hide') ) {
+        this.c.childNodes[i].classList.add('hide');
       }
     }
   }

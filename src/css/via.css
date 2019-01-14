@@ -4,7 +4,7 @@ CSS style definitions for VGG Image Annotator (VIA)
 
 Theme: https://material.io/tools/color/#!/?view.left=0&view.right=0&primary.color=009688&secondary.color=FFEB3B
 Primary:  #009688
-  light:  #52c7b8  
+  light:  #52c7b8
   dark:   #00675b
 Secondary: #ffeb3b
   light:  #ffff72
@@ -20,120 +20,118 @@ Date: 29 Dec. 2018
 */
 
 html, body {
-  width: 100vw;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
+    width: 100vw;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
 }
 
 .via_container {
-  display: grid;
-  height:100vh;
-  grid-template-rows: 3em auto 10em;
-  grid-template-columns: minmax(5em, 3fr) 9fr;
-  grid-template-areas:"menu_container menu_container"
-                      "lsidebar_container annotator_container"
-                      "editor_container editor_container";
+    display: grid;
+    height:100vh;
+    grid-template-rows: 2em auto 10em;
+    grid-template-columns: minmax(10em, 2fr) 10fr;
+    grid-template-areas:"menu_container menu_container"
+                            "lsidebar_container annotator_container"
+                            "editor_container editor_container";
 }
 .via_container > * { border:1px solid #cecece; }
 .via_container > .menu_container {
-  grid-area:menu_container;
+    grid-area:menu_container;
 }
 
 .via_container > .lsidebar_container {
-  grid-area:lsidebar_container;
-  display: grid;
-  grid-template-rows: 3em auto;
-  grid-template-areas:"toolbar_container"
-                      "filemanager_container";
+    grid-area:lsidebar_container;
+    display: grid;
+    grid-template-rows: 3em auto;
+    grid-template-areas:"toolbar_container"
+                            "filemanager_container";
 }
 .via_container > .lsidebar_container > .toolbar_container {
-  grid-area:toolbar_container;
+    grid-area:toolbar_container;
 }
 .via_container > .lsidebar_container > .filemanager_container {
-  grid-area:filemanager_container;
+    grid-area:filemanager_container;
 }
 
 .via_container > .annotator_container {
-  grid-area:annotator_container;
+    grid-area:annotator_container;
 }
 
 .via_container > .editor_container {
-  grid-area:editor_container;
+    grid-area:editor_container;
 }
 
 /*
  * Annotator
  */
-.annotator_container .hide { display:none; }
-.annotator_container .show { display:block; }
-
 .annotator {
-  box-sizing:border-box;
-  height:100%;
-  background-color:#f5f5f5;
-  border:1px solid #c2c2c2;
+    grid-template-rows:3em auto 3em;
+    grid-template-columns:1fr;
+    height:100%;
+    grid-template-areas:"segment_annotator"
+                            "content_annotator"
+                            "content_controls";
+}
+.annotator_container > .hide { display:none; }
+.annotator_container > .show { display:grid; }
+
+.annotator > .segment_annotator {
+    grid-area:segment_annotator;
+    margin:auto;
+}
+.annotator > .segment_annotator .spaced_button {
+    margin:0 0.5em;
 }
 
-.annotator .segment_annotator {
-  display:block;
-  text-align:center;
-  padding:0.5em;
-}
-.annotator .segment_annotator .spaced_button {
-  margin:0 0.5em;
+.annotator > .content_controls {
+    grid-area:content_controls;
+    font-size:small;
+    margin:auto;
 }
 
-.annotator .video_control {
-  display:block;
-  text-align:center;
-  padding:0.5em;
-  font-size:small;
+.annotator > .content_controls button {
+    font-size:small;
+    margin:0 0.5em;
 }
 
-.annotator .video_control button {
-  font-size:small;
-  margin:0 0.5em;
+.annotator > .content_controls input[type="checkbox"] {
+    vertical-align:middle;
 }
 
-.annotator .video_control input[type="checkbox"] {
-  vertical-align:middle;
+.annotator > .content_annotator {
+    grid-area:content_annotator;
+    position:relative;
+    text-align:center;
 }
 
-.annotator .parent_container {
-  display:block;
-  position:relative;
-  height:70%; 
-  text-align:center;
+.annotator > .content_annotator > .layer_container {
+    display:inline-block;
+    position:relative;
+}
+.annotator > .content_annotator > .layer_container .media {
+    display:block;
+    position:absolute;
+    left:0;
+    right:0;
+    padding:0; margin:0;
+    z-index:1000;
 }
 
-.annotator .parent_container .layer_container {
-  display:inline-block;  
-  position:relative;
-}
-.annotator .parent_container .layer_container .media {
-  display:block;
-  position:absolute; 
-  left:0; 
-  right:0;
-  padding:0; margin:0;
-  z-index:1000;
+.annotator > .content_annotator > .layer_container .regions {
+    display:block;
+    position:absolute;
+    left:0;
+    right:0;
+    padding:0; margin:0;
+    z-index:2;
 }
 
-.annotator .parent_container .layer_container .regions { 
-  display:block;
-  position:absolute; 
-  left:0; 
-  right:0;
-  padding:0; margin:0;
-  z-index:2;
-}
-
-.annotator .parent_container .layer_container .input_handler {
-  display:block;
-  position:absolute; 
-  left:0; 
-  right:0;
-  padding:0; margin:0;
-  z-index:3;
+.annotator > .content_annotator > .layer_container .input_handler {
+    display:block;
+    position:absolute;
+    left:0;
+    right:0;
+    padding:0; margin:0;
+    z-index:3;
 }

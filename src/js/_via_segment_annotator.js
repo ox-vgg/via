@@ -21,6 +21,7 @@ function _via_segment_annotator(container, media_element) {
   this.style.bstart = '';
   this.style.breset = '';
   this.style.bend = '';
+
   if ( typeof(container.innerHTML) === 'undefined' ||
        typeof(media_element.duration) === 'undefined'
      ) {
