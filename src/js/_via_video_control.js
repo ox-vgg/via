@@ -58,6 +58,7 @@ _via_video_control.prototype.init = function() {
   }.bind(this));
 
   this.sleft = document.createElement('button');
+  this.sleft.setAttribute('class', 'text_button');
   this.sleft.innerHTML = '&cularr;';
   this.sleft.addEventListener('click', function() {
     if ( this.media_element.currentTime > 0 ) {
@@ -81,6 +82,7 @@ _via_video_control.prototype.init = function() {
   }.bind(this));
 
   this.sright = document.createElement('button');
+  this.sright.setAttribute('class', 'text_button');
   this.sright.innerHTML = '&curarr;';
   this.sright.addEventListener('click', function() {
     if ( this.media_element.currentTime < this.media_element.duration ) {

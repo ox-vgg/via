@@ -24,7 +24,7 @@ function _via_attribute(id, name, desc, type, options, default_option_id) {
   }
 }
 
-_via_attribute.prototype.TYPE = { 'TEXT':1, 'CHECKBOX':2, 'RADIO':3, 'DROPDOWN':4, 'IMAGE':5 };
+_via_attribute.prototype.TYPE = { 'TEXT':1, 'CHECKBOX':2, 'RADIO':3, 'SELECT':4, 'IMAGE':5 };
 
 _via_attribute.prototype.option_add = function(option_id, option_value, is_default=false) {
   this.options[option_id] = option_value;
@@ -33,20 +33,15 @@ _via_attribute.prototype.option_add = function(option_id, option_value, is_defau
   }
 }
 
-_via_attribute.prototype.html = function() {
+_via_attribute.prototype.html_element = function() {
   switch(this.type) {
   case this.TYPE.TEXT:
-    var el = document.createElement('input');
-    el.setAttribute('type', 'text');
-    el.setAttribute('name', this.attr_name);
-    el.setAttribute('id', this.html_id());
+    var el = document.createElement('textarea');
     return el;
     break;
 
-  case this.TYPE.DROPDOWN:
+  case this.TYPE.SELECT:
     var el = document.createElement('select');
-    el.setAttribute('name', this.attr_name);
-    el.setAttribute('id', this.html_id());
     var oid;
     for ( oid in this.options ) {
       var oi = document.createElement('option');
@@ -59,6 +54,3 @@ _via_attribute.prototype.html = function() {
   }
 }
 
-_via_attribute.prototype.html_id = function() {
-  return 'at_' + this.id;
-}

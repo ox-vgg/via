@@ -24,18 +24,21 @@ html, body {
     min-height: 100vh;
     margin: 0;
     padding: 0;
+    font-size:small;
 }
 
 .via_container {
     display: grid;
     height:100vh;
-    grid-template-rows: 2em auto 10em;
+    grid-template-rows: 1fr 20fr 9fr;
     grid-template-columns: minmax(10em, 2fr) 10fr;
     grid-template-areas:"menu_container menu_container"
                             "lsidebar_container annotator_container"
                             "editor_container editor_container";
 }
+
 .via_container > * { border:1px solid #cecece; }
+
 .via_container > .menu_container {
     grid-area:menu_container;
 }
@@ -43,9 +46,9 @@ html, body {
 .via_container > .lsidebar_container {
     grid-area:lsidebar_container;
     display: grid;
-    grid-template-rows: 3em auto;
+    grid-template-rows: 4fr 6fr;
     grid-template-areas:"toolbar_container"
-                            "filemanager_container";
+                        "filemanager_container";
 }
 .via_container > .lsidebar_container > .toolbar_container {
     grid-area:toolbar_container;
@@ -60,21 +63,24 @@ html, body {
 
 .via_container > .editor_container {
     grid-area:editor_container;
+    overflow:auto;
 }
 
 /*
  * Annotator
  */
 .annotator {
-    grid-template-rows:3em auto 3em;
-    grid-template-columns:1fr;
-    height:100%;
+    grid-template-rows:0.5fr 0.5fr 9fr;
+    grid-template-columns:auto;
     grid-template-areas:"segment_annotator"
-                            "content_annotator"
-                            "content_controls";
+                            "content_controls"
+                            "content_annotator";
+    height:100%;
 }
 .annotator_container > .hide { display:none; }
 .annotator_container > .show { display:grid; }
+.annotator button { font-size:small; }
+.annotator select { font-size:small; }
 
 .annotator > .segment_annotator {
     grid-area:segment_annotator;
@@ -91,7 +97,6 @@ html, body {
 }
 
 .annotator > .content_controls button {
-    font-size:small;
     margin:0 0.5em;
 }
 
@@ -101,8 +106,10 @@ html, body {
 
 .annotator > .content_annotator {
     grid-area:content_annotator;
+    display:block;
     position:relative;
     text-align:center;
+    height:100%;
 }
 
 .annotator > .content_annotator > .layer_container {
@@ -135,3 +142,43 @@ html, body {
     padding:0; margin:0;
     z-index:3;
 }
+
+/*
+ Metadata Editor
+*/
+.metadata_container {
+    display:block;
+    width:100%;
+}
+.metadata_container table {
+    border-collapse:collapse;
+    margin:1em;
+    overflow:scroll;
+    height:100%;
+}
+.metadata_container table, th, td {
+    border:1px solid #cccccc;
+}
+.metadata_container th, td {
+    padding:0.3em 0.4em;
+}
+
+.metadata_container .preview_container {
+}
+.metadata_container .preview_container canvas {
+    margin:0 0.5em;
+}
+
+/**/
+
+/*
+Text Buttons
+*/
+.text_button {
+    border:none;
+    color:blue;
+    background-color:inherit;
+    cursor:pointer;
+    display:inline-block;
+}
+.text_button:hover { color:red; }

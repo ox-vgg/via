@@ -9,8 +9,11 @@
  * @param {Element} container HTML container element like <div>
  * @param {HTMLMediaElement} media_element HTML video of audio
  */
+
 function _via_segment_annotator(container, media_element) {
-  this.t = [];
+  //this.t = [];
+  this.t = [1.643, 5.398]; // for DEBUG
+
   this.container = container;
   this.media_element = media_element;
 
@@ -21,6 +24,11 @@ function _via_segment_annotator(container, media_element) {
   this.style.bstart = '';
   this.style.breset = '';
   this.style.bend = '';
+
+  // registers on_event(), emit_event(), ... methods from
+  // _via_event to let this module listen and emit events
+  this.event_prefix = '_via_segment_annotator_';
+  _via_event.call( this );
 
   if ( typeof(container.innerHTML) === 'undefined' ||
        typeof(media_element.duration) === 'undefined'
@@ -33,6 +41,7 @@ function _via_segment_annotator(container, media_element) {
 }
 
 _via_segment_annotator.prototype.is_media_time_valid = function(t) {
+
   if ( typeof(t) === 'string' ) {
     t = parseFloat(t);
   }
@@ -58,8 +67,9 @@ _via_segment_annotator.prototype.init = function() {
   }.bind(this));
 
   this.bstart = document.createElement('button');
+  this.bstart.setAttribute('class', 'text_button');
   this.bstart.setAttribute('value', 'segment_tstart');
-  this.bstart.innerHTML = '&gt;';
+  this.bstart.innerHTML = '&lsh;';
   this.bstart.setAttribute('title', 'Use current frame time as start time');
   this.bstart.addEventListener('click', function() {
     this.t[0] = this.media_element.currentTime;
@@ -71,9 +81,10 @@ _via_segment_annotator.prototype.init = function() {
   label.innerHTML = '&nbsp;to&nbsp;';
 
   this.bend = document.createElement('button');
+  this.bend.setAttribute('class', 'text_button');
   this.bend.setAttribute('value', 'segment_tend');
   this.bend.setAttribute('title', 'Mark current frame as end of segment');
-  this.bend.innerHTML = '&gt;';
+  this.bend.innerHTML = '&rsh;';
   this.bend.addEventListener('click', function() {
     this.t[1] = this.media_element.currentTime;
     this.tend.value = this.t[1];
@@ -99,8 +110,8 @@ _via_segment_annotator.prototype.init = function() {
   this.bcreate.addEventListener('click', this.on_create.bind(this))
 
   this.container.innerHTML = '<span>Video segment from time&nbsp;</span>';
-  this.container.appendChild(this.bstart);
   this.container.appendChild(this.tstart);
+  this.container.appendChild(this.bstart);
   this.container.appendChild(label);
   this.container.appendChild(this.bend);
   this.container.appendChild(this.tend);
@@ -119,7 +130,7 @@ _via_segment_annotator.prototype.on_reset = function() {
 }
 
 _via_segment_annotator.prototype.on_create = function() {
-  console.log('create segment: ' + this.t)
+  this.emit_event(this.event_prefix + 'seg_add', { 't':this.t } );
 }
 
 

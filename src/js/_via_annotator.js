@@ -19,6 +19,18 @@ function _via_annotator(container, data) {
 }
 
 //
+// Metadata
+//
+_via_annotator.prototype.seg_add = function(data, event_payload) {
+  var fid = event_payload.fid;
+  var t = event_payload.t.slice();
+  this.d.seg_add(fid, t).then( function(ok) {
+  }.bind(this), function(err) {
+    console.log(err);
+  }.bind(this));
+}
+
+//
 // File preload
 //
 _via_annotator.prototype._preload_video_content = function(file) {
@@ -38,6 +50,7 @@ _via_annotator.prototype._preload_video_content = function(file) {
 
     this.preload[fid].media_annotator = new _via_media_annotator(this.preload[fid].view,
                                                                  this.preload[fid].file);
+    this.preload[fid].media_annotator.on_event('_via_media_annotator_seg_add', this.seg_add.bind(this));
 
     this.preload[fid].media_annotator.load_media().then( function(media_ok) {
       this.preload[fid].media_annotator.init_static_content();
