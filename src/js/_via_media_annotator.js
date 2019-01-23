@@ -9,24 +9,19 @@
 
 'use strict';
 
-function _via_media_annotator(container, file) {
-  this.container = container;
+function _via_media_annotator(container, file, data) {
+  this.c = container;
   this.file = file;
+  this.d = data;
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this.event_prefix = '_via_media_annotator_';
+  this._EVENT_ID_PREFIX = '_via_media_annotator_';
   _via_event.call( this );
 }
 
 // the content that needs to be cached
 _via_media_annotator.prototype.init_static_content = function() {
-  console.log('init_static_content()');
-
-  //// segment annotator
-  this.segment_annotator_view = document.createElement('div');
-  this.segment_annotator_view.setAttribute('class', 'segment_annotator');
-
   //// content layers
   // inner layer: canvas that will contain all the user drawn regions
   this.regions = document.createElement('canvas');
@@ -35,31 +30,27 @@ _via_media_annotator.prototype.init_static_content = function() {
   this.input_handler = document.createElement('div');
   this.input_handler.setAttribute('class', 'input_handler');
   // add all layers to annotation_container
-  this.annotator_container_view = document.createElement('div');
-  this.annotator_container_view.setAttribute('class', 'content_annotator');
   this.layer_container = document.createElement('div');
   this.layer_container.setAttribute('class', 'layer_container');
   this.layer_container.appendChild(this.media); // loaded using _via_media_annotator.load_media()
   this.layer_container.appendChild(this.regions);
   this.layer_container.appendChild(this.input_handler);
-  this.annotator_container_view.appendChild(this.layer_container);
+  this.content_container = document.createElement('div');
+  this.content_container.setAttribute('class', 'content');
+  this.content_container.appendChild(this.layer_container);
 
-  //// video control panel
-  this.video_control_view = document.createElement('div');
-  this.video_control_view.setAttribute('class', 'content_controls');
+  this.segmenter_container = document.createElement('div');
+  this.segmenter_container.setAttribute('class', 'segmenter');
 
   //// add everything to html view
-  this.container.innerHTML = '';
-  this.container.appendChild(this.segment_annotator_view);
-  this.container.appendChild(this.annotator_container_view);
-  this.container.appendChild(this.video_control_view);
+  this.c.innerHTML = '';
+  this.c.appendChild(this.content_container);
+  this.c.appendChild(this.segmenter_container);
 }
 
 // the content that is created dynamically and hence should not be cached
 _via_media_annotator.prototype.clear_dynamic_content = function() {
-  this.segment_annotator_view.innerHTML = '';
   this.input_handler.innerHTML = '';
-  this.video_control_view.innerHTML = '';
 
   // clear canvas
   var c = this.regions;
@@ -70,16 +61,6 @@ _via_media_annotator.prototype.clear_dynamic_content = function() {
 _via_media_annotator.prototype.init_dynamic_content = function() {
   try {
     this.init_layers_size();
-    this.segment_annotator = new _via_segment_annotator(this.segment_annotator_view,
-                                                        this.media);
-    this.segment_annotator.on_event('_via_segment_annotator_seg_add', function(data, event_payload) {
-      var new_payload = Object.assign(data, event_payload);
-      this.emit_event('_via_media_annotator_seg_add', new_payload);
-    }.bind(this), { 'fid':this.file.id } );
-
-    //// video control panel
-    this.video_control = new _via_video_control(this.video_control_view,
-                                                this.media);
   } catch(err) {
     console.log(err);
   }
@@ -89,18 +70,35 @@ _via_media_annotator.prototype.init_dynamic_content = function() {
 _via_media_annotator.prototype.init_layers_size = function() {
   try {
     // max. dimension of the container
-    // to avoid overflowing window, we artificially reduce the max. size by 5 pixels
-    var maxw = this.annotator_container_view.clientWidth - 5;
-    var maxh = this.annotator_container_view.clientHeight - 5;
+    // to avoid overflowing window, we artificially reduce the max. size by 1 pixels
+    var maxw = this.c.clientWidth - 1;
+    var maxh = this.c.clientHeight - 1;
+    if ( this.file.type === _VIA_FILE_TYPE.VIDEO ||
+         this.file.type === _VIA_FILE_TYPE.AUDIO
+       ) {
+      // we allocate 1/4th available vertical space to segmenter
+      // and remaining 3/4th space to media content
+      var segmenter_container_height = Math.floor(this.c.clientHeight/4);
+      this.segmenter_container.style.height = segmenter_container_height + 'px';
+      maxh = this.c.clientHeight - segmenter_container_height - 1;
+
+      // initialise segmenter
+      this.segmenter = new _via_media_segment_annotator(this.segmenter_container,
+                                                        this.d,
+                                                        this.media
+                                                       );
+    } else {
+      this.segmenter_container.style.height = '0';
+    }
 
     // original size of the content
     var cw0, ch0;
     switch( this.file.type ) {
-    case _via_file.prototype.TYPE.VIDEO:
+    case _VIA_FILE_TYPE.VIDEO:
       cw0 = this.media.videoWidth;
       ch0 = this.media.videoHeight;
       break;
-    case _via_file.prototype.TYPE.IMAGE:
+    case _VIA_FILE_TYPE.IMAGE:
       cw0 = this.media.naturalWidth;
       ch0 = this.media.naturalHeight;
       break;
@@ -132,20 +130,19 @@ _via_media_annotator.prototype.init_layers_size = function() {
 _via_media_annotator.prototype.load_media = function() {
   return new Promise( function(ok_callback, err_callback) {
     switch( this.file.type ) {
-    case _via_file.prototype.TYPE.VIDEO:
+    case _VIA_FILE_TYPE.VIDEO:
       //// a number of layers are added above the image or video
       //// so that user interactions with this visual content
       //// can be translated to user drawn regions
       // bottom layer: the media content
       this.media = document.createElement('video');
       this.media.setAttribute('src', this.file.path + this.file.uri);
-      this.media.setAttribute('class', 'media');
+      this.media.setAttribute('class', 'media_element');
       this.media.setAttribute('autoplay', false);
       this.media.setAttribute('loop', false);
       this.media.setAttribute('controls', '');
       this.media.setAttribute('preload', 'auto');
       this.media.addEventListener('loadeddata', function() {
-        console.log('media loaded');
         this.media.pause();
         ok_callback(this.file);
       }.bind(this));
@@ -159,9 +156,21 @@ _via_media_annotator.prototype.load_media = function() {
       }.bind(this));
 
       break;
-    case _via_file.prototype.TYPE.IMAGE:
-      console.log('@todo: handle image');
-      err_callback(this.file);
+    case _VIA_FILE_TYPE.IMAGE:
+      this.media = document.createElement('img');
+      this.media.setAttribute('src', this.file.path + this.file.uri);
+      this.media.setAttribute('class', 'media_element');
+      this.media.addEventListener('load', function() {
+        ok_callback(this.file);
+      }.bind(this));
+      this.media.addEventListener('error', function() {
+        console.log('error')
+        err_callback(this.file);
+      }.bind(this));
+      this.media.addEventListener('abort', function() {
+        console.log('abort')
+        err_callback(this.file);
+      }.bind(this));
       break;
 
     default:

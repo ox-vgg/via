@@ -19,46 +19,37 @@ function _via_video_control(container, media_element) {
 
 _via_video_control.prototype.init = function() {
   this.bplay = document.createElement('button');
-  if ( this.media_element.paused || this.media_element.ended ) {
-    this.bplay.innerHTML = 'Play&nbsp;';
-  } else {
-    this.bplay.innerHTML = 'Pause';
-  }
+  this.bplay.innerHTML = 'Play';
   this.bplay.addEventListener('click', function() {
-    if ( this.media_element.paused || this.media_element.ended ) {
-      this.media_element.play();
-      this.bplay.innerHTML = 'Pause';
-    } else {
-      this.media_element.pause();
-      this.bplay.innerHTML = 'Play&nbsp;';
-    }
-  }.bind(this))
-  // @fixme: for some reason, 'ended' event does not fire
-  this.media_element.addEventListener('ended', function() {
-    console.log('ended')
-    this.bplay.innerHTML = 'Play&nbsp;';
+    this.media_element.play();
+  }.bind(this));
+
+
+  this.bpause = document.createElement('button');
+  this.bpause.innerHTML = 'Pause';
+  this.bpause.addEventListener('click', function() {
+    this.media_element.pause();
   }.bind(this));
 
   this.bspeed = document.createElement('select');
   var o1 = document.createElement('option');
   o1.setAttribute('value', 0.5);
-  o1.innerHTML = 'Slow';
+  o1.innerHTML = 'Speed: Slow';
   this.bspeed.appendChild(o1);
   var o2 = document.createElement('option');
   o2.setAttribute('value', 1);
   o2.setAttribute('selected', '');
-  o2.innerHTML = 'Normal';
+  o2.innerHTML = 'Speed: Normal';
   this.bspeed.appendChild(o2);
   var o3 = document.createElement('option');
   o3.setAttribute('value', 2);
-  o3.innerHTML = 'Fast';
+  o3.innerHTML = 'Speed: Fast';
   this.bspeed.appendChild(o3);
   this.bspeed.addEventListener('change', function() {
     this.media_element.playbackRate = parseFloat(this.bspeed.options[ this.bspeed.selectedIndex ].value);
   }.bind(this));
 
   this.sleft = document.createElement('button');
-  this.sleft.setAttribute('class', 'text_button');
   this.sleft.innerHTML = '&cularr;';
   this.sleft.addEventListener('click', function() {
     if ( this.media_element.currentTime > 0 ) {
@@ -82,7 +73,6 @@ _via_video_control.prototype.init = function() {
   }.bind(this));
 
   this.sright = document.createElement('button');
-  this.sright.setAttribute('class', 'text_button');
   this.sright.innerHTML = '&curarr;';
   this.sright.addEventListener('click', function() {
     if ( this.media_element.currentTime < this.media_element.duration ) {
@@ -108,10 +98,11 @@ _via_video_control.prototype.init = function() {
 
   this.container.innerHTML = '';
   this.container.appendChild(this.bplay);
+  this.container.appendChild(this.bpause);
   this.container.appendChild(this.sleft);
   this.container.appendChild(this.bjump);
   this.container.appendChild(this.sright);
   this.container.appendChild(this.bspeed);
-  this.container.appendChild(annotate_frame_label);
-  this.container.appendChild(this.bring_video_to_top);
+  //this.container.appendChild(annotate_frame_label);
+  //this.container.appendChild(this.bring_video_to_top);
 }

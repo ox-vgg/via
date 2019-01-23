@@ -1,0 +1,60 @@
+/*
+
+CSS style definitions for VGG Image Annotator (VIA)
+
+Theme: https://material.io/tools/color/#!/?view.left=0&view.right=0&primary.color=9E9E9E&secondary.color=FFEB3B
+Primary:  #9e9e9e
+  light:  #cfcfcf
+  dark:   #707070
+Secondary: #ffeb3b
+  light:  #ffff72
+  dark:   #c8b900
+Text
+  primary:    #000000
+  secondary:  #000000
+
+
+
+Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
+Date: 23 Jan. 2019
+*/
+
+html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-size:1em; }
+
+*, *:before, *:after { box-sizing:inherit; }
+
+.via { display:block;  padding:0.3em 0.2em; background-color:white; }
+
+.cpanel { display:flex; border:1px solid #707070; padding:0.4em 0.5em; }
+.cpanel .tool_group { display:inline-block; margin:0 1%; padding:0; }
+.cpanel .tool_group:first-child { margin-left:0; }
+.cpanel .tool_group:last-child { margin-right:0; }
+.cpanel .logo { display:inline-block; line-height:1.4em;}
+.cpanel .logo a { text-decoration:none; }
+.cpanel .tool_group select { background-color:inherit; border:1px solid #cfcfcf; vertical-align:middle; width:10em; }
+
+.annotator_container { text-align:center; height:70vh; width:100%; border:1px solid #707070; padding:0.4em 0.5em; }
+.annotator_container > .hide { display:none; }
+.annotator_container > .show { display:block; }
+.annotator_container > .file { width:100%; height:100%; position:relative; }
+.annotator_container > .file > .content { display:block; width:100%; position:relative; text-align:center; }
+.annotator_container > .file > .content > .layer_container { display:inline-block; position:relative; }
+.annotator_container > .file > .content > .layer_container .media_element { display:block; position:absolute; left:0; right:0; padding:0; margin:0; z-index:1000; }
+.annotator_container > .file > .content > .layer_container .regions { display:block; position:absolute; left:0; right:0; padding:0; margin:0; z-index:2; }
+.annotator_container > .file > .content > .layer_container .input_handler { display:block; position:absolute; left:0; right:0; padding:0; margin:0; z-index:3; }
+.annotator_container > .file > .segmenter { width:100%; position:relative; text-align:center; overflow:auto; font-size:small; }
+.annotator_container > .file > .segmenter button { font-size:small; }
+.annotator_container > .file > .segmenter select { font-size:small; }
+.annotator_container > .file > .segmenter input { font-size:small; }
+.annotator_container > .file > .segmenter canvas { padding:0; margin:0; }
+.annotator_container > .file > .segmenter table { border-collapse:collapse; border:1px solid #cccccc; margin: 1em; }
+.annotator_container > .file > .segmenter th { padding:0.3em 0.4em; border:1px solid #cccccc; }
+.annotator_container > .file > .segmenter td { padding:0.3em 0.4em; border:1px solid #cccccc; }
+.annotator_container > .file > .segmenter svg { font-size:medium; margin:0 0.4em; }
+
+.editor_container { display:block; height:25vh; width:100%; overflow:auto; border:1px solid #707070; }
+
+/* SVG Buttons */
+.svg_button { width:1.2em; height:1.2em; fill:black; stroke:none; vertical-align:middle; }
+.svg_button:hover { fill:#cfcfcf; cursor:pointer; }
+.svg_button:active { fill:#707070; cursor:pointer; }

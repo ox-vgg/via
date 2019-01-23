@@ -3,12 +3,14 @@
  * @classdesc Marks time segments of a {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement|HTMLMediaElement}
  * @author Abhishek Dutta <adutta@robots.ox.ac.uk>
  * @since 28 Dec. 2018
- * @fires _via_segment_annotator#seg_add
- * @fires _via_segment_annotator#seg_del
- * @fires _via_segment_annotator#seg_edit
+ * @fires _via_segment_annotator#segment_add
+ * @fires _via_segment_annotator#segment_del
+ * @fires _via_segment_annotator#segment_edit
  * @param {Element} container HTML container element like <div>
  * @param {HTMLMediaElement} media_element HTML video of audio
  */
+
+'use strict';
 
 function _via_segment_annotator(container, media_element) {
   //this.t = [];
@@ -27,7 +29,7 @@ function _via_segment_annotator(container, media_element) {
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this.event_prefix = '_via_segment_annotator_';
+  this._EVENT_ID_PREFIX = '_via_segment_annotator_';
   _via_event.call( this );
 
   if ( typeof(container.innerHTML) === 'undefined' ||
@@ -130,7 +132,7 @@ _via_segment_annotator.prototype.on_reset = function() {
 }
 
 _via_segment_annotator.prototype.on_create = function() {
-  this.emit_event(this.event_prefix + 'seg_add', { 't':this.t } );
+  this.emit_event('segment_add', { 't':this.t } );
 }
 
 
