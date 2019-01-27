@@ -87,6 +87,11 @@ _via_media_annotator.prototype.init_layers_size = function() {
                                                         this.d,
                                                         this.media
                                                        );
+      this.segmenter.on_event('segment_add', function(data, event_payload) {
+        var new_payload = Object.assign(event_payload, {'fid':this.file.id})
+        console.log(new_payload)
+        this.emit_event('segment_add', new_payload);
+      }.bind(this));
     } else {
       this.segmenter_container.style.height = '0';
     }

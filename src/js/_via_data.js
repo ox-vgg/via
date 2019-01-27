@@ -102,14 +102,14 @@ _via_data.prototype.fid2file = function(fid) {
 //
 // Metadata
 //
-_via_data.prototype.segment_add = function(fid, t) {
+_via_data.prototype.segment_add = function(fid, t, what) {
   return new Promise( function(ok_callback, err_callback) {
     if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
       this.metadata_store[fid] = [];
     }
 
     // sanity checks
-    if ( t.length !== 2 ) {
+    if ( t.length < 2 ) {
       err_callback({'fid':fid, 't':t});
       return;
     }
@@ -120,9 +120,8 @@ _via_data.prototype.segment_add = function(fid, t) {
 
     var mid = this.metadata_store[fid].push( new Object() ) - 1; // get a slot
     var where = [ _via_metadata.prototype.TYPE.VSEGMENT,
-                  _via_metadata.prototype.SHAPE.TIME,
-                  t[0], t[1] ];
-    var what = {};
+                  _via_metadata.prototype.SHAPE.TIME
+                ].concat(t);
     this.metadata_store[fid][mid] = new _via_metadata(mid, where, what);
 
     this.emit_event( 'segment_add', { 'fid':fid, 'mid':mid } );

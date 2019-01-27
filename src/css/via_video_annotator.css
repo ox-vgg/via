@@ -33,7 +33,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .cpanel .logo a { text-decoration:none; }
 .cpanel .tool_group select { background-color:inherit; border:1px solid #cfcfcf; vertical-align:middle; width:10em; }
 
-.annotator_container { text-align:center; height:70vh; width:100%; border:1px solid #707070; padding:0.4em 0.5em; }
+.annotator_container { text-align:center; height:95vh; width:100%; border:1px solid #707070; padding:0.4em 0.5em; }
 .annotator_container > .hide { display:none; }
 .annotator_container > .show { display:block; }
 .annotator_container > .file { width:100%; height:100%; position:relative; }
@@ -42,17 +42,24 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .annotator_container > .file > .content > .layer_container .media_element { display:block; position:absolute; left:0; right:0; padding:0; margin:0; z-index:1000; }
 .annotator_container > .file > .content > .layer_container .regions { display:block; position:absolute; left:0; right:0; padding:0; margin:0; z-index:2; }
 .annotator_container > .file > .content > .layer_container .input_handler { display:block; position:absolute; left:0; right:0; padding:0; margin:0; z-index:3; }
-.annotator_container > .file > .segmenter { width:100%; position:relative; text-align:center; overflow:auto; font-size:small; }
+.annotator_container > .file > .segmenter { width:100%; position:relative; text-align:center; overflow:hidden; font-size:small; }
+.annotator_container > .file > .segmenter .timeline_container { overflow:hidden; }
 .annotator_container > .file > .segmenter button { font-size:small; }
+.annotator_container > .file > .segmenter .large_button { height:3em; }
 .annotator_container > .file > .segmenter select { font-size:small; }
 .annotator_container > .file > .segmenter input { font-size:small; }
 .annotator_container > .file > .segmenter canvas { padding:0; margin:0; }
-.annotator_container > .file > .segmenter table { border-collapse:collapse; border:1px solid #cccccc; margin: 1em; }
-.annotator_container > .file > .segmenter th { padding:0.3em 0.4em; border:1px solid #cccccc; }
-.annotator_container > .file > .segmenter td { padding:0.3em 0.4em; border:1px solid #cccccc; }
 .annotator_container > .file > .segmenter svg { font-size:medium; margin:0 0.4em; }
+.annotator_container > .file > .segmenter .metadata_container { overflow:auto; height:80%; }
+.annotator_container > .file > .segmenter .metadata_container table { border-collapse:collapse; border:1px solid #cccccc; margin: 1em; }
+.annotator_container > .file > .segmenter .metadata_container th { padding:0.3em 0.4em; border:1px solid #cccccc; }
+.annotator_container > .file > .segmenter .metadata_container td { padding:0.3em 0.4em; border:1px solid #cccccc; vertical-align:top; }
+.annotator_container > .file > .segmenter .metadata_container .segment_table { border:none; margin:0; }
+.annotator_container > .file > .segmenter .metadata_container .segment_table th { border:none; }
+.annotator_container > .file > .segmenter .metadata_container .segment_table td { border:none; }
+.annotator_container > .file > .segmenter .metadata_container .segment_table .current { background-color:#cccccc; }
 
-.editor_container { display:block; height:25vh; width:100%; overflow:auto; border:1px solid #707070; }
+.editor_container { display:none; height:25vh; width:100%; overflow:auto; border:1px solid #707070; }
 
 /* SVG Buttons */
 .svg_button { width:1.2em; height:1.2em; fill:black; stroke:none; vertical-align:middle; }

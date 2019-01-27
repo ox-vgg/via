@@ -20,3 +20,16 @@ function _via_util_get_svg_button(id, title, viewbox) {
   el.innerHTML = '<use xlink:href="#' + id + '"></use><title>' + title + '</title>';
   return el;
 }
+
+function _via_util_get_html_input_element_value(el) {
+  switch(el.tagName) {
+  case 'TEXTAREA':
+    return el.value;
+
+  case 'SELECT':
+    return el.options[el.selectedIndex].value;
+
+  case 'INPUT':
+    return el.value;
+  }
+}

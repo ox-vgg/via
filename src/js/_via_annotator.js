@@ -35,7 +35,9 @@ function _via_annotator(container, data) {
 _via_annotator.prototype.segment_add = function(data, event_payload) {
   var fid = event_payload.fid;
   var t = event_payload.t.slice();
-  this.d.segment_add(fid, t).then( function(ok) {
+  var what = event_payload.what;
+  this.d.segment_add(fid, t, what).then( function(ok) {
+    console.log(ok)
   }.bind(this), function(err) {
     console.log(err);
   }.bind(this));
@@ -74,7 +76,7 @@ _via_annotator.prototype._preload_video_content = function(file) {
                                                                  this.preload[fid].file,
                                                                  this.d
                                                                 );
-
+    this.preload[fid].media_annotator.on_event('segment_add', this.segment_add.bind(this));
     this.preload[fid].media_annotator.load_media().then( function(media_ok) {
       this.preload[fid].media_annotator.init_static_content();
       ok_callback(file);
