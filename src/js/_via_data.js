@@ -11,9 +11,17 @@
 
 function _via_data() {
   this.project = { 'id':'', 'name':'', 'desc':'' };
+
   this.metadata_store = {};
-  this.attribute_store = [];
-  this.file_store = [];
+
+  // attributes
+  this.attribute_store = {};
+  this.aid_list = [];        // to maintain ordering of attributes
+
+  // files
+  this.file_store = {};
+  this.fid_list = [];        // to maintain ordering of files
+
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -21,25 +29,40 @@ function _via_data() {
   _via_event.call( this );
 }
 
+_via_data.prototype._init = function() {
+}
+
 //
 // attribute
 //
+_via_data.prototype._attribute_get_new_id = function() {
+  var aid;
+  if ( this.aid_list.length ) {
+    aid = parseInt(this.aid_list[this.aid_list.length - 1]) + 1;
+  } else {
+    aid = 0;
+  }
+  return aid;
+}
+
 _via_data.prototype.attribute_add = function(name, desc, type, options, default_option_id) {
-  var aid = this.attribute_store.push( {} ) - 1; // get a slot
+  var aid = this._attribute_get_new_id();
   this.attribute_store[aid] = new _via_attribute(aid,
                                                  name,
                                                  desc,
                                                  type,
                                                  options,
                                                  default_option_id);
+  this.aid_list.push(aid);
   return aid;
 }
 
-_via_data.prototype.attribute_del = function(aid) {
-  console.log(aid)
-  console.log(typeof(aid))
+_via_data.prototype.attribute_remove = function(aid) {
   if ( this.attribute_store.hasOwnProperty(aid) ) {
     delete this.attribute_store[aid];
+    var aindex = this.aid_list.indexOf(aid);
+    this.aid_list.splice(aindex, 1);
+
     console.log(this.attribute_store)
     this.emit_event( 'attribute_del', { 'aid':aid } );
 
@@ -81,10 +104,30 @@ _via_data.prototype.attribute_update_type = function(aid, new_type) {
 //
 // file
 //
-_via_data.prototype.file_add = function(uri, type, path) {
-  var fid = this.file_store.push( new Object() ) - 1; // get a slot
-  this.file_store[fid] = new _via_file(fid, uri, type, path);
+_via_data.prototype._file_get_new_id = function() {
+  var fid;
+  if ( this.fid_list.length ) {
+    fid = parseInt(this.fid_list[this.fid_list.length - 1]) + 1;
+  } else {
+    fid = 0;
+  }
   return fid;
+}
+
+_via_data.prototype.file_add = function(uri, type, path) {
+  var fid = this._file_get_new_id();
+  this.file_store[fid] = new _via_file(fid, uri, type, path);
+  this.fid_list.push(fid);
+  return fid;
+}
+
+_via_data.prototype.file_remove = function(fid) {
+  if ( this.has_file(fid) ) {
+    delete this.file_store[fid];
+    var findex = this.fid_list.indexOf(fid);
+    this.fid_list.splice(findex, 1);
+    this.emit_event( 'file_remove', { 'fid':fid } );
+  }
 }
 
 _via_data.prototype.has_file = function(fid) {

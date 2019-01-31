@@ -163,25 +163,34 @@ _via_editor.prototype.get_metadata = function(fid, mid) {
   if ( this.d.metadata_store[fid][mid].where_type() === _via_metadata.prototype.TYPE.VSEGMENT &&
        this.d.metadata_store[fid][mid].where_type() === _via_metadata.prototype.SHAPE.TIME
      ) {
-    var t1 = document.createElement('button');
-    t1.setAttribute('class', 'text_button');
-    t1.setAttribute('data-fid', fid);
-    t1.setAttribute('data-mid', mid);
-    t1.setAttribute('data-where_index', 2);
-    t1.innerHTML = this.d.metadata_store[fid][mid].where[2].toFixed(3).toString();
-    t1.addEventListener('click', this.jump_to_metadata.bind(this));
+    var n = this.d.metadata_store[fid][mid].where.length;
+    var i;
+    var ul = document.createElement('ul');
+    for ( i = 2; i < n; i = i + 2 ) {
+      var li = document.createElement('li');
+      // only one segment
+      var t1 = document.createElement('button');
+      t1.setAttribute('class', 'text_button');
+      t1.setAttribute('data-fid', fid);
+      t1.setAttribute('data-mid', mid);
+      t1.setAttribute('data-where_index', 2);
+      t1.innerHTML = this.d.metadata_store[fid][mid].where[i].toFixed(3).toString();
+      t1.addEventListener('click', this.jump_to_metadata.bind(this));
 
-    var arrow = document.createElement('span');
-    arrow.innerHTML = '&rarr;';
+      var arrow = document.createElement('span');
+      arrow.innerHTML = '&rarr;';
 
-    var t2 = t1.cloneNode();
-    t2.setAttribute('data-where_index', 3);
-    t2.innerHTML = this.d.metadata_store[fid][mid].where[3].toFixed(3).toString();
-    t2.addEventListener('click', this.jump_to_metadata.bind(this));
+      var t2 = t1.cloneNode();
+      t2.setAttribute('data-where_index', 3);
+      t2.innerHTML = this.d.metadata_store[fid][mid].where[i+1].toFixed(3).toString();
+      t2.addEventListener('click', this.jump_to_metadata.bind(this));
 
-    location.appendChild(t1);
-    location.appendChild(arrow);
-    location.appendChild(t2);
+      li.appendChild(t1);
+      li.appendChild(arrow);
+      li.appendChild(t2);
+      ul.appendChild(li);
+    }
+    location.appendChild(ul);
   }
   tr.appendChild(location);
 
@@ -197,20 +206,14 @@ _via_editor.prototype.get_metadata = function(fid, mid) {
 }
 
 _via_editor.prototype.get_metadata_action_tools = function(container, fid, mid) {
-  var del = document.createElement('button');
+  var del = _via_util_get_svg_button('micon_delete', 'Delete Metadata');
   del.setAttribute('data-fid', fid);
   del.setAttribute('data-mid', mid);
-  del.setAttribute('class', 'text_button');
-  del.setAttribute('title', 'Delete Metadata');
-  del.innerHTML = '&times;';
   del.addEventListener('click', this.metadata_del.bind(this));
 
-  var edit = document.createElement('button');
+  var edit = _via_util_get_svg_button('micon_edit', 'Select Metadata for Editing');
   edit.setAttribute('data-fid', fid);
   edit.setAttribute('data-mid', mid);
-  edit.setAttribute('class', 'text_button');
-  edit.setAttribute('title', 'Update Metadata');
-  edit.innerHTML = '&olarr;';
   edit.addEventListener('click', this.metadata_edit.bind(this));
 
   container.appendChild(edit);
@@ -308,14 +311,14 @@ _via_editor.prototype.clear_attribute = function() {
 _via_editor.prototype.update_all_attributes = function() {
   this.clear_attribute();
 
-  if ( this.d.attribute_store.length ) {
+  if ( this.d.aid_list.length ) {
     this.attribute_view.appendChild( this.get_attribute_header() );
 
     // add each metadata
     var tbody = document.createElement('tbody');
-    var n = this.d.attribute_store.length;
-    var aid;
-    for ( aid = 0; aid < n; ++aid ) {
+    var aindex;
+    for ( aindex in this.d.aid_list ) {
+      var aid = this.d.aid_list[aindex];
       tbody.appendChild( this.get_attribute(aid) );
     }
     this.attribute_view.appendChild(tbody);
@@ -395,7 +398,6 @@ _via_editor.prototype.get_attribute = function(aid) {
 
   // sixth column: preview of attribute
   var preview = document.createElement('td');
-  console.log(this.d.attribute_store[aid])
   preview.appendChild( this.d.attribute_store[aid].html_element() );
   tr.appendChild(preview);
 

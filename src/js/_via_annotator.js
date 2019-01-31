@@ -27,6 +27,8 @@ function _via_annotator(container, data) {
   // _via_event to let this module listen and emit events
   this.event_prefix = '_via_annotator_';
   _via_event.call( this );
+
+  this.d.on_event('file_remove', this._on_event_file_remove.bind(this));
 }
 
 //
@@ -125,13 +127,13 @@ _via_annotator.prototype._which_preload_is_oldest = function() {
 _via_annotator.prototype._preload_neighbours = function(anchor_fid) {
   return new Promise( function(ok_callback, err_callback) {
     var load_promise_list = [];
-    var fid_list = this._preload_get_neighbours_fid(anchor_fid);
-    var n = fid_list.length;
-    var i, file, fid;
-    for ( i = 0; i < n; ++i ) {
-      fid = fid_list[i];
-      file = this.d.file_store[fid];
-      load_promise_list.push( this.file_load(file) );
+    var nbd_fid_list = this._preload_get_neighbours_fid(anchor_fid);
+    var nbd_length = nbd_fid_list.length;
+    var i, nbd_file, nbd_fid;
+    for ( i = 0; i < nbd_length; ++i ) {
+      nbd_fid = nbd_fid_list[i];
+      nbd_file = this.d.file_store[nbd_fid];
+      load_promise_list.push( this.file_load(nbd_file) );
     }
 
     Promise.all( load_promise_list ).then( function(all_ok) {
@@ -143,25 +145,30 @@ _via_annotator.prototype._preload_neighbours = function(anchor_fid) {
 }
 
 _via_annotator.prototype._preload_get_neighbours_fid = function(anchor_fid) {
-  var fid_list = [];
-  var n = this.conf.PRELOAD_NBD_INDEX_LIST.length;
-  var i, fid, offset;
+  var fid_list = this.d.fid_list;
+  var n = fid_list.length;
   var anchor_fid = parseInt(anchor_fid);
-  for ( i = 0; i < n; ++i ) {
-    fid = anchor_fid + this.conf.PRELOAD_NBD_INDEX_LIST[i];
-    if ( fid < 0 ||
-         fid >= this.d.file_store.length ) {
-      if ( fid < 0 ) {
-        fid = this.d.file_store.length + fid;
+  var anchor_findex = fid_list.indexOf(anchor_fid);
+
+  var nbd_fid_list = [];
+  var nbd_length = this.conf.PRELOAD_NBD_INDEX_LIST.length;
+  var i, nbd_findex, nbd_fid;
+  for ( i = 0; i < nbd_length; ++i ) {
+    nbd_findex = anchor_findex + this.conf.PRELOAD_NBD_INDEX_LIST[i];
+    if ( nbd_findex < 0 ||
+         nbd_findex >= n ) {
+      if ( nbd_findex < 0 ) {
+        nbd_findex = n + nbd_findex;
       } else {
-        fid = fid - this.d.file_store.length;
+        nbd_findex = nbd_findex - n;
       }
     }
-    if ( this.d.file_store[fid] !== 'undefined' ) {
-      fid_list.push(fid);
+    nbd_fid = fid_list[nbd_findex]
+    if ( this.d.has_file(nbd_fid) ) {
+      nbd_fid_list.push(nbd_fid);
     }
   }
-  return fid_list;
+  return nbd_fid_list;
 }
 
 //
@@ -204,6 +211,19 @@ _via_annotator.prototype._show_in_view = function(file) {
 // Public Interface
 // i.e. _via_annotator interacts with outside words using these methods
 //
+_via_annotator.prototype.file_show_none = function() {
+  var n = this.c.childNodes.length;
+  var i;
+  for ( i = 0; i < n; ++i ) {
+    if ( this.c.childNodes[i].classList.contains('show') ) {
+      this.c.childNodes[i].classList.remove('show');
+    }
+    if ( ! this.c.childNodes[i].classList.contains('hide') ) {
+      this.c.childNodes[i].classList.add('hide');
+    }
+  }
+}
+
 _via_annotator.prototype.file_show_fid = function(fid) {
   if ( this.d.has_file(fid) ) {
     var file = this.d.fid2file(fid);
@@ -287,4 +307,13 @@ _via_annotator.prototype.config = function(key, value) {
 
 _via_annotator.prototype.on_browser_resize = function() {
   this.preload[this.now.file.id].media_annotator.init_dynamic_content();
+}
+
+//
+// External events
+//
+
+_via_annotator.prototype._on_event_file_remove = function(data, event_payload) {
+  var fid = event_payload.fid;
+  this._remove_preload(fid);
 }

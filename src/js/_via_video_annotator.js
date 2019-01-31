@@ -47,11 +47,27 @@ var annotator = new _via_annotator(annotator_container, data);
 //var project_container = document.getElementById('project_container');
 //var project = new _via_project(project_container, data, annotator);
 
-//var editor_container = document.getElementById('editor_container');
-//var editor = new _via_editor(editor_container, data, annotator);
+var editor_container = document.getElementById('editor_container');
+var editor = new _via_editor(editor_container, data, annotator);
 
+var filelist_element = document.getElementById('file_manager_filelist');
+var file_manager = new _via_file_manager(filelist_element, data, annotator);
+
+// for debugging, show one of the files
 annotator.file_show_fid(fid);
 
 function _via_on_browser_resize() {
+  annotator.on_browser_resize();
+}
+
+function _via_toggle_metadata_and_attribute_editor() {
+  if ( editor_container.classList.contains('hide') ) {
+    document.getElementById('annotator_container').style.height = '65vh';
+    document.getElementById('editor_container').style.height = '30vh';
+    editor_container.classList.remove('hide');
+  } else {
+    document.getElementById('annotator_container').style.height = '95vh';
+    editor_container.classList.add('hide');
+  }
   annotator.on_browser_resize();
 }
