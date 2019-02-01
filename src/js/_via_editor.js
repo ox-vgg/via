@@ -490,7 +490,5 @@ _via_editor.prototype.on_attribute_del = function(data, event_payload) {
 }
 
 _via_editor.prototype.on_segment_add = function(data, event_payload) {
-  console.log(data)
-  console.log(event_payload)
   this.update_all_metadata();
 }

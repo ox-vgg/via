@@ -23,12 +23,14 @@
         </div>
 
         <div id="file_manager_container" class="tool_group">
-          <select id="file_manager_filelist"></select>
-          <input type="text" placeholder="Search" oninput="file_manager._filelist_update_regex(this.value)">
           <svg onclick="file_manager.on_file_show_prev()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_navigate_prev"></use><title>Show previous file</title></svg>
           <svg onclick="file_manager.on_file_show_next()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_navigate_next"></use><title>Show next file</title></svg>
-          <svg onclick="file_manager.on_select_local_file()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_circle"></use><title>Select local file using browser's file selector</title></svg>
-          <svg onclick="file_manager.on_bulk_add_file_uri()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_lib_add"></use><title>Bulk add file URI ( e.g. file:///... or http://... ) contained in a local text file</title></svg>
+          <select id="file_manager_filelist"></select>
+          <input type="text" placeholder="Search" oninput="file_manager._filelist_update_regex(this.value)">
+          <svg onclick="file_manager.on_file_select_local_image()" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_image"></use><title>Add Image</title></svg>
+          <svg onclick="file_manager.on_file_select_local_video()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_video"></use><title>Add Video</title></svg>
+          <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_audio"></use><title>Add Audio</title></svg>
+          <svg onclick="file_manager.on_file_bulk_add_uri()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_lib_add"></use><title>Bulk add file URI ( e.g. file:///... or http://... ) contained in a local text file</title></svg>
           <svg onclick="file_manager.on_file_remove_current()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_remove_circle"></use><title>Remove the current file from project</title></svg>
         </div>
 
@@ -171,6 +173,21 @@
         </symbol>
         <symbol id="micon_search">
           <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </symbol>
+        <!-- composed by Abhishek Dutta from existing materian icons, 31 Jan. 2019 -->
+        <symbol id="micon_add_image">
+          <path d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3z"/>
+          <path transform="translate(-9,-12) scale(1.8 1.8)" d="M5 19l3-4 2 3 3-4 4 5H5z"/>
+        </symbol>
+        <!-- composed by Abhishek Dutta from existing materian icons, 31 Jan. 2019 -->
+        <symbol id="micon_add_video">
+          <path d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3z"/>
+          <path transform="translate(-8,-4) scale(1.6 1.6)" d="M10 16.5l6-4.5-6-4.5v9z"/>
+        </symbol>
+        <!-- composed by Abhishek Dutta from existing materian icons, 31 Jan. 2019 -->
+        <symbol id="micon_add_audio">
+          <path d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3z"/>
+          <path transform="translate(-11,-4) scale(1.4 1.4)" d="M8 15c0-1.66 1.34-3 3-3 .35 0 .69.07 1 .18V6h5v2h-3v7.03c-.02 1.64-1.35 2.97-3 2.97-1.66 0-3-1.34-3-3z"/>
         </symbol>
 
         <!-- Video player controls -->

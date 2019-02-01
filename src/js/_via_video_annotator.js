@@ -36,7 +36,11 @@ var local_uri_list = [
 
 var i, fid;
 for ( i = 0; i < local_uri_list.length; ++i ) {
-  fid = data.file_add(local_uri_list[i], _VIA_FILE_TYPE.VIDEO, '');
+  fid = data.file_add(_via_util_get_filename_from_uri( local_uri_list[i] ),
+                      _VIA_FILE_TYPE.VIDEO,
+                      _VIA_FILE_LOC.URIFILE,
+                      local_uri_list[i]
+                     );
 }
 
 //-- debug code end

@@ -39,7 +39,7 @@ _via_annotator.prototype.segment_add = function(data, event_payload) {
   var t = event_payload.t.slice();
   var what = event_payload.what;
   this.d.segment_add(fid, t, what).then( function(ok) {
-    console.log(ok)
+    // @todo: do we need to do something here?
   }.bind(this), function(err) {
     console.log(err);
   }.bind(this));
@@ -56,9 +56,9 @@ _via_annotator.prototype._is_preloaded = function(fid) {
   }
 }
 
-_via_annotator.prototype._preload_video_content = function(file) {
+_via_annotator.prototype._preload_file_content = function(file) {
   return new Promise( function(ok_callback, err_callback) {
-    var fid = file.id;
+    var fid = file.fid;
 
     if ( this._is_preloaded(fid) ) {
       ok_callback(file);
@@ -89,14 +89,6 @@ _via_annotator.prototype._preload_video_content = function(file) {
   }.bind(this));
 }
 
-_via_annotator.prototype._preload_audio_content = function(file) {
-  // @todo
-}
-
-_via_annotator.prototype._preload_image_content = function(file) {
-  // @todo
-}
-
 _via_annotator.prototype._evict_preload_oldest = function(count) {
   var i;
   for ( i = 0; i < count; ++i ) {
@@ -106,6 +98,9 @@ _via_annotator.prototype._evict_preload_oldest = function(count) {
 }
 
 _via_annotator.prototype._remove_preload = function(fid) {
+  // if file.type = LOCAL, this releases the memory occupied by file object URI
+  this.preload[fid].media_annotator._revoke_file_object_url();
+
   this._remove_from_view(fid);
   delete this.preload[fid];
   delete this.now.preload.time[fid];
@@ -188,7 +183,7 @@ _via_annotator.prototype._remove_from_view = function(fid) {
 
 _via_annotator.prototype._show_in_view = function(file) {
   var n = this.c.childNodes.length;
-  var fid = file.id.toString();
+  var fid = file.fid.toString();
   var i;
   for ( i = 0; i < n; ++i ) {
     if ( this.c.childNodes[i].dataset.fid === fid ) {
@@ -236,7 +231,7 @@ _via_annotator.prototype.file_show = function(file) {
     this._show_in_view(ok_file);
     this.now.file = ok_file;
     this.emit_event('file_show', ok_file);
-    this._preload_neighbours(this.now.file.id);
+    this._preload_neighbours(this.now.file.fid);
   }.bind(this), function(err_file) {
     console.log('file_show() failed');
     console.log(err_file);
@@ -246,13 +241,13 @@ _via_annotator.prototype.file_show = function(file) {
 _via_annotator.prototype.file_load = function(file) {
   return new Promise( function(ok_callback, err_callback) {
     // check if the file has already been loaded
-    if ( file.id in this.preload ) {
+    if ( file.fid in this.preload ) {
       ok_callback( file );
     } else {
       this.file_preload(file).then( function(preloaded_file) {
         ok_callback( preloaded_file );
       }.bind(this), function(preload_error) {
-        console.log('file_preload() failed for file ' + file.uri);
+        console.log('file_preload() failed for file ' + file.src);
         err_callback(preload_error);
       }.bind(this) );
     }
@@ -268,30 +263,12 @@ _via_annotator.prototype.file_preload = function(file) {
       this._evict_preload_oldest(this.conf.PRELOAD_NBD_INDEX_LIST.length);
     }
 
-    var file_load_promise;
-    switch( file.type ) {
-    case _VIA_FILE_TYPE.VIDEO:
-      file_load_promise = this._preload_video_content(file);
-      break;
-    case _VIA_FILE_TYPE.AUDIO:
-      file_load_promise = this._preload_audio_content(file);
-      break;
-    case _VIA_FILE_TYPE.IMAGE:
-      file_load_promise = this._preload_image_content(file);
-      break;
-    default:
-      console.log('_via_annotator.prototype.file_preload(): ' +
-                  'unknown file type ');
-      console.log(file);
-      err_callback(file);
-      return;
-    }
-    file_load_promise.then( function(ok_file) {
-      this.now.preload.time[ok_file.id] = Date.now(); // shown time (until actually shown)
+    this._preload_file_content(file).then( function(ok_file) {
+      this.now.preload.time[ok_file.fid] = Date.now(); // shown time (until actually shown)
       ok_callback(ok_file);
     }.bind(this), function(err_file) {
       err_callback(err_file);
-      console.log('preload failed for fid=' + ok_file.id);
+      console.log('preload failed for fid=' + ok_file.fid);
     }.bind(this));
   }.bind(this));
 }
@@ -306,7 +283,7 @@ _via_annotator.prototype.config = function(key, value) {
 }
 
 _via_annotator.prototype.on_browser_resize = function() {
-  this.preload[this.now.file.id].media_annotator.init_dynamic_content();
+  this.preload[this.now.file.fid].media_annotator.init_dynamic_content();
 }
 
 //

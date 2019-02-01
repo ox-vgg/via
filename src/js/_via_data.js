@@ -10,7 +10,12 @@
 'use strict';
 
 function _via_data() {
-  this.project = { 'id':'', 'name':'', 'desc':'' };
+  this.project = {
+    'id':this._uuid(),
+    'name':'',
+    'description':'',
+    'created': new Date().toString(),
+  };
 
   this.metadata_store = {};
 
@@ -25,8 +30,8 @@ function _via_data() {
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this.event_prefix = '_via_data_';
-  _via_event.call( this );
+  this._EVENT_ID_PREFIX = '_via_data_';
+  _via_event.call(this);
 }
 
 _via_data.prototype._init = function() {
@@ -114,11 +119,31 @@ _via_data.prototype._file_get_new_id = function() {
   return fid;
 }
 
-_via_data.prototype.file_add = function(uri, type, path) {
+_via_data.prototype.file_add = function(name, type, loc, src) {
   var fid = this._file_get_new_id();
-  this.file_store[fid] = new _via_file(fid, uri, type, path);
+  this.file_store[fid] = new _via_file(fid, name, type, loc, src);
   this.fid_list.push(fid);
+  this.emit_event( 'file_add', { 'fid':fid } );
   return fid;
+}
+
+_via_data.prototype.file_add_bulk = function(filelist) {
+  var n = filelist.length;
+  var added_fid_list = [];
+  var i, fid;
+  for ( i = 0; i < n; ++i ) {
+    fid = this._file_get_new_id();
+    this.file_store[fid] = new _via_file(fid,
+                                         filelist[i].name,
+                                         filelist[i].type,
+                                         filelist[i].loc,
+                                         filelist[i].src
+                                        );
+    this.fid_list.push(fid);
+    added_fid_list.push(fid);
+  }
+  this.emit_event( 'file_add_bulk', { 'fid_list':added_fid_list } );
+  return added_fid_list;
 }
 
 _via_data.prototype.file_remove = function(fid) {
@@ -148,7 +173,7 @@ _via_data.prototype.fid2file = function(fid) {
 _via_data.prototype.segment_add = function(fid, t, what) {
   return new Promise( function(ok_callback, err_callback) {
     if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
-      this.metadata_store[fid] = [];
+      this.metadata_store[fid] = {};
     }
 
     // sanity checks
@@ -161,7 +186,7 @@ _via_data.prototype.segment_add = function(fid, t, what) {
       return;
     }
 
-    var mid = this.metadata_store[fid].push( new Object() ) - 1; // get a slot
+    var mid = this._uuid();
     var where = [ _via_metadata.prototype.TYPE.VSEGMENT,
                   _via_metadata.prototype.SHAPE.TIME
                 ].concat(t);
@@ -170,4 +195,22 @@ _via_data.prototype.segment_add = function(fid, t, what) {
     this.emit_event( 'segment_add', { 'fid':fid, 'mid':mid } );
     ok_callback({'fid':fid, 'mid':mid});
   }.bind(this));
+}
+
+//
+// Unique Id
+//
+
+// URL.createObjectURL() produces a unique id every time it is invoked.
+// We use this functionality to generate unique id required by VIA
+// @todo: Replace with a true UUID generator if it can be efficiently generated
+// using pure JS (no dependencies)
+_via_data.prototype._uuid = function() {
+  var temp_url = URL.createObjectURL(new Blob())
+  var uuid = temp_url.toString();
+  URL.revokeObjectURL(temp_url);
+  if ( uuid.startsWith('blob:null/') ) {
+    uuid = uuid.substr(10);
+  }
+  return uuid;
 }

@@ -5,18 +5,20 @@
  * @author Abhishek Dutta <adutta@robots.ox.ac.uk>
  * @date 23 Dec. 2018
  *
- * @param {number} id a globally unique identifier
- * @param {string} uri URI of the file
- * @param {number} type the file type as defined by _VIA_FILE_TYPE in _via.js
- * @param {string} path prefix added to uri to form the complete URI
+ * @param {number} fid a globally unique identifier
+ * @param {string} filename filename
+ * @param {number} type the file type as defined by _VIA_FILE_TYPE in file _via_const.js
+ * @param {string} loc location of file as defined by _VIA_FILE_LOC in file _via_const.js
+ * @param {string} src URI of the file or base64 data
  */
 
 'use strict'
 
-function _via_file(id, uri, type, path='') {
-  this.id = id;
-  this.uri = uri;
-  this.type = type;
-  this.path = path;
+function _via_file(fid, filename, type, loc, src) {
+  this.fid      = fid;
+  this.filename = filename;
+  this.type     = type;
+  this.loc      = loc;
+  this.src      = src;
 }
 

@@ -33,3 +33,47 @@ function _via_util_get_html_input_element_value(el) {
     return el.value;
   }
 }
+
+function _via_util_get_filename_from_uri(uri) {
+  if ( uri.includes('/') ) {
+    var tokens = uri.split('/');
+    return tokens[ tokens.length - 1 ];
+  } else {
+    return uri;
+  }
+}
+
+function _via_util_file_type_to_str(type) {
+  switch(type) {
+    case _VIA_FILE_TYPE.IMAGE:
+      return 'image';
+      break;
+    case _VIA_FILE_TYPE.VIDEO:
+      return 'video';
+      break;
+    case _VIA_FILE_TYPE.AUDIO:
+      return 'audio';
+      break;
+    default:
+      return 'unknown ' + type.toString();
+  }
+}
+
+function _via_util_file_loc_to_str(type) {
+  switch(type) {
+    case _VIA_FILE_TYPE.LOCAL:
+      return 'local';
+      break;
+    case _VIA_FILE_TYPE.URIHTTP:
+      return 'http://';
+      break;
+    case _VIA_FILE_TYPE.URIFILE:
+      return 'file://';
+      break;
+    case _VIA_FILE_TYPE.URIFILE:
+      return 'inline';
+      break;
+    default:
+      return 'unknown-type-id=' + type.toString();
+  }
+}

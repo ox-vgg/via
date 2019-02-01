@@ -48,26 +48,16 @@ _via_media_annotator.prototype.init_static_content = function() {
   this.c.appendChild(this.segmenter_container);
 }
 
-// the content that is created dynamically and hence should not be cached
-_via_media_annotator.prototype.clear_dynamic_content = function() {
-  this.input_handler.innerHTML = '';
-
-  // clear canvas
-  var c = this.regions;
-  var ctx = c.getContext('2d', {alpha:false});
-  ctx.clearRect(0, 0, c.width, c.height);
-}
-
 _via_media_annotator.prototype.init_dynamic_content = function() {
   try {
-    this.init_layers_size();
+    this._init_layers_size();
   } catch(err) {
     console.log(err);
   }
 }
 
 // this method ensures that all the layers have same size as that of the content
-_via_media_annotator.prototype.init_layers_size = function() {
+_via_media_annotator.prototype._init_layers_size = function() {
   try {
     // max. dimension of the container
     // to avoid overflowing window, we artificially reduce the max. size by 1 pixels
@@ -88,8 +78,7 @@ _via_media_annotator.prototype.init_layers_size = function() {
                                                         this.media
                                                        );
       this.segmenter.on_event('segment_add', function(data, event_payload) {
-        var new_payload = Object.assign(event_payload, {'fid':this.file.id})
-        console.log(new_payload)
+        var new_payload = Object.assign(event_payload, {'fid':this.file.fid})
         this.emit_event('segment_add', new_payload);
       }.bind(this));
     } else {
@@ -132,16 +121,44 @@ _via_media_annotator.prototype.init_layers_size = function() {
   }
 }
 
-_via_media_annotator.prototype.load_media = function() {
+_via_media_annotator.prototype._read_media_file = function() {
+  return new Promise( function(ok_callback, err_callback) {
+    var file_reader = new FileReader();
+    file_reader.addEventListener('error', function() {
+      console.log('_via_media_annotator._read_media_file() error');
+      err_callback();
+    }.bind(this));
+    file_reader.addEventListener('abort', function() {
+      console.log('_via_media_annotator._read_media_file() abort');
+      err_callback()
+    }.bind(this));
+    file_reader.addEventListener('load', function() {
+      var blob = new Blob( [ file_reader.result ],
+                           { type: this.file.src.type }
+                         );
+      // we keep a reference of file object URL so that we can revoke it when not needed
+      // WARNING: ensure that this._destroy_file_object_url() gets called when "this" not needed
+      this.file_object_url = URL.createObjectURL(blob);
+      console.log('_via_media_annotator._read_media_file() done url=' + this.file_object_url);
+      ok_callback(this.file_object_url);
+    }.bind(this));
+    file_reader.readAsArrayBuffer( this.file.src );
+  }.bind(this));
+}
+
+_via_media_annotator.prototype._revoke_file_object_url = function() {
+  if ( typeof(this.file_object_url) !== 'undefined' ) {
+    console.log('Revoking URL ' + this.file_object_url);
+    URL.revokeObjectURL(this.file_object_url);
+  }
+}
+
+_via_media_annotator.prototype._init_media_html = function(src) {
   return new Promise( function(ok_callback, err_callback) {
     switch( this.file.type ) {
     case _VIA_FILE_TYPE.VIDEO:
-      //// a number of layers are added above the image or video
-      //// so that user interactions with this visual content
-      //// can be translated to user drawn regions
-      // bottom layer: the media content
       this.media = document.createElement('video');
-      this.media.setAttribute('src', this.file.path + this.file.uri);
+      this.media.setAttribute('src', src);
       this.media.setAttribute('class', 'media_element');
       this.media.setAttribute('autoplay', false);
       this.media.setAttribute('loop', false);
@@ -152,33 +169,80 @@ _via_media_annotator.prototype.load_media = function() {
         ok_callback(this.file);
       }.bind(this));
       this.media.addEventListener('error', function() {
-        console.log('error')
+        console.log('_via_media_annotator._init_media_html() error')
         err_callback(this.file);
       }.bind(this));
       this.media.addEventListener('abort', function() {
-        console.log('abort')
+        console.log('_via_media_annotator._init_media_html() abort')
         err_callback(this.file);
       }.bind(this));
 
       break;
     case _VIA_FILE_TYPE.IMAGE:
       this.media = document.createElement('img');
-      this.media.setAttribute('src', this.file.path + this.file.uri);
+      this.media.setAttribute('src', src);
       this.media.setAttribute('class', 'media_element');
       this.media.addEventListener('load', function() {
         ok_callback(this.file);
       }.bind(this));
       this.media.addEventListener('error', function() {
-        console.log('error')
+        console.log('_via_media_annotator._init_media_html() error')
         err_callback(this.file);
       }.bind(this));
       this.media.addEventListener('abort', function() {
-        console.log('abort')
+        console.log('_via_media_annotator._init_media_html() abort')
+        err_callback(this.file);
+      }.bind(this));
+      break;
+
+    case _VIA_FILE_TYPE.AUDIO:
+      this.media = document.createElement('audio');
+      this.media.setAttribute('src', src);
+      this.media.setAttribute('class', 'media_element');
+      this.media.setAttribute('autoplay', false);
+      this.media.setAttribute('loop', false);
+      this.media.setAttribute('controls', '');
+      this.media.setAttribute('preload', 'auto');
+      this.media.addEventListener('loadeddata', function() {
+        this.media.pause();
+        ok_callback(this.file);
+      }.bind(this));
+      this.media.addEventListener('error', function() {
+        console.log('_via_media_annotator._init_media_html() error')
+        err_callback(this.file);
+      }.bind(this));
+      this.media.addEventListener('abort', function() {
+        console.log('_via_media_annotator._init_media_html() abort')
         err_callback(this.file);
       }.bind(this));
       break;
 
     default:
+      console.log('_via_media_annotator._init_media_html() : ' +
+                  ' cannot load file of type ' +
+                  _via_util_file_type_to_str(this.file.type)
+                 );
+      err_callback(this.file);
     }
   }.bind(this));
+}
+
+_via_media_annotator.prototype.load_media = function() {
+  // check if user has given access to local file using
+  // browser's file selector
+  if ( this.file.src instanceof File ) {
+    return new Promise( function(ok_callback, err_callback) {
+      this._read_media_file().then( function(file_src_ok) {
+        this._init_media_html(file_src_ok).then( function(file_html_ok) {
+          ok_callback(this.file);
+        }.bind(this), function(file_html_err) {
+          err_callback(this.file);
+        }.bind(this));
+      }.bind(this), function(file_src_err) {
+        err_callback(this.file);
+      }.bind(this));
+    }.bind(this));
+  } else {
+    return this._init_media_html(this.file.src);
+  }
 }
