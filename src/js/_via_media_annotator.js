@@ -9,8 +9,9 @@
 
 'use strict';
 
-function _via_media_annotator(container, file, data) {
+function _via_media_annotator(container, segmenter_container, file, data) {
   this.c = container;
+  this.segmenter_container = segmenter_container;
   this.file = file;
   this.d = data;
 
@@ -39,13 +40,9 @@ _via_media_annotator.prototype.init_static_content = function() {
   this.content_container.setAttribute('class', 'content');
   this.content_container.appendChild(this.layer_container);
 
-  this.segmenter_container = document.createElement('div');
-  this.segmenter_container.setAttribute('class', 'segmenter');
-
   //// add everything to html view
   this.c.innerHTML = '';
   this.c.appendChild(this.content_container);
-  this.c.appendChild(this.segmenter_container);
 }
 
 _via_media_annotator.prototype.init_dynamic_content = function() {
@@ -66,13 +63,8 @@ _via_media_annotator.prototype._init_layers_size = function() {
     if ( this.file.type === _VIA_FILE_TYPE.VIDEO ||
          this.file.type === _VIA_FILE_TYPE.AUDIO
        ) {
-      // we allocate 1/4th available vertical space to segmenter
-      // and remaining 3/4th space to media content
-      var segmenter_container_height = Math.floor(this.c.clientHeight/4);
-      this.segmenter_container.style.height = segmenter_container_height + 'px';
-      maxh = this.c.clientHeight - segmenter_container_height - 1;
-
       // initialise segmenter
+      this.segmenter_container.classList.remove('hide');
       this.segmenter = new _via_media_segment_annotator(this.segmenter_container,
                                                         this.d,
                                                         this.media
@@ -82,7 +74,7 @@ _via_media_annotator.prototype._init_layers_size = function() {
         this.emit_event('segment_add', new_payload);
       }.bind(this));
     } else {
-      this.segmenter_container.style.height = '0';
+      this.segmenter_container.classList.add('hide');
     }
 
     // original size of the content
@@ -139,7 +131,6 @@ _via_media_annotator.prototype._read_media_file = function() {
       // we keep a reference of file object URL so that we can revoke it when not needed
       // WARNING: ensure that this._destroy_file_object_url() gets called when "this" not needed
       this.file_object_url = URL.createObjectURL(blob);
-      console.log('_via_media_annotator._read_media_file() done url=' + this.file_object_url);
       ok_callback(this.file_object_url);
     }.bind(this));
     file_reader.readAsArrayBuffer( this.file.src );
@@ -148,7 +139,6 @@ _via_media_annotator.prototype._read_media_file = function() {
 
 _via_media_annotator.prototype._revoke_file_object_url = function() {
   if ( typeof(this.file_object_url) !== 'undefined' ) {
-    console.log('Revoking URL ' + this.file_object_url);
     URL.revokeObjectURL(this.file_object_url);
   }
 }
@@ -245,4 +235,12 @@ _via_media_annotator.prototype.load_media = function() {
   } else {
     return this._init_media_html(this.file.src);
   }
+}
+
+_via_media_annotator.prototype.on_event_attribute_del = function(aid) {
+  this.segmenter._on_attribute_del(aid);
+}
+
+_via_media_annotator.prototype.on_event_attribute_add = function(aid) {
+  this.segmenter._on_attribute_add(aid);
 }

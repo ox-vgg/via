@@ -50,26 +50,45 @@ _via_data.prototype._attribute_get_new_id = function() {
   return aid;
 }
 
-_via_data.prototype.attribute_add = function(name, desc, type, options, default_option_id) {
-  var aid = this._attribute_get_new_id();
-  this.attribute_store[aid] = new _via_attribute(aid,
-                                                 name,
-                                                 desc,
-                                                 type,
-                                                 options,
-                                                 default_option_id);
-  this.aid_list.push(aid);
-  return aid;
+_via_data.prototype.attribute_is_present = function(name) {
+  var aid;
+  for ( aid in this.attribute_store ) {
+    if ( this.attribute_store[aid].name === name ) {
+      return true;
+    }
+  }
+  return false;
 }
 
-_via_data.prototype.attribute_remove = function(aid) {
-  if ( this.attribute_store.hasOwnProperty(aid) ) {
-    delete this.attribute_store[aid];
-    var aindex = this.aid_list.indexOf(aid);
-    this.aid_list.splice(aindex, 1);
+_via_data.prototype.attribute_add = function(name, type, options, default_option_id) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( this.attribute_is_present(name) ) {
+      err_callback('attribute already exists');
+      return;
+    }
 
-    console.log(this.attribute_store)
-    this.emit_event( 'attribute_del', { 'aid':aid } );
+    var aid = this._attribute_get_new_id();
+    this.attribute_store[aid] = new _via_attribute(aid,
+                                                   name,
+                                                   type,
+                                                   options,
+                                                   default_option_id);
+    this.aid_list.push(aid);
+    this.emit_event( 'attribute_add', { 'aid':aid } );
+    ok_callback(aid);
+  }.bind(this));
+}
+
+_via_data.prototype.attribute_del = function(aid) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( ! this.attribute_store.hasOwnProperty(aid) ) {
+      err_callback('invalid aid=' + aid);
+      return;
+    }
+
+    delete this.attribute_store[aid];
+    var aindex = this.aid_list.indexOf( parseInt(aid) );
+    this.aid_list.splice(aindex, 1);
 
     // @todo: delete all metadata containing this attribute
     var fid, mid;
@@ -77,11 +96,11 @@ _via_data.prototype.attribute_remove = function(aid) {
       for ( mid in this.metadata_store[fid] ) {
         if ( this.metadata_store[fid][mid].what[aid] !== 'undefined' ) {
           delete this.metadata_store[fid][mid].what[aid];
-          this.emit_event( 'metadata_update', { 'fid':fid, 'mid':mid } );
         }
       }
     }
-  }
+    this.emit_event( 'attribute_del', { 'aid':aid } );
+  }.bind(this));
 }
 
 _via_data.prototype.attribute_update_options = function(aid, csv_str) {
@@ -170,7 +189,7 @@ _via_data.prototype.fid2file = function(fid) {
 //
 // Metadata
 //
-_via_data.prototype.segment_add = function(fid, t, what) {
+_via_data.prototype.metadata_segment_add = function(fid, t, what) {
   return new Promise( function(ok_callback, err_callback) {
     if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
       this.metadata_store[fid] = {};
@@ -192,7 +211,25 @@ _via_data.prototype.segment_add = function(fid, t, what) {
                 ].concat(t);
     this.metadata_store[fid][mid] = new _via_metadata(mid, where, what);
 
-    this.emit_event( 'segment_add', { 'fid':fid, 'mid':mid } );
+    this.emit_event( 'metadata_add', { 'fid':fid, 'mid':mid } );
+    ok_callback({'fid':fid, 'mid':mid});
+  }.bind(this));
+}
+
+_via_data.prototype.metadata_del = function(fid, mid) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
+      err_callback('invalid fid=' + fid);
+      console.log(this.metadata_store)
+      return;
+    }
+
+    if ( typeof(this.metadata_store[fid][mid]) === 'undefined' ) {
+      err_callback('invalid mid=' + mid);
+      console.log(this.metadata_store[fid])
+    }
+    delete this.metadata_store[fid][mid];
+    this.emit_event( 'metadata_del', { 'fid':fid, 'mid':mid } );
     ok_callback({'fid':fid, 'mid':mid});
   }.bind(this));
 }

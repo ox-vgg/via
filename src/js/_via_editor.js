@@ -14,7 +14,13 @@ function _via_editor(container, data, annotator) {
   }
 
   this.init();
-  this.init_event_listeners();
+
+  // initialise event listeners
+  this.d.on_event('metadata_add', this.on_event_metadata_add.bind(this));
+  this.d.on_event('metadata_del', this.on_event_metadata_del.bind(this));
+  this.d.on_event('attribute_update', this.on_event_attribute_update.bind(this));
+  this.d.on_event('attribute_del', this.on_event_attribute_del.bind(this));
+  this.d.on_event('attribute_add', this.on_event_attribute_add.bind(this));
 }
 
 _via_editor.prototype.TYPE = { 'METADATA':2, 'ATTRIBUTE':3 };
@@ -65,34 +71,29 @@ _via_editor.prototype.init = function() {
   this.attribute_container.setAttribute('class', 'attribute_container');
   this.attribute_view = document.createElement('table');
   var attribute_title = document.createElement('h2');
-  attribute_title.innerHTML = 'Attribute';
+  attribute_title.innerHTML = 'Attributes';
 
   this.attribute_container.appendChild( attribute_title );
   this.attribute_container.appendChild( this.get_attribute_name_entry_panel() );
   this.attribute_container.appendChild( this.attribute_view );
 
+  this.content_container = document.createElement('div');
+  this.content_container.setAttribute('class', 'content_container');
+  this.content_container.appendChild(this.metadata_container);
+  this.content_container.appendChild(this.attribute_container);
+
   // add everything to container
   this.c.appendChild(this.editor_content_selector);
-  this.c.appendChild(this.metadata_container);
-  this.c.appendChild(this.attribute_container);
+  this.c.appendChild(this.content_container);
 
-  this.update_all_metadata();
-  this.update_all_attributes();
+  this.metadata_update();
+  this.attributes_update();
 
   // initial state of content
   this.edit_metadata_checkbox.checked = true;
   this.metadata_container.classList.remove('hide');
   this.edit_attribute_checkbox.checked = true;
   this.attribute_container.classList.remove('hide');
-
-  //this.edit_attribute_checkbox.checked = false;
-  //this.attribute_container.classList.add('hide');
-}
-
-_via_editor.prototype.init_event_listeners = function() {
-  this.d.on_event('segment_add', this.on_segment_add.bind(this));
-  this.d.on_event('attribute_update', this.on_attribute_update.bind(this));
-  this.d.on_event('attribute_del', this.on_attribute_del.bind(this));
 }
 
 //
@@ -100,7 +101,6 @@ _via_editor.prototype.init_event_listeners = function() {
 //
 _via_editor.prototype.on_editor_content_select = function(selector) {
   var element;
-  console.log(selector.target.checked)
   switch(selector.target.name) {
   case 'metadata':
     element = this.metadata_container;
@@ -120,29 +120,42 @@ _via_editor.prototype.on_editor_content_select = function(selector) {
 //
 // metadata
 //
-_via_editor.prototype.clear_metadata = function() {
+_via_editor.prototype.metadata_clear = function() {
   this.metadata_view.innerHTML = '';
 }
 
-_via_editor.prototype.update_all_metadata = function() {
-  this.clear_metadata();
-
-  // add header
-  this.metadata_view.appendChild( this.get_metadata_header() );
+_via_editor.prototype.metadata_update = function() {
+  this.metadata_clear();
 
   if ( this.a.now.file ) {
-    // add each metadata
-    var tbody = document.createElement('tbody');
-    var fid = this.a.now.file.id;
-    var mid;
-    for ( mid in this.d.metadata_store[fid] ) {
-      tbody.appendChild( this.get_metadata(fid, mid) );
+    var fid = this.a.now.file.fid;
+    if ( typeof(this.d.metadata_store[fid]) === 'undefined' ) {
+      return;
     }
-    this.metadata_view.appendChild(tbody);
+
+    var metadata_count = Object.keys(this.d.metadata_store[fid]).length;
+    if ( metadata_count ) {
+      // add header
+      this.metadata_view.appendChild( this.get_metadata_header() );
+
+      // add each metadata
+      var tbody = document.createElement('tbody');
+      var metadata_index = 1;
+      var mid;
+      for ( mid in this.d.metadata_store[fid] ) {
+        tbody.appendChild( this.metadata_get(fid, mid, metadata_index) );
+        metadata_index = metadata_index + 1;
+      }
+      this.metadata_view.appendChild(tbody);
+    } else {
+      this.metadata_view.innerHTML = '<tr><td>No metadata added yet!</td></tr>';
+    }
+  } else {
+    this.metadata_view.innerHTML = '<tr><td><i>No metadata added yet!</i></td></tr>';
   }
 }
 
-_via_editor.prototype.get_metadata = function(fid, mid) {
+_via_editor.prototype.metadata_get = function(fid, mid, metadata_index) {
   var tr = document.createElement('tr');
   tr.setAttribute('data-fid', fid);
   tr.setAttribute('data-mid', mid);
@@ -152,8 +165,10 @@ _via_editor.prototype.get_metadata = function(fid, mid) {
   this.get_metadata_action_tools(action_tools_container, fid, mid);
   tr.appendChild( action_tools_container );
 
-  // second column: mid (i.e. metadata id)
-  tr.appendChild( this.html_element('td', mid) );
+  // second column: index of this metadata
+  var metadata_index_container = document.createElement('td');
+  metadata_index_container.innerHTML = metadata_index;
+  tr.appendChild(metadata_index_container);
 
   // third column: where (i.e. location of metadata)
   var location = document.createElement('td');
@@ -166,7 +181,7 @@ _via_editor.prototype.get_metadata = function(fid, mid) {
     var n = this.d.metadata_store[fid][mid].where.length;
     var i;
     var ul = document.createElement('ul');
-    for ( i = 2; i < n; i = i + 2 ) {
+    for ( i = 2; i < n; i = i + 2 ) { // the time coordinates are stored in array[2,...]
       var li = document.createElement('li');
       // only one segment
       var t1 = document.createElement('button');
@@ -195,7 +210,8 @@ _via_editor.prototype.get_metadata = function(fid, mid) {
   tr.appendChild(location);
 
   // subsequent columns: what (i.e. the attributes for this metadata)
-  for ( aid = 0; aid < this.d.attribute_store.length; ++aid ) {
+  var aid;
+  for ( aid in this.d.attribute_store ) {
     var td = document.createElement('td');
     td.setAttribute('data-aid', aid);
     td.appendChild( this.get_attribute_html_element(fid, mid, aid) );
@@ -210,14 +226,15 @@ _via_editor.prototype.get_metadata_action_tools = function(container, fid, mid) 
   del.setAttribute('data-fid', fid);
   del.setAttribute('data-mid', mid);
   del.addEventListener('click', this.metadata_del.bind(this));
+  container.appendChild(del);
 
+  /*
   var edit = _via_util_get_svg_button('micon_edit', 'Select Metadata for Editing');
   edit.setAttribute('data-fid', fid);
   edit.setAttribute('data-mid', mid);
   edit.addEventListener('click', this.metadata_edit.bind(this));
-
   container.appendChild(edit);
-  container.appendChild(del);
+  */
 }
 
 _via_editor.prototype.get_attribute_html_element = function(fid, mid, aid) {
@@ -262,14 +279,15 @@ _via_editor.prototype.get_attribute_html_element = function(fid, mid, aid) {
   }
   return el;
 }
+
 _via_editor.prototype.get_metadata_header = function() {
   var tr = document.createElement('tr');
   tr.appendChild( this.html_element('th', '') );
-  tr.appendChild( this.html_element('th', 'Id') );
+    tr.appendChild( this.html_element('th', 'Id') );
   tr.appendChild( this.html_element('th', 'Location') );
 
   var aid;
-  for ( aid = 0; aid < this.d.attribute_store.length; ++aid ) {
+  for ( aid in this.d.attribute_store ) {
     tr.appendChild( this.html_element('th',
                                       this.d.attribute_store[aid].attr_name)
                   );
@@ -304,12 +322,12 @@ _via_editor.prototype.jump_to_metadata = function(e) {
 //
 // attribute
 //
-_via_editor.prototype.clear_attribute = function() {
+_via_editor.prototype.attribute_clear = function() {
   this.attribute_view.innerHTML = '';
 }
 
-_via_editor.prototype.update_all_attributes = function() {
-  this.clear_attribute();
+_via_editor.prototype.attributes_update = function() {
+  this.attribute_clear();
 
   if ( this.d.aid_list.length ) {
     this.attribute_view.appendChild( this.get_attribute_header() );
@@ -408,10 +426,10 @@ _via_editor.prototype.get_attribute_name_entry_panel = function() {
   var c = document.createElement('div');
   c.setAttribute('class', 'attribute_entry');
 
-  this.attribute_name_input = document.createElement('input');
-  this.attribute_name_input.setAttribute('type', 'text');
-  this.attribute_name_input.setAttribute('placeholder', 'name of attribute');
-  c.appendChild(this.attribute_name_input);
+  this.new_attribute_name_input = document.createElement('input');
+  this.new_attribute_name_input.setAttribute('type', 'text');
+  this.new_attribute_name_input.setAttribute('placeholder', 'name of new attribute');
+  c.appendChild(this.new_attribute_name_input);
 
   var add = document.createElement('button');
   add.setAttribute('class', 'text-button');
@@ -423,11 +441,8 @@ _via_editor.prototype.get_attribute_name_entry_panel = function() {
 }
 
 _via_editor.prototype.get_attribute_action_tools = function(container, aid) {
-  var del = document.createElement('button');
+  var del = _via_util_get_svg_button('micon_delete', 'Delete Attribute');
   del.setAttribute('data-aid', aid);
-  del.setAttribute('class', 'text_button');
-  del.setAttribute('title', 'Delete Attribute');
-  del.innerHTML = '&times;';
   del.addEventListener('click', this.attribute_del.bind(this));
   container.appendChild(del);
 }
@@ -449,19 +464,39 @@ _via_editor.prototype.update_attribute_for = function(aid) {
 // Listeners for data update events
 //
 _via_editor.prototype.metadata_del = function(e) {
-  console.log('@todo: deleting metadata: fid=' + e.target.dataset.fid + ', mid=' + e.target.dataset.mid);
+  var fid = e.currentTarget.dataset.fid;
+  var mid = e.currentTarget.dataset.mid;
+  this.d.metadata_del(fid, mid).then( function(ok) {
+    // we don't need to do anything when metadata delete is successful
+  }.bind(this), function(err) {
+    console.log(err)
+  }.bind(this));
 }
 
 _via_editor.prototype.metadata_edit = function(e) {
-  console.log('@todo: edit metadata: fid=' + e.target.dataset.fid + ', mid=' + e.target.dataset.mid);
+  var fid = e.target.parentNode.dataset.fid;
+  var mid = e.target.parentNode.dataset.mid;
+  console.log('@todo: edit metadata: fid=' + fid + ', mid=' + mid);
 }
 
 _via_editor.prototype.on_attribute_create = function(e) {
+  var new_attribute_name = this.new_attribute_name_input.value;
+  this.d.attribute_add(new_attribute_name,
+                       _VIA_ATTRIBUTE_TYPE.TEXT
+                      ).then( function(ok) {
+                        // attribute was added
+                      }.bind(this), function(err) {
+                        console.log(err);
+                      }.bind(this));
 }
 
 _via_editor.prototype.attribute_del = function(e) {
-  var aid = e.target.dataset.aid;
-  this.d.attribute_del(aid);
+  var aid = e.currentTarget.dataset.aid;
+  this.d.attribute_del(aid).then( function(ok) {
+    // we don't need to do anything when attribute delete is successful
+  }.bind(this), function(err) {
+    console.log(err)
+  }.bind(this));
 }
 
 _via_editor.prototype.attribute_update_options = function(e) {
@@ -479,16 +514,24 @@ _via_editor.prototype.attribute_update_type = function(e) {
   console.log('aid='+aid+', new_type='+new_type);
 }
 
-_via_editor.prototype.on_attribute_update = function(data, event_payload) {
+_via_editor.prototype.on_event_attribute_update = function(data, event_payload) {
   this.update_attribute_for(event_payload.aid);
 }
 
-_via_editor.prototype.on_attribute_del = function(data, event_payload) {
-  console.log(data)
-  console.log(event_payload)
-  this.update_all_attributes();
+_via_editor.prototype.on_event_attribute_del = function(data, event_payload) {
+  this.metadata_update();
+  this.attributes_update();
 }
 
-_via_editor.prototype.on_segment_add = function(data, event_payload) {
-  this.update_all_metadata();
+_via_editor.prototype.on_event_attribute_add = function(data, event_payload) {
+  this.metadata_update();
+  this.attributes_update();
+}
+
+_via_editor.prototype.on_event_metadata_add = function(data, event_payload) {
+  this.metadata_update();
+}
+
+_via_editor.prototype.on_event_metadata_del = function(data, event_payload) {
+  this.metadata_update();
 }

@@ -42,6 +42,8 @@ function _via_media_segment_annotator(container, data, media_element) {
 
   this._init();
   this._redraw_all();
+
+  this.m.addEventListener('timeupdate', this._on_media_timeupdate.bind(this));
 }
 
 _via_media_segment_annotator.prototype._init = function() {
@@ -93,8 +95,7 @@ _via_media_segment_annotator.prototype._metadata_init = function() {
   tr.appendChild(segment_list_container);
 
   var aid;
-  var n = this.d.attribute_store.length;
-  for ( aid = 0; aid < n; ++aid ) {
+  for ( aid in this.d.attribute_store ) {
     var td = document.createElement('td');
     td.setAttribute('data-is_attribute', 1);
     var attr_input = this.d.attribute_store[aid].html_element();
@@ -109,6 +110,11 @@ _via_media_segment_annotator.prototype._metadata_init = function() {
   return metadata_table;
 }
 
+_via_media_segment_annotator.prototype._metadata_update = function() {
+  this.metadata_table = this._metadata_init();
+  this.metadata_container.replaceChild(this.metadata_table, this.metadata_container.firstChild);
+}
+
 _via_media_segment_annotator.prototype._metadata_get_header = function() {
   var tr = document.createElement('tr');
 
@@ -120,8 +126,7 @@ _via_media_segment_annotator.prototype._metadata_get_header = function() {
   tr.appendChild(segments);
 
   var aid;
-  var n = this.d.attribute_store.length;
-  for ( aid = 0; aid < n; ++aid ) {
+  for ( aid in this.d.attribute_store ) {
     var th = document.createElement('th');
     th.innerHTML = this.d.attribute_store[aid].attr_name;
     tr.appendChild(th);
@@ -205,6 +210,7 @@ _via_media_segment_annotator.prototype._timeline_init = function(container) {
   this.tmark.addEventListener('mousemove', this._on_timeline_mousemove.bind(this));
   this.tmark.addEventListener('mousedown', this._on_timeline_mousedown.bind(this));
   this.tmark.addEventListener('mouseup', this._on_timeline_mouseup.bind(this));
+  this.tmark.addEventListener('mouseout', this._on_timeline_mouseout.bind(this));
 
   container.appendChild(this.tmark);
 
@@ -550,6 +556,20 @@ _via_media_segment_annotator.prototype._which_marker = function(x) {
   return -1;
 }
 
+_via_media_segment_annotator.prototype._on_timeline_mouseout = function(e) {
+  if ( this.is_mark_move_ongoing ) {
+    var x_timeline = this._canvas2timeline(e.offsetX);
+    if ( this._is_valid_timeline_mark(this.move_markid, x_timeline) ) {
+      this._update_timeline_mark(this.move_markid, x_timeline);
+      this.is_mark_move_ongoing = false;
+      this.move_markid = -1;
+    } else {
+      this._update_timeline_mark(this.move_markid, this.move_mark_initial);
+      this.is_mark_move_ongoing = false;
+      this.move_markid = -1;
+    }
+  }
+}
 _via_media_segment_annotator.prototype._on_timeline_mousemove = function(e) {
   var x_timeline = this._canvas2timeline(e.offsetX)
   if ( this.is_mark_move_ongoing ) {
@@ -598,4 +618,23 @@ _via_media_segment_annotator.prototype._on_timeline_mouseup = function(e) {
       this._update_timeline_mark(nearest_markid, x_timeline);
     }
   }
+}
+
+//
+// Attribute events
+//
+_via_media_segment_annotator.prototype._on_attribute_del = function(aid) {
+  this._metadata_update();
+}
+
+_via_media_segment_annotator.prototype._on_attribute_add = function(aid) {
+  this._metadata_update();
+}
+
+//
+// Media Events
+//
+_via_media_segment_annotator.prototype._on_media_timeupdate = function() {
+  // @todo: it may be not necessary to re-draw everything! Just update the time.
+  this._redraw_all();
 }

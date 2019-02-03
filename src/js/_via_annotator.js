@@ -9,9 +9,10 @@
 
 'use strict';
 
-function _via_annotator(container, data) {
+function _via_annotator(annotator_container, segmenter_container, data) {
   // everything will be added to this contained
-  this.c = container;
+  this.c = annotator_container;
+  this.segmenter_container = segmenter_container;
   this.d = data;
 
   this.now = {};
@@ -29,6 +30,8 @@ function _via_annotator(container, data) {
   _via_event.call( this );
 
   this.d.on_event('file_remove', this._on_event_file_remove.bind(this));
+  this.d.on_event('attribute_del', this._on_event_attribute_del.bind(this));
+  this.d.on_event('attribute_add', this._on_event_attribute_del.bind(this));
 }
 
 //
@@ -38,7 +41,7 @@ _via_annotator.prototype.segment_add = function(data, event_payload) {
   var fid = event_payload.fid;
   var t = event_payload.t.slice();
   var what = event_payload.what;
-  this.d.segment_add(fid, t, what).then( function(ok) {
+  this.d.metadata_segment_add(fid, t, what).then( function(ok) {
     // @todo: do we need to do something here?
   }.bind(this), function(err) {
     console.log(err);
@@ -75,6 +78,7 @@ _via_annotator.prototype._preload_file_content = function(file) {
     this.preload[fid].view.classList.add('file');
     this.c.appendChild( this.preload[fid].view );
     this.preload[fid].media_annotator = new _via_media_annotator(this.preload[fid].view,
+                                                                 this.segmenter_container,
                                                                  this.preload[fid].file,
                                                                  this.d
                                                                 );
@@ -293,4 +297,12 @@ _via_annotator.prototype.on_browser_resize = function() {
 _via_annotator.prototype._on_event_file_remove = function(data, event_payload) {
   var fid = event_payload.fid;
   this._remove_preload(fid);
+}
+
+_via_annotator.prototype._on_event_attribute_del = function(data, event_payload) {
+  this.preload[this.now.file.fid].media_annotator.on_event_attribute_del(event_payload.aid);
+}
+
+_via_annotator.prototype._on_event_attribute_add = function(data, event_payload) {
+  this.preload[this.now.file.fid].media_annotator.on_event_attribute_add(event_payload.aid);
 }

@@ -46,7 +46,8 @@ for ( i = 0; i < local_uri_list.length; ++i ) {
 //-- debug code end
 
 var annotator_container = document.getElementById('annotator_container');
-var annotator = new _via_annotator(annotator_container, data);
+var segmenter_container = document.getElementById('segmenter_container');
+var annotator = new _via_annotator(annotator_container, segmenter_container, data);
 
 //var project_container = document.getElementById('project_container');
 //var project = new _via_project(project_container, data, annotator);

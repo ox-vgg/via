@@ -16,8 +16,8 @@ function _via_util_get_svg_button(id, title, viewbox) {
 
   var el = document.createElementNS(_VIA_SVG_NS, 'svg');
   el.setAttributeNS(null, 'viewbox', svg_viewbox);
-  el.setAttributeNS(null, 'class', 'svg_button');
   el.innerHTML = '<use xlink:href="#' + id + '"></use><title>' + title + '</title>';
+  el.setAttributeNS(null, 'class', 'svg_button');
   return el;
 }
 
