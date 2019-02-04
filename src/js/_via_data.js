@@ -11,9 +11,8 @@
 
 function _via_data() {
   this.project = {
-    'id':this._uuid(),
-    'name':'',
-    'description':'',
+    'via_project_id':this._uuid(),
+    'via_data_format_version':1,
     'created': new Date().toString(),
   };
 
@@ -153,7 +152,7 @@ _via_data.prototype.file_add_bulk = function(filelist) {
   for ( i = 0; i < n; ++i ) {
     fid = this._file_get_new_id();
     this.file_store[fid] = new _via_file(fid,
-                                         filelist[i].name,
+                                         filelist[i].filename,
                                          filelist[i].type,
                                          filelist[i].loc,
                                          filelist[i].src
@@ -206,8 +205,8 @@ _via_data.prototype.metadata_segment_add = function(fid, t, what) {
     }
 
     var mid = this._uuid();
-    var where = [ _via_metadata.prototype.TYPE.VSEGMENT,
-                  _via_metadata.prototype.SHAPE.TIME
+    var where = [ _VIA_WHERE_TARGET.SEGMENT,
+                  _VIA_WHERE_SHAPE.TIME
                 ].concat(t);
     this.metadata_store[fid][mid] = new _via_metadata(mid, where, what);
 
@@ -232,6 +231,98 @@ _via_data.prototype.metadata_del = function(fid, mid) {
     this.emit_event( 'metadata_del', { 'fid':fid, 'mid':mid } );
     ok_callback({'fid':fid, 'mid':mid});
   }.bind(this));
+}
+
+//
+// Project
+//
+_via_data.prototype._project_load_json = function(e) {
+  _via_util_load_text_file(e.target.files[0], this._project_import_from_json.bind(this));
+}
+
+_via_data.prototype._project_import_from_json = function(json_str) {
+  if ( json_str === '' || typeof(json_str) === 'undefined') {
+    console.log('_via_data._project_import_from_json() failed as json_str=' + json_str);
+    return;
+  }
+
+  var json = JSON.parse(json_str);
+  this.project = json.project;
+
+  // add all files
+  var fid;
+  for ( fid in json.file_store ) {
+    this.file_store[fid] = new _via_file(fid,
+                                         json.file_store[fid].filename,
+                                         json.file_store[fid].type,
+                                         json.file_store[fid].loc,
+                                         json.file_store[fid].src
+                                        );
+    this.fid_list.push(fid);
+  }
+
+  // add all attributes
+  var aid;
+  for ( aid in json.attribute_store ) {
+    this.attribute_store[aid] = new _via_attribute(aid,
+                                                   json.attribute_store[aid].attr_name,
+                                                   json.attribute_store[aid].type,
+                                                   json.attribute_store[aid].options,
+                                                   json.attribute_store[aid].default_option_id
+                                                  );
+    this.aid_list.push(aid);
+  }
+
+  // add all metadata
+  var mid;
+  for ( fid in json.metadata_store ) {
+    if ( ! this.metadata_store.hasOwnProperty(fid) ) {
+      this.metadata_store[fid] = {};
+    }
+
+    for ( mid in json.metadata_store[fid] ) {
+      this.metadata_store[fid][mid] = new _via_metadata(mid,
+                                                        json.metadata_store[fid][mid].where,
+                                                        json.metadata_store[fid][mid].what
+                                                       );
+    }
+  }
+  this.emit_event( 'file_add_bulk', { 'fid_list':this.fid_list } );
+}
+
+_via_data.prototype._project_save = function() {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      var d = {
+        'project':this.project,
+        'metadata_store':this.metadata_store,
+        'attribute_store':this.attribute_store,
+        'aid_list':this.aid_list,
+        'file_store':this.file_store,
+        'fid_list':this.fid_list,
+      };
+
+      var data_json = JSON.stringify(d);
+      console.log(data_json)
+      ok_callback(data_json);
+    } catch(err) {
+      err_callback('failed to convert to json');
+    }
+  }.bind(this));
+}
+
+_via_data.prototype.save_local = function() {
+  this._project_save().then( function(data) {
+    console.log(data)
+    var blob = new Blob( [data], {type:'text/json;charset=utf-8'} );
+    _via_util_download_as_file(blob, 'via_project.json');
+  }.bind(this), function(err) {
+    console.log(err)
+  }.bind(this));
+}
+
+_via_data.prototype.load_local = function() {
+  _via_util_file_select_local(_VIA_FILE_TYPE.JSON, this._project_load_json.bind(this), false);
 }
 
 //

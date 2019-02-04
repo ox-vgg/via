@@ -46,9 +46,9 @@ _via_file_manager.prototype._filelist_html_element = function(findex, fid) {
     var oi = document.createElement('option');
     oi.setAttribute('data-fid', fid);
     oi.setAttribute('value', fid);
-    oi.setAttribute('title', this.d.file_store[fid].src);
+    oi.setAttribute('title', decodeURI(this.d.file_store[fid].src));
     oi.addEventListener('click', this._filelist_switch_to_file.bind(this));
-    oi.innerHTML = '[' + (parseInt(findex)+1) + '] ' + this.d.file_store[fid].filename;
+    oi.innerHTML = '[' + (parseInt(findex)+1) + '] ' + decodeURI(this.d.file_store[fid].filename);
   } else {
     console.log('_via_file_manager._filelist_html_element() : not found fid=' + fid);
   }
@@ -103,7 +103,9 @@ _via_file_manager.prototype._filelist_set_selected_to_current_file = function() 
     var n = this.filelist.options.length;
     var i;
     for ( i = 0; i < n; ++i ) {
-      if ( parseInt(this.filelist.options[i].value) === this.a.now.file.fid ) {
+      console.log( this.filelist.options[i].dataset.fid +':' + this.a.now.file.fid)
+      console.log( typeof(this.a.now.file.fid) )
+      if ( this.filelist.options[i].dataset.fid == this.a.now.file.fid ) {
         this.filelist.selectedIndex = i;
         this.filelist.title = this.d.file_store[ this.a.now.file.fid.toString() ].uri;
       }
@@ -122,7 +124,6 @@ _via_file_manager.prototype._filelist_switch_to_file = function(el) {
 _via_file_manager.prototype._file_add_local_video = function(e) {
   var files = e.target.files;
   var n = files.length;
-  console.log(files)
   var i;
   var filelist = [];
   for ( i = 0; i < n; ++i ) {
@@ -135,42 +136,58 @@ _via_file_manager.prototype._file_add_local_video = function(e) {
       });
     }
   }
-  console.log(filelist)
+
   if ( filelist.length ) {
     var added_fid_list = this.d.file_add_bulk(filelist);
     console.log(added_fid_list);
   }
 }
 
+_via_file_manager.prototype._file_add_bulk_from_text_file = function(e) {
+  _via_util_load_text_file(e.target.files[0], this._file_add_bulk.bind(this));
+}
+
+_via_file_manager.prototype._file_add_bulk = function(data) {
+  if ( data === '' || typeof(data) === 'undefined') {
+    console.log('_via_file_manager._file_add_bulk() failed as data=' + data);
+    return;
+  }
+
+  var line_split_regex = new RegExp('\n|\r|\r\n', 'g');
+  var csvdata = data.split(line_split_regex);
+  var n = csvdata.length;
+  if ( n > 0 ) {
+    var i, fid, first_fid;
+    var filelist = [];
+    for ( i=0; i < n; ++i ) {
+      // ignore blank lines
+      if (csvdata[i].charAt(0) === '\n' || csvdata[i].charAt(0) === '') {
+        continue;
+      } else {
+        filelist.push( {
+          'filename': _via_util_get_filename_from_uri(csvdata[i]),
+          'type': _via_util_infer_file_type_from_filename(csvdata[i]),
+          'loc':  _via_util_infer_file_loc_from_filename(csvdata[i]),
+          'src':  csvdata[i],
+        });
+      }
+    }
+  }
+
+  if ( filelist.length ) {
+    var added_fid_list = this.d.file_add_bulk(filelist);
+  }
+}
+
 //
 // Events and actions
 //
-_via_file_manager.prototype.on_file_select_local = function(type, handler, multiple) {
-  var fsel = document.createElement('input');
-  fsel.setAttribute('type', 'file');
-  fsel.setAttribute('name', 'files[]');
-  if ( typeof(multiple) === 'undefined' ||
-       multiple === true ) {
-    fsel.setAttribute('multiple', 'multiple')
-  }
-
-  switch(type) {
-  case _VIA_FILE_TYPE.IMAGE:
-    fsel.accept = 'image/*';
-    break;
-  case _VIA_FILE_TYPE.VIDEO:
-    fsel.accept = 'video/*';
-    break;
-  case _VIA_FILE_TYPE.AUDIO:
-    fsel.accept = 'audio/*';
-    break;
-  }
-
-  fsel.onchange = handler;
-  fsel.click();
-}
 _via_file_manager.prototype.on_file_select_local_video = function() {
-  this.on_file_select_local(_VIA_FILE_TYPE.VIDEO, this._file_add_local_video.bind(this));
+  _via_util_file_select_local(_VIA_FILE_TYPE.VIDEO, this._file_add_local_video.bind(this));
+}
+
+_via_file_manager.prototype.on_file_bulk_add_uri = function() {
+  _via_util_file_select_local(_VIA_FILE_TYPE.TEXT, this._file_add_bulk_from_text_file.bind(this), false);
 }
 
 _via_file_manager.prototype.on_filelist_regex = function(el) {
@@ -251,13 +268,9 @@ _via_file_manager.prototype._on_event_file_remove = function(data, event_payload
 }
 
 _via_file_manager.prototype._on_event_file_add = function(data, event_payload) {
-  console.log('file_add');
 }
 
 _via_file_manager.prototype._on_event_file_add_bulk = function(data, event_payload) {
-  console.log('file_add_bulk');
-  console.log(data)
-  console.log(event_payload)
   this._filelist_update();
   var first_added_fid = event_payload.fid_list[0];
   this.a.file_show_fid( first_added_fid );

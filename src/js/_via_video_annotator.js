@@ -2,15 +2,18 @@
 
 var data = new _via_data();
 
+/*
 data.attribute_add('Keywords',
                 _VIA_ATTRIBUTE_TYPE.TEXT);
 data.attribute_add('Activity',
                    _VIA_ATTRIBUTE_TYPE.SELECT,
                    {
-                     'walk':'Walk',
+                     'talk':'Talk',
+                     'play':'Play',
                      'eat':'Eat',
-                     'run':'Run',
                      'sleep':'Sleep',
+                     'run':'Run',
+                     'walk':'Walk',
                      'none':'None'
                    },
                    'none');
@@ -42,6 +45,7 @@ for ( i = 0; i < local_uri_list.length; ++i ) {
                       local_uri_list[i]
                      );
 }
+*/
 
 //-- debug code end
 
@@ -52,14 +56,17 @@ var annotator = new _via_annotator(annotator_container, segmenter_container, dat
 //var project_container = document.getElementById('project_container');
 //var project = new _via_project(project_container, data, annotator);
 
+
 var editor_container = document.getElementById('editor_container');
 var editor = new _via_editor(editor_container, data, annotator);
 
 var filelist_element = document.getElementById('file_manager_filelist');
 var file_manager = new _via_file_manager(filelist_element, data, annotator);
 
+var io = new _via_io(data);
+
 // for debugging, show one of the files
-annotator.file_show_fid(fid);
+//annotator.file_show_fid(fid);
 
 function _via_on_browser_resize() {
   annotator.on_browser_resize();

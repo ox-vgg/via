@@ -16,6 +16,7 @@ function _via_editor(container, data, annotator) {
   this.init();
 
   // initialise event listeners
+  this.a.on_event('file_show', this.on_event_file_show.bind(this));
   this.d.on_event('metadata_add', this.on_event_metadata_add.bind(this));
   this.d.on_event('metadata_del', this.on_event_metadata_del.bind(this));
   this.d.on_event('attribute_update', this.on_event_attribute_update.bind(this));
@@ -92,8 +93,8 @@ _via_editor.prototype.init = function() {
   // initial state of content
   this.edit_metadata_checkbox.checked = true;
   this.metadata_container.classList.remove('hide');
-  this.edit_attribute_checkbox.checked = true;
-  this.attribute_container.classList.remove('hide');
+  this.edit_attribute_checkbox.checked = false;
+  this.attribute_container.classList.add('hide');
 }
 
 //
@@ -175,8 +176,8 @@ _via_editor.prototype.metadata_get = function(fid, mid, metadata_index) {
   var where_type = document.createElement('span');
   where_type.innerHTML = this.d.metadata_store[fid][mid].where_type_str();
   location.appendChild(where_type);
-  if ( this.d.metadata_store[fid][mid].where_type() === _via_metadata.prototype.TYPE.VSEGMENT &&
-       this.d.metadata_store[fid][mid].where_type() === _via_metadata.prototype.SHAPE.TIME
+  if ( this.d.metadata_store[fid][mid].where_target() === _VIA_WHERE_TARGET.SEGMENT &&
+       this.d.metadata_store[fid][mid].where_target() === _VIA_WHERE_SHAPE.TIME
      ) {
     var n = this.d.metadata_store[fid][mid].where.length;
     var i;
@@ -312,8 +313,8 @@ _via_editor.prototype.jump_to_metadata = function(e) {
   var fid = e.target.dataset.fid;
   var mid = e.target.dataset.mid;
   var where_index = e.target.dataset.where_index;
-  if ( this.d.metadata_store[fid][mid].where_type() === _via_metadata.prototype.TYPE.VSEGMENT &&
-       this.d.metadata_store[fid][mid].where_type() === _via_metadata.prototype.SHAPE.TIME
+  if ( this.d.metadata_store[fid][mid].where_target() === _VIA_WHERE_TARGET.SEGMENT &&
+       this.d.metadata_store[fid][mid].where_target() === _VIA_WHERE_SHAPE.TIME
      ) {
     this.a.preload[fid].media_annotator.media.currentTime = this.d.metadata_store[fid][mid].where[where_index];
   }
@@ -533,5 +534,9 @@ _via_editor.prototype.on_event_metadata_add = function(data, event_payload) {
 }
 
 _via_editor.prototype.on_event_metadata_del = function(data, event_payload) {
+  this.metadata_update();
+}
+
+_via_editor.prototype.on_event_file_show = function(data, event_payload) {
   this.metadata_update();
 }
