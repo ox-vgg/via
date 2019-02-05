@@ -21,6 +21,20 @@ function _via_media_annotator(container, segmenter_container, file, data) {
   _via_event.call( this );
 }
 
+// listeners for events coming from an instance of _via_media_segment_annotator
+_via_media_annotator.prototype.init_segmenter_event_listeners = function(segmenter) {
+  segmenter.on_event('metadata_segment_add', function(data, event_payload) {
+    var new_payload = Object.assign(event_payload, {'fid':this.file.fid})
+    this.emit_event('metadata_segment_add', new_payload);
+  }.bind(this));
+  segmenter.on_event('metadata_segment_update', function(data, event_payload) {
+    this.emit_event('metadata_segment_update', event_payload);
+  }.bind(this));
+  segmenter.on_event('metadata_segment_del', function(data, event_payload) {
+    this.emit_event('metadata_segment_del', event_payload);
+  }.bind(this));
+}
+
 // the content that needs to be cached
 _via_media_annotator.prototype.init_static_content = function() {
   //// content layers
@@ -67,12 +81,10 @@ _via_media_annotator.prototype._init_layers_size = function() {
       this.segmenter_container.classList.remove('hide');
       this.segmenter = new _via_media_segment_annotator(this.segmenter_container,
                                                         this.d,
-                                                        this.media
+                                                        this.media,
+                                                        this.file
                                                        );
-      this.segmenter.on_event('segment_add', function(data, event_payload) {
-        var new_payload = Object.assign(event_payload, {'fid':this.file.fid})
-        this.emit_event('segment_add', new_payload);
-      }.bind(this));
+      this.init_segmenter_event_listeners(this.segmenter);
     } else {
       this.segmenter_container.classList.add('hide');
     }
@@ -237,10 +249,22 @@ _via_media_annotator.prototype.load_media = function() {
   }
 }
 
-_via_media_annotator.prototype.on_event_attribute_del = function(aid) {
-  this.segmenter._on_attribute_del(aid);
+_via_media_annotator.prototype._on_event_attribute_del = function(aid) {
+  this.segmenter._on_event_attribute_del(aid);
 }
 
-_via_media_annotator.prototype.on_event_attribute_add = function(aid) {
-  this.segmenter._on_attribute_add(aid);
+_via_media_annotator.prototype._on_event_attribute_add = function(aid) {
+  this.segmenter._on_event_attribute_add(aid);
+}
+
+_via_media_annotator.prototype._on_event_metadata_add = function(fid, mid) {
+  this.segmenter._on_event_metadata_add(fid, mid);
+}
+
+_via_media_annotator.prototype._on_event_metadata_del = function(fid, mid) {
+  this.segmenter._on_event_metadata_del(fid, mid);
+}
+
+_via_media_annotator.prototype._on_event_metadata_update = function(fid, mid) {
+  this.segmenter._on_event_metadata_update(fid, mid);
 }

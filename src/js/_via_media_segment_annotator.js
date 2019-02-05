@@ -12,10 +12,11 @@
 
 'use strict';
 
-function _via_media_segment_annotator(container, data, media_element) {
+function _via_media_segment_annotator(container, data, media_element, file) {
   this.c = container;
   this.d = data;
   this.m = media_element;
+  this.file = file;
 
   // state
   this.is_mark_move_ongoing = false;
@@ -29,7 +30,13 @@ function _via_media_segment_annotator(container, data, media_element) {
   this.segment_mark_list = [];  // an array of [start,end] marks for timeline
   this.segment_input_list = []; // an array of [start,end] html input=text fields
 
+  // segment boundary view (segview)
   this.SEGMENT_COLOR_LIST = ["#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"];
+  this.segview_boundary_to_mid = {};
+  this.SEGMENTER_MODE = { 'EDIT':1, 'CREATE':2 };
+  this.segmenter_mode_now = this.SEGMENTER_MODE.CREATE;
+  this.segmenter_edit_mid = -1; // not needed in create mode
+  this.MAX_LABEL_SIZE = 20;
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -41,36 +48,57 @@ function _via_media_segment_annotator(container, data, media_element) {
   }
 
   this._init();
-  this._redraw_all();
+  this._timeline_update();
 
   this.m.addEventListener('timeupdate', this._on_media_timeupdate.bind(this));
 }
 
 _via_media_segment_annotator.prototype._init = function() {
-  // initialize timeline segmenter tool
+  // initialise timeline segmenter tool
   this.timeline_container = document.createElement('div');
   this.timeline_container.setAttribute('class', 'timeline_container');
   this._timeline_init(this.timeline_container);
 
+  // initialise segment boundary viewer
+  this.segview_container = document.createElement('div');
+  this.segview_container.setAttribute('class', 'segview_container');
+  this._segview_init(this.segview_container);
+
   // initialise with a single segment spanning the media duration
-  this.metadata_container = document.createElement('div');
-  this.metadata_container.setAttribute('class', 'metadata_container');
-  this._segment_add_default();
-  this.metadata_table = this._metadata_init();
-  this.metadata_container.appendChild( this.metadata_table );
-  this._segment_set_current(0);
+  this.segmetadata_container = document.createElement('div');
+  this.segmetadata_container.setAttribute('class', 'segmetadata_container');
+  this._segmetadata_add_default();
+  this.segmetadata_table = this._segmetadata_init();
+  this._segmetadata_set_current(0);
+  this.segmetadata_container.appendChild( this.segmetadata_table );
 
   this.c.innerHTML = '';
+  this.c.appendChild(this.segview_container);
   this.c.appendChild(this.timeline_container);
-  this.c.appendChild(this.metadata_container);
+  this.c.appendChild(this.segmetadata_container);
 }
 
 //
 // Metadata
 //
-_via_media_segment_annotator.prototype._metadata_init = function() {
-  var metadata_table = document.createElement('table');
-  metadata_table.appendChild( this._metadata_get_header() );
+_via_media_segment_annotator.prototype._segmetadata_init = function() {
+  if ( this.segmenter_mode_now === this.SEGMENTER_MODE.EDIT ) {
+    // update this.segment_time_list
+    var t = this.d.metadata_store[this.file.fid][this.segmenter_edit_mid].where.slice(2);
+    this.segment_time_list = [];
+    this.segment_mark_list = [];
+    var i;
+    for ( i = 0; i < t.length; i = i + 2 ) {
+      this.segment_time_list.push( [ t[i], t[i+1] ] );
+      this.segment_mark_list.push( [ this.time2mark(t[i]),
+                                     this.time2mark(t[i+1])
+                                   ]
+                                 );
+    }
+  }
+
+  var segmetadata_table = document.createElement('table');
+  segmetadata_table.appendChild( this._segmetadata_get_header() );
 
   // add a single row containing
   // - a list of segments
@@ -79,10 +107,28 @@ _via_media_segment_annotator.prototype._metadata_init = function() {
 
   var button_container = document.createElement('td');
   this.create_segment_button = document.createElement('button');
-  this.create_segment_button.innerHTML = 'Add to Metadata';
-  this.create_segment_button.setAttribute('class', 'large_button');
+  this.create_segment_button.innerHTML = 'Create';
+  this.create_segment_button.setAttribute('title', 'Create a new metadata');
   this.create_segment_button.addEventListener('click', this._metadata_create.bind(this));
   button_container.appendChild(this.create_segment_button);
+
+  this.update_segment_button = document.createElement('button');
+  this.update_segment_button.innerHTML = 'Update';
+  this.update_segment_button.setAttribute('title', 'Update this existing metadata');
+  this.update_segment_button.addEventListener('click', this._metadata_update.bind(this));
+  button_container.appendChild(this.update_segment_button);
+
+  this.del_segment_button = document.createElement('button');
+  this.del_segment_button.innerHTML = 'Delete';
+  this.del_segment_button.setAttribute('title', 'Delete this existing metadata');
+  this.del_segment_button.addEventListener('click', this._metadata_del.bind(this));
+  button_container.appendChild(this.del_segment_button);
+
+  if ( this.segmenter_mode_now === this.SEGMENTER_MODE.CREATE ) {
+    this.update_segment_button.setAttribute('disabled', 'true');
+    this.del_segment_button.setAttribute('disabled', 'true');
+  }
+
   tr.appendChild(button_container);
 
   var segment_list_container = document.createElement('td');
@@ -106,19 +152,20 @@ _via_media_segment_annotator.prototype._metadata_init = function() {
 
   var tbody = document.createElement('tbody');
   tbody.appendChild(tr);
-  metadata_table.appendChild( tbody );
-  return metadata_table;
+  segmetadata_table.appendChild( tbody );
+  return segmetadata_table;
 }
 
-_via_media_segment_annotator.prototype._metadata_update = function() {
-  this.metadata_table = this._metadata_init();
-  this.metadata_container.replaceChild(this.metadata_table, this.metadata_container.firstChild);
+_via_media_segment_annotator.prototype._segmetadata_update = function() {
+  this.segmetadata_table = this._segmetadata_init();
+  this.segmetadata_container.replaceChild(this.segmetadata_table,
+                                          this.segmetadata_container.firstChild);
 }
 
-_via_media_segment_annotator.prototype._metadata_get_header = function() {
+_via_media_segment_annotator.prototype._segmetadata_get_header = function() {
   var tr = document.createElement('tr');
 
-  var controls = this._get_media_controls();
+  var controls = this._segmetadata_media_controls();
   tr.appendChild(controls);
 
   var segments = document.createElement('th');
@@ -137,7 +184,7 @@ _via_media_segment_annotator.prototype._metadata_get_header = function() {
   return thead;
 }
 
-_via_media_segment_annotator.prototype._get_media_controls = function() {
+_via_media_segment_annotator.prototype._segmetadata_media_controls = function() {
   var th = document.createElement('th');
 
   var play  = _via_util_get_svg_button('micon_play', 'Play Media');
@@ -167,8 +214,19 @@ _via_media_segment_annotator.prototype._get_media_controls = function() {
   return th;
 }
 
+//
+// Metadata (create, update, delete)
+//
+_via_media_segment_annotator.prototype._metadata_del = function() {
+  console.log('_metadata_del');
+  this.emit_event('metadata_segment_del', {'fid':this.file.fid,
+                                           'mid':this.segmenter_edit_mid
+                                          }
+                 );
+  this._segmenter_switch_mode(this.SEGMENTER_MODE.CREATE);
+}
+
 _via_media_segment_annotator.prototype._metadata_create = function() {
-  this.d;
   var t = [];
   var n = this.segment_time_list.length;
   var i;
@@ -179,7 +237,7 @@ _via_media_segment_annotator.prototype._metadata_create = function() {
 
   // get all the attribute values
   var what = {}; // value of each attribute
-  var tbody = this.metadata_table.getElementsByTagName('tbody')[0];
+  var tbody = this.segmetadata_table.getElementsByTagName('tbody')[0];
   var td_list = tbody.getElementsByTagName('td');
   var n = td_list.length;
   var i, aid, value;
@@ -195,22 +253,212 @@ _via_media_segment_annotator.prototype._metadata_create = function() {
     }
   }
 
-  this.emit_event('segment_add', {'t':t, 'what':what});
+  this.emit_event('metadata_segment_add', { 't':t, 'what':what });
 }
 
-_via_media_segment_annotator.prototype._metadata_get_current = function() {
+_via_media_segment_annotator.prototype._metadata_update = function() {
+  console.log('_metadata_update()');
+  var t = [];
+  var n = this.segment_time_list.length;
+  var i;
+  for ( i = 0; i < n; ++i ) {
+    t.push( this.segment_time_list[i][0] );
+    t.push( this.segment_time_list[i][1] );
+  }
+
+  // get all the attribute values
+  var what = {}; // value of each attribute
+  var tbody = this.segmetadata_table.getElementsByTagName('tbody')[0];
+  var td_list = tbody.getElementsByTagName('td');
+  var n = td_list.length;
+  var i, aid, value;
+  for ( i = 0; i < n; ++i ) {
+    if ( typeof(td_list[i].dataset.is_attribute) !== 'undefined' ) {
+      if ( td_list[i].firstChild &&
+           typeof(td_list[i].firstChild.dataset.aid) !== 'undefined'
+         ) {
+        aid = td_list[i].firstChild.dataset.aid;
+        value = _via_util_get_html_input_element_value(td_list[i].firstChild);
+        what[aid] = value;
+      }
+    }
+  }
+
+  this.emit_event('metadata_segment_update', {'fid':this.file.fid,
+                                              'mid':this.segmenter_edit_mid,
+                                              't':t,
+                                              'what':what
+                                             }
+                 );
 }
 
 //
-// Draw routines
+// Segment boundary viewer
 //
+_via_media_segment_annotator.prototype._segview_init = function(container) {
+  this.segview = document.createElement('canvas');
+  this.segview.addEventListener('mousemove', this._on_segview_mousemove.bind(this));
+  this.segview.addEventListener('mousedown', this._on_segview_mousedown.bind(this));
+  this.segview.addEventListener('mouseup', this._on_segview_mouseup.bind(this));
 
+  container.appendChild(this.segview);
+
+  this.segviewctx = this.segview.getContext('2d', { alpha:false } );
+  this.segviewctx.font = '10px Sans';
+
+  var char_width = this.segviewctx.measureText('M').width;
+  this.sh = Math.floor(char_width * 3);
+  this.sw = this.c.clientWidth - 2*char_width;
+  this.segview.width  = this.sw;
+  this.segview.height = this.sh;
+  this.arrow_width = 5;
+  this.arrow_height = 6;
+  this.arrow_heightby2 = 3;
+  this.seg_label_y0 = Math.floor(char_width);
+  this.seg_boundary_y0 = Math.floor(char_width + this.arrow_heightby2 );
+
+  this._segview_update();
+}
+
+_via_media_segment_annotator.prototype._segview_update = function() {
+  this._segview_clear();
+  this._segview_draw_all();
+}
+
+_via_media_segment_annotator.prototype._segview_clear = function() {
+  this.segviewctx.fillStyle = 'white';
+  this.segviewctx.fillRect(0, 0, this.segview.width, this.segview.height);
+}
+
+_via_media_segment_annotator.prototype._segview_draw_all = function() {
+  var fid = this.file.fid;
+  var mindex = 0;
+  var mid;
+  this.segview_boundary_to_mid = {};
+  for ( mid in this.d.metadata_store[fid] ) {
+    if ( this.d.metadata_store[fid][mid].where[0] === _VIA_WHERE_TARGET.SEGMENT &&
+         this.d.metadata_store[fid][mid].where[1] === _VIA_WHERE_SHAPE.TIME
+       ) {
+      this.segview_boundary_to_mid[mid] = [];
+      var color = this.SEGMENT_COLOR_LIST[ mindex % this.SEGMENT_COLOR_LIST.length ];
+      var n = this.d.metadata_store[fid][mid].where.length; // [target_id, shape_id, t0, ...]
+      var ti, mstart, mend, label, color, linedash;
+      if ( mid === this.segmenter_edit_mid ) {
+        linedash = [8, 2];
+      } else {
+        linedash = [];
+      }
+      for ( ti = 2; ti < n; ti = ti + 2 ) {
+        mstart = this.time2mark( this.d.metadata_store[fid][mid].where[ti] );
+        mend = this.time2mark( this.d.metadata_store[fid][mid].where[ti+1] );
+        label = this.d.metadata_store[fid][mid].what[ this.d.aid_list[0] ];
+        this._segview_draw_boundary(mstart, mend, color, linedash);
+        this.segview_boundary_to_mid[mid].push([mstart, mend]);
+      }
+      this._segview_draw_label(mstart, mend, label);
+      mindex = mindex + 1;
+    }
+  }
+}
+
+_via_media_segment_annotator.prototype._segview_draw_boundary = function(mstart, mend, color, linedash) {
+  this.segviewctx.lineWidth = 1;
+  this.segviewctx.strokeStyle = color;
+  this.segviewctx.fillStyle = color;
+  this.segviewctx.setLineDash([]);
+
+  this.segviewctx.beginPath();
+  // draw start arrow
+  this.segviewctx.moveTo(this.timelinex + mstart, this.seg_boundary_y0);
+  this.segviewctx.lineTo(this.timelinex + mstart + this.arrow_width, this.seg_boundary_y0 - this.arrow_heightby2);
+  this.segviewctx.lineTo(this.timelinex + mstart + this.arrow_width, this.seg_boundary_y0 + this.arrow_heightby2);
+  this.segviewctx.lineTo(this.timelinex + mstart, this.seg_boundary_y0);
+  // draw end arrow
+  this.segviewctx.moveTo(this.timelinex + mend, this.seg_boundary_y0);
+  this.segviewctx.lineTo(this.timelinex + mend - this.arrow_width, this.seg_boundary_y0 - this.arrow_heightby2);
+  this.segviewctx.lineTo(this.timelinex + mend - this.arrow_width, this.seg_boundary_y0 + this.arrow_heightby2);
+  this.segviewctx.lineTo(this.timelinex + mend, this.seg_boundary_y0);
+  this.segviewctx.fill();
+
+  // draw line
+  this.segviewctx.setLineDash(linedash);
+  this.segviewctx.beginPath();
+  this.segviewctx.moveTo(this.timelinex + mstart, this.seg_boundary_y0);
+  this.segviewctx.lineTo(this.timelinex + mend, this.seg_boundary_y0);
+  this.segviewctx.stroke();
+}
+
+_via_media_segment_annotator.prototype._segview_draw_label = function(mstart, mend, label) {
+  this.segviewctx.font = '10px Mono';
+  if ( label.length > this.MAX_LABEL_SIZE ) {
+    label = label.substr(0, this.MAX_LABEL_SIZE) + '.';
+  }
+
+  var char_width = this.segviewctx.measureText(label[0]).width;
+  var label_width = this.segviewctx.measureText(label).width;
+  var label_drawn = label;
+  var seg_width = mend - mstart;
+  if (label_width > seg_width ) {
+    var max_label_size = Math.floor(seg_width / char_width) - 1;
+    label_drawn = label.substr(0, max_label_size) + '.';
+    label_width = this.segviewctx.measureText(label_drawn).width;
+  }
+
+  this.segviewctx.fillStyle = 'white';
+  this.segviewctx.fillRect(mstart, 0, label_width + this.seg_label_y0, this.seg_label_y0);
+  this.segviewctx.fillStyle = '#808080';
+  this.segviewctx.fillText(label,
+                           this.timelinex + mstart,
+                           this.seg_label_y0);
+}
+
+_via_media_segment_annotator.prototype._on_segview_mousemove = function(e) {
+  var x_timeline = this._canvas2timeline(e.offsetX)
+  var mid = this._segview_which_mid( x_timeline );
+  if ( mid === -1 ) {
+    this.segview.style.cursor = 'default';
+  } else {
+    this.segview.style.cursor = 'pointer';
+  }
+}
+
+_via_media_segment_annotator.prototype._on_segview_mousedown = function(e) {
+}
+
+_via_media_segment_annotator.prototype._on_segview_mouseup = function(e) {
+  var x_timeline = this._canvas2timeline(e.offsetX)
+  var mid_info = this._segview_which_mid( x_timeline );
+  if ( mid_info.mid !== -1 ) {
+    console.log('Editing mid=' + mid_info.mid);
+    this._segmenter_switch_mode( this.SEGMENTER_MODE.EDIT, mid_info.mid, mid_info.segment_index );
+  } else {
+    this._segmenter_switch_mode( this.SEGMENTER_MODE.CREATE );
+  }
+}
+
+_via_media_segment_annotator.prototype._segview_which_mid = function(markx) {
+  var fid = this.file.fid;
+  var mid, i;
+  for ( mid in this.d.metadata_store[fid] ) {
+    for ( i = 0; i < this.segview_boundary_to_mid[mid].length; ++i ) {
+      if ( markx >= this.segview_boundary_to_mid[mid][i][0] &&
+           markx <  this.segview_boundary_to_mid[mid][i][1]
+         ) {
+        return {'mid':mid, 'segment_index':i};
+      }
+    }
+  }
+  return {'mid':-1};
+}
+
+//
+// Timline
+//
 _via_media_segment_annotator.prototype._timeline_init = function(container) {
   this.tmark = document.createElement('canvas');
   this.tmark.addEventListener('mousemove', this._on_timeline_mousemove.bind(this));
   this.tmark.addEventListener('mousedown', this._on_timeline_mousedown.bind(this));
   this.tmark.addEventListener('mouseup', this._on_timeline_mouseup.bind(this));
-  this.tmark.addEventListener('mouseout', this._on_timeline_mouseout.bind(this));
 
   container.appendChild(this.tmark);
 
@@ -238,7 +486,7 @@ _via_media_segment_annotator.prototype._timeline_init = function(container) {
   this.marky1 = this.ch - this.markw;
 }
 
-_via_media_segment_annotator.prototype._redraw_all = function() {
+_via_media_segment_annotator.prototype._timeline_update = function() {
   this._draw_timeline();
   this._fill_between_marks();
   this._draw_marks();
@@ -306,9 +554,9 @@ _via_media_segment_annotator.prototype._draw_current_time = function() {
 }
 
 //
-// Segment
+// Segment Metadata
 //
-_via_media_segment_annotator.prototype._segment_add_default = function() {
+_via_media_segment_annotator.prototype._segmetadata_add_default = function() {
   this.segment_time_list.push( [0, this.m.duration] );
   var new_segment_index = this.segment_time_list.length - 1;
 
@@ -318,7 +566,7 @@ _via_media_segment_annotator.prototype._segment_add_default = function() {
   return new_segment_index;
 }
 
-_via_media_segment_annotator.prototype._segment_set_current = function(sindex, markid) {
+_via_media_segment_annotator.prototype._segmetadata_set_current = function(sindex, markid) {
   this.current_segment_index = sindex;
   if ( typeof(markid) === 'undefined' ) {
     this.m.currentTime = this.segment_time_list[this.current_segment_index][0];
@@ -361,7 +609,7 @@ _via_media_segment_annotator.prototype._segment_delete = function(e) {
 
   this._segment_list_update();
   if ( this.segment_time_list.length ) {
-    this._segment_set_current(0);
+    this._segmetadata_set_current(0);
   }
 }
 
@@ -373,8 +621,8 @@ _via_media_segment_annotator.prototype._segment_input_set_to_current_mark = func
 _via_media_segment_annotator.prototype._segment_input_on_focus = function(e) {
   var sindex = parseInt(e.target.dataset.segment_index);
   var markid = parseInt(e.target.dataset.markid);
-  this._segment_set_current(sindex, markid);
-  this._redraw_all();
+  this._segmetadata_set_current(sindex, markid);
+  this._timeline_update();
 }
 
 _via_media_segment_annotator.prototype._segment_input_on_change = function(e) {
@@ -393,7 +641,7 @@ _via_media_segment_annotator.prototype._segment_on_update = function(sindex, mar
   var time = this.segment_time_list[sindex][markid];
   this.segment_mark_list[this.current_segment_index][markid] = this.time2mark(time);
   this.m.currentTime = time;
-  this._redraw_all();
+  this._timeline_update();
 }
 
 _via_media_segment_annotator.prototype._segment_list_update = function() {
@@ -421,9 +669,9 @@ _via_media_segment_annotator.prototype._segment_list_get_header = function() {
 _via_media_segment_annotator.prototype._segment_list_get_body = function() {
   // segment list
   var body = document.createElement('tbody');
-  var n = this.segment_time_list.length;
+  var segment_count = this.segment_time_list.length;
   var i;
-  for ( i = 0; i < n; ++i ) {
+  for ( i = 0; i < segment_count; ++i ) {
     // actions
     var td_action = document.createElement('td');
     var action = document.createElement('button');
@@ -441,8 +689,10 @@ _via_media_segment_annotator.prototype._segment_list_get_body = function() {
     this.segment_input_list[i][0].setAttribute('size', '4');
     this.segment_input_list[i][0].setAttribute('data-segment_index', i);
     this.segment_input_list[i][0].setAttribute('data-markid', 0);
-    this.segment_input_list[i][0].addEventListener('focus', this._segment_input_on_focus.bind(this));
-    this.segment_input_list[i][0].addEventListener('change', this._segment_input_on_change.bind(this));
+    this.segment_input_list[i][0].addEventListener('focus',
+                                                   this._segment_input_on_focus.bind(this));
+    this.segment_input_list[i][0].addEventListener('change',
+                                                   this._segment_input_on_change.bind(this));
     this._segment_input_set_to_current_mark(i, 0);
     td_start.appendChild(this.segment_input_list[i][0]);
 
@@ -473,10 +723,10 @@ _via_media_segment_annotator.prototype._segment_list_get_body = function() {
   action.setAttribute('class', 'text_button');
   action.innerHTML = 'Add More Segments';
   action.addEventListener('click', function(e) {
-    var sindex = this._segment_add_default();
+    var sindex = this._segmetadata_add_default();
     this._segment_list_update();
-    this._segment_set_current(sindex);
-    this._redraw_all();
+    this._segmetadata_set_current(sindex);
+    this._timeline_update();
   }.bind(this));
   td_action.appendChild(action);
   var tr = document.createElement('tr');
@@ -556,20 +806,6 @@ _via_media_segment_annotator.prototype._which_marker = function(x) {
   return -1;
 }
 
-_via_media_segment_annotator.prototype._on_timeline_mouseout = function(e) {
-  if ( this.is_mark_move_ongoing ) {
-    var x_timeline = this._canvas2timeline(e.offsetX);
-    if ( this._is_valid_timeline_mark(this.move_markid, x_timeline) ) {
-      this._update_timeline_mark(this.move_markid, x_timeline);
-      this.is_mark_move_ongoing = false;
-      this.move_markid = -1;
-    } else {
-      this._update_timeline_mark(this.move_markid, this.move_mark_initial);
-      this.is_mark_move_ongoing = false;
-      this.move_markid = -1;
-    }
-  }
-}
 _via_media_segment_annotator.prototype._on_timeline_mousemove = function(e) {
   var x_timeline = this._canvas2timeline(e.offsetX)
   if ( this.is_mark_move_ongoing ) {
@@ -623,12 +859,27 @@ _via_media_segment_annotator.prototype._on_timeline_mouseup = function(e) {
 //
 // Attribute events
 //
-_via_media_segment_annotator.prototype._on_attribute_del = function(aid) {
+_via_media_segment_annotator.prototype._on_event_attribute_del = function(aid) {
   this._metadata_update();
 }
 
-_via_media_segment_annotator.prototype._on_attribute_add = function(aid) {
+_via_media_segment_annotator.prototype._on_event_attribute_add = function(aid) {
   this._metadata_update();
+}
+
+//
+// Metadata events
+//
+_via_media_segment_annotator.prototype._on_event_metadata_add = function(fid, mid) {
+  this._segview_update();
+}
+
+_via_media_segment_annotator.prototype._on_event_metadata_del = function(fid, mid) {
+  this._segview_update();
+}
+
+_via_media_segment_annotator.prototype._on_event_metadata_update = function(fid, mid) {
+  this._segview_update();
 }
 
 //
@@ -636,5 +887,24 @@ _via_media_segment_annotator.prototype._on_attribute_add = function(aid) {
 //
 _via_media_segment_annotator.prototype._on_media_timeupdate = function() {
   // @todo: it may be not necessary to re-draw everything! Just update the time.
-  this._redraw_all();
+  this._timeline_update();
+}
+
+//
+// Segmenter mode
+//
+_via_media_segment_annotator.prototype._segmenter_switch_mode = function(mode, mid, sindex) {
+  this.segmenter_mode_now = mode;
+  this.segmenter_edit_mid = mid;
+
+  if ( this.segmenter_mode_now === this.SEGMENTER_MODE.CREATE ) {
+  }
+
+  this._segmetadata_update();
+  if ( this.segmenter_mode_now === this.SEGMENTER_MODE.EDIT ) {
+    this._segmetadata_set_current(sindex);
+  }
+
+  this._segview_update();
+  this._timeline_update();
 }

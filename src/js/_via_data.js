@@ -188,6 +188,28 @@ _via_data.prototype.fid2file = function(fid) {
 //
 // Metadata
 //
+_via_data.prototype.metadata_segment_del = function(fid, mid) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
+      err_callback('undefined fid=' + fid);
+    }
+
+    if ( typeof(this.file_store[fid]) === 'undefined' ) {
+      err_callback('undefined fid=' + fid);
+      return;
+    }
+
+    if ( typeof(this.metadata_store[fid][mid]) === 'undefined' ) {
+      err_callback('for fid=' + fid + ', undefined mid=' + mid);
+    }
+
+    delete this.metadata_store[fid][mid];
+
+    this.emit_event( 'metadata_del', { 'fid':fid, 'mid':mid } );
+    ok_callback({'fid':fid, 'mid':mid});
+  }.bind(this));
+}
+
 _via_data.prototype.metadata_segment_add = function(fid, t, what) {
   return new Promise( function(ok_callback, err_callback) {
     if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
@@ -211,6 +233,36 @@ _via_data.prototype.metadata_segment_add = function(fid, t, what) {
     this.metadata_store[fid][mid] = new _via_metadata(mid, where, what);
 
     this.emit_event( 'metadata_add', { 'fid':fid, 'mid':mid } );
+    ok_callback({'fid':fid, 'mid':mid});
+  }.bind(this));
+}
+
+_via_data.prototype.metadata_segment_update = function(fid, mid, t, what) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
+      err_callback('undefined fid=' + fid);
+    }
+
+    if ( typeof(this.file_store[fid]) === 'undefined' ) {
+      err_callback('undefined fid=' + fid);
+      return;
+    }
+
+    if ( typeof(this.metadata_store[fid][mid]) === 'undefined' ) {
+      err_callback('for fid=' + fid + ', undefined mid=' + mid);
+    }
+
+    if ( t.length < 2 ) {
+      err_callback('t must have the format [target_id, shape_id, t0, ...]');
+      return;
+    }
+
+    var where = [ _VIA_WHERE_TARGET.SEGMENT,
+                  _VIA_WHERE_SHAPE.TIME
+                ].concat(t);
+    this.metadata_store[fid][mid] = new _via_metadata(mid, where, what);
+
+    this.emit_event( 'metadata_update', { 'fid':fid, 'mid':mid } );
     ok_callback({'fid':fid, 'mid':mid});
   }.bind(this));
 }

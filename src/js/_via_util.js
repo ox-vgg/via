@@ -254,3 +254,8 @@ function _via_util_file_select_local(type, handler, multiple) {
   fsel.onchange = handler;
   fsel.click();
 }
+
+// see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+function _via_util_rand_int(min_inclusive, max_exclusive) {
+  return Math.floor(Math.random() * (max_exclusive - min_inclusive)) + min_inclusive;
+}

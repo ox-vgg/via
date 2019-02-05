@@ -2,7 +2,6 @@
 
 var data = new _via_data();
 
-/*
 data.attribute_add('Keywords',
                 _VIA_ATTRIBUTE_TYPE.TEXT);
 data.attribute_add('Activity',
@@ -45,7 +44,11 @@ for ( i = 0; i < local_uri_list.length; ++i ) {
                       local_uri_list[i]
                      );
 }
-*/
+/**/
+
+data.metadata_segment_add(fid, [0.0, 3.557], {'0':'segment label 1.', '1':'talk'});
+//data.metadata_segment_add(fid, [2.534, 5.751], {'0':'Lorem ipsum dolor sit amet, consectetur adipiscing elit', '1':'talk'});
+data.metadata_segment_add(fid, [3.895, 5.391, 6.241, 8.105], {'0':'segment label 2', '1':'walk'});
 
 //-- debug code end
 
@@ -57,8 +60,8 @@ var annotator = new _via_annotator(annotator_container, segmenter_container, dat
 //var project = new _via_project(project_container, data, annotator);
 
 
-var editor_container = document.getElementById('editor_container');
-var editor = new _via_editor(editor_container, data, annotator);
+//var editor_container = document.getElementById('editor_container');
+//var editor = new _via_editor(editor_container, data, annotator);
 
 var filelist_element = document.getElementById('file_manager_filelist');
 var file_manager = new _via_file_manager(filelist_element, data, annotator);
@@ -66,7 +69,7 @@ var file_manager = new _via_file_manager(filelist_element, data, annotator);
 var io = new _via_io(data);
 
 // for debugging, show one of the files
-//annotator.file_show_fid(fid);
+annotator.file_show_fid(fid);
 
 function _via_on_browser_resize() {
   annotator.on_browser_resize();

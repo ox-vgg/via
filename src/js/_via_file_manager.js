@@ -103,8 +103,6 @@ _via_file_manager.prototype._filelist_set_selected_to_current_file = function() 
     var n = this.filelist.options.length;
     var i;
     for ( i = 0; i < n; ++i ) {
-      console.log( this.filelist.options[i].dataset.fid +':' + this.a.now.file.fid)
-      console.log( typeof(this.a.now.file.fid) )
       if ( this.filelist.options[i].dataset.fid == this.a.now.file.fid ) {
         this.filelist.selectedIndex = i;
         this.filelist.title = this.d.file_store[ this.a.now.file.fid.toString() ].uri;
