@@ -6,7 +6,8 @@
     - '0' is reserved to set the file attribute
     - '023' assigns value 3 to the file attribute 2
     - provide visual cues to the user when doing these operations (update bottom status bar as keys are pressed)
-
+ * grid view should only consider files filtered using filename regex in sidebar
+ 
 ## [2.0.6] - not released yet
  * fixed wrong region location for high zoom levels for large images (Closes: #166, thank you @fredowski) 
  * image grid view
