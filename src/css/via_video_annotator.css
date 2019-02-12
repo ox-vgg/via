@@ -23,7 +23,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 
 *, *:before, *:after { box-sizing:inherit; }
 
-.via { display:block;  padding:0.3em 0.2em; background-color:white; }
+.via { display:flex; flex-direction:column; flex-wrap:nowrap; padding:0.3em 0.2em; background-color:#ffffff; height:100vh; overflow:hidden; }
 
 .cpanel { display:flex; border:1px solid #707070; padding:0.4em 0.5em; }
 .cpanel .tool_group { display:inline-block; margin:0 1%; padding:0; }
@@ -34,15 +34,24 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .cpanel .tool_group select { background-color:inherit; border:1px solid #cfcfcf; vertical-align:middle; width:10em; }
 .cpanel .tool_group input { background-color:inherit; border:1px solid #cfcfcf; vertical-align:middle; width:4em;}
 
-.annotator_container { text-align:center; height:70vh; width:100%; border:none; padding:0.4em 0.5em; }
-.annotator_container > .hide { display:none; }
-.annotator_container > .show { display:block; }
+.annotator_container { flex:auto; border:1px solid red; background-color:#cfcfcf; }
+.annotator_container > .file_container { display:block; height:100%; }
+.annotator_container > .file_hide { display:none; }
+.annotator_container > .file_container > .region_annotator_container { display:block; position:relative; background-color:#34ffff; }
+.annotator_container > .file_container > .region_annotator_container * { position:absolute; left:0; top:0; }
+.annotator_container > .file_container > .region_annotator_container > .layer_region { pointer-events:none; }
+
+.annotator_container > .file_container > .time_annotator_container { position:relative; display:block; background-color:white; margin:0; padding:1em 0; }
+
+/*
+.segmenter_container { height:15em; flex:none; border:1px solid blue; }
 .annotator_container > .file { width:100%; height:100%; position:relative; }
-.annotator_container > .file > .content { display:block; width:100%; position:relative; text-align:center; }
+.annotator_container > .hide_file { display:none; }
+.annotator_container > .file > .content { display:block; width:100%; position:relative; text-align:left; }
 .annotator_container > .file > .content > .layer_container { display:inline-block; position:relative; }
 .annotator_container > .file > .content > .layer_container .media_element { display:block; position:absolute; left:0; right:0; padding:0; margin:0; z-index:1000; }
 .annotator_container > .file > .content > .layer_container .regions { display:block; position:absolute; left:0; right:0; padding:0; margin:0; z-index:2; }
-.annotator_container > .file > .content > .layer_container .input_handler { display:block; position:absolute; left:0; right:0; padding:0; margin:0; z-index:3; }
+.annotator_container > .file > .content > .layer_container .input_handler { display:inline-block; position:absolute; left:0; right:0; padding:0; margin:0; z-index:3; }
 
 .segmenter_container { display:block; height:23vh; position:relative; text-align:center; font-size:small; overflow:hidden; }
 .segmenter_container > .hide { display:none !important; }
@@ -60,8 +69,10 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .segmenter_container .segmetadata_container .segment_table th { border:none; }
 .segmenter_container .segmetadata_container .segment_table td { border:none; }
 .segmenter_container .segmetadata_container .segment_table .current { background-color:#cccccc; }
+*/
 
-.editor_container { display:block; height:19vh; overflow:auto; border:none; font-size:small; border:1px solid #707070; }
+/* Editor panel for add/update/view metadata and attributes */
+.editor_container { display:none; position:absolute; bottom:0; left:0; right:0; height:30vh; overflow:auto; background-color:white; }
 .editor_container .hide { display:none !important; }
 .editor_container svg { font-size:large; margin:0 0.4em; }
 .editor_container > .editor_content_selector { display:block; margin:0; padding:0.4em 1em;  }
@@ -71,7 +82,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .editor_container > .content_container td { border:1px solid #cccccc; padding:0.3em 0.4em; }
 .editor_container > .content_container .attribute_entry { display:block; margin-bottom:0.4em; }
 
-/* SVG Buttons */
+/* Misc */
 .svg_button { width:1.2em; height:1.2em; fill:black; stroke:none; vertical-align:middle; }
 .svg_button:hover { fill:#cfcfcf; cursor:pointer; }
 .svg_button:active { fill:#707070; cursor:pointer; }
@@ -80,3 +91,5 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .disabled_button:active { fill:#cfcfcf !important; cursor:auto !important; }
 .text_button { border:none; color:blue; background-color:inherit; cursor:pointer; display:inline-block; }
 .text_button:hover { color:black; }
+
+.page_overlay { display:none; }

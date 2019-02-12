@@ -9,85 +9,35 @@
 
 'use strict';
 
-function _via_media_annotator(container, segmenter_container, file, data) {
+function _via_region_annotator(container, file, data) {
   this.c = container;
-  this.segmenter_container = segmenter_container;
   this.file = file;
   this.d = data;
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this._EVENT_ID_PREFIX = '_via_media_annotator_';
+  this._EVENT_ID_PREFIX = '_via_region_annotator_';
   _via_event.call( this );
+
+  this.on_event('container_resize', this._on_event_container_resize.bind(this));
 }
 
-// listeners for events coming from an instance of _via_media_segment_annotator
-_via_media_annotator.prototype.init_segmenter_event_listeners = function(segmenter) {
-  segmenter.on_event('metadata_segment_add', function(data, event_payload) {
-    var new_payload = Object.assign(event_payload, {'fid':this.file.fid})
-    this.emit_event('metadata_segment_add', new_payload);
-  }.bind(this));
-  segmenter.on_event('metadata_segment_update', function(data, event_payload) {
-    this.emit_event('metadata_segment_update', event_payload);
-  }.bind(this));
-  segmenter.on_event('metadata_segment_del', function(data, event_payload) {
-    this.emit_event('metadata_segment_del', event_payload);
-  }.bind(this));
-}
-
-// the content that needs to be cached
-_via_media_annotator.prototype.init_static_content = function() {
-  //// content layers
-  // inner layer: canvas that will contain all the user drawn regions
-  this.regions = document.createElement('canvas');
-  this.regions.setAttribute('class', 'regions');
-  // top layer: transparent <div> that captures all user interactions with media content
-  this.input_handler = document.createElement('div');
-  this.input_handler.setAttribute('class', 'input_handler');
-  // add all layers to annotation_container
-  this.layer_container = document.createElement('div');
-  this.layer_container.setAttribute('class', 'layer_container');
-  this.layer_container.appendChild(this.media); // loaded using _via_media_annotator.load_media()
-  this.layer_container.appendChild(this.regions);
-  this.layer_container.appendChild(this.input_handler);
-  this.content_container = document.createElement('div');
-  this.content_container.setAttribute('class', 'content');
-  this.content_container.appendChild(this.layer_container);
-
-  //// add everything to html view
-  this.c.innerHTML = '';
-  this.c.appendChild(this.content_container);
-}
-
-_via_media_annotator.prototype.init_dynamic_content = function() {
-  try {
-    this._init_layers_size();
-  } catch(err) {
-    console.log(err);
-  }
+_via_region_annotator.prototype._on_event_container_resize = function() {
+  console.log('resize container');
+  this._update_child_containers_size();
 }
 
 // this method ensures that all the layers have same size as that of the content
-_via_media_annotator.prototype._init_layers_size = function() {
+_via_region_annotator.prototype._update_child_containers_size = function() {
   try {
     // max. dimension of the container
     // to avoid overflowing window, we artificially reduce the max. size by 1 pixels
+    if ( this.c.clientWidth === 0 || this.c.clientHeight === 0 ) {
+      console.log('_via_region_annotator._update_child_containers_size(): container dimension is 0');
+      return;
+    }
     var maxw = this.c.clientWidth - 1;
     var maxh = this.c.clientHeight - 1;
-    if ( this.file.type === _VIA_FILE_TYPE.VIDEO ||
-         this.file.type === _VIA_FILE_TYPE.AUDIO
-       ) {
-      // initialise segmenter
-      this.segmenter_container.classList.remove('hide');
-      this.segmenter = new _via_media_segment_annotator(this.segmenter_container,
-                                                        this.d,
-                                                        this.media,
-                                                        this.file
-                                                       );
-      this.init_segmenter_event_listeners(this.segmenter);
-    } else {
-      this.segmenter_container.classList.add('hide');
-    }
 
     // original size of the content
     var cw0, ch0;
@@ -108,32 +58,38 @@ _via_media_annotator.prototype._init_layers_size = function() {
       cw = maxw;
       ch = Math.floor(cw/ar);
     }
-    this.width = cw;
-    this.height = ch;
+    this.cwidth = cw;
+    this.cheight = ch;
     this.original_width = cw0;
     this.original_height = ch0;
-    this.layer_size_css = 'width:' + cw + 'px;height:' + ch + 'px;';
+    this.content_size_css = 'width:' + cw + 'px;height:' + ch + 'px;';
+    this.layer_region.width  = this.cwidth;
+    this.layer_region.height = this.cheight;
 
-    this.layer_container.setAttribute('style', this.layer_size_css);
-    this.media.setAttribute('style', this.layer_size_css);
-    this.regions.setAttribute('style', this.layer_size_css);
-    this.regions.width = this.width;
-    this.regions.height = this.height;
-    this.input_handler.setAttribute('style', this.layer_size_css);
+    this.media.setAttribute('style', this.content_size_css);
   } catch (err) {
     console.log(err)
   }
 }
 
-_via_media_annotator.prototype._read_media_file = function() {
+_via_region_annotator.prototype._init_html_elements = function() {
+  this.layer_region = document.createElement('canvas');
+  this.layer_region.setAttribute('class', 'layer_region');
+
+  this.c.innerHTML = '';
+  this.c.appendChild(this.media);
+  this.c.appendChild(this.layer_region);
+}
+
+_via_region_annotator.prototype._read_media_file = function() {
   return new Promise( function(ok_callback, err_callback) {
     var file_reader = new FileReader();
     file_reader.addEventListener('error', function() {
-      console.log('_via_media_annotator._read_media_file() error');
+      console.log('_via_region_annotator._read_media_file() error');
       err_callback();
     }.bind(this));
     file_reader.addEventListener('abort', function() {
-      console.log('_via_media_annotator._read_media_file() abort');
+      console.log('_via_region_annotator._read_media_file() abort');
       err_callback()
     }.bind(this));
     file_reader.addEventListener('load', function() {
@@ -149,13 +105,13 @@ _via_media_annotator.prototype._read_media_file = function() {
   }.bind(this));
 }
 
-_via_media_annotator.prototype._revoke_file_object_url = function() {
+_via_region_annotator.prototype._revoke_file_object_url = function() {
   if ( typeof(this.file_object_url) !== 'undefined' ) {
     URL.revokeObjectURL(this.file_object_url);
   }
 }
 
-_via_media_annotator.prototype._init_media_html = function(src) {
+_via_region_annotator.prototype._init_media_html = function(src) {
   return new Promise( function(ok_callback, err_callback) {
     switch( this.file.type ) {
     case _VIA_FILE_TYPE.VIDEO:
@@ -164,18 +120,18 @@ _via_media_annotator.prototype._init_media_html = function(src) {
       this.media.setAttribute('class', 'media_element');
       this.media.setAttribute('autoplay', false);
       this.media.setAttribute('loop', false);
-      this.media.setAttribute('controls', '');
+      //this.media.setAttribute('controls', '');
       this.media.setAttribute('preload', 'auto');
       this.media.addEventListener('loadeddata', function() {
         this.media.pause();
         ok_callback(this.file);
       }.bind(this));
       this.media.addEventListener('error', function() {
-        console.log('_via_media_annotator._init_media_html() error')
+        console.log('_via_region_annotator._init_media_html() error')
         err_callback(this.file);
       }.bind(this));
       this.media.addEventListener('abort', function() {
-        console.log('_via_media_annotator._init_media_html() abort')
+        console.log('_via_region_annotator._init_media_html() abort')
         err_callback(this.file);
       }.bind(this));
 
@@ -188,11 +144,11 @@ _via_media_annotator.prototype._init_media_html = function(src) {
         ok_callback(this.file);
       }.bind(this));
       this.media.addEventListener('error', function() {
-        console.log('_via_media_annotator._init_media_html() error')
+        console.log('_via_region_annotator._init_media_html() error')
         err_callback(this.file);
       }.bind(this));
       this.media.addEventListener('abort', function() {
-        console.log('_via_media_annotator._init_media_html() abort')
+        console.log('_via_region_annotator._init_media_html() abort')
         err_callback(this.file);
       }.bind(this));
       break;
@@ -210,17 +166,17 @@ _via_media_annotator.prototype._init_media_html = function(src) {
         ok_callback(this.file);
       }.bind(this));
       this.media.addEventListener('error', function() {
-        console.log('_via_media_annotator._init_media_html() error')
+        console.log('_via_region_annotator._init_media_html() error')
         err_callback(this.file);
       }.bind(this));
       this.media.addEventListener('abort', function() {
-        console.log('_via_media_annotator._init_media_html() abort')
+        console.log('_via_region_annotator._init_media_html() abort')
         err_callback(this.file);
       }.bind(this));
       break;
 
     default:
-      console.log('_via_media_annotator._init_media_html() : ' +
+      console.log('_via_region_annotator._init_media_html() : ' +
                   ' cannot load file of type ' +
                   _via_util_file_type_to_str(this.file.type)
                  );
@@ -229,7 +185,7 @@ _via_media_annotator.prototype._init_media_html = function(src) {
   }.bind(this));
 }
 
-_via_media_annotator.prototype.load_media = function() {
+_via_region_annotator.prototype.load_media = function() {
   // check if user has given access to local file using
   // browser's file selector
   if ( this.file.src instanceof File ) {
@@ -249,22 +205,17 @@ _via_media_annotator.prototype.load_media = function() {
   }
 }
 
-_via_media_annotator.prototype._on_event_attribute_del = function(aid) {
-  this.segmenter._on_event_attribute_del(aid);
+_via_region_annotator.prototype._on_event_attribute_del = function(aid) {
 }
 
-_via_media_annotator.prototype._on_event_attribute_add = function(aid) {
-  this.segmenter._on_event_attribute_add(aid);
+_via_region_annotator.prototype._on_event_attribute_add = function(aid) {
 }
 
-_via_media_annotator.prototype._on_event_metadata_add = function(fid, mid) {
-  this.segmenter._on_event_metadata_add(fid, mid);
+_via_region_annotator.prototype._on_event_metadata_add = function(fid, mid) {
 }
 
-_via_media_annotator.prototype._on_event_metadata_del = function(fid, mid) {
-  this.segmenter._on_event_metadata_del(fid, mid);
+_via_region_annotator.prototype._on_event_metadata_del = function(fid, mid) {
 }
 
-_via_media_annotator.prototype._on_event_metadata_update = function(fid, mid) {
-  this.segmenter._on_event_metadata_update(fid, mid);
+_via_region_annotator.prototype._on_event_metadata_update = function(fid, mid) {
 }

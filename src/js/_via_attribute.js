@@ -7,6 +7,11 @@
  *
  */
 
+'use strict'
+
+//const _VIA_ATTRIBUTE_TYPE = { 'TEXT':1, 'CHECKBOX':2, 'RADIO':3, 'SELECT':4, 'IMAGE':5 };
+const _VIA_ATTRIBUTE_TYPE = { 'TEXT':1, 'SELECT':4 };
+
 function _via_attribute(id, name, type, options, default_option_id) {
   this.id = id;
   this.attr_name = name;

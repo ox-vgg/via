@@ -47,14 +47,18 @@
           <svg onclick="file_manager.on_file_remove_current()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_remove_circle"></use><title>Remove the current file from project</title></svg>
         </div>
 
-        <!--
+
         <div id="content_tools" class="tool_group">
+        <!--
           <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_zoomin"></use><title>Zoom In</title></svg>
           <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_zoomout"></use><title>Zoom Out</title></svg>
           <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_copy"></use><title>Copy Selected Regions</title></svg>
           <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_paste"></use><title>Paste Selected Regions</title></svg>
-          <svg onclick="_via_toggle_metadata_and_attribute_editor()" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_insertcomment"></use><title>Show/hide metadata and attribute editor</title></svg>
+-->
+          <svg onclick="document.getElementById('editor_container').classList.toggle('hide')" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_insertcomment"></use><title>Show/hide metadata and attribute editor</title></svg>
         </div>
+
+        <!--
         <div id="region_shape" class="tool_group" >
           <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_point"></use><title>Point</title></svg>
           <svg onclick="" class="svg_button" viewbox="0 0 24 24" ><use xlink:href="#shape_rectangle"></use><title>Rectangle</title></svg>
@@ -73,9 +77,19 @@
             -->
         </div>
       </div>
+
       <div id="annotator_container" class="annotator_container"></div>
-      <div id="segmenter_container" class="segmenter_container"></div>
-<!--      <div id="editor_container" class="editor_container"></div>-->
+      <div id="editor_container" class="editor_container">Editor</div>
+      <div id="page_shortcut_keys" class="page_overlay">
+        <dl>
+          <dt>Space</dt>
+          <dd>Play or pause video</dd>
+        </dl>
+        <dl>
+          <dt>[Ctrl] + 1, 2, ..., 9</dt>
+          <dd>Move backward 1, ..., 9 sec. (Ctrl to move forward)</dd>
+        </dl>
+      </div>
     </div>
 
     <script src="../js/_via_util.js"></script>
@@ -91,8 +105,9 @@
 
     <script src="../js/_via_project.js"></script>
 
-    <script src="../js/_via_media_segment_annotator.js"></script>
-    <script src="../js/_via_media_annotator.js"></script>
+    <script src="../js/_via_video_thumbnail.js"></script>
+    <script src="../js/_via_region_annotator.js"></script>
+    <script src="../js/_via_time_annotator.js"></script>
     <script src="../js/_via_annotator.js"></script>
 
     <script src="../js/_via_file_manager.js"></script>
