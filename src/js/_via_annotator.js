@@ -297,7 +297,7 @@ _via_annotator.prototype._show_in_view = function(file) {
         this.c.childNodes[i].classList.remove('file_hide');
         this.now.preload.time[fid] = Date.now(); // shown time recorded for cache admin.
         this.preload[fid].region_annotator._update_child_containers_size();
-        this.preload[fid].thumbnail = new _via_video_thumbnail(this.preload[fid].file);
+
         this.preload[fid].time_annotator._init();
 
       }

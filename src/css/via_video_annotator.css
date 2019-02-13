@@ -41,8 +41,10 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .annotator_container > .file_container > .region_annotator_container * { position:absolute; left:0; top:0; }
 .annotator_container > .file_container > .region_annotator_container > .layer_region { pointer-events:none; }
 
-.annotator_container > .file_container > .time_annotator_container { position:relative; display:block; background-color:white; margin:0; padding:1em 0; }
+.annotator_container > .file_container > .time_annotator_container { position:relative; display:block; background-color:white; margin:0; padding:1em 0; border:1px solid red;}
 
+#video_timeline { display:block; margin:0; padding:0; }
+#video_timeline_mark { display:block; margin:0; padding:0; }
 /*
 .segmenter_container { height:15em; flex:none; border:1px solid blue; }
 .annotator_container > .file { width:100%; height:100%; position:relative; }
