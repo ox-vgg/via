@@ -188,7 +188,7 @@ _via_data.prototype.fid2file = function(fid) {
 //
 // Metadata
 //
-_via_data.prototype.metadata_segment_del = function(fid, mid) {
+_via_data.prototype.metadata_del = function(fid, mid) {
   return new Promise( function(ok_callback, err_callback) {
     if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
       err_callback('undefined fid=' + fid);
@@ -210,34 +210,26 @@ _via_data.prototype.metadata_segment_del = function(fid, mid) {
   }.bind(this));
 }
 
-_via_data.prototype.metadata_segment_add = function(fid, t, what) {
+_via_data.prototype.metadata_add = function(fid, z, xy, metadata) {
   return new Promise( function(ok_callback, err_callback) {
     if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
       this.metadata_store[fid] = {};
     }
 
-    // sanity checks
-    if ( t.length < 2 ) {
-      err_callback({'fid':fid, 't':t});
-      return;
-    }
     if ( typeof(this.file_store[fid]) === 'undefined' ) {
       err_callback({'fid':fid, 't':t});
       return;
     }
 
     var mid = this._uuid();
-    var where = [ _VIA_WHERE_TARGET.SEGMENT,
-                  _VIA_WHERE_SHAPE.TIME
-                ].concat(t);
-    this.metadata_store[fid][mid] = new _via_metadata(mid, where, what);
+    this.metadata_store[fid][mid] = new _via_metadata(mid, z, xy, metadata);
 
     this.emit_event( 'metadata_add', { 'fid':fid, 'mid':mid } );
     ok_callback({'fid':fid, 'mid':mid});
   }.bind(this));
 }
 
-_via_data.prototype.metadata_segment_update = function(fid, mid, t, what) {
+_via_data.prototype.metadata_update = function(fid, mid, z, xy, metadata) {
   return new Promise( function(ok_callback, err_callback) {
     if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
       err_callback('undefined fid=' + fid);
@@ -252,15 +244,7 @@ _via_data.prototype.metadata_segment_update = function(fid, mid, t, what) {
       err_callback('for fid=' + fid + ', undefined mid=' + mid);
     }
 
-    if ( t.length < 2 ) {
-      err_callback('t must have the format [target_id, shape_id, t0, ...]');
-      return;
-    }
-
-    var where = [ _VIA_WHERE_TARGET.SEGMENT,
-                  _VIA_WHERE_SHAPE.TIME
-                ].concat(t);
-    this.metadata_store[fid][mid] = new _via_metadata(mid, where, what);
+    this.metadata_store[fid][mid] = new _via_metadata(mid, z, xy, metadata);
 
     this.emit_event( 'metadata_update', { 'fid':fid, 'mid':mid } );
     ok_callback({'fid':fid, 'mid':mid});

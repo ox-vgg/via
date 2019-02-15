@@ -5,32 +5,20 @@
  * @author Abhishek Dutta <adutta@robots.ox.ac.uk>
  * @date 31 Dec. 2018
  *
+ * @param {string} mid a unique metadata identifier
+ * @param {Array} z an array of temporal locations (e.g. time, frame index, etc.)
+ * @param {Array} xy an array consisting of type and extent of spatial region (e.g. [1, 10, 10, 50, 50] denotes a 50x50 rectangle at (10,10)
+ * @param {Object} metadata an associative array mapping attribute-id to its value
  */
 
 'use strict';
 
-const _VIA_WHERE_TARGET = { 'SEGMENT':1, 'FRAME':2, 'IMAGE':3 };
-const _VIA_WHERE_SHAPE  = { 'TIME':1, 'RECT':2, 'CIRCLE':3, 'ELLIPSE':4, 'POINT':5, 'POLYLINE':6, 'POLYGON':7 };
+const _VIA_SHAPE  = { 'RECT':1, 'CIRCLE':2, 'ELLIPSE':3, 'POINT':4, 'POLYLINE':5, 'POLYGON':6 };
 
-function _via_metadata(mid, where, what) {
-  this.mid = mid;      // unique metadata id
-  this.where = where;  // [target_id, shape_id, where_value0, ..., where_valuen]
-  this.what = what;    // {attribute_id, attribute_value}
-}
-
-_via_metadata.prototype.where_type_str = function() {
-  switch(this.where[0]) {
-    case 1:
-      return 'Video Segment';
-    default:
-      return 'Unknown';
-  }
-}
-
-_via_metadata.prototype.where_target = function() {
-  return this.where[0];
-}
-_via_metadata.prototype.where_shape = function() {
-  return this.where[1];
+function _via_metadata(mid, z, xy, metadata) {
+  this.mid = mid;           // unique metadata id
+  this.z = z;               // time or frame index
+  this.xy = xy;             // [shape_id, shape_coordinates, ...]
+  this.metadata = metadata; // {attribute_id, attribute_value}
 }
 

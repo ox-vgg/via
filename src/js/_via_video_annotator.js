@@ -4,6 +4,7 @@ var data = new _via_data();
 
 data.attribute_add('Keywords',
                 _VIA_ATTRIBUTE_TYPE.TEXT);
+/*
 data.attribute_add('Activity',
                    _VIA_ATTRIBUTE_TYPE.SELECT,
                    {
@@ -16,6 +17,7 @@ data.attribute_add('Activity',
                      'none':'None'
                    },
                    'none');
+*/
 
 //-- debug code start
 var remote_uri_list = [
@@ -48,9 +50,11 @@ for ( i = 0; i < local_uri_list.length; ++i ) {
 }
 /**/
 
-data.metadata_segment_add(fid, [0.0, 3.557], {'0':'segment label 1.', '1':'talk'});
+data.metadata_add(fid, [0.567, 3.557], [], {'0':'talk'});
+data.metadata_add(fid, [5.032, 13.557], [], {'0':'house'});
+data.metadata_add(fid, [15.532, 20], [], {'0':'fire'});
 //data.metadata_segment_add(fid, [2.534, 5.751], {'0':'Lorem ipsum dolor sit amet, consectetur adipiscing elit', '1':'talk'});
-data.metadata_segment_add(fid, [3.895, 5.391, 6.241, 8.105], {'0':'segment label 2', '1':'walk'});
+//data.metadata_segment_add(fid, [3.895, 5.391, 6.241, 8.105], {'0':'segment label 2', '1':'walk'});
 
 //-- debug code end
 

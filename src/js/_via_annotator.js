@@ -147,6 +147,10 @@ _via_annotator.prototype._preload_file_content = function(file) {
                                                                    this.d,
                                                                    this.preload[fid].region_annotator.media
                                                                   );
+
+        // capture all keypresses when the video panel is in focus
+        this.preload[fid].region_annotator.media.addEventListener('keydown',
+                                                                  this._on_event_keydown.bind(this));
       } catch(err) {
         console.log(err);
       }
@@ -440,23 +444,42 @@ _via_annotator.prototype._on_event_keydown = function(e) {
 
   // play/pause
   if ( e.key === ' ' ) {
+    e.preventDefault();
     if ( this.preload[fid].region_annotator.media.paused ) {
       this.preload[fid].region_annotator.media.play();
     } else {
       this.preload[fid].region_annotator.media.pause();
     }
-
+    return;
   }
 
   // jump 1,...,9 seconds forward or backward
   if ( ['1','2','3','4','5','6','7','8','9'].includes( e.key ) ) {
+    e.preventDefault();
     var t = this.preload[fid].region_annotator.media.currentTime;
     if ( e.ctrlKey ) {
       t += parseInt(e.key);
     } else {
       t -= parseInt(e.key);
     }
+    // clamp
+    t = Math.max(0, Math.min(t, this.preload[fid].region_annotator.media.duration));
     this.preload[fid].region_annotator.media.pause();
     this.preload[fid].region_annotator.media.currentTime = t;
+    return;
+  }
+
+  if ( e.key === 'Home' ) {
+    e.preventDefault();
+    this.preload[fid].region_annotator.media.pause();
+    this.preload[fid].region_annotator.media.currentTime = 0;
+    return;
+  }
+
+  if ( e.key === 'End' ) {
+    e.preventDefault();
+    this.preload[fid].region_annotator.media.pause();
+    this.preload[fid].region_annotator.media.currentTime = this.preload[fid].region_annotator.media.duration - 5;
+    return;
   }
 }
