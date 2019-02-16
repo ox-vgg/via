@@ -30,6 +30,7 @@ function _via_time_annotator(container, file, data, media_element) {
   // constants
   this.METADATA_COLOR_LIST = ["#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"];
   this.PLAYBACK_MODE = { NORMAL:'1', REVIEW:'2', ANNOTATION:'3' };
+  this.DEFAULT_TEMPORAL_SEG_LEN = 1.0; // in sec
 
   // state
   this.tseg_timeline_tstart = -1; // boundary of current timeline visible in temporal seg.
@@ -40,6 +41,7 @@ function _via_time_annotator(container, file, data, media_element) {
   this.tseg_metadata_sel_mindex = -1; // metadata index in this.tseg_metadata_mid_list
   this.tseg_metadata_sel_bindex = -1; // 0=>left boundary, 1=>right boundary
   this.tseg_is_metadata_resize_ongoing = false;
+  this.tseg_is_metadata_selected = false;
   this.tseg_is_metadata_selected = false;
 
   this.current_playback_mode = this.PLAYBACK_MODE.NORMAL;
@@ -121,6 +123,9 @@ _via_time_annotator.prototype._toolbar_init = function() {
 
 _via_time_annotator.prototype._toolbar_playback_mode_on_change = function(e) {
   this.current_playback_mode = e.target.value;
+  if ( this.current_playback_mode === this.PLAYBACK_MODE.NORMAL ) {
+    this._tseg_set_playback_rate(1);
+  }
 }
 
 //
@@ -171,6 +176,10 @@ _via_time_annotator.prototype._vtimeline_time2strms = function(t) {
   return hh + ':' + mm + ':' + ss + '.' + ms;
 }
 
+_via_time_annotator.prototype._vtimeline_playbackrate2str = function(t) {
+  return this.m.playbackRate + 'X';
+}
+
 //
 // Video Timeline
 //
@@ -201,8 +210,8 @@ _via_time_annotator.prototype._vtimeline_init = function() {
   ctx.fillRect(0, 0, this.vtimeline.width, this.vtimeline.height);
 
   // draw line
-  ctx.strokeStyle = '#707070';
-  ctx.fillStyle = '#707070';
+  ctx.strokeStyle = '#999999';
+  ctx.fillStyle = '#999999';
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(this.padx, 1);
@@ -257,9 +266,16 @@ _via_time_annotator.prototype._vtimeline_mark_draw = function() {
   this.vtimeline_mark_ctx.fill();
 
   // draw current time
-  this.vtimeline_mark_ctx.fillStyle = '#707070';
+  this.vtimeline_mark_ctx.fillStyle = '#666666';
+  var label =  + ' speed=' + this.m.playbackRate + 'X ]';
   this.vtimeline_mark_ctx.fillText(this._vtimeline_time2strms(time),
                                    cx + this.lineh, this.lineh2 - 2);
+
+  // show playback rate
+  var rate = this.m.playbackRate.toFixed(1) + 'X';
+  this.vtimeline_mark_ctx.fillText(rate,
+                                   this.timelinew - this.lineh4, this.lineh2 - 2);
+
 
   window.requestAnimationFrame(this._vtimeline_mark_draw.bind(this))
 }
@@ -352,23 +368,27 @@ _via_time_annotator.prototype._video_current_time_has_metadata = function() {
   return -1;
 }
 
+_via_time_annotator.prototype._tseg_set_playback_rate = function(rate) {
+  if ( this.m.playbackRate !== rate ) {
+    this.m.playbackRate = rate;
+  }
+}
+
 _via_time_annotator.prototype._tseg_update = function() {
   // speed up video when inside metadata
-  if ( this.current_playback_mode === this.PLAYBACK_MODE.NORMAL ) {
-    this.m.playbackRate = 1;
-  } else {
+  if ( this.current_playback_mode !== this.PLAYBACK_MODE.NORMAL ) {
     var mindex = this._video_current_time_has_metadata();
     if ( mindex !== -1 ) {
       if ( this.current_playback_mode === this.PLAYBACK_MODE.REVIEW ) {
-        this.m.playbackRate = 1;
+        this._tseg_set_playback_rate(1);
       } else {
-        this.m.playbackRate = 10;
+        this._tseg_set_playback_rate(10);
       }
     } else {
-      if ( this.current_playback_mode === this.PLAYBACK_MODE.REVIEW ) {
-        this.m.playbackRate = 10;
+      if ( this.current_playback_mode === this.PLAYBACK_MODE.ANNOTATION ) {
+        this._tseg_set_playback_rate(1);
       } else {
-        this.m.playbackRate = 1;
+        this._tseg_set_playback_rate(10);
       }
     }
   }
@@ -537,6 +557,9 @@ _via_time_annotator.prototype._tseg_metadata_draw_seg = function() {
   }
 }
 
+//
+// tseg input handlers
+//
 _via_time_annotator.prototype._tseg_timeline_canvas2time = function(x) {
   var T = this.tseg_timeline_tend - this.tseg_timeline_tstart;
   var dx = x - this.padx;
@@ -627,13 +650,16 @@ _via_time_annotator.prototype._tseg_on_mousedown = function(e) {
           if ( this.tseg_metadata_sel_mindex === mindex[0] ) {
             // remove selection
             this._tseg_metadata_unselect();
+            this._tseg_metadata_panel_hide();
           } else {
             // update selection
             this._tseg_metadata_select(mindex[0]);
+            this._tseg_metadata_panel_show();
           }
         } else {
           // select
           this._tseg_metadata_select(mindex[0]);
+          this._tseg_metadata_panel_show();
         }
       }
     } else {
@@ -662,23 +688,67 @@ _via_time_annotator.prototype._tseg_on_mouseup = function(e) {
 //
 // Metadata Panel
 //
+_via_time_annotator.prototype._tseg_metadata_add_at_current_time = function() {
+  var z = [ this.m.currentTime ];
+  z[1] = z[0] + this.DEFAULT_TEMPORAL_SEG_LEN;
+  var fid = this.file.fid;
+  var xy = [];
+  var metadata = {};
+  this.d.metadata_add(fid, z, xy, metadata).then( function(ok) {
+  }.bind(this), function(err) {
+    console.log(err);
+  }.bind(this));
+}
+
 _via_time_annotator.prototype._tseg_metadata_select = function(mindex) {
   this.tseg_is_metadata_selected = true;
   this.tseg_metadata_sel_mindex = mindex;
-
-  var mid = this.tseg_metadata_mid_list[ this.tseg_metadata_sel_mindex ];
-  var x = this._tseg_timeline_time2canvas( this.tseg_metadata_time_list[mindex][0] );
-  var y = this._tseg_timeline_time2canvas( this.tseg_metadata_time_list[mindex][1] );
-  this._tseg_metadata_panel_show(mid, x, y);
 }
 
-_via_time_annotator.prototype._tseg_metadata_unselect = function(mid) {
+_via_time_annotator.prototype._tseg_metadata_select_next = function(mindex) {
+  if ( this.tseg_is_metadata_selected ) {
+    var next = this.tseg_metadata_sel_mindex + 1;
+    if ( next >= this.tseg_metadata_mid_list.length ) {
+      next = 0;
+    }
+    this._tseg_metadata_select(next);
+    this._tseg_metadata_panel_show();
+  } else {
+    if ( this.tseg_metadata_mid_list.length ) {
+      this._tseg_metadata_select(0);
+      this._tseg_metadata_panel_show();
+    } else {
+      this._tseg_metadata_panel_hide();
+    }
+  }
+}
+
+_via_time_annotator.prototype._tseg_metadata_select_prev = function(mindex) {
+  if ( this.tseg_is_metadata_selected ) {
+    var next = this.tseg_metadata_sel_mindex - 1;
+    if ( next < 0 ) {
+      next = this.tseg_metadata_mid_list.length - 1;
+    }
+    this._tseg_metadata_select(next);
+    this._tseg_metadata_panel_show();
+  } else {
+    if ( this.tseg_metadata_mid_list.length ) {
+      this._tseg_metadata_select(0);
+      this._tseg_metadata_panel_show();
+    }
+  }
+}
+
+_via_time_annotator.prototype._tseg_metadata_unselect = function() {
   this.tseg_is_metadata_selected = false;
   this.tseg_metadata_sel_mindex = -1;
-  this._tseg_metadata_panel_hide();
 }
 
-_via_time_annotator.prototype._tseg_metadata_panel_show = function(mid, x, y) {
+_via_time_annotator.prototype._tseg_metadata_panel_show = function() {
+  var mid = this.tseg_metadata_mid_list[ this.tseg_metadata_sel_mindex ];
+  var x = this._tseg_timeline_time2canvas( this.tseg_metadata_time_list[this.tseg_metadata_sel_mindex][0] );
+  var y = this._tseg_timeline_time2canvas( this.tseg_metadata_time_list[this.tseg_metadata_sel_mindex][1] );
+
   this.tseg_metadata_panel.style.display = 'inline-block';
   this.tseg_metadata_panel.style.left = (x + 1) + 'px';
   this.tseg_metadata_panel.style.top = (this.lineh7 + 2) + 'px';
@@ -764,6 +834,15 @@ _via_time_annotator.prototype._tseg_metadata_html_element = function(fid, mid, a
   return el;
 }
 
+_via_time_annotator.prototype._tseg_metadata_del_selected = function() {
+  if ( this.tseg_is_metadata_selected ) {
+    var mid = this.tseg_metadata_mid_list[ this.tseg_metadata_sel_mindex ];
+    this._tseg_metadata_unselect();
+    this.d.metadata_del(this.file.fid, mid);
+    this._tseg_metadata_select_next();
+  }
+}
+
 _via_time_annotator.prototype._tseg_metadata_on_change = function(e) {
   var value = e.target.value;
   var fid = e.target.dataset.fid;
@@ -778,5 +857,25 @@ _via_time_annotator.prototype._tseg_metadata_update_time = function(mid, bindex,
 }
 
 _via_time_annotator.prototype._on_event_metadata_update = function(fid, mid) {
-  this._tseg_timeline_update_metadata();
+  if ( fid === this.file.fid ) {
+    this._tseg_timeline_update_metadata();
+  }
+}
+
+_via_time_annotator.prototype._on_event_metadata_add = function(fid, mid) {
+  if ( fid === this.file.fid ) {
+    this._tseg_timeline_update_metadata();
+    var mindex = this.tseg_metadata_mid_list.indexOf(mid);
+    if ( mindex !== -1 ) {
+      this._tseg_metadata_select(mindex);
+      this._tseg_metadata_panel_show();
+    }
+  }
+
+}
+
+_via_time_annotator.prototype._on_event_metadata_del = function(fid, mid) {
+  if ( fid === this.file.fid ) {
+    this._tseg_timeline_update_metadata();
+  }
 }

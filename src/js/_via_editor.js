@@ -174,7 +174,6 @@ _via_editor.prototype.metadata_get = function(fid, mid, metadata_index) {
   // third column: where (i.e. location of metadata)
   var location = document.createElement('td');
   var where_type = document.createElement('span');
-  where_type.innerHTML = this.d.metadata_store[fid][mid].where_type_str();
   location.appendChild(where_type);
   if ( this.d.metadata_store[fid][mid].where_target() === _VIA_WHERE_TARGET.SEGMENT &&
        this.d.metadata_store[fid][mid].where_target() === _VIA_WHERE_SHAPE.TIME

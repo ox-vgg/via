@@ -3,6 +3,9 @@ We welcome all forms of contributions (code update, documentation, etc) from use
 These contributions must adhere to the existing [license](LICENSE) of VIA project.
 Here is the list of current contributions to VIA project.
 
+* Friedrich Beckmann (@fredowski) in via-2.0.4 (https://gitlab.com/vgg/via/merge_requests/12, 08 Dec. 2018)
+  * fixed wrong region location for high zoom levels for large images (Closes: #166) 
+
 * Friedrich Beckmann (@fredowski) in via-2.0.4 (https://gitlab.com/vgg/via/merge_requests/11, 24 Nov. 2018)
   * fixed annotation download issue encountered in Safari browser (see https://gitlab.com/vgg/via/issues/162)
 

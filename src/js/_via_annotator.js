@@ -384,13 +384,21 @@ _via_annotator.prototype._on_event_attribute_add = function(data, event_payload)
 }
 
 _via_annotator.prototype._on_event_metadata_add = function(data, event_payload) {
-  this.preload[this.now.file.fid].media_annotator._on_event_metadata_add(event_payload.fid,
-                                                                         event_payload.mid);
+  this.preload[this.now.file.fid].region_annotator._on_event_metadata_add(event_payload.fid,
+                                                                          event_payload.mid);
+  if ( this.preload[this.now.file.fid].time_annotator ) {
+    this.preload[this.now.file.fid].time_annotator._on_event_metadata_add(event_payload.fid,
+                                                                          event_payload.mid);
+  }
 }
 
 _via_annotator.prototype._on_event_metadata_del = function(data, event_payload) {
-  this.preload[this.now.file.fid].media_annotator._on_event_metadata_del(event_payload.fid,
-                                                                         event_payload.mid);
+  this.preload[this.now.file.fid].region_annotator._on_event_metadata_del(event_payload.fid,
+                                                                          event_payload.mid);
+  if ( this.preload[this.now.file.fid].time_annotator ) {
+    this.preload[this.now.file.fid].time_annotator._on_event_metadata_del(event_payload.fid,
+                                                                          event_payload.mid);
+  }
 }
 
 _via_annotator.prototype._on_event_metadata_update = function(data, event_payload) {
@@ -446,6 +454,80 @@ _via_annotator.prototype._on_event_keydown = function(e) {
     e.preventDefault();
     this.preload[fid].region_annotator.media.pause();
     this.preload[fid].region_annotator.media.currentTime = this.preload[fid].region_annotator.media.duration - 5;
+    return;
+  }
+
+  // change playback rate
+  if ( e.key === '0' ) {
+    e.preventDefault();
+    this.preload[fid].region_annotator.media.playbackRate = 1;
+    return;
+  }
+  if ( e.key === '+' ) {
+    e.preventDefault();
+    this.preload[fid].region_annotator.media.playbackRate = this.preload[fid].region_annotator.media.playbackRate + 0.1;
+    return;
+  }
+  if ( e.key === '-' ) {
+    e.preventDefault();
+    if ( this.preload[fid].region_annotator.media.playbackRate > 0.1 ) {
+      this.preload[fid].region_annotator.media.playbackRate = this.preload[fid].region_annotator.media.playbackRate - 0.1;
+    }
+    return;
+  }
+
+  // add temporal segment at current timeline
+  if ( e.key === 'a' ) {
+    e.preventDefault();
+    this.preload[fid].time_annotator._tseg_metadata_add_at_current_time();
+    return;
+  }
+
+  if ( e.key === 'd' ) {
+    e.preventDefault();
+    this.preload[fid].time_annotator._tseg_metadata_del_selected();
+    // add temporal segment at current timeline
+    return;
+  }
+
+  if ( e.key === 'm' ) {
+    e.preventDefault();
+    if ( this.preload[fid].region_annotator.media.muted ) {
+      this.preload[fid].region_annotator.media.muted = false;
+    } else {
+      this.preload[fid].region_annotator.media.muted = true;
+    }
+    return;
+  }
+
+  // cancel ongoing action or event
+  if ( e.key === 'Escape' ) {
+    e.preventDefault();
+
+    // time annotator
+    this.preload[fid].time_annotator._tseg_metadata_unselect();
+    this.preload[fid].time_annotator._tseg_metadata_panel_hide();
+    return;
+  }
+
+  // select temporal segments
+  if ( e.key === 'Tab' ) {
+    e.preventDefault();
+
+    if ( e.shiftKey ) {
+      this.preload[fid].time_annotator._tseg_metadata_select_prev();
+    } else {
+      this.preload[fid].time_annotator._tseg_metadata_select_next();
+    }
+    return;
+  }
+
+  // select temporal segments
+  if ( e.key === 'Enter' ) {
+    e.preventDefault();
+
+    if ( this.preload[fid].time_annotator.tseg_is_metadata_selected ) {
+    }
     return;
   }
 }

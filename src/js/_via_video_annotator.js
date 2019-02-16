@@ -48,13 +48,13 @@ for ( i = 0; i < local_uri_list.length; ++i ) {
                       local_uri_list[i]
                      );
 }
-/**/
-
+/*
 data.metadata_add(fid, [0.567, 3.557], [], {'0':'talk'});
 data.metadata_add(fid, [5.032, 13.557], [], {'0':'house'});
 data.metadata_add(fid, [15.532, 20], [], {'0':'fire'});
 data.metadata_add(fid, [35.532, 40], [], {'0':'jump'});
 data.metadata_add(fid, [42.532, 50], [], {'0':'laugh'});
+*/
 //data.metadata_segment_add(fid, [2.534, 5.751], {'0':'Lorem ipsum dolor sit amet, consectetur adipiscing elit', '1':'talk'});
 //data.metadata_segment_add(fid, [3.895, 5.391, 6.241, 8.105], {'0':'segment label 2', '1':'walk'});
 
@@ -68,8 +68,8 @@ var annotator = new _via_annotator(annotator_container, data);
 //var project = new _via_project(project_container, data, annotator);
 
 
-var editor_container = document.getElementById('editor_container');
-var editor = new _via_editor(editor_container, data, annotator);
+//var editor_container = document.getElementById('editor_container');
+//var editor = new _via_editor(editor_container, data, annotator);
 
 var filelist_element = document.getElementById('file_manager_filelist');
 var file_manager = new _via_file_manager(filelist_element, data, annotator);

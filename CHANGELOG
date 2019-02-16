@@ -8,7 +8,7 @@
     - support a large number of people collaboratively annotating a large image and video dataset
     - support for different data sink (local fossil/gitlab repository, remote gitlab repository, etc.)
 
-## [2.0.6] - not released yet
+## [2.0.7] - not released yet
  * fast annotation mode @todo
     - keyboard input '123' denotes the following operation: select region 1, set 3 as the value of region attribute 2.
     - if there is a single region attribute, the '13' sets 3 as the value of region 1
@@ -16,7 +16,21 @@
     - '0' is reserved to set the file attribute
     - '023' assigns value 3 to the file attribute 2
     - provide visual cues to the user when doing these operations (update bottom status bar as keys are pressed)
-
+ * grid view should only consider files filtered using filename regex in sidebar
+ 
+## [2.0.6] - not released yet
+ * fixed wrong region location for high zoom levels for large images (Closes: #166, thank you @fredowski) 
+ * image grid view
+    - cancel ongoing image load process
+    - add a "UNASSIGNED" group to denote all the files that do not have a value for the group variable
+    - preload images in adjacent groups to speed up visualization
+    - label subgroup of images in a group based on a certain variable
+ * Update region colour based on value of a region attribute
+    - https://gitlab.com/vgg/via/issues/175
+ * Local file not resolved, see https://gitlab.com/vgg/via/issues/171
+ * Grid view filter show "only first,middle and last image" broken, see https://gitlab.com/vgg/via/issues/167
+ * Add constraints to shape attributes : 0 <= x <= {width,height} - 1, see https://gitlab.com/vgg/via/issues/173
+ 
 ## [2.0.5] - December 03, 2018
  * reverted back to a.dispatchEvent() from a.link() which does not work in Firefox 63
 
