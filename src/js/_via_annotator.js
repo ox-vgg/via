@@ -158,44 +158,6 @@ _via_annotator.prototype._preload_file_content = function(file) {
     }.bind(this), function(file_err) {
       err_callback(file_err);
     }.bind(this));
-
-    /*
-    this.preload[fid].time_annotator = new _via_time_annotator(this.preload[fid].time_annotator_container,
-                                                               this.preload[fid].file,
-                                                               this.d);
-
-    switch( this.preload[fid].file.type ) {
-    case _VIA_FILE_TYPE.IMAGE:
-      break;
-    case _VIA_FILE_TYPE.AUDIO:
-    case _VIA_FILE_TYPE.VIDEO:
-      break;
-    default:
-      console.log('_via_annotator._preload_file_content(): unknown file type=' +
-                  _via_util_file_type_to_str(this.preload[fid].file.type)
-                 );
-    }
-    //// initialize the media annotator
-    this.preload[fid].view = document.createElement('div');
-    this.preload[fid].view.setAttribute('data-fid', fid);
-    this.preload[fid].view.classList.add('hide_file'); // hidden by default
-    this.preload[fid].view.classList.add('file');
-    this.c.appendChild( this.preload[fid].view );
-    this.preload[fid].media_annotator = new _via_media_annotator(this.preload[fid].view,
-                                                                 this.segmenter_container,
-                                                                 this.preload[fid].file,
-                                                                 this.d
-                                                                );
-    this.init_media_annotator_event_listener(this.preload[fid].media_annotator);
-
-    this.preload[fid].media_annotator.load_media().then( function(media_ok) {
-      this.preload[fid].media_annotator.init_static_content();
-      ok_callback(file);
-    }.bind(this), function(media_err) {
-      console.log('load_media() failed');
-      err_callback(file);
-    }.bind(this));
-    */
   }.bind(this));
 }
 
@@ -432,8 +394,12 @@ _via_annotator.prototype._on_event_metadata_del = function(data, event_payload) 
 }
 
 _via_annotator.prototype._on_event_metadata_update = function(data, event_payload) {
-  this.preload[this.now.file.fid].media_annotator._on_event_metadata_update(event_payload.fid,
-                                                                            event_payload.mid);
+  this.preload[this.now.file.fid].region_annotator._on_event_metadata_update(event_payload.fid,
+                                                                             event_payload.mid);
+  if ( this.preload[this.now.file.fid].time_annotator ) {
+    this.preload[this.now.file.fid].time_annotator._on_event_metadata_update(event_payload.fid,
+                                                                             event_payload.mid);
+  }
 }
 
 //

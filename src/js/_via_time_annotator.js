@@ -27,6 +27,10 @@ function _via_time_annotator(container, file, data, media_element) {
     throw 'media element must be an instance of HTMLMediaElement!';
   }
 
+  // constants
+  this.METADATA_COLOR_LIST = ["#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"];
+  this.PLAYBACK_MODE = { NORMAL:'1', REVIEW:'2', ANNOTATION:'3' };
+
   // state
   this.tseg_timeline_tstart = -1; // boundary of current timeline visible in temporal seg.
   this.tseg_timeline_tend   = -1;
@@ -38,14 +42,13 @@ function _via_time_annotator(container, file, data, media_element) {
   this.tseg_is_metadata_resize_ongoing = false;
   this.tseg_is_metadata_selected = false;
 
-  // constants
-  this.METADATA_COLOR_LIST = ["#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"];
+  this.current_playback_mode = this.PLAYBACK_MODE.NORMAL;
 }
 
 _via_time_annotator.prototype._init = function() {
   try {
     this.thumbnail_container = document.createElement('div');
-    this.thumbnail_container.setAttribute('id', 'thumbnail_container');
+    this.thumbnail_container.setAttribute('class', 'thumbnail_container');
     this.thumbnail_container.setAttribute('style', 'display:none; position:absolute; top:0; left:0;');
     this.c.appendChild(this.thumbnail_container);
 
@@ -54,23 +57,70 @@ _via_time_annotator.prototype._init = function() {
       this.thumbnail.start();
       this._vtimeline_init();
       this._tseg_init();
+      this._toolbar_init();
     } catch(err) {
       console.log(err)
     }
   } catch(err) {
     console.log(err)
   }
-  /*
-  this.full_timeline = document.createElement('canvas');
-  this.preview_container.classList.add('preview_container');
+}
 
-  this.segmenter_container = document.createElement('div');
-  this.segmenter_container.classList.add('segmenter_container');
-  this._init_video_timeline(this.segmenter_container);
+//
+// toolbar
+//
+_via_time_annotator.prototype._toolbar_init = function() {
+  var toolbar_container = document.createElement('div');
+  toolbar_container.setAttribute('class', 'toolbar_container');
 
-  this.c.appendChild(this.preview_container);
-  this.c.appendChild(this.segmenter_container);
-*/
+  var pb_mode_container = document.createElement('div');
+  var pb_mode_label = document.createElement('span');
+  pb_mode_label.innerHTML = 'Playback Mode:';
+  pb_mode_container.appendChild(pb_mode_label);
+
+  var pb_normal = document.createElement('input');
+  pb_normal.setAttribute('type', 'radio');
+  pb_normal.setAttribute('id', 'playback_mode_normal');
+  pb_normal.setAttribute('name', 'via_time_annotator_playback_mode');
+  pb_normal.setAttribute('value', this.PLAYBACK_MODE.NORMAL);
+  pb_normal.setAttribute('checked', '');
+  pb_normal.addEventListener('change', this._toolbar_playback_mode_on_change.bind(this));
+  pb_mode_container.appendChild(pb_normal);
+  var pb_normal_label = document.createElement('label');
+  pb_normal_label.setAttribute('for', 'playback_mode_normal');
+  pb_normal_label.innerHTML = 'Normal';
+  pb_mode_container.appendChild(pb_normal_label);
+
+  var pb_review = document.createElement('input');
+  pb_review.setAttribute('type', 'radio');
+  pb_review.setAttribute('id', 'playback_mode_review');
+  pb_review.setAttribute('name', 'via_time_annotator_playback_mode');
+  pb_review.setAttribute('value', this.PLAYBACK_MODE.REVIEW);
+  pb_review.addEventListener('change', this._toolbar_playback_mode_on_change.bind(this));
+  pb_mode_container.appendChild(pb_review);
+  var pb_review_label = document.createElement('label');
+  pb_review_label.setAttribute('for', 'playback_mode_review');
+  pb_review_label.innerHTML = 'Review';
+  pb_mode_container.appendChild(pb_review_label);
+
+  var pb_annotation = document.createElement('input');
+  pb_annotation.setAttribute('type', 'radio');
+  pb_annotation.setAttribute('id', 'playback_mode_annotation');
+  pb_annotation.setAttribute('name', 'via_time_annotator_playback_mode');
+  pb_annotation.setAttribute('value', this.PLAYBACK_MODE.ANNOTATION);
+  pb_annotation.addEventListener('change', this._toolbar_playback_mode_on_change.bind(this));
+  pb_mode_container.appendChild(pb_annotation);
+  var pb_annotation_label = document.createElement('label');
+  pb_annotation_label.setAttribute('for', 'playback_mode_annotation');
+  pb_annotation_label.innerHTML = 'Annotation';
+  pb_mode_container.appendChild(pb_annotation_label);
+
+  toolbar_container.appendChild(pb_mode_container);
+  this.c.appendChild(toolbar_container);
+}
+
+_via_time_annotator.prototype._toolbar_playback_mode_on_change = function(e) {
+  this.current_playback_mode = e.target.value;
 }
 
 //
@@ -127,7 +177,7 @@ _via_time_annotator.prototype._vtimeline_time2strms = function(t) {
 _via_time_annotator.prototype._vtimeline_init = function() {
   //// video timeline
   this.vtimeline = document.createElement('canvas');
-  this.vtimeline.setAttribute('id', 'video_timeline');
+  this.vtimeline.setAttribute('class', 'video_timeline');
   this.vtimeline.style.cursor = 'pointer';
   this.vtimeline.addEventListener('mousedown', this._vtimeline_on_mousedown.bind(this));
   this.vtimeline.addEventListener('mousemove', this._vtimeline_on_mousemove.bind(this));
@@ -147,6 +197,7 @@ _via_time_annotator.prototype._vtimeline_init = function() {
 
   // clear
   ctx.fillStyle = '#ffffff';
+  ctx.clearRect(0, 0, this.vtimeline.width, this.vtimeline.height);
   ctx.fillRect(0, 0, this.vtimeline.width, this.vtimeline.height);
 
   // draw line
@@ -174,7 +225,7 @@ _via_time_annotator.prototype._vtimeline_init = function() {
 
   //// timeline mark showing the current video time
   this.vtimeline_mark = document.createElement('canvas');
-  this.vtimeline_mark.setAttribute('id', 'video_timeline_mark');
+  this.vtimeline_mark.setAttribute('class', 'video_timeline_mark');
   this.vtimeline_mark_ctx = this.vtimeline_mark.getContext('2d', {alpha:false});
   this.vtimeline_mark.width = this.vtimeline.width;
   this.vtimeline_mark.height = this.lineh2;
@@ -235,6 +286,7 @@ _via_time_annotator.prototype._thumbnail_show = function(time, x, y) {
   this.thumbnail_container.innerHTML = '';
   this.thumbnail_container.appendChild(this.thumbnail.get_thumbnail(time));
   this.thumbnail_container.style.display = 'inline-block';
+
   this.thumbnail_container.style.left = x + this.lineh2 + 'px';
   this.thumbnail_container.style.top  = y + this.lineh4 + 'px';
 }
@@ -249,57 +301,15 @@ _via_time_annotator.prototype._thumbnail_hide = function(t) {
 _via_time_annotator.prototype._tseg_init = function() {
   this.tseg_container = document.createElement('div');
   this.tseg_container.setAttribute('class', 'tseg_container');
+  this.c.appendChild(this.tseg_container);
 
-  this.tseg_container_width = this.c.clientWidth;
-  this.tseg_container_height = Math.floor(this.char_width * 9);
-  var seglist_width = Math.floor(this.tseg_container_width / 6);
-  var tseg_width = this.tseg_container_width - seglist_width - 50;
-
-  var seglist_container = document.createElement('div');
-  seglist_container.setAttribute('class', 'seglist_container');
-  seglist_container.style.width = seglist_width + 'px';
-  seglist_container.style.height = this.tseg_container_height + 'px';
-
-  this.seglist_filter_input = document.createElement('input');
-  this.seglist_filter_input.setAttribute('type', 'text');
-  this.seglist_filter_input.setAttribute('placeholder', 'metadata filter');
-
-  this.seglist = document.createElement('ul');
-  var fid = this.file.fid;
-  var mid, tn, t0, t1;
-  for ( mid in this.d.metadata_store[fid] ) {
-    tn = this.d.metadata_store[fid][mid].z.length;
-    if ( tn ) {
-      var i;
-      for ( i = 0; i < tn; i = i + 2 ) {
-        t0 = this.d.metadata_store[fid][mid].z[i];
-        t1 = this.d.metadata_store[fid][mid].z[i+1];
-        var li = document.createElement('li');
-        li.innerHTML = t0 + ' to ' + t1 + ':' + this.d.metadata_store[fid][mid].metadata[0];
-        this.seglist.appendChild(li);
-      }
-    }
-  }
-
-  seglist_container.appendChild(this.seglist_filter_input);
-  seglist_container.appendChild(this.seglist);
-  this.tseg_container.appendChild(seglist_container);
-
-  var segtools_container = document.createElement('div');
-  segtools_container.setAttribute('class', 'segtools_container');
-  var add = _via_util_get_svg_button('micon_add', 'Add Temporal Segment');
-  segtools_container.appendChild(add);
-  var del = _via_util_get_svg_button('micon_delete', 'Delete Temporal Segment');
-  segtools_container.appendChild(del);
-  this.tseg_container.appendChild(segtools_container);
-
-  this.seg_container = document.createElement('div');
-  this.seg_container.setAttribute('class', 'seg_container');
+  this.tseg_container_width = this.tseg_container.clientWidth;
+  this.tseg_container_height = Math.floor(this.char_width * 10);
 
   this.tseg_metadata_panel = document.createElement('div');
   this.tseg_metadata_panel.setAttribute('class', 'metadata_panel');
   this.tseg_metadata_panel.style.display = 'none';
-  this.seg_container.appendChild(this.tseg_metadata_panel);
+  this.tseg_container.appendChild(this.tseg_metadata_panel);
 
   this.tseg = document.createElement('canvas');
   this.tseg.addEventListener('mousemove', this._tseg_on_mousemove.bind(this));
@@ -308,7 +318,7 @@ _via_time_annotator.prototype._tseg_init = function() {
 
   var duration = this.m.duration;
   var width_per_sec = this.linehb2;
-  this.tseg.width = tseg_width;
+  this.tseg.width = this.tseg_container_width;
   this.tseg.height = this.tseg_container_height;
   this.tseg_timelinew = Math.floor(this.tseg.width - 2*this.padx);
   this.tseg_timelinewb2 = Math.floor(this.tseg_timelinew/2);
@@ -322,16 +332,47 @@ _via_time_annotator.prototype._tseg_init = function() {
   this.lineh7 = Math.floor(this.char_width * 7);
   this.lineh8 = Math.floor(this.char_width * 8);
   this.lineh9 = Math.floor(this.char_width * 9);
-
-  this.seg_container.appendChild(this.tseg);
-  this.tseg_container.appendChild(this.seg_container);
-  this.c.appendChild(this.tseg_container);
+  this.lineh10 = Math.floor(this.char_width * 10);
+  this.tseg_container.appendChild(this.tseg);
 
   this._tseg_timeline_update_boundary();
   this._tseg_update();
 }
 
+_via_time_annotator.prototype._video_current_time_has_metadata = function() {
+  var t = this.m.currentTime;
+  var n = this.tseg_metadata_time_list.length;
+  var i;
+  for ( i = 0; i < n; ++i ) {
+    if ( t >= this.tseg_metadata_time_list[i][0] &&
+         t <= this.tseg_metadata_time_list[i][1] ) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 _via_time_annotator.prototype._tseg_update = function() {
+  // speed up video when inside metadata
+  if ( this.current_playback_mode === this.PLAYBACK_MODE.NORMAL ) {
+    this.m.playbackRate = 1;
+  } else {
+    var mindex = this._video_current_time_has_metadata();
+    if ( mindex !== -1 ) {
+      if ( this.current_playback_mode === this.PLAYBACK_MODE.REVIEW ) {
+        this.m.playbackRate = 1;
+      } else {
+        this.m.playbackRate = 10;
+      }
+    } else {
+      if ( this.current_playback_mode === this.PLAYBACK_MODE.REVIEW ) {
+        this.m.playbackRate = 10;
+      } else {
+        this.m.playbackRate = 1;
+      }
+    }
+  }
+
   this._tseg_clear();
 
   if ( this.m.currentTime < this.tseg_timeline_tstart ||
@@ -383,8 +424,9 @@ _via_time_annotator.prototype._tseg_timeline_update_metadata = function() {
 }
 
 _via_time_annotator.prototype._tseg_clear = function() {
-  this.tsegctx.fillStyle = '#ffffff';
-  this.tsegctx.fillRect(0, 0, this.tseg.width - 1, this.tseg.height);
+  this.tsegctx.fillStyle = '#f2f2f2';
+  this.tsegctx.clearRect(0, 0, this.tseg.width, this.tseg.height);
+  this.tsegctx.fillRect(0, 0, this.tseg.width, this.tseg.height);
 }
 
 _via_time_annotator.prototype._tseg_marknow_draw = function() {
@@ -463,31 +505,11 @@ _via_time_annotator.prototype._tseg_metadata_draw_container = function() {
 
 _via_time_annotator.prototype._tseg_metadata_draw_seg = function() {
   this.tsegctx.strokeStyle = '#707070';
+  this.tsegctx.font = '12px Sans';
   this.tsegctx.lineWidth = 1;
   var n = this.tseg_metadata_time_list.length;
   var i;
   var color, left, right, label, mid;
-/*
-  this.tsegctx.beginPath();
-  for ( i = 0; i < n; ++i ) {
-    color = this.METADATA_COLOR_LIST[ i % this.METADATA_COLOR_LIST.length ];
-    left  = this._tseg_timeline_time2canvas(this.tseg_metadata_time_list[i][0]);
-    right = this._tseg_timeline_time2canvas(this.tseg_metadata_time_list[i][1]);
-    //console.log(left + ':' + right)
-
-    // draw left boundary
-    this.tsegctx.moveTo(left + this.linehb2, this.lineh5 - this.linehb2);
-    this.tsegctx.lineTo(left, this.lineh5 - this.linehb2);
-    this.tsegctx.lineTo(left, this.lineh7 + this.linehb2);
-    this.tsegctx.lineTo(left + this.linehb2, this.lineh7 + this.linehb2);
-    // draw right boundary
-    this.tsegctx.moveTo(right - this.linehb2, this.lineh5 - this.linehb2);
-    this.tsegctx.lineTo(right, this.lineh5 - this.linehb2);
-    this.tsegctx.lineTo(right, this.lineh7 + this.linehb2);
-    this.tsegctx.lineTo(right - this.linehb2, this.lineh7 + this.linehb2);
-  }
-  this.tsegctx.stroke();
-*/
   for ( i = 0; i < n; ++i ) {
     color = this.METADATA_COLOR_LIST[ i % this.METADATA_COLOR_LIST.length ];
     left  = this._tseg_timeline_time2canvas(this.tseg_metadata_time_list[i][0]);
@@ -504,13 +526,13 @@ _via_time_annotator.prototype._tseg_metadata_draw_seg = function() {
     if ( this.tseg_is_metadata_selected &&
          this.tseg_metadata_sel_mindex === i
        ) {
-      this.tsegctx.fillStyle = '#000000';
       this.tsegctx.strokeStyle = '#000000';
       this.tsegctx.stroke();
     } else {
       this.tsegctx.fillStyle = color;
       this.tsegctx.fill();
     }
+    this.tsegctx.fillStyle = '#000000';
     this.tsegctx.fillText(this.tseg_metadata_label_list[i], left + 1, this.lineh5 - 2);
   }
 }
@@ -621,9 +643,8 @@ _via_time_annotator.prototype._tseg_on_mousedown = function(e) {
   }
 
   // clear state if clicked anywhere else
-  this.tseg_is_metadata_selected = false;
+  this._tseg_metadata_unselect();
   this.tseg_is_metadata_resize_ongoing = false;
-  this.tseg_metadata_sel_mindex = -1;
   this.tseg_metadata_sel_bindex = -1;
 }
 
@@ -686,7 +707,9 @@ _via_time_annotator.prototype._tseg_metadata_panel_init = function(mid) {
     thead_tr.appendChild(head_td);
 
     var body_td = document.createElement('td');
-    body_td.appendChild( this._tseg_metadata_html_element(fid, mid, aid) );
+    var el = this._tseg_metadata_html_element(fid, mid, aid);
+    el.addEventListener('change', this._tseg_metadata_on_change.bind(this));
+    body_td.appendChild(el);
     tbody_tr.appendChild(body_td);
   }
 
@@ -741,6 +764,19 @@ _via_time_annotator.prototype._tseg_metadata_html_element = function(fid, mid, a
   return el;
 }
 
+_via_time_annotator.prototype._tseg_metadata_on_change = function(e) {
+  var value = e.target.value;
+  var fid = e.target.dataset.fid;
+  var mid = e.target.dataset.mid;
+  var aid = e.target.dataset.aid;
+
+  this.d.metadata_update_attribute_value(fid, mid, aid, value);
+}
+
 _via_time_annotator.prototype._tseg_metadata_update_time = function(mid, bindex, t) {
   this.d.metadata_store[this.file.fid][mid].z[bindex] = t;
+}
+
+_via_time_annotator.prototype._on_event_metadata_update = function(fid, mid) {
+  this._tseg_timeline_update_metadata();
 }

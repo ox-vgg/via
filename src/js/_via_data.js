@@ -251,6 +251,12 @@ _via_data.prototype.metadata_update = function(fid, mid, z, xy, metadata) {
   }.bind(this));
 }
 
+_via_data.prototype.metadata_update_attribute_value = function(fid, mid, aid, value) {
+  // @todo: add checks
+  this.metadata_store[fid][mid].metadata[aid] = value;
+  this.emit_event( 'metadata_update', { 'fid':fid, 'mid':mid } );
+}
+
 _via_data.prototype.metadata_del = function(fid, mid) {
   return new Promise( function(ok_callback, err_callback) {
     if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
