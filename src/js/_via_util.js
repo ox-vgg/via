@@ -259,3 +259,28 @@ function _via_util_file_select_local(type, handler, multiple) {
 function _via_util_rand_int(min_inclusive, max_exclusive) {
   return Math.floor(Math.random() * (max_exclusive - min_inclusive)) + min_inclusive;
 }
+
+function _via_util_show_info_page(page_id) {
+  var el = document.getElementById('_via_info_page_container');
+
+  var pages = el.getElementsByClassName('info_page');
+  var n = pages.length;
+  var i;
+  for ( i = 0; i < n; ++i ) {
+    if ( pages[i].dataset.pageid === page_id ) {
+      pages[i].style.display = 'inline-block';
+      el.style.display = 'block';
+      el.addEventListener('mousedown', _via_util_hide_info_page);
+    } else {
+      pages[i].style.display = 'none';
+    }
+  }
+}
+
+function _via_util_hide_info_page() {
+  var el = document.getElementById('_via_info_page_container');
+  if ( el.style.display === 'block' ) {
+    el.removeEventListener('mousedown', _via_util_hide_info_page);
+    el.style.display = 'none';
+  }
+}

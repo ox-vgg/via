@@ -121,7 +121,7 @@ _via_region_annotator.prototype._init_media_html = function(src) {
       // @todo : add subtitle track for video
       //this.media.setAttribute('autoplay', false);
       //this.media.setAttribute('loop', false);
-      this.media.setAttribute('controls', '');
+      //this.media.setAttribute('controls', '');
       this.media.setAttribute('preload', 'auto');
       this.media.addEventListener('loadeddata', function() {
         this.media.pause();

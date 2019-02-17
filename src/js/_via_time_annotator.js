@@ -30,7 +30,10 @@ function _via_time_annotator(container, file, data, media_element) {
   // constants
   this.METADATA_COLOR_LIST = ["#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"];
   this.PLAYBACK_MODE = { NORMAL:'1', REVIEW:'2', ANNOTATION:'3' };
+  this.MODE = { TEMPORAL_SEGMENTATION:'1', METADATA_EDIT:'2' };
+
   this.DEFAULT_TEMPORAL_SEG_LEN = 1.0; // in sec
+  this.EDGE_UPDATE_TIME_DELTA = 1/50;  // in sec
 
   // state
   this.tseg_timeline_tstart = -1; // boundary of current timeline visible in temporal seg.
@@ -42,9 +45,9 @@ function _via_time_annotator(container, file, data, media_element) {
   this.tseg_metadata_sel_bindex = -1; // 0=>left boundary, 1=>right boundary
   this.tseg_is_metadata_resize_ongoing = false;
   this.tseg_is_metadata_selected = false;
-  this.tseg_is_metadata_selected = false;
 
   this.current_playback_mode = this.PLAYBACK_MODE.NORMAL;
+  this.tseg_current_mode = this.MODE.TEMPORAL_SEGMENTATION;
 }
 
 _via_time_annotator.prototype._init = function() {
@@ -74,6 +77,9 @@ _via_time_annotator.prototype._init = function() {
 _via_time_annotator.prototype._toolbar_init = function() {
   var toolbar_container = document.createElement('div');
   toolbar_container.setAttribute('class', 'toolbar_container');
+  toolbar_container.addEventListener('focus', function(e) {
+    this.blur();
+  });
 
   var pb_mode_container = document.createElement('div');
   var pb_mode_label = document.createElement('span');
@@ -174,6 +180,14 @@ _via_time_annotator.prototype._vtimeline_time2strms = function(t) {
     ms = '0' + ms;
   }
   return hh + ':' + mm + ':' + ss + '.' + ms;
+}
+
+_via_time_annotator.prototype._vtimeline_time2ssms = function(t) {
+  var hh = Math.floor(t / 3600);
+  var mm = Math.floor( (t - hh * 3600) / 60 );
+  var ss = Math.floor( t - hh*3600 - mm*60 );
+  var ms = Math.floor( (t - Math.floor(t) ) * 1000 );
+  return ss + '.' + ms;
 }
 
 _via_time_annotator.prototype._vtimeline_playbackrate2str = function(t) {
@@ -283,6 +297,7 @@ _via_time_annotator.prototype._vtimeline_mark_draw = function() {
 _via_time_annotator.prototype._vtimeline_on_mousedown = function(e) {
   var canvas_x = e.offsetX;
   var time = this._vtimeline_canvas2time(canvas_x);
+  console.log(canvas_x + ':' + time)
   this.m.currentTime = time;
 }
 
@@ -399,6 +414,18 @@ _via_time_annotator.prototype._tseg_update = function() {
        this.m.currentTime > this.tseg_timeline_tend
      ) {
     this._tseg_timeline_update_boundary();
+    this._tseg_metadata_unselect();
+    this._tseg_metadata_panel_hide();
+    this._tseg_mode_switch(this.MODE.TEMPORAL_SEGMENTATION);
+  }
+
+  if ( this.tseg_is_metadata_selected ) {
+    if ( this.m.currentTime > this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][1] ) {
+      this.m.currentTime = this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][0];
+    }
+    if ( this.m.currentTime < this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][0] ) {
+      this.m.currentTime = this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][0];
+    }
   }
 
   this._tseg_timeline_drawtick();
@@ -406,6 +433,7 @@ _via_time_annotator.prototype._tseg_update = function() {
   this._tseg_metadata_draw_container();
   this._tseg_metadata_draw_seg();
   this._tseg_marknow_draw();
+
   window.requestAnimationFrame(this._tseg_update.bind(this));
 }
 
@@ -444,7 +472,7 @@ _via_time_annotator.prototype._tseg_timeline_update_metadata = function() {
 }
 
 _via_time_annotator.prototype._tseg_clear = function() {
-  this.tsegctx.fillStyle = '#f2f2f2';
+  this.tsegctx.fillStyle = '#f6f6f6';
   this.tsegctx.clearRect(0, 0, this.tseg.width, this.tseg.height);
   this.tsegctx.fillRect(0, 0, this.tseg.width, this.tseg.height);
 }
@@ -523,37 +551,70 @@ _via_time_annotator.prototype._tseg_metadata_draw_container = function() {
   this.tsegctx.stroke();
 }
 
+_via_time_annotator.prototype._tseg_metadata_draw_seg_i = function(i) {
+  var color = this.METADATA_COLOR_LIST[ i % this.METADATA_COLOR_LIST.length ];
+  var left  = this._tseg_timeline_time2canvas(this.tseg_metadata_time_list[i][0]);
+  var right = this._tseg_timeline_time2canvas(this.tseg_metadata_time_list[i][1]);
+  var label = this.tseg_metadata_mid_list[i]
+
+  // fill metadata boundary
+  this.tsegctx.beginPath();
+  this.tsegctx.moveTo(left, this.lineh5 + 1);
+  this.tsegctx.lineTo(right, this.lineh5 + 1);
+  this.tsegctx.lineTo(right, this.lineh7 - 1);
+  this.tsegctx.lineTo(left, this.lineh7 - 1);
+  this.tsegctx.lineTo(left, this.lineh5 + 1);
+  this.tsegctx.fillStyle = color;
+  this.tsegctx.fill();
+
+  if ( this.tseg_is_metadata_selected &&
+       this.tseg_metadata_sel_mindex === i
+     ) {
+    this.tsegctx.fillStyle = '#000000';
+    this.tsegctx.strokeStyle = '#000000';
+    this.tsegctx.lineWidth = 1;
+    this.tsegctx.beginPath();
+    this.tsegctx.moveTo(left, this.lineh6);
+    this.tsegctx.lineTo(left + this.linehb2, this.lineh6 - this.linehb2);
+    this.tsegctx.lineTo(left + this.linehb2, this.lineh6 + this.linehb2);
+    this.tsegctx.lineTo(left, this.lineh6);
+    this.tsegctx.lineTo(right, this.lineh6);
+    this.tsegctx.lineTo(right - this.linehb2, this.lineh6 - this.linehb2);
+    this.tsegctx.lineTo(right - this.linehb2, this.lineh6 + this.linehb2);
+    this.tsegctx.lineTo(right, this.lineh6);
+    this.tsegctx.stroke();
+    this.tsegctx.fill();
+  }
+  this.tsegctx.fillStyle = '#000000';
+  this.tsegctx.fillText(this.tseg_metadata_label_list[i], left + 1, this.lineh8 + 3);
+
+  this.tsegctx.font = '10px Sans';
+  this.tsegctx.fillStyle = '#707070';
+  var start_time_str = this._vtimeline_time2ssms(this.tseg_metadata_time_list[i][0]);
+  this.tsegctx.fillText(start_time_str, left + 1, this.lineh5 - 2);
+
+  var end_time_str = this._vtimeline_time2ssms(this.tseg_metadata_time_list[i][1]);
+  var endtwidth = this.tsegctx.measureText(end_time_str).width
+  this.tsegctx.fillText(end_time_str, right - endtwidth, this.lineh5 - 2);
+}
+
 _via_time_annotator.prototype._tseg_metadata_draw_seg = function() {
   this.tsegctx.strokeStyle = '#707070';
   this.tsegctx.font = '12px Sans';
   this.tsegctx.lineWidth = 1;
+
+  // first draw all the non-selected temporal segments
   var n = this.tseg_metadata_time_list.length;
   var i;
-  var color, left, right, label, mid;
   for ( i = 0; i < n; ++i ) {
-    color = this.METADATA_COLOR_LIST[ i % this.METADATA_COLOR_LIST.length ];
-    left  = this._tseg_timeline_time2canvas(this.tseg_metadata_time_list[i][0]);
-    right = this._tseg_timeline_time2canvas(this.tseg_metadata_time_list[i][1]);
-    label = this.tseg_metadata_mid_list[i]
-    // fill metadata boundary
-    this.tsegctx.beginPath();
-    this.tsegctx.moveTo(left + 1, this.lineh5 + 1);
-    this.tsegctx.lineTo(right - 1, this.lineh5 + 1);
-    this.tsegctx.lineTo(right - 1, this.lineh7 - 1);
-    this.tsegctx.lineTo(left + 1, this.lineh7 - 1);
-    this.tsegctx.lineTo(left + 1, this.lineh5 + 1);
-
-    if ( this.tseg_is_metadata_selected &&
-         this.tseg_metadata_sel_mindex === i
-       ) {
-      this.tsegctx.strokeStyle = '#000000';
-      this.tsegctx.stroke();
-    } else {
-      this.tsegctx.fillStyle = color;
-      this.tsegctx.fill();
+    if ( i !== this.tseg_metadata_sel_mindex ) {
+      this._tseg_metadata_draw_seg_i(i);
     }
-    this.tsegctx.fillStyle = '#000000';
-    this.tsegctx.fillText(this.tseg_metadata_label_list[i], left + 1, this.lineh5 - 2);
+  }
+
+  // now draw the selected segment (if any)
+  if ( this.tseg_is_metadata_selected ) {
+    this._tseg_metadata_draw_seg_i( this.tseg_metadata_sel_mindex );
   }
 }
 
@@ -663,13 +724,14 @@ _via_time_annotator.prototype._tseg_on_mousedown = function(e) {
         }
       }
     } else {
-      // @todo add new segment
+      this._tseg_metadata_add_at_time(t);
     }
     return;
   }
 
   // clear state if clicked anywhere else
   this._tseg_metadata_unselect();
+  this._tseg_metadata_panel_hide();
   this.tseg_is_metadata_resize_ongoing = false;
   this.tseg_metadata_sel_bindex = -1;
 }
@@ -688,8 +750,17 @@ _via_time_annotator.prototype._tseg_on_mouseup = function(e) {
 //
 // Metadata Panel
 //
-_via_time_annotator.prototype._tseg_metadata_add_at_current_time = function() {
-  var z = [ this.m.currentTime ];
+_via_time_annotator.prototype._tseg_metadata_update_edge = function(bindex, dt) {
+  var mid = this.tseg_metadata_mid_list[ this.tseg_metadata_sel_mindex ];
+  var t = this.d.metadata_store[this.file.fid][mid].z[bindex] + dt;
+  this.m.currentTime = t;
+  this._tseg_metadata_update_time(mid, bindex, t);
+  this._tseg_timeline_update_metadata();
+  this._tseg_metadata_panel_show();
+}
+
+_via_time_annotator.prototype._tseg_metadata_add_at_time = function(t) {
+  var z = [ t ];
   z[1] = z[0] + this.DEFAULT_TEMPORAL_SEG_LEN;
   var fid = this.file.fid;
   var xy = [];
@@ -703,6 +774,15 @@ _via_time_annotator.prototype._tseg_metadata_add_at_current_time = function() {
 _via_time_annotator.prototype._tseg_metadata_select = function(mindex) {
   this.tseg_is_metadata_selected = true;
   this.tseg_metadata_sel_mindex = mindex;
+  this.m.currentTime = this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][0];
+}
+
+_via_time_annotator.prototype._tseg_metadata_select_at_current_time = function(mindex) {
+  var mindex = this._video_current_time_has_metadata();
+  if ( mindex !== -1 ) {
+    this._tseg_metadata_select(mindex);
+    this._tseg_metadata_panel_show();
+  }
 }
 
 _via_time_annotator.prototype._tseg_metadata_select_next = function(mindex) {
@@ -733,7 +813,7 @@ _via_time_annotator.prototype._tseg_metadata_select_prev = function(mindex) {
     this._tseg_metadata_panel_show();
   } else {
     if ( this.tseg_metadata_mid_list.length ) {
-      this._tseg_metadata_select(0);
+      this._tseg_metadata_select( this.tseg_metadata_mid_list.length - 1);
       this._tseg_metadata_panel_show();
     }
   }
@@ -751,7 +831,7 @@ _via_time_annotator.prototype._tseg_metadata_panel_show = function() {
 
   this.tseg_metadata_panel.style.display = 'inline-block';
   this.tseg_metadata_panel.style.left = (x + 1) + 'px';
-  this.tseg_metadata_panel.style.top = (this.lineh7 + 2) + 'px';
+  this.tseg_metadata_panel.style.top = (this.lineh7 + 1) + 'px';
 
   this.tseg_metadata_panel.innerHTML = '';
   this.tseg_metadata_panel.appendChild( this._tseg_metadata_panel_init(mid) );
@@ -849,6 +929,7 @@ _via_time_annotator.prototype._tseg_metadata_on_change = function(e) {
   var mid = e.target.dataset.mid;
   var aid = e.target.dataset.aid;
 
+  //console.log('Updating: fid='+fid+',mid='+mid+',aid='+aid+': value='+value);
   this.d.metadata_update_attribute_value(fid, mid, aid, value);
 }
 
@@ -877,5 +958,223 @@ _via_time_annotator.prototype._on_event_metadata_add = function(fid, mid) {
 _via_time_annotator.prototype._on_event_metadata_del = function(fid, mid) {
   if ( fid === this.file.fid ) {
     this._tseg_timeline_update_metadata();
+  }
+}
+
+//
+// Mode of temporal segmenter
+//
+_via_time_annotator.prototype._tseg_mode_switch = function(mode) {
+  switch(mode) {
+  case this.MODE.TEMPORAL_SEGMENTATION:
+    this.tseg_current_mode = this.MODE.TEMPORAL_SEGMENTATION;
+    this.tseg_metadata_panel.classList.remove('edit_mode');
+    break;
+  case this.MODE.METADATA_EDIT:
+    this.tseg_current_mode = this.MODE.METADATA_EDIT;
+    this.tseg_metadata_panel.classList.add('edit_mode');
+    this._tseg_metadata_edit_focus_first_attr();
+    break;
+  }
+}
+
+_via_time_annotator.prototype._tseg_metadata_edit_focus_first_attr = function() {
+  var table = this.tseg_metadata_panel.firstChild;
+  var attribute_input_list = table.childNodes[1].getElementsByTagName('td');
+  var n = attribute_input_list.length;
+  if ( n > 0 ) {
+    attribute_input_list[0].firstChild.focus();
+  }
+}
+
+_via_time_annotator.prototype._tseg_metadata_edit_keydown_handler = function(e) {
+  // cancel ongoing action or event
+  if ( e.key === 'Escape' ) {
+    e.preventDefault();
+    e.stopPropagation();
+    this._tseg_mode_switch(this.MODE.TEMPORAL_SEGMENTATION);
+    return;
+  }
+}
+
+_via_time_annotator.prototype._tseg_keydown_handler = function(e) {
+  var fid = this.file.fid;
+
+  // play/pause
+  if ( e.key === ' ' ) {
+    e.preventDefault();
+    if ( this.m.paused ) {
+      this.m.play();
+    } else {
+      this.m.pause();
+    }
+    return;
+  }
+
+  // jump 1,...,9 seconds forward or backward
+  if ( ['1','2','3','4','5','6','7','8','9'].includes( e.key ) ) {
+    e.preventDefault();
+    var t = this.m.currentTime;
+    if ( e.ctrlKey ) {
+      t += parseInt(e.key);
+    } else {
+      t -= parseInt(e.key);
+    }
+    // clamp
+    t = Math.max(0, Math.min(t, this.m.duration));
+    this.m.pause();
+    this.m.currentTime = t;
+    return;
+  }
+
+  if ( e.key === 'Home' ) {
+    e.preventDefault();
+    this.m.pause();
+    if ( this.tseg_is_metadata_selected ) {
+      this.m.currentTime = this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][0];
+    } else {
+      this.m.currentTime = 0;
+    }
+    return;
+  }
+
+  if ( e.key === 'End' ) {
+    e.preventDefault();
+    this.m.pause();
+    if ( this.tseg_is_metadata_selected ) {
+      this.m.currentTime = this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][1];
+    } else {
+      this.m.currentTime = this.m.duration - 5;
+    }
+    return;
+  }
+
+  // change playback rate
+  if ( e.key === '0' ) {
+    e.preventDefault();
+    this.m.playbackRate = 1;
+    return;
+  }
+  if ( e.key === '+' ) {
+    e.preventDefault();
+    this.m.playbackRate = this.m.playbackRate + 0.1;
+    return;
+  }
+  if ( e.key === '-' ) {
+    e.preventDefault();
+    if ( this.m.playbackRate > 0.1 ) {
+      this.m.playbackRate = this.m.playbackRate - 0.1;
+    }
+    return;
+  }
+
+  // add temporal segment at current timeline
+  if ( e.key === 'a' ) {
+    e.preventDefault();
+    var t = this.m.currentTime;
+    this._tseg_metadata_add_at_time(t);
+    return;
+  }
+
+  if ( e.key === 'd' ) {
+    e.preventDefault();
+    this._tseg_metadata_del_selected();
+    // add temporal sdegment at current timeline
+    return;
+  }
+
+  if ( e.key === 'm' ) {
+    e.preventDefault();
+    if ( this.m.muted ) {
+      this.m.muted = false;
+    } else {
+      this.m.muted = true;
+    }
+    return;
+  }
+
+  if ( e.key === 'l' || e.key === 'L') {
+    if ( this.tseg_is_metadata_selected ) {
+      // resize left edge of selected temporal segment
+      e.preventDefault();
+      if ( e.key === 'l' ) {
+        this._tseg_metadata_update_edge(0, -this.EDGE_UPDATE_TIME_DELTA);
+      } else {
+        this._tseg_metadata_update_edge(0, this.EDGE_UPDATE_TIME_DELTA);
+      }
+      return;
+    }
+  }
+
+  if ( e.key === 'r' || e.key === 'R') {
+    if ( this.tseg_is_metadata_selected ) {
+      // resize left edge of selected temporal segment
+      e.preventDefault();
+      if ( e.key === 'r' ) {
+        this._tseg_metadata_update_edge(1, this.EDGE_UPDATE_TIME_DELTA);
+      } else {
+        this._tseg_metadata_update_edge(1, -this.EDGE_UPDATE_TIME_DELTA);
+      }
+      return;
+    }
+  }
+
+  // cancel ongoing action or event
+  if ( e.key === 'Escape' ) {
+    e.preventDefault();
+
+    // time annotator
+    this._tseg_metadata_unselect();
+    this._tseg_metadata_panel_hide();
+
+    // hide info panel
+    _via_util_hide_info_page();
+
+    return;
+  }
+
+  // select temporal segments
+  if ( e.key === 'Tab' ) {
+    e.preventDefault();
+
+    if ( e.shiftKey ) {
+      this._tseg_metadata_select_prev();
+    } else {
+      this._tseg_metadata_select_next();
+    }
+    return;
+  }
+
+  if ( e.key === 'Enter' ) {
+    e.preventDefault();
+    if ( this.tseg_is_metadata_selected ) {
+      if ( this.tseg_current_mode === this.MODE.TEMPORAL_SEGMENTATION ) {
+        // enter edit mode
+        this._tseg_mode_switch(this.MODE.METADATA_EDIT);
+      }
+    } else {
+      this._tseg_metadata_select_at_current_time();
+    }
+    return;
+  }
+
+  if ( e.key === 'F2' ) {
+    e.preventDefault();
+    _via_util_show_info_page('keyboard_shortcuts');
+    return;
+  }
+}
+
+//
+// keyboard input handler
+//
+_via_time_annotator.prototype._on_event_keydown = function(e) {
+  switch(this.tseg_current_mode) {
+  case this.MODE.TEMPORAL_SEGMENTATION:
+    this._tseg_keydown_handler(e);
+    break;
+  case this.MODE.METADATA_EDIT:
+    this._tseg_metadata_edit_keydown_handler(e);
+    break;
   }
 }

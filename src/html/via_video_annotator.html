@@ -20,17 +20,17 @@
           <svg onclick="data.load_local()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_open"></use><title>Open Project</title></svg>
           <svg onclick="data.save_local()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_save"></use><title>Save Project</title></svg>
           <!--
-          <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_settings"></use><title>Project Settings</title></svg>
-          <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Upload Project</title></svg>
-          <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_download"></use><title>Download Project</title></svg>
-          -->
+              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_settings"></use><title>Project Settings</title></svg>
+              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Upload Project</title></svg>
+              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_download"></use><title>Download Project</title></svg>
+              -->
         </div>
 
         <div id="import_export" class="tool_group">
           <!--
-          <svg onclick="io.metadata_import_csv()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#icon_import"></use><title>Import Metadata from CSV</title></svg>
-          -->
-          <svg onclick="io.metadata_export_csv(1)" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#icon_export"></use><title>Download Metadata as CSV</title></svg>
+              <svg onclick="io.metadata_import_csv()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#icon_import"></use><title>Import Metadata from CSV</title></svg>
+              -->
+              <svg onclick="io.metadata_export_csv(1)" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#icon_export"></use><title>Download Metadata as CSV</title></svg>
         </div>
 
         <div id="file_manager_container" class="tool_group">
@@ -40,57 +40,86 @@
           <input type="text" placeholder="Search" oninput="file_manager._filelist_update_regex(this.value)">
           <svg onclick="file_manager.on_file_select_local_video()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_video"></use><title>Add video file from this computer</title></svg>
           <!--
-          <svg onclick="file_manager.on_file_select_local_image()" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_image"></use><title>Add Image</title></svg>
-          <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_audio"></use><title>Add Audio</title></svg>
-          -->
-          <svg onclick="file_manager.on_file_bulk_add_uri()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_lib_add"></use><title>Bulk add file URI ( e.g. file:///... or http://... ) contained in a local CSV file where each row is a remote or local filename.</title></svg>
-          <svg onclick="file_manager.on_file_remove_current()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_remove_circle"></use><title>Remove the current file from project</title></svg>
+              <svg onclick="file_manager.on_file_select_local_image()" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_image"></use><title>Add Image</title></svg>
+              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_audio"></use><title>Add Audio</title></svg>
+              -->
+              <svg onclick="file_manager.on_file_bulk_add_uri()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_lib_add"></use><title>Bulk add file URI ( e.g. file:///... or http://... ) contained in a local CSV file where each row is a remote or local filename.</title></svg>
+              <svg onclick="file_manager.on_file_remove_current()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_remove_circle"></use><title>Remove the current file from project</title></svg>
         </div>
 
 
         <div id="content_tools" class="tool_group">
-        <!--
-          <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_zoomin"></use><title>Zoom In</title></svg>
-          <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_zoomout"></use><title>Zoom Out</title></svg>
-          <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_copy"></use><title>Copy Selected Regions</title></svg>
-          <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_paste"></use><title>Paste Selected Regions</title></svg>
--->
-          <svg onclick="document.getElementById('editor_container').classList.toggle('hide')" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_insertcomment"></use><title>Show/hide metadata and attribute editor</title></svg>
-        </div>
-
-        <!--
-        <div id="region_shape" class="tool_group" >
-          <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_point"></use><title>Point</title></svg>
-          <svg onclick="" class="svg_button" viewbox="0 0 24 24" ><use xlink:href="#shape_rectangle"></use><title>Rectangle</title></svg>
-          <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_circle"></use><title>Circle</title></svg>
-          <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_ellipse"></use><title>Ellipse</title></svg>
-          <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_polygon"></use><title>Polygon</title></svg>
-          <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_polyline"></use><title>Polyline</title></svg>
-        </div>
-        -->
-
-        <div id="region_info_panel" class="tool_group" >
           <!--
-              display the (x,y) coordinate of current mouse cursor
-              display the boundaries of current selected region
-              ...
-            -->
+              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_zoomin"></use><title>Zoom In</title></svg>
+              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_zoomout"></use><title>Zoom Out</title></svg>
+              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_copy"></use><title>Copy Selected Regions</title></svg>
+              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_paste"></use><title>Paste Selected Regions</title></svg>
+              -->
+              <svg onclick="document.getElementById('editor_container').classList.toggle('hide')" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_insertcomment"></use><title>Show/hide metadata and attribute editor</title></svg>
         </div>
+
+        <!--
+            <div id="region_shape" class="tool_group" >
+              <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_point"></use><title>Point</title></svg>
+              <svg onclick="" class="svg_button" viewbox="0 0 24 24" ><use xlink:href="#shape_rectangle"></use><title>Rectangle</title></svg>
+              <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_circle"></use><title>Circle</title></svg>
+              <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_ellipse"></use><title>Ellipse</title></svg>
+              <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_polygon"></use><title>Polygon</title></svg>
+              <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_polyline"></use><title>Polyline</title></svg>
+            </div>
+            -->
+
+            <div id="about" class="tool_group" >
+              <svg onclick="_via_util_show_info_page('keyboard_shortcuts')" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_help"></use><title>Help</title></svg>
+            </div>
+
+            <div id="region_info_panel" class="tool_group" >
+              <!--
+                  display the (x,y) coordinate of current mouse cursor
+                  display the boundaries of current selected region
+                  ...
+                -->
+            </div>
       </div>
 
       <div id="annotator_container" class="annotator_container"></div>
       <div id="editor_container" class="editor_container">Editor</div>
-      <div id="page_shortcut_keys" class="page_overlay">
-        <dl>
-          <dt>Space</dt>
-          <dd>Play or pause video</dd>
-        </dl>
-        <dl>
-          <dt>[Ctrl] + 1, 2, ..., 9</dt>
-          <dd>Move backward 1, ..., 9 sec. (Ctrl to move forward)</dd>
-        </dl>
+
+      <!-- Information Panel (displayed when user wants to see them) -->
+      <div id="_via_info_page_container" class="info_page_container">
+        <div data-pageid="keyboard_shortcuts" class="info_page">
+          <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
+          <h1>Keyboard Shortcuts</h1>
+          <h3>Video Annotator</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Command</th>
+                <th>Shortcut</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Play/Pause Video (or temporal segment, if selected)</td><td>Spc</td></tr>
+              <tr><td>Increase / Decrease Video Playback Speed</td><td>+ / -</td></tr>
+              <tr><td>Move Video Backward 1, ..., 9 sec. (Ctrl to move forward)</td><td>[Ctrl] + 1, 2, ..., 9</td></tr>
+
+              <tr><td>Add Temporal Segment at Current Time</td><td>a</td></tr>
+              <tr><td>Add Selected Temporal Segment</td><td>d</td></tr>
+
+              <tr><td>Select [Previous] Next Temporal Segment</td><td>[Shift] + Tab</td></tr>
+              <tr><td>Unselect Temporal Segment</td><td>Esc</td></tr>
+              <tr><td>Start Editing Metadata (a temporal segment must already be selected)</td><td>Enter</td></tr>
+              <tr><td>Finish Editing Metadata (metadata editing is already active)</td><td>Esc</td></tr>
+              <tr><td>Increase/Decrease the extent of left edge of selected temporal segment</td><td>l / L</td></tr>
+              <tr><td>Increase/Decrease the extent of right edge of selected temporal segment</td><td>r / R</td></tr>
+              <tr><td>Jump to start/end of video (of temporal segment, if selected)</td><td>Home / End</td></tr>
+
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
+
 
     <script src="../js/_via_util.js"></script>
     <script src="../js/_via_const.js"></script>
@@ -246,6 +275,12 @@
         <symbol id="micon_add">
           <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
         </symbol>
+
+        <!-- Help -->
+        <symbol id="micon_help">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+        </symbol>
+
       </defs>
     </svg>
   </body>
