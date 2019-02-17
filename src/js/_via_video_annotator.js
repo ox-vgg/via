@@ -51,13 +51,13 @@ for ( i = 0; i < local_uri_list.length; ++i ) {
                       local_uri_list[i]
                      );
 }
-/**/
+/*
 data.metadata_add(fid, [0.567, 3.557], [], {'0':'talk', '1':'keyword1, keyword2'});
 data.metadata_add(fid, [2.032, 13.557], [], {'0':'house', '1':'keyword6, keyword8'});
 data.metadata_add(fid, [15.532, 20], [], {'0':'fire', '1':'keyword3, keyword9'});
 data.metadata_add(fid, [35.532, 40], [], {'0':'jump', '1':'keyword7, keyword2'});
 data.metadata_add(fid, [42.532, 50], [], {'0':'laugh', '1':'keyword9, keyword5'});
-
+*/
 //data.metadata_segment_add(fid, [2.534, 5.751], {'0':'Lorem ipsum dolor sit amet, consectetur adipiscing elit', '1':'talk'});
 //data.metadata_segment_add(fid, [3.895, 5.391, 6.241, 8.105], {'0':'segment label 2', '1':'walk'});
 

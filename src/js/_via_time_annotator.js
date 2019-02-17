@@ -40,9 +40,10 @@ function _via_time_annotator(container, file, data, media_element) {
   this.tseg_timeline_tend   = -1;
   this.tseg_metadata_mid_list = [];
   this.tseg_metadata_time_list = [];
-  this.tseg_metadata_label_list = [];
   this.tseg_metadata_sel_mindex = -1; // metadata index in this.tseg_metadata_mid_list
   this.tseg_metadata_sel_bindex = -1; // 0=>left boundary, 1=>right boundary
+  this.tseg_metadata_sel_show_time_bindex = -1;
+  this.tseg_metadata_sel_show_aindex = -1;
   this.tseg_is_metadata_resize_ongoing = false;
   this.tseg_is_metadata_selected = false;
 
@@ -56,6 +57,11 @@ _via_time_annotator.prototype._init = function() {
     this.thumbnail_container.setAttribute('class', 'thumbnail_container');
     this.thumbnail_container.setAttribute('style', 'display:none; position:absolute; top:0; left:0;');
     this.c.appendChild(this.thumbnail_container);
+
+    // by default, show the first attribute's value
+    if ( this.d.aid_list.length ) {
+      this.tseg_metadata_sel_show_aindex = this.d.aid_list[0];
+    }
 
     try {
       this.thumbnail = new _via_video_thumbnail(this.file);
@@ -420,11 +426,13 @@ _via_time_annotator.prototype._tseg_update = function() {
   }
 
   if ( this.tseg_is_metadata_selected ) {
-    if ( this.m.currentTime > this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][1] ) {
-      this.m.currentTime = this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][0];
-    }
-    if ( this.m.currentTime < this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][0] ) {
-      this.m.currentTime = this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][0];
+    if ( ! this.m.paused ) {
+      if ( this.m.currentTime > this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][1] ) {
+        this.m.currentTime = this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][0];
+      }
+      if ( this.m.currentTime < this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][0] ) {
+        this.m.currentTime = this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][0];
+      }
     }
   }
 
@@ -449,7 +457,6 @@ _via_time_annotator.prototype._tseg_timeline_update_metadata = function() {
   // gather all the metadata contained in this time range
   this.tseg_metadata_mid_list = [];
   this.tseg_metadata_time_list = [];
-  this.tseg_metadata_label_list = [];
   var fid = this.file.fid;
   var mid, tn, t0, t1;
   for ( mid in this.d.metadata_store[fid] ) {
@@ -464,7 +471,6 @@ _via_time_annotator.prototype._tseg_timeline_update_metadata = function() {
            ) {
           this.tseg_metadata_mid_list.push(mid);
           this.tseg_metadata_time_list.push([t0, t1]);
-          this.tseg_metadata_label_list.push(this.d.metadata_store[fid][mid].metadata[0]);
         }
       }
     }
@@ -584,18 +590,28 @@ _via_time_annotator.prototype._tseg_metadata_draw_seg_i = function(i) {
     this.tsegctx.lineTo(right, this.lineh6);
     this.tsegctx.stroke();
     this.tsegctx.fill();
+
+    if ( this.tseg_metadata_sel_show_time_bindex !== -1 ) {
+      this.tsegctx.font = '10px Sans';
+      this.tsegctx.fillStyle = '#707070';
+      var bindex = this.tseg_metadata_sel_show_time_bindex;
+      var time_str = this._vtimeline_time2ssms(this.tseg_metadata_time_list[i][bindex]);
+      if ( bindex === 0 ) {
+        this.tsegctx.fillText(time_str, left + 1, this.lineh5 - 2);
+      } else {
+        var twidth = this.tsegctx.measureText(time_str).width
+        this.tsegctx.fillText(time_str, right - twidth, this.lineh5 - 2);
+      }
+    }
   }
-  this.tsegctx.fillStyle = '#000000';
-  this.tsegctx.fillText(this.tseg_metadata_label_list[i], left + 1, this.lineh8 + 3);
 
-  this.tsegctx.font = '10px Sans';
-  this.tsegctx.fillStyle = '#707070';
-  var start_time_str = this._vtimeline_time2ssms(this.tseg_metadata_time_list[i][0]);
-  this.tsegctx.fillText(start_time_str, left + 1, this.lineh5 - 2);
-
-  var end_time_str = this._vtimeline_time2ssms(this.tseg_metadata_time_list[i][1]);
-  var endtwidth = this.tsegctx.measureText(end_time_str).width
-  this.tsegctx.fillText(end_time_str, right - endtwidth, this.lineh5 - 2);
+  if ( this.tseg_metadata_sel_show_aindex !== -1 ) {
+    var mid = this.tseg_metadata_mid_list[i];
+    var aid = this.d.aid_list[ this.tseg_metadata_sel_show_aindex ];
+    var label = this.d.metadata_store[this.file.fid][mid].metadata[aid]
+    this.tsegctx.fillStyle = '#000000';
+    this.tsegctx.fillText(label, left + 1, this.lineh8 + 3);
+  }
 }
 
 _via_time_annotator.prototype._tseg_metadata_draw_seg = function() {
@@ -750,7 +766,22 @@ _via_time_annotator.prototype._tseg_on_mouseup = function(e) {
 //
 // Metadata Panel
 //
+_via_time_annotator.prototype._tseg_metadata_move = function(dt) {
+  this.tseg_metadata_sel_show_time_bindex = 0; // show both
+  var mid = this.tseg_metadata_mid_list[ this.tseg_metadata_sel_mindex ];
+  var n = this.d.metadata_store[this.file.fid][mid].z.length;
+  var i, t;
+  for ( i = 0; i < n; ++i ) {
+    t = this.d.metadata_store[this.file.fid][mid].z[i] + dt;
+    this._tseg_metadata_update_time(mid, i, t);
+  }
+  this.m.currentTime = this.d.metadata_store[this.file.fid][mid].z[0];
+  this._tseg_timeline_update_metadata();
+  this._tseg_metadata_panel_show();
+}
+
 _via_time_annotator.prototype._tseg_metadata_update_edge = function(bindex, dt) {
+  this.tseg_metadata_sel_show_time_bindex = bindex;
   var mid = this.tseg_metadata_mid_list[ this.tseg_metadata_sel_mindex ];
   var t = this.d.metadata_store[this.file.fid][mid].z[bindex] + dt;
   this.m.currentTime = t;
@@ -822,6 +853,7 @@ _via_time_annotator.prototype._tseg_metadata_select_prev = function(mindex) {
 _via_time_annotator.prototype._tseg_metadata_unselect = function() {
   this.tseg_is_metadata_selected = false;
   this.tseg_metadata_sel_mindex = -1;
+  this.tseg_metadata_sel_show_time_bindex = -1;
 }
 
 _via_time_annotator.prototype._tseg_metadata_panel_show = function() {
@@ -991,9 +1023,12 @@ _via_time_annotator.prototype._tseg_metadata_edit_keydown_handler = function(e) 
   // cancel ongoing action or event
   if ( e.key === 'Escape' ) {
     e.preventDefault();
-    e.stopPropagation();
+    document.activeElement.blur(); // ensures that updated values are saved
     this._tseg_mode_switch(this.MODE.TEMPORAL_SEGMENTATION);
     return;
+  }
+
+  if ( e.key === 'Tab' ) {
   }
 }
 
@@ -1156,6 +1191,36 @@ _via_time_annotator.prototype._tseg_keydown_handler = function(e) {
       this._tseg_metadata_select_at_current_time();
     }
     return;
+  }
+
+  if ( e.key === 'ArrowDown' || e.key === 'ArrowUp' ) {
+    // update the attribute being shown below each temporal segment
+    e.preventDefault();
+    var next_aindex;
+    if ( e.key === 'ArrowDown' ) {
+      next_aindex = this.tseg_metadata_sel_show_aindex + 1;
+      if ( next_aindex >= this.d.aid_list.length ) {
+        next_aindex = 0;
+      }
+    } else {
+      next_aindex = this.tseg_metadata_sel_show_aindex - 1;
+      if ( next_aindex < 0 ) {
+        next_aindex = this.d.aid_list.length - 1;
+      }
+    }
+    this.tseg_metadata_sel_show_aindex = next_aindex;
+  }
+
+  if ( e.key === 'ArrowLeft' || e.key === 'ArrowRight' ) {
+    // move selected temporal segment
+    e.preventDefault();
+    if ( this.tseg_is_metadata_selected ) {
+      if ( e.key === 'ArrowLeft' ) {
+        this._tseg_metadata_move(-this.EDGE_UPDATE_TIME_DELTA);
+      } else {
+        this._tseg_metadata_move(this.EDGE_UPDATE_TIME_DELTA);
+      }
+    }
   }
 
   if ( e.key === 'F2' ) {
