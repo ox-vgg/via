@@ -10,6 +10,10 @@
 
   <body onresize="_via_on_browser_resize()">
     <div class="via">
+      <div id="_via_message_container" class="message_container">
+        <div id="_via_message"></div>
+      </div>
+
       <div class="cpanel">
         <div class="tool_group">
           <div class="logo"><a href="http://www.robots.ox.ac.uk/~vgg/software/via/" title="VGG Image Annotator (VIA)">VIA</a></div>
@@ -81,9 +85,8 @@
                 -->
             </div>
       </div>
-
       <div id="annotator_container" class="annotator_container"></div>
-      <div id="editor_container" class="editor_container">Editor</div>
+      <div id="editor_container" class="editor_container"></div>
 
       <!-- Information Panel (displayed when user wants to see them) -->
       <div id="_via_info_page_container" class="info_page_container">
@@ -99,21 +102,24 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td>Play/Pause Video (or temporal segment, if selected)</td><td>Spc</td></tr>
-              <tr><td>Increase / Decrease Video Playback Speed</td><td>+ / -</td></tr>
-              <tr><td>Move Video Backward 1, ..., 9 sec. (Ctrl to move forward)</td><td>[Ctrl] + 1, 2, ..., 9</td></tr>
+              <tr><td>Play/Pause Video (or temporal segment, if selected)</td><td><span class="key">Spc</span></td></tr>
+              <tr><td>Increase / Decrease Video Playback Speed</td><td><span class="key">+</span> / <span class="key">-</span></td></tr>
+              <tr><td>Move Video Time Backward 1, ..., 9 sec. (Ctrl to move forward)</td><td><span class="key">Ctrl</span> + <span class="key">1</span>, <span class="key">2</span>, ..., <span class="key">9</span</td></tr>
 
-              <tr><td>Add Temporal Segment at Current Time</td><td>a</td></tr>
-              <tr><td>Add Selected Temporal Segment</td><td>d</td></tr>
-              <tr><td>Change the attribute value shown against each temporal segment</td><td>Up / Down Arrow</td></tr>
+              <tr><td>Add Temporal Segment at Current Time</td><td><span class="key">a</span></td></tr>
+              <tr><td>Delete Selected Temporal Segment</td><td><span class="key">Backspace</span></td></tr>
+              <tr><td>Change the displayed attribute (temporal segment must be selected)</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
 
-              <tr><td>Select [Previous] Next Temporal Segment</td><td>[Shift] + Tab</td></tr>
-              <tr><td>Unselect Temporal Segment</td><td>Esc</td></tr>
-              <tr><td>Start Editing Metadata (a temporal segment must already be selected)</td><td>Enter</td></tr>
-              <tr><td>Finish Editing Metadata (metadata editing is already active)</td><td>Esc</td></tr>
-              <tr><td>Increase/Decrease the extent of left edge of selected temporal segment</td><td>l / L</td></tr>
-              <tr><td>Increase/Decrease the extent of right edge of selected temporal segment</td><td>r / R</td></tr>
-              <tr><td>Jump to start/end of video (of temporal segment, if selected)</td><td>Home / End</td></tr>
+              <tr><td>Select [Previous] Next Temporal Segment</td><td><span class="key">Shift</span> + <span class="key">Tab</span></td></tr>
+              <tr><td>Unselect Temporal Segment</td><td><span class="key">Esc</span></td></tr>
+              <tr><td>Start Editing Metadata (temporal segment must be selected)</td><td><span class="key">Enter</span></td></tr>
+              <tr><td>Finish Editing Metadata (metadata editing is already active)</td><td><span class="key">Esc</span></td></tr>
+              <tr><td>Move to Previous / Next video frame</td><td><span class="key">l</span> / <span class="key">r</span></td></tr>
+              <tr><td>If Temporal Segment is Selected, Increase/Decrease the Extent of Left Edge</td><td><span class="key">l</span> / <span class="key">L</span></td></tr>
+              <tr><td>If Temporal Segment is Selected, Increase/Decrease the Extent of Right edge</td><td><span class="key">r</span> / <span class="key">R</span></td></tr>
+
+              <tr><td>Jump to Start/End of Timeline (of temporal segment, if selected)</td><td><span class="key">s</span> / <span class="key">e</span></td></tr>
+              <tr><td>Jump to Start/End of Video</td><td><span class="key">Shift</span> + <span class="key">s</span> / <span class="key">e</span></td></tr>
               <tr><td>Horizontall Move Selected Temporal Segment</td><td>Left / Right Arrow</td></tr>
             </tbody>
           </table>
@@ -124,6 +130,7 @@
 
     <script src="../js/_via_util.js"></script>
     <script src="../js/_via_const.js"></script>
+    <script src="../js/_via_config.js"></script>
 
     <script src="../js/_via_event.js"></script>
     <script src="../js/_via_metadata.js"></script>

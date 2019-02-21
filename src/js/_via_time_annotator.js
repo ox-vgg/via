@@ -341,7 +341,7 @@ _via_time_annotator.prototype._tseg_init = function() {
   this.c.appendChild(this.tseg_container);
 
   this.tseg_container_width = this.tseg_container.clientWidth;
-  this.tseg_container_height = Math.floor(this.char_width * 10);
+  this.tseg_container_height = Math.floor(this.char_width * 11);
 
   this.tseg_metadata_panel = document.createElement('div');
   this.tseg_metadata_panel.setAttribute('class', 'metadata_panel');
@@ -448,7 +448,7 @@ _via_time_annotator.prototype._tseg_update = function() {
 _via_time_annotator.prototype._tseg_timeline_update_boundary = function() {
   this.tseg_timeline_tstart = this.m.currentTime;
   var dt = this.tseg_timelinew / this.tseg_width_per_sec;
-  this.tseg_timeline_tend = this.tseg_timeline_tstart + dt;
+  this.tseg_timeline_tend = this.tseg_timeline_tstart + dt - 2;
 
   this._tseg_timeline_update_metadata();
 }
@@ -511,9 +511,7 @@ _via_time_annotator.prototype._tseg_timeline_drawtick = function() {
   // draw ticks
   var start = this.padx;
   var end = start + this.tseg_timelinew;
-  if ( this.tseg_timeline_tstart !== 0 ) {
-    start = start + this.tseg_width_per_sec;
-  }
+
   var t = this.tseg_timeline_tstart;
   this.tsegctx.strokeStyle = '#707070';
   this.tsegctx.beginPath();
@@ -529,12 +527,12 @@ _via_time_annotator.prototype._tseg_timeline_drawtick = function() {
 }
 
 _via_time_annotator.prototype._tseg_timeline_drawtime = function() {
-  this.tsegctx.fillStyle = '#707070';
+  this.tsegctx.fillStyle = '#666666';
   this.tsegctx.font = '10px Sans';
   var t = this.tseg_timeline_tstart;
   var start = this.padx;
-  var end = start + this.tseg_timelinew - this.tseg_width_per_sec;
-  for ( ; start <= end; start = start + this.tseg_width_per_sec ) {
+  var end = start + this.tseg_timelinew;
+  for ( ; start < end; start = start + this.tseg_width_per_sec ) {
     this.tsegctx.fillText(this._vtimeline_time2str(t), start, this.lineh2 );
     t = t + 1;
     if ( t > this.m.duration ) {
@@ -549,11 +547,11 @@ _via_time_annotator.prototype._tseg_metadata_draw_container = function() {
   this.tsegctx.fillStyle = '#707070';
   this.tsegctx.lineWidth = 1;
   this.tsegctx.beginPath();
-  this.tsegctx.moveTo(this.padx, this.lineh5);
-  this.tsegctx.lineTo(this.padx + this.tseg_timelinew, this.lineh5);
-  this.tsegctx.lineTo(this.padx + this.tseg_timelinew, this.lineh7);
-  this.tsegctx.lineTo(this.padx, this.lineh7);
-  this.tsegctx.lineTo(this.padx, this.lineh5);
+  this.tsegctx.moveTo(this.padx, this.lineh6);
+  this.tsegctx.lineTo(this.padx + this.tseg_timelinew, this.lineh6);
+  this.tsegctx.lineTo(this.padx + this.tseg_timelinew, this.lineh8);
+  this.tsegctx.lineTo(this.padx, this.lineh8);
+  this.tsegctx.lineTo(this.padx, this.lineh6);
   this.tsegctx.stroke();
 }
 
@@ -565,29 +563,33 @@ _via_time_annotator.prototype._tseg_metadata_draw_seg_i = function(i) {
 
   // fill metadata boundary
   this.tsegctx.beginPath();
-  this.tsegctx.moveTo(left, this.lineh5 + 1);
-  this.tsegctx.lineTo(right, this.lineh5 + 1);
-  this.tsegctx.lineTo(right, this.lineh7 - 1);
-  this.tsegctx.lineTo(left, this.lineh7 - 1);
-  this.tsegctx.lineTo(left, this.lineh5 + 1);
+  this.tsegctx.moveTo(left, this.lineh6 + 1);
+  this.tsegctx.lineTo(right, this.lineh6 + 1);
+  this.tsegctx.lineTo(right, this.lineh8 - 1);
+  this.tsegctx.lineTo(left, this.lineh8 - 1);
+  this.tsegctx.lineTo(left, this.lineh6 + 1);
   this.tsegctx.fillStyle = color;
   this.tsegctx.fill();
-
   if ( this.tseg_is_metadata_selected &&
        this.tseg_metadata_sel_mindex === i
      ) {
+    // highlight boundary of temporal segment
+    this.tsegctx.strokeStyle = '#000000';
+    this.tsegctx.stroke();
+
+    // draw arrow extending to the edges of temporal segment
     this.tsegctx.fillStyle = '#000000';
     this.tsegctx.strokeStyle = '#000000';
     this.tsegctx.lineWidth = 1;
     this.tsegctx.beginPath();
-    this.tsegctx.moveTo(left, this.lineh6);
-    this.tsegctx.lineTo(left + this.linehb2, this.lineh6 - this.linehb2);
-    this.tsegctx.lineTo(left + this.linehb2, this.lineh6 + this.linehb2);
-    this.tsegctx.lineTo(left, this.lineh6);
-    this.tsegctx.lineTo(right, this.lineh6);
-    this.tsegctx.lineTo(right - this.linehb2, this.lineh6 - this.linehb2);
-    this.tsegctx.lineTo(right - this.linehb2, this.lineh6 + this.linehb2);
-    this.tsegctx.lineTo(right, this.lineh6);
+    this.tsegctx.moveTo(left, this.lineh7);
+    this.tsegctx.lineTo(left + this.linehb2, this.lineh7 - this.linehb2);
+    this.tsegctx.lineTo(left + this.linehb2, this.lineh7 + this.linehb2);
+    this.tsegctx.lineTo(left, this.lineh7);
+    this.tsegctx.lineTo(right, this.lineh7);
+    this.tsegctx.lineTo(right - this.linehb2, this.lineh7 - this.linehb2);
+    this.tsegctx.lineTo(right - this.linehb2, this.lineh7 + this.linehb2);
+    this.tsegctx.lineTo(right, this.lineh7);
     this.tsegctx.stroke();
     this.tsegctx.fill();
 
@@ -597,10 +599,10 @@ _via_time_annotator.prototype._tseg_metadata_draw_seg_i = function(i) {
       var bindex = this.tseg_metadata_sel_show_time_bindex;
       var time_str = this._vtimeline_time2ssms(this.tseg_metadata_time_list[i][bindex]);
       if ( bindex === 0 ) {
-        this.tsegctx.fillText(time_str, left + 1, this.lineh5 - 2);
+        this.tsegctx.fillText(time_str, left + 1, this.lineh6 - 2);
       } else {
         var twidth = this.tsegctx.measureText(time_str).width
-        this.tsegctx.fillText(time_str, right - twidth, this.lineh5 - 2);
+        this.tsegctx.fillText(time_str, right - twidth, this.lineh6 - 2);
       }
     }
   }
@@ -610,7 +612,7 @@ _via_time_annotator.prototype._tseg_metadata_draw_seg_i = function(i) {
     var aid = this.d.aid_list[ this.tseg_metadata_sel_show_aindex ];
     var label = this.d.metadata_store[this.file.fid][mid].metadata[aid]
     this.tsegctx.fillStyle = '#000000';
-    this.tsegctx.fillText(label, left + 1, this.lineh8 + 3);
+    this.tsegctx.fillText(label, left + 1, this.lineh9 + 3);
   }
 }
 
@@ -685,7 +687,7 @@ _via_time_annotator.prototype._tseg_on_mousemove = function(e) {
   }
 
   // metadata
-  if ( e.offsetY >= this.lineh5 && e.offsetY <= this.lineh7) {
+  if ( e.offsetY >= this.lineh6 && e.offsetY <= this.lineh8) {
     var t = this._tseg_timeline_canvas2time(e.offsetX);
     var mindex = this._tseg_time_to_metadata_index(t);
     if ( mindex[0] !== -1 ) {
@@ -712,7 +714,7 @@ _via_time_annotator.prototype._tseg_on_mousedown = function(e) {
   }
 
   // metadata
-  if ( e.offsetY >= this.lineh5 && e.offsetY <= this.lineh7 ) {
+  if ( e.offsetY >= this.lineh6 && e.offsetY <= this.lineh8 ) {
     var mindex = this._tseg_time_to_metadata_index(t);
     // clicked on one of the visible metadata?
     if ( mindex[0] !== -1 ) {
@@ -863,7 +865,7 @@ _via_time_annotator.prototype._tseg_metadata_panel_show = function() {
 
   this.tseg_metadata_panel.style.display = 'inline-block';
   this.tseg_metadata_panel.style.left = (x + 1) + 'px';
-  this.tseg_metadata_panel.style.top = (this.lineh7 + 1) + 'px';
+  this.tseg_metadata_panel.style.top = (this.lineh8 + 1) + 'px';
 
   this.tseg_metadata_panel.innerHTML = '';
   this.tseg_metadata_panel.appendChild( this._tseg_metadata_panel_init(mid) );
@@ -949,9 +951,10 @@ _via_time_annotator.prototype._tseg_metadata_html_element = function(fid, mid, a
 _via_time_annotator.prototype._tseg_metadata_del_selected = function() {
   if ( this.tseg_is_metadata_selected ) {
     var mid = this.tseg_metadata_mid_list[ this.tseg_metadata_sel_mindex ];
-    this._tseg_metadata_unselect();
     this.d.metadata_del(this.file.fid, mid);
-    this._tseg_metadata_select_next();
+    this._tseg_metadata_unselect();
+    this._tseg_metadata_panel_hide()
+    //this._tseg_metadata_select_next();
   }
 }
 
@@ -991,6 +994,7 @@ _via_time_annotator.prototype._on_event_metadata_del = function(fid, mid) {
   if ( fid === this.file.fid ) {
     this._tseg_timeline_update_metadata();
   }
+  _via_msg_show('Deleted metadata');
 }
 
 //
@@ -1040,14 +1044,20 @@ _via_time_annotator.prototype._tseg_keydown_handler = function(e) {
     e.preventDefault();
     if ( this.m.paused ) {
       this.m.play();
+      _via_msg_show('Playing ...');
     } else {
       this.m.pause();
+      _via_msg_show('Paused. Press <span class="key">a</span> to add a temporal segment, ' +
+                    '<span class="key">Backspace</span> to delete and ' +
+                    '<span class="key">Tab</span> to select.', true);
     }
-    return;
   }
 
   // jump 1,...,9 seconds forward or backward
   if ( ['1','2','3','4','5','6','7','8','9'].includes( e.key ) ) {
+    if ( e.altKey ) {
+      return; // Alt + Num is used to navigated browser tabs
+    }
     e.preventDefault();
     var t = this.m.currentTime;
     if ( e.ctrlKey ) {
@@ -1062,24 +1072,32 @@ _via_time_annotator.prototype._tseg_keydown_handler = function(e) {
     return;
   }
 
-  if ( e.key === 'Home' ) {
+  if ( e.key === 's' || e.key === 'S' ) {
     e.preventDefault();
     this.m.pause();
-    if ( this.tseg_is_metadata_selected ) {
-      this.m.currentTime = this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][0];
+    if ( e.key === 's' ) {
+      if ( this.tseg_is_metadata_selected ) {
+        this.m.currentTime = this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][0];
+      } else {
+        this.m.currentTime = this.tseg_timeline_tstart;
+      }
     } else {
       this.m.currentTime = 0;
     }
     return;
   }
 
-  if ( e.key === 'End' ) {
+  if ( e.key === 'e' || e.key === 'E' ) {
     e.preventDefault();
     this.m.pause();
+    if ( e.key === 'e' ) {
     if ( this.tseg_is_metadata_selected ) {
       this.m.currentTime = this.tseg_metadata_time_list[ this.tseg_metadata_sel_mindex ][1];
     } else {
-      this.m.currentTime = this.m.duration - 5;
+      this.m.currentTime = this.tseg_timeline_tend;
+    }
+    } else {
+      this.m.currentTime = this.m.duration - 3;
     }
     return;
   }
@@ -1103,7 +1121,6 @@ _via_time_annotator.prototype._tseg_keydown_handler = function(e) {
     return;
   }
 
-  // add temporal segment at current timeline
   if ( e.key === 'a' ) {
     e.preventDefault();
     var t = this.m.currentTime;
@@ -1111,10 +1128,9 @@ _via_time_annotator.prototype._tseg_keydown_handler = function(e) {
     return;
   }
 
-  if ( e.key === 'd' ) {
+  if ( e.key === 'Backspace' ) {
     e.preventDefault();
     this._tseg_metadata_del_selected();
-    // add temporal sdegment at current timeline
     return;
   }
 
@@ -1129,15 +1145,21 @@ _via_time_annotator.prototype._tseg_keydown_handler = function(e) {
   }
 
   if ( e.key === 'l' || e.key === 'L') {
+    e.preventDefault();
     if ( this.tseg_is_metadata_selected ) {
       // resize left edge of selected temporal segment
-      e.preventDefault();
       if ( e.key === 'l' ) {
         this._tseg_metadata_update_edge(0, -this.EDGE_UPDATE_TIME_DELTA);
       } else {
         this._tseg_metadata_update_edge(0, this.EDGE_UPDATE_TIME_DELTA);
       }
       return;
+    } else {
+      if ( e.key === 'l' ) {
+        this.m.currentTime = this.m.currentTime - this.EDGE_UPDATE_TIME_DELTA;
+      } else {
+        this.m.currentTime = this.m.currentTime - 2*this.EDGE_UPDATE_TIME_DELTA;
+      }
     }
   }
 
@@ -1151,6 +1173,12 @@ _via_time_annotator.prototype._tseg_keydown_handler = function(e) {
         this._tseg_metadata_update_edge(1, -this.EDGE_UPDATE_TIME_DELTA);
       }
       return;
+    } else {
+      if ( e.key === 'r' ) {
+        this.m.currentTime = this.m.currentTime + this.EDGE_UPDATE_TIME_DELTA;
+      } else {
+        this.m.currentTime = this.m.currentTime + 2*this.EDGE_UPDATE_TIME_DELTA;
+      }
     }
   }
 
@@ -1196,19 +1224,23 @@ _via_time_annotator.prototype._tseg_keydown_handler = function(e) {
   if ( e.key === 'ArrowDown' || e.key === 'ArrowUp' ) {
     // update the attribute being shown below each temporal segment
     e.preventDefault();
-    var next_aindex;
-    if ( e.key === 'ArrowDown' ) {
-      next_aindex = this.tseg_metadata_sel_show_aindex + 1;
-      if ( next_aindex >= this.d.aid_list.length ) {
-        next_aindex = 0;
+    if ( this.tseg_is_metadata_selected ) {
+      var next_aindex;
+      if ( e.key === 'ArrowDown' ) {
+        next_aindex = this.tseg_metadata_sel_show_aindex + 1;
+        if ( next_aindex >= this.d.aid_list.length ) {
+          next_aindex = 0;
+        }
+      } else {
+        next_aindex = this.tseg_metadata_sel_show_aindex - 1;
+        if ( next_aindex < 0 ) {
+          next_aindex = this.d.aid_list.length - 1;
+        }
       }
+      this.tseg_metadata_sel_show_aindex = next_aindex;
     } else {
-      next_aindex = this.tseg_metadata_sel_show_aindex - 1;
-      if ( next_aindex < 0 ) {
-        next_aindex = this.d.aid_list.length - 1;
-      }
+      // @todo move to next speaker during diarisation
     }
-    this.tseg_metadata_sel_show_aindex = next_aindex;
   }
 
   if ( e.key === 'ArrowLeft' || e.key === 'ArrowRight' ) {

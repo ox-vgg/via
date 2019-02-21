@@ -49,7 +49,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .annotator_container > .file_container > .time_annotator_container > .tseg_container .metadata_panel { position:absolute; font-size:small; background-color:white; z-index:999; border:1px solid #cccccc; }
 .annotator_container > .file_container > .time_annotator_container > .tseg_container .metadata_panel table { border-collapse:collapse; }
 .annotator_container > .file_container > .time_annotator_container > .tseg_container .metadata_panel td { border:1px solid #cccccc; padding:0.3em 0.4em; }
-.annotator_container > .file_container > .time_annotator_container > .tseg_container .edit_mode { border:1px solid #707070; background-color: #f5f5f5; }
+.annotator_container > .file_container > .time_annotator_container > .tseg_container .edit_mode { border:1px solid #808080; background-color: #333333; color:#ffffff; }
 .annotator_container > .file_container > .time_annotator_container > .toolbar_container { display:flex; flex-direction:row; flex-wrap:wrap; font-size:small; padding:0.5em; }
 .annotator_container > .file_container > .time_annotator_container > .toolbar_container input[type="radio"] { vertical-align:bottom; }
 /*
@@ -109,3 +109,8 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .info_page_container > .info_page table { border-collapse:collapse; border:1px solid #cccccc; }
 .info_page_container > .info_page th { border:1px solid #cccccc; padding:0.3em 0.4em; }
 .info_page_container > .info_page td { border:1px solid #cccccc; padding:0.3em 0.4em; }
+
+/* Message Panel */
+#_via_message_container { display:none; width:100vw; position:fixed; bottom:0px; z-index:9999; text-align:center; }
+#_via_message_container #_via_message { display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:medium; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}
+.key { font-family:monospace; padding:1px 6px; background:linear-gradient(to bottom,#f0f0f0,#fcfcfc);; border:1px solid #e0e0e0; white-space:nowrap; color:#303030; border-bottom-width:2px; border-radius:3px; font-size:1.2em; }

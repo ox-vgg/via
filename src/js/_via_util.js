@@ -8,6 +8,8 @@
 
 'use strict'
 
+var _via_msg_clear_timer; // holds a reference to current message timoout
+
 function _via_util_get_svg_button(id, title, viewbox) {
   var svg_viewbox = viewbox;
   if ( typeof(svg_viewbox) === 'undefined' ) {
@@ -282,5 +284,32 @@ function _via_util_hide_info_page() {
   if ( el.style.display === 'block' ) {
     el.removeEventListener('mousedown', _via_util_hide_info_page);
     el.style.display = 'none';
+  }
+}
+
+function _via_msg_show(msg, sticky) {
+  var container = document.getElementById('_via_message_container');
+  var content = document.getElementById('_via_message');
+  if ( container && content ) {
+    if ( _via_msg_clear_timer ) {
+      clearTimeout(_via_msg_clear_timer);
+    }
+    if ( typeof(sticky) === 'undefined' ||
+         sticky === false
+       ) {
+      _via_msg_clear_timer = setTimeout( function() {
+        document.getElementById('_via_message_container').style.display = 'none';
+      }, _VIA_CONFIG.MSG_TIMEOUT);
+    }
+
+    content.innerHTML = msg;
+    container.style.display = 'block';
+  }
+}
+
+function _via_msg_hide() {
+  document.getElementById('_via_message_container').style.display = 'none';
+  if ( _via_msg_clear_timer ) {
+    clearTimeout(_via_msg_clear_timer);
   }
 }
