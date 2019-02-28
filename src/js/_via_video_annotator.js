@@ -51,6 +51,7 @@ for ( i = 0; i < local_uri_list.length; ++i ) {
                       local_uri_list[i]
                      );
 }
+//data.metadata_add(fid, [32.5, 33.5], [], {'0':'talk', '1':'keyword1, keyword2'});
 /*
 data.metadata_add(fid, [0.567, 3.557], [], {'0':'talk', '1':'keyword1, keyword2'});
 data.metadata_add(fid, [2.032, 13.557], [], {'0':'house', '1':'keyword6, keyword8'});
@@ -65,26 +66,28 @@ data.metadata_add(fid, [42.532, 50], [], {'0':'laugh', '1':'keyword9, keyword5'}
 
 var annotator_container = document.getElementById('annotator_container');
 var annotator = new _via_annotator(annotator_container, data);
-
+window.addEventListener('keydown', function(e) {
+  // avoid handling events when text input field is in focus
+  if ( e.target.type !== 'text' ) {
+    annotator._on_event_keydown(e);
+  }
+});
 
 //var project_container = document.getElementById('project_container');
 //var project = new _via_project(project_container, data, annotator);
 
 
 //var editor_container = document.getElementById('editor_container');
-//var editor = new _via_editor(editor_container, data, annotator);
+//var editor = new _via_editor(editor_container, data);
 
 var filelist_element = document.getElementById('file_manager_filelist');
 var file_manager = new _via_file_manager(filelist_element, data, annotator);
+file_manager._init();
 
 var io = new _via_io(data);
 
 // for debugging, show one of the files
-annotator.file_show_fid(fid);
-
-window.addEventListener('keydown', function(e) {
-  annotator._on_event_keydown(e);
-});
+annotator.file_show_fid(0);
 
 function _via_on_browser_resize() {
   annotator.emit_event('container_resize', {});

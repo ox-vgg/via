@@ -10,12 +10,14 @@
 'use strict';
 
 function _via_data() {
-  this.project = {
-    'via_project_id':this._uuid(),
-    'via_data_format_version':1,
+  this.project_store = {
+    'project_id':this._uuid(),
+    'data_format_version':'3.0.0',
     'created': new Date().toString(),
+    'updated': new Date().toString(),
   };
 
+  // metadata
   this.metadata_store = {};
 
   // attributes
@@ -25,7 +27,19 @@ function _via_data() {
   // files
   this.file_store = {};
   this.fid_list = [];        // to maintain ordering of files
+  this.file_mid_list = {};   // list of all metadata associated with a file
 
+  // data persistence
+  this._store_list = {};
+
+  // metadata_store is treated differently
+  this.data_key_list = ['project_store',
+                        'attribute_store',
+                        'aid_list',
+                        'file_store',
+                        'file_mid_list',
+                        'fid_list',
+                       ];
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -35,6 +49,36 @@ function _via_data() {
 
 _via_data.prototype._init = function() {
 }
+
+_via_data.prototype._hook_on_data_update = function() {
+  this.project_store.updated = new Date().toString();
+}
+
+//
+// data persistence
+//
+_via_data.prototype._store_add = function(id, store) {
+  this._store_list[id] = store;
+}
+
+_via_data.prototype._store_del = function(store_id) {
+  delete this._store_list[id];
+}
+
+_via_data.prototype._store_transaction = function(data_key, action, param) {
+  var promise_list = [];
+  var store_id;
+  for ( store_id in this._store_list ) {
+    promise_list.push( this._store_list[store_id].transaction(data_key, action, param) );
+  }
+
+  Promise.all(promise_list).then( function(ok) {
+    console.log('store transaction: {' + data_key + ',' + action + ', ' + JSON.stringify(param) + '} completed');
+  }.bind(this), function(err) {
+    console.warn('store transaction {' + data_key + ',' + action + ', ' + JSON.stringify(param) + '} failed');
+  }.bind(this));
+}
+
 
 //
 // attribute
@@ -73,6 +117,8 @@ _via_data.prototype.attribute_add = function(name, type, options, default_option
                                                    options,
                                                    default_option_id);
     this.aid_list.push(aid);
+    this._store_transaction('attribute_store', 'add', {'aid':aid});
+    this._hook_on_data_update();
     this.emit_event( 'attribute_add', { 'aid':aid } );
     ok_callback(aid);
   }.bind(this));
@@ -98,6 +144,8 @@ _via_data.prototype.attribute_del = function(aid) {
         }
       }
     }
+    this._store_transaction('attribute_store', 'del', {'aid':aid});
+    this._hook_on_data_update();
     this.emit_event( 'attribute_del', { 'aid':aid } );
   }.bind(this));
 }
@@ -115,12 +163,15 @@ _via_data.prototype.attribute_update_options = function(aid, csv_str) {
       this.attribute_store[aid].options[i] = csv[i];
     }
   }
+  this._store_transaction('attribute_store', 'update', {'aid':aid});
+  this._hook_on_data_update();
   this.emit_event( 'attribute_update', { 'aid':aid } );
 }
 
 _via_data.prototype.attribute_update_type = function(aid, new_type) {
   this.attribute_store[aid].type = parseInt(new_type);
-
+  this._store_transaction('attribute_store', 'update', {'aid':aid});
+  this._hook_on_data_update();
   this.emit_event( 'attribute_update', { 'aid':aid } );
 }
 
@@ -141,6 +192,8 @@ _via_data.prototype.file_add = function(name, type, loc, src) {
   var fid = this._file_get_new_id();
   this.file_store[fid] = new _via_file(fid, name, type, loc, src);
   this.fid_list.push(fid);
+  this._store_transaction('file_store', 'add', {'fid':fid});
+  this._hook_on_data_update();
   this.emit_event( 'file_add', { 'fid':fid } );
   return fid;
 }
@@ -160,15 +213,28 @@ _via_data.prototype.file_add_bulk = function(filelist) {
     this.fid_list.push(fid);
     added_fid_list.push(fid);
   }
+  this._store_transaction('file_store', 'add_bulk', {'fid_list':added_fid_list});
+  this._hook_on_data_update();
   this.emit_event( 'file_add_bulk', { 'fid_list':added_fid_list } );
   return added_fid_list;
 }
 
 _via_data.prototype.file_remove = function(fid) {
   if ( this.has_file(fid) ) {
+    // delete all metadata associated with fid
+    var mid, mid_index;
+    for ( mid_index in this.file_mid_list[fid] ) {
+      mid = this.file_mid_list[fid][mid_index]
+      delete this.metadata_store[mid];
+    }
+    delete this.file_mid_list[fid];
+
+    // delete file entry
     delete this.file_store[fid];
     var findex = this.fid_list.indexOf(fid);
     this.fid_list.splice(findex, 1);
+    this._store_transaction('file_store', 'remove', {'fid':fid});
+    this._hook_on_data_update();
     this.emit_event( 'file_remove', { 'fid':fid } );
   }
 }
@@ -188,42 +254,21 @@ _via_data.prototype.fid2file = function(fid) {
 //
 // Metadata
 //
-_via_data.prototype.metadata_del = function(fid, mid) {
-  return new Promise( function(ok_callback, err_callback) {
-    if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
-      err_callback('undefined fid=' + fid);
-    }
-
-    if ( typeof(this.file_store[fid]) === 'undefined' ) {
-      err_callback('undefined fid=' + fid);
-      return;
-    }
-
-    if ( typeof(this.metadata_store[fid][mid]) === 'undefined' ) {
-      err_callback('for fid=' + fid + ', undefined mid=' + mid);
-    }
-
-    delete this.metadata_store[fid][mid];
-
-    this.emit_event( 'metadata_del', { 'fid':fid, 'mid':mid } );
-    ok_callback({'fid':fid, 'mid':mid});
-  }.bind(this));
-}
-
 _via_data.prototype.metadata_add = function(fid, z, xy, metadata) {
   return new Promise( function(ok_callback, err_callback) {
-    if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
-      this.metadata_store[fid] = {};
-    }
-
     if ( typeof(this.file_store[fid]) === 'undefined' ) {
-      err_callback({'fid':fid, 't':t});
+      err_callback({'fid':fid});
       return;
     }
 
     var mid = this._uuid();
-    this.metadata_store[fid][mid] = new _via_metadata(mid, z, xy, metadata);
-
+    this.metadata_store[mid] = new _via_metadata(fid, mid, z, xy, metadata);
+    if ( typeof(this.file_mid_list[fid]) === 'undefined' ) {
+      this.file_mid_list[fid] = [];
+    }
+    this.file_mid_list[fid].push(mid);
+    this._store_transaction('metadata_store', 'add', {'fid':fid, 'mid':mid});
+    this._hook_on_data_update();
     this.emit_event( 'metadata_add', { 'fid':fid, 'mid':mid } );
     ok_callback({'fid':fid, 'mid':mid});
   }.bind(this));
@@ -231,21 +276,18 @@ _via_data.prototype.metadata_add = function(fid, z, xy, metadata) {
 
 _via_data.prototype.metadata_update = function(fid, mid, z, xy, metadata) {
   return new Promise( function(ok_callback, err_callback) {
-    if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
-      err_callback('undefined fid=' + fid);
-    }
-
     if ( typeof(this.file_store[fid]) === 'undefined' ) {
       err_callback('undefined fid=' + fid);
       return;
     }
 
-    if ( typeof(this.metadata_store[fid][mid]) === 'undefined' ) {
-      err_callback('for fid=' + fid + ', undefined mid=' + mid);
+    if ( typeof(this.metadata_store[mid]) === 'undefined' ) {
+      err_callback('undefined mid=' + mid);
     }
 
-    this.metadata_store[fid][mid] = new _via_metadata(mid, z, xy, metadata);
-
+    this.metadata_store[mid] = new _via_metadata(fid, mid, z, xy, metadata);
+    this._store_transaction('metadata_store', 'update', {'fid':fid, 'mid':mid});
+    this._hook_on_data_update();
     this.emit_event( 'metadata_update', { 'fid':fid, 'mid':mid } );
     ok_callback({'fid':fid, 'mid':mid});
   }.bind(this));
@@ -253,23 +295,28 @@ _via_data.prototype.metadata_update = function(fid, mid, z, xy, metadata) {
 
 _via_data.prototype.metadata_update_attribute_value = function(fid, mid, aid, value) {
   // @todo: add checks
-  this.metadata_store[fid][mid].metadata[aid] = value;
+  this.metadata_store[mid].metadata[aid] = value;
+  this._store_transaction('metadata_store', 'update', {'fid':fid, 'mid':mid});
+  this._hook_on_data_update();
   this.emit_event( 'metadata_update', { 'fid':fid, 'mid':mid } );
 }
 
 _via_data.prototype.metadata_del = function(fid, mid) {
   return new Promise( function(ok_callback, err_callback) {
-    if ( typeof(this.metadata_store[fid]) === 'undefined' ) {
+    if ( typeof(this.file_store[fid]) === 'undefined' ) {
       err_callback('invalid fid=' + fid);
-      console.log(this.metadata_store)
       return;
     }
 
-    if ( typeof(this.metadata_store[fid][mid]) === 'undefined' ) {
+    if ( typeof(this.metadata_store[mid]) === 'undefined' ) {
       err_callback('invalid mid=' + mid);
-      console.log(this.metadata_store[fid])
     }
-    delete this.metadata_store[fid][mid];
+    delete this.metadata_store[mid];
+
+    var mid_index = this.file_mid_list[fid].indexOf(mid);
+    this.file_mid_list[fid].splice(mid_index, 1);
+    this._store_transaction('metadata_store', 'del', {'fid':fid, 'mid':mid});
+    this._hook_on_data_update();
     this.emit_event( 'metadata_del', { 'fid':fid, 'mid':mid } );
     ok_callback({'fid':fid, 'mid':mid});
   }.bind(this));
@@ -336,7 +383,7 @@ _via_data.prototype._project_save = function() {
   return new Promise( function(ok_callback, err_callback) {
     try {
       var d = {
-        'project':this.project,
+        'project_store':this.project_store,
         'metadata_store':this.metadata_store,
         'attribute_store':this.attribute_store,
         'aid_list':this.aid_list,
@@ -365,6 +412,10 @@ _via_data.prototype.save_local = function() {
 
 _via_data.prototype.load_local = function() {
   _via_util_file_select_local(_VIA_FILE_TYPE.JSON, this._project_load_json.bind(this), false);
+}
+
+_via_data.prototype.on_event_file_show = function() {
+
 }
 
 //

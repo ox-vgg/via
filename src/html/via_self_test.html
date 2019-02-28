@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VIA Self Test</title>
+<style>
+#console { font-family:mono; background-color:#f2f2f2; padding:0.5em; }
+</style>
+</head>
+<body>
+<h1>VIA Self Test</h1>
+<div id="console"></div>
+
+<script src="../js/_via_util.js"></script>
+<script src="../js/_via_const.js"></script>
+<script src="../js/_via_config.js"></script>
+
+<script src="../js/_via_event.js"></script>
+<script src="../js/_via_metadata.js"></script>
+<script src="../js/_via_file.js"></script>
+<script src="../js/_via_attribute.js"></script>
+<script src="../js/_via_data.js"></script>
+
+<script src="../js/_via_store_localstorage.js"></script>
+
+<script src="../js/_via_io.js"></script>
+
+<script src="../js/_via_project.js"></script>
+
+<script src="../js/_via_video_thumbnail.js"></script>
+<script src="../js/_via_region_annotator.js"></script>
+<script src="../js/_via_time_annotator.js"></script>
+<script src="../js/_via_annotator.js"></script>
+
+<script src="../js/_via_file_manager.js"></script>
+
+<script src="../js/_via_editor.js"></script>
+
+<script>
+'use strict'
+
+// data persistence: localStorage
+var data = new _via_data();
+var store = new _via_store_localstorage(data);
+if ( store._init() ) {
+  data._store_add(_VIA_STORE_TYPE.LOCALSTORAGE, store);
+  store._self_test();
+}
+
+</script>
+</body>
+</html>

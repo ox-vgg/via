@@ -9,6 +9,8 @@ function _via_editor(container, data, annotator) {
   this.d = data;
   this.a = annotator;
 
+  this.now = {};
+
   if ( typeof(this.c.innerHTML) === 'undefined' ) {
     throw 'invalid html container or media element!';
   }
@@ -16,7 +18,7 @@ function _via_editor(container, data, annotator) {
   this.init();
 
   // initialise event listeners
-  this.a.on_event('file_show', this.on_event_file_show.bind(this));
+  this.d.on_event('file_show', this.on_event_file_show.bind(this));
   this.d.on_event('metadata_add', this.on_event_metadata_add.bind(this));
   this.d.on_event('metadata_del', this.on_event_metadata_del.bind(this));
   this.d.on_event('attribute_update', this.on_event_attribute_update.bind(this));
@@ -537,5 +539,7 @@ _via_editor.prototype.on_event_metadata_del = function(data, event_payload) {
 }
 
 _via_editor.prototype.on_event_file_show = function(data, event_payload) {
+  console.log(event_payload)
+  //this.now.file = event
   this.metadata_update();
 }

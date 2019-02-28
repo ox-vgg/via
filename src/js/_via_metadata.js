@@ -15,7 +15,8 @@
 
 const _VIA_SHAPE  = { 'RECT':1, 'CIRCLE':2, 'ELLIPSE':3, 'POINT':4, 'POLYLINE':5, 'POLYGON':6 };
 
-function _via_metadata(mid, z, xy, metadata) {
+function _via_metadata(fid, mid, z, xy, metadata) {
+  this.fid = fid;           // this metadata is attached to this file id
   this.mid = mid;           // unique metadata id
   this.z = z;               // time or frame index
   this.xy = xy;             // [shape_id, shape_coordinates, ...]

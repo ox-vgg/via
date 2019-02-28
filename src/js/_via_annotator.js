@@ -22,14 +22,12 @@ function _via_annotator(annotator_container, data) {
   this.conf.PRELOAD_CACHE_SIZE = 5;
   this.conf.PRELOAD_NBD_INDEX_LIST = [1, -1, 2]; // for current image, preload previous and next 2 images
 
-
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
   this.event_prefix = '_via_annotator_';
   _via_event.call( this );
 
   this.on_event('container_resize', this._on_event_container_resize.bind(this));
-
   this.d.on_event('file_remove', this._on_event_file_remove.bind(this));
   this.d.on_event('attribute_del', this._on_event_attribute_del.bind(this));
   this.d.on_event('attribute_add', this._on_event_attribute_del.bind(this));
@@ -46,18 +44,6 @@ _via_annotator.prototype.init_media_annotator_event_listener = function(media_an
                            this.metadata_segment_update.bind(this));
   media_annotator.on_event('metadata_segment_del',
                            this.metadata_segment_del.bind(this));
-}
-
-//
-// View Panel
-//
-_via_annotator.prototype._update_child_containers_size = function() {
-  var h = this.c.clientHeight;
-  var region_annotator_height = Math.floor(0.65 * h);
-  var time_annotator_height = h - region_annotator_height;
-
-  this.preload[fid].region_annotator_container.style.height = region_annotator_height + 'px';
-  this.preload[fid].time_annotator_container.style.height = time_annotator_height + 'px';
 }
 
 //
@@ -129,8 +115,6 @@ _via_annotator.prototype._preload_file_content = function(file) {
     this.preload[fid].file_container.appendChild(this.preload[fid].region_annotator_container);
     this.preload[fid].file_container.appendChild(this.preload[fid].time_annotator_container);
     this.c.appendChild(this.preload[fid].file_container);
-    this._update_child_containers_size();
-
 
     this.preload[fid].region_annotator = new _via_region_annotator(this.preload[fid].region_annotator_container,
                                                                    this.preload[fid].file,
@@ -139,20 +123,12 @@ _via_annotator.prototype._preload_file_content = function(file) {
       var fid = file_ok.fid;
       this.preload[fid].region_annotator._init_html_elements();
 
-      try {
-        this.preload[fid].time_annotator = new _via_time_annotator(this.preload[fid].time_annotator_container,
-                                                                   this.preload[fid].file,
-                                                                   this.d,
-                                                                   this.preload[fid].region_annotator.media
-                                                                  );
-
-        // capture all keypresses when the video panel is in focus
-        this.preload[fid].region_annotator.media.addEventListener('focus', function(e) {
-          this.blur();
-        });
-      } catch(err) {
-        console.log(err);
-      }
+      // capture all keypresses when the video panel is in focus
+      /*
+      this.preload[fid].region_annotator.media.addEventListener('focus', function(e) {
+        this.blur();
+      });
+      */
       ok_callback(file_ok);
     }.bind(this), function(file_err) {
       err_callback(file_err);
@@ -170,7 +146,7 @@ _via_annotator.prototype._evict_preload_oldest = function(count) {
 
 _via_annotator.prototype._remove_preload = function(fid) {
   // if file.type = LOCAL, this releases the memory occupied by file object URI
-  this.preload[fid].media_annotator._revoke_file_object_url();
+  this.preload[fid].region_annotator._revoke_file_object_url();
 
   this._remove_from_view(fid);
   delete this.preload[fid];
@@ -252,26 +228,59 @@ _via_annotator.prototype._remove_from_view = function(fid) {
   }
 }
 
+_via_annotator.prototype._hide_in_view = function(file) {
+  if ( typeof(file) === 'undefined' ) {
+    return;
+  }
+  var n = this.c.childNodes.length;
+  var fid = file.fid.toString();
+  for ( i = 0; i < n; ++i ) {
+    if ( this.c.childNodes[i].dataset.fid === fid ) {
+      this.c.childNodes[i].classList.add('file_hide');
+      if ( this.preload[fid].time_annotator ) {
+        this.preload[fid].time_annotator.thumbnail._destructor();
+        delete this.preload[fid].time_annotator;
+        this.preload[fid].time_annotator_container.innerHTML = '';
+      }
+    }
+  }
+}
+
 _via_annotator.prototype._show_in_view = function(file) {
+  if ( typeof(file) === 'undefined' ) {
+    return;
+  }
+
   var n = this.c.childNodes.length;
   var fid = file.fid.toString();
   var i;
+
+  var maxw = this.c.clientWidth;
+  var maxh = this.c.clientHeight;
+
   for ( i = 0; i < n; ++i ) {
     if ( this.c.childNodes[i].dataset.fid === fid ) {
-      if ( this.c.childNodes[i].classList.contains('file_hide') ) {
-        this.c.childNodes[i].classList.remove('file_hide');
-        this.now.preload.time[fid] = Date.now(); // shown time recorded for cache admin.
-        this.preload[fid].region_annotator._update_child_containers_size();
+      // 1. Make the container visible
+      // Note: this is needed to let panels compute the height and width
+      this.c.childNodes[i].classList.remove('file_hide');
 
-        this.preload[fid].time_annotator._init();
+      // if time annotator is needed, the vertical space is shared
+      var region_annotator_height = maxh;
 
+      if ( file.type === _VIA_FILE_TYPE.VIDEO ) {
+        var time_annotator_height = Math.floor( 0.35 * maxh );
+        this.preload[fid].time_annotator_container.style.height = time_annotator_height + 'px';
+        this.preload[fid].time_annotator = new _via_time_annotator(this.preload[fid].time_annotator_container,
+                                                                   this.preload[fid].file,
+                                                                   this.d,
+                                                                   this.preload[fid].region_annotator.media
+                                                                  );
+        region_annotator_height = region_annotator_height - time_annotator_height;
       }
-    } else {
-      if ( ! this.c.childNodes[i].classList.contains('file_hide') ) {
-        this.c.childNodes[i].classList.add('file_hide');
-        this.preload[fid].thumbnail._destructor(); // free resources
-        delete this.preload[fid].thumbnail;
-      }
+
+      this.preload[fid].region_annotator_container.style.height = region_annotator_height + 'px';
+      this.now.preload.time[fid] = Date.now(); // shown time recorded for cache admin.
+      this.preload[fid].region_annotator._init_container_size(maxw, region_annotator_height);
     }
   }
 }
@@ -284,11 +293,8 @@ _via_annotator.prototype.file_show_none = function() {
   var n = this.c.childNodes.length;
   var i;
   for ( i = 0; i < n; ++i ) {
-    if ( this.c.childNodes[i].classList.contains('show') ) {
-      this.c.childNodes[i].classList.remove('show');
-    }
-    if ( ! this.c.childNodes[i].classList.contains('hide') ) {
-      this.c.childNodes[i].classList.add('hide');
+    if ( ! this.c.childNodes[i].classList.contains('file_hide') ) {
+      this.c.childNodes[i].classList.add('file_hide');
     }
   }
 }
@@ -302,11 +308,12 @@ _via_annotator.prototype.file_show_fid = function(fid) {
 
 _via_annotator.prototype.file_show = function(file) {
   this.file_load(file).then( function(ok_file) {
+    this._hide_in_view(this.now.file);
     this._show_in_view(ok_file);
     this.now.file = ok_file;
     this.emit_event('file_show', ok_file);
-    console.log('@fixme')
-    //this._preload_neighbours(this.now.file.fid);
+    //console.log('@fixme: activate neighbour preload')
+    this._preload_neighbours(this.now.file.fid);
   }.bind(this), function(err_file) {
     console.log('file_show() failed');
     console.log(err_file);
@@ -331,7 +338,6 @@ _via_annotator.prototype.file_load = function(file) {
 
 _via_annotator.prototype.file_preload = function(file) {
   return new Promise( function(ok_callback, err_callback) {
-    //console.log(file.type + ' file_preload()')
     if ( Object.keys(this.preload).length > this.conf.PRELOAD_CACHE_SIZE ) {
       // create space for preloading neighbours
       this._evict_preload_oldest(this.conf.PRELOAD_NBD_INDEX_LIST.length);
@@ -346,27 +352,12 @@ _via_annotator.prototype.file_preload = function(file) {
   }.bind(this));
 }
 
-_via_annotator.prototype.add_event_listener = function(file) {
-}
-
-_via_annotator.prototype.remove_event_listener = function(file) {
-}
-
-_via_annotator.prototype.config = function(key, value) {
-}
-
 //
 // External events
 //
 
 _via_annotator.prototype._on_event_container_resize = function(data, event_payload) {
-  this._update_child_containers_size();
-  if ( this.preload[fid].region_annotator ) {
-    this.preload[fid].region_annotator.emit_event('container_resize', {});
-  }
-  if ( this.preload[fid].time_annotator ) {
-    this.preload[fid].time_annotator.emit_event('container_resize', {});
-  }
+  this.file_show(this.now.file);
 }
 
 _via_annotator.prototype._on_event_file_remove = function(data, event_payload) {

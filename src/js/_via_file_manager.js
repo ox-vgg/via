@@ -27,7 +27,6 @@ function _via_file_manager(filelist_element, data, annotator) {
   this.d.on_event('file_remove', this._on_event_file_remove.bind(this));
   this.d.on_event('file_add', this._on_event_file_add.bind(this));
   this.d.on_event('file_add_bulk', this._on_event_file_add_bulk.bind(this));
-  this._init();
 }
 
 _via_file_manager.prototype._init = function() {
@@ -67,11 +66,11 @@ _via_file_manager.prototype._filelist_update_regex = function(regex) {
   if ( regex === '' ||
        typeof(regex) === 'undefined'
      ) {
-    _filelist_update_showall();
+    this._filelist_update_showall();
   } else {
     this._filelist_clear();
     var i, uri;
-    var fid, uri;
+    var fid, uri, src;
     var findex;
     for ( findex in this.d.fid_list ) {
       fid = this.d.fid_list[findex];

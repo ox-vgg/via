@@ -18,26 +18,15 @@ function _via_region_annotator(container, file, data) {
   // _via_event to let this module listen and emit events
   this._EVENT_ID_PREFIX = '_via_region_annotator_';
   _via_event.call( this );
-
-  this.on_event('container_resize', this._on_event_container_resize.bind(this));
-}
-
-_via_region_annotator.prototype._on_event_container_resize = function() {
-  console.log('resize container');
-  this._update_child_containers_size();
 }
 
 // this method ensures that all the layers have same size as that of the content
-_via_region_annotator.prototype._update_child_containers_size = function() {
+_via_region_annotator.prototype._init_container_size = function(maxw, maxh) {
   try {
     // max. dimension of the container
     // to avoid overflowing window, we artificially reduce the max. size by 1 pixels
-    if ( this.c.clientWidth === 0 || this.c.clientHeight === 0 ) {
-      console.log('_via_region_annotator._update_child_containers_size(): container dimension is 0');
-      return;
-    }
-    var maxw = this.c.clientWidth - 1;
-    var maxh = this.c.clientHeight - 1;
+    maxw = maxw - 1;
+    maxh = maxh - 1;
 
     // original size of the content
     var cw0, ch0;
