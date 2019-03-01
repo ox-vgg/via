@@ -1,6 +1,35 @@
 'use strict'
 
 var data = new _via_data();
+try {
+  var store = new _via_store_localstorage(data);
+  store.prev_session_data_init().then( function(ok) {
+    var button = document.getElementById('_via_restore_project_button');
+    if ( store.prev_session_is_available() ) {
+      var button_title = 'Restore and save ' + store.prev_session_get_size() + ' bytes of VIA project data saved on ' + store.prev_session_get_timestamp();
+      button.getElementsByTagName('title')[0].innerHTML = button_title;
+    } else {
+      button.classList.add('disabled_button');
+      button.getElementsByTagName('title')[0].innerHTML = 'Browser\'s localStorage is not available!';
+      button.setAttribute('onclick', '');
+    }
+    if ( store._init() ) {
+      data._store_add('localStorage', store);
+    }
+  }.bind(this), function(err) {
+    var button = document.getElementById('_via_restore_project_button');
+    button.classList.add('disabled_button');
+    button.getElementsByTagName('title')[0].innerHTML = 'Browser\'s localStorage is not available!';
+    button.setAttribute('onclick', '');
+
+    if ( store._init() ) {
+      data._store_add('localStorage', store);
+    }
+  }.bind(this));
+}
+catch(e) {
+  console.log(e);
+}
 
 data.attribute_add('Caption',
                 _VIA_ATTRIBUTE_TYPE.TEXT);

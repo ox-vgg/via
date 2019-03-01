@@ -262,7 +262,7 @@ _via_data.prototype.metadata_add = function(fid, z, xy, metadata) {
     }
 
     var mid = this._uuid();
-    this.metadata_store[mid] = new _via_metadata(fid, mid, z, xy, metadata);
+    this.metadata_store[mid] = new _via_metadata(mid, z, xy, metadata);
     if ( typeof(this.file_mid_list[fid]) === 'undefined' ) {
       this.file_mid_list[fid] = [];
     }

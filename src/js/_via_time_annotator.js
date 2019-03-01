@@ -503,8 +503,8 @@ _via_time_annotator.prototype._tseg_timeline_update_metadata = function() {
   var fid = this.file.fid;
   var mid, tn, t0, t1;
   var mid_index;
-  for ( mid_index in this.d.mid_list[fid] ) {
-    mid = this.d.mid_list[fid][mid_index];
+  for ( mid_index in this.d.file_mid_list[fid] ) {
+    mid = this.d.file_mid_list[fid][mid_index];
     tn = this.d.metadata_store[mid].z.length;
     if ( tn ) {
       var i;

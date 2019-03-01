@@ -15,21 +15,17 @@ function _via_store_localstorage(data) {
   this.store = window.localStorage;
   this.store_available = false;
 
+  this.prev_session_available = false;
+  this.prev_session_data = {};
+  this.prev_session_timestamp = '';
+  this.prev_session_timestamp_str = '';
+
   this.event_prefix = '_via_store_localstorage_';
   _via_event.call( this );
 }
 
 _via_store_localstorage.prototype._init = function() {
   if ( this.is_store_available() ) {
-    /*
-    var existing_project_store = this.store.getItem('_via_project_store');
-    if ( typeof(existing_project_store) !== 'undefined' ) {
-      // retrieve and save a copy of existing data
-      var store_data = this._pack_store_data();
-      console.log('please save this data');
-      console.log(store_data)
-    }
-    */
     this.store.clear();
     this.store_available = true;
 
@@ -37,6 +33,50 @@ _via_store_localstorage.prototype._init = function() {
     return true;
   } else {
     return false;
+  }
+}
+
+_via_store_localstorage.prototype.prev_session_data_init = function() {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      var existing_project_store_str = this.store.getItem('_via_project_store');
+      if ( typeof(existing_project_store_str) !== 'undefined' ) {
+        // save a copy of previous session's data
+        var session_data = this._pack_store_data();
+        this.prev_session_data = new Blob( [ JSON.stringify(session_data) ],
+                                           {type:'text/json;charset=utf-8'} );
+        var t = new Date(session_data.project_store.created);
+        this.prev_session_timestamp_str = t.getFullYear() + '_' + (t.getMonth()+1) + '_' + t.getDate() + '_at_' + t.getHours() + ':' + t.getMinutes() + ':' + t.getSeconds();
+
+        this.prev_session_timestamp = t;
+        this.prev_session_available = true;
+        ok_callback();
+      } else {
+        err_callback();
+      }
+    }
+    catch(ex) {
+      err_callback(ex);
+    }
+  }.bind(this));
+}
+
+_via_store_localstorage.prototype.prev_session_is_available = function() {
+  return this.prev_session_available;
+}
+
+_via_store_localstorage.prototype.prev_session_get_size = function() {
+  return this.prev_session_data.size;
+}
+
+_via_store_localstorage.prototype.prev_session_get_timestamp = function() {
+  return this.prev_session_timestamp.toString();
+}
+
+_via_store_localstorage.prototype.prev_session_download = function() {
+  if ( this.is_previous_session_available ) {
+    _via_util_download_as_file(this.prev_session_data,
+                               'via_project_' + this.prev_session_timestamp_str + '.json');
   }
 }
 
@@ -63,7 +103,11 @@ _via_store_localstorage.prototype._push_metadata = function() {
 }
 
 _via_store_localstorage.prototype._storekey_to_datakey = function(store_key) {
-  return store_key.substring(5); // remove prefix '_via_'
+  if ( store_key.startsWith('_via_') ) {
+    return store_key.substring( '_via_'.length ); // remove prefix '_via_'
+  } else {
+    return store_key;
+  }
 }
 
 _via_store_localstorage.prototype._datakey_to_storekey = function(data_key) {
@@ -72,29 +116,35 @@ _via_store_localstorage.prototype._datakey_to_storekey = function(data_key) {
 
 
 _via_store_localstorage.prototype._pack_store_data = function() {
-  var data = {};
-  var store_key, data_key;
-  for ( store_key in Object.keys(this.store) ) {
-    data_key = this._storekey_to_datakey(store_key);
-    if ( this.d.data_key_list.includes(data_key) ) {
-      data[data_key] = JSON.parse( this.store.getItem(store_key) );
-    } else {
-      try {
-        var metadata = JSON.parse( this.store.getItem(store_key) );
-        if ( typeof(metadata.fid) !== 'undefined' &&
-             typeof(metadata.mid) !== 'undefined'
-           ) {
-          data['metadata_store'][store_key] = metadata;
-        } else {
-          console.log('store_key=[' + store_key + '] is unknown');
+  try {
+    var data = { 'metadata_store':{} };
+    var store_items = Object.keys(this.store);
+    var store_key, store_key_index, data_key;
+
+    for ( store_key_index in Object.keys(this.store) ) {
+      store_key = store_items[store_key_index];
+      data_key = this._storekey_to_datakey(store_key);
+      if ( this.d.data_key_list.includes(data_key) ) {
+        data[data_key] = JSON.parse( this.store.getItem(store_key) );
+      } else {
+        try {
+          var metadata_str = this.store.getItem(store_key);
+          var metadata = JSON.parse(metadata_str);
+          if ( typeof(metadata.mid) !== 'undefined' ) {
+            data['metadata_store'][store_key] = metadata;
+          } else {
+            console.log('malformed metadata : [' + metadata_str + ']');
+          }
+        } catch(e) {
+          console.log('Faied to parse data for store_key=[' + store_key + ']');
+          console.log(this.store.getItem(store_key));
         }
-      } catch(e) {
-        console.log('Faied to parse data for store_key=[' + store_key + ']');
-        console.log(this.store.getItem(store_key));
       }
     }
+    return data;
+  } catch(e) {
+    err_callback(e);
   }
-  return data;
 }
 
 //
@@ -152,7 +202,6 @@ _via_store_localstorage.prototype.transaction = function(data_key, action, param
         ok_callback();
         break;
       case 'file_store':
-        console.log('file_store')
         this._push_data('file_store');
         this._push_data('fid_list');
         ok_callback();
@@ -177,9 +226,19 @@ _via_store_localstorage.prototype._self_test = function() {
   var aid1 = this.d.attribute_add('attribute1', _VIA_ATTRIBUTE_TYPE.TEXT);
   var aid2 = this.d.attribute_add('attribute2', _VIA_ATTRIBUTE_TYPE.TEXT);
   this.d.metadata_add(fid1, [], [ _VIA_SHAPE.RECT, 10, 20, 50, 100 ], { aid1:'value1', aid2:'value2'}).then( function(ok) {
-
+    this._pack_store_data().then( function(d) {
+      console.assert( d.file_mid_list[0][0] === Object.keys(d.metadata_store)[0] );
+      console.assert( d.fid_list.length === 2 );
+      console.assert( d.aid_list.length === 2 );
+      console.assert( d.file_store[1].filename === 'testXYZ.jpg' );
+      console.assert( d.file_store[0].filename === 'test123.jpg' );
+      console.assert( d.attribute_store[0].attr_name === 'attribute1' );
+      console.assert( d.attribute_store[1].attr_name === 'attribute2' );
+      console.log('_via_store_localstorage : self test done');
+    }, function(err) {
+      console.error(err)
+    });
   }.bind(this), function(err) {
     console.error('failed');
-  };
-
+  });
 }
