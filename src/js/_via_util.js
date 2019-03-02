@@ -287,7 +287,7 @@ function _via_util_hide_info_page() {
   }
 }
 
-function _via_msg_show(msg, sticky) {
+function _via_util_msg_show(msg, sticky) {
   var container = document.getElementById('_via_message_container');
   var content = document.getElementById('_via_message');
   if ( container && content ) {
@@ -307,9 +307,24 @@ function _via_msg_show(msg, sticky) {
   }
 }
 
-function _via_msg_hide() {
+function _via_util_msg_hide() {
   document.getElementById('_via_message_container').style.display = 'none';
   if ( _via_msg_clear_timer ) {
     clearTimeout(_via_msg_clear_timer);
   }
+}
+
+function _via_util_pad10(x) {
+  if ( x < 10 ) {
+    return '0' + x.toString();
+  } else {
+    return x;
+  }
+}
+
+function _via_util_date_to_filename_str(date_str) {
+  var t = new Date(date_str);
+  var month_list = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var ts
+  return _via_util_pad10(t.getDate()) + month_list[t.getMonth()] + t.getFullYear() + '_at_' + _via_util_pad10(t.getHours()) + 'h' + _via_util_pad10(t.getMinutes()) + 'm' + _via_util_pad10(t.getSeconds())+'s';
 }

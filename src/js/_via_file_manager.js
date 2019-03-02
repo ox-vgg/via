@@ -27,6 +27,7 @@ function _via_file_manager(filelist_element, data, annotator) {
   this.d.on_event('file_remove', this._on_event_file_remove.bind(this));
   this.d.on_event('file_add', this._on_event_file_add.bind(this));
   this.d.on_event('file_add_bulk', this._on_event_file_add_bulk.bind(this));
+  this.d.on_event('project_load', this._on_event_project_load.bind(this));
 }
 
 _via_file_manager.prototype._init = function() {
@@ -200,7 +201,9 @@ _via_file_manager.prototype.on_file_show_next = function() {
       var index_next = index_now + 1;
       if ( index_next >= this.filelist_fid_list.length ) {
         index_next = 0;
+
       }
+
       this.a.file_show_fid( this.filelist_fid_list[index_next] );
     } else {
       // show the first file in the regex list
@@ -271,4 +274,8 @@ _via_file_manager.prototype._on_event_file_add_bulk = function(data, event_paylo
   this._filelist_update();
   var first_added_fid = event_payload.fid_list[0];
   this.a.file_show_fid( first_added_fid );
+}
+
+_via_file_manager.prototype._on_event_project_load = function(data, event_payload) {
+  this._init();
 }

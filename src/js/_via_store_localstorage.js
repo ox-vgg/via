@@ -42,13 +42,12 @@ _via_store_localstorage.prototype.prev_session_data_init = function() {
       var existing_project_store_str = this.store.getItem('_via_project_store');
       if ( typeof(existing_project_store_str) !== 'undefined' ) {
         // save a copy of previous session's data
-        var session_data = this._pack_store_data();
-        this.prev_session_data = new Blob( [ JSON.stringify(session_data) ],
-                                           {type:'text/json;charset=utf-8'} );
-        var t = new Date(session_data.project_store.created);
-        this.prev_session_timestamp_str = t.getFullYear() + '_' + (t.getMonth()+1) + '_' + t.getDate() + '_at_' + t.getHours() + ':' + t.getMinutes() + ':' + t.getSeconds();
+        this.prev_session_data = this._pack_store_data();
+        this.prev_session_data_blob = new Blob( [ JSON.stringify(this.prev_session_data) ],
+                                                {type:'text/json;charset=utf-8'} );
 
-        this.prev_session_timestamp = t;
+        this.prev_session_timestamp_str = _via_util_date_to_filename_str(this.prev_session_data.project_store.created);
+        this.prev_session_timestamp = new Date(this.prev_session_data.project_store.created);
         this.prev_session_available = true;
         ok_callback();
       } else {
@@ -66,17 +65,24 @@ _via_store_localstorage.prototype.prev_session_is_available = function() {
 }
 
 _via_store_localstorage.prototype.prev_session_get_size = function() {
-  return this.prev_session_data.size;
+  return this.prev_session_data_blob.size;
 }
 
 _via_store_localstorage.prototype.prev_session_get_timestamp = function() {
   return this.prev_session_timestamp.toString();
 }
 
-_via_store_localstorage.prototype.prev_session_download = function() {
-  if ( this.is_previous_session_available ) {
-    _via_util_download_as_file(this.prev_session_data,
-                               'via_project_' + this.prev_session_timestamp_str + '.json');
+_via_store_localstorage.prototype.prev_session_load = function() {
+  if ( this.prev_session_available ) {
+    this.d._project_load(this.prev_session_data);
+  }
+}
+
+_via_store_localstorage.prototype.prev_session_save = function() {
+  if ( this.prev_session_available ) {
+    _via_util_download_as_file(this.prev_session_data_blob,
+                               'via_project_' +
+                               this.prev_session_timestamp_str + '.json');
   }
 }
 

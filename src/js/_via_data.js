@@ -12,7 +12,9 @@
 function _via_data() {
   this.project_store = {
     'project_id':this._uuid(),
+    'project_name':'via_project',
     'data_format_version':'3.0.0',
+    'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
     'created': new Date().toString(),
     'updated': new Date().toString(),
   };
@@ -285,7 +287,26 @@ _via_data.prototype.metadata_update = function(fid, mid, z, xy, metadata) {
       err_callback('undefined mid=' + mid);
     }
 
-    this.metadata_store[mid] = new _via_metadata(fid, mid, z, xy, metadata);
+    this.metadata_store[mid] = new _via_metadata(mid, z, xy, metadata);
+    this._store_transaction('metadata_store', 'update', {'fid':fid, 'mid':mid});
+    this._hook_on_data_update();
+    this.emit_event( 'metadata_update', { 'fid':fid, 'mid':mid } );
+    ok_callback({'fid':fid, 'mid':mid});
+  }.bind(this));
+}
+
+_via_data.prototype.metadata_update_z = function(fid, mid, zindex, zvalue) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( typeof(this.file_store[fid]) === 'undefined' ) {
+      err_callback('undefined fid=' + fid);
+      return;
+    }
+
+    if ( typeof(this.metadata_store[mid]) === 'undefined' ) {
+      err_callback('undefined mid=' + mid);
+    }
+
+    this.metadata_store[mid].z[zindex] = zvalue;
     this._store_transaction('metadata_store', 'update', {'fid':fid, 'mid':mid});
     this._hook_on_data_update();
     this.emit_event( 'metadata_update', { 'fid':fid, 'mid':mid } );
@@ -325,6 +346,11 @@ _via_data.prototype.metadata_del = function(fid, mid) {
 //
 // Project
 //
+_via_data.prototype._project_id_short = function(e) {
+  return this.project_store.project_id.substring(0,
+                                                 Math.min(5, this.project_store.project_id.length));
+}
+
 _via_data.prototype._project_load_json = function(e) {
   _via_util_load_text_file(e.target.files[0], this._project_import_from_json.bind(this));
 }
@@ -335,76 +361,108 @@ _via_data.prototype._project_import_from_json = function(json_str) {
     return;
   }
 
-  var json = JSON.parse(json_str);
-  this.project = json.project;
+  var data = JSON.parse(json_str);
+  this._project_load(data);
+}
+
+_via_data.prototype._project_load = function(data) {
+  // clear everything
+  this.project_store = {};
+  this.metadata_store = {};
+  this.attribute_store = {};
+  this.aid_list = [];        // to maintain ordering of attributes
+  this.file_store = {};
+  this.fid_list = [];        // to maintain ordering of files
+  this.file_mid_list = {};   // list of all metadata associated with a file
+
+  // project
+  this.project_store = data.project_store;
 
   // add all files
   var fid;
-  for ( fid in json.file_store ) {
+  for ( fid in data.file_store ) {
     this.file_store[fid] = new _via_file(fid,
-                                         json.file_store[fid].filename,
-                                         json.file_store[fid].type,
-                                         json.file_store[fid].loc,
-                                         json.file_store[fid].src
+                                         data.file_store[fid].filename,
+                                         data.file_store[fid].type,
+                                         data.file_store[fid].loc,
+                                         data.file_store[fid].src
                                         );
-    this.fid_list.push(fid);
   }
+
+  // copy list of file id (fid)
+  var findex;
+  for ( findex in data.fid_list ) {
+    this.fid_list[findex] = data.fid_list[findex].toString(); // fid is always string
+  }
+
+  // copy map of mid associated with each fid
+  this.file_mid_list = data.file_mid_list;
 
   // add all attributes
   var aid;
-  for ( aid in json.attribute_store ) {
+  for ( aid in data.attribute_store ) {
     this.attribute_store[aid] = new _via_attribute(aid,
-                                                   json.attribute_store[aid].attr_name,
-                                                   json.attribute_store[aid].type,
-                                                   json.attribute_store[aid].options,
-                                                   json.attribute_store[aid].default_option_id
+                                                   data.attribute_store[aid].attr_name,
+                                                   data.attribute_store[aid].type,
+                                                   data.attribute_store[aid].options,
+                                                   data.attribute_store[aid].default_option_id
                                                   );
-    this.aid_list.push(aid);
+  }
+
+  // copy list of attribute id (aid)
+  var aindex;
+  for ( aindex in data.aid_list ) {
+    this.aid_list[aindex] = data.aid_list[aindex].toString(); // aid is always string
   }
 
   // add all metadata
   var mid;
-  for ( fid in json.metadata_store ) {
-    if ( ! this.metadata_store.hasOwnProperty(fid) ) {
-      this.metadata_store[fid] = {};
-    }
-
-    for ( mid in json.metadata_store[fid] ) {
-      this.metadata_store[fid][mid] = new _via_metadata(mid,
-                                                        json.metadata_store[fid][mid].where,
-                                                        json.metadata_store[fid][mid].what
-                                                       );
-    }
+  for ( mid in data.metadata_store ) {
+    this.metadata_store[mid] = new _via_metadata(mid,
+                                                 data.metadata_store[mid].z,
+                                                 data.metadata_store[mid].xy,
+                                                 data.metadata_store[mid].metadata
+                                                );
   }
-  this.emit_event( 'file_add_bulk', { 'fid_list':this.fid_list } );
+
+  // initialise all the stores
+  var store_id;
+  for ( store_id in this._store_list ) {
+    this._store_list[store_id]._init();
+  }
+
+  this.emit_event( 'project_load', {}  );
 }
 
-_via_data.prototype._project_save = function() {
+_via_data.prototype._project_pack_data = function() {
   return new Promise( function(ok_callback, err_callback) {
     try {
-      var d = {
+      var data = {
         'project_store':this.project_store,
         'metadata_store':this.metadata_store,
         'attribute_store':this.attribute_store,
         'aid_list':this.aid_list,
         'file_store':this.file_store,
         'fid_list':this.fid_list,
+        'file_mid_list':this.file_mid_list,
       };
 
-      var data_json = JSON.stringify(d);
-      console.log(data_json)
-      ok_callback(data_json);
+      var data_str = JSON.stringify(data);
+      ok_callback({'project_name':data.project_store.project_name,
+                   'data_str':data_str
+                  });
     } catch(err) {
-      err_callback('failed to convert to json');
+      _via_util_msg_show('Failed to convert project data to JSON', true);
+      console.log(err)
     }
   }.bind(this));
 }
 
 _via_data.prototype.save_local = function() {
-  this._project_save().then( function(data) {
-    console.log(data)
-    var blob = new Blob( [data], {type:'text/json;charset=utf-8'} );
-    _via_util_download_as_file(blob, 'via_project.json');
+  this._project_pack_data().then( function(payload) {
+    var blob = new Blob( [payload.data_str], {type:'text/json;charset=utf-8'} );
+    var filename = payload.project_name + '.json';
+    _via_util_download_as_file(blob, filename);
   }.bind(this), function(err) {
     console.log(err)
   }.bind(this));

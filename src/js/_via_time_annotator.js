@@ -37,8 +37,11 @@ function _via_time_annotator(container, file, data, media_element) {
   this.TEMPORAL_SEG_MOVE_OFFSET = 1;   // in sec
 
   // state
-  this.tseg_timeline_tstart = -1; // boundary of current timeline visible in temporal seg.
+  this.tseg_timeline_tstart = -1; // time boundary of current timeline visible in temporal seg.
   this.tseg_timeline_tend   = -1;
+  this.tseg_timeline_xstart = -1; // spatial boundary of current timeline visible in temporal seg.
+  this.tseg_timeline_xend   = -1;
+
   this.tseg_timeline_mark_time_str = [];
   this.tseg_timeline_mark_x        = []
   this.tseg_metadata_mid_list      = [];
@@ -68,15 +71,14 @@ _via_time_annotator.prototype._init = function() {
       this.tseg_metadata_sel_show_aindex = this.d.aid_list[0];
     }
 
-    try {
-      this.thumbnail = new _via_video_thumbnail(this.file);
-      this.thumbnail.start();
-      this._vtimeline_init();
-      this._tseg_init();
-      this._toolbar_init();
-    } catch(err) {
-      console.log(err)
-    }
+    // initialise thumbnail viewer
+    this.thumbnail = new _via_video_thumbnail(this.file);
+    this.thumbnail.start();
+
+    // initialise all the components
+    this._vtimeline_init();
+    this._tseg_init();
+    this._toolbar_init();
   } catch(err) {
     console.log(err)
   }
@@ -459,9 +461,10 @@ _via_time_annotator.prototype._tseg_update = function() {
 
 _via_time_annotator.prototype._tseg_timeline_update_boundary = function(tstart) {
   this.tseg_timeline_tstart = tstart;
+  this.tseg_timeline_xstart = this.padx;
 
   var t = this.tseg_timeline_tstart;
-  var tx = this.padx;
+  var tx = this.tseg_timeline_xstart;
   var endx = tx + this.tseg_timelinew;
   this.tseg_timeline_mark_x = [];
   this.tseg_timeline_mark_time_str = [];
@@ -478,6 +481,8 @@ _via_time_annotator.prototype._tseg_timeline_update_boundary = function(tstart) 
   } else {
     this.tseg_timeline_tend = t - 1;
   }
+  this.tseg_timeline_xend = (this.tseg_timeline_tend - this.tseg_timeline_tstart) * this.tseg_width_per_sec;
+
   ///console.log(this.m.duration + ',' + t + ',' + this.tseg_timeline_tstart + ':' + this.tseg_timeline_tend)
   //console.table(this.tseg_timeline_mark_x)
   //console.table(this.tseg_timeline_mark_time_str)
@@ -690,8 +695,9 @@ _via_time_annotator.prototype._tseg_move_left = function() {
 //
 _via_time_annotator.prototype._tseg_timeline_canvas2time = function(x) {
   var T = this.tseg_timeline_tend - this.tseg_timeline_tstart;
+  var W = this.tseg_timeline_xend - this.tseg_timeline_xstart;
   var dx = x - this.padx;
-  return this.tseg_timeline_tstart + ((T * dx) / this.tseg_timelinew);
+  return this.tseg_timeline_tstart + ((T * dx) / W);
 }
 
 _via_time_annotator.prototype._tseg_timeline_time2canvas = function(t) {
@@ -741,15 +747,19 @@ _via_time_annotator.prototype._tseg_on_mousemove = function(e) {
   // metadata
   if ( e.offsetY >= this.lineh6 && e.offsetY <= this.lineh8) {
     var t = this._tseg_timeline_canvas2time(e.offsetX);
-    var mindex = this._tseg_time_to_metadata_index(t);
-    if ( mindex[0] !== -1 ) {
-      if ( mindex[1] !== -1 ) {
-        this.tseg.style.cursor = 'ew-resize';
-      } else {
-        this.tseg.style.cursor = 'pointer';
-      }
+    if ( t < 0 || t > this.m.duration ) {
+      this.tseg.style.cursor = 'default';
     } else {
-      this.tseg.style.cursor = 'cell';
+      var mindex = this._tseg_time_to_metadata_index(t);
+      if ( mindex[0] !== -1 ) {
+        if ( mindex[1] !== -1 ) {
+          this.tseg.style.cursor = 'ew-resize';
+        } else {
+          this.tseg.style.cursor = 'pointer';
+        }
+      } else {
+        this.tseg.style.cursor = 'cell';
+      }
     }
     return;
   }
@@ -776,6 +786,8 @@ _via_time_annotator.prototype._tseg_on_mousedown = function(e) {
         this.tseg_is_metadata_resize_ongoing = true;
         this.tseg_metadata_sel_bindex = mindex[1];
         this.tseg_metadata_sel_mindex = mindex[0];
+        this._tseg_metadata_select(mindex[0]);
+        this._tseg_metadata_panel_show();
       } else {
         if ( this.tseg_is_metadata_selected ) {
           if ( this.tseg_metadata_sel_mindex === mindex[0] ) {
@@ -846,7 +858,15 @@ _via_time_annotator.prototype._tseg_metadata_update_edge = function(bindex, dt) 
 
 _via_time_annotator.prototype._tseg_metadata_add_at_time = function(t) {
   var z = [ t ];
+  if ( z[0] < 0 ) {
+    z[0] = 0.0;
+  }
+
   z[1] = z[0] + this.DEFAULT_TEMPORAL_SEG_LEN;
+  if ( z[1] > this.m.duration ) {
+    z[1] = this.m.duration;
+  }
+
   var fid = this.file.fid;
   var xy = [];
   var metadata = {};
@@ -1021,7 +1041,7 @@ _via_time_annotator.prototype._tseg_metadata_on_change = function(e) {
 }
 
 _via_time_annotator.prototype._tseg_metadata_update_time = function(mid, bindex, t) {
-  this.d.metadata_store[mid].z[bindex] = t;
+  this.d.metadata_update_z(this.file.fid, mid, bindex, t);
 }
 
 _via_time_annotator.prototype._on_event_metadata_update = function(fid, mid) {
@@ -1046,7 +1066,7 @@ _via_time_annotator.prototype._on_event_metadata_del = function(fid, mid) {
   if ( fid === this.file.fid ) {
     this._tseg_timeline_update_metadata();
   }
-  _via_msg_show('Deleted metadata');
+  _via_util_msg_show('Deleted metadata');
 }
 
 //
@@ -1096,12 +1116,12 @@ _via_time_annotator.prototype._tseg_keydown_handler = function(e) {
     e.preventDefault();
     if ( this.m.paused ) {
       this.m.play();
-      _via_msg_show('Playing ...');
+      _via_util_msg_show('Playing ...');
     } else {
       this.m.pause();
-      _via_msg_show('Paused. Press <span class="key">a</span> to add a temporal segment, ' +
-                    '<span class="key">Backspace</span> to delete and ' +
-                    '<span class="key">Tab</span> to select.', true);
+      _via_util_msg_show('Paused. Press <span class="key">a</span> to add a temporal segment, ' +
+                         '<span class="key">Backspace</span> to delete and ' +
+                         '<span class="key">Tab</span> to select.', true);
     }
   }
 
