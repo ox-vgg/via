@@ -32,7 +32,7 @@ function _via_restore_activate() {
 
 function _via_restore_deactivate() {
   var button_container = document.getElementById('restore');
-  var svg_child = button_container.getElementByTagName('svg');
+  var svg_child = button_container.getElementsByTagName('svg');
   var n = svg_child.length;
   var i;
   for ( i = 0; i < n; ++i ) {
@@ -82,7 +82,7 @@ function _via_toggle_metadata_and_attribute_editor() {
 
 
 
-if ( false ) {
+if ( true ) {
 
   data.attribute_add('Caption',
                      _VIA_ATTRIBUTE_TYPE.TEXT);
@@ -106,6 +106,7 @@ if ( false ) {
 
   //-- debug code start
   var remote_uri_list = [
+    'http://zeus.robots.ox.ac.uk/bsl/_tmp/Terry%2Band%2BMason%2BGreat%2BFood%2BTrip/6215811962695895675/signhd.avi',
     'https://upload.wikimedia.org/wikipedia/commons/b/bd/US-WA-Olympia-NisquallyWildlifeRefuge-Heron.webm',
     'https://upload.wikimedia.org/wikipedia/commons/a/a7/Wood_mouse_%28Apodemus_sylvaticus%29.webm',
     'https://upload.wikimedia.org/wikipedia/commons/3/37/Flock_of_birds_near_Padilla_Bay.webm',
@@ -126,13 +127,26 @@ if ( false ) {
   ];
 
   var i, fid;
+  var filelist = [];
   for ( i = 0; i < local_uri_list.length; ++i ) {
-    //for ( i = 0; i < 1; ++i ) {
-    fid = data.file_add(_via_util_get_filename_from_uri( local_uri_list[i] ),
-                        _VIA_FILE_TYPE.VIDEO,
-                        _VIA_FILE_LOC.URIFILE,
-                        local_uri_list[i]
-                       );
+    filelist.push( {
+      'filename':_via_util_get_filename_from_uri( local_uri_list[i] ),
+      'type':_VIA_FILE_TYPE.VIDEO,
+      'loc':_VIA_FILE_LOC.URIFILE,
+      'src':local_uri_list[i],
+    });
+  }
+
+  filelist.push( {
+    'filename':_via_util_get_filename_from_uri( remote_uri_list[0] ),
+    'type':_VIA_FILE_TYPE.VIDEO,
+    'loc':_VIA_FILE_LOC.URIHTTP,
+    'src':remote_uri_list[0],
+  });
+
+  if ( filelist.length ) {
+    var added_fid_list = data.file_add_bulk(filelist);
+    console.log(added_fid_list);
   }
 
   //data.metadata_add(fid, [32.5, 33.5], [], {'0':'talk', '1':'keyword1, keyword2'});
@@ -148,6 +162,6 @@ if ( false ) {
 
 
   // for debugging, show one of the files
-  annotator.file_show_fid(0);
+  //annotator.file_show_fid(0);
 
 }

@@ -73,8 +73,9 @@ _via_region_annotator.prototype._init_html_elements = function() {
 _via_region_annotator.prototype._read_media_file = function() {
   return new Promise( function(ok_callback, err_callback) {
     var file_reader = new FileReader();
-    file_reader.addEventListener('error', function() {
+    file_reader.addEventListener('error', function(e) {
       console.log('_via_region_annotator._read_media_file() error');
+      console.warn(e.target.error)
       err_callback();
     }.bind(this));
     file_reader.addEventListener('abort', function() {
@@ -118,6 +119,7 @@ _via_region_annotator.prototype._init_media_html = function(src) {
       }.bind(this));
       this.media.addEventListener('error', function() {
         console.log('_via_region_annotator._init_media_html() error')
+        console.log(this.file)
         err_callback(this.file);
       }.bind(this));
       this.media.addEventListener('abort', function() {

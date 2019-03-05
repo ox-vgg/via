@@ -328,3 +328,17 @@ function _via_util_date_to_filename_str(date_str) {
   var ts
   return _via_util_pad10(t.getDate()) + month_list[t.getMonth()] + t.getFullYear() + '_at_' + _via_util_pad10(t.getHours()) + 'h' + _via_util_pad10(t.getMinutes()) + 'm' + _via_util_pad10(t.getSeconds())+'s';
 }
+
+function _via_util_remote_get(uri) {
+  return new Promise( function(ok_callback, err_callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener('load', function() {
+      ok_callback(xhr.responseText);
+    });
+    xhr.addEventListener('error', function(e) {
+      err_callback(e)
+    });
+    xhr.open('GET', uri);
+    xhr.send();
+  });
+}

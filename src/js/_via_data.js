@@ -75,7 +75,7 @@ _via_data.prototype._store_transaction = function(data_key, action, param) {
   }
 
   Promise.all(promise_list).then( function(ok) {
-    console.log('store transaction: {' + data_key + ',' + action + ', ' + JSON.stringify(param) + '} completed');
+    //console.log('store transaction: {' + data_key + ',' + action + ', ' + JSON.stringify(param) + '} completed');
   }.bind(this), function(err) {
     console.warn('store transaction {' + data_key + ',' + action + ', ' + JSON.stringify(param) + '} failed');
   }.bind(this));
@@ -201,24 +201,26 @@ _via_data.prototype.file_add = function(name, type, loc, src) {
 }
 
 _via_data.prototype.file_add_bulk = function(filelist) {
-  var n = filelist.length;
-  var added_fid_list = [];
-  var i, fid;
-  for ( i = 0; i < n; ++i ) {
-    fid = this._file_get_new_id();
-    this.file_store[fid] = new _via_file(fid,
-                                         filelist[i].filename,
-                                         filelist[i].type,
-                                         filelist[i].loc,
-                                         filelist[i].src
-                                        );
-    this.fid_list.push(fid);
-    added_fid_list.push(fid);
-  }
-  this._store_transaction('file_store', 'add_bulk', {'fid_list':added_fid_list});
-  this._hook_on_data_update();
-  this.emit_event( 'file_add_bulk', { 'fid_list':added_fid_list } );
-  return added_fid_list;
+  return new Promise( function(ok_callback, err_callback) {
+    var n = filelist.length;
+    var added_fid_list = [];
+    var i, fid;
+    for ( i = 0; i < n; ++i ) {
+      fid = this._file_get_new_id();
+      this.file_store[fid] = new _via_file(fid,
+                                           filelist[i].filename,
+                                           filelist[i].type,
+                                           filelist[i].loc,
+                                           filelist[i].src
+                                          );
+      this.fid_list.push(fid);
+      added_fid_list.push(fid);
+    }
+    this._store_transaction('file_store', 'add_bulk', {'fid_list':added_fid_list});
+    this._hook_on_data_update();
+    this.emit_event( 'file_add_bulk', { 'fid_list':added_fid_list } );
+    ok_callback(added_fid_list);
+  }.bind(this));
 }
 
 _via_data.prototype.file_remove = function(fid) {
@@ -241,12 +243,22 @@ _via_data.prototype.file_remove = function(fid) {
   }
 }
 
-_via_data.prototype.has_file = function(fid) {
+_via_data.prototype.file_is_fid_valid = function(fid) {
   if ( this.file_store.hasOwnProperty(fid) ) {
     return true;
   } else {
     return false;
   }
+}
+
+_via_data.prototype.file_src2fid = function(src) {
+  var fid;
+  for ( fid in this.file_store ) {
+    if ( this.file_store[fid].src === src ) {
+      return fid;
+    }
+  }
+  return '-1';
 }
 
 _via_data.prototype.fid2file = function(fid) {
@@ -256,6 +268,46 @@ _via_data.prototype.fid2file = function(fid) {
 //
 // Metadata
 //
+
+// metadata_list = { 'fid', 'z', 'xy', 'metadata' }
+_via_data.prototype.metadata_add_bulk = function(metadata_list) {
+  return new Promise( function(ok_callback, err_callback) {
+    var n = metadata_list.length;
+    var added_mid_list = {};
+    var fid, mid;
+    var i;
+    for ( i = 0; i < n; ++i ) {
+      fid = metadata_list[i].fid;
+
+      if ( ! this.file_store.hasOwnProperty(fid) ) {
+        err_callback('fid=' + fid + ' does not exist!');
+        return;
+      }
+
+      mid = this._uuid();
+      this.metadata_store[mid] = new _via_metadata(mid,
+                                                   metadata_list[i].z,
+                                                   metadata_list[i].xy,
+                                                   metadata_list[i].metadata
+                                                  );
+      if ( typeof(this.file_mid_list[fid]) === 'undefined' ) {
+        this.file_mid_list[fid] = [];
+      }
+      this.file_mid_list[fid].push(mid);
+
+      if ( typeof(added_mid_list[fid]) === 'undefined' ) {
+        added_mid_list[fid] = [];
+      }
+      added_mid_list[fid].push(mid);
+      this._store_transaction('metadata_store', 'add', {'fid':fid, 'mid':mid});
+    }
+
+    this._hook_on_data_update();
+    this.emit_event( 'metadata_add_bulk', { 'added_mid_list':added_mid_list } );
+    ok_callback({'added_mid_list':added_mid_list});
+  }.bind(this));
+}
+
 _via_data.prototype.metadata_add = function(fid, z, xy, metadata) {
   return new Promise( function(ok_callback, err_callback) {
     if ( typeof(this.file_store[fid]) === 'undefined' ) {

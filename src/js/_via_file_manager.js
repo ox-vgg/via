@@ -42,7 +42,7 @@ _via_file_manager.prototype._filelist_clear = function() {
 
 _via_file_manager.prototype._filelist_html_element = function(findex, fid) {
   var oi = document.createElement('option');
-  if ( this.d.has_file(fid) ) {
+  if ( this.d.file_is_fid_valid(fid) ) {
     var oi = document.createElement('option');
     oi.setAttribute('data-fid', fid);
     oi.setAttribute('value', fid);
@@ -105,7 +105,7 @@ _via_file_manager.prototype._filelist_set_selected_to_current_file = function() 
     for ( i = 0; i < n; ++i ) {
       if ( this.filelist.options[i].dataset.fid == this.a.now.file.fid ) {
         this.filelist.selectedIndex = i;
-        this.filelist.title = this.d.file_store[ this.a.now.file.fid.toString() ].uri;
+        this.filelist.title = this.d.file_store[ this.a.now.file.fid.toString() ].src;
       }
     }
   }
@@ -127,7 +127,7 @@ _via_file_manager.prototype._file_add_local_video = function(e) {
   for ( i = 0; i < n; ++i ) {
     if ( files[i].type.startsWith('video') ) {
       filelist.push( {
-        'name':files[i].name,
+        'filename':files[i].name,
         'type':_VIA_FILE_TYPE.VIDEO,
         'loc':_VIA_FILE_LOC.LOCAL,
         'src':files[i],
@@ -268,6 +268,8 @@ _via_file_manager.prototype._on_event_file_remove = function(data, event_payload
 }
 
 _via_file_manager.prototype._on_event_file_add = function(data, event_payload) {
+  this._filelist_update();
+  this.a.file_show_fid( event_payload.fid );
 }
 
 _via_file_manager.prototype._on_event_file_add_bulk = function(data, event_payload) {
