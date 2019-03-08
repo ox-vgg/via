@@ -203,8 +203,6 @@ _via_file_manager.prototype.on_file_show_next = function() {
         index_next = 0;
 
       }
-      console.log(index_next)
-      console.log(this.filelist_fid_list[index_next])
       this.a.annotate_fid( this.filelist_fid_list[index_next] );
     } else {
       // show the first file in the regex list

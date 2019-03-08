@@ -491,7 +491,7 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_draw = function() {
 
   // draw tick labels
   this.gtimelinectx.fillStyle = '#666666';
-  this.gtimelinectx.font = '10px Sans';
+  this.gtimelinectx.font = '9px Sans';
   for ( var i = 0; i < this.tmetadata_gtimeline_mark_x.length; ++i ) {
     this.gtimelinectx.fillText(this.tmetadata_gtimeline_mark_time_str[i],
                                this.tmetadata_gtimeline_mark_x[i], this.linehn[2] );
