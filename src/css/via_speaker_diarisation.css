@@ -35,8 +35,8 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .cpanel .tool_group input { background-color:inherit; border:1px solid #cfcfcf; vertical-align:middle; width:4em;}
 
 .annotator_container { flex:auto; padding-top:0em; margin-top:0.5em; }
-.annotator_container > .file_container { display:block; height:100%; }
-.annotator_container > .file_hide { display:none; }
+.annotator_container > .file_container { display:none; height:100%; }
+.annotator_container > .file_show { display:block !important; }
 .annotator_container > .file_container > .region_annotator_container { display:block; position:relative; }
 .annotator_container > .file_container > .region_annotator_container * { position:absolute; left:0; top:0; }
 .annotator_container > .file_container > .region_annotator_container > .layer_region { pointer-events:none; }
@@ -47,15 +47,20 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .annotator_container > .file_container > .temporal_segmenter_container > .video_timeline_mark { display:block; margin:0; padding:0; }
 
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container { border:1px solid #909090; margin-top:1em; }
+.annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container canvas { margin:0; padding:0; }
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .header_container {}
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .header_container table { border-collapse:collapse; }
-.annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .header_container td { display:inline-block; overflow:hidden; border:1px solid red; line-height:2em; }
+.annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .header_container td { display:inline-block; overflow:hidden; margin:0; padding:0; }
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .header_container select { width:100%; }
 
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .metadata_container {}
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .metadata_container table { border-collapse:collapse; }
-.annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .metadata_container td { display:inline-block; overflow:hidden; border:1px solid red; line-height:2em; }
+.annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .metadata_container td { display:inline-block; overflow:hidden; margin:0; padding:0;  }
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .metadata_container input[type="text"] { width:100%; }
+
+.annotator_container > .file_container > .temporal_segmenter_container > .toolbar_container { display:block; padding:0.2em 0.5em; font-size:small; }
+.annotator_container > .file_container > .temporal_segmenter_container > .toolbar_container input {font-size:small; vertical-align:middle; }
+.annotator_container > .file_container > .temporal_segmenter_container > .toolbar_container label {vertical-align:middle; }
 
 /*
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container table { border-collapse:collapse; border:1px solid red; }

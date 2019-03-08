@@ -347,7 +347,7 @@ _via_data.prototype.metadata_update = function(fid, mid, z, xy, metadata) {
   }.bind(this));
 }
 
-_via_data.prototype.metadata_update_z = function(fid, mid, zindex, zvalue) {
+_via_data.prototype.metadata_update_zi = function(fid, mid, zindex, zvalue) {
   return new Promise( function(ok_callback, err_callback) {
     if ( typeof(this.file_store[fid]) === 'undefined' ) {
       err_callback('undefined fid=' + fid);
@@ -359,6 +359,25 @@ _via_data.prototype.metadata_update_z = function(fid, mid, zindex, zvalue) {
     }
 
     this.metadata_store[mid].z[zindex] = zvalue;
+    this._store_transaction('metadata_store', 'update', {'fid':fid, 'mid':mid});
+    this._hook_on_data_update();
+    this.emit_event( 'metadata_update', { 'fid':fid, 'mid':mid } );
+    ok_callback({'fid':fid, 'mid':mid});
+  }.bind(this));
+}
+
+_via_data.prototype.metadata_update_z = function(fid, mid, z) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( typeof(this.file_store[fid]) === 'undefined' ) {
+      err_callback('undefined fid=' + fid);
+      return;
+    }
+
+    if ( typeof(this.metadata_store[mid]) === 'undefined' ) {
+      err_callback('undefined mid=' + mid);
+    }
+
+    this.metadata_store[mid].z = z;
     this._store_transaction('metadata_store', 'update', {'fid':fid, 'mid':mid});
     this._hook_on_data_update();
     this.emit_event( 'metadata_update', { 'fid':fid, 'mid':mid } );

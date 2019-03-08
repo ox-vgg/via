@@ -99,13 +99,13 @@ _via_file_manager.prototype._filelist_update_showall = function() {
 }
 
 _via_file_manager.prototype._filelist_set_selected_to_current_file = function() {
-  if ( typeof(this.a.now.file) !== 'undefined' ) {
+  if ( typeof(this.a.file) !== 'undefined' ) {
     var n = this.filelist.options.length;
     var i;
     for ( i = 0; i < n; ++i ) {
-      if ( this.filelist.options[i].dataset.fid == this.a.now.file.fid ) {
+      if ( this.filelist.options[i].dataset.fid == this.a.file.fid ) {
         this.filelist.selectedIndex = i;
-        this.filelist.title = this.d.file_store[ this.a.now.file.fid.toString() ].src;
+        this.filelist.title = this.d.file_store[ this.a.file.fid.toString() ].src;
       }
     }
   }
@@ -113,7 +113,7 @@ _via_file_manager.prototype._filelist_set_selected_to_current_file = function() 
 
 _via_file_manager.prototype._filelist_switch_to_file = function(el) {
   var fid = el.target.dataset.fid;
-  this.a.file_show_fid(fid);
+  this.a.annotate_fid(fid);
 }
 
 //
@@ -196,18 +196,19 @@ _via_file_manager.prototype.on_file_show_next = function() {
   if ( this.d.fid_list.length &&
        this.filelist_fid_list.length // to account for filelist update made by regex
      ) {
-    var index_now = this.filelist_fid_list.indexOf(this.a.now.file.fid);
+    var index_now = this.filelist_fid_list.indexOf(this.a.file.fid);
     if ( index_now !== -1 ) {
       var index_next = index_now + 1;
       if ( index_next >= this.filelist_fid_list.length ) {
         index_next = 0;
 
       }
-
-      this.a.file_show_fid( this.filelist_fid_list[index_next] );
+      console.log(index_next)
+      console.log(this.filelist_fid_list[index_next])
+      this.a.annotate_fid( this.filelist_fid_list[index_next] );
     } else {
       // show the first file in the regex list
-      this.a.file_show_fid( this.filelist_fid_list[0] );
+      this.a.annotate_fid( this.filelist_fid_list[0] );
     }
   }
 }
@@ -216,24 +217,24 @@ _via_file_manager.prototype.on_file_show_prev = function() {
   if ( this.d.fid_list.length &&
        this.filelist_fid_list.length // to account for filelist update made by regex
      ) {
-    var index_now = this.filelist_fid_list.indexOf(this.a.now.file.fid);
+    var index_now = this.filelist_fid_list.indexOf(this.a.file.fid);
 
     if ( index_now !== -1 ) {
       var index_prev = index_now - 1;
       if ( index_prev < 0 ) {
         index_prev = this.filelist_fid_list.length - 1;
       }
-      this.a.file_show_fid( this.filelist_fid_list[index_prev] );
+      this.a.annotate_fid( this.filelist_fid_list[index_prev] );
     } else {
       // show the last file in the regex list
-      this.a.file_show_fid( this.filelist_fid_list[ this.filelist_fid_list.length - 1 ] );
+      this.a.annotate_fid( this.filelist_fid_list[ this.filelist_fid_list.length - 1 ] );
     }
   }
 }
 
 _via_file_manager.prototype.on_file_remove_current = function() {
   if ( this.d.fid_list.length ) {
-    var index_now = this.filelist_fid_list.indexOf(this.a.now.file.fid);
+    var index_now = this.filelist_fid_list.indexOf(this.a.file.fid);
     if ( index_now !== -1 ) {
       this.d.file_remove( this.filelist_fid_list[index_now] );
     }
@@ -246,10 +247,10 @@ _via_file_manager.prototype._on_event_file_show = function(data, event_payload) 
 
 _via_file_manager.prototype._on_event_file_remove = function(data, event_payload) {
   var fid = event_payload.fid;
-  var index_now = this.filelist_fid_list.indexOf(this.a.now.file.fid);
+  var index_now = this.filelist_fid_list.indexOf(this.a.file.fid);
   this._filelist_update();
 
-  if ( fid === this.a.now.file.fid ) {
+  if ( fid === this.a.file.fid ) {
     var move_to = index_now - 1;
     if ( move_to < 0 ) {
       move_to = index_now + 1;
@@ -258,24 +259,24 @@ _via_file_manager.prototype._on_event_file_remove = function(data, event_payload
         this.a.file_show_none();
       } else {
         var new_fid = this.filelist_fid_list[ move_to ];
-        this.a.file_show_fid( new_fid );
+        this.a.annotate_fid( new_fid );
       }
     } else {
       var new_fid = this.filelist_fid_list[ move_to ];
-      this.a.file_show_fid( new_fid );
+      this.a.annotate_fid( new_fid );
     }
   }
 }
 
 _via_file_manager.prototype._on_event_file_add = function(data, event_payload) {
   this._filelist_update();
-  this.a.file_show_fid( event_payload.fid );
+  this.a.annotate_fid( event_payload.fid );
 }
 
 _via_file_manager.prototype._on_event_file_add_bulk = function(data, event_payload) {
   this._filelist_update();
   var first_added_fid = event_payload.fid_list[0];
-  this.a.file_show_fid( first_added_fid );
+  this.a.annotate_fid( first_added_fid );
 }
 
 _via_file_manager.prototype._on_event_project_load = function(data, event_payload) {

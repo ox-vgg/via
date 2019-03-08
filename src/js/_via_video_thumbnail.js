@@ -37,8 +37,9 @@ _via_video_thumbnail.prototype._init = function() {
 
 // WARNING: not invoking this method will result in
 // resources being allocated to things that are no longer needed
-_via_video_thumbnail.prototype._destructor = function() {
+_via_video_thumbnail.prototype._on_event_destroy = function() {
   if ( typeof(this.file_object_url) !== 'undefined' ) {
+    console.log('_via_video_thumbnail(): revoking object uri for fid=' + this.file.fid);
     URL.revokeObjectURL(this.file_object_url);
   }
 }

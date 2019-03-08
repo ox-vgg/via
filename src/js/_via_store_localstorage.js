@@ -46,7 +46,6 @@ _via_store_localstorage.prototype.prev_session_data_init = function() {
         this.prev_session_data_blob = new Blob( [ JSON.stringify(this.prev_session_data) ],
                                                 {type:'text/json;charset=utf-8'} );
 
-        console.log(this.prev_session_data)
         this.prev_session_timestamp_str = _via_util_date_to_filename_str(this.prev_session_data.project_store.created);
         this.prev_session_timestamp = new Date(this.prev_session_data.project_store.created);
         this.prev_session_available = true;
