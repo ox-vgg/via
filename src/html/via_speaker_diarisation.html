@@ -5,6 +5,20 @@
     <title>Speaker Diarisation : VIA</title>
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 400 KB) that runs on most modern web browsers.">
+
+    <!--
+    Development of VIA is supported by the EPSRC programme grant
+    Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1).
+    Using Google Analytics, we record the usage of this application.
+    This data is used in reporting of this programme grant.
+
+    If you do not wish to share this data, you can safely remove the
+    javascript code below.
+    -->
+    <script type="text/javascript">
+      //<!--AUTO_INSERT_GOOGLE_ANALYTICS_JS_HERE-->
+    </script>
+
     <link rel="stylesheet" type="text/css" href="../css/via_speaker_diarisation.css">
   </head>
 
@@ -21,9 +35,10 @@
 
 
         <div id="project" class="tool_group">
+          <!--
           <svg onclick="data.load_local()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_open"></use><title>Open Project</title></svg>
           <svg onclick="data.save_local()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_save"></use><title>Save Project</title></svg>
-          <!--
+
               <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_settings"></use><title>Project Settings</title></svg>
               <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Upload Project</title></svg>
               <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_download"></use><title>Download Project</title></svg>
@@ -34,7 +49,7 @@
           <!--
               <svg onclick="io.metadata_import_csv()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#icon_import"></use><title>Import Metadata from CSV</title></svg>
               -->
-              <svg onclick="io.metadata_export_csv(1)" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#icon_export"></use><title>Download Metadata as CSV</title></svg>
+              <svg onclick="io.speaker_diarisation_export_csv()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#icon_export"></use><title>Download Metadata as CSV</title></svg>
         </div>
 
         <div id="file_manager_container" class="tool_group">
@@ -42,13 +57,15 @@
           <svg onclick="file_manager.on_file_show_next()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_navigate_next"></use><title>Show next file</title></svg>
           <select id="file_manager_filelist"></select>
           <input type="text" placeholder="Search" oninput="file_manager._filelist_update_regex(this.value)">
-          <svg onclick="file_manager.on_file_select_local_video()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_video"></use><title>Add video file from this computer</title></svg>
           <!--
+              <svg onclick="file_manager.on_file_select_local_video()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_video"></use><title>Add video file from this computer</title></svg>
+
               <svg onclick="file_manager.on_file_select_local_image()" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_image"></use><title>Add Image</title></svg>
               <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_audio"></use><title>Add Audio</title></svg>
-              -->
+
               <svg onclick="file_manager.on_file_bulk_add_uri()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_lib_add"></use><title>Bulk add file URI ( e.g. file:///... or http://... ) contained in a local CSV file where each row is a remote or local filename.</title></svg>
               <svg onclick="file_manager.on_file_remove_current()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_remove_circle"></use><title>Remove the current file from project</title></svg>
+              -->
         </div>
 
 
@@ -58,8 +75,8 @@
               <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_zoomout"></use><title>Zoom Out</title></svg>
               <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_copy"></use><title>Copy Selected Regions</title></svg>
               <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_paste"></use><title>Paste Selected Regions</title></svg>
-              -->
               <svg onclick="document.getElementById('editor_container').classList.toggle('hide')" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_insertcomment"></use><title>Show/hide metadata and attribute editor</title></svg>
+              -->
         </div>
 
         <!--
@@ -73,6 +90,7 @@
             </div>
             -->
 
+            <!--            -->
             <div id="restore" class="tool_group" >
               <svg id="_via_restore_load_button" onclick="store.prev_session_load()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_restore_load"></use><title>Load VIA project from previous session</title></svg>
 

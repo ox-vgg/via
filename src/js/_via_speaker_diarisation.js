@@ -1,6 +1,7 @@
 'use strict'
 
 var data = new _via_data();
+var io = new _via_io(data);
 
 _via_restore_deactivate();
 /*

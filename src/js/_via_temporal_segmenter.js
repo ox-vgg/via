@@ -140,7 +140,7 @@ _via_temporal_segmenter.prototype._update_playback_rate = function(t) {
       }
     }
   } else {
-    this._toolbar_playback_rate_set(1);
+    //this._toolbar_playback_rate_set(1);
   }
 }
 
@@ -338,6 +338,8 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   var hrow = document.createElement('tr');
   var groupvar_col = document.createElement('td');
   groupvar_col.setAttribute('style', 'width:' + this.gid_width + 'px;');
+  //groupvar_col.innerHTML = this.d.attribute_store[this.groupby_aid].attr_name;
+  /* // hide as not needed now
   this.groupby_select = document.createElement('select');
   this.groupby_select.setAttribute('title', 'Group creates multiple slices of the timeline where each slice corresponds to one unique value of the group attribute.')
   var aindex, aid;
@@ -352,6 +354,7 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
     this._group_init(aid);
   }.bind(this));
   groupvar_col.appendChild(this.groupby_select);
+  */
 
   var gtimeline_col = document.createElement('td');
   this._tmetadata_gtimeline_init();
@@ -367,17 +370,17 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   metadata_container.setAttribute('class', 'metadata_container');
   metadata_container.setAttribute('style', 'display:inline-block; height:' + this.linehn[this.METADATA_CONTAINER_HEIGHT] + 'px; width:100%; overflow:auto;');
   var metadata_table = document.createElement('table');
-  var tbody = document.createElement('tbody');
+  this.metadata_tbody = document.createElement('tbody');
 
   this.gcanvas = {}; // contains a list of canvas for each group
   this.gctx = {};    // contains the corresponding drawing context
   var gindex, gid;
   for ( gindex in this.gid_list ) {
     gid = this.gid_list[gindex];
-    tbody.appendChild( this._tmetadata_group_gid_html(gid) );
+    this.metadata_tbody.appendChild( this._tmetadata_group_gid_html(gid) );
   }
 
-  metadata_table.appendChild(tbody);
+  metadata_table.appendChild(this.metadata_tbody);
   metadata_container.appendChild(metadata_table);
   this.tmetadata_container.appendChild(metadata_container);
   this.c.appendChild(this.tmetadata_container);
@@ -540,16 +543,31 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_time2canvas = function(t)
 //
 // metadata for a given group-id
 //
+_via_temporal_segmenter.prototype._tmetadata_group_update_gid = function(e) {
+  var old_gid = e.target.dataset.gid;
+  var new_gid = e.target.value.trim();
+  var mindex, mid;
+  var update_list = [];
+  for ( mindex in this.group[old_gid] ) {
+    mid = this.group[old_gid][mindex]
+    update_list.push( {'mid':mid,
+                       'aid':this.groupby_aid,
+                       'value':new_gid,
+                      } );
+  }
+  this.d.metadata_update_attribute_value_bulk(this.file.fid, update_list);
+}
 
 _via_temporal_segmenter.prototype._tmetadata_group_gid_html = function(gid) {
   var tr = document.createElement('tr');
   tr.setAttribute('data-gid', gid);
   var gid_col = document.createElement('td');
-  gid_col.setAttribute('style', 'width:' + this.gid_width + 'px;');
+  gid_col.setAttribute('style', 'width:' + this.gid_width + 'px; padding:0.2em 0.5em;');
   var gid_label = document.createElement('input');
   gid_label.setAttribute('type', 'text');
   gid_label.setAttribute('value', gid);
-  gid_label.setAttribute('readonly', '');
+  gid_label.setAttribute('data-gid', gid);
+  gid_label.addEventListener('change', this._tmetadata_group_update_gid.bind(this));
   gid_col.appendChild(gid_label);
   tr.appendChild(gid_col);
 
@@ -792,7 +810,7 @@ _via_temporal_segmenter.prototype._tmetadata_mid_del = function() {
   if ( mindex !== -1 ) {
     this.tmetadata_gtimeline_mid[this.selected_gid].splice(mindex, 1);
   }
-
+  this._group_gid_del_mid(this.selected_gid, mid);
   this.d.metadata_del(this.file.fid, mid);
 }
 
@@ -833,8 +851,9 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     } else {
       this.m.pause();
       _via_util_msg_show('Paused. Press <span class="key">a</span> to add a temporal segment, ' +
-                         '<span class="key">Backspace</span> to delete and ' +
-                         '<span class="key">Tab</span> to select.', true);
+                         '<span class="key">Backspace</span> to delete, ' +
+                         '<span class="key">Tab</span> to select and ' +
+                         '<span class="key">&uarr;</span>&nbsp;<span class="key">&darr;</span> to select speaker.', true);
     }
   }
 
@@ -1079,7 +1098,7 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
   }
 
   if ( this.gid_list.length ) {
-    this._tmetadata_group_gid_sel(1);
+    this._tmetadata_group_gid_sel(0);
   }
 }
 
@@ -1101,6 +1120,49 @@ _via_temporal_segmenter.prototype._group_gid_add_mid = function(gid, new_mid) {
       return;
     }
   }
+}
+
+_via_temporal_segmenter.prototype._group_gid_del_mid = function(gid, mid) {
+  var mindex = this.group[gid].indexOf(mid);
+  if ( mindex !== -1 ) {
+    this.group[gid].splice(mindex, 1);
+  }
+}
+
+_via_temporal_segmenter.prototype._group_del_gid = function(gid) {
+  if ( Object.keys(this.group).length === 1 ) {
+    _via_util_msg_show('Cannot delete the last group!');
+    return;
+  }
+
+  var mid_list = this.group[gid].slice();
+  delete this.group[gid];
+  delete this.tmetadata_gtimeline_mid[gid];
+  var gindex = this.gid_list.indexOf(gid);
+  this.gid_list.splice(gindex, 1);
+  delete this.gctx[gid];
+  delete this.gcanvas[gid];
+
+  var tr_list = this.metadata_tbody.getElementsByTagName('tr');
+  var i;
+  for ( i = 0; i < tr_list.length; ++i ) {
+    if ( tr_list[i].dataset.gid === gid ) {
+      this.metadata_tbody.removeChild(tr_list[i]);
+      break;
+    }
+  }
+
+  // remove selection
+  var selected_gindex = this.gid_list.indexOf(this.selected_gid);
+  var next_gindex = selected_gindex + 1;
+  if ( next_gindex >= this.gid_list.length ) {
+    next_gindex = 0;
+  }
+  this._tmetadata_group_gid_sel(next_gindex);
+
+  // delete from store
+  this.d.metadata_del_bulk(this.file.fid, mid_list);
+  _via_util_msg_show('Deleted group + ' + gid);
 }
 
 //
@@ -1216,7 +1278,19 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   pb_annotation_label.innerHTML = 'Review Gaps';
   pb_mode_container.appendChild(pb_annotation_label);
 
+  var control_container = document.createElement('div');
+  var delbtn = document.createElement('button');
+  delbtn.setAttribute('data-gid', this.selected_gid);
+  delbtn.innerHTML = 'Delete ' + this.d.attribute_store[this.groupby_aid].attr_name;
+  delbtn.addEventListener('click', function(e) {
+    this._group_del_gid(this.selected_gid);
+  }.bind(this));
+
+  control_container.appendChild(delbtn);
+
+
   toolbar_container.appendChild(pb_mode_container);
+  toolbar_container.appendChild(control_container);
 
   this.c.appendChild(toolbar_container);
 }

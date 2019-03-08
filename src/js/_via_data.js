@@ -393,6 +393,18 @@ _via_data.prototype.metadata_update_attribute_value = function(fid, mid, aid, va
   this.emit_event( 'metadata_update', { 'fid':fid, 'mid':mid } );
 }
 
+_via_data.prototype.metadata_update_attribute_value_bulk = function(fid, value_list) {
+  var mid_list = [];
+  var i;
+  for ( i in value_list ) {
+    this.metadata_store[ value_list[i].mid ].metadata[ value_list[i].aid ] = value_list[i].value;
+    this._store_transaction('metadata_store', 'update', {'fid':fid, 'mid':value_list[i].mid});
+    mid_list.push(value_list[i].mid);
+  }
+  this._hook_on_data_update();
+  this.emit_event( 'metadata_update_bulk', { 'fid':fid, 'mid_list':mid_list } );
+}
+
 _via_data.prototype.metadata_del = function(fid, mid) {
   return new Promise( function(ok_callback, err_callback) {
     if ( typeof(this.file_store[fid]) === 'undefined' ) {
@@ -410,6 +422,28 @@ _via_data.prototype.metadata_del = function(fid, mid) {
     this._store_transaction('metadata_store', 'del', {'fid':fid, 'mid':mid});
     this._hook_on_data_update();
     this.emit_event( 'metadata_del', { 'fid':fid, 'mid':mid } );
+    ok_callback({'fid':fid, 'mid':mid});
+  }.bind(this));
+}
+
+_via_data.prototype.metadata_del_bulk = function(fid, mid_list) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( typeof(this.file_store[fid]) === 'undefined' ) {
+      err_callback('invalid fid=' + fid);
+      return;
+    }
+    var mindex, mid, findex;
+    for ( mindex in mid_list ) {
+      mid = mid_list[mindex];
+      delete this.metadata_store[mid];
+      findex = this.file_mid_list[fid].indexOf(mid);
+      if ( findex !== -1 ) {
+        this.file_mid_list[fid].splice(findex, 1);
+      }
+      this._store_transaction('metadata_store', 'del', {'fid':fid, 'mid':mid});
+    }
+    this._hook_on_data_update();
+    this.emit_event( 'metadata_del_bulk', { 'fid':fid, 'mid_list':mid_list } );
     ok_callback({'fid':fid, 'mid':mid});
   }.bind(this));
 }

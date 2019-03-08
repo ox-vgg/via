@@ -230,6 +230,9 @@ _via_region_annotator.prototype._on_event_attribute_add = function(aid) {
 }
 
 _via_region_annotator.prototype._on_event_metadata_add = function(fid, mid) {
+  if ( this.temporal_segmenter ) {
+    this.temporal_segmenter._on_event_metadata_add(fid,mid);
+  }
 }
 
 _via_region_annotator.prototype._on_event_metadata_del = function(fid, mid) {

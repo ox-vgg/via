@@ -42,7 +42,6 @@ function _via_annotator(annotator_container, data) {
 }
 
 _via_annotator.prototype.annotate_fid = function(fid) {
-  console.log('annotate_fid() : fid=' + fid);
   // check if file has already been loaded
   if ( fid in this.file_container ) {
     if ( this.file.fid ) {
@@ -64,9 +63,7 @@ _via_annotator.prototype.annotate_fid = function(fid) {
     }.bind(this));
   } else {
     // we first need to preload this file
-    console.log('starting preload of fid=' + fid);
     this._preload_fid(fid).then( function(ok_fid) {
-      console.log('preload done for fid=' + ok_fid);
       this.annotate_fid(ok_fid);
     }.bind(this), function(err_fid) {
       _via_util_msg_show('Failed to preload media');
@@ -159,7 +156,7 @@ _via_annotator.prototype._preload_limit_overflow = function(fid) {
       this._preload_del(furthest_fid);
     }
   } else {
-    console.log('_preload_limit_overflow(): no overflow yet');
+    //console.log('_preload_limit_overflow(): no overflow yet');
   }
 }
 
@@ -251,6 +248,14 @@ _via_annotator.prototype._on_event_attribute_add = function(data, event_payload)
 }
 
 _via_annotator.prototype._on_event_metadata_add = function(data, event_payload) {
+  var fid = event_payload.fid;
+  var mid = event_payload.mid;
+
+  if ( this.file.fid ) {
+    if ( this.region_annotator[this.file.fid] ) {
+      this.region_annotator[this.file.fid]._on_event_metadata_add(fid,mid);
+    }
+  }
 }
 
 _via_annotator.prototype._on_event_metadata_add_bulk = function(data, event_payload) {
