@@ -48,6 +48,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container { border:1px solid #909090; margin-top:1em; }
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container canvas { margin:0; padding:0; }
+.annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container .gtimeline { cursor:pointer; }
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .header_container {}
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .header_container table { border-collapse:collapse; }
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .header_container td { display:inline-block; overflow:hidden; margin:0; padding:0; }
@@ -59,9 +60,10 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container > .metadata_container input[type="text"] { width:100%; }
 
 .annotator_container > .file_container > .temporal_segmenter_container > .toolbar_container { display:block; padding:1em 0.5em; font-size:small; }
-.annotator_container > .file_container > .temporal_segmenter_container > .toolbar_container div { margin:0 1em; display:inline-block; }
+.annotator_container > .file_container > .temporal_segmenter_container > .toolbar_container div { margin:0 2em; display:inline-block; }
 .annotator_container > .file_container > .temporal_segmenter_container > .toolbar_container div:first-child { margin:0; }
 .annotator_container > .file_container > .temporal_segmenter_container > .toolbar_container input {font-size:small; vertical-align:middle; }
+.annotator_container > .file_container > .temporal_segmenter_container > .toolbar_container button {font-size:small; vertical-align:middle; margin-right:0.5em;}
 .annotator_container > .file_container > .temporal_segmenter_container > .toolbar_container label {vertical-align:middle; }
 
 /*
@@ -121,7 +123,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 /* info pages */
 .info_page_container { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:1001; text-align:center; }
 .info_page_container > .toolbar { position:relative; display:block; text-align:right; padding:1em; }
-.info_page_container > .info_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow:auto; text-align:left; content:"close"; }
+.info_page_container > .info_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow:auto; text-align:left; content:"close"; height:100vh;}
 .info_page_container > .info_page .toolbar { display:block; text-align:right; }
 .info_page_container > .info_page table { border-collapse:collapse; border:1px solid #cccccc; }
 .info_page_container > .info_page th { border:1px solid #cccccc; padding:0.3em 0.4em; }

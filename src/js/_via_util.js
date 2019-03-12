@@ -342,3 +342,14 @@ function _via_util_remote_get(uri) {
     xhr.send();
   });
 }
+
+function _via_util_float_arr_to_fixed(arr, fixed) {
+  for ( var i in arr ) {
+    arr[i] = parseFloat( arr[i].toFixed(fixed) );
+  }
+  return arr;
+}
+
+function _via_util_float_to_fixed(value, fixed) {
+  return parseFloat( value.toFixed(fixed) );
+}

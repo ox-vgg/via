@@ -30,6 +30,8 @@ function _via_video_thumbnail(file) {
   // _via_event to let this module listen and emit events
   this._EVENT_ID_PREFIX = '_via_video_thumbnail_';
   _via_event.call( this );
+
+  this._init();
 }
 
 _via_video_thumbnail.prototype._init = function() {
@@ -101,16 +103,18 @@ _via_video_thumbnail.prototype._load_video = function(src) {
   return new Promise( function(ok_callback, err_callback) {
     this.video = document.createElement('video');
     this.video.setAttribute('src', src);
-    this.video.setAttribute('autoplay', false);
-    this.video.setAttribute('loop', false);
-    this.video.setAttribute('controls', '');
+    //this.video.setAttribute('autoplay', false);
+    //this.video.setAttribute('loop', false);
+    //this.video.setAttribute('controls', '');
     this.video.setAttribute('preload', 'auto');
+    //this.video.setAttribute('crossorigin', 'anonymous');
+
     this.video.addEventListener('loadeddata', function() {
-      this.video.pause();
       var aspect_ratio = this.video.videoHeight / this.video.videoWidth;
       this.fheight = Math.floor(this.fwidth * aspect_ratio);
       this.thumbnail_canvas.width = this.fwidth;
       this.thumbnail_canvas.height = this.fheight;
+      this.thumbnail_context = this.thumbnail_canvas.getContext('2d', { alpha:false });
       ok_callback();
     }.bind(this));
     this.video.addEventListener('error', function() {
@@ -135,12 +139,10 @@ _via_video_thumbnail.prototype.get_thumbnail = function(time_float) {
 
 _via_video_thumbnail.prototype._on_seeked = function() {
   if ( this.is_thumbnail_read_ongoing ) {
-    // skip if we already have this frame
-    var ctx = this.thumbnail_canvas.getContext('2d', { alpha:false });
-    ctx.drawImage(this.video,
-                  0, 0, this.video.videoWidth, this.video.videoHeight,
-                  0, 0, this.fwidth, this.fheight
-                 );
     this.is_thumbnail_read_ongoing = false;
+    this.thumbnail_context.drawImage(this.video,
+                                     0, 0, this.video.videoWidth, this.video.videoHeight,
+                                     0, 0, this.fwidth, this.fheight
+                                    );
   }
 }

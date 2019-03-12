@@ -44,7 +44,7 @@ function _via_annotator(annotator_container, data) {
 _via_annotator.prototype.annotate_fid = function(fid) {
   // check if file has already been loaded
   if ( fid in this.file_container ) {
-    if ( this.file.fid ) {
+    if ( this.file.fid && fid !== this.file.fid ) {
       this._file_container_hide(this.file.fid);
     }
 
@@ -53,6 +53,7 @@ _via_annotator.prototype.annotate_fid = function(fid) {
     this.region_annotator[fid]._on_event_show();
     this.emit_event('file_show', this.file);
 
+    /* // disable preload to avoid overloading a browser
     // trigger preload of neighbours
     Promise.all(this.neighbour_preload_promise_list).then( function(ok) {
       this._preload_limit_overflow();
@@ -61,6 +62,7 @@ _via_annotator.prototype.annotate_fid = function(fid) {
       this.neighbour_preload_promise_list = [];
       this.neighbour_preload_fid_list = {};
     }.bind(this));
+    */
   } else {
     // we first need to preload this file
     this._preload_fid(fid).then( function(ok_fid) {
@@ -90,6 +92,7 @@ _via_annotator.prototype._file_container_init = function(fid) {
 _via_annotator.prototype._file_container_hide = function(fid) {
   if ( this.file_container[fid].classList.contains('file_show') ) {
     this.file_container[fid].classList.remove('file_show');
+    this._preload_del(fid);
   }
 }
 
@@ -122,7 +125,7 @@ _via_annotator.prototype._preload_fid = function(fid) {
 }
 
 _via_annotator.prototype._preload_del = function(fid) {
-  console.log('_preload_del() : fid=' + fid);
+  //console.log('_preload_del() : fid=' + fid);
   if ( fid in this.file_container ) {
     if ( this.file_container[fid].classList.contains('file_show') ) {
       this.file_container[fid].classList.remove('file_show');
@@ -229,11 +232,14 @@ _via_annotator.prototype._preload_neighbours = function() {
 // External events
 //
 _via_annotator.prototype._on_event_project_load = function(data, event_payload) {
-  this.annotate_fid( this.d.fid_list[0] );
+  if ( this.d.fid_list.length ) {
+    this.annotate_fid( this.d.fid_list[0] );
+  }
 }
 
 _via_annotator.prototype._on_event_container_resize = function(data, event_payload) {
   if ( this.file.fid ) {
+    this._preload_del(this.file.fid);
     this.annotate_fid(this.file.fid);
   }
 }

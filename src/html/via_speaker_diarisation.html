@@ -24,7 +24,7 @@
 
   <body onresize="_via_on_browser_resize()">
     <div class="via">
-      <div id="_via_message_container" class="message_container">
+      <div id="_via_message_container" class="message_container" onclick="_via_util_msg_hide()">
         <div id="_via_message"></div>
       </div>
 
@@ -132,15 +132,15 @@
               <tr><td>Move Video Time Backward by 1, ..., 9 sec. (Ctrl to move forward)</td><td><span class="key">Ctrl</span> + <span class="key">1</span>, <span class="key">2</span>, ..., <span class="key">9</span</td></tr>
 
               <tr><td>Add Temporal Segment at Current Time</td><td><span class="key">a</span></td></tr>
-              <tr><td>Select Previous / Next group (if group exists)</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
+              <tr><td>Select Previous / Next Speaker</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
 
               <tr><td>Select [Previous] Next Temporal Segment</td><td><span class="key">Shift</span> + <span class="key">Tab</span></td></tr>
               <tr><td>Select Temporal Segment at Current Time (if any)</td><td><span class="key">Enter</span></td></tr>
 
-              <tr><td>Previous / Next Video Frame</td><td><span class="key">l</span> / <span class="key">r</span></td></tr>
+              <tr><td>Move to Previous / Next Video Frame</td><td><span class="key">l</span> / <span class="key">r</span></td></tr>
               <tr><td>Jump to Start/End of Video</td><td><span class="key">Shift</span> + <span class="key">s</span> / <span class="key">e</span></td></tr>
-              <tr><td>Shift Visible Timeline 1 sec.</td><td><span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
-              <tr><td>Shift Visible Timeline 60 sec.</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
+              <tr><td>Shift Visible Timeline by 1 sec.</td><td><span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
+              <tr><td>Shift Visible Timeline by 60 sec.</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
             </tbody>
           </table>
           <h3>When a Temporal Segment is Selected</h3>
@@ -161,6 +161,7 @@
 
               <tr><td>Jump to Start/End of Temporal Segment</td><td><span class="key">s</span> / <span class="key">e</span></td></tr>
               <tr><td>Move Selected Temporal Segment</td><td><span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
+              <tr><td>Merge Selected Temporal Segment with the Segment on Left/Right</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
             </tbody>
           </table>
         </div>
