@@ -14,18 +14,10 @@ const _VIA_ATTRIBUTE_TYPE = { 'TEXT':1, 'SELECT':4 };
 
 function _via_attribute(id, name, type, options, default_option_id) {
   this.id = id;
-  this.attr_name = name;
+  this.aname = name;
   this.type = type;
-  if ( typeof(options) === 'undefined' ) {
-    this.options = {};
-  } else {
-    this.options = options;
-  }
-  if ( typeof(default_option_id) === 'undefined' ) {
-    this.default_option_id = '';
-  } else {
-    this.default_option_id = default_option_id;
-  }
+  this.options = options;
+  this.default_option_id = default_option_id;
 }
 
 _via_attribute.prototype.option_add = function(option_id, option_value, is_default=false) {

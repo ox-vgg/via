@@ -22,19 +22,8 @@
 <script src="../js/_via_data.js"></script>
 
 <script src="../js/_via_store_localstorage.js"></script>
-
-<script src="../js/_via_io.js"></script>
-
-<script src="../js/_via_project.js"></script>
-
-<script src="../js/_via_video_thumbnail.js"></script>
-<script src="../js/_via_region_annotator.js"></script>
-<script src="../js/_via_time_annotator.js"></script>
-<script src="../js/_via_annotator.js"></script>
-
-<script src="../js/_via_file_manager.js"></script>
-
-<script src="../js/_via_editor.js"></script>
+<script src="../js/_via_couchdb.js"></script>
+<script src="../js/_via_store_couchdb.js"></script>
 
 <script>
 'use strict'
@@ -47,6 +36,24 @@ if ( store._init() ) {
   store._self_test();
 }
 
+
+/*
+// data persistence: couchdb
+try {
+  var data = new _via_data();
+  var couchdb_url = 'http://127.0.0.1:5984';
+  var store = new _via_store_couchdb(data, couchdb_url);
+  if ( store._init() ) {
+    data._store_add(_VIA_STORE_TYPE.COUCHDB, store);
+    store._self_test();
+  } else {
+    console.log('init failed')
+  }
+}
+catch(e) {
+  console.log(e)
+}
+*/
 </script>
 </body>
 </html>

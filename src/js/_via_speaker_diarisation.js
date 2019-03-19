@@ -3,8 +3,8 @@
 var data = new _via_data();
 var io = new _via_io(data);
 
-_via_restore_deactivate();
-/*
+//_via_restore_deactivate();
+
 var store = new _via_store_localstorage(data);
 store.prev_session_data_init().then( function(ok) {
   if ( store.prev_session_is_available() ) {
@@ -21,7 +21,6 @@ store.prev_session_data_init().then( function(ok) {
     data._store_add('localStorage', store);
   }
 }.bind(this));
-*/
 
 function _via_restore_activate() {
   var button_container = document.getElementById('restore');
@@ -55,14 +54,29 @@ window.addEventListener('keydown', function(e) {
 });
 
 var filelist_element = document.getElementById('file_manager_filelist');
-var file_manager = new _via_file_manager(filelist_element, data, annotator);
+var project_name_element = document.getElementById('_via_filemanager_project_name');
+var file_manager = new _via_file_manager(data, annotator, filelist_element, project_name_element);
 file_manager._init();
 
 function _via_on_browser_resize() {
   annotator.emit_event('container_resize', {});
 }
 
-if ( true ) {
+if ( false ) {
+  var VIA_PROJECT_LIST = ["p1f9f7e66fd0d482a8ae7a38468cd308d","p1ff7175481f942389fcccef82857f9c6","p2c56bb12f48849669e9dce75c9f5929c","p3e79c313d04744eebc5203f9b7f293ec","p42c179d206e042ebbfbb02a6248f9461","p6f75428e279e4a75bca6374718670779","p81c738031f78436da4ef6e67341122f2","p9013cba11e2c40539fc4676c9c65764c","p9036d02214ec439c9eeff6e27ed20dcc","p9f9243bbe3434391a7d6583ff18475b6","pbd28c6ff99d540a9bc07a81dfbf7c3d0","pc33a5ad24b514c7fa943a023572b1aa3","pd9d5f56857c44b52afaf3df3d717ee3a","pe4b6c03af2f9428fa02040f85a8e58cc"];
+
+  //var couchdb_url = 'http://zeus.robots.ox.ac.uk/via/';
+  var couchdb_url = 'http://127.0.0.1:5984/';
+  var store = new _via_store_couchdb(data, couchdb_url);
+  if ( store._init() ) {
+    data._store_add(_VIA_STORE_TYPE.COUCHDB, store);
+    store._project_pull('v1ff7175481f942389fcccef82857f9c6');
+  } else {
+    console.warn('Failed to initialise couchdb store at: ' + couchdb_url);
+  }
+}
+
+if ( false ) {
   var metadata_uri = 'http://zeus.robots.ox.ac.uk/bsl/voxceleb/val/output.max6spk.pad0p10.4col_VIA.txt';
   _via_util_remote_get(metadata_uri).then( function(file_content) {
     try {
@@ -157,7 +171,7 @@ if ( true ) {
           if ( accept_uri_list.includes(line_tokens[0]) ) {
             fid = filesrc_to_fid_map[fileuri];
             mid = this.data._uuid();
-            d.metadata_store[mid] = new _via_metadata(mid, [t0, t1], [], { '0':speakerid });
+            d.metadata_store[mid] = new _via_metadata([t0, t1], [], { '0':speakerid });
             if ( typeof(d.file_mid_list[fid]) === 'undefined' ) {
               d.file_mid_list[fid] = [];
             }

@@ -12,7 +12,7 @@
 function _via_data() {
   this.project_store = {
     'project_id':this._uuid(),
-    'project_name':'via_project',
+    'project_name':'Default Project',
     'data_format_version':'3.0.0',
     'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
     'created': new Date().toString(),
@@ -29,7 +29,7 @@ function _via_data() {
   // files
   this.file_store = {};
   this.fid_list = [];        // to maintain ordering of files
-  this.file_mid_list = {};   // list of all metadata associated with a file
+  this.file_mid_store = {};   // list of all metadata associated with a file
 
   // data persistence
   this._store_list = {};
@@ -39,7 +39,7 @@ function _via_data() {
                         'attribute_store',
                         'aid_list',
                         'file_store',
-                        'file_mid_list',
+                        'file_mid_store',
                         'fid_list',
                        ];
 
@@ -227,11 +227,11 @@ _via_data.prototype.file_remove = function(fid) {
   if ( this.has_file(fid) ) {
     // delete all metadata associated with fid
     var mid, mid_index;
-    for ( mid_index in this.file_mid_list[fid] ) {
-      mid = this.file_mid_list[fid][mid_index]
+    for ( mid_index in this.file_mid_store[fid] ) {
+      mid = this.file_mid_store[fid][mid_index]
       delete this.metadata_store[mid];
     }
-    delete this.file_mid_list[fid];
+    delete this.file_mid_store[fid];
 
     // delete file entry
     delete this.file_store[fid];
@@ -269,7 +269,7 @@ _via_data.prototype.fid2file = function(fid) {
 // Metadata
 //
 
-// metadata_list = { 'fid', 'z', 'xy', 'metadata' }
+// metadata_list = { 'mid', 'z', 'xy', 'metadata' }
 _via_data.prototype.metadata_add_bulk = function(metadata_list) {
   return new Promise( function(ok_callback, err_callback) {
     var n = metadata_list.length;
@@ -285,15 +285,14 @@ _via_data.prototype.metadata_add_bulk = function(metadata_list) {
       }
 
       mid = this._uuid();
-      this.metadata_store[mid] = new _via_metadata(mid,
-                                                   metadata_list[i].z,
+      this.metadata_store[mid] = new _via_metadata(metadata_list[i].z,
                                                    metadata_list[i].xy,
-                                                   metadata_list[i].metadata
+                                                   metadata_list[i].v
                                                   );
-      if ( typeof(this.file_mid_list[fid]) === 'undefined' ) {
-        this.file_mid_list[fid] = [];
+      if ( typeof(this.file_mid_store[fid]) === 'undefined' ) {
+        this.file_mid_store[fid] = [];
       }
-      this.file_mid_list[fid].push(mid);
+      this.file_mid_store[fid].push(mid);
 
       if ( typeof(added_mid_list[fid]) === 'undefined' ) {
         added_mid_list[fid] = [];
@@ -316,11 +315,11 @@ _via_data.prototype.metadata_add = function(fid, z, xy, metadata) {
     }
 
     var mid = this._uuid();
-    this.metadata_store[mid] = new _via_metadata(mid, z, xy, metadata);
-    if ( typeof(this.file_mid_list[fid]) === 'undefined' ) {
-      this.file_mid_list[fid] = [];
+    this.metadata_store[mid] = new _via_metadata(z, xy, metadata);
+    if ( typeof(this.file_mid_store[fid]) === 'undefined' ) {
+      this.file_mid_store[fid] = [];
     }
-    this.file_mid_list[fid].push(mid);
+    this.file_mid_store[fid].push(mid);
     this._store_transaction('metadata_store', 'add', {'fid':fid, 'mid':mid});
     this._hook_on_data_update();
     this.emit_event( 'metadata_add', { 'fid':fid, 'mid':mid } );
@@ -339,7 +338,7 @@ _via_data.prototype.metadata_update = function(fid, mid, z, xy, metadata) {
       err_callback('undefined mid=' + mid);
     }
 
-    this.metadata_store[mid] = new _via_metadata(mid, z, xy, metadata);
+    this.metadata_store[mid] = new _via_metadata(z, xy, metadata);
     this._store_transaction('metadata_store', 'update', {'fid':fid, 'mid':mid});
     this._hook_on_data_update();
     this.emit_event( 'metadata_update', { 'fid':fid, 'mid':mid } );
@@ -417,8 +416,8 @@ _via_data.prototype.metadata_del = function(fid, mid) {
     }
     delete this.metadata_store[mid];
 
-    var mid_index = this.file_mid_list[fid].indexOf(mid);
-    this.file_mid_list[fid].splice(mid_index, 1);
+    var mid_index = this.file_mid_store[fid].indexOf(mid);
+    this.file_mid_store[fid].splice(mid_index, 1);
     this._store_transaction('metadata_store', 'del', {'fid':fid, 'mid':mid});
     this._hook_on_data_update();
     this.emit_event( 'metadata_del', { 'fid':fid, 'mid':mid } );
@@ -436,9 +435,9 @@ _via_data.prototype.metadata_del_bulk = function(fid, mid_list) {
     for ( mindex in mid_list ) {
       mid = mid_list[mindex];
       delete this.metadata_store[mid];
-      findex = this.file_mid_list[fid].indexOf(mid);
+      findex = this.file_mid_store[fid].indexOf(mid);
       if ( findex !== -1 ) {
-        this.file_mid_list[fid].splice(findex, 1);
+        this.file_mid_store[fid].splice(findex, 1);
       }
       this._store_transaction('metadata_store', 'del', {'fid':fid, 'mid':mid});
     }
@@ -451,11 +450,6 @@ _via_data.prototype.metadata_del_bulk = function(fid, mid_list) {
 //
 // Project
 //
-_via_data.prototype._project_id_short = function(e) {
-  return this.project_store.project_id.substring(0,
-                                                 Math.min(5, this.project_store.project_id.length));
-}
-
 _via_data.prototype._project_load_json = function(e) {
   _via_util_load_text_file(e.target.files[0], this._project_import_from_json.bind(this));
 }
@@ -478,7 +472,7 @@ _via_data.prototype._project_load = function(data) {
   this.aid_list = [];        // to maintain ordering of attributes
   this.file_store = {};
   this.fid_list = [];        // to maintain ordering of files
-  this.file_mid_list = {};   // list of all metadata associated with a file
+  this.file_mid_store = {};   // list of all metadata associated with a file
 
   // project
   this.project_store = data.project_store;
@@ -501,13 +495,13 @@ _via_data.prototype._project_load = function(data) {
   }
 
   // copy map of mid associated with each fid
-  this.file_mid_list = data.file_mid_list;
+  this.file_mid_store = data.file_mid_store;
 
   // add all attributes
   var aid;
   for ( aid in data.attribute_store ) {
     this.attribute_store[aid] = new _via_attribute(aid,
-                                                   data.attribute_store[aid].attr_name,
+                                                   data.attribute_store[aid].aname,
                                                    data.attribute_store[aid].type,
                                                    data.attribute_store[aid].options,
                                                    data.attribute_store[aid].default_option_id
@@ -523,10 +517,9 @@ _via_data.prototype._project_load = function(data) {
   // add all metadata
   var mid;
   for ( mid in data.metadata_store ) {
-    this.metadata_store[mid] = new _via_metadata(mid,
-                                                 data.metadata_store[mid].z,
+    this.metadata_store[mid] = new _via_metadata(data.metadata_store[mid].z,
                                                  data.metadata_store[mid].xy,
-                                                 data.metadata_store[mid].metadata
+                                                 data.metadata_store[mid].v
                                                 );
   }
 
@@ -549,11 +542,12 @@ _via_data.prototype._project_pack_data = function() {
         'aid_list':this.aid_list,
         'file_store':this.file_store,
         'fid_list':this.fid_list,
-        'file_mid_list':this.file_mid_list,
+        'file_mid_store':this.file_mid_store,
       };
 
       var data_str = JSON.stringify(data);
-      ok_callback({'project_name':data.project_store.project_name,
+      var filename = data.project_store.project_name;
+      ok_callback({'project_filename':filename,
                    'data_str':data_str
                   });
     } catch(err) {
@@ -566,7 +560,7 @@ _via_data.prototype._project_pack_data = function() {
 _via_data.prototype.save_local = function() {
   this._project_pack_data().then( function(payload) {
     var blob = new Blob( [payload.data_str], {type:'text/json;charset=utf-8'} );
-    var filename = payload.project_name + '.json';
+    var filename = payload.project_filename + '.json';
     _via_util_download_as_file(blob, filename);
   }.bind(this), function(err) {
     console.log(err)
@@ -595,6 +589,7 @@ _via_data.prototype._uuid = function() {
   URL.revokeObjectURL(temp_url);
   if ( uuid.startsWith('blob:null/') ) {
     uuid = uuid.substr(10);
+    uuid = uuid.replace('-', '');
   }
   return uuid;
 }

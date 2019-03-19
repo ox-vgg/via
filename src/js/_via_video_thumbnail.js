@@ -138,7 +138,9 @@ _via_video_thumbnail.prototype.get_thumbnail = function(time_float) {
 }
 
 _via_video_thumbnail.prototype._on_seeked = function() {
-  if ( this.is_thumbnail_read_ongoing ) {
+  if ( this.is_thumbnail_read_ongoing &&
+       this.thumbnail_context
+     ) {
     this.is_thumbnail_read_ongoing = false;
     this.thumbnail_context.drawImage(this.video,
                                      0, 0, this.video.videoWidth, this.video.videoHeight,

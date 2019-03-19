@@ -105,9 +105,10 @@ _via_store_localstorage.prototype._push_data = function(data_key) {
 }
 
 _via_store_localstorage.prototype._push_metadata = function() {
-  var mid;
+  var mid, mid_storekey;
   for ( mid in this.d.metadata_store ) {
-    this.store.setItem(mid, JSON.stringify(this.d.metadata_store[mid]));
+    mid_storekey = this._datakey_to_storekey(mid);
+    this.store.setItem(mid_storekey, JSON.stringify(this.d.metadata_store[mid]));
   }
 }
 
@@ -130,7 +131,7 @@ _via_store_localstorage.prototype._pack_store_data = function() {
     var store_items = Object.keys(this.store);
     var store_key, store_key_index, data_key;
 
-    for ( store_key_index in Object.keys(this.store) ) {
+    for ( store_key_index in store_items ) {
       store_key = store_items[store_key_index];
       data_key = this._storekey_to_datakey(store_key);
       if ( this.d.data_key_list.includes(data_key) ) {
@@ -139,13 +140,16 @@ _via_store_localstorage.prototype._pack_store_data = function() {
         try {
           var metadata_str = this.store.getItem(store_key);
           var metadata = JSON.parse(metadata_str);
-          if ( typeof(metadata.mid) !== 'undefined' ) {
-            data['metadata_store'][store_key] = metadata;
+          if ( typeof(metadata.z)  !== 'undefined' &&
+               typeof(metadata.xy) !== 'undefined' &&
+               typeof(metadata.v)  !== 'undefined'
+             ) {
+            data['metadata_store'][data_key] = metadata;
           } else {
             console.log('malformed metadata : [' + metadata_str + ']');
           }
         } catch(e) {
-          console.log('Faied to parse data for store_key=[' + store_key + ']');
+          console.log('Failed to parse data for store_key=[' + store_key + '], data_key=[' + data_key + ']');
           console.log(this.store.getItem(store_key));
         }
       }
@@ -199,9 +203,19 @@ _via_store_localstorage.prototype.transaction = function(data_key, action, param
       case 'metadata_store':
         var fid = param.fid;
         var mid = param.mid;
-        this.store.setItem(mid, JSON.stringify(this.d.metadata_store[mid]));
-        if ( action !== 'update' ) {
-          this._push_data('file_mid_list');
+        var mid_store_key = this._datakey_to_storekey(mid);
+        switch(action) {
+        case 'add':
+          this.store.setItem(mid_store_key, JSON.stringify(this.d.metadata_store[mid]));
+          this._push_data('file_mid_store');
+          break;
+        case 'del':
+          this.store.removeItem(mid_store_key);
+          this._push_data('file_mid_store');
+          break;
+        case 'update':
+          this.store.setItem(mid_store_key, JSON.stringify(this.d.metadata_store[mid]));
+          break;
         }
         ok_callback();
         break;
@@ -234,9 +248,9 @@ _via_store_localstorage.prototype._self_test = function() {
 
   var aid1 = this.d.attribute_add('attribute1', _VIA_ATTRIBUTE_TYPE.TEXT);
   var aid2 = this.d.attribute_add('attribute2', _VIA_ATTRIBUTE_TYPE.TEXT);
-  this.d.metadata_add(fid1, [], [ _VIA_SHAPE.RECT, 10, 20, 50, 100 ], { aid1:'value1', aid2:'value2'}).then( function(ok) {
+  this.d.metadata_add( fid1, [], [ _VIA_SHAPE.RECT, 10, 20, 50, 100 ], { aid1:'value1', aid2:'value2'}).then( function(ok) {
     this._pack_store_data().then( function(d) {
-      console.assert( d.file_mid_list[0][0] === Object.keys(d.metadata_store)[0] );
+      console.assert( d.file_mid_store[0][0] === Object.keys(d.metadata_store)[0] );
       console.assert( d.fid_list.length === 2 );
       console.assert( d.aid_list.length === 2 );
       console.assert( d.file_store[1].filename === 'testXYZ.jpg' );

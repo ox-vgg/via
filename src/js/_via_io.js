@@ -23,11 +23,11 @@ _via_io.prototype.speaker_diarisation_export_csv = function() {
   csvd.push('file,speaker,tstart,tend');
 
   var fid, mindex, mid, filename, avalue, t0, t1;
-  for ( fid in this.d.file_mid_list ) {
+  for ( fid in this.d.file_mid_store ) {
     filename = this.d.file_store[fid].filename;
-    for ( mindex in this.d.file_mid_list[fid] ) {
-      mid = this.d.file_mid_list[fid][mindex];
-      avalue = this.d.metadata_store[mid].metadata['0'];
+    for ( mindex in this.d.file_mid_store[fid] ) {
+      mid = this.d.file_mid_store[fid][mindex];
+      avalue = this.d.metadata_store[mid].v['0'];
       t0 = this.d.metadata_store[mid].z[0];
       t1 = this.d.metadata_store[mid].z[1];
       csvd.push( filename + ',' + avalue + ',' + t0 + ',' + t1);

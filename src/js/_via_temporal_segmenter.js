@@ -25,6 +25,7 @@ function _via_temporal_segmenter(container, file, data, media_element) {
   this.selected_gindex = -1;
   this.selected_mindex = -1;
   this.edge_show_time = -1;
+  this.group_default_gid_list = ['laughter', 'music'];
 
   this.DRAW_LINE_WIDTH = 2;
   this.EDGE_UPDATE_TIME_DELTA = 1/50;  // in sec
@@ -341,7 +342,7 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   var hrow = document.createElement('tr');
   var groupvar_col = document.createElement('td');
   groupvar_col.setAttribute('style', 'width:' + this.gid_width + 'px;');
-  //groupvar_col.innerHTML = this.d.attribute_store[this.groupby_aid].attr_name;
+  //groupvar_col.innerHTML = this.d.attribute_store[this.groupby_aid].aname;
   /* // hide as not needed now
   this.groupby_select = document.createElement('select');
   this.groupby_select.setAttribute('title', 'Group creates multiple slices of the timeline where each slice corresponds to one unique value of the group attribute.')
@@ -349,7 +350,7 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   for ( aindex in this.d.aid_list ) {
     var oi = document.createElement('option');
     oi.setAttribute('value', this.d.aid_list[aindex]);
-    oi.innerHTML = this.d.attribute_store[ this.d.aid_list[aindex] ].attr_name;
+    oi.innerHTML = this.d.attribute_store[ this.d.aid_list[aindex] ].aname;
     this.groupby_select.appendChild(oi);
   }
   this.groupby_select.addEventListener('change', function(e) {
@@ -472,6 +473,7 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_gid_mid = function(g
       this.tmetadata_gtimeline_mid[gid].push(mid);
     }
   }
+  this.tmetadata_gtimeline_mid[gid].sort( this._compare_mid_by_time.bind(this) );
 }
 
 //
@@ -764,7 +766,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_sel = function(gindex) {
 
   this.edge_show_time = -1;
   this._tmetadata_group_gid_draw(this.selected_gid);
-  this.gcanvas[this.selected_gid].scrollIntoView();
+  this.gcanvas[this.selected_gid].scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
 
   // update old selection
   if ( old_selected_gindex !== -1 ) {
@@ -781,8 +783,12 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_sel_metadata = function(m
   this.selected_mid = this.tmetadata_gtimeline_mid[this.selected_gid][mindex];
   this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
   this._tmetadata_group_gid_draw(this.selected_gid);
-  _via_util_msg_show('Selected metadata [' + this.d.metadata_store[this.selected_mid].z[0] +
-                     ', ' + this.d.metadata_store[this.selected_mid].z[1] + ']');
+  _via_util_msg_show('Metadata selected. ' +
+                     'Use <span class="key">l</span> or <span class="key">r</span> to expand and ' +
+                     '<span class="key">L</span> or <span class="key">R</span> to reduce segment. ' +
+                     'Press <span class="key">&larr;</span>&nbsp;<span class="key">&rarr;</span> to move, ' +
+                     '<span class="key">Backspace</span> to delete and ' +
+                     '<span class="key">Esc</span> to unselect.', true);
 }
 
 _via_temporal_segmenter.prototype._tmetadata_group_gid_remove_mid_sel = function(mindex) {
@@ -1004,18 +1010,26 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mousedown = function(e) {
   } else {
     var mindex = this._tmetadata_group_gid_get_mindex_at_time(gid, t);
     if ( mindex !== -1 ) {
-      // check if this metadata is selected
-      if ( mindex === this.selected_mindex ) {
-        // if selected, start move metadata
+      // clicked on a metadata
+      if ( this.selected_mindex !== -1 &&
+           mindex === this.selected_mindex
+         ) {
+        // clicked on an already selected metadata
+        // hence, start moving
         this.metadata_move_start_x = x;
         this.metadata_move_is_ongoing = true;
         var z = this.d.metadata_store[this.selected_mid].z;
         this.metadata_ongoing_update_x = [ this._tmetadata_gtimeline_time2canvas(z[0]),
-                                             this._tmetadata_gtimeline_time2canvas(z[1])
-                                           ];
+                                           this._tmetadata_gtimeline_time2canvas(z[1])
+                                         ];
       } else {
         // else, select metadata
         this._tmetadata_group_gid_sel_metadata(mindex);
+      }
+    } else {
+      if ( this.selected_mindex !== -1 ) {
+        // remove metadata selection
+        this._tmetadata_group_gid_remove_mid_sel(this.selected_mindex);
       }
     }
   }
@@ -1036,9 +1050,10 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mouseup = function(e) {
 
   if ( this.metadata_move_is_ongoing ) {
     var dx = x - this.metadata_move_start_x;
-    var dt = this._tmetadata_gtimeline_canvas2time(dx);
-    this._tmetadata_mid_move(dt);
-
+    if ( dx > this.DRAW_LINE_WIDTH ) {
+      var dt = this._tmetadata_gtimeline_canvas2time(dx);
+      this._tmetadata_mid_move(dt);
+    }
     this.metadata_move_is_ongoing = false;
     this.metadata_ongoing_update_x = [0, 0];
     return;
@@ -1088,7 +1103,6 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     } else {
       this.m.pause();
       _via_util_msg_show('Paused. Press <span class="key">a</span> to add a temporal segment, ' +
-                         '<span class="key">Backspace</span> to delete, ' +
                          '<span class="key">Tab</span> to select and ' +
                          '<span class="key">&uarr;</span>&nbsp;<span class="key">&darr;</span> to select speaker.', true);
     }
@@ -1329,21 +1343,27 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
   this.groupby_aid = aid;
 
   var mid, mindex, avalue;
-  for ( mindex in this.d.file_mid_list[this.file.fid] ) {
-    mid = this.d.file_mid_list[this.file.fid][mindex];
-    avalue = this.d.metadata_store[mid].metadata[aid];
-    if ( ! this.group.hasOwnProperty(avalue) ) {
-      this.group[avalue] = [];
+  for ( mindex in this.d.file_mid_store[this.file.fid] ) {
+    mid = this.d.file_mid_store[this.file.fid][mindex];
+    if ( this.d.metadata_store.hasOwnProperty(mid) ) {
+      avalue = this.d.metadata_store[mid].v[aid];
+      if ( ! this.group.hasOwnProperty(avalue) ) {
+        this.group[avalue] = [];
+      }
+      this.group[avalue].push(mid);
     }
-    this.group[avalue].push(mid);
   }
 
   this.gid_list = Object.keys(this.group).sort();
 
-  // add a default 'background' group
-  if ( ! this.group.hasOwnProperty('background') ) {
-    this.group['background'] = [];
-    this.gid_list.push('background');
+  // add a default groups
+  var gid;
+  for ( var i in this.group_default_gid_list ) {
+    gid = this.group_default_gid_list[i];
+    if ( ! this.group.hasOwnProperty(gid) ) {
+      this.group[gid] = [];
+      this.gid_list.push(gid);
+    }
   }
 
   // sort each group elements based on time
@@ -1354,7 +1374,16 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
 }
 
 _via_temporal_segmenter.prototype._compare_mid_by_time = function(mid1, mid2) {
-  if ( this.d.metadata_store[mid1].z[0] < this.d.metadata_store[mid2].z[0] ) {
+  var t1 = this.d.metadata_store[mid1].z[0];
+  var t2 = this.d.metadata_store[mid2].z[0];
+
+  if ( typeof(t2) === 'string' ||
+       typeof(t2) === 'string' ) {
+    t1 = parseFloat(t1);
+    t2 = parseFloat(t2);
+  }
+
+  if ( t1 < t2 ) {
     return -1;
   } else {
     return 1;
@@ -1388,7 +1417,7 @@ _via_temporal_segmenter.prototype._group_gid_del_mid = function(gid, mid) {
 _via_temporal_segmenter.prototype._group_del_gid = function(gid) {
   if ( Object.keys(this.group).length === 1 ) {
     _via_util_msg_show('Cannot delete the last ' +
-                       this.d.attribute_store[this.groupby_aid].attr_name + '!');
+                       this.d.attribute_store[this.groupby_aid].aname + '!');
     return;
   }
 
@@ -1412,20 +1441,20 @@ _via_temporal_segmenter.prototype._group_del_gid = function(gid) {
 
   // delete from store
   this.d.metadata_del_bulk(this.file.fid, mid_list);
-  _via_util_msg_show('Deleted ' + this.d.attribute_store[this.groupby_aid].attr_name +
+  _via_util_msg_show('Deleted ' + this.d.attribute_store[this.groupby_aid].aname +
                      ' [' + gid + ']');
 }
 
 _via_temporal_segmenter.prototype._group_add_gid = function(gid) {
   if ( this.group.hasOwnProperty(gid) ) {
-    _via_util_msg_show(this.d.attribute_store[this.groupby_aid].attr_name +
+    _via_util_msg_show(this.d.attribute_store[this.groupby_aid].aname +
                        ' [' + gid + '] already exists!');
   } else {
     this.group[gid] = [];
     this.gid_list.push(gid);
     this.metadata_tbody.appendChild( this._tmetadata_group_gid_html(gid) );
     this.new_group_id_input.value = ''; // clear input field
-    _via_util_msg_show('Add ' + this.d.attribute_store[this.groupby_aid].attr_name +
+    _via_util_msg_show('Add ' + this.d.attribute_store[this.groupby_aid].aname +
                        ' [' + gid + ']');
   }
 }
@@ -1546,7 +1575,7 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   var control_container = document.createElement('div');
   var delbtn = document.createElement('button');
   delbtn.setAttribute('data-gid', this.selected_gid);
-  delbtn.innerHTML = 'Delete Selected ' + this.d.attribute_store[this.groupby_aid].attr_name;
+  delbtn.innerHTML = 'Delete Selected ' + this.d.attribute_store[this.groupby_aid].aname;
   delbtn.addEventListener('click', function(e) {
     this._group_del_gid(this.selected_gid);
   }.bind(this));
@@ -1558,13 +1587,13 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
 
   var addbtn = document.createElement('button');
   addbtn.setAttribute('data-gid', this.selected_gid);
-  addbtn.innerHTML = 'Add ' + this.d.attribute_store[this.groupby_aid].attr_name;
+  addbtn.innerHTML = 'Add ' + this.d.attribute_store[this.groupby_aid].aname;
   addbtn.addEventListener('click', function(e) {
     var new_gid = this.new_group_id_input.value;
     if ( new_gid !== '' ) {
       this._group_add_gid(new_gid.trim());
     } else {
-      _via_util_msg_show(this.d.attribute_store[this.groupby_aid].attr_name +
+      _via_util_msg_show(this.d.attribute_store[this.groupby_aid].aname +
                          ' id cannot be empty!');
     }
   }.bind(this));

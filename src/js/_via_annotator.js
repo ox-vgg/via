@@ -42,6 +42,7 @@ function _via_annotator(annotator_container, data) {
 }
 
 _via_annotator.prototype.annotate_fid = function(fid) {
+  //console.log('annotate_fid(): fid=' + fid);
   // check if file has already been loaded
   if ( fid in this.file_container ) {
     if ( this.file.fid && fid !== this.file.fid ) {
@@ -68,7 +69,7 @@ _via_annotator.prototype.annotate_fid = function(fid) {
     this._preload_fid(fid).then( function(ok_fid) {
       this.annotate_fid(ok_fid);
     }.bind(this), function(err_fid) {
-      _via_util_msg_show('Failed to preload media');
+      _via_util_msg_show('Failed to load media + [' + this.d.file_store[err_fid].filename + ']');
       // show blank page to allow move to next/prev media
       if ( this.file.fid ) {
         this._file_container_hide(this.file.fid);
@@ -232,6 +233,10 @@ _via_annotator.prototype._preload_neighbours = function() {
 // External events
 //
 _via_annotator.prototype._on_event_project_load = function(data, event_payload) {
+  if ( this.file.fid ) {
+    this._preload_del(this.file.fid);
+  }
+
   if ( this.d.fid_list.length ) {
     this.annotate_fid( this.d.fid_list[0] );
   }

@@ -46,7 +46,7 @@ _via_region_annotator.prototype._on_event_show = function() {
     this._media_element_show();
   }.bind(this), function(err) {
     console.log(this.media_element_load_msg)
-    _via_util_msg_show(this.media_element_load_msg);
+    _via_util_msg_show(this.media_element_load_msg, true);
   }.bind(this));
 }
 
@@ -119,6 +119,7 @@ _via_region_annotator.prototype._media_element_init = function() {
     media = document.createElement('video');
     //media.setAttribute('src', src); // set by _media_element_load() method
     media.setAttribute('class', 'media_element');
+    media.setAttribute('controls', '');
     // @todo : add subtitle track for video
     media.setAttribute('preload', 'auto');
     break;
@@ -150,13 +151,13 @@ _via_region_annotator.prototype._media_element_load = function() {
       this.media.addEventListener('error', function() {
         console.log('_via_region_annotator._media_element_load() error')
         this._is_media_element_loaded = false;
-        this.media_element_load_msg = 'Error loading media';
+        this.media_element_load_msg = 'Error loading media [' + this.media.src + ']';
         err_callback();
       }.bind(this));
       this.media.addEventListener('stalled', function() {
         console.log('_via_region_annotator._media_element_load() stalled')
         this._is_media_element_loaded = false;
-        this.media_element_load_msg = 'Error loading media.';
+        this.media_element_load_msg = 'Error loading media [' + this.media.src + ']';
         err_callback();
       }.bind(this));
       this.media.addEventListener('suspend', function() {
@@ -165,7 +166,7 @@ _via_region_annotator.prototype._media_element_load = function() {
       this.media.addEventListener('abort', function() {
         console.log('_via_region_annotator._media_element_load() abort')
         this._is_media_element_loaded = false;
-        this.media_element_load_msg = 'Error loading media.';
+        this.media_element_load_msg = 'Error loading media [' + this.media.src + ']';
         err_callback();
       }.bind(this));
       this.media.setAttribute('src', file_ok_src);

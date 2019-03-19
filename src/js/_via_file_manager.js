@@ -9,10 +9,11 @@
 
 'use strict';
 
-function _via_file_manager(filelist_element, data, annotator) {
-  this.filelist = filelist_element;
+function _via_file_manager(data, annotator, filelist_element, project_name_element) {
   this.d = data;
   this.a = annotator;
+  this.filelist = filelist_element;
+  this.project_name_element = project_name_element;
 
   var is_filelist_regex_active = false;
   this.filelist_fid_list = [];
@@ -28,9 +29,12 @@ function _via_file_manager(filelist_element, data, annotator) {
   this.d.on_event('file_add', this._on_event_file_add.bind(this));
   this.d.on_event('file_add_bulk', this._on_event_file_add_bulk.bind(this));
   this.d.on_event('project_load', this._on_event_project_load.bind(this));
+
+  this.filelist.addEventListener('change', this._filelist_switch_to_file.bind(this));
 }
 
 _via_file_manager.prototype._init = function() {
+  this.project_name_element.innerHTML = this.d.project_store.project_name;
   // trigger update of filelist (for the first time)
   this._filelist_update();
 }
@@ -47,7 +51,6 @@ _via_file_manager.prototype._filelist_html_element = function(findex, fid) {
     oi.setAttribute('data-fid', fid);
     oi.setAttribute('value', fid);
     oi.setAttribute('title', decodeURI(this.d.file_store[fid].src));
-    oi.addEventListener('click', this._filelist_switch_to_file.bind(this));
     oi.innerHTML = '[' + (parseInt(findex)+1) + '] ' + decodeURI(this.d.file_store[fid].filename);
   } else {
     console.log('_via_file_manager._filelist_html_element() : not found fid=' + fid);
@@ -111,8 +114,9 @@ _via_file_manager.prototype._filelist_set_selected_to_current_file = function() 
   }
 }
 
-_via_file_manager.prototype._filelist_switch_to_file = function(el) {
-  var fid = el.target.dataset.fid;
+_via_file_manager.prototype._filelist_switch_to_file = function() {
+  var fid = this.filelist.options[this.filelist.selectedIndex].dataset.fid;
+  console.log('_via_file_manager(): triggering annotated_fid() fid='+fid);
   this.a.annotate_fid(fid);
 }
 

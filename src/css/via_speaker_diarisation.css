@@ -33,6 +33,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .cpanel .logo a { text-decoration:none; }
 .cpanel .tool_group select { background-color:inherit; border:1px solid #cfcfcf; vertical-align:middle; width:10em; }
 .cpanel .tool_group input { background-color:inherit; border:1px solid #cfcfcf; vertical-align:middle; width:4em;}
+.cpanel .tool_group .project_name_container { display:inline-block; vertical-align:middle; font-size:small; width:10em; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:right; }
 
 .annotator_container { flex:auto; padding-top:0em; margin-top:0.5em; }
 .annotator_container > .file_container { display:none; height:100%; }
@@ -128,6 +129,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .info_page_container > .info_page table { border-collapse:collapse; border:1px solid #cccccc; }
 .info_page_container > .info_page th { border:1px solid #cccccc; padding:0.3em 0.4em; }
 .info_page_container > .info_page td { border:1px solid #cccccc; padding:0.3em 0.4em; }
+.info_page_container > .info_page div { width:45em; }
 
 /* Message Panel */
 #_via_message_container { display:none; width:100vw; position:fixed; bottom:0px; z-index:9999; text-align:center; }
