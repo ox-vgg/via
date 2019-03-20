@@ -16,7 +16,7 @@ function _via_data() {
     'data_format_version':'3.0.0',
     'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
     'created': new Date().toString(),
-    'updated': new Date().toString(),
+    'update_history': [],
   };
 
   // metadata
@@ -53,7 +53,7 @@ _via_data.prototype._init = function() {
 }
 
 _via_data.prototype._hook_on_data_update = function() {
-  this.project_store.updated = new Date().toString();
+  //@todo
 }
 
 //
@@ -523,6 +523,11 @@ _via_data.prototype._project_load = function(data) {
                                                 );
   }
 
+  if ( data.hasOwnProperty('_id') && data.hasOwnProperty('_rev') ) {
+    this.couchdb_id = data['_id'];
+    this.couchdb_rev = data['_rev'];
+  }
+
   // initialise all the stores
   var store_id;
   for ( store_id in this._store_list ) {
@@ -548,7 +553,8 @@ _via_data.prototype._project_pack_data = function() {
 
       var data_str = JSON.stringify(data);
       var filename = data.project_store.project_name;
-      ok_callback({'project_filename':filename,
+      ok_callback({'project_id':data.project_store.project_id,
+                   'project_name':data.project_store.project_name,
                    'data_str':data_str
                   });
     } catch(err) {
@@ -561,11 +567,64 @@ _via_data.prototype._project_pack_data = function() {
 _via_data.prototype.save_local = function() {
   this._project_pack_data().then( function(payload) {
     var blob = new Blob( [payload.data_str], {type:'text/json;charset=utf-8'} );
-    var filename = payload.project_filename + '.json';
+    var filename = payload.project_name + '.json';
     _via_util_download_as_file(blob, filename);
   }.bind(this), function(err) {
     console.log(err)
   }.bind(this));
+}
+
+_via_data.prototype.save_remote = function(username) {
+  if ( ! this.couchdb_id || ! this.couchdb_rev ) {
+    _via_util_msg_show('Upload feature not available!', true);
+    return;
+  }
+
+  var commit_msg = [];
+  commit_msg.push(username);
+  if ( this._store_list.hasOwnProperty('localStorage') ) {
+    commit_msg.push( this._store_list['localStorage'].BROWSER_ID_VALUE );
+  } else {
+    commit_msg.push('unknown');
+  }
+  commit_msg.push(new Date().toString())
+  commit_msg.push(this.couchdb_rev);
+  this.project_store['update_history'].push( commit_msg.join(',') );
+
+  var data = {
+    'project_store':this.project_store,
+    'metadata_store':this.metadata_store,
+    'attribute_store':this.attribute_store,
+    'aid_list':this.aid_list,
+    'file_store':this.file_store,
+    'fid_list':this.fid_list,
+    'file_mid_store':this.file_mid_store,
+  };
+
+  var uri = _VIA_PROJECT_DS_URI + this.couchdb_id + '?rev=' + this.couchdb_rev;
+  var xhr = new XMLHttpRequest();
+  xhr.open('PUT', uri);
+  xhr.addEventListener('error', function(e) {
+    _via_util_msg_show('Failed to upload!', true);
+  }.bind(this));
+  xhr.addEventListener('abort', function(e) {
+    _via_util_msg_show('Upload aborted!', true);
+    err_callback(false);
+  }.bind(this));
+  xhr.addEventListener('load', function(e) {
+    switch(xhr.statusText) {
+    case 'Created':
+    case 'Accepted':
+      _via_util_msg_show('Upload successful!', true);
+      break;
+    default:
+      _via_util_msg_show('Upload failed with response [' + xhr.statusText + ']', true);
+      break;
+    }
+  }.bind(this));
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('Accept', 'application/json');
+  xhr.send( JSON.stringify(data) );
 }
 
 _via_data.prototype.load_local = function() {

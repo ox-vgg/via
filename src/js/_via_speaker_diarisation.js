@@ -1,5 +1,7 @@
 'use strict'
 
+var _VIA_PROJECT_DS_URI = '';
+
 var data = new _via_data();
 var io = new _via_io(data);
 
@@ -86,12 +88,12 @@ if ( true ) {
 }
 
 function _via_project_load_remote(project_id) {
-  var voxceleb_project_baseuri = '';
-  var project_uri = voxceleb_project_baseuri + project_id;
+  var project_uri = _VIA_PROJECT_DS_URI + project_id;
   _via_util_remote_get(project_uri).then( function(file_content) {
     try {
       var project_data = JSON.parse(file_content);
       data._project_load( project_data );
+      console.log(data.project_store)
     }
     catch(err) {
       _via_util_msg_show('Failed to load project [' + project_id + '] from malformed json data!', true);

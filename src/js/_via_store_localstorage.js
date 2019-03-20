@@ -20,15 +20,21 @@ function _via_store_localstorage(data) {
   this.prev_session_timestamp = '';
   this.prev_session_timestamp_str = '';
 
+  this.BROWSER_ID_KEY = '_via_browser_id';
+  this.BROWSER_ID_VALUE = '';
   this.event_prefix = '_via_store_localstorage_';
   _via_event.call( this );
 }
 
 _via_store_localstorage.prototype._init = function() {
   if ( this.is_store_available() ) {
+    this.BROWSER_ID_VALUE = this.store.getItem(this.BROWSER_ID_KEY);
     this.store.clear();
     this.store_available = true;
-
+    if ( this.BROWSER_ID_VALUE === null ) {
+      this.BROWSER_ID_VALUE = this.d._uuid();
+    }
+    this.store.setItem(this.BROWSER_ID_KEY, this.BROWSER_ID_VALUE);
     this._push_all();
     return true;
   } else {
@@ -154,8 +160,10 @@ _via_store_localstorage.prototype._pack_store_data = function() {
               console.log('malformed metadata : [' + metadata_str + ']');
             }
           } catch(e) {
-            console.log('Failed to parse data for store_key=[' + store_key + '], data_key=[' + data_key + ']');
-            console.log(this.store.getItem(store_key));
+            if ( store_key !== this.BROWSER_ID_KEY ) {
+              console.log('Failed to parse data for store_key=[' + store_key + '], data_key=[' + data_key + ']');
+              console.log(this.store.getItem(store_key));
+            }
           }
         }
       }
