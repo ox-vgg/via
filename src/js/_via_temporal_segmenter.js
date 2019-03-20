@@ -32,9 +32,10 @@ function _via_temporal_segmenter(container, file, data, media_element) {
   this.TEMPORAL_SEG_MOVE_OFFSET = 1;   // in sec
   this.DEFAULT_TEMPORAL_SEG_LEN = 1;   // in sec
   this.GTIMELINE_HEIGHT = 5;           // units of char width
-  this.WIDTH_PER_SEC = 6;              // units of char width
+  this.GTIMELINE_ZOOM_OFFSET = 4;      // in pixels
+  this.DEFAULT_WIDTH_PER_SEC = 6;      // units of char width
   this.GID_COL_WIDTH = 15;             // units of char width
-  this.METADATA_CONTAINER_HEIGHT = 22;  // units of char width
+  this.METADATA_CONTAINER_HEIGHT = 22; // units of char width
   this.METADATA_EDGE_TOL = 0.1;
 
   this.PLAYBACK_MODE = { NORMAL:'1', REVIEW_SEGMENT:'2', REVIEW_GAP:'3' };
@@ -332,7 +333,7 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   this.gid_width = this.linehn[15];
   this.timeline_container_width = cw - this.gid_width - this.linehn[3];
   this.tmetadata_timelinew = this.timeline_container_width - Math.floor(2 * this.padx);
-  this.tmetadata_width_per_sec = this.linehn[this.WIDTH_PER_SEC];
+  this.tmetadata_width_per_sec = this.linehn[this.DEFAULT_WIDTH_PER_SEC];
   this._tmetadata_boundary_update(0); // determine the boundary of gtimeline
 
   // header
@@ -488,6 +489,36 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_init = function(container
   this.gtimeline.width = this.timeline_container_width;
   this.gtimeline.height = this.linehn[this.GTIMELINE_HEIGHT];
   this.gtimelinectx = this.gtimeline.getContext('2d', {alpha:false});
+
+  this.gtimeline.addEventListener('wheel', this._tmetadata_gtimeline_wheel_listener.bind(this));
+}
+
+_via_temporal_segmenter.prototype._tmetadata_gtimeline_wheel_listener = function(e) {
+  // perform zoom of gtimeline
+  if (e.deltaY < 0) {
+    this._tmetadata_gtimeline_zoomin();
+  } else {
+    this._tmetadata_gtimeline_zoomout();
+  }
+  e.preventDefault();
+}
+
+_via_temporal_segmenter.prototype._tmetadata_gtimeline_zoomin = function() {
+  var wps = this.tmetadata_width_per_sec + this.GTIMELINE_ZOOM_OFFSET;
+  if ( wps < this.gtimeline.width ) {
+    this.tmetadata_width_per_sec = wps;
+    this._tmetadata_boundary_update(this.tmetadata_gtimeline_tstart);
+    this._redraw_all();
+  }
+}
+
+_via_temporal_segmenter.prototype._tmetadata_gtimeline_zoomout = function() {
+  var wps = this.tmetadata_width_per_sec - this.GTIMELINE_ZOOM_OFFSET;
+  if ( wps > 1 ) {
+    this.tmetadata_width_per_sec = wps;
+    this._tmetadata_boundary_update(this.tmetadata_gtimeline_tstart);
+    this._redraw_all();
+  }
 }
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_clear = function() {
@@ -507,22 +538,42 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_draw = function() {
   this.gtimelinectx.lineTo(this.tmetadata_gtimeline_xend, this.linehn[3]);
   this.gtimelinectx.stroke();
 
-  // draw tick marks
-  this.gtimelinectx.beginPath();
-  for ( var i = 0; i < this.tmetadata_gtimeline_mark_x.length; ++i ) {
-    this.gtimelinectx.moveTo(this.tmetadata_gtimeline_mark_x[i], this.linehn[3]);
-    this.gtimelinectx.lineTo(this.tmetadata_gtimeline_mark_x[i], this.linehn[4]);
-  }
-  this.gtimelinectx.stroke();
+  if ( this.tmetadata_gtimeline_mark_x.length ) {
+    /*
+    // draw tick marks
+    this.gtimelinectx.beginPath();
+    for ( var i = 0; i < this.tmetadata_gtimeline_mark_x.length; ++i ) {
+      this.gtimelinectx.moveTo(this.tmetadata_gtimeline_mark_x[i], this.linehn[3]);
+      this.gtimelinectx.lineTo(this.tmetadata_gtimeline_mark_x[i], this.linehn[4]);
+    }
+    this.gtimelinectx.stroke();
+    */
 
-  // draw tick labels
-  this.gtimelinectx.fillStyle = '#666666';
-  this.gtimelinectx.font = '9px Sans';
-  for ( var i = 0; i < this.tmetadata_gtimeline_mark_x.length; ++i ) {
-    this.gtimelinectx.fillText(this.tmetadata_gtimeline_mark_time_str[i],
-                               this.tmetadata_gtimeline_mark_x[i], this.linehn[5] );
-  }
+    // draw tick labels
+    this.gtimelinectx.fillStyle = '#666666';
+    this.gtimelinectx.font = '9px Sans';
+    var last_mark_x = this.tmetadata_gtimeline_mark_x[0];
+    var tick_width = this.gtimelinectx.measureText(this.tmetadata_gtimeline_mark_time_str[0]).width;
+    var dx;
+    this.gtimelinectx.beginPath();
+    for ( var i = 0; i < this.tmetadata_gtimeline_mark_x.length; ++i ) {
+      dx = this.tmetadata_gtimeline_mark_x[i] - last_mark_x;
+      if ( i === 0 || dx > tick_width ) {
+        // draw tick
+        this.gtimelinectx.moveTo(this.tmetadata_gtimeline_mark_x[i], this.linehn[3]);
+        this.gtimelinectx.lineTo(this.tmetadata_gtimeline_mark_x[i], this.linehn[4]);
 
+        // draw label
+        this.gtimelinectx.fillText(this.tmetadata_gtimeline_mark_time_str[i],
+                                   this.tmetadata_gtimeline_mark_x[i], this.linehn[5] );
+        last_mark_x = this.tmetadata_gtimeline_mark_x[i];
+      } else {
+        // avoid crowding of labels
+        continue;
+      }
+    }
+    this.gtimelinectx.stroke();
+  }
 }
 
 _via_temporal_segmenter.prototype._tmetadata_draw_currenttime_mark = function(tnow) {
@@ -543,7 +594,7 @@ _via_temporal_segmenter.prototype._tmetadata_draw_currenttime_mark = function(tn
   // show playback rate
   this.gtimelinectx.font = '10px Sans';
   var rate = this.m.playbackRate.toFixed(1) + 'X';
-  this.gtimelinectx.fillText(rate, this.tmetadata_gtimeline_xend, this.linehn[3] - 2);
+  this.gtimelinectx.fillText(rate, this.tmetadata_gtimeline_xend - this.linehn[3], this.linehn[3] - 2);
 }
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_canvas2time = function(x) {
@@ -892,6 +943,9 @@ _via_temporal_segmenter.prototype._tmetadata_mid_move = function(dt) {
   this.d.metadata_update_z(this.file.fid, this.selected_mid, newz);
   this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
   this._tmetadata_group_gid_draw(this.selected_gid);
+
+  // the move operation may have changed the sequential order of mid
+  this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
 }
 
 _via_temporal_segmenter.prototype._tmetadata_mid_del_sel = function(mid) {
