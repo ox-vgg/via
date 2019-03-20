@@ -41,10 +41,11 @@
         </div>
 
         <div id="project" class="tool_group">
+          <!--
           <svg onclick="data.load_local()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_open"></use><title>Open Project</title></svg>
           <svg onclick="data.save_local()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_save"></use><title>Save Project</title></svg>
+
           <svg onclick="data.save_remote()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Upload Project</title></svg>
-          <!--
               <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_settings"></use><title>Project Settings</title></svg>
               <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Upload Project</title></svg>
               <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_download"></use><title>Download Project</title></svg>
@@ -60,8 +61,8 @@
         </div>
 
         <div id="file_manager_container" class="tool_group">
-          <select id="project_list" title="List of Files" style="width:10em;"></select>
-          <div title="VIA Project Name" id="_via_filemanager_project_name" class="project_name_container"></div>
+          <select id="project_list" title="List of Videos" style="width:10em;"></select>
+          <div title="Current Video Id" id="_via_filemanager_project_name" class="project_name_container"></div>
 
           <select style="display:none;" id="file_manager_filelist" title="List of files in this project"></select>
           <input style="display:none;" type="text" placeholder="Search" oninput="file_manager._filelist_update_regex(this.value)">
@@ -105,13 +106,19 @@
 
             <!--            -->
             <div id="restore" class="tool_group" >
-              <svg id="_via_restore_load_button" onclick="store.prev_session_load()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_restore_load"></use><title>Load VIA project from previous session</title></svg>
+              <svg id="_via_restore_load_button" onclick="store.prev_session_load()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_restore_load"></use><title>Restore to previous version that was not yet uploaded!</title></svg>
 
-              <svg id="_via_restore_save_button" onclick="store.prev_session_save()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_restore_save"></use><title>Restore and save VIA project data from previous session</title></svg>
+              <svg style="display:none;" id="_via_restore_save_button" onclick="store.prev_session_save()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_restore_save"></use><title>Restore and save VIA project data from previous session</title></svg>
             </div>
 
             <div id="help" class="tool_group" >
               <svg onclick="_via_util_show_info_page('keyboard_shortcuts')" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_help"></use><title>Help</title></svg>
+            </div>
+
+            <div id="remote" class="tool_group" >
+              <input id="remote_push_username" type="text" title="To upload, you must enter your username (min 5 characters and no special characters or spaces)" placeholder="Enter username" style="width:10em;" autocomplete="on">
+              <svg onclick="data.save_remote()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Upload</title></svg>
+
             </div>
 
             <div id="region_info_panel" class="tool_group" >

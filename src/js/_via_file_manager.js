@@ -34,7 +34,7 @@ function _via_file_manager(data, annotator, filelist_element, project_name_eleme
 }
 
 _via_file_manager.prototype._init = function() {
-  this.project_name_element.innerHTML = "Project: " + this.d.project_store.project_name;
+  this.project_name_element.innerHTML = "Video: " + this.d.project_store.project_name;
   // trigger update of filelist (for the first time)
   this._filelist_update();
 }

@@ -46,7 +46,7 @@ _via_store_localstorage.prototype.prev_session_data_init = function() {
   return new Promise( function(ok_callback, err_callback) {
     try {
       var existing_project_store_str = this.store.getItem('_via_project_store');
-      if ( typeof(existing_project_store_str) !== 'undefined' ) {
+      if ( existing_project_store_str !== null ) {
         // save a copy of previous session's data
         this._pack_store_data().then( function(ok) {
           this.prev_session_data = ok;
@@ -167,6 +167,7 @@ _via_store_localstorage.prototype._pack_store_data = function() {
           }
         }
       }
+
       ok_callback(data);
     }
     catch(e) {

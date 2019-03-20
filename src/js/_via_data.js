@@ -574,9 +574,22 @@ _via_data.prototype.save_local = function() {
   }.bind(this));
 }
 
+// temporary method for voxceleb data annotation - Abhishek (20 Mar. 2019)
 _via_data.prototype.save_remote = function(username) {
   if ( ! this.couchdb_id || ! this.couchdb_rev ) {
     _via_util_msg_show('Upload feature not available!', true);
+    return;
+  }
+
+  var username = document.getElementById('remote_push_username').value;
+  username = username.trim();
+  if ( username === '' ) {
+    _via_util_msg_show('To upload, you must enter your username!', true);
+    return;
+  }
+  var constraint = new RegExp("^([a-z0-9]{5,})$");
+  if ( ! constraint.test(username) ) {
+    _via_util_msg_show('Username must be 5 characters long and cannot contain spaces or special characters.', true);
     return;
   }
 
@@ -587,7 +600,7 @@ _via_data.prototype.save_remote = function(username) {
   } else {
     commit_msg.push('unknown');
   }
-  commit_msg.push(new Date().toString())
+  commit_msg.push( new Date().toJSON() );
   commit_msg.push(this.couchdb_rev);
   this.project_store['update_history'].push( commit_msg.join(',') );
 
