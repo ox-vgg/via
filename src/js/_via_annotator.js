@@ -45,8 +45,12 @@ _via_annotator.prototype.annotate_fid = function(fid) {
   //console.log('annotate_fid(): fid=' + fid);
   // check if file has already been loaded
   if ( fid in this.file_container ) {
+
+    // remove any previously visible files
     if ( this.file.fid && fid !== this.file.fid ) {
-      this._file_container_hide(this.file.fid);
+      if ( this.file_container.hasOwnProperty(this.file.fid) ) {
+        this._file_container_hide(this.file.fid);
+      }
     }
 
     this.file = this.d.file_store[fid];

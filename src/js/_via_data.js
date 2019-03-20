@@ -529,6 +529,7 @@ _via_data.prototype._project_load = function(data) {
     this._store_list[store_id]._init();
   }
 
+  _via_util_msg_show('Loaded project [' + this.project_store['project_name'] + ']');
   this.emit_event( 'project_load', {}  );
 }
 
@@ -587,9 +588,11 @@ _via_data.prototype._uuid = function() {
   var temp_url = URL.createObjectURL(new Blob())
   var uuid = temp_url.toString();
   URL.revokeObjectURL(temp_url);
-  if ( uuid.startsWith('blob:null/') ) {
-    uuid = uuid.substr(10);
-    uuid = uuid.replace('-', '');
+  var slash_index = uuid.lastIndexOf('/');
+  if ( uuid !== -1 ) {
+    // remove any prefix (e.g. blob:null/, blob:www.test.com/, ...)
+    uuid = uuid.substr(slash_index + 1);
+    uuid = uuid.replace(/-/g, '');
   }
   return uuid;
 }

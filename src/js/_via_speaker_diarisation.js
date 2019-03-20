@@ -62,6 +62,46 @@ function _via_on_browser_resize() {
   annotator.emit_event('container_resize', {});
 }
 
+if ( true ) {
+  var project_list = document.getElementById('project_list');
+  for ( var i = 1; i < 694; ++i ) {
+    var o = document.createElement('option');
+    var label = i;
+    if ( i > 0 && i < 10 ) {
+      label = '00' + i;
+    } else {
+      if ( i > 9 && i < 100 ) {
+        label = '0' + i;
+      }
+    }
+    o.innerHTML = "Load Project: " + label;
+    o.setAttribute('value', 'voxceleb_val_693_' + label);
+    project_list.appendChild(o);
+  }
+  _via_project_load_remote('voxceleb_val_693_001'); // default project
+
+  project_list.addEventListener('change', function(e) {
+    _via_project_load_remote(e.target.options[e.target.selectedIndex].value);
+  }.bind(this));
+}
+
+function _via_project_load_remote(project_id) {
+  var voxceleb_project_baseuri = '';
+  var project_uri = voxceleb_project_baseuri + project_id;
+  _via_util_remote_get(project_uri).then( function(file_content) {
+    try {
+      var project_data = JSON.parse(file_content);
+      data._project_load( project_data );
+    }
+    catch(err) {
+      _via_util_msg_show('Failed to load project [' + project_id + '] from malformed json data!', true);
+      console.log(err)
+    }
+  }.bind(this), function(err) {
+    _via_util_msg_show('Failed to load project [' + project_id + ']', true);
+  }.bind(this));
+}
+
 if ( false ) {
   var VIA_PROJECT_LIST = ["p1f9f7e66fd0d482a8ae7a38468cd308d","p1ff7175481f942389fcccef82857f9c6","p2c56bb12f48849669e9dce75c9f5929c","p3e79c313d04744eebc5203f9b7f293ec","p42c179d206e042ebbfbb02a6248f9461","p6f75428e279e4a75bca6374718670779","p81c738031f78436da4ef6e67341122f2","p9013cba11e2c40539fc4676c9c65764c","p9036d02214ec439c9eeff6e27ed20dcc","p9f9243bbe3434391a7d6583ff18475b6","pbd28c6ff99d540a9bc07a81dfbf7c3d0","pc33a5ad24b514c7fa943a023572b1aa3","pd9d5f56857c44b52afaf3df3d717ee3a","pe4b6c03af2f9428fa02040f85a8e58cc"];
 

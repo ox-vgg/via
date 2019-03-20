@@ -34,7 +34,7 @@ function _via_file_manager(data, annotator, filelist_element, project_name_eleme
 }
 
 _via_file_manager.prototype._init = function() {
-  this.project_name_element.innerHTML = this.d.project_store.project_name;
+  this.project_name_element.innerHTML = "Project: " + this.d.project_store.project_name;
   // trigger update of filelist (for the first time)
   this._filelist_update();
 }
@@ -108,7 +108,7 @@ _via_file_manager.prototype._filelist_set_selected_to_current_file = function() 
     for ( i = 0; i < n; ++i ) {
       if ( this.filelist.options[i].dataset.fid == this.a.file.fid ) {
         this.filelist.selectedIndex = i;
-        this.filelist.title = this.d.file_store[ this.a.file.fid.toString() ].src;
+        //this.filelist.title = this.d.file_store[ this.a.file.fid.toString() ].src;
       }
     }
   }

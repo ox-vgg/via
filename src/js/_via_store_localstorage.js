@@ -42,14 +42,18 @@ _via_store_localstorage.prototype.prev_session_data_init = function() {
       var existing_project_store_str = this.store.getItem('_via_project_store');
       if ( typeof(existing_project_store_str) !== 'undefined' ) {
         // save a copy of previous session's data
-        this.prev_session_data = this._pack_store_data();
-        this.prev_session_data_blob = new Blob( [ JSON.stringify(this.prev_session_data) ],
-                                                {type:'text/json;charset=utf-8'} );
+        this._pack_store_data().then( function(ok) {
+          this.prev_session_data = ok;
+          this.prev_session_data_blob = new Blob( [ JSON.stringify(this.prev_session_data) ],
+                                                  {type:'text/json;charset=utf-8'} );
 
-        this.prev_session_timestamp_str = _via_util_date_to_filename_str(this.prev_session_data.project_store.created);
-        this.prev_session_timestamp = new Date(this.prev_session_data.project_store.created);
-        this.prev_session_available = true;
-        ok_callback();
+          this.prev_session_timestamp_str = _via_util_date_to_filename_str(this.prev_session_data.project_store.created);
+          this.prev_session_timestamp = new Date(this.prev_session_data.project_store.created);
+          this.prev_session_available = true;
+          ok_callback();
+        }.bind(this), function(err) {
+          err_callback();
+        }.bind(this))
       } else {
         console.log('_via_store_localstorage.prev_session_data_init() failed');
         err_callback();
@@ -126,38 +130,41 @@ _via_store_localstorage.prototype._datakey_to_storekey = function(data_key) {
 
 
 _via_store_localstorage.prototype._pack_store_data = function() {
-  try {
-    var data = { 'metadata_store':{} };
-    var store_items = Object.keys(this.store);
-    var store_key, store_key_index, data_key;
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      var data = { 'metadata_store':{} };
+      var store_items = Object.keys(this.store);
+      var store_key, store_key_index, data_key;
 
-    for ( store_key_index in store_items ) {
-      store_key = store_items[store_key_index];
-      data_key = this._storekey_to_datakey(store_key);
-      if ( this.d.data_key_list.includes(data_key) ) {
-        data[data_key] = JSON.parse( this.store.getItem(store_key) );
-      } else {
-        try {
-          var metadata_str = this.store.getItem(store_key);
-          var metadata = JSON.parse(metadata_str);
-          if ( typeof(metadata.z)  !== 'undefined' &&
-               typeof(metadata.xy) !== 'undefined' &&
-               typeof(metadata.v)  !== 'undefined'
-             ) {
-            data['metadata_store'][data_key] = metadata;
-          } else {
-            console.log('malformed metadata : [' + metadata_str + ']');
+      for ( store_key_index in store_items ) {
+        store_key = store_items[store_key_index];
+        data_key = this._storekey_to_datakey(store_key);
+        if ( this.d.data_key_list.includes(data_key) ) {
+          data[data_key] = JSON.parse( this.store.getItem(store_key) );
+        } else {
+          try {
+            var metadata_str = this.store.getItem(store_key);
+            var metadata = JSON.parse(metadata_str);
+            if ( typeof(metadata.z)  !== 'undefined' &&
+                 typeof(metadata.xy) !== 'undefined' &&
+                 typeof(metadata.v)  !== 'undefined'
+               ) {
+              data['metadata_store'][data_key] = metadata;
+            } else {
+              console.log('malformed metadata : [' + metadata_str + ']');
+            }
+          } catch(e) {
+            console.log('Failed to parse data for store_key=[' + store_key + '], data_key=[' + data_key + ']');
+            console.log(this.store.getItem(store_key));
           }
-        } catch(e) {
-          console.log('Failed to parse data for store_key=[' + store_key + '], data_key=[' + data_key + ']');
-          console.log(this.store.getItem(store_key));
         }
       }
+      ok_callback(data);
     }
-    return data;
-  } catch(e) {
-    err_callback(e);
-  }
+    catch(e) {
+      err_callback();
+    }
+  }.bind(this));
 }
 
 //
@@ -249,7 +256,7 @@ _via_store_localstorage.prototype._self_test = function() {
   var aid1 = this.d.attribute_add('attribute1', _VIA_ATTRIBUTE_TYPE.TEXT);
   var aid2 = this.d.attribute_add('attribute2', _VIA_ATTRIBUTE_TYPE.TEXT);
   this.d.metadata_add( fid1, [], [ _VIA_SHAPE.RECT, 10, 20, 50, 100 ], { aid1:'value1', aid2:'value2'}).then( function(ok) {
-    this._pack_store_data().then( function(d) {
+    this._pack_store_data().then( function(ok) {
       console.assert( d.file_mid_store[0][0] === Object.keys(d.metadata_store)[0] );
       console.assert( d.fid_list.length === 2 );
       console.assert( d.aid_list.length === 2 );
@@ -258,9 +265,9 @@ _via_store_localstorage.prototype._self_test = function() {
       console.assert( d.attribute_store[0].attr_name === 'attribute1' );
       console.assert( d.attribute_store[1].attr_name === 'attribute2' );
       console.log('_via_store_localstorage : self test done');
-    }, function(err) {
-      console.error(err)
-    });
+    }.bind(this), function(err) {
+      console.error('_via_store_localstorage : self test failed');
+    }.bind(this));
   }.bind(this), function(err) {
     console.error('failed');
   });
