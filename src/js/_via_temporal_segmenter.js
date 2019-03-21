@@ -796,7 +796,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_draw_mid = function(gid, 
       this.gctx[gid].font = '10px Sans';
       this.gctx[gid].fillStyle = '#000000';
 
-      var time_str = this._time2ssms(this.d.metadata_store[this.selected_mid].z[this.edge_show_time]);
+      var time_str = this.d.metadata_store[this.selected_mid].z[this.edge_show_time].toFixed(3);
       if ( this.edge_show_time === 0 ) {
         this.gctx[gid].fillText(time_str, x0 + 1, this.linehn[4]);
       } else {
@@ -1218,14 +1218,18 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     return;
   }
   if ( e.key === '+' ) {
-    e.preventDefault();
-    this.m.playbackRate = this.m.playbackRate + 0.1;
+    if ( ! e.ctrlKey ) {
+      e.preventDefault();
+      this.m.playbackRate = this.m.playbackRate + 0.1;
+    }
     return;
   }
   if ( e.key === '-' ) {
-    e.preventDefault();
-    if ( this.m.playbackRate > 0.1 ) {
-      this.m.playbackRate = this.m.playbackRate - 0.1;
+    if ( ! e.ctrlKey ) {
+      e.preventDefault();
+      if ( this.m.playbackRate > 0.1 ) {
+        this.m.playbackRate = this.m.playbackRate - 0.1;
+      }
     }
     return;
   }
@@ -1557,7 +1561,7 @@ _via_temporal_segmenter.prototype._time2ssms = function(t) {
   var mm = Math.floor( (t - hh * 3600) / 60 );
   var ss = Math.floor( t - hh*3600 - mm*60 );
   var ms = Math.floor( (t - Math.floor(t) ) * 1000 );
-  return ss + '.' + ms;
+  return ss + ':' + ms;
 }
 
 _via_temporal_segmenter.prototype._vtimeline_playbackrate2str = function(t) {
