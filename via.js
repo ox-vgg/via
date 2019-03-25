@@ -101,12 +101,13 @@ var VIA_THETA_TOL                 = Math.PI/18; // 10 degrees
 var VIA_POLYGON_RESIZE_VERTEX_OFFSET  = 100;
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
 var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4, 5];
+var VIA_REGION_COLOR_LIST = ["#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442"];
 
 var VIA_THEME_REGION_BOUNDARY_WIDTH = 4;
 var VIA_THEME_BOUNDARY_LINE_COLOR   = "black";
-var VIA_THEME_BOUNDARY_FILL_COLOR   = "yellow";
+var VIA_THEME_BOUNDARY_FILL_COLOR   = "white";
 var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
-var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "yellow";
+var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "white";
 var VIA_THEME_SEL_REGION_OPACITY    = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS    = 6000;
 var VIA_THEME_CONTROL_POINT_COLOR   = '#ff0000';
@@ -186,6 +187,9 @@ var _via_message_clear_timer;
 var _via_attribute_being_updated       = 'region'; // {region, file}
 var _via_attributes                    = { 'region':{}, 'file':{} };
 var _via_current_attribute_id          = '';
+
+// region group color
+var _via_canvas_regions_group_color = {}; // color of each region
 
 // invoke a method after receiving user input
 var _via_user_input_ok_handler     = null;
@@ -270,6 +274,7 @@ _via_settings.ui.image_grid.show_image_policy   = 'all';
 
 _via_settings.ui.image = {};
 _via_settings.ui.image.region_label      = '__via_region_id__'; // default: region_id
+_via_settings.ui.image.region_color      = '__via_default_region_color__'; // default color: yellow
 _via_settings.ui.image.region_label_font = '10px Sans';
 _via_settings.ui.image.on_image_annotation_editor_placement = VIA_ANNOTATION_EDITOR_PLACEMENT.NEAR_REGION;
 
@@ -1139,8 +1144,27 @@ function show_message(msg, t) {
   }, timeout);
 }
 
+function _via_regions_group_color_init() {
+  _via_canvas_regions_group_color = {};
+  var aid = _via_settings.ui.image.region_color;
+  if ( aid !== '__via_default_region_color__' ) {
+    var avalue;
+    for ( var i = 0; i < _via_img_metadata[_via_image_id].regions.length; ++i ) {
+      avalue = _via_img_metadata[_via_image_id].regions[i].region_attributes[aid];
+      _via_canvas_regions_group_color[avalue] = 1;
+    }
+    var color_index = 0;
+    for ( avalue in _via_canvas_regions_group_color ) {
+      _via_canvas_regions_group_color[avalue] = VIA_REGION_COLOR_LIST[ color_index % VIA_REGION_COLOR_LIST.length ];
+      color_index = color_index + 1;
+    }
+  }
+}
+
 // transform regions in image space to canvas space
 function _via_load_canvas_regions() {
+  _via_regions_group_color_init();
+
   // load all existing annotations into _via_canvas_regions
   var regions = _via_img_metadata[_via_image_id].regions;
   _via_canvas_regions  = [];
@@ -1923,6 +1947,7 @@ function _via_reg_canvas_mousemove_handler(e) {
 
     var dx = Math.round(Math.abs(_via_current_x - _via_click_x0));
     var dy = Math.round(Math.abs(_via_current_y - _via_click_y0));
+    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
 
     switch (_via_current_shape ) {
     case VIA_REGION_SHAPE.RECT:
@@ -2235,9 +2260,22 @@ function _via_clear_reg_canvas() {
 }
 
 function draw_all_regions() {
+  var aid = _via_settings.ui.image.region_color;
+  var attr, is_selected, aid, avalue;
   for (var i=0; i < _via_canvas_regions.length; ++i) {
-    var attr = _via_canvas_regions[i].shape_attributes;
-    var is_selected = _via_region_selected_flag[i];
+    attr = _via_canvas_regions[i].shape_attributes;
+    is_selected = _via_region_selected_flag[i];
+
+    if ( aid === '__via_default_region_color__' ) {
+      _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
+    } else {
+      avalue = _via_img_metadata[_via_image_id].regions[i].region_attributes[aid];
+      if ( _via_canvas_regions_group_color.hasOwnProperty(avalue) ) {
+        _via_reg_ctx.strokeStyle = _via_canvas_regions_group_color[avalue];
+      } else {
+        _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
+      }
+    }
 
     switch( attr['name'] ) {
     case VIA_REGION_SHAPE.RECT:
@@ -2314,7 +2352,7 @@ function _via_draw_rect_region(x, y, w, h, is_selected) {
     _via_draw_control_point(x+w  , y+h/2);
   } else {
     // draw a fill line
-    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
+    //_via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
     _via_draw_rect(x, y, w, h);
     _via_reg_ctx.stroke();
@@ -3227,13 +3265,13 @@ function _via_handle_global_keydown_event(e) {
   }
 
   if ( e.key === 'ArrowUp' ) {
-    region_label_update(+1);
+    region_visualisation_update('region_label', '__via_region_id__', 1);
     e.preventDefault();
     return;
   }
 
   if ( e.key === 'ArrowDown' ) {
-    region_label_update(-1);
+    region_visualisation_update('region_color', '__via_default_region_color__', -1);
     e.preventDefault();
     return;
   }
@@ -4081,14 +4119,14 @@ function _via_reg_canvas_mouse_wheel_listener(e) {
   }
 }
 
-function region_label_update(distance_from_current_label) {
-  var attr_list = ['__via_region_id__'];
+function region_visualisation_update(type, default_id, next_offset) {
+  var attr_list = [ default_id ];
   attr_list = attr_list.concat(Object.keys(_via_attributes['region']));
   var n = attr_list.length;
-  var current_index = attr_list.indexOf(_via_settings.ui.image.region_label);
+  var current_index = attr_list.indexOf(_via_settings.ui.image[type]);
   var new_index;
   if ( current_index !== -1 ) {
-    new_index = current_index + distance_from_current_label;
+    new_index = current_index + next_offset;
 
     if ( new_index < 0 ) {
       new_index = n + new_index;
@@ -4096,8 +4134,16 @@ function region_label_update(distance_from_current_label) {
     if ( new_index >= n ) {
       new_index = new_index - n;
     }
-    _via_settings.ui.image.region_label = attr_list[new_index];
-    _via_redraw_reg_canvas();
+    switch(type) {
+    case 'region_label':
+      _via_settings.ui.image.region_label = attr_list[new_index];
+      _via_redraw_reg_canvas();
+      break;
+    case 'region_color':
+      _via_settings.ui.image.region_color = attr_list[new_index];
+      _via_regions_group_color_init();
+      _via_redraw_reg_canvas();
+    }
   }
 }
 
@@ -6162,6 +6208,7 @@ function annotation_editor_on_metadata_update_done(type, attr_id, update_count) 
       break;
     }
   }
+  _via_regions_group_color_init();
   _via_redraw_reg_canvas();
 
   // @todo: it is wasteful to cancel the full set of groups.
@@ -8808,7 +8855,7 @@ function settings_panel_toggle() {
 }
 
 function settings_init() {
-  settings_region_label_update_options();
+  settings_region_visualisation_update_options();
   settings_filepath_update_html();
   settings_show_current_value();
 }
@@ -8898,28 +8945,39 @@ function settings_show_current_value() {
   }
 }
 
-function settings_region_label_update_options() {
-  var p = document.getElementById('_via_settings.ui.image.region_label');
-  p.innerHTML = '';
+function settings_region_visualisation_update_options() {
+  var region_setting_list = {'region_label': {
+    'default_option':'__via_region_id__',
+    'default_label':'Region id (1, 2, ...)',
+    'label_prefix':'Show value of region attribute: ',
+  }, 'region_color': {
+    'default_option':'__via_default_region_color__',
+    'default_label':'Default Region Colour',
+    'label_prefix':'Based on value of region attribute: ',
+  }};
 
-  var default_option = document.createElement('option');
-  default_option.setAttribute('value', '__via_region_id__');
-  if ( _via_settings.ui.image.region_label === '__via_region_id__' ) {
-    default_option.setAttribute('selected', 'selected');
-  }
-  default_option.innerHTML = 'Region id (1, 2, ...)';
-  p.appendChild(default_option);
-
-  // options: add region attributes
-  var rattr;
-  for ( rattr in _via_attributes['region'] ) {
-    var o = document.createElement('option');
-    o.setAttribute('value', rattr);
-    o.innerHTML = 'Value of Region Attribute: ' + rattr;
-    if ( _via_settings.ui.image.region_label === rattr ) {
-      o.setAttribute('selected', 'selected');
+  for ( var setting in region_setting_list ) {
+    var select = document.getElementById('_via_settings.ui.image.' + setting);
+    select.innerHTML = '';
+    var default_option = document.createElement('option');
+    default_option.setAttribute('value', region_setting_list[setting]['default_option']);
+    if ( _via_settings.ui.image[setting] === region_setting_list[setting]['default_option'] ) {
+      default_option.setAttribute('selected', 'selected');
     }
-    p.appendChild(o);
+    default_option.innerHTML = region_setting_list[setting]['default_label'];
+    select.appendChild(default_option);
+
+    // options: add region attributes
+    var rattr;
+    for ( rattr in _via_attributes['region'] ) {
+      var o = document.createElement('option');
+      o.setAttribute('value', rattr);
+      o.innerHTML = region_setting_list[setting]['label_prefix'] + rattr;
+      if ( _via_settings.ui.image.region_label === rattr ) {
+        o.setAttribute('selected', 'selected');
+      }
+      select.appendChild(o);
+    }
   }
 }
 
