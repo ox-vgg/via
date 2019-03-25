@@ -5803,7 +5803,6 @@ function annotation_editor_get_metadata_row_html(row_id) {
       case 'text':
         if ( attr_metadata_stat.hasOwnProperty(attr_id) ) {
           var attr_value_set = Object.keys(attr_metadata_stat[attr_id]);
-          console.log(attr_metadata_stat[attr_id])
           if ( attr_value_set.includes('undefined') ) {
             attr_value = '';
             attr_placeholder = 'includes ' + attr_metadata_stat[attr_id]['undefined'] + ' undefined values';
@@ -7088,9 +7087,16 @@ function image_grid_set_content(img_index_list) {
     _via_image_grid_page_img_index_list = _via_image_grid_img_index_list.slice(0);
     break;
   case 'first_mid_last':
-    _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[0] );
-    _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[ Math.floor(n/2) ] );
-    _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[n-1] );
+    if ( n < 3 ) {
+      var i;
+      for ( i = 0; i < n; ++i ) {
+        _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[i] );
+      }
+    } else {
+      _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[0] );
+      _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[ Math.floor(n/2) ] );
+      _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[n-1] );
+    }
     break;
   case 'even_indexed':
     var i;
