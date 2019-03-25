@@ -7033,9 +7033,10 @@ function image_grid_toggle() {
 function image_grid_show_all_project_images() {
   var all_img_index_list = [];
   var i, n;
-  n = _via_image_id_list.length;
+  //n = _via_image_id_list.length;
+  n = _via_img_fn_list_img_index_list.length;
   for ( i = 0; i < n; ++i ) {
-    all_img_index_list.push(i);
+    all_img_index_list.push( _via_img_fn_list_img_index_list[i] );
   }
   image_grid_clear_all_groups();
 
@@ -7760,9 +7761,10 @@ function image_grid_group_by(type, name) {
   if ( Object.keys(_via_image_grid_group).length === 0 ) {
     // first group
     var img_index_array = [];
+    var n = _via_img_fn_list_img_index_list.length;
     var i;
-    for ( i = 0; i < _via_img_count; ++i ) {
-      img_index_array.push(i);
+    for ( i = 0; i < n; ++i ) {
+      img_index_array.push( _via_img_fn_list_img_index_list[i] );
     }
 
     _via_image_grid_group = image_grid_split_array_to_group(img_index_array, type, name);
