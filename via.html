@@ -264,6 +264,7 @@
       .narrow_page_content { width:60%; }
 
       .force_small_font { font-size:small !important; }
+      .key { font-family:monospace; padding:1px 6px; background:linear-gradient(to bottom,#f0f0f0,#fcfcfc);; border:1px solid #e0e0e0; white-space:nowrap; color:#303030; border-bottom-width:2px; border-radius:3px; font-size:1.2em; }
     </style>
   </head>
 
@@ -594,44 +595,44 @@
           <div style="display:block; text-align:center; padding:1rem;">Available only on image focus</div>
           <table>
             <tr>
-              <td style="width: 8em;">Arrow Keys</td>
+              <td style="width:8em;"><span class="key">&larr;</span>&nbsp;<span class="key">&uarr;</span>&nbsp;<span class="key">&rarr;</span>&nbsp;<span class="key">&darr;</span></td>
               <td>Move selected region by 1 px (Shift to jump)</td>
             </tr>
             <tr>
-              <td>a</td>
+              <td><span class="key">a</span></td>
               <td>Select all regions</td>
             </tr>
 
             <tr>
-              <td>c</td>
+              <td><span class="key">c</span></td>
               <td>Copy selected regions</td>
             </tr>
             <tr>
-              <td>v</td>
+              <td><span class="key">v</span></td>
               <td>Paste selected regions</td>
             </tr>
             <tr>
-              <td>d</td>
+              <td><span class="key">d</span></td>
               <td>Delete selected regions</td>
             </tr>
             <tr>
-              <td>Ctrl + Mouse Wheel</td>
-              <td>Zoom in/out</td>
+              <td><span class="key">Ctrl</span> + Wheel</td>
+              <td>Zoom in/out (mouse cursor is over image)</td>
             </tr>
             <tr>
-              <td>l</td>
+              <td><span class="key">l</span></td>
               <td>Toggle region label</td>
             </tr>
             <tr>
-              <td>b</td>
+              <td><span class="key">b</span></td>
               <td>Toggle region boundary</td>
             </tr>
             <tr>
-              <td>Enter</td>
+              <td><span class="key">Enter</span></td>
               <td>Finish drawing polyshape</td>
             </tr>
             <tr>
-              <td>Backspace</td>
+              <td><span class="key">Backspace</span></td>
               <td>Delete last polyshape vertex</td>
             </tr>
           </table>
@@ -639,44 +640,44 @@
           <div style="display:block; text-align:center; padding:1rem;">Always Available</div>
           <table>
             <tr>
-              <td style="width: 8em;">&larr; / &rarr; [ p / n ]</td>
+              <td style="width:8em;"><span class="key">&larr;</span>&nbsp;<span class="key">&rarr;</span></td>
               <td>Move to next/previous image</td>
             </tr>
             <tr>
-              <td style="width: 8em;">&uarr;/&darr;</td>
-              <td>Shuffle through region labels</td>
-            </tr>
-            <tr>
-              <td>+&nbsp;/&nbsp;-&nbsp;/&nbsp;=</td>
+              <td><span class="key">+</span>&nbsp;<span class="key">-</span>&nbsp;<span class="key">=</span></td>
               <td>Zoom in/out/reset</td>
             </tr>
             <tr>
-              <td>1,2,3,...</td>
-              <td>Set shape to rectangle, circle, ellipse, ...</td>
+              <td><span class="key">&uarr;</span></td>
+              <td>Update region label</td>
             </tr>
             <tr>
-              <td>Spacebar</td>
+              <td><span class="key">&darr;</span></td>
+              <td>Update region colour</td>
+            </tr>
+            <tr>
+              <td><span class="key">Spacebar</span></td>
               <td>Toggle annotation editor (Ctrl to toggle on image editor)</td>
             </tr>
             <tr>
-              <td>Home [h]</td>
+              <td><span class="key">Home</span> / <span class="key">h</span></td>
               <td>Jump to first image</td>
             </tr>
             <tr>
-              <td>End [e]</td>
+              <td><span class="key">End</span> / <span class="key">e</span></td>
               <td>Jump to last image</td>
             </tr>
             <tr>
-              <td>PageUp [u]</td>
+              <td><span class="key">PgUp</span> / <span class="key">u</span></td>
               <td>Jump several images</td>
             </tr>
             <tr>
-              <td>PageDown [d]</td>
+              <td><span class="key">PgDown</span> / <span class="key">d</span></td>
               <td>Jump several images</td>
             </tr>
 
             <tr>
-              <td>Esc</td>
+              <td><span class="key">Esc</span></td>
               <td>Cancel ongoing task</td>
             </tr>
           </table>
@@ -772,6 +773,17 @@
 
             <div class="value">
               <select id="_via_settings.ui.image.region_label"></select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="variable">
+              <div class="name">Region Colour</div>
+              <div class="desc">By default, each region is drawn using a single colour. Using this setting, you can assign a unique colour to regions grouped according to a region attribute.</div>
+            </div>
+
+            <div class="value">
+              <select id="_via_settings.ui.image.region_color"></select>
             </div>
           </div>
 
@@ -922,7 +934,7 @@
             </a>
           </div>
 
-          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.5</a></p>
+          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.6</a></p>
           <p>VGG Image Annotator (VIA) is an image annotation tool that can be used to define regions in an image and create textual descriptions of those regions. VIA is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.</p>
           <p>Here is a list of some salient features of VIA:
             <ul>
@@ -935,12 +947,12 @@
           </p>
           <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
           <p>&nbsp;</p>
-          <p>Copyright &copy; 2016-2018, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>,Visual Geometry Group, Oxford University and <a target="_blank" href="https://gitlab.com/vgg/via/blob/master/Contributors.md">VIA Contributors</a>.</p>
+          <p>Copyright &copy; 2016-2019, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>,Visual Geometry Group, Oxford University and <a target="_blank" href="https://gitlab.com/vgg/via/blob/master/Contributors.md">VIA Contributors</a>.</p>
         </div> <!-- end of page_about -->
 
         <div id="page_license" class="display_area_content display_none narrow_page_content">
           <pre>
-Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University and VIA Contributors.
+Copyright (c) 2016-2019, Abhishek Dutta, Visual Geometry Group, Oxford University and VIA Contributors.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -1033,7 +1045,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 "use strict";
 
-var VIA_VERSION      = '2.0.5';
+var VIA_VERSION      = '2.0.6';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -1055,7 +1067,6 @@ var VIA_DISPLAY_AREA_CONTENT_NAME = {IMAGE:'image_panel',
                                      IMAGE_GRID:'image_grid_panel',
                                      SETTINGS:'settings_panel',
                                      PAGE_404:'page_404',
-                                     PAGE_USER_GUIDE:'page_user_guide',
                                      PAGE_GETTING_STARTED:'page_getting_started',
                                      PAGE_ABOUT:'page_about',
                                      PAGE_START_INFO:'page_start_info',
@@ -1078,9 +1089,10 @@ var VIA_ELLIPSE_EDGE_TOL          = 0.2; // euclidean distance
 var VIA_THETA_TOL                 = Math.PI/18; // 10 degrees
 var VIA_POLYGON_RESIZE_VERTEX_OFFSET  = 100;
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
-var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4, 5];
+var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4, 5, 6, 7, 8, 9, 10];
+var VIA_REGION_COLOR_LIST = ["#E69F00", "#56B4E9", "#009E73", "#D55E00", "#CC79A7", "#F0E442", "#ffffff"];
 
-var VIA_THEME_REGION_BOUNDARY_WIDTH = 4;
+var VIA_THEME_REGION_BOUNDARY_WIDTH = 3;
 var VIA_THEME_BOUNDARY_LINE_COLOR   = "black";
 var VIA_THEME_BOUNDARY_FILL_COLOR   = "yellow";
 var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
@@ -1165,6 +1177,9 @@ var _via_attribute_being_updated       = 'region'; // {region, file}
 var _via_attributes                    = { 'region':{}, 'file':{} };
 var _via_current_attribute_id          = '';
 
+// region group color
+var _via_canvas_regions_group_color = {}; // color of each region
+
 // invoke a method after receiving user input
 var _via_user_input_ok_handler     = null;
 var _via_user_input_cancel_handler = null;
@@ -1248,6 +1263,7 @@ _via_settings.ui.image_grid.show_image_policy   = 'all';
 
 _via_settings.ui.image = {};
 _via_settings.ui.image.region_label      = '__via_region_id__'; // default: region_id
+_via_settings.ui.image.region_color      = '__via_default_region_color__'; // default color: yellow
 _via_settings.ui.image.region_label_font = '10px Sans';
 _via_settings.ui.image.on_image_annotation_editor_placement = VIA_ANNOTATION_EDITOR_PLACEMENT.NEAR_REGION;
 
@@ -2117,8 +2133,27 @@ function show_message(msg, t) {
   }, timeout);
 }
 
+function _via_regions_group_color_init() {
+  _via_canvas_regions_group_color = {};
+  var aid = _via_settings.ui.image.region_color;
+  if ( aid !== '__via_default_region_color__' ) {
+    var avalue;
+    for ( var i = 0; i < _via_img_metadata[_via_image_id].regions.length; ++i ) {
+      avalue = _via_img_metadata[_via_image_id].regions[i].region_attributes[aid];
+      _via_canvas_regions_group_color[avalue] = 1;
+    }
+    var color_index = 0;
+    for ( avalue in _via_canvas_regions_group_color ) {
+      _via_canvas_regions_group_color[avalue] = VIA_REGION_COLOR_LIST[ color_index % VIA_REGION_COLOR_LIST.length ];
+      color_index = color_index + 1;
+    }
+  }
+}
+
 // transform regions in image space to canvas space
 function _via_load_canvas_regions() {
+  _via_regions_group_color_init();
+
   // load all existing annotations into _via_canvas_regions
   var regions = _via_img_metadata[_via_image_id].regions;
   _via_canvas_regions  = [];
@@ -2780,7 +2815,7 @@ function _via_reg_canvas_mouseup_handler(e) {
       case VIA_REGION_SHAPE.POINT:    // handled by case VIA_REGION_SHAPE.POLYGON
       case VIA_REGION_SHAPE.POLYLINE: // handled by case VIA_REGION_SHAPE.POLYGON
       case VIA_REGION_SHAPE.POLYGON:
-        // handled by _via_is_user_drawing polygon
+        // handled by _via_is_user_drawing_polygon
         break;
       } // end of switch
 
@@ -2901,6 +2936,7 @@ function _via_reg_canvas_mousemove_handler(e) {
 
     var dx = Math.round(Math.abs(_via_current_x - _via_click_x0));
     var dy = Math.round(Math.abs(_via_current_y - _via_click_y0));
+    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
 
     switch (_via_current_shape ) {
     case VIA_REGION_SHAPE.RECT:
@@ -3213,9 +3249,21 @@ function _via_clear_reg_canvas() {
 }
 
 function draw_all_regions() {
+  var aid = _via_settings.ui.image.region_color;
+  var attr, is_selected, aid, avalue;
   for (var i=0; i < _via_canvas_regions.length; ++i) {
-    var attr = _via_canvas_regions[i].shape_attributes;
-    var is_selected = _via_region_selected_flag[i];
+    attr = _via_canvas_regions[i].shape_attributes;
+    is_selected = _via_region_selected_flag[i];
+
+    // region stroke style may depend on attribute value
+    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
+    if ( ! _via_is_user_drawing_polygon &&
+         aid !== '__via_default_region_color__' ) {
+      avalue = _via_img_metadata[_via_image_id].regions[i].region_attributes[aid];
+      if ( _via_canvas_regions_group_color.hasOwnProperty(avalue) ) {
+        _via_reg_ctx.strokeStyle = _via_canvas_regions_group_color[avalue];
+      }
+    }
 
     switch( attr['name'] ) {
     case VIA_REGION_SHAPE.RECT:
@@ -3292,7 +3340,6 @@ function _via_draw_rect_region(x, y, w, h, is_selected) {
     _via_draw_control_point(x+w  , y+h/2);
   } else {
     // draw a fill line
-    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
     _via_draw_rect(x, y, w, h);
     _via_reg_ctx.stroke();
@@ -3342,7 +3389,6 @@ function _via_draw_circle_region(cx, cy, r, is_selected) {
     _via_draw_control_point(cx + r, cy);
   } else {
     // draw a fill line
-    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
     _via_draw_circle(cx, cy, r);
     _via_reg_ctx.stroke();
@@ -3384,7 +3430,6 @@ function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
     _via_draw_control_point(cx     , cy - ry);
   } else {
     // draw a fill line
-    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
     _via_draw_ellipse(cx, cy, rx, ry);
     _via_reg_ctx.stroke();
@@ -3442,7 +3487,6 @@ function _via_draw_polygon_region(all_points_x, all_points_y, is_selected, shape
     }
   } else {
     // draw a fill line
-    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
     _via_reg_ctx.beginPath();
     _via_reg_ctx.moveTo(all_points_x[0], all_points_y[0]);
@@ -3470,7 +3514,6 @@ function _via_draw_point_region(cx, cy, is_selected) {
     _via_reg_ctx.globalAlpha = 1.0;
   } else {
     // draw a fill line
-    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
     _via_draw_point(cx, cy, VIA_REGION_POINT_RADIUS);
     _via_reg_ctx.stroke();
@@ -4205,13 +4248,13 @@ function _via_handle_global_keydown_event(e) {
   }
 
   if ( e.key === 'ArrowUp' ) {
-    region_label_update(+1);
+    region_visualisation_update('region_label', '__via_region_id__', 1);
     e.preventDefault();
     return;
   }
 
   if ( e.key === 'ArrowDown' ) {
-    region_label_update(-1);
+    region_visualisation_update('region_color', '__via_default_region_color__', -1);
     e.preventDefault();
     return;
   }
@@ -4308,7 +4351,7 @@ function _via_handle_global_keydown_event(e) {
   }
 
   if ( e.key === 'F1' ) { // F1 for help
-    set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_USER_GUIDE);
+    set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_GETTING_STARTED);
     e.preventDefault();
     return;
   }
@@ -4933,8 +4976,10 @@ function set_zoom(zoom_level_index) {
 
   var zoom_scale = VIA_CANVAS_ZOOM_LEVELS[_via_canvas_zoom_level_index];
   set_all_canvas_scale(zoom_scale);
-  set_all_canvas_size(_via_canvas_width  * zoom_scale,
-                      _via_canvas_height * zoom_scale);
+  var canvas_w = ( _via_current_image.naturalWidth  * zoom_scale ) / _via_canvas_scale_without_zoom;
+  var canvas_h = ( _via_current_image.naturalHeight * zoom_scale ) / _via_canvas_scale_without_zoom;
+  set_all_canvas_size(canvas_w, canvas_h);
+  _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
   _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
 
   _via_load_canvas_regions(); // image to canvas space transform
@@ -5057,14 +5102,14 @@ function _via_reg_canvas_mouse_wheel_listener(e) {
   }
 }
 
-function region_label_update(distance_from_current_label) {
-  var attr_list = ['__via_region_id__'];
+function region_visualisation_update(type, default_id, next_offset) {
+  var attr_list = [ default_id ];
   attr_list = attr_list.concat(Object.keys(_via_attributes['region']));
   var n = attr_list.length;
-  var current_index = attr_list.indexOf(_via_settings.ui.image.region_label);
+  var current_index = attr_list.indexOf(_via_settings.ui.image[type]);
   var new_index;
   if ( current_index !== -1 ) {
-    new_index = current_index + distance_from_current_label;
+    new_index = current_index + next_offset;
 
     if ( new_index < 0 ) {
       new_index = n + new_index;
@@ -5072,8 +5117,23 @@ function region_label_update(distance_from_current_label) {
     if ( new_index >= n ) {
       new_index = new_index - n;
     }
-    _via_settings.ui.image.region_label = attr_list[new_index];
-    _via_redraw_reg_canvas();
+    switch(type) {
+    case 'region_label':
+      _via_settings.ui.image.region_label = attr_list[new_index];
+      _via_redraw_reg_canvas();
+      break;
+    case 'region_color':
+      _via_settings.ui.image.region_color = attr_list[new_index];
+      _via_regions_group_color_init();
+      _via_redraw_reg_canvas();
+    }
+
+    var type_str = type.replace('_', ' ');
+    if ( _via_settings.ui.image[type].startsWith('__via') ) {
+      show_message(type_str + ' cleared');
+    } else {
+      show_message(type_str + ' set to region attribute [' + _via_settings.ui.image[type] + ']');
+    }
   }
 }
 
@@ -6732,7 +6792,6 @@ function annotation_editor_get_metadata_row_html(row_id) {
       case 'text':
         if ( attr_metadata_stat.hasOwnProperty(attr_id) ) {
           var attr_value_set = Object.keys(attr_metadata_stat[attr_id]);
-          console.log(attr_metadata_stat[attr_id])
           if ( attr_value_set.includes('undefined') ) {
             attr_value = '';
             attr_placeholder = 'includes ' + attr_metadata_stat[attr_id]['undefined'] + ' undefined values';
@@ -7138,6 +7197,7 @@ function annotation_editor_on_metadata_update_done(type, attr_id, update_count) 
       break;
     }
   }
+  _via_regions_group_color_init();
   _via_redraw_reg_canvas();
 
   // @todo: it is wasteful to cancel the full set of groups.
@@ -7962,9 +8022,10 @@ function image_grid_toggle() {
 function image_grid_show_all_project_images() {
   var all_img_index_list = [];
   var i, n;
-  n = _via_image_id_list.length;
+  //n = _via_image_id_list.length;
+  n = _via_img_fn_list_img_index_list.length;
   for ( i = 0; i < n; ++i ) {
-    all_img_index_list.push(i);
+    all_img_index_list.push( _via_img_fn_list_img_index_list[i] );
   }
   image_grid_clear_all_groups();
 
@@ -8016,9 +8077,16 @@ function image_grid_set_content(img_index_list) {
     _via_image_grid_page_img_index_list = _via_image_grid_img_index_list.slice(0);
     break;
   case 'first_mid_last':
-    _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[0] );
-    _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[ Math.floor(n/2) ] );
-    _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[n-1] );
+    if ( n < 3 ) {
+      var i;
+      for ( i = 0; i < n; ++i ) {
+        _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[i] );
+      }
+    } else {
+      _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[0] );
+      _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[ Math.floor(n/2) ] );
+      _via_image_grid_page_img_index_list.push( _via_image_grid_img_index_list[n-1] );
+    }
     break;
   case 'even_indexed':
     var i;
@@ -8682,9 +8750,10 @@ function image_grid_group_by(type, name) {
   if ( Object.keys(_via_image_grid_group).length === 0 ) {
     // first group
     var img_index_array = [];
+    var n = _via_img_fn_list_img_index_list.length;
     var i;
-    for ( i = 0; i < _via_img_count; ++i ) {
-      img_index_array.push(i);
+    for ( i = 0; i < n; ++i ) {
+      img_index_array.push( _via_img_fn_list_img_index_list[i] );
     }
 
     _via_image_grid_group = image_grid_split_array_to_group(img_index_array, type, name);
@@ -9340,6 +9409,10 @@ function _via_show_img(img_index) {
         return;
       } else {
         var search_path_list = _via_file_get_search_path_list();
+        if ( search_path_list.length === 0 ) {
+          search_path_list.push(''); // search using just the filename
+        }
+
         _via_file_resolve(img_index, search_path_list).then( function(ok_file_index) {
           _via_show_img(img_index);
         }, function(err_file_index) {
@@ -9493,6 +9566,7 @@ function _via_img_buffer_add_image(img_index) {
       ok_callback(img_index);
       return;
     }
+
     var img_id = _via_image_id_list[img_index];
     var img_filename = _via_img_metadata[img_id].filename;
     if ( !_via_img_metadata.hasOwnProperty(img_id)) {
@@ -9784,7 +9858,7 @@ function settings_panel_toggle() {
 }
 
 function settings_init() {
-  settings_region_label_update_options();
+  settings_region_visualisation_update_options();
   settings_filepath_update_html();
   settings_show_current_value();
 }
@@ -9874,28 +9948,39 @@ function settings_show_current_value() {
   }
 }
 
-function settings_region_label_update_options() {
-  var p = document.getElementById('_via_settings.ui.image.region_label');
-  p.innerHTML = '';
+function settings_region_visualisation_update_options() {
+  var region_setting_list = {'region_label': {
+    'default_option':'__via_region_id__',
+    'default_label':'Region id (1, 2, ...)',
+    'label_prefix':'Show value of region attribute: ',
+  }, 'region_color': {
+    'default_option':'__via_default_region_color__',
+    'default_label':'Default Region Colour',
+    'label_prefix':'Based on value of region attribute: ',
+  }};
 
-  var default_option = document.createElement('option');
-  default_option.setAttribute('value', '__via_region_id__');
-  if ( _via_settings.ui.image.region_label === '__via_region_id__' ) {
-    default_option.setAttribute('selected', 'selected');
-  }
-  default_option.innerHTML = 'Region id (1, 2, ...)';
-  p.appendChild(default_option);
-
-  // options: add region attributes
-  var rattr;
-  for ( rattr in _via_attributes['region'] ) {
-    var o = document.createElement('option');
-    o.setAttribute('value', rattr);
-    o.innerHTML = 'Value of Region Attribute: ' + rattr;
-    if ( _via_settings.ui.image.region_label === rattr ) {
-      o.setAttribute('selected', 'selected');
+  for ( var setting in region_setting_list ) {
+    var select = document.getElementById('_via_settings.ui.image.' + setting);
+    select.innerHTML = '';
+    var default_option = document.createElement('option');
+    default_option.setAttribute('value', region_setting_list[setting]['default_option']);
+    if ( _via_settings.ui.image[setting] === region_setting_list[setting]['default_option'] ) {
+      default_option.setAttribute('selected', 'selected');
     }
-    p.appendChild(o);
+    default_option.innerHTML = region_setting_list[setting]['default_label'];
+    select.appendChild(default_option);
+
+    // options: add region attributes
+    var rattr;
+    for ( rattr in _via_attributes['region'] ) {
+      var o = document.createElement('option');
+      o.setAttribute('value', rattr);
+      o.innerHTML = region_setting_list[setting]['label_prefix'] + rattr;
+      if ( _via_settings.ui.image.region_label === rattr ) {
+        o.setAttribute('selected', 'selected');
+      }
+      select.appendChild(o);
+    }
   }
 }
 
@@ -10192,8 +10277,7 @@ if ( ! _via_is_debug_mode ) {
     </script>
 
     <!-- scripts code debugging
-    <script src="via.js"></script>
-    -->
+    <script src="via.js"></script>    -->
 
     <!--<script src="./demo/_via_basic_demo.js"></script>-->
     <!--<script src="./demo/_via_face_demo.js"></script>-->
