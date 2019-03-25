@@ -21,26 +21,32 @@
 <script>
 var VOXCELEB_DS_URI = 'http://zeus.robots.ox.ac.uk/via/ds/voxceleb_val_693';
 
-var payload = { 'docs':[] };
-var label;
-for ( var id = 1; id < 694; ++id ) {
-  label = id;
-  if ( id > 0 && id < 10 ) {
-    label = '00' + id;
-  } else {
-    if ( id > 9 && id < 100 ) {
-      label = '0' + id;
+try {
+  var payload = { 'docs':[] };
+  var label;
+  for ( var id = 1; id < 694; ++id ) {
+    label = id;
+    if ( id > 0 && id < 10 ) {
+      label = '00' + id;
+    } else {
+      if ( id > 9 && id < 100 ) {
+        label = '0' + id;
+      }
     }
+
+    payload['docs'].push( { 'id': 'voxceleb_val_693_' + label} );
   }
 
-  payload['docs'].push( { 'id': 'voxceleb_val_693_' + label} );
+  _via_util_stat_fetch(payload).then( function(ok) {
+    _via_util_stat_show(ok);
+  }.bind(this), function(err) {
+    document.getElementById('stat_content').innerHTML = 'Error';
+    console.warn('Error');
+  }.bind(this));
 }
-
-_via_util_stat_fetch(payload).then( function(ok) {
-  _via_util_stat_show(ok);
-}.bind(this), function(err) {
-  console.warn('Error');
-}.bind(this));
+catch(err) {
+  console.log(err)
+}
 
 function _via_util_stat_show(stat_str) {
   var c = document.getElementById('stat_content');
@@ -104,12 +110,13 @@ function _via_util_stat_fetch(payload) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', VOXCELEB_DS_URI + '/_bulk_get');
     xhr.addEventListener('error', function(e) {
-      err_callback(false);
+      err_callback();
     }.bind(this));
     xhr.addEventListener('abort', function(e) {
-      err_callback(false);
+      err_callback();
     }.bind(this));
     xhr.addEventListener('load', function(e) {
+      console.log(xhr.status)
       switch(xhr.status) {
         case 200:
           ok_callback(xhr.responseText);
