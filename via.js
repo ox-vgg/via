@@ -100,7 +100,7 @@ var VIA_ELLIPSE_EDGE_TOL          = 0.2; // euclidean distance
 var VIA_THETA_TOL                 = Math.PI/18; // 10 degrees
 var VIA_POLYGON_RESIZE_VERTEX_OFFSET  = 100;
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
-var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4, 5];
+var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4, 5, 6, 7, 8, 9, 10];
 var VIA_REGION_COLOR_LIST = ["#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442"];
 
 var VIA_THEME_REGION_BOUNDARY_WIDTH = 4;
@@ -1826,7 +1826,7 @@ function _via_reg_canvas_mouseup_handler(e) {
       case VIA_REGION_SHAPE.POINT:    // handled by case VIA_REGION_SHAPE.POLYGON
       case VIA_REGION_SHAPE.POLYLINE: // handled by case VIA_REGION_SHAPE.POLYGON
       case VIA_REGION_SHAPE.POLYGON:
-        // handled by _via_is_user_drawing polygon
+        // handled by _via_is_user_drawing_polygon
         break;
       } // end of switch
 
@@ -2266,14 +2266,13 @@ function draw_all_regions() {
     attr = _via_canvas_regions[i].shape_attributes;
     is_selected = _via_region_selected_flag[i];
 
-    if ( aid === '__via_default_region_color__' ) {
-      _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
-    } else {
+    // region stroke style may depend on attribute value
+    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
+    if ( ! _via_is_user_drawing_polygon &&
+         aid !== '__via_default_region_color__' ) {
       avalue = _via_img_metadata[_via_image_id].regions[i].region_attributes[aid];
       if ( _via_canvas_regions_group_color.hasOwnProperty(avalue) ) {
         _via_reg_ctx.strokeStyle = _via_canvas_regions_group_color[avalue];
-      } else {
-        _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
       }
     }
 
@@ -2352,7 +2351,6 @@ function _via_draw_rect_region(x, y, w, h, is_selected) {
     _via_draw_control_point(x+w  , y+h/2);
   } else {
     // draw a fill line
-    //_via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
     _via_draw_rect(x, y, w, h);
     _via_reg_ctx.stroke();
@@ -2402,7 +2400,6 @@ function _via_draw_circle_region(cx, cy, r, is_selected) {
     _via_draw_control_point(cx + r, cy);
   } else {
     // draw a fill line
-    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
     _via_draw_circle(cx, cy, r);
     _via_reg_ctx.stroke();
@@ -2444,7 +2441,6 @@ function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
     _via_draw_control_point(cx     , cy - ry);
   } else {
     // draw a fill line
-    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
     _via_draw_ellipse(cx, cy, rx, ry);
     _via_reg_ctx.stroke();
@@ -2502,7 +2498,6 @@ function _via_draw_polygon_region(all_points_x, all_points_y, is_selected, shape
     }
   } else {
     // draw a fill line
-    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
     _via_reg_ctx.beginPath();
     _via_reg_ctx.moveTo(all_points_x[0], all_points_y[0]);
@@ -2530,7 +2525,6 @@ function _via_draw_point_region(cx, cy, is_selected) {
     _via_reg_ctx.globalAlpha = 1.0;
   } else {
     // draw a fill line
-    _via_reg_ctx.strokeStyle = VIA_THEME_BOUNDARY_FILL_COLOR;
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
     _via_draw_point(cx, cy, VIA_REGION_POINT_RADIUS);
     _via_reg_ctx.stroke();
@@ -4143,6 +4137,13 @@ function region_visualisation_update(type, default_id, next_offset) {
       _via_settings.ui.image.region_color = attr_list[new_index];
       _via_regions_group_color_init();
       _via_redraw_reg_canvas();
+    }
+
+    var type_str = type.replace('_', ' ');
+    if ( _via_settings.ui.image[type].startsWith('__via') ) {
+      show_message(type_str + ' cleared');
+    } else {
+      show_message(type_str + ' set to region attribute [' + _via_settings.ui.image[type] + ']');
     }
   }
 }
@@ -8411,6 +8412,10 @@ function _via_show_img(img_index) {
         return;
       } else {
         var search_path_list = _via_file_get_search_path_list();
+        if ( search_path_list.length === 0 ) {
+          search_path_list.push(''); // search using just the filename
+        }
+
         _via_file_resolve(img_index, search_path_list).then( function(ok_file_index) {
           _via_show_img(img_index);
         }, function(err_file_index) {
@@ -8564,6 +8569,7 @@ function _via_img_buffer_add_image(img_index) {
       ok_callback(img_index);
       return;
     }
+
     var img_id = _via_image_id_list[img_index];
     var img_filename = _via_img_metadata[img_id].filename;
     if ( !_via_img_metadata.hasOwnProperty(img_id)) {
