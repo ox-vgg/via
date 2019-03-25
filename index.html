@@ -256,6 +256,7 @@
       .narrow_page_content { width:60%; }
 
       .force_small_font { font-size:small !important; }
+      .key { font-family:monospace; padding:1px 6px; background:linear-gradient(to bottom,#f0f0f0,#fcfcfc);; border:1px solid #e0e0e0; white-space:nowrap; color:#303030; border-bottom-width:2px; border-radius:3px; font-size:1.2em; }
     </style>
   </head>
 
@@ -586,44 +587,44 @@
           <div style="display:block; text-align:center; padding:1rem;">Available only on image focus</div>
           <table>
             <tr>
-              <td style="width: 8em;">Arrow Keys</td>
+              <td style="width:8em;"><span class="key">&larr;</span>&nbsp;<span class="key">&uarr;</span>&nbsp;<span class="key">&rarr;</span>&nbsp;<span class="key">&darr;</span></td>
               <td>Move selected region by 1 px (Shift to jump)</td>
             </tr>
             <tr>
-              <td>a</td>
+              <td><span class="key">a</span></td>
               <td>Select all regions</td>
             </tr>
 
             <tr>
-              <td>c</td>
+              <td><span class="key">c</span></td>
               <td>Copy selected regions</td>
             </tr>
             <tr>
-              <td>v</td>
+              <td><span class="key">v</span></td>
               <td>Paste selected regions</td>
             </tr>
             <tr>
-              <td>d</td>
+              <td><span class="key">d</span></td>
               <td>Delete selected regions</td>
             </tr>
             <tr>
-              <td>Ctrl + Mouse Wheel</td>
-              <td>Zoom in/out</td>
+              <td><span class="key">Ctrl</span> + Wheel</td>
+              <td>Zoom in/out (mouse cursor is over image)</td>
             </tr>
             <tr>
-              <td>l</td>
+              <td><span class="key">l</span></td>
               <td>Toggle region label</td>
             </tr>
             <tr>
-              <td>b</td>
+              <td><span class="key">b</span></td>
               <td>Toggle region boundary</td>
             </tr>
             <tr>
-              <td>Enter</td>
+              <td><span class="key">Enter</span></td>
               <td>Finish drawing polyshape</td>
             </tr>
             <tr>
-              <td>Backspace</td>
+              <td><span class="key">Backspace</span></td>
               <td>Delete last polyshape vertex</td>
             </tr>
           </table>
@@ -631,44 +632,44 @@
           <div style="display:block; text-align:center; padding:1rem;">Always Available</div>
           <table>
             <tr>
-              <td style="width: 8em;">&larr; / &rarr; [ p / n ]</td>
+              <td style="width:8em;"><span class="key">&larr;</span>&nbsp;<span class="key">&rarr;</span></td>
               <td>Move to next/previous image</td>
             </tr>
             <tr>
-              <td style="width: 8em;">&uarr;/&darr;</td>
-              <td>Shuffle through region labels</td>
-            </tr>
-            <tr>
-              <td>+&nbsp;/&nbsp;-&nbsp;/&nbsp;=</td>
+              <td><span class="key">+</span>&nbsp;<span class="key">-</span>&nbsp;<span class="key">=</span></td>
               <td>Zoom in/out/reset</td>
             </tr>
             <tr>
-              <td>1,2,3,...</td>
-              <td>Set shape to rectangle, circle, ellipse, ...</td>
+              <td><span class="key">&uarr;</span></td>
+              <td>Update region label</td>
             </tr>
             <tr>
-              <td>Spacebar</td>
+              <td><span class="key">&darr;</span></td>
+              <td>Update region colour</td>
+            </tr>
+            <tr>
+              <td><span class="key">Spacebar</span></td>
               <td>Toggle annotation editor (Ctrl to toggle on image editor)</td>
             </tr>
             <tr>
-              <td>Home [h]</td>
+              <td><span class="key">Home</span> / <span class="key">h</span></td>
               <td>Jump to first image</td>
             </tr>
             <tr>
-              <td>End [e]</td>
+              <td><span class="key">End</span> / <span class="key">e</span></td>
               <td>Jump to last image</td>
             </tr>
             <tr>
-              <td>PageUp [u]</td>
+              <td><span class="key">PgUp</span> / <span class="key">u</span></td>
               <td>Jump several images</td>
             </tr>
             <tr>
-              <td>PageDown [d]</td>
+              <td><span class="key">PgDown</span> / <span class="key">d</span></td>
               <td>Jump several images</td>
             </tr>
 
             <tr>
-              <td>Esc</td>
+              <td><span class="key">Esc</span></td>
               <td>Cancel ongoing task</td>
             </tr>
           </table>
@@ -764,6 +765,17 @@
 
             <div class="value">
               <select id="_via_settings.ui.image.region_label"></select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="variable">
+              <div class="name">Region Colour</div>
+              <div class="desc">By default, each region is drawn using a single colour. Using this setting, you can assign a unique colour to regions grouped according to a region attribute.</div>
+            </div>
+
+            <div class="value">
+              <select id="_via_settings.ui.image.region_color"></select>
             </div>
           </div>
 
@@ -927,12 +939,12 @@
           </p>
           <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
           <p>&nbsp;</p>
-          <p>Copyright &copy; 2016-2018, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>,Visual Geometry Group, Oxford University and <a target="_blank" href="https://gitlab.com/vgg/via/blob/master/Contributors.md">VIA Contributors</a>.</p>
+          <p>Copyright &copy; 2016-2019, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>,Visual Geometry Group, Oxford University and <a target="_blank" href="https://gitlab.com/vgg/via/blob/master/Contributors.md">VIA Contributors</a>.</p>
         </div> <!-- end of page_about -->
 
         <div id="page_license" class="display_area_content display_none narrow_page_content">
           <pre>
-Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University and VIA Contributors.
+Copyright (c) 2016-2019, Abhishek Dutta, Visual Geometry Group, Oxford University and VIA Contributors.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -973,9 +985,10 @@ POSSIBILITY OF SUCH DAMAGE.
       //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
     </script>
 
-    <!-- scripts code debugging
+    <!-- scripts code debugging    -->
     <script src="via.js"></script>
-    -->
+
+    <!----><script src="/data/datasets/via/Jane Uhd Jepsen/_via_jane_jepsen_demo.js"></script>
     <!--<script src="./demo/_via_basic_demo.js"></script>-->
     <!--<script src="./demo/_via_face_demo.js"></script>-->
     <!--<script src="./demo/_via_face_track_annotation_demo.js"></script>-->

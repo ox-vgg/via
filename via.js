@@ -77,7 +77,6 @@ var VIA_DISPLAY_AREA_CONTENT_NAME = {IMAGE:'image_panel',
                                      IMAGE_GRID:'image_grid_panel',
                                      SETTINGS:'settings_panel',
                                      PAGE_404:'page_404',
-                                     PAGE_USER_GUIDE:'page_user_guide',
                                      PAGE_GETTING_STARTED:'page_getting_started',
                                      PAGE_ABOUT:'page_about',
                                      PAGE_START_INFO:'page_start_info',
@@ -101,13 +100,13 @@ var VIA_THETA_TOL                 = Math.PI/18; // 10 degrees
 var VIA_POLYGON_RESIZE_VERTEX_OFFSET  = 100;
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
 var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4, 5, 6, 7, 8, 9, 10];
-var VIA_REGION_COLOR_LIST = ["#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442"];
+var VIA_REGION_COLOR_LIST = ["#E69F00", "#56B4E9", "#009E73", "#D55E00", "#CC79A7", "#F0E442", "#ffffff"];
 
-var VIA_THEME_REGION_BOUNDARY_WIDTH = 4;
+var VIA_THEME_REGION_BOUNDARY_WIDTH = 3;
 var VIA_THEME_BOUNDARY_LINE_COLOR   = "black";
-var VIA_THEME_BOUNDARY_FILL_COLOR   = "white";
+var VIA_THEME_BOUNDARY_FILL_COLOR   = "yellow";
 var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
-var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "white";
+var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "yellow";
 var VIA_THEME_SEL_REGION_OPACITY    = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS    = 6000;
 var VIA_THEME_CONTROL_POINT_COLOR   = '#ff0000';
@@ -163,7 +162,7 @@ var _via_is_loading_current_image    = false;
 var _via_is_region_id_visible        = true;
 var _via_is_region_boundary_visible  = true;
 var _via_is_ctrl_pressed             = false;
-var _via_is_debug_mode               = true;
+var _via_is_debug_mode               = false;
 
 // region
 var _via_current_shape             = VIA_REGION_SHAPE.RECT;
@@ -3362,7 +3361,7 @@ function _via_handle_global_keydown_event(e) {
   }
 
   if ( e.key === 'F1' ) { // F1 for help
-    set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_USER_GUIDE);
+    set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_GETTING_STARTED);
     e.preventDefault();
     return;
   }
