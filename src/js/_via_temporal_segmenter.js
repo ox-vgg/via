@@ -21,11 +21,11 @@ function _via_temporal_segmenter(container, file, data, media_element) {
   this.groupby = false;
   this.groupby_aid = '';
   this.group = {};
-  this.gid_list = [];
+  this.gid_list = ['laughter', 'music'];
   this.selected_gindex = -1;
   this.selected_mindex = -1;
   this.edge_show_time = -1;
-  this.group_default_gid_list = ['laughter', 'music'];
+  this.group_default_gid_list = [];
 
   this.DRAW_LINE_WIDTH = 2;
   this.EDGE_UPDATE_TIME_DELTA = 1/50;  // in sec
@@ -935,17 +935,17 @@ _via_temporal_segmenter.prototype._tmetadata_mid_update_edge = function(eindex, 
 
 _via_temporal_segmenter.prototype._tmetadata_mid_move = function(dt) {
   var n = this.d.metadata_store[this.selected_mid].z.length;
-  var newz = this.d.metadata_store[this.selected_mid].z;
-  var i;
-  for ( i = 0; i < n; ++i ) {
+  var newz = this.d.metadata_store[this.selected_mid].z.slice();
+  for ( var i = 0; i < n; ++i ) {
     newz[i] = parseFloat((parseFloat(newz[i]) + dt).toFixed(3));
   }
-  this.d.metadata_update_z(this.file.fid, this.selected_mid, newz);
-  this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
-  this._tmetadata_group_gid_draw(this.selected_gid);
+  this.d.metadata_update_z(this.file.fid, this.selected_mid, newz).then( function(ok) {
+    this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
+    this._tmetadata_group_gid_draw(this.selected_gid);
 
-  // the move operation may have changed the sequential order of mid
-  this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
+    // the move operation may have changed the sequential order of mid
+    this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
+  }.bind(this));
 }
 
 _via_temporal_segmenter.prototype._tmetadata_mid_del_sel = function(mid) {
@@ -1105,6 +1105,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mouseup = function(e) {
   if ( this.metadata_move_is_ongoing ) {
     var dx = x - this.metadata_move_start_x;
     if ( dx > this.DRAW_LINE_WIDTH ) {
+      dx = dx + this.padx; // _tmetadata_gtimeline_canvas2time() expects absolute x coordinate
       var dt = this._tmetadata_gtimeline_canvas2time(dx);
       this._tmetadata_mid_move(dt);
     }
