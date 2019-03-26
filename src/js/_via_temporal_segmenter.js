@@ -25,7 +25,7 @@ function _via_temporal_segmenter(container, file, data, media_element) {
   this.selected_gindex = -1;
   this.selected_mindex = -1;
   this.edge_show_time = -1;
-  this.group_default_gid_list = ['laughter', 'music'];
+  this.group_default_gid_list = [];
 
   this.DRAW_LINE_WIDTH = 2;
   this.EDGE_UPDATE_TIME_DELTA = 1/50;  // in sec
@@ -68,6 +68,10 @@ function _via_temporal_segmenter(container, file, data, media_element) {
 
 _via_temporal_segmenter.prototype._init = function() {
   try {
+    if ( typeof(_VIA_GROUP_DEFAULT_GID_LIST) !== 'undefined' ) {
+      this.group_default_gid_list = _VIA_GROUP_DEFAULT_GID_LIST;
+    }
+
     this._group_init('0'); // for debug
 
     this._thumbview_init();
@@ -657,6 +661,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_html = function(gid) {
   gid_col.setAttribute('style', 'width:' + this.gid_width + 'px; padding:0.2em 0.5em;');
   var gid_label = document.createElement('input');
   gid_label.setAttribute('type', 'text');
+  gid_label.setAttribute('disabled', '');
   gid_label.setAttribute('value', gid);
   gid_label.setAttribute('data-gid', gid);
   gid_label.addEventListener('change', this._tmetadata_group_update_gid.bind(this));
@@ -935,17 +940,18 @@ _via_temporal_segmenter.prototype._tmetadata_mid_update_edge = function(eindex, 
 
 _via_temporal_segmenter.prototype._tmetadata_mid_move = function(dt) {
   var n = this.d.metadata_store[this.selected_mid].z.length;
-  var newz = this.d.metadata_store[this.selected_mid].z;
-  var i;
-  for ( i = 0; i < n; ++i ) {
+  var newz = this.d.metadata_store[this.selected_mid].z.slice();
+  for ( var i = 0; i < n; ++i ) {
     newz[i] = parseFloat((parseFloat(newz[i]) + dt).toFixed(3));
   }
-  this.d.metadata_update_z(this.file.fid, this.selected_mid, newz);
-  this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
-  this._tmetadata_group_gid_draw(this.selected_gid);
 
-  // the move operation may have changed the sequential order of mid
-  this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
+  this.d.metadata_update_z(this.file.fid, this.selected_mid, newz).then( function(ok) {
+    this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
+    this._tmetadata_group_gid_draw(this.selected_gid);
+
+    // the move operation may have changed the sequential order of mid
+    this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
+  }.bind(this));
 }
 
 _via_temporal_segmenter.prototype._tmetadata_mid_del_sel = function(mid) {
@@ -1052,6 +1058,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mousedown = function(e) {
   }
 
   var edge = this._tmetadata_group_gid_is_on_edge(gid, t);
+
   if ( edge[0] !== -1 ) {
     // mousedown was at the edge
     this.metadata_resize_is_ongoing = true;
@@ -1105,6 +1112,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mouseup = function(e) {
   if ( this.metadata_move_is_ongoing ) {
     var dx = x - this.metadata_move_start_x;
     if ( dx > this.DRAW_LINE_WIDTH ) {
+      dx = dx + this.padx; // _tmetadata_gtimeline_canvas2time() expects absolute x coordinate
       var dt = this._tmetadata_gtimeline_canvas2time(dx);
       this._tmetadata_mid_move(dt);
     }
@@ -1633,7 +1641,7 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   var control_container = document.createElement('div');
   var delbtn = document.createElement('button');
   delbtn.setAttribute('data-gid', this.selected_gid);
-  delbtn.innerHTML = 'Delete Selected ' + this.d.attribute_store[this.groupby_aid].aname;
+  delbtn.innerHTML = 'Delete Selected';
   delbtn.addEventListener('click', function(e) {
     this._group_del_gid(this.selected_gid);
   }.bind(this));
@@ -1641,11 +1649,11 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   this.new_group_id_input = document.createElement('input');
   this.new_group_id_input.setAttribute('type', 'text');
   this.new_group_id_input.setAttribute('size', '16');
-  this.new_group_id_input.setAttribute('placeholder', 'New Speaker Name');
+  this.new_group_id_input.setAttribute('placeholder', 'New ' + this.d.attribute_store[this.groupby_aid].aname);
 
   var addbtn = document.createElement('button');
   addbtn.setAttribute('data-gid', this.selected_gid);
-  addbtn.innerHTML = 'Add ' + this.d.attribute_store[this.groupby_aid].aname;
+  addbtn.innerHTML = 'Add';
   addbtn.addEventListener('click', function(e) {
     var new_gid = this.new_group_id_input.value;
     if ( new_gid !== '' ) {
