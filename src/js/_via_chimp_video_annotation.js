@@ -70,8 +70,7 @@ function _via_on_browser_resize() {
 }
 
 if ( true ) {
-  //var project_data = { '2012': [1,18], '2013': [1,9] };
-  var project_data = { '2013': [1,9] };
+  var project_data = { '2012': [1,18], '2013': [1,9] };
 
   var project_list = document.getElementById('project_list');
   var project_id_list = [];
