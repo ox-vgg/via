@@ -1111,7 +1111,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mouseup = function(e) {
 
   if ( this.metadata_move_is_ongoing ) {
     var dx = x - this.metadata_move_start_x;
-    if ( dx > this.DRAW_LINE_WIDTH ) {
+    if ( Math.abs(dx) > this.DRAW_LINE_WIDTH ) {
       dx = dx + this.padx; // _tmetadata_gtimeline_canvas2time() expects absolute x coordinate
       var dt = this._tmetadata_gtimeline_canvas2time(dx);
       this._tmetadata_mid_move(dt);
@@ -1669,7 +1669,7 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   control_container.appendChild(delbtn);
 
   toolbar_container.appendChild(pb_mode_container);
-  toolbar_container.appendChild(control_container);
+  //toolbar_container.appendChild(control_container);
 
   this.c.appendChild(toolbar_container);
 }

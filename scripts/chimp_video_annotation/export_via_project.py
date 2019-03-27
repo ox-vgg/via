@@ -13,8 +13,8 @@ import csv
 
 COUCHDB_IP = '127.0.0.1'
 COUCHDB_PORT = '5984'
-VIA_FOLDER = '/data/datasets/arsha/chimp/chimp_annotation/via_projects'
-metadata_fn = '/data/datasets/arsha/chimp/chimp_annotation/initial_metadata/2013.csv'
+VIA_FOLDER = '/data/datasets/arsha/chimp/chimp_video_annotation/via_projects'
+metadata_fn = '/data/datasets/arsha/chimp/chimp_video_annotation/initial_metadata/2012_2013.csv'
 metadata = {}
 
 def init_via_project(project_index, year):
@@ -100,7 +100,7 @@ for year in year_list:
     via_project_filename = os.path.join(VIA_FOLDER, ('chimp_%s_%.3d.json' % (year, project_index)))
     print( 'Writing %s : %s' % (filename, via_project_filename) )
     save_via_project(d, via_project_filename)
-    #push_via_project_to_couchdb(d)
+    push_via_project_to_couchdb(d)
 
     project_index = project_index + 1
     fid = fid + 1

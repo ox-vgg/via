@@ -1,5 +1,5 @@
-SRC_DIR="/data/datasets/arsha/chimp/chimp_annotation/videos/2012"
-DST_DIR="/data/datasets/arsha/chimp/chimp_annotation/videos/2012"
+SRC_DIR="/data/datasets/arsha/chimp/chimp_video_annotation/videos/2012"
+DST_DIR="/data/datasets/arsha/chimp/chimp_video_annotation/videos/2012"
 
 for video_file in $SRC_DIR/*.m2ts
 do
