@@ -1,7 +1,7 @@
 'use strict'
 
 var _VIA_PROJECT_DS_URI = 'http://zeus.robots.ox.ac.uk/via/ds/chimp_2012_2013/';
-var _VIA_GROUP_DEFAULT_GID_LIST = [ "FANA", "FANLE", "FLANLE", "FOAF", "FOTAIU", "JEJE", "JIRE", "JOYA", "JURU", "KAI", "NINA", "NOTSURE", "NTO","PAMA", "PELEY", "PILI", "POKURU", "PONI", "TUA", "VELU", "VUAVUA", "YO", "OLO" ];
+var _VIA_GROUP_DEFAULT_GID_LIST = [ "FANA", "FANLE", "FLANLE", "FOAF", "FOTAIU", "JEJE", "JIRE", "JOYA", "JURU", "KAI", "NINA", "NOTSURE", "NTO","PAMA", "PELEY", "PILI", "POKURU", "PONI", "TUA", "VELU", "VUAVUA", "YO", "OLO", "FANWA" ];
 
 var data = new _via_data();
 var io = new _via_io(data);
