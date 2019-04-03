@@ -1011,6 +1011,7 @@ _via_temporal_segmenter.prototype._tmetadata_mid_update_last_added_end_edge_to_t
                               1,
                               t
                              );
+    this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
     this._tmetadata_group_gid_draw(this.selected_gid);
   }
 }
