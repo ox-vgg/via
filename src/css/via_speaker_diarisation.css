@@ -67,39 +67,6 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .annotator_container > .file_container > .temporal_segmenter_container > .toolbar_container button {font-size:small; vertical-align:middle; margin-right:0.5em;}
 .annotator_container > .file_container > .temporal_segmenter_container > .toolbar_container label {vertical-align:middle; }
 
-/*
-.annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container table { border-collapse:collapse; border:1px solid red; }
-.annotator_container > .file_container > .temporal_segmenter_container > .tmetadata_container td { border:1px solid red; padding:0.2em 0.4em;}
-*/
-
-/*
-.segmenter_container { height:15em; flex:none; border:1px solid blue; }
-.annotator_container > .file { width:100%; height:100%; position:relative; }
-.annotator_container > .hide_file { display:none; }
-.annotator_container > .file > .content { display:block; width:100%; position:relative; text-align:left; }
-.annotator_container > .file > .content > .layer_container { display:inline-block; position:relative; }
-.annotator_container > .file > .content > .layer_container .media_element { display:block; position:absolute; left:0; right:0; padding:0; margin:0; z-index:1000; }
-.annotator_container > .file > .content > .layer_container .regions { display:block; position:absolute; left:0; right:0; padding:0; margin:0; z-index:2; }
-.annotator_container > .file > .content > .layer_container .input_handler { display:inline-block; position:absolute; left:0; right:0; padding:0; margin:0; z-index:3; }
-
-.segmenter_container { display:block; height:23vh; position:relative; text-align:center; font-size:small; overflow:hidden; }
-.segmenter_container > .hide { display:none !important; }
-.segmenter_container .timeline_container { overflow:hidden; }
-.segmenter_container button { font-size:small; }
-.segmenter_container select { font-size:small; }
-.segmenter_container input { font-size:small; }
-.segmenter_container canvas { padding:0; margin:0; }
-.segmenter_container svg { font-size:medium; margin:0 0.4em; }
-.segmenter_container .segmetadata_container { overflow:auto; height:80%; }
-.segmenter_container .segmetadata_container table { border-collapse:collapse; border:1px solid #cccccc; margin: 1em; }
-.segmenter_container .segmetadata_container th { padding:0.3em 0.4em; border:1px solid #cccccc; }
-.segmenter_container .segmetadata_container td { padding:0.3em 0.4em; border:1px solid #cccccc; vertical-align:top; }
-.segmenter_container .segmetadata_container .segment_table { border:none; margin:0; }
-.segmenter_container .segmetadata_container .segment_table th { border:none; }
-.segmenter_container .segmetadata_container .segment_table td { border:none; }
-.segmenter_container .segmetadata_container .segment_table .current { background-color:#cccccc; }
-*/
-
 /* Editor panel for add/update/view metadata and attributes */
 .editor_container { display:none; position:absolute; bottom:0; left:0; right:0; height:30vh; overflow:auto; background-color:white; }
 .editor_container .hide { display:none !important; }

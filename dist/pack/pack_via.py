@@ -5,10 +5,13 @@
 import string
 import os
 
+#TARGET_HTML = '/ssd/adutta/dev/via/src/html/via_speaker_diarisation.html'
+#OUT_HTML = '/ssd/adutta/dev/via/dist/via_speaker_diarisation.html'
+#SRC_DIR='/ssd/adutta/dev/via/src/'
 
-TARGET_HTML = '/ssd/adutta/dev/via/src/html/via_speaker_diarisation.html'
-OUT_HTML = '/ssd/adutta/dev/via/dist/via_speaker_diarisation.html'
-SRC_DIR='/ssd/adutta/dev/via/src/'
+TARGET_HTML = '/home/tlm/dev/via/src/html/via_speaker_diarisation.html'
+OUT_HTML = '/home/tlm/dev/via/dist/via_speaker_diarisation.html'
+SRC_DIR='/home/tlm/dev/via/src/'
 
 ANALYTICS_JS = '''(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

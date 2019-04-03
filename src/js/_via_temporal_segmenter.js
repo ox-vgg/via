@@ -21,7 +21,7 @@ function _via_temporal_segmenter(container, file, data, media_element) {
   this.groupby = false;
   this.groupby_aid = '';
   this.group = {};
-  this.gid_list = [];
+  this.gid_list = ['laughter', 'music'];
   this.selected_gindex = -1;
   this.selected_mindex = -1;
   this.edge_show_time = -1;
@@ -47,6 +47,7 @@ function _via_temporal_segmenter(container, file, data, media_element) {
   this.metadata_ongoing_update_x = [0, 0];
   this.metadata_move_start_x = 0;
   this.metadata_move_dx = 0;
+  this.metadata_last_added_mid = '';
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -470,10 +471,10 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_gid_mid = function(g
     t0 = this.d.metadata_store[mid].z[0];
     t1 = this.d.metadata_store[mid].z[1];
 
-    if ( (t0 > this.tmetadata_gtimeline_tstart &&
-          t0 < this.tmetadata_gtimeline_tend) ||
-         (t1 > this.tmetadata_gtimeline_tstart &&
-          t1 < this.tmetadata_gtimeline_tend)
+    if ( (t0 >= this.tmetadata_gtimeline_tstart &&
+          t0 <= this.tmetadata_gtimeline_tend) ||
+         (t1 >= this.tmetadata_gtimeline_tstart &&
+          t1 <= this.tmetadata_gtimeline_tend)
        ) {
       this.tmetadata_gtimeline_mid[gid].push(mid);
     }
@@ -498,11 +499,20 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_init = function(container
 }
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_wheel_listener = function(e) {
-  // perform zoom of gtimeline
-  if (e.deltaY < 0) {
-    this._tmetadata_gtimeline_zoomin();
+  if ( e.shiftKey ) {
+    // pan temporal segment horizontally
+    if (e.deltaY < 0) {
+      this._tmetadata_boundary_move(this.TEMPORAL_SEG_MOVE_OFFSET);
+    } else {
+      this._tmetadata_boundary_move(-this.TEMPORAL_SEG_MOVE_OFFSET);
+    }
   } else {
-    this._tmetadata_gtimeline_zoomout();
+    // zoom temporal segment
+    if (e.deltaY < 0) {
+      this._tmetadata_gtimeline_zoomin();
+    } else {
+      this._tmetadata_gtimeline_zoomout();
+    }
   }
   e.preventDefault();
 }
@@ -732,12 +742,59 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_draw_boundary = function(
   this.gctx[gid].stroke();
 }
 
+_via_temporal_segmenter.prototype._tmetadata_group_gid_mark_selected = function() {
+  var gid = this.selected_gid;
+  var mid = this.selected_mid;
+  var t0, t1, x0, x1;
+  t0 = this.d.metadata_store[mid].z[0];
+  t1 = this.d.metadata_store[mid].z[1];
+  x0 = this._tmetadata_gtimeline_time2canvas(t0);
+  x1 = this._tmetadata_gtimeline_time2canvas(t1);
+
+  // draw arrow extending to the edges of temporal segment
+  this.gctx[gid].fillStyle = '#f2f2f2';
+  this.gctx[gid].strokeStyle = '#e6e6e6';
+
+  this.gctx[gid].lineWidth = this.DRAW_LINE_WIDTH;
+  this.gctx[gid].beginPath();
+  this.gctx[gid].moveTo(x0 + 2, this.linehn[2]);
+  this.gctx[gid].lineTo(x0 + this.linehb2 + 2, this.linehn[2] - this.linehb2);
+  this.gctx[gid].lineTo(x0 + this.linehb2 + 2, this.linehn[2] + this.linehb2);
+  this.gctx[gid].lineTo(x0 + 2, this.linehn[2]);
+  this.gctx[gid].lineTo(x1 - 1, this.linehn[2]);
+  this.gctx[gid].lineTo(x1 - this.linehb2 - 1, this.linehn[2] - this.linehb2);
+  this.gctx[gid].lineTo(x1 - this.linehb2 - 1, this.linehn[2] + this.linehb2);
+  this.gctx[gid].lineTo(x1 - 1, this.linehn[2]);
+  this.gctx[gid].stroke();
+  this.gctx[gid].fill();
+
+  // draw edge time if an edge is being updated
+  if ( this.edge_show_time !== -1 ) {
+    this.gctx[gid].font = '10px Sans';
+    this.gctx[gid].fillStyle = '#000000';
+
+    var time_str = this.d.metadata_store[this.selected_mid].z[this.edge_show_time].toFixed(3);
+    if ( this.edge_show_time === 0 ) {
+      this.gctx[gid].fillText(time_str, x0 + 1, this.linehn[4]);
+    } else {
+      var twidth = this.gctx[gid].measureText(time_str).width;
+      this.gctx[gid].fillText(time_str, x1 - twidth, this.linehn[4]);
+    }
+  }
+}
+
 _via_temporal_segmenter.prototype._tmetadata_group_gid_draw_metadata = function(gid) {
   if ( this.tmetadata_gtimeline_mid.hasOwnProperty(gid) ) {
     var mindex, mid;
     for ( mindex in this.tmetadata_gtimeline_mid[gid] ) {
       mid = this.tmetadata_gtimeline_mid[gid][mindex];
       this._tmetadata_group_gid_draw_mid(gid, mid);
+    }
+
+    if ( this.selected_gid === gid &&
+         this.selected_mindex !== -1
+       ) {
+      this._tmetadata_group_gid_mark_selected();
     }
   }
 }
@@ -777,39 +834,18 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_draw_mid = function(gid, 
   this.gctx[gid].lineTo(x0, this.linehn[1] + 1);
   this.gctx[gid].fill();
 
-  // draw arrow extending to the edges of temporal segment
-  if ( gid === this.selected_gid &&
-       mid === this.selected_mid ) {
-    this.gctx[gid].fillStyle = '#f2f2f2';
-    this.gctx[gid].strokeStyle = '#e6e6e6';
-
-    this.gctx[gid].lineWidth = this.DRAW_LINE_WIDTH;
-    this.gctx[gid].beginPath();
-    this.gctx[gid].moveTo(x0 + 2, this.linehn[2]);
-    this.gctx[gid].lineTo(x0 + this.linehb2 + 2, this.linehn[2] - this.linehb2);
-    this.gctx[gid].lineTo(x0 + this.linehb2 + 2, this.linehn[2] + this.linehb2);
-    this.gctx[gid].lineTo(x0 + 2, this.linehn[2]);
-    this.gctx[gid].lineTo(x1 - 1, this.linehn[2]);
-    this.gctx[gid].lineTo(x1 - this.linehb2 - 1, this.linehn[2] - this.linehb2);
-    this.gctx[gid].lineTo(x1 - this.linehb2 - 1, this.linehn[2] + this.linehb2);
-    this.gctx[gid].lineTo(x1 - 1, this.linehn[2]);
-    this.gctx[gid].stroke();
-    this.gctx[gid].fill();
-
-    // draw edge time if an edge is being updated
-    if ( this.edge_show_time !== -1 ) {
-      this.gctx[gid].font = '10px Sans';
-      this.gctx[gid].fillStyle = '#000000';
-
-      var time_str = this.d.metadata_store[this.selected_mid].z[this.edge_show_time].toFixed(3);
-      if ( this.edge_show_time === 0 ) {
-        this.gctx[gid].fillText(time_str, x0 + 1, this.linehn[4]);
-      } else {
-        var twidth = this.gctx[gid].measureText(time_str).width;
-        this.gctx[gid].fillText(time_str, x1 - twidth, this.linehn[4]);
-      }
-    }
-  }
+  // vertical lines for edge ref.
+  this.gctx[gid].strokeStyle = '#000000';
+  this.gctx[gid].beginPath();
+  this.gctx[gid].moveTo(x0 + 2, this.linehn[1] - 2);
+  this.gctx[gid].lineTo(x0, this.linehn[1] - 2);
+  this.gctx[gid].lineTo(x0, this.linehn[3] + 2);
+  this.gctx[gid].lineTo(x0+2, this.linehn[3] + 2);
+  this.gctx[gid].moveTo(x1 - 2, this.linehn[1] - 2);
+  this.gctx[gid].lineTo(x1, this.linehn[1] - 2);
+  this.gctx[gid].lineTo(x1, this.linehn[3] + 2);
+  this.gctx[gid].lineTo(x1 - 2, this.linehn[3] + 2);
+  this.gctx[gid].stroke();
 }
 
 _via_temporal_segmenter.prototype._tmetadata_group_gid_sel = function(gindex) {
@@ -928,6 +964,10 @@ _via_temporal_segmenter.prototype._tmetadata_mid_update_edge = function(eindex, 
       return;
     }
   }
+  if ( new_value < 0.0 || new_value > this.m.duration ) {
+    _via_util_msg_show('Cannot update edge beyond the boundary!');
+    return;
+  }
 
   this.d.metadata_update_zi(this.file.fid,
                             this.selected_mid,
@@ -944,11 +984,18 @@ _via_temporal_segmenter.prototype._tmetadata_mid_move = function(dt) {
   for ( var i = 0; i < n; ++i ) {
     newz[i] = parseFloat((parseFloat(newz[i]) + dt).toFixed(3));
   }
+<<<<<<< HEAD
 
   this.d.metadata_update_z(this.file.fid, this.selected_mid, newz).then( function(ok) {
     this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
     this._tmetadata_group_gid_draw(this.selected_gid);
 
+=======
+  this.d.metadata_update_z(this.file.fid, this.selected_mid, newz).then( function(ok) {
+    this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
+    this._tmetadata_group_gid_draw(this.selected_gid);
+
+>>>>>>> via-3.x.y
     // the move operation may have changed the sequential order of mid
     this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
   }.bind(this));
@@ -970,6 +1017,17 @@ _via_temporal_segmenter.prototype._tmetadata_mid_del = function(mid) {
   }
 }
 
+_via_temporal_segmenter.prototype._tmetadata_mid_update_last_added_end_edge_to_time = function(t) {
+  if ( this.d.metadata_store.hasOwnProperty(this.metadata_last_added_mid) ) {
+    this.d.metadata_update_zi(this.file.fid,
+                              this.metadata_last_added_mid,
+                              1,
+                              t
+                             );
+    this._tmetadata_group_gid_draw(this.selected_gid);
+  }
+}
+
 _via_temporal_segmenter.prototype._tmetadata_mid_add_at_time = function(t) {
   var z = [ t ];
   if ( z[0] < 0 ) {
@@ -987,6 +1045,7 @@ _via_temporal_segmenter.prototype._tmetadata_mid_add_at_time = function(t) {
   var metadata = {};
   metadata[ this.groupby_aid ] = this.selected_gid;
   this.d.metadata_add(fid, z, xy, metadata).then( function(ok) {
+    this.metadata_last_added_mid = ok.mid;
     this._tmetadata_group_gid_draw(this.selected_gid);
   }.bind(this), function(err) {
     _via_util_msg_show('Failed to add metadata!');
@@ -995,26 +1054,38 @@ _via_temporal_segmenter.prototype._tmetadata_mid_add_at_time = function(t) {
 }
 
 _via_temporal_segmenter.prototype._tmetadata_mid_merge = function(eindex) {
-  var merge_mid, new_z;
+  var merge_mid;
   if ( eindex === 0 ) {
     var left_mindex = parseInt(this.selected_mindex) - 1;
     if ( left_mindex >= 0 ) {
       merge_mid = this.tmetadata_gtimeline_mid[this.selected_gid][left_mindex];
-      new_z = this.d.metadata_store[merge_mid].z[0] - this.d.metadata_store[this.selected_mid].z[0];
     }
   } else {
     var right_mindex = parseInt(this.selected_mindex) + 1;
     if (right_mindex < this.tmetadata_gtimeline_mid[this.selected_gid].length ) {
       merge_mid = this.tmetadata_gtimeline_mid[this.selected_gid][right_mindex];
-      new_z = this.d.metadata_store[merge_mid].z[1] - this.d.metadata_store[this.selected_mid].z[1];
     }
   }
 
   if ( typeof(merge_mid) !== 'undefined' ) {
+    var new_z = this.d.metadata_store[this.selected_mid].z;
+    if ( new_z[0] > this.d.metadata_store[merge_mid].z[0] ) {
+      new_z[0] = this.d.metadata_store[merge_mid].z[0];
+    }
+    if ( new_z[1] < this.d.metadata_store[merge_mid].z[1] ) {
+      new_z[1] = this.d.metadata_store[merge_mid].z[1];
+    }
+
     this._tmetadata_mid_del(merge_mid);
     // while selected mid remains consistent, mindex changes due to deletion
     this.selected_mindex = this.tmetadata_gtimeline_mid[this.selected_gid].indexOf(this.selected_mid);
-    this._tmetadata_mid_update_edge(eindex, new_z);
+    this.d.metadata_update_z(this.file.fid, this.selected_mid, new_z);
+    this._tmetadata_group_gid_draw(this.selected_gid);
+    if ( eindex === 0 ) {
+      this.m.currentTime = new_z[0];
+    } else {
+      this.m.currentTime = new_z[1];
+    }
     _via_util_msg_show('Temporal segments merged.');
   } else {
     _via_util_msg_show('Merge is not possible without temporal segments in the neighbourhood');
@@ -1066,8 +1137,8 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mousedown = function(e) {
     this.metadata_resize_edge_index = edge[1];
     var z = this.d.metadata_store[this.selected_mid].z;
     this.metadata_ongoing_update_x = [ this._tmetadata_gtimeline_time2canvas(z[0]),
-                                         this._tmetadata_gtimeline_time2canvas(z[1])
-                                       ];
+                                       this._tmetadata_gtimeline_time2canvas(z[1])
+                                     ];
   } else {
     var mindex = this._tmetadata_group_gid_get_mindex_at_time(gid, t);
     if ( mindex !== -1 ) {
@@ -1242,10 +1313,14 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     return;
   }
 
-  if ( e.key === 'a' ) {
+  if ( e.key === 'a' || e.key === 'A' ) {
     e.preventDefault();
     var t = this.m.currentTime;
-    this._tmetadata_mid_add_at_time(t);
+    if ( e.key === 'a' ) {
+      this._tmetadata_mid_add_at_time(t);
+    } else {
+      this._tmetadata_mid_update_last_added_end_edge_to_time(t);
+    }
     return;
   }
 
@@ -1440,19 +1515,45 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
 }
 
 _via_temporal_segmenter.prototype._compare_mid_by_time = function(mid1, mid2) {
-  var t1 = this.d.metadata_store[mid1].z[0];
-  var t2 = this.d.metadata_store[mid2].z[0];
+  var t00 = this.d.metadata_store[mid1].z[0];
+  var t10 = this.d.metadata_store[mid2].z[0];
+  var t01 = this.d.metadata_store[mid1].z[1];
+  var t11 = this.d.metadata_store[mid2].z[1];
 
-  if ( typeof(t2) === 'string' ||
-       typeof(t2) === 'string' ) {
-    t1 = parseFloat(t1);
-    t2 = parseFloat(t2);
+  if ( typeof(t00) === 'string' ||
+       typeof(t01) === 'string' ) {
+    t00 = parseFloat(t00);
+    t01 = parseFloat(t01);
+    t10 = parseFloat(t10);
+    t11 = parseFloat(t11);
   }
 
-  if ( t1 < t2 ) {
-    return -1;
+  if ( (t00 === t10) && ( t01 === t11 ) ) {
+    return 0;
+  }
+
+  if ( ( t00 === t10 ) || ( t01 === t11 ) ) {
+    var a,b;
+    if ( ( t00 === t10 ) ) {
+      // same start time
+      a = t01;
+      b = t11;
+    } else {
+      // same end time
+      a = t00;
+      b = t10;
+    }
+    if ( a < b ) {
+      return -1;
+    } else {
+      return 1;
+    }
   } else {
-    return 1;
+    if ( (t00 < t10) || ( t01 < t11 ) ) {
+      return -1;
+    } else {
+      return 1;
+    }
   }
 }
 
