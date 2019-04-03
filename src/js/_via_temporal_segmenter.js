@@ -984,18 +984,9 @@ _via_temporal_segmenter.prototype._tmetadata_mid_move = function(dt) {
   for ( var i = 0; i < n; ++i ) {
     newz[i] = parseFloat((parseFloat(newz[i]) + dt).toFixed(3));
   }
-<<<<<<< HEAD
-
   this.d.metadata_update_z(this.file.fid, this.selected_mid, newz).then( function(ok) {
     this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
     this._tmetadata_group_gid_draw(this.selected_gid);
-
-=======
-  this.d.metadata_update_z(this.file.fid, this.selected_mid, newz).then( function(ok) {
-    this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
-    this._tmetadata_group_gid_draw(this.selected_gid);
-
->>>>>>> via-3.x.y
     // the move operation may have changed the sequential order of mid
     this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
   }.bind(this));
@@ -1024,6 +1015,7 @@ _via_temporal_segmenter.prototype._tmetadata_mid_update_last_added_end_edge_to_t
                               1,
                               t
                              );
+    this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
     this._tmetadata_group_gid_draw(this.selected_gid);
   }
 }
