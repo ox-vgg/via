@@ -628,7 +628,20 @@ _via_data.prototype.save_remote = function(username) {
     switch(xhr.statusText) {
     case 'Created':
     case 'Accepted':
-      _via_util_msg_show('Upload successful!', true);
+      try {
+        var response = JSON.parse(xhr.responseText);
+        if ( response.ok ) {
+          this.couchdb_rev = response.rev;
+          this.couchdb_id = response.id;
+          var revision = this.couchdb_rev.split('-')[0];
+          _via_util_msg_show('Upload successful (revision = ' + revision + ')', true);
+        } else {
+          _via_util_msg_show('Upload failed. Please report this: ' + xhr.responseText + ')', true);
+        }
+      }
+      catch(e) {
+        _via_util_msg_show('Malformed server response. Please report this: ' + xhr.responseText, true);
+      }
       break;
     default:
       _via_util_msg_show('Upload failed with response [' + xhr.statusText + ']', true);
