@@ -495,11 +495,20 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_init = function(container
 }
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_wheel_listener = function(e) {
-  // perform zoom of gtimeline
-  if (e.deltaY < 0) {
-    this._tmetadata_gtimeline_zoomin();
+  if ( e.shiftKey ) {
+    // pan temporal segment horizontally
+    if (e.deltaY < 0) {
+      this._tmetadata_boundary_move(this.TEMPORAL_SEG_MOVE_OFFSET);
+    } else {
+      this._tmetadata_boundary_move(-this.TEMPORAL_SEG_MOVE_OFFSET);
+    }
   } else {
-    this._tmetadata_gtimeline_zoomout();
+    // zoom temporal segment
+    if (e.deltaY < 0) {
+      this._tmetadata_gtimeline_zoomin();
+    } else {
+      this._tmetadata_gtimeline_zoomout();
+    }
   }
   e.preventDefault();
 }
