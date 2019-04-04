@@ -1170,8 +1170,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mouseup = function(e) {
   if ( this.metadata_move_is_ongoing ) {
     var dx = x - this.metadata_move_start_x;
     if ( Math.abs(dx) > this.DRAW_LINE_WIDTH ) {
-      dx = dx + this.padx; // _tmetadata_gtimeline_canvas2time() expects absolute x coordinate
-      var dt = this._tmetadata_gtimeline_canvas2time(dx);
+      var dt = dx / this.tmetadata_width_per_sec;
       this._tmetadata_mid_move(dt);
     }
     this.metadata_move_is_ongoing = false;
