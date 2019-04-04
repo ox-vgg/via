@@ -1008,9 +1008,23 @@ _via_temporal_segmenter.prototype._tmetadata_mid_del = function(mid) {
 
 _via_temporal_segmenter.prototype._tmetadata_mid_update_last_added_end_edge_to_time = function(t) {
   if ( this.d.metadata_store.hasOwnProperty(this.metadata_last_added_mid) ) {
+    var z_now = this.d.metadata_store[this.metadata_last_added_mid].z;
+    var update_edge_index;
+    if ( t > z_now[1] ) {
+      update_edge_index = 1;
+    } else {
+      if ( t < z_now[0] ) {
+        update_edge_index = 0;
+      } else {
+        // no resize when current time is inside the segment
+        return;
+      }
+    }
+
+    // to avoid malformed entried
     this.d.metadata_update_zi(this.file.fid,
                               this.metadata_last_added_mid,
-                              1,
+                              update_edge_index,
                               t
                              );
     this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
@@ -1030,6 +1044,14 @@ _via_temporal_segmenter.prototype._tmetadata_mid_add_at_time = function(t) {
   }
 
   z = _via_util_float_arr_to_fixed(z, 3);
+  // avoid adding same overlapping segments
+  if ( this.d.metadata_store.hasOwnProperty(this.metadata_last_added_mid) ) {
+    var z0 = this.d.metadata_store[this.metadata_last_added_mid].z;
+    if ( z0[0] === z[0] && z0[1] === z[1] ) {
+      _via_util_msg_show('A temporal segment of same size already exists.');
+      return;
+    }
+  }
   var fid = this.file.fid;
   var xy = [];
   var metadata = {};
