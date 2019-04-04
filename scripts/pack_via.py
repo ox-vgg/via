@@ -4,11 +4,18 @@
 
 import string
 import os
+import sys
 
+DIST_PACK_DIR = os.path.dirname(os.path.realpath(__file__))
+VIA_SRC_DIR = os.path.join(DIST_PACK_DIR, '..')
+if len(sys.argv) != 2:
+  print("Usage: python3 pack.py target_html")
+  sys.exit()
 
-TARGET_HTML = '/ssd/adutta/dev/via/src/html/via_speaker_diarisation.html'
-OUT_HTML = '/ssd/adutta/dev/via/dist/via_speaker_diarisation.html'
-SRC_DIR='/ssd/adutta/dev/via/src/'
+TARGET = sys.argv[1]
+TARGET_HTML = os.path.join(VIA_SRC_DIR, 'src', 'html', TARGET)
+
+OUT_HTML = os.path.join(VIA_SRC_DIR, 'dist', 'html', TARGET)
 
 ANALYTICS_JS = '''(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -20,7 +27,7 @@ ga('set', 'page', '/via/3.0.0/via_speaker_diarisation');
 ga('send', 'pageview');'''
 
 def get_file_contents(filename):
-  full_filename = os.path.join(SRC_DIR, filename)
+  full_filename = os.path.join(VIA_SRC_DIR, 'src', filename)
   with open(full_filename) as f:
     return f.read()
 
