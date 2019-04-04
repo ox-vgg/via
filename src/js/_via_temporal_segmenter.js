@@ -470,7 +470,9 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_gid_mid = function(g
     if ( (t0 >= this.tmetadata_gtimeline_tstart &&
           t0 <= this.tmetadata_gtimeline_tend) ||
          (t1 >= this.tmetadata_gtimeline_tstart &&
-          t1 <= this.tmetadata_gtimeline_tend)
+          t1 <= this.tmetadata_gtimeline_tend) ||
+         (t0 <= this.tmetadata_gtimeline_tstart &&
+          t1 >= this.tmetadata_gtimeline_tend)
        ) {
       this.tmetadata_gtimeline_mid[gid].push(mid);
     }
