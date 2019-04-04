@@ -4,11 +4,13 @@
 
 import string
 import os
+import os
 
-
-TARGET_HTML = '/ssd/adutta/dev/via/src/html/via_speaker_diarisation.html'
-OUT_HTML = '/ssd/adutta/dev/via/dist/via_speaker_diarisation.html'
-SRC_DIR='/ssd/adutta/dev/via/src/'
+CUR_DIR = os.path.dirname(os.path.realpath(__file__))
+VIA_DIR = os.path.join(CUR_DIR, '..', '..')
+TARGET_HTML = os.path.join(VIA_DIR, 'src', 'html', 'via_speaker_diarisation.html')
+OUT_HTML = os.path.join(VIA_DIR, 'dist', 'html', 'via_speaker_diarisation.html')
+SRC_DIR=os.path.join(VIA_DIR, 'src')
 
 ANALYTICS_JS = '''(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
