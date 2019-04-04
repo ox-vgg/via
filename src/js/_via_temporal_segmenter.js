@@ -1016,8 +1016,13 @@ _via_temporal_segmenter.prototype._tmetadata_mid_update_last_added_end_edge_to_t
       if ( t < z_now[0] ) {
         update_edge_index = 0;
       } else {
-        // no resize when current time is inside the segment
-        return;
+        var dt0 = Math.abs(z_now[0] - t);
+        var dt1 = Math.abs(z_now[1] - t);
+        if ( dt0 < dt1 ) {
+          update_edge_index = 0;
+        } else {
+          update_edge_index = 1;
+        }
       }
     }
 
