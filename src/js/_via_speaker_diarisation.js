@@ -6,8 +6,8 @@ var _VIA_GROUP_DEFAULT_GID_LIST = ['laughter', 'music'];
 var data = new _via_data();
 var io = new _via_io(data);
 
-//_via_restore_deactivate();
-
+_via_restore_deactivate();
+/*
 var store = new _via_store_localstorage(data);
 if ( store.is_store_available() ) {
   store.prev_session_data_init().then( function(ok) {
@@ -26,7 +26,7 @@ if ( store.is_store_available() ) {
     }
   }.bind(this));
 }
-
+*/
 
 function _via_restore_activate() {
   var button_container = document.getElementById('restore');
