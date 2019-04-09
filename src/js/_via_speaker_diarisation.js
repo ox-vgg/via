@@ -1,7 +1,7 @@
 'use strict'
 
 var _VIA_PROJECT_DS_URI = 'http://zeus.robots.ox.ac.uk/via/ds/voxceleb_val_693/';
-var _VIA_GROUP_DEFAULT_GID_LIST = ['laughter', 'music'];
+var _VIA_GROUP_DEFAULT_GID_LIST = ['spk1', 'laughter', 'music'];
 
 var data = new _via_data();
 var io = new _via_io(data);

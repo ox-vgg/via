@@ -69,6 +69,7 @@ function _via_temporal_segmenter(container, file, data, media_element) {
 
 _via_temporal_segmenter.prototype._init = function() {
   try {
+    this.group_default_gid_list = _VIA_GROUP_DEFAULT_GID_LIST;
     this._group_init('0'); // for debug
 
     this._thumbview_init();

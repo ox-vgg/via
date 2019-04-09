@@ -9,7 +9,7 @@ import os
 CUR_DIR = os.path.dirname(os.path.realpath(__file__))
 VIA_DIR = os.path.join(CUR_DIR, '..', '..')
 TARGET_HTML = os.path.join(VIA_DIR, 'src', 'html', 'via_speaker_diarisation.html')
-OUT_HTML = os.path.join(VIA_DIR, 'dist', 'html', 'via_speaker_diarisation.html')
+OUT_HTML = os.path.join(VIA_DIR, 'dist', 'via_speaker_diarisation.html')
 SRC_DIR=os.path.join(VIA_DIR, 'src')
 
 ANALYTICS_JS = '''(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
