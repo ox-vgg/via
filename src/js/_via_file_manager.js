@@ -9,11 +9,11 @@
 
 'use strict';
 
-function _via_file_manager(data, annotator, filelist_element, project_name_element) {
+function _via_file_manager(data, annotator, filelist_element, project_name_input) {
   this.d = data;
   this.a = annotator;
   this.filelist = filelist_element;
-  this.project_name_element = project_name_element;
+  this.project_name_input = project_name_input;
 
   var is_filelist_regex_active = false;
   this.filelist_fid_list = [];
@@ -34,7 +34,12 @@ function _via_file_manager(data, annotator, filelist_element, project_name_eleme
 }
 
 _via_file_manager.prototype._init = function() {
-  this.project_name_element.innerHTML = "Video: " + this.d.project_store.project_name;
+  this.project_name_input.setAttribute('value', this.d.store.project.name);
+  this.project_name_input.addEventListener('change', function() {
+    this.d.store.project.name = this.project_name_input.value.trim();
+    _via_util_msg_show('Project name updated to [' + this.d.store.project.name + ']');
+  }.bind(this));
+
   // trigger update of filelist (for the first time)
   this._filelist_update();
 }
@@ -46,15 +51,10 @@ _via_file_manager.prototype._filelist_clear = function() {
 
 _via_file_manager.prototype._filelist_html_element = function(findex, fid) {
   var oi = document.createElement('option');
-  if ( this.d.file_is_fid_valid(fid) ) {
-    var oi = document.createElement('option');
-    oi.setAttribute('data-fid', fid);
-    oi.setAttribute('value', fid);
-    oi.setAttribute('title', decodeURI(this.d.file_store[fid].src));
-    oi.innerHTML = '[' + (parseInt(findex)+1) + '] ' + decodeURI(this.d.file_store[fid].filename);
-  } else {
-    console.log('_via_file_manager._filelist_html_element() : not found fid=' + fid);
-  }
+  oi.setAttribute('data-fid', fid);
+  oi.setAttribute('value', fid);
+  oi.setAttribute('title', decodeURI(this.d.store.file[fid].src));
+  oi.innerHTML = '[' + (parseInt(findex)+1) + '] ' + decodeURI(this.d.store.file[fid].fname);
   return oi;
 }
 

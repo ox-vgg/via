@@ -12,7 +12,7 @@
 
 'use strict';
 
-const _VIA_SHAPE  = { 'RECT':1, 'CIRCLE':2, 'ELLIPSE':3, 'POINT':4, 'POLYLINE':5, 'POLYGON':6, 'FILE':7 };
+const _VIA_RSHAPE  = { 'POINT':1, 'RECT':2, 'CIRCLE':3, 'ELLIPSE':4, 'LINE':5, 'POLYLINE':6, 'POLYGON':7, 'FILE':8 };
 
 function _via_metadata(z, xy, v) {
   this.z  = z;  // time or frame index

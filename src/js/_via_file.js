@@ -17,9 +17,9 @@
 const _VIA_FILE_TYPE = { IMAGE:1, VIDEO:2, AUDIO:3, TEXT:4, JSON:5 };
 const _VIA_FILE_LOC  = { LOCAL:1, URIHTTP:2, URIFILE:3, INLINE:4 };
 
-function _via_file(fid, filename, type, loc, src) {
+function _via_file(fid, fname, type, loc, src) {
   this.fid      = fid;
-  this.filename = filename;
+  this.fname    = fname;
   this.type     = type;
   this.loc      = loc;
   this.src      = src;
