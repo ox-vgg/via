@@ -163,6 +163,24 @@ _via_data.prototype.metadata_update = function(vid, mid, z, xy, v) {
   }.bind(this));
 }
 
+_via_data.prototype.metadata_update_xy = function(vid, mid, xy) {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      if ( ! this.store['view'].hasOwnProperty(vid) ) {
+        err_callback({'vid':vid});
+        return;
+      }
+      this.store.view[vid].d[mid].xy = xy.slice(0);
+      this.emit_event( 'metadata_update', { 'vid':vid, 'mid':mid } );
+      ok_callback({'vid':vid, 'mid':mid});
+    }
+    catch(ex) {
+      console.log(xy);
+      err_callback(ex);
+    }
+  }.bind(this));
+}
+
 //
 // View
 //

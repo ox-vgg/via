@@ -31,6 +31,8 @@ function _via_file_annotator(view_annotator, data, vid, findex, container) {
   this.state_id = this._state_set(_VIA_RINPUT_STATE.UNKNOWN);
   this.user_input_pts = []; // [x0, y0, x1, y1, ..., xk, yk]
   this.last_clicked_mid_list = [];
+  this.resize_control_point_index = -1;
+  this.resize_selected_mid_index = -1;
 
   // canvas regions
   this.creg = {}; // canvas regions
@@ -60,6 +62,7 @@ function _via_file_annotator(view_annotator, data, vid, findex, container) {
 
   // register event listeners
   this.d.on_event('metadata_add', this._on_event_metadata_add.bind(this));
+  this.d.on_event('metadata_update', this._on_event_metadata_update.bind(this));
 
   this._init();
 }
@@ -216,6 +219,9 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this._rinput_attach_input_handlers();
   this.c.appendChild(this.rinput_canvas);
 
+  // draw all existing regions
+  this._creg_reload();
+
   this._state_set(_VIA_RINPUT_STATE.IDLE);
 }
 
@@ -279,6 +285,48 @@ _via_file_annotator.prototype._rinput_mousedown_handler = function(e) {
   }
 
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_SELECTED ) {
+    var sel_region_cp = this._creg_is_on_sel_region_cp(cx, cy,
+                                                       this.conf.CONTROL_POINT_CLICK_TOL);
+    console.log(sel_region_cp)
+    if ( sel_region_cp[0] !== -1 ) {
+      // mousedown was on control point of one of the selected regions
+      this.resize_selected_mid_index = sel_region_cp[0];
+      this.resize_control_point_index = sel_region_cp[1];
+      this._state_set( _VIA_RINPUT_STATE.REGION_RESIZE_ONGOING );
+    } else {
+      // mousedown was not on a control point, two possibilities:
+      // - inside an already selected region
+      // - outside a selected region
+      //   * inside another unselected region
+      //   * outside any region
+      var mid_list = this._is_point_inside_existing_regions(cx, cy);
+      console.log(mid_list)
+      if ( e.shiftKey ) { // used to select multiple regions or unselect one of existing regions
+        if ( mid_list.length === 0 ) {
+          // outside a region, hence it could be to select regions inside a user drawn area
+          this.user_input_pts.push(cx, cy);
+          this._state_set( _VIA_RINPUT_STATE.SELECT_ALL_INSIDE_AN_AREA_ONGOING );
+        } else {
+          // inside a region, hence toggle selection
+          this.last_clicked_mid_list = mid_list;
+          this._state_set( _VIA_RINPUT_STATE.REGION_SELECT_TOGGLE_ONGOING );
+        }
+      } else {
+        if ( mid_list.length === 0 ) {
+          this._state_set( _VIA_RINPUT_STATE.REGION_UNSELECT_ONGOING );
+        } else {
+          var sel_mindex = this._is_point_inside_sel_regions(cx, cy);
+          if ( sel_mindex === -1 ) {
+            this.last_clicked_mid_list = mid_list;
+            this._state_set( _VIA_RINPUT_STATE.REGION_SELECT_OR_DRAW_POSSIBLE );
+          } else {
+            this.user_input_pts.push(cx, cy);
+            this._state_set( _VIA_RINPUT_STATE.REGION_MOVE_ONGOING );
+          }
+        }
+      }
+    }
+
     return;
   }
 }
@@ -319,15 +367,31 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
     return;
   }
 
-  if ( this.state_id === _VIA_RINPUT_STATE.REGION_UNSELECT_ONGOING ) {
-    return;
-  }
-
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_MOVE_ONGOING ) {
+    this.user_input_pts.push(cx, cy);
+    var canvas_input_pts = this.user_input_pts.slice(0);
+    var cdx = canvas_input_pts[2] - canvas_input_pts[0];
+    var cdy = canvas_input_pts[3] - canvas_input_pts[1];
+    var mid_list = this.selected_mid_list.slice(0);
+    this._metadata_move_region(mid_list, cdx, cdy).then( function(ok) {
+      console.log('move done');
+    }.bind(this), function(err) {
+      console.log('move failed');
+    }.bind(this));
+    this._tmpreg_clear();
+    this.user_input_pts = [];
+    this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
     return;
   }
 
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_RESIZE_ONGOING ) {
+    return;
+  }
+
+  if ( this.state_id === _VIA_RINPUT_STATE.REGION_UNSELECT_ONGOING ) {
+    this._creg_select_none();
+    this.user_input_pts = [];
+    this._state_set( _VIA_RINPUT_STATE.IDLE );
     return;
   }
 
@@ -336,6 +400,11 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
   }
 
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_SELECT_TOGGLE_ONGOING ) {
+    if ( ! e.shiftKey ) {
+      this._creg_select_none();
+    }
+    this._creg_select_toggle( this.last_clicked_mid_list );
+    this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
     return;
   }
 }
@@ -355,50 +424,59 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
   }
 
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_SELECTED ) {
-    // iterate through each selected region
-    var n = this.selected_mid_list.length;
-    var mid, shape_id;
-    for ( var i = 0; i < n; ++i ) {
-      mid = this.selected_mid_list[i];
-      var cp_index = this._creg_is_on_control_point(this.creg[mid],
-                                                    cx, cy,
-                                                    this.conf.CONTROL_POINT_CLICK_TOL);
-      if ( cp_index !== -1 ) {
-        shape_id = this.creg[mid][0];
-        switch(shape_id) {
-        case _VIA_RSHAPE.RECT:
-        case _VIA_RSHAPE.CIRCLE:
-        case _VIA_RSHAPE.ELLIPSE:
-          switch(cp_index) {
-          case 1: // top center
-          case 3: // bottom center
-            this.rinput_canvas.style.cursor = 'row-resize';
-            break;
-          case 2: // right center
-          case 4: // left center
-            this.rinput_canvas.style.cursor = 'col-resize';
-            break;
-          case 5: // corner top-right
-          case 7: // corner bottom-left
-            this.rinput_canvas.style.cursor = 'nesw-resize';
-            break;
-          case 6: // corner bottom-right
-          case 7: // corner top-left
-            this.rinput_canvas.style.cursor = 'nwse-resize';
-            break;
-          }
+    var sel_region_cp = this._creg_is_on_sel_region_cp(cx, cy,
+                                                       this.conf.CONTROL_POINT_CLICK_TOL);
+
+    if ( sel_region_cp[0] !== -1 && sel_region_cp[1] !== -1 ) {
+      var mid = sel_region_cp[0];
+      var cp_index = sel_region_cp[1];
+      var shape_id = this.creg[mid][0];
+
+      switch(shape_id) {
+      case _VIA_RSHAPE.RECT:
+      case _VIA_RSHAPE.CIRCLE:
+      case _VIA_RSHAPE.ELLIPSE:
+        switch(cp_index) {
+        case 1: // top center
+        case 3: // bottom center
+          this.rinput_canvas.style.cursor = 'row-resize';
           break;
-        case _VIA_RSHAPE.POINT:
-        case _VIA_RSHAPE.LINE:
-        case _VIA_RSHAPE.POLYGON:
-        case _VIA_RSHAPE.POLYLINE:
-          this.rinput_canvas.style.cursor = 'cell';
+        case 2: // right center
+        case 4: // left center
+          this.rinput_canvas.style.cursor = 'col-resize';
+          break;
+        case 5: // corner top-right
+        case 7: // corner bottom-left
+          this.rinput_canvas.style.cursor = 'nesw-resize';
+          break;
+        case 6: // corner bottom-right
+        case 8: // corner top-left
+          this.rinput_canvas.style.cursor = 'nwse-resize';
           break;
         }
-      } else {
-        this.rinput_canvas.style.cursor = 'default';
+        break;
+      case _VIA_RSHAPE.POINT:
+      case _VIA_RSHAPE.LINE:
+      case _VIA_RSHAPE.POLYGON:
+      case _VIA_RSHAPE.POLYLINE:
+        this.rinput_canvas.style.cursor = 'cell';
+        break;
       }
+    } else {
+      this.rinput_canvas.style.cursor = 'default';
     }
+    return;
+  }
+
+  if ( this.state_id === _VIA_RINPUT_STATE.REGION_MOVE_ONGOING ) {
+    this._tmpreg_clear();
+    var dx = cx - this.user_input_pts[0];
+    var dy = cy - this.user_input_pts[1];
+    this._tmpreg_move_sel_regions(dx, dy);
+    return;
+  }
+
+  if ( this.state_id === _VIA_RINPUT_STATE.REGION_RESIZE_ONGOING ) {
     return;
   }
 }
@@ -483,23 +561,55 @@ _via_file_annotator.prototype._is_point_inside_existing_regions = function(cx, c
 _via_file_annotator.prototype._is_point_on_region_edge = function(cx, cy) {
   for ( var mid in this.creg ) {
     if ( this._creg_is_on_edge(this.creg[mid],
-                              cx,
-                              cy,
-                              this.conf.CONTROL_POINT_CLICK_TOL) ) {
+                               cx,
+                               cy,
+                               this.conf.CONTROL_POINT_CLICK_TOL) ) {
       return true;
     }
   }
   return false;
 }
 
-_via_file_annotator.prototype._is_point_inside_these_regions = function(mid_list, cx, cy) {
-  // @todo
-  return false;
+_via_file_annotator.prototype._is_point_inside_sel_regions = function(cx, cy) {
+  var mid, mindex;
+  for ( mindex in this.selected_mid_list ) {
+    mid = this.selected_mid_list[mindex];
+    if ( this._creg_is_inside(this.creg[mid],
+                              cx,
+                              cy,
+                              this.conf.CONTROL_POINT_CLICK_TOL) ) {
+      return mindex;
+    }
+  }
+  return -1;
 }
 
 //
 // metadata
 //
+_via_file_annotator.prototype._metadata_move_region = function(mid_list, cdx, cdy) {
+  return new Promise( function(ok_callback, err_callback) {
+    var mid, shape_id;
+    var dx = cdx * this.cscale;
+    var dy = cdy * this.cscale;
+    console.log(dx + ',' + dy)
+    var promise_list = [];
+    var n = mid_list.length;
+    for ( var i = 0; i < n; ++i ) {
+      mid = mid_list[i];
+      var new_xy  = this._metadata_move_xy(this.d.store.view[this.vid].d[mid].xy, dx, dy);
+      promise_list.push( this.d.metadata_update_xy(this.vid, mid, new_xy) );
+    }
+
+    Promise.all( promise_list ).then( function(ok) {
+      ok_callback();
+    }.bind(this), function(err) {
+      console.log(err)
+      err_callback();
+    }.bind(this));
+  }.bind(this));
+}
+
 _via_file_annotator.prototype._metadata_add = function(region_shape, canvas_input_pts) {
   return new Promise( function(ok_callback, err_callback) {
     var file_input_pts = this._rinput_pts_canvas_to_file(canvas_input_pts);
@@ -521,6 +631,32 @@ _via_file_annotator.prototype._metadata_xy_to_creg = function(vid, mid) {
     cxy[i] = Math.floor( cxy[i] * this.fscale );
   }
   return cxy;
+}
+
+_via_file_annotator.prototype._metadata_move_xy = function(xy0, dx, dy) {
+  var xy = xy0.slice(0);
+  var shape_id = xy[0];
+  switch(shape_id) {
+  case _VIA_RSHAPE.POINT:
+  case _VIA_RSHAPE.RECT:
+  case _VIA_RSHAPE.CIRCLE:
+  case _VIA_RSHAPE.ELLIPSE:
+    xy[1] = xy[1] + dx;
+    xy[2] = xy[2] + dy;
+    break;
+  case _VIA_RSHAPE.LINE:
+  case _VIA_RSHAPE.POLYLINE:
+  case _VIA_RSHAPE.POLYGON:
+    var n = xy.length;
+    for ( var i = 1; i < n; i = i+2 ) {
+      xy[i]   = xy[i]   + dx;
+      xy[i+1] = xy[i+1] + dy;
+    }
+    break;
+  case _VIA_RSHAPE.FILE:
+    break;
+  }
+  return xy;
 }
 
 _via_file_annotator.prototype._metadata_pts_to_xy = function(shape_id, pts) {
@@ -586,6 +722,19 @@ _via_file_annotator.prototype._metadata_pts_to_xy_rect = function(pts) {
 //
 // canvas region maintainers
 //
+_via_file_annotator.prototype._creg_reload = function() {
+  this._creg_add_all(this.vid);
+  this._creg_draw_all();
+}
+
+_via_file_annotator.prototype._creg_add_all = function(vid) {
+  this.creg = {};
+  var mid;
+  for ( mid in this.d.store.view[vid].d ) {
+    this.creg[mid] = this._metadata_xy_to_creg(vid, mid);
+  }
+}
+
 _via_file_annotator.prototype._creg_add = function(vid, mid) {
   this.creg[mid] = this._metadata_xy_to_creg(vid, mid);
 }
@@ -719,6 +868,22 @@ _via_file_annotator.prototype._creg_is_on_control_point = function(xy, cx, cy, t
   return -1;
 }
 
+_via_file_annotator.prototype._creg_is_on_sel_region_cp = function(cx, cy, tolerance) {
+  var n = this.selected_mid_list.length;
+  var mid, shape_id;
+  var sel_region_cp = [-1, -1];
+  for ( var i = 0; i < n; ++i ) {
+    mid = this.selected_mid_list[i];
+    var cp_index = this._creg_is_on_control_point(this.creg[mid], cx, cy, tolerance);
+    // is mousedown on region control point?
+    if ( cp_index !== -1 ) {
+      sel_region_cp = [i, cp_index];
+      break;
+    }
+  }
+  return sel_region_cp;
+}
+
 _via_file_annotator.prototype._creg_select_one = function(mid) {
   this.selected_mid_list = [mid];
   this._creg_draw_all();
@@ -728,11 +893,30 @@ _via_file_annotator.prototype._creg_select = function(mid) {
   this.selected_mid_list.push(mid);
   this._creg_draw(mid);
 }
+
 _via_file_annotator.prototype._creg_select_multiple = function(mid_list) {
   var n = mid_list.length;
   if ( n > 0 ) {
     for ( var i = 0; i < n; ++i ) {
       this.selected_mid_list.push( mid_list[i] );
+    }
+    this._creg_draw_all();
+  }
+}
+
+_via_file_annotator.prototype._creg_select_toggle = function(mid_list) {
+  var n = mid_list.length;
+  if ( n > 0 ) {
+    var mindex;
+    for ( var i = 0; i < n; ++i ) {
+      mindex = this.selected_mid_list.indexOf( mid_list[i] );
+      if ( mindex === -1 ) {
+        // add to selection
+        this.selected_mid_list.push( mid_list[i] );
+      } else {
+        // remove from selection
+        this.selected_mid_list.splice(mindex, 1 );
+      }
     }
     this._creg_draw_all();
   }
@@ -759,6 +943,13 @@ _via_file_annotator.prototype._on_event_metadata_add = function(data, event_payl
   this._creg_draw_all();
 }
 
+_via_file_annotator.prototype._on_event_metadata_update = function(data, event_payload) {
+  var vid = event_payload.vid;
+  var mid = event_payload.mid;
+  this._creg_add(vid, mid);
+  this._creg_draw_all();
+}
+
 //
 // temp. regions
 //
@@ -766,6 +957,15 @@ _via_file_annotator.prototype._tmpreg_draw_region = function(shape_id, pts) {
   var xy = this._metadata_pts_to_xy(shape_id, pts);
   this._tmpreg_clear();
   this._draw(this.rinputctx, xy);
+}
+
+_via_file_annotator.prototype._tmpreg_move_sel_regions = function(dx, dy) {
+  var mid, mindex;
+  for ( mindex in this.selected_mid_list ) {
+    mid = this.selected_mid_list[mindex];
+    var new_cxy = this._metadata_move_xy(this.creg[mid], dx, dy);
+    this._draw(this.rinputctx, new_cxy, false);
+  }
 }
 
 _via_file_annotator.prototype._tmpreg_clear = function() {
