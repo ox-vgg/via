@@ -181,6 +181,51 @@ _via_data.prototype.metadata_update_xy = function(vid, mid, xy) {
   }.bind(this));
 }
 
+_via_data.prototype.metadata_delete = function(vid, mid) {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      if ( ! this.store['view'].hasOwnProperty(vid) ) {
+        err_callback({'vid':vid});
+        return;
+      }
+      delete this.store.view[vid].d[mid];
+      this.emit_event( 'metadata_delete', { 'vid':vid, 'mid':mid } );
+      ok_callback({'vid':vid, 'mid':mid});
+    }
+    catch(ex) {
+      console.log(xy);
+      err_callback(ex);
+    }
+  }.bind(this));
+}
+
+_via_data.prototype.metadata_delete_bulk = function(vid, mid_list) {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      if ( ! this.store['view'].hasOwnProperty(vid) ) {
+        err_callback({'vid':vid});
+        return;
+      }
+      var deleted_mid_list = [];
+      var mid;
+      for ( var mindex in mid_list ) {
+        mid = mid_list[mindex];
+        if ( this.store.view[vid].d.hasOwnProperty(mid) ) {
+          delete this.store.view[vid].d[mid];
+          deleted_mid_list.push(mid);
+        }
+      }
+
+      this.emit_event( 'view_update', { 'vid':vid, 'mid_list':deleted_mid_list } );
+      ok_callback({'vid':vid, 'mid_list':deleted_mid_list});
+    }
+    catch(ex) {
+      console.log(xy);
+      err_callback(ex);
+    }
+  }.bind(this));
+}
+
 //
 // View
 //

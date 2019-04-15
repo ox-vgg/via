@@ -32,6 +32,7 @@ if ( true ) {
       var sample_metadata = {};
       sample_metadata['0'] = new _via_metadata([], [2,100,100,200,200], {});
       sample_metadata['1'] = new _via_metadata([], [2,150,400,200,150], {});
+      sample_metadata['2'] = new _via_metadata([], [4,250,800,80,120], {});
       vpromiselist.push( data.view_add( [fid], sample_metadata ) );
     }
 
@@ -39,7 +40,7 @@ if ( true ) {
       console.log(data.store)
       console.log(ok);
       view_manager._init();
-      view_annotator.view_show(1);
+      view_annotator.view_show(0);
     }.bind(this), function(err) {
       console.warn(err);
     }.bind(this));

@@ -131,7 +131,6 @@ _via_view_annotator.prototype._view_has_only_video = function(vid) {
 // view container
 //
 _via_view_annotator.prototype._view_split_content_container = function(container, file_container, nrow, ncol) {
-  console.log(file_container)
   for ( var i = 0; i < nrow; ++i ) {
     file_container[i] = [];
     for ( var j = 0; j < ncol; ++j ) {

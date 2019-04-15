@@ -175,10 +175,6 @@ _via_view_manager.prototype._view_selector_update_regex = function(regex) {
 
 _via_view_manager.prototype._view_selector_update_showall = function() {
   this._view_selector_clear();
-  console.log(this.d.store)
-  console.log(this.d.store.vid_list);
-  console.log(this.d.store.fid_list);
-  console.log(this.d.store.aid_list);
 
   var vid;
   var vindex;
