@@ -24,6 +24,7 @@ function _via_view_annotator(data, container ) {
 
   this._init();
 }
+
 _via_view_annotator.prototype._init = function() {
   // for viewing content of a view and definition of metadata.{xy, z, v} for the view
   this.view_content_container = document.createElement('div');
@@ -45,7 +46,7 @@ _via_view_annotator.prototype.view_show = function(vid) {
 }
 
 _via_view_annotator.prototype._view_init = function(vid) {
-  var file_count = this.d.store.view[vid].f.length;
+  var file_count = this.d.store.view[vid].fid_list.length;
 
   switch(file_count) {
   case 1:
@@ -84,7 +85,8 @@ _via_view_annotator.prototype._view_annotate_single_image = function(vid) {
   this._view_split_content_container(this.view_content_container, this.file_container, 1, 1);
 
   this.file_annotator[0] = [];
-  this.file_annotator[0][0] = new _via_file_annotator(this, this.d, vid, 0, this.file_container[0][0]);
+  var vid0 = this.d.view_get_file_vid( this.d.store.view[vid].fid_list[0] );
+  this.file_annotator[0][0] = new _via_file_annotator(this, this.d, vid0, this.file_container[0][0]);
 }
 
 _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
@@ -97,12 +99,18 @@ _via_view_annotator.prototype._view_annotate_two_images = function(vid) {
   this.file_annotator = [];
   this.file_container = [];
   this.view_content_container.innerHTML = '';
-  this.view_metadata_container.innerHTML = '';
   this._view_split_content_container(this.view_content_container, this.file_container, 1, 2);
 
   this.file_annotator[0] = [];
-  this.file_annotator[0][0] = new _via_file_annotator(this, this.d, vid, 0, this.file_container[0][0]);
-  this.file_annotator[0][1] = new _via_file_annotator(this, this.d, vid, 1, this.file_container[0][1]);
+  var vid0 = this.d.view_get_file_vid( this.d.store.view[vid].fid_list[0] );
+  var vid1 = this.d.view_get_file_vid( this.d.store.view[vid].fid_list[1] );
+  this.file_annotator[0][0] = new _via_file_annotator(this, this.d, vid0, 'Image 1', this.file_container[0][0]);
+  this.file_annotator[0][1] = new _via_file_annotator(this, this.d, vid1, 'Image 2', this.file_container[0][1]);
+
+  // setup view metadata editor
+  this.view_metadata_container.innerHTML = '';
+  this._metadata_show(this.view_metadata_container,
+                      _VIA_ATTRIBUTE_ANCHOR.FILEN_Z0_XY0);
 }
 
 _via_view_annotator.prototype._view_has_only_image = function(vid) {
@@ -165,4 +173,65 @@ _via_view_annotator.prototype._view_clear_all_file_annotator = function() {
       this.file_annotator[i][j]._destroy_file_object_url();
     }
   }
+}
+
+//
+// view metadata editor
+//
+_via_view_annotator.prototype._metadata_show = function(c, anchor_value) {
+  var table = document.createElement('table');
+  var anchor_name = this.d.attribute_anchor_value_to_name(anchor_value);
+  for ( var aid in this.d.cache.attribute_group[anchor_name] ) {
+    table.appendChild( this._metadata_table_row(aid) );
+  }
+  c.appendChild(table);
+}
+
+_via_view_annotator.prototype._metadata_table_row = function(aid) {
+  var tr = document.createElement('tr');
+  var adesc_col = document.createElement('td');
+  adesc_col.innerHTML = this.d.store.attribute[aid].desc;
+  tr.appendChild(adesc_col);
+
+  var aopt_col = document.createElement('td');
+  aopt_col.appendChild(this._attribute_html_element(aid));
+  tr.appendChild(aopt_col);
+  return tr;
+}
+
+//
+// attribute helper methods
+//
+_via_view_annotator.prototype._attribute_html_element = function(aid) {
+  var el;
+  switch(this.d.store.attribute[aid].type) {
+  case _VIA_ATTRIBUTE_TYPE.TEXT:
+    el = document.createElement('textarea');
+    break;
+
+  case _VIA_ATTRIBUTE_TYPE.SELECT:
+    //@todo
+    break;
+
+  case _VIA_ATTRIBUTE_TYPE.RADIO:
+    el = document.createElement('div');
+    var oid;
+    for ( oid in this.d.store.attribute[aid].options ) {
+      var inp = document.createElement('input');
+      inp.setAttribute('type', 'radio');
+      inp.setAttribute('value', oid);
+      inp.setAttribute('id', oid);
+      inp.setAttribute('name', this.d.store.attribute[aid].aname);
+
+      var label = document.createElement('label');
+      label.setAttribute('for', oid);
+      label.innerHTML = this.d.store.attribute[aid].options[oid];
+      el.appendChild(inp);
+      el.appendChild(label);
+    }
+    break;
+  default:
+    console.warn('undefined attribute type = ' + this.type);
+  }
+  return el;
 }

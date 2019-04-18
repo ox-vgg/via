@@ -353,3 +353,59 @@ function _via_util_float_arr_to_fixed(arr, fixed) {
 function _via_util_float_to_fixed(value, fixed) {
   return parseFloat( value.toFixed(fixed) );
 }
+
+
+//
+// Unique Id
+//
+
+// URL.createObjectURL() produces a unique id every time it is invoked.
+// We use this functionality to generate unique id required by VIA
+// @todo: Replace with a true UUID generator if it can be efficiently generated
+// using pure JS (no dependencies)
+function _via_util_uuid() {
+  var temp_url = URL.createObjectURL(new Blob())
+  var uuid = temp_url.toString();
+  URL.revokeObjectURL(temp_url);
+  var slash_index = uuid.lastIndexOf('/');
+  if ( uuid !== -1 ) {
+    // remove any prefix (e.g. blob:null/, blob:www.test.com/, ...)
+    uuid = uuid.substr(slash_index + 1);
+    uuid = uuid.replace(/-/g, '');
+  }
+  return uuid;
+}
+
+function _via_util_gen_project_id() {
+  return 'via-' + _via_util_uuid();
+}
+
+function _via_util_uid6() {
+  var temp_url = URL.createObjectURL(new Blob());
+  var uuid = temp_url.toString();
+  URL.revokeObjectURL(temp_url);
+  var n = uuid.length;
+  // remove any prefix (e.g. blob:null/, blob:www.test.com/, ...)
+  var uuid_suffix_str = '';
+  for ( var i = n - 12; i < n; i = i + 2 ) {
+    uuid_suffix_str += String.fromCharCode( parseInt(uuid.substr(i, 2), 16) );
+  }
+  var uid = btoa(uuid_suffix_str).replace('/', '-');
+  return uid;
+}
+
+function _via_util_array_eq(a, b) {
+  if ( a == null || b == null ) {
+    return false;
+  }
+  if ( a.length != b.length ) {
+    return false;
+  }
+  var n = a.length;
+  for ( var i = 0; i < n; ++i ) {
+    if ( a[i] !== b[i] ) {
+      return false;
+    }
+  }
+  return true;
+}

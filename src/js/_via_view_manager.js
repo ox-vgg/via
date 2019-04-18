@@ -128,11 +128,11 @@ _via_view_manager.prototype._view_selector_clear = function() {
 }
 
 _via_view_manager.prototype._view_selector_option_html = function(vindex, vid) {
-  var file_count = this.d.store.view[vid].f.length;
+  var file_count = this.d.store.view[vid].fid_list.length;
   var filename_list = [];
   var fid;
   for ( var i = 0; i < file_count; ++i ) {
-    fid = this.d.store.view[vid].f[i];
+    fid = this.d.store.view[vid].fid_list[i];
     filename_list.push(this.d.store.file[fid].fname);
   }
   var view_name = filename_list.join(', ');

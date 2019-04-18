@@ -44,11 +44,15 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 #view_manager_container .view_selector { margin:0 0.5em; width:10em; }
 #view_manager_container .view_filter_regex { width:4em; }
 
-#view_container { display:grid; height:100vh; grid-template-rows:10fr 4fr; border:1px solid red; margin-top:0.4em; }
-#view_container > .view_content_container { display:grid; background-color:#43f245; }
+#view_container { display:grid; height:100vh; grid-template-rows:10fr 2fr; margin-top:0.4em; }
+#view_container > .view_content_container { display:grid; }
 #view_container > .view_content_container > .file_container { display:block; position:relative; border:1px solid blue; }
 #view_container > .view_content_container > .file_container * { position:absolute; top:0; }
-#view_container > .view_metadata_container {background-color:#43ffff; }
+#view_container > .view_metadata_container { padding:1em; font-size:x-large; }
+#view_container > .view_metadata_container table { margin:0 auto; border-collapse:collapse; }
+#view_container > .view_metadata_container td {}
+#view_container > .view_metadata_container input { vertical-align:middle; margin-left:1.5em; }
+#view_container > .view_metadata_container label { vertical-align:middle; }
 
 /* Editor panel for add/update/view metadata and attributes */
 .editor_container { display:none; position:absolute; bottom:0; left:0; right:0; height:30vh; overflow:auto; background-color:white; }

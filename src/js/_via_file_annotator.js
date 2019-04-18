@@ -20,11 +20,11 @@ var _VIA_RINPUT_STATE = { UNKNOWN:1,
                           REGION_DRAW_NCLICK_ONGOING: 11,
                         }
 
-function _via_file_annotator(view_annotator, data, vid, findex, container) {
+function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.va = view_annotator;
   this.d = data;
   this.vid = vid;
-  this.findex = findex;
+  this.file_label = file_label;
   this.c = container;
 
   // state variables
@@ -69,7 +69,12 @@ function _via_file_annotator(view_annotator, data, vid, findex, container) {
 }
 
 _via_file_annotator.prototype._init = function() {
-  this.fid = this.d.store.view[this.vid].f[this.findex];
+  if ( this.d.store.view[this.vid].fid_list.length !== 1 ) {
+    console.warn('_via_file_annotator() can only operate on a single file!');
+    return;
+  }
+
+  this.fid = this.d.store.view[this.vid].fid_list[0];
   this.file = this.d.store.file[this.fid];
 
   this._file_read().then( function(file_src) {
@@ -175,10 +180,11 @@ _via_file_annotator.prototype._file_html_element_compute_scale = function() {
   this.cwidth = cw;
   this.cheight = ch;
   this.cscale = ch0/ch; // x  = cscale * cx
-  this.fscale = ch/ch0; // cx = fscale * x
+  this.fscale = 1 / this.cscale; // cx = fscale * x
   this.original_width = cw0;
   this.original_height = ch0;
   this.file_html_element_size_css = 'width:' + cw + 'px;height:' + ch + 'px;';
+  console.log(this.cscale + ':' + this.fscale + ':' + ar)
 
   switch( this.d.store.config.ui.file_content_align ) {
   case 'center':
@@ -200,6 +206,7 @@ _via_file_annotator.prototype._file_html_element_compute_scale = function() {
 _via_file_annotator.prototype._file_html_element_ready = function() {
   this._file_html_element_compute_scale();
   this.file_html_element.setAttribute('style', this.file_html_element_size_css);
+  this.file_html_element.setAttribute('id', 'file_content');
   this.c.appendChild(this.file_html_element);
 
   // add canvas for region shape
@@ -211,15 +218,19 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this.rshapectx = this.rshape_canvas.getContext('2d', { alpha:true });
   this.c.appendChild(this.rshape_canvas);
 
-  this.rinput_canvas = document.createElement('canvas');
-  this.rinput_canvas.setAttribute('style', this.file_html_element_size_css);
-  this.rinput_canvas.setAttribute('id', 'region_input');
-  this.rinput_canvas.setAttribute('tabindex', '1');
-  this.rinput_canvas.width = this.cwidth;
-  this.rinput_canvas.height = this.cheight;
-  this.rinputctx = this.rinput_canvas.getContext('2d', { alpha:true });
-  this._rinput_attach_input_handlers();
-  this.c.appendChild(this.rinput_canvas);
+  this.tempr_canvas = document.createElement('canvas');
+  this.tempr_canvas.setAttribute('style', this.file_html_element_size_css);
+  this.tempr_canvas.setAttribute('id', 'region_input');
+  this.tempr_canvas.width = this.cwidth;
+  this.tempr_canvas.height = this.cheight;
+  this.temprctx = this.tempr_canvas.getContext('2d', { alpha:true });
+  this.c.appendChild(this.tempr_canvas);
+
+  this.input = document.createElement('div');
+  this.input.setAttribute('style', this.file_html_element_size_css);
+  this.input.setAttribute('id', 'input');
+  this._rinput_attach_input_handlers(this.input);
+  this.c.appendChild(this.input);
 
   // draw all existing regions
   this._creg_reload();
@@ -234,12 +245,12 @@ _via_file_annotator.prototype._file_html_element_error = function() {
 //
 // input event listeners
 //
-_via_file_annotator.prototype._rinput_attach_input_handlers = function() {
-  this.rinput_canvas.addEventListener('mousedown', this._rinput_mousedown_handler.bind(this));
-  this.rinput_canvas.addEventListener('mouseup', this._rinput_mouseup_handler.bind(this));
-  this.rinput_canvas.addEventListener('mousemove', this._rinput_mousemove_handler.bind(this));
+_via_file_annotator.prototype._rinput_attach_input_handlers = function(container) {
+  container.addEventListener('mousedown', this._rinput_mousedown_handler.bind(this));
+  container.addEventListener('mouseup', this._rinput_mouseup_handler.bind(this));
+  container.addEventListener('mousemove', this._rinput_mousemove_handler.bind(this));
 
-  this.rinput_canvas.addEventListener('keydown', this._rinput_keydown_handler.bind(this));
+  container.addEventListener('keydown', this._rinput_keydown_handler.bind(this));
 }
 
 _via_file_annotator.prototype._rinput_remove_input_handlers = function() {
@@ -471,19 +482,19 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
         switch(cp_index) {
         case 1: // top center
         case 3: // bottom center
-          this.rinput_canvas.style.cursor = 'row-resize';
+          this.input.style.cursor = 'row-resize';
           break;
         case 2: // right center
         case 4: // left center
-          this.rinput_canvas.style.cursor = 'col-resize';
+          this.input.style.cursor = 'col-resize';
           break;
         case 5: // corner top-right
         case 7: // corner bottom-left
-          this.rinput_canvas.style.cursor = 'nesw-resize';
+          this.input.style.cursor = 'nesw-resize';
           break;
         case 6: // corner bottom-right
         case 8: // corner top-left
-          this.rinput_canvas.style.cursor = 'nwse-resize';
+          this.input.style.cursor = 'nwse-resize';
           break;
         }
         break;
@@ -491,11 +502,11 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
       case _VIA_RSHAPE.LINE:
       case _VIA_RSHAPE.POLYGON:
       case _VIA_RSHAPE.POLYLINE:
-        this.rinput_canvas.style.cursor = 'cell';
+        this.input.style.cursor = 'cell';
         break;
       }
     } else {
-      this.rinput_canvas.style.cursor = 'default';
+      this.input.style.cursor = 'default';
     }
     return;
   }
@@ -522,7 +533,7 @@ _via_file_annotator.prototype._rinput_pts_canvas_to_file = function(canvas_input
   var n = canvas_input_pts.length;
   var x, y;
   for ( var i = 0; i < n; ++i ) {
-    file_input_pts[i] = Math.floor( canvas_input_pts[i] * this.cscale );
+    file_input_pts[i] = parseFloat((canvas_input_pts[i] * this.cscale).toFixed(3));
   }
   return file_input_pts;
 }
@@ -628,7 +639,7 @@ _via_file_annotator.prototype._metadata_resize_region = function(mindex, cpindex
     var mid = this.selected_mid_list[mindex];
     var x = cx * this.cscale;
     var y = cy * this.cscale;
-    var moved_xy = this._creg_move_control_point(this.d.store.view[this.vid].d[mid].xy,
+    var moved_xy = this._creg_move_control_point(this.d.store.metadata[mid].xy,
                                                  cpindex, x, y);
     this.d.metadata_update_xy(this.vid, mid, moved_xy).then( function(ok) {
       ok_callback(ok.mid);
@@ -644,12 +655,11 @@ _via_file_annotator.prototype._metadata_move_region = function(mid_list, cdx, cd
     var mid, shape_id;
     var dx = cdx * this.cscale;
     var dy = cdy * this.cscale;
-    console.log(dx + ',' + dy)
     var promise_list = [];
     var n = mid_list.length;
     for ( var i = 0; i < n; ++i ) {
       mid = mid_list[i];
-      var new_xy  = this._metadata_move_xy(this.d.store.view[this.vid].d[mid].xy, dx, dy);
+      var new_xy  = this._metadata_move_xy(this.d.store.metadata[mid].xy, dx, dy);
       promise_list.push( this.d.metadata_update_xy(this.vid, mid, new_xy) );
     }
 
@@ -666,10 +676,10 @@ _via_file_annotator.prototype._metadata_add = function(region_shape, canvas_inpu
   return new Promise( function(ok_callback, err_callback) {
     var file_input_pts = this._rinput_pts_canvas_to_file(canvas_input_pts);
     var xy = this._metadata_pts_to_xy(region_shape, file_input_pts);
-
+    console.log(xy)
     this.d.metadata_add(this.vid, [], xy, {}).then( function(ok) {
+      console.log(this.d.store.metadata[ok.mid])
       ok_callback(ok.mid);
-      console.log(this.d.store.view[this.vid].d[ok.mid])
     }.bind(this), function(err) {
       console.warn(err);
       err_callback();
@@ -678,10 +688,10 @@ _via_file_annotator.prototype._metadata_add = function(region_shape, canvas_inpu
 }
 
 _via_file_annotator.prototype._metadata_xy_to_creg = function(vid, mid) {
-  var cxy = this.d.store.view[vid].d[mid].xy.slice(0);
+  var cxy = this.d.store.metadata[mid].xy.slice(0);
   var n = cxy.length;
   for ( var i = 1; i < n; ++i ) {
-    cxy[i] = Math.floor( cxy[i] * this.fscale );
+    cxy[i] = this.d.store.metadata[mid].xy[i] * this.fscale;
   }
   return cxy;
 }
@@ -780,9 +790,10 @@ _via_file_annotator.prototype._creg_reload = function() {
 
 _via_file_annotator.prototype._creg_add_all = function(vid) {
   this.creg = {};
-  for ( var mid in this.d.store.view[vid].d ) {
-    console.log(mid)
-    this.creg[mid] = this._metadata_xy_to_creg(vid, mid);
+  for ( var mid in this.d.cache.mid_list[vid] ) {
+    if ( this.d.cache.mid_list[vid][mid] === 1 ) {
+      this.creg[mid] = this._metadata_xy_to_creg(vid, mid);
+    }
   }
 }
 
@@ -799,6 +810,12 @@ _via_file_annotator.prototype._creg_draw_all = function() {
   for ( var mid in this.creg ) {
     this._creg_draw(mid);
   }
+
+  // add file label
+  this.rshapectx.fillStyle = 'yellow';
+  this.rshapectx.font = '16px mono';
+  var label_width = this.rshapectx.measureText(this.file_label).width;
+  this.rshapectx.fillText(this.file_label, this.rshape_canvas.width/2 - label_width/2, 20);
 }
 
 _via_file_annotator.prototype._creg_draw = function(mid) {
@@ -1097,7 +1114,7 @@ _via_file_annotator.prototype._on_event_view_update = function(data, event_paylo
 _via_file_annotator.prototype._tmpreg_draw_region = function(shape_id, pts) {
   var xy = this._metadata_pts_to_xy(shape_id, pts);
   this._tmpreg_clear();
-  this._draw(this.rinputctx, xy);
+  this._draw(this.temprctx, xy);
 }
 
 _via_file_annotator.prototype._tmpreg_move_sel_regions = function(dx, dy) {
@@ -1105,18 +1122,18 @@ _via_file_annotator.prototype._tmpreg_move_sel_regions = function(dx, dy) {
   for ( mindex in this.selected_mid_list ) {
     mid = this.selected_mid_list[mindex];
     var new_cxy = this._metadata_move_xy(this.creg[mid], dx, dy);
-    this._draw(this.rinputctx, new_cxy, false);
+    this._draw(this.temprctx, new_cxy, false);
   }
 }
 
 _via_file_annotator.prototype._tmpreg_move_sel_region_cp = function(mindex, cpindex, cx, cy) {
   var mid = this.selected_mid_list[mindex];
   var moved_cxy = this._creg_move_control_point(this.creg[mid], cpindex, cx, cy);
-  this._draw(this.rinputctx, moved_cxy, false);
+  this._draw(this.temprctx, moved_cxy, false);
 }
 
 _via_file_annotator.prototype._tmpreg_clear = function() {
-  this.rinputctx.clearRect(0, 0, this.rinput_canvas.width, this.rinput_canvas.height);
+  this.temprctx.clearRect(0, 0, this.tempr_canvas.width, this.tempr_canvas.height);
 }
 
 //

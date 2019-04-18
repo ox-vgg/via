@@ -12,11 +12,14 @@
 
 'use strict';
 
-const _VIA_RSHAPE  = { 'POINT':1, 'RECT':2, 'CIRCLE':3, 'ELLIPSE':4, 'LINE':5, 'POLYLINE':6, 'POLYGON':7, 'FILE':8 };
+const _VIA_RSHAPE  = { 'POINT':1, 'RECT':2, 'CIRCLE':3, 'ELLIPSE':4, 'LINE':5, 'POLYLINE':6, 'POLYGON':7 };
+const _VIA_METADATA_FLAG = { 'DELETED':1, 'HIDDEN':2, 'RESERVED1':4, 'RESERVED2':8, }
 
-function _via_metadata(z, xy, v) {
-  this.z  = z;  // time or frame index
-  this.xy = xy; // [shape_id, shape_coordinates, ...]
-  this.v  = v;  // attribute-value pair e.g. {attribute_id : attribute_value, ...}
+function _via_metadata(vid, z, xy, av) {
+  this.vid = vid;   // view id
+  this.flg = 0;     // flags: [deleted, hidden, ...]
+  this.z   = z;     // time or frame index
+  this.xy  = xy;    // [shape_id, shape_coordinates, ...]
+  this.av  = av;    // attribute-value pair e.g. {attribute_id : attribute_value, ...}
 }
 

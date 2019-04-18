@@ -9,8 +9,7 @@
 
 'use strict'
 
-function _via_view(f, d) {
-  this.f = f; // [ fid0, fid1, ... ]
-  this.d = d; // { 'mid1': {'z':..., 'xy':..., 'v':...}, 'mid2': {...}, ... }
+function _via_view(fid_list) {
+  this.fid_list = fid_list; // [ [fid00, fid01, ...], [fid10, fid11, ...] ]
 }
 
