@@ -2165,6 +2165,14 @@ function _via_move_selected_regions(move_x, move_y) {
   }
 }
 
+function _via_validate_move_region(x, y) {
+  if (x < 0 || y < 0) {
+      show_message('Region moved beyond image boundary. Resetting.');
+      return false;
+  }
+  return true;
+}
+
 function _via_move_region(region_id, move_x, move_y) {
   var image_attr = _via_img_metadata[_via_image_id].regions[region_id].shape_attributes;
   var canvas_attr = _via_canvas_regions[region_id].shape_attributes;
@@ -2173,6 +2181,10 @@ function _via_move_region(region_id, move_x, move_y) {
   case VIA_REGION_SHAPE.RECT:
     var xnew = image_attr['x'] + Math.round(move_x * _via_canvas_scale);
     var ynew = image_attr['y'] + Math.round(move_y * _via_canvas_scale);
+
+    var is_valid = _via_validate_move_region(xnew, ynew);
+    if (! is_valid ) { break; }
+
     image_attr['x'] = xnew;
     image_attr['y'] = ynew;
 
@@ -2185,6 +2197,10 @@ function _via_move_region(region_id, move_x, move_y) {
   case VIA_REGION_SHAPE.POINT:
     var cxnew = image_attr['cx'] + Math.round(move_x * _via_canvas_scale);
     var cynew = image_attr['cy'] + Math.round(move_y * _via_canvas_scale);
+
+    var is_valid = _via_validate_move_region(cxnew, cynew);
+    if (! is_valid ) { break; }
+
     image_attr['cx'] = cxnew;
     image_attr['cy'] = cynew;
 
@@ -2196,6 +2212,21 @@ function _via_move_region(region_id, move_x, move_y) {
   case VIA_REGION_SHAPE.POLYGON:
     var img_px = image_attr['all_points_x'];
     var img_py = image_attr['all_points_y'];
+    // clone for reverting if valiation fails
+    var img_px_old = Object.assign({}, img_px);
+    var img_py_old = Object.assign({}, img_py);
+
+    // validate move
+    for (var i=0; i<img_px.length; ++i) {
+      var pxnew = img_px[i] + Math.round(move_x * _via_canvas_scale);
+      var pynew = img_py[i] + Math.round(move_y * _via_canvas_scale);
+      if (! _via_validate_move_region(pxnew, pynew) ) {
+        img_px = img_px_old;
+        img_py = img_py_old;
+        break;
+      }
+    }
+    // move points
     for (var i=0; i<img_px.length; ++i) {
       img_px[i] = img_px[i] + Math.round(move_x * _via_canvas_scale);
       img_py[i] = img_py[i] + Math.round(move_y * _via_canvas_scale);
