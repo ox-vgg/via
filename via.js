@@ -2165,10 +2165,32 @@ function _via_move_selected_regions(move_x, move_y) {
   }
 }
 
-function _via_validate_move_region(x, y) {
-  if (x < 0 || y < 0) {
-      show_message('Region moved beyond image boundary. Resetting.');
-      return false;
+function _via_validate_move_region(x, y, canvas_attr) {
+  switch( canvas_attr['name'] ) {
+    case VIA_REGION_SHAPE.RECT:
+      // left and top boundary check
+      if (x < 0 || y < 0) {
+          show_message('Region moved beyond image boundary. Resetting.');
+          return false;
+      }
+      // right and bottom boundary check
+      if ((y + canvas_attr['height']) > _via_current_image_height ||
+          (x + canvas_attr['width']) > _via_current_image_width) {
+            show_message('Region moved beyond image boundary. Resetting.');
+            return false;
+      }
+
+    // same validation for all
+    case VIA_REGION_SHAPE.CIRCLE:
+    case VIA_REGION_SHAPE.ELLIPSE:
+    case VIA_REGION_SHAPE.POINT:
+    case VIA_REGION_SHAPE.POLYLINE:
+    case VIA_REGION_SHAPE.POLYGON:
+      if (x < 0 || y < 0 ||
+          x > _via_current_image_width || y > _via_current_image_height) {
+          show_message('Region moved beyond image boundary. Resetting.');
+          return false;
+      }
   }
   return true;
 }
@@ -2182,7 +2204,7 @@ function _via_move_region(region_id, move_x, move_y) {
     var xnew = image_attr['x'] + Math.round(move_x * _via_canvas_scale);
     var ynew = image_attr['y'] + Math.round(move_y * _via_canvas_scale);
 
-    var is_valid = _via_validate_move_region(xnew, ynew);
+    var is_valid = _via_validate_move_region(xnew, ynew, canvas_attr);
     if (! is_valid ) { break; }
 
     image_attr['x'] = xnew;
@@ -2198,7 +2220,7 @@ function _via_move_region(region_id, move_x, move_y) {
     var cxnew = image_attr['cx'] + Math.round(move_x * _via_canvas_scale);
     var cynew = image_attr['cy'] + Math.round(move_y * _via_canvas_scale);
 
-    var is_valid = _via_validate_move_region(cxnew, cynew);
+    var is_valid = _via_validate_move_region(cxnew, cynew, canvas_attr);
     if (! is_valid ) { break; }
 
     image_attr['cx'] = cxnew;
@@ -2212,6 +2234,8 @@ function _via_move_region(region_id, move_x, move_y) {
   case VIA_REGION_SHAPE.POLYGON:
     var img_px = image_attr['all_points_x'];
     var img_py = image_attr['all_points_y'];
+    var canvas_px = canvas_attr['all_points_x'];
+    var canvas_py = canvas_attr['all_points_y'];
     // clone for reverting if valiation fails
     var img_px_old = Object.assign({}, img_px);
     var img_py_old = Object.assign({}, img_py);
@@ -2220,7 +2244,7 @@ function _via_move_region(region_id, move_x, move_y) {
     for (var i=0; i<img_px.length; ++i) {
       var pxnew = img_px[i] + Math.round(move_x * _via_canvas_scale);
       var pynew = img_py[i] + Math.round(move_y * _via_canvas_scale);
-      if (! _via_validate_move_region(pxnew, pynew) ) {
+      if (! _via_validate_move_region(pxnew, pynew, canvas_attr) ) {
         img_px = img_px_old;
         img_py = img_py_old;
         break;
@@ -2232,8 +2256,6 @@ function _via_move_region(region_id, move_x, move_y) {
       img_py[i] = img_py[i] + Math.round(move_y * _via_canvas_scale);
     }
 
-    var canvas_px = canvas_attr['all_points_x'];
-    var canvas_py = canvas_attr['all_points_y'];
     for (var i=0; i<canvas_px.length; ++i) {
       canvas_px[i] = Math.round( img_px[i] / _via_canvas_scale );
       canvas_py[i] = Math.round( img_py[i] / _via_canvas_scale );
