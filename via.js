@@ -2204,7 +2204,7 @@ function _via_move_region(region_id, move_x, move_y) {
     var xnew = image_attr['x'] + Math.round(move_x * _via_canvas_scale);
     var ynew = image_attr['y'] + Math.round(move_y * _via_canvas_scale);
 
-    var is_valid = _via_validate_move_region(xnew, ynew, canvas_attr);
+    var is_valid = _via_validate_move_region(xnew, ynew, image_attr);
     if (! is_valid ) { break; }
 
     image_attr['x'] = xnew;
@@ -2220,7 +2220,7 @@ function _via_move_region(region_id, move_x, move_y) {
     var cxnew = image_attr['cx'] + Math.round(move_x * _via_canvas_scale);
     var cynew = image_attr['cy'] + Math.round(move_y * _via_canvas_scale);
 
-    var is_valid = _via_validate_move_region(cxnew, cynew, canvas_attr);
+    var is_valid = _via_validate_move_region(cxnew, cynew, image_attr);
     if (! is_valid ) { break; }
 
     image_attr['cx'] = cxnew;
@@ -2244,7 +2244,7 @@ function _via_move_region(region_id, move_x, move_y) {
     for (var i=0; i<img_px.length; ++i) {
       var pxnew = img_px[i] + Math.round(move_x * _via_canvas_scale);
       var pynew = img_py[i] + Math.round(move_y * _via_canvas_scale);
-      if (! _via_validate_move_region(pxnew, pynew, canvas_attr) ) {
+      if (! _via_validate_move_region(pxnew, pynew, image_attr) ) {
         img_px = img_px_old;
         img_py = img_py_old;
         break;
