@@ -15,7 +15,7 @@ const _VIA_ATTRIBUTE_ANCHOR = {
   'FILE1_Z0_XY0':[ 1, 0, 0],   // File attribute (e.g. image caption)
   'FILE1_Z0_XY1':[ 1, 0, 1],   // File region attribute (e.g. object name)
   'FILE1_Z0_XYN':[ 1, 0,-1],   // File region composed of multiple disconnected regions
-  'FILE1_Z1_XY0':[ 1, 1, 0],   // Time marker in video or audio (e.g tongue clicks)
+  'FILE1_Z1_XY0':[ 1, 1, 0],   // Time marker in video or audio (e.g tongue clicks, speaker diarisation)
   'FILE1_Z1_XY1':[ 1, 1, 1],   // A video frame region
   'FILE1_Z1_XYN':[ 1, 1,-1],   // A video frame region composed of multiple disconnected regions
   'FILE1_Z2_XY0':[ 1, 2, 0],   // Temporal segment (start-time, end-time) in video or audio

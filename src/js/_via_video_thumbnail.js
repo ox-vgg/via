@@ -9,8 +9,9 @@
 
 'use strict';
 
-function _via_video_thumbnail(file) {
+function _via_video_thumbnail(file, path) {
   this.file = file;
+  this.file_path = path;
   this.fwidth = 160;
   this.file_object_url = undefined; // file contents are in this the object url
   this.frames = {}; // indexed by second
@@ -46,56 +47,49 @@ _via_video_thumbnail.prototype._on_event_destroy = function() {
   }
 }
 
-_via_video_thumbnail.prototype.start = function() {
+_via_video_thumbnail.prototype.load = function() {
   return new Promise( function(ok_callback, err_callback) {
-    if ( this.file.src instanceof File ) {
-      this._read_file().then( function(file_src_ok) {
-        this._load_video(file_src_ok).then( function() {
-          this.video.currentTime = 0.0;
-          ok_callback();
-        }.bind(this), function(err) {
-          console.log(err);
-          err_callback();
-        }.bind(this));
-      }.bind(this), function(file_src_err) {
-        console.log(file_src_err);
-        err_callback();
-      }.bind(this));
-    } else {
-      this._load_video(this.file.src).then( function() {
+    this._file_read().then( function(file_src_ok) {
+      this._load_video(file_src_ok).then( function() {
         this.video.currentTime = 0.0;
         ok_callback();
-      }.bind(this), function(err) {
-        console.log(err);
+      }.bind(this), function(load_err) {
+        console.log(load_err);
         err_callback();
       }.bind(this));
-    }
+    }.bind(this), function(file_src_err) {
+      console.log(file_src_err);
+      err_callback();
+    }.bind(this));
   }.bind(this));
 }
 
-_via_video_thumbnail.prototype._read_file = function() {
+_via_video_thumbnail.prototype._file_read = function() {
   return new Promise( function(ok_callback, err_callback) {
-    var file_reader = new FileReader();
-    file_reader.addEventListener('error', function() {
-      console.log('_via_video_thumbnail._read_file() error');
-      err_callback('error');
-    }.bind(this));
-    file_reader.addEventListener('abort', function() {
-      console.log('_via_video_thumbnail._read_file() abort');
-      err_callback('abort')
-    }.bind(this));
-    file_reader.addEventListener('load', function() {
-      var blob = new Blob( [ file_reader.result ],
-                           { type: this.file.src.type }
-                         );
-      // we keep a reference of file object URL so that we can revoke it when not needed
-      // WARNING: ensure that this._destructor() gets called when "this" not needed
-      this.file_object_url = URL.createObjectURL(blob);
-      console.log(this.file_object_url)
-      ok_callback(this.file_object_url);
-    }.bind(this));
-    console.log(this.file.src)
-    file_reader.readAsArrayBuffer( this.file.src );
+    if ( this.file.src instanceof File ) {
+      var file_reader = new FileReader();
+      file_reader.addEventListener('error', function(e) {
+        console.log('_via_file_annotator._file_read() error');
+        console.warn(e.target.error)
+        err_callback(this.file);
+      }.bind(this));
+      file_reader.addEventListener('abort', function() {
+        console.log('_via_file_annotator._file_read() abort');
+        err_callback(this.file)
+      }.bind(this));
+      file_reader.addEventListener('load', function() {
+        var blob = new Blob( [ file_reader.result ],
+                             { type: this.file.src.type }
+                           );
+        // we keep a reference of file object URL so that we can revoke it when not needed
+        // WARNING: ensure that this._destroy_file_object_url() gets called when "this" not needed
+        this.file_object_url = URL.createObjectURL(blob);
+        ok_callback(this.file_object_url);
+      }.bind(this));
+      file_reader.readAsArrayBuffer( this.file_path + this.file.src );
+    } else {
+      ok_callback( this.file_path + this.file.src ); // read from URL
+    }
   }.bind(this));
 }
 

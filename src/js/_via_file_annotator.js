@@ -7,18 +7,20 @@
 
 'use strict';
 
-var _VIA_RINPUT_STATE = { UNKNOWN:1,
-                          IDLE:2,
-                          REGION_SELECTED: 3,
-                          REGION_SELECT_OR_DRAW_POSSIBLE: 4,
-                          SELECT_ALL_INSIDE_AN_AREA_ONGOING: 5,
-                          REGION_UNSELECT_ONGOING: 6,
-                          REGION_SELECT_TOGGLE_ONGOING: 7,
-                          REGION_MOVE_ONGOING: 8,
-                          REGION_RESIZE_ONGOING: 9,
-                          REGION_DRAW_ONGOING: 10,
-                          REGION_DRAW_NCLICK_ONGOING: 11,
-                        }
+var _VIA_RINPUT_STATE = {
+  UNKNOWN: 0,
+  SUSPEND: 1,
+  IDLE: 2,
+  REGION_SELECTED: 3,
+  REGION_SELECT_OR_DRAW_POSSIBLE: 4,
+  SELECT_ALL_INSIDE_AN_AREA_ONGOING: 5,
+  REGION_UNSELECT_ONGOING: 6,
+  REGION_SELECT_TOGGLE_ONGOING: 7,
+  REGION_MOVE_ONGOING: 8,
+  REGION_RESIZE_ONGOING: 9,
+  REGION_DRAW_ONGOING: 10,
+  REGION_DRAW_NCLICK_ONGOING: 11,
+};
 
 function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.va = view_annotator;
@@ -76,15 +78,32 @@ _via_file_annotator.prototype._init = function() {
 
   this.fid = this.d.store.view[this.vid].fid_list[0];
   this.file = this.d.store.file[this.fid];
+}
 
-  this._file_read().then( function(file_src) {
-    this.file_html_element = this._file_create_html_element(this.file);
-    this.file_html_element.setAttribute('title', this.file.fname);
-    this.file_html_element.setAttribute('src', file_src);
-    // _file_html_element_ready() will be invoked when load is complete
-  }.bind(this), function(err) {
-    console.warn('Failed to read file: ' + this.file);
-    console.log(err);
+_via_file_annotator.prototype._file_load = function() {
+  return new Promise( function(ok_callback, err_callback) {
+    this._file_read().then( function(file_src) {
+      this.file_html_element = this._file_create_html_element(this.file);
+      this.file_html_element.setAttribute('title', this.file.fname);
+      this.file_html_element.setAttribute('src', file_src);
+      this.file_html_element.addEventListener('loadeddata', function() {
+        this._file_html_element_ready();
+        ok_callback();
+      }.bind(this));
+      this.file_html_element.addEventListener('abort', function() {
+        err_callback();
+      }.bind(this));
+      this.file_html_element.addEventListener('stalled', function() {
+        err_callback();
+      }.bind(this));
+      this.file_html_element.addEventListener('error', function() {
+        err_callback();
+      }.bind(this));
+    }.bind(this), function(err) {
+      console.warn('Failed to read file: ' + this.file);
+      console.log(err);
+      err_callback();
+    }.bind(this));
   }.bind(this));
 }
 
@@ -96,9 +115,14 @@ _via_file_annotator.prototype._file_create_html_element = function(file) {
     media.setAttribute('controls', '');
     // @todo : add subtitle track for video
     media.setAttribute('preload', 'auto');
-    media.addEventListener('loadeddata', this._file_html_element_ready.bind(this));
-    media.addEventListener('stalled', this._file_html_element_error.bind(this));
-    media.addEventListener('suspend', this._file_html_element_error.bind(this));
+    media.addEventListener('pause', function(e) {
+      this._rinput_enable();
+    }.bind(this));
+    media.addEventListener('play', function(e) {
+      this._rinput_disable();
+    }.bind(this));
+
+    //media.addEventListener('suspend', this._file_html_element_error.bind(this));
     break;
 
   case _VIA_FILE_TYPE.IMAGE:
@@ -113,8 +137,6 @@ _via_file_annotator.prototype._file_create_html_element = function(file) {
   default:
     console.warn('unknown file type = ' + this.file.type);
   }
-  media.addEventListener('abort', this._file_html_element_error.bind(this));
-  media.addEventListener('error', this._file_html_element_error.bind(this));
   return media;
 }
 
@@ -213,6 +235,7 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this.rshape_canvas = document.createElement('canvas');
   this.rshape_canvas.setAttribute('style', this.file_html_element_size_css);
   this.rshape_canvas.setAttribute('id', 'region_shape');
+  this.rshape_canvas.style.pointerEvents = 'none';
   this.rshape_canvas.width = this.cwidth;
   this.rshape_canvas.height = this.cheight;
   this.rshapectx = this.rshape_canvas.getContext('2d', { alpha:true });
@@ -221,6 +244,7 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this.tempr_canvas = document.createElement('canvas');
   this.tempr_canvas.setAttribute('style', this.file_html_element_size_css);
   this.tempr_canvas.setAttribute('id', 'region_input');
+  this.tempr_canvas.style.pointerEvents = 'none';
   this.tempr_canvas.width = this.cwidth;
   this.tempr_canvas.height = this.cheight;
   this.temprctx = this.tempr_canvas.getContext('2d', { alpha:true });
@@ -229,6 +253,7 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this.input = document.createElement('div');
   this.input.setAttribute('style', this.file_html_element_size_css);
   this.input.setAttribute('id', 'input');
+  this.input.style.pointerEvents = 'none';
   this._rinput_attach_input_handlers(this.input);
   this.c.appendChild(this.input);
 
@@ -236,10 +261,6 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this._creg_reload();
 
   this._state_set(_VIA_RINPUT_STATE.IDLE);
-}
-
-_via_file_annotator.prototype._file_html_element_error = function() {
-  this.c.innerHTML += 'Error'
 }
 
 //
@@ -383,10 +404,13 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
     default:
       // region shape requiring just two points (rectangle, circle, ellipse, etc.)
       this.user_input_pts.push(cx, cy);
-      if ( this._is_user_input_pts_equal() &&
-           this.va.region_draw_shape !== _VIA_RSHAPE.POINT
-         ) {
-        _via_util_msg_show('Discarded degenerate region');
+      if ( this._is_user_input_pts_equal() ) {
+        if ( this.va.region_draw_shape !== _VIA_RSHAPE.POINT ) {
+          _via_util_msg_show('Discarded degenerate region');
+        } else {
+          var canvas_input_pts = this.user_input_pts.slice(0);
+          this._metadata_add(this.va.region_draw_shape, canvas_input_pts);
+        }
       } else {
         var canvas_input_pts = this.user_input_pts.slice(0);
         this._metadata_add(this.va.region_draw_shape, canvas_input_pts);
@@ -811,11 +835,13 @@ _via_file_annotator.prototype._creg_draw_all = function() {
     this._creg_draw(mid);
   }
 
-  // add file label
-  this.rshapectx.fillStyle = 'yellow';
-  this.rshapectx.font = '16px mono';
-  var label_width = this.rshapectx.measureText(this.file_label).width;
-  this.rshapectx.fillText(this.file_label, this.rshape_canvas.width/2 - label_width/2, 20);
+  // add file label (if any)
+  if ( this.file_label.length !== 0 ) {
+    this.rshapectx.fillStyle = 'yellow';
+    this.rshapectx.font = '16px mono';
+    var label_width = this.rshapectx.measureText(this.file_label).width;
+    this.rshapectx.fillText(this.file_label, this.rshape_canvas.width/2 - label_width/2, 20);
+  }
 }
 
 _via_file_annotator.prototype._creg_draw = function(mid) {
@@ -1339,4 +1365,26 @@ _via_file_annotator.prototype._draw_control_point = function(ctx, cx, cy) {
   ctx.fillStyle = this.conf.CONTROL_POINT_COLOR;
   ctx.globalAlpha = 1.0;
   ctx.fill();
+}
+
+
+//
+// region draw enable/disable
+//
+_via_file_annotator.prototype._rinput_enable = function() {
+  console.log('rinput enabled');
+  this._state_set(_VIA_RINPUT_STATE.IDLE);
+  this.input.style.pointerEvents = 'auto';
+  this.input.classList.add('rinput_enabled');
+  _via_util_msg_show('Region drawing is now enabled. ' +
+                     'Press <span class="key">Space</span> to play the video and disable region drawing.', true);
+}
+
+_via_file_annotator.prototype._rinput_disable = function() {
+  console.log('rinput disabled');
+  this._state_set(_VIA_RINPUT_STATE.SUSPEND);
+  this.input.style.pointerEvents = 'none';
+  this.input.classList.remove('rinput_enabled');
+  _via_util_msg_show('Region drawing is now disabled. ' +
+                     'Press <span class="key">Space</span> to pause the video and enable region drawing.', true);
 }

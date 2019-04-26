@@ -1,23 +1,29 @@
 'use strict'
 
+// 0: speaker diarisation
+// 1: ...
+var _VIA_DEBUG_PROJECT_INDEX = 0;
+
 var data = new _via_data();
 
-if ( true ) {
-  data.store = JSON.parse(_via_debug_project_json_str);
+if ( _VIA_DEBUG_PROJECT_INDEX < _via_dp.length ) {
+  data.store = _via_dp[_VIA_DEBUG_PROJECT_INDEX]['store'];
+  console.log(data.store)
   data._cache_update();
 }
 
 var view_annotator_container = document.getElementById('view_container');
 var view_annotator = new _via_view_annotator(data, view_annotator_container);
 
-/*
-window.addEventListener('keydown', function(e) {
+var via_container = document.getElementById('via_container');
+via_container.focus()
+console.log(via_container)
+via_container.addEventListener('keydown', function(e) {
   // avoid handling events when text input field is in focus
   if ( e.target.type !== 'text' ) {
-    annotator._on_event_keydown(e);
+    view_annotator._on_event_keydown(e);
   }
 });
-*/
 
 var view_manager_container = document.getElementById('view_manager_container');
 var view_manager = new _via_view_manager(data, view_annotator, view_manager_container);

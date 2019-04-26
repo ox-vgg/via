@@ -16,7 +16,7 @@ function _via_data() {
     'pname':'Default Project',
     'data_format_version':'3.1.0',
     'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
-    'created': new Date().toString(),
+    'created': Date.now(),
   }
   this.store['config'] = {
     'file': { 'path':'' },
@@ -189,6 +189,29 @@ _via_data.prototype.metadata_update_xy = function(vid, mid, xy) {
       }
 
       this.store.metadata[mid].xy = xy.slice(0);
+      this.emit_event( 'metadata_update', { 'vid':vid, 'mid':mid } );
+      ok_callback({'vid':vid, 'mid':mid});
+    }
+    catch(ex) {
+      console.log(xy);
+      err_callback(ex);
+    }
+  }.bind(this));
+}
+
+_via_data.prototype.metadata_update_av = function(vid, mid, aid, avalue) {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      if ( ! this.store.view.hasOwnProperty(vid) ) {
+        err_callback({'vid':vid});
+        return;
+      }
+      if ( ! this.store.metadata.hasOwnProperty(mid) ) {
+        err_callback({'mid':mid});
+        return;
+      }
+
+      this.store.metadata[mid].av[aid] = avalue;
       this.emit_event( 'metadata_update', { 'vid':vid, 'mid':mid } );
       ok_callback({'vid':vid, 'mid':mid});
     }

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>VIA</title>
+    <title>VIA : MRI Stenosis</title>
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 500 KB) that runs on most modern web browsers.">
 
@@ -29,7 +29,7 @@
   </head>
 
   <body onresize="_via_on_browser_resize()">
-    <div class="via" id="via_container" tabindex="0">
+    <div class="via">
       <div id="_via_message_container" class="message_container" onclick="_via_util_msg_hide()">
         <div id="_via_message"></div>
       </div>
@@ -231,8 +231,10 @@ POSSIBILITY OF SUCH DAMAGE.
 
     <script src="../js/_via_editor.js"></script>
 
-    <script src="../js/_via_debug_project.js"></script>
-    <script src="../js/_via_debug.js"></script>
+    <script src="../../debug/data/_via_mri_stenosis_data.js"></script>
+    <script src="../../debug/data/_via_mri_stenosis_debug.js">
+
+    </script>
     <!--
         SVG icons
         Icons prefixed with "micon_" are downloaded from https://material.io/icons

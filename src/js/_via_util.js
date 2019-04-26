@@ -302,7 +302,7 @@ function _via_util_msg_show(msg, sticky) {
       }, _VIA_CONFIG.MSG_TIMEOUT);
     }
 
-    content.innerHTML = msg;
+    content.innerHTML = msg + '<span class="message_panel_close_button">&times;</span>';
     container.style.display = 'block';
   }
 }

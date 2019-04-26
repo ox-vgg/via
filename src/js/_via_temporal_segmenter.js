@@ -12,9 +12,9 @@
 
 'use strict';
 
-function _via_temporal_segmenter(container, file, data, media_element) {
+function _via_temporal_segmenter(container, vid, data, media_element) {
   this.c = container;
-  this.file = file;
+  this.vid = vid;
   this.d = data;
   this.m = media_element;
 
@@ -31,7 +31,7 @@ function _via_temporal_segmenter(container, file, data, media_element) {
   this.EDGE_UPDATE_TIME_DELTA = 1/50;  // in sec
   this.TEMPORAL_SEG_MOVE_OFFSET = 1;   // in sec
   this.DEFAULT_TEMPORAL_SEG_LEN = 1;   // in sec
-  this.GTIMELINE_HEIGHT = 5;           // units of char width
+  this.GTIMELINE_HEIGHT = 4;           // units of char width
   this.GTIMELINE_ZOOM_OFFSET = 4;      // in pixels
   this.DEFAULT_WIDTH_PER_SEC = 6;      // units of char width
   this.GID_COL_WIDTH = 15;             // units of char width
@@ -69,7 +69,10 @@ function _via_temporal_segmenter(container, file, data, media_element) {
 
 _via_temporal_segmenter.prototype._init = function() {
   try {
-    this._group_init('0'); // for debug
+    var fid = this.d.store.view[this.vid].fid_list[0];
+    this.file = this.d.store.file[fid];
+
+    this._group_init('1'); // for debug
 
     this._thumbview_init();
     this._vtimeline_init();
@@ -107,7 +110,7 @@ _via_temporal_segmenter.prototype._redraw_all = function() {
   // lock playback in the selected temporal segment
   if ( this.selected_mindex !== -1 ) {
     if ( ! this.m.paused ) {
-      var t = this.d.metadata_store[this.selected_mid].z;
+      var t = this.d.store.metadata[this.selected_mid].z;
       if ( tnow > t[1] ) {
         this.m.currentTime = t[0];
       }
@@ -162,8 +165,8 @@ _via_temporal_segmenter.prototype._thumbview_init = function() {
   this.c.appendChild(this.thumbnail_container);
 
   // initialise thumbnail viewer
-  this.thumbnail = new _via_video_thumbnail(this.file);
-  this.thumbnail.start();
+  this.thumbnail = new _via_video_thumbnail(this.file, this.d.store.config.file.path);
+  this.thumbnail.load();
 }
 
 _via_temporal_segmenter.prototype._thumbview_show = function(time, x, y) {
@@ -330,73 +333,80 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   this.tmetadata_container = document.createElement('div');
   this.tmetadata_container.setAttribute('class', 'tmetadata_container');
 
-  var cw = this.c.clientWidth;
-  this.gid_width = this.linehn[15];
-  this.timeline_container_width = cw - this.gid_width - this.linehn[3];
+  // group timeline container
+  var gtimeline_container = document.createElement('div');
+  gtimeline_container.setAttribute('class', 'gtimeline_container');
+  var gtimeline_grid = document.createElement('div');
+  gtimeline_grid.setAttribute('class', 'twocolgrid');
+  var group_aname_container = document.createElement('div');
+  group_aname_container.setAttribute('class', 'gidcol');
+  this.group_aname_input = document.createElement('input');
+  this.group_aname_input.setAttribute('type', 'text');
+  this.group_aname_input.setAttribute('value', this.d.store.attribute[this.groupby_aid].aname);
+  group_aname_container.appendChild(this.group_aname_input);
+  this.gtimeline_container = document.createElement('div');
+  gtimeline_grid.appendChild(group_aname_container);
+  gtimeline_grid.appendChild(this.gtimeline_container);
+  gtimeline_container.appendChild(gtimeline_grid);
+  this.tmetadata_container.appendChild(gtimeline_container);
+  this.c.appendChild(this.tmetadata_container);
+
+  // initialise the gtimeline (timeline for temporal segmentation, requires width of container)
+  this.timeline_container_width = this.gtimeline_container.clientWidth - Math.floor(2 * this.padx);
   this.tmetadata_timelinew = this.timeline_container_width - Math.floor(2 * this.padx);
   this.tmetadata_width_per_sec = this.linehn[this.DEFAULT_WIDTH_PER_SEC];
   this._tmetadata_boundary_update(0); // determine the boundary of gtimeline
 
-  // header
-  var header_container = document.createElement('div');
-  header_container.setAttribute('class', 'header_container');
-  var header = document.createElement('table');
-  var hrow = document.createElement('tr');
-  var groupvar_col = document.createElement('td');
-  groupvar_col.setAttribute('style', 'width:' + this.gid_width + 'px;');
-  //groupvar_col.innerHTML = this.d.attribute_store[this.groupby_aid].aname;
-  /* // hide as not needed now
-  this.groupby_select = document.createElement('select');
-  this.groupby_select.setAttribute('title', 'Group creates multiple slices of the timeline where each slice corresponds to one unique value of the group attribute.')
-  var aindex, aid;
-  for ( aindex in this.d.aid_list ) {
-    var oi = document.createElement('option');
-    oi.setAttribute('value', this.d.aid_list[aindex]);
-    oi.innerHTML = this.d.attribute_store[ this.d.aid_list[aindex] ].aname;
-    this.groupby_select.appendChild(oi);
-  }
-  this.groupby_select.addEventListener('change', function(e) {
-    var aid = e.target.options[e.target.selectedIndex];
-    this._group_init(aid);
-  }.bind(this));
-  groupvar_col.appendChild(this.groupby_select);
-  */
-
-  var gtimeline_col = document.createElement('td');
   this._tmetadata_gtimeline_init();
-  gtimeline_col.appendChild(this.gtimeline);
-  hrow.appendChild(groupvar_col);
-  hrow.appendChild(gtimeline_col);
-  header.appendChild(hrow);
-  header_container.appendChild(header);
-  this.tmetadata_container.appendChild(header_container);
+  this.gtimeline_container.appendChild(this.gtimeline);
 
-  // metadata
-  var metadata_container = document.createElement('div');
-  metadata_container.setAttribute('class', 'metadata_container');
-  metadata_container.setAttribute('style', 'display:inline-block; max-height:' +
-                                  this.lineh * this.METADATA_CONTAINER_HEIGHT +
-                                  'px; width:100%; overflow:auto;');
-
-  var metadata_table = document.createElement('table');
-  this.metadata_tbody = document.createElement('tbody');
+  // initialise the gmetadata (temporal segment corresponding to each group)
+  var gmetadata_container = document.createElement('div');
+  gmetadata_container.setAttribute('class', 'gmetadata_container');
+  var gmetadata_grid = document.createElement('div');
+  gmetadata_grid.setAttribute('class', 'twocolgrid');
 
   this.gcanvas = {}; // contains a list of canvas for each group
   this.gctx = {};    // contains the corresponding drawing context
   var gindex, gid;
   for ( gindex in this.gid_list ) {
     gid = this.gid_list[gindex];
-    this.metadata_tbody.appendChild( this._tmetadata_group_gid_html(gid) );
-  }
 
-  metadata_table.appendChild(this.metadata_tbody);
-  metadata_container.appendChild(metadata_table);
-  this.tmetadata_container.appendChild(metadata_container);
-  this.c.appendChild(this.tmetadata_container);
+    // column containing value of timeline-id
+    var gid_container = document.createElement('div');
+    gid_container.setAttribute('class', 'gidcol');
+    var gid_input = document.createElement('input');
+    gid_input.setAttribute('type', 'text');
+    gid_input.setAttribute('value', gid);
+    var down_button = document.createElement('span');
+    down_button.setAttribute('class', 'text_button');
+    down_button.innerHTML = '&darr;';
+    var up_button = document.createElement('span');
+    up_button.setAttribute('class', 'text_button');
+    up_button.innerHTML = '&uarr;';
+    gid_container.appendChild(up_button);
+    gid_container.appendChild(down_button);
+    gid_container.appendChild(gid_input);
+    gmetadata_grid.appendChild(gid_container);
+
+    // column containing temporal segments for this value timeline-id
+    this._tmetadata_group_gid_init(gid);
+    var gid_metadata_container = document.createElement('div');
+    gid_metadata_container.appendChild(this.gcanvas[gid]);
+    gmetadata_grid.appendChild(gid_metadata_container);
+  }
+  gmetadata_container.appendChild(gmetadata_grid);
+  this.tmetadata_container.appendChild(gmetadata_container);
+  // Note: this.tmetadata_container has already been added to parent container
 
   if ( this.gid_list.length ) {
     this._tmetadata_group_gid_sel(0);
   }
+}
+
+_via_temporal_segmenter.prototype._tmetadata_on_timeline_id_update = function() {
+  //@todo
+  console.log('timeline-id updated! @todo');
 }
 
 _via_temporal_segmenter.prototype._tmetadata_boundary_move = function(dt) {
@@ -464,8 +474,8 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_gid_mid = function(g
   var mindex, mid, t0, t1;
   for ( mindex in this.group[gid] ) {
     mid = this.group[gid][mindex];
-    t0 = this.d.metadata_store[mid].z[0];
-    t1 = this.d.metadata_store[mid].z[1];
+    t0 = this.d.store.metadata[mid].z[0];
+    t1 = this.d.store.metadata[mid].z[1];
 
     if ( (t0 >= this.tmetadata_gtimeline_tstart &&
           t0 <= this.tmetadata_gtimeline_tend) ||
@@ -483,7 +493,7 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_gid_mid = function(g
 //
 // group timeline (common to all group-id and shown at top)
 //
-_via_temporal_segmenter.prototype._tmetadata_gtimeline_init = function(container) {
+_via_temporal_segmenter.prototype._tmetadata_gtimeline_init = function() {
   this.gtimeline = document.createElement('canvas');
   this.gtimeline.setAttribute('class', 'gtimeline');
   this.gtimeline.addEventListener('mousedown', this._tmetadata_gtimeline_mousedown.bind(this));
@@ -546,8 +556,8 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_draw = function() {
   this.gtimelinectx.fillStyle = '#707070';
   this.gtimelinectx.lineWidth = this.DRAW_LINE_WIDTH;
   this.gtimelinectx.beginPath();
-  this.gtimelinectx.moveTo(this.tmetadata_gtimeline_xstart, this.linehn[3]);
-  this.gtimelinectx.lineTo(this.tmetadata_gtimeline_xend, this.linehn[3]);
+  this.gtimelinectx.moveTo(this.tmetadata_gtimeline_xstart, this.linehn[2]);
+  this.gtimelinectx.lineTo(this.tmetadata_gtimeline_xend, this.linehn[2]);
   this.gtimelinectx.stroke();
 
   if ( this.tmetadata_gtimeline_mark_x.length ) {
@@ -572,12 +582,12 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_draw = function() {
       dx = this.tmetadata_gtimeline_mark_x[i] - last_mark_x;
       if ( i === 0 || dx > tick_width ) {
         // draw tick
-        this.gtimelinectx.moveTo(this.tmetadata_gtimeline_mark_x[i], this.linehn[3]);
-        this.gtimelinectx.lineTo(this.tmetadata_gtimeline_mark_x[i], this.linehn[4]);
+        this.gtimelinectx.moveTo(this.tmetadata_gtimeline_mark_x[i], this.linehn[2]);
+        this.gtimelinectx.lineTo(this.tmetadata_gtimeline_mark_x[i], this.linehn[3]);
 
         // draw label
         this.gtimelinectx.fillText(this.tmetadata_gtimeline_mark_time_str[i],
-                                   this.tmetadata_gtimeline_mark_x[i], this.linehn[5] );
+                                   this.tmetadata_gtimeline_mark_x[i], this.linehn[4] );
         last_mark_x = this.tmetadata_gtimeline_mark_x[i];
       } else {
         // avoid crowding of labels
@@ -591,22 +601,22 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_draw = function() {
 _via_temporal_segmenter.prototype._tmetadata_draw_currenttime_mark = function(tnow) {
   // clear previous mark
   this.gtimelinectx.fillStyle = '#ffffff';
-  this.gtimelinectx.fillRect(0, 0, this.gtimeline.width, this.linehn[3] - 1);
+  this.gtimelinectx.fillRect(0, 0, this.gtimeline.width, this.linehn[2] - 1);
 
   var markx = this._tmetadata_gtimeline_time2canvas(tnow);
 
   this.gtimelinectx.fillStyle = 'black';
   this.gtimelinectx.beginPath();
-  this.gtimelinectx.moveTo(markx, this.linehn[3]);
-  this.gtimelinectx.lineTo(markx - this.linehb2, this.linehn[2]);
-  this.gtimelinectx.lineTo(markx + this.linehb2, this.linehn[2]);
-  this.gtimelinectx.moveTo(markx, this.linehn[3]);
+  this.gtimelinectx.moveTo(markx, this.linehn[2]);
+  this.gtimelinectx.lineTo(markx - this.linehb2, this.linehn[1]);
+  this.gtimelinectx.lineTo(markx + this.linehb2, this.linehn[1]);
+  this.gtimelinectx.moveTo(markx, this.linehn[2]);
   this.gtimelinectx.fill();
 
   // show playback rate
   this.gtimelinectx.font = '10px Sans';
   var rate = this.m.playbackRate.toFixed(1) + 'X';
-  this.gtimelinectx.fillText(rate, this.tmetadata_gtimeline_xend - this.linehn[3], this.linehn[3] - 2);
+  this.gtimelinectx.fillText(rate, this.tmetadata_gtimeline_xend - this.linehn[2], this.linehn[2] - 2);
 }
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_canvas2time = function(x) {
@@ -743,8 +753,8 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mark_selected = function(
   var gid = this.selected_gid;
   var mid = this.selected_mid;
   var t0, t1, x0, x1;
-  t0 = this.d.metadata_store[mid].z[0];
-  t1 = this.d.metadata_store[mid].z[1];
+  t0 = this.d.store.metadata[mid].z[0];
+  t1 = this.d.store.metadata[mid].z[1];
   x0 = this._tmetadata_gtimeline_time2canvas(t0);
   x1 = this._tmetadata_gtimeline_time2canvas(t1);
 
@@ -770,7 +780,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mark_selected = function(
     this.gctx[gid].font = '10px Sans';
     this.gctx[gid].fillStyle = '#000000';
 
-    var time_str = this.d.metadata_store[this.selected_mid].z[this.edge_show_time].toFixed(3);
+    var time_str = this.d.store.metadata[this.selected_mid].z[this.edge_show_time].toFixed(3);
     if ( this.edge_show_time === 0 ) {
       this.gctx[gid].fillText(time_str, x0 + 1, this.linehn[4]);
     } else {
@@ -798,8 +808,8 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_draw_metadata = function(
 
 _via_temporal_segmenter.prototype._tmetadata_group_gid_draw_mid = function(gid, mid) {
   var t0, t1, x0, x1;
-  t0 = this.d.metadata_store[mid].z[0];
-  t1 = this.d.metadata_store[mid].z[1];
+  t0 = this.d.store.metadata[mid].z[0];
+  t1 = this.d.store.metadata[mid].z[1];
   x0 = this._tmetadata_gtimeline_time2canvas(t0);
   x1 = this._tmetadata_gtimeline_time2canvas(t1);
 
@@ -870,7 +880,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_sel_metadata = function(m
   var old_selected_mindex = this.selected_mindex;
   this.selected_mindex = mindex;
   this.selected_mid = this.tmetadata_gtimeline_mid[this.selected_gid][mindex];
-  this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
+  this.m.currentTime = this.d.store.metadata[this.selected_mid].z[0];
   this._tmetadata_group_gid_draw(this.selected_gid);
   _via_util_msg_show('Metadata selected. ' +
                      'Use <span class="key">l</span> or <span class="key">r</span> to expand and ' +
@@ -899,8 +909,8 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_metadata_at_time = functi
   var mindex, mid;
   for ( mindex in this.tmetadata_gtimeline_mid[this.selected_gid] ) {
     mid = this.tmetadata_gtimeline_mid[this.selected_gid][mindex];
-    if ( t >= this.d.metadata_store[mid].z[0] &&
-         t <= this.d.metadata_store[mid].z[1]
+    if ( t >= this.d.store.metadata[mid].z[0] &&
+         t <= this.d.store.metadata[mid].z[1]
        ) {
       return parseInt(mindex);
     }
@@ -946,17 +956,17 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_sel_prev_metadata = funct
 _via_temporal_segmenter.prototype._tmetadata_mid_update_edge = function(eindex, dz) {
   this.edge_show_time = eindex;
   // to ensure only 3 decimal values are stored for time
-  var new_value = this.d.metadata_store[this.selected_mid].z[eindex] + dz;
+  var new_value = this.d.store.metadata[this.selected_mid].z[eindex] + dz;
   new_value = _via_util_float_to_fixed(new_value, 3);
 
   // consistency check
   if ( eindex === 0 ) {
-    if ( new_value >= this.d.metadata_store[this.selected_mid].z[1] ) {
+    if ( new_value >= this.d.store.metadata[this.selected_mid].z[1] ) {
       _via_util_msg_show('Cannot update left edge!');
       return;
     }
   } else {
-    if ( new_value <= this.d.metadata_store[this.selected_mid].z[0] ) {
+    if ( new_value <= this.d.store.metadata[this.selected_mid].z[0] ) {
       _via_util_msg_show('Cannot update right edge!');
       return;
     }
@@ -976,13 +986,13 @@ _via_temporal_segmenter.prototype._tmetadata_mid_update_edge = function(eindex, 
 }
 
 _via_temporal_segmenter.prototype._tmetadata_mid_move = function(dt) {
-  var n = this.d.metadata_store[this.selected_mid].z.length;
-  var newz = this.d.metadata_store[this.selected_mid].z.slice();
+  var n = this.d.store.metadata[this.selected_mid].z.length;
+  var newz = this.d.store.metadata[this.selected_mid].z.slice();
   for ( var i = 0; i < n; ++i ) {
     newz[i] = parseFloat((parseFloat(newz[i]) + dt).toFixed(3));
   }
   this.d.metadata_update_z(this.file.fid, this.selected_mid, newz).then( function(ok) {
-    this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
+    this.m.currentTime = this.d.store.metadata[this.selected_mid].z[0];
     this._tmetadata_group_gid_draw(this.selected_gid);
 
     // the move operation may have changed the sequential order of mid
@@ -1007,8 +1017,8 @@ _via_temporal_segmenter.prototype._tmetadata_mid_del = function(mid) {
 }
 
 _via_temporal_segmenter.prototype._tmetadata_mid_update_last_added_end_edge_to_time = function(t) {
-  if ( this.d.metadata_store.hasOwnProperty(this.metadata_last_added_mid) ) {
-    var z_now = this.d.metadata_store[this.metadata_last_added_mid].z;
+  if ( this.d.store.metadata.hasOwnProperty(this.metadata_last_added_mid) ) {
+    var z_now = this.d.store.metadata[this.metadata_last_added_mid].z;
     var update_edge_index;
     if ( t > z_now[1] ) {
       update_edge_index = 1;
@@ -1050,8 +1060,8 @@ _via_temporal_segmenter.prototype._tmetadata_mid_add_at_time = function(t) {
 
   z = _via_util_float_arr_to_fixed(z, 3);
   // avoid adding same overlapping segments
-  if ( this.d.metadata_store.hasOwnProperty(this.metadata_last_added_mid) ) {
-    var z0 = this.d.metadata_store[this.metadata_last_added_mid].z;
+  if ( this.d.store.metadata.hasOwnProperty(this.metadata_last_added_mid) ) {
+    var z0 = this.d.store.metadata[this.metadata_last_added_mid].z;
     if ( z0[0] === z[0] && z0[1] === z[1] ) {
       _via_util_msg_show('A temporal segment of same size already exists.');
       return;
@@ -1085,12 +1095,12 @@ _via_temporal_segmenter.prototype._tmetadata_mid_merge = function(eindex) {
   }
 
   if ( typeof(merge_mid) !== 'undefined' ) {
-    var new_z = this.d.metadata_store[this.selected_mid].z;
-    if ( new_z[0] > this.d.metadata_store[merge_mid].z[0] ) {
-      new_z[0] = this.d.metadata_store[merge_mid].z[0];
+    var new_z = this.d.store.metadata[this.selected_mid].z;
+    if ( new_z[0] > this.d.store.metadata[merge_mid].z[0] ) {
+      new_z[0] = this.d.store.metadata[merge_mid].z[0];
     }
-    if ( new_z[1] < this.d.metadata_store[merge_mid].z[1] ) {
-      new_z[1] = this.d.metadata_store[merge_mid].z[1];
+    if ( new_z[1] < this.d.store.metadata[merge_mid].z[1] ) {
+      new_z[1] = this.d.store.metadata[merge_mid].z[1];
     }
 
     this._tmetadata_mid_del(merge_mid);
@@ -1151,7 +1161,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mousedown = function(e) {
     this.metadata_resize_is_ongoing = true;
     this._tmetadata_group_gid_sel_metadata(edge[0]);
     this.metadata_resize_edge_index = edge[1];
-    var z = this.d.metadata_store[this.selected_mid].z;
+    var z = this.d.store.metadata[this.selected_mid].z;
     this.metadata_ongoing_update_x = [ this._tmetadata_gtimeline_time2canvas(z[0]),
                                        this._tmetadata_gtimeline_time2canvas(z[1])
                                      ];
@@ -1166,7 +1176,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mousedown = function(e) {
         // hence, start moving
         this.metadata_move_start_x = x;
         this.metadata_move_is_ongoing = true;
-        var z = this.d.metadata_store[this.selected_mid].z;
+        var z = this.d.store.metadata[this.selected_mid].z;
         this.metadata_ongoing_update_x = [ this._tmetadata_gtimeline_time2canvas(z[0]),
                                            this._tmetadata_gtimeline_time2canvas(z[1])
                                          ];
@@ -1188,7 +1198,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mouseup = function(e) {
   if ( this.metadata_resize_is_ongoing ) {
     // resize metadata
     var t = this._tmetadata_gtimeline_canvas2time(e.offsetX);
-    var dz = t - this.d.metadata_store[this.selected_mid].z[this.metadata_resize_edge_index];
+    var dz = t - this.d.store.metadata[this.selected_mid].z[this.metadata_resize_edge_index];
     this._tmetadata_mid_update_edge(this.metadata_resize_edge_index, dz);
     this.metadata_resize_is_ongoing = false;
     this.metadata_resize_edge_index = -1;
@@ -1212,10 +1222,10 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_is_on_edge = function(gid
   var mindex, mid;
   for ( mindex in this.tmetadata_gtimeline_mid[gid] ) {
     mid = this.tmetadata_gtimeline_mid[gid][mindex];
-    if ( Math.abs(t - this.d.metadata_store[mid].z[0]) < this.METADATA_EDGE_TOL ) {
+    if ( Math.abs(t - this.d.store.metadata[mid].z[0]) < this.METADATA_EDGE_TOL ) {
       return [parseInt(mindex), 0];
     } else {
-      if ( Math.abs(t - this.d.metadata_store[mid].z[1]) < this.METADATA_EDGE_TOL ) {
+      if ( Math.abs(t - this.d.store.metadata[mid].z[1]) < this.METADATA_EDGE_TOL ) {
         return [parseInt(mindex), 1];
       }
     }
@@ -1227,8 +1237,8 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_get_mindex_at_time = func
   var mindex, mid;
   for ( mindex in this.tmetadata_gtimeline_mid[gid] ) {
     mid = this.tmetadata_gtimeline_mid[gid][mindex];
-    if ( t >= this.d.metadata_store[mid].z[0] &&
-         t <= this.d.metadata_store[mid].z[1]
+    if ( t >= this.d.store.metadata[mid].z[0] &&
+         t <= this.d.store.metadata[mid].z[1]
        ) {
       return parseInt(mindex);
     }
@@ -1280,7 +1290,7 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     this.m.pause();
     if ( e.key === 's' ) {
       if ( this.selected_mindex !== -1 ) {
-        this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
+        this.m.currentTime = this.d.store.metadata[this.selected_mid].z[0];
       } else {
         this.m.currentTime = this.tmetadata_gtimeline_tstart;
       }
@@ -1295,7 +1305,7 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     this.m.pause();
     if ( e.key === 'e' ) {
       if ( this.selected_mindex !== -1 ) {
-        this.m.currentTime = this.d.metadata_store[this.selected_mid].z[1];
+        this.m.currentTime = this.d.store.metadata[this.selected_mid].z[1];
       } else {
         this.m.currentTime = this.tmetadata_gtimeline_tend;
       }
@@ -1498,16 +1508,14 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
   this.group = {};
   this.groupby_aid = aid;
 
-  var mid, mindex, avalue;
-  for ( mindex in this.d.file_mid_store[this.file.fid] ) {
-    mid = this.d.file_mid_store[this.file.fid][mindex];
-    if ( this.d.metadata_store.hasOwnProperty(mid) ) {
-      avalue = this.d.metadata_store[mid].v[aid];
-      if ( ! this.group.hasOwnProperty(avalue) ) {
-        this.group[avalue] = [];
-      }
-      this.group[avalue].push(mid);
+  var mid, avalue;
+  for ( var mindex in this.d.cache.mid_list[this.vid] ) {
+    mid = this.d.cache.mid_list[this.vid][mindex];
+    avalue = this.d.store.metadata[mid].av[aid];
+    if ( ! this.group.hasOwnProperty(avalue) ) {
+      this.group[avalue] = [];
     }
+    this.group[avalue].push(mid);
   }
 
   this.gid_list = Object.keys(this.group).sort();
@@ -1530,10 +1538,10 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
 }
 
 _via_temporal_segmenter.prototype._compare_mid_by_time = function(mid1, mid2) {
-  var t00 = this.d.metadata_store[mid1].z[0];
-  var t10 = this.d.metadata_store[mid2].z[0];
-  var t01 = this.d.metadata_store[mid1].z[1];
-  var t11 = this.d.metadata_store[mid2].z[1];
+  var t00 = this.d.store.metadata[mid1].z[0];
+  var t10 = this.d.store.metadata[mid2].z[0];
+  var t01 = this.d.store.metadata[mid1].z[1];
+  var t11 = this.d.store.metadata[mid2].z[1];
 
   if ( typeof(t00) === 'string' ||
        typeof(t01) === 'string' ) {
@@ -1577,7 +1585,7 @@ _via_temporal_segmenter.prototype._group_gid_add_mid = function(gid, new_mid) {
   var i, mindex, mid;
   for ( mindex in this.group[gid] ) {
     mid = this.group[gid][mindex];
-    if ( this.d.metadata_store[new_mid].z[0] < this.d.metadata_store[mid].z[0] ) {
+    if ( this.d.store.metadata[new_mid].z[0] < this.d.store.metadata[mid].z[0] ) {
       this.group[gid].splice(mindex, 0, new_mid); // insert at correct location
       return;
     }
@@ -1709,6 +1717,13 @@ _via_temporal_segmenter.prototype._on_event_metadata_add = function(fid, mid) {
 // Toolbar
 //
 _via_temporal_segmenter.prototype._toolbar_init = function() {
+  this.toolbar_container = document.createElement('div');
+  this.toolbar_container.setAttribute('class', 'toolbar_container');
+  this.toolbar_container.innerHTML = 'Toolbar: <input type="radio"><label>Review</label>&nbsp;<input type="radio"><label>Annotate</label>';
+  this.c.appendChild(this.toolbar_container);
+
+  return; // *********** DEBUG
+
   var toolbar_container = document.createElement('div');
   toolbar_container.setAttribute('class', 'toolbar_container');
 
