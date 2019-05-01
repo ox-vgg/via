@@ -3492,12 +3492,15 @@ function _via_reg_canvas_keydown_handler(e) {
       return;
     }
 
-    if ( _via_is_region_selected ) {
-      if ( e.key === 'd' ) {
-        del_sel_regions();
-        e.preventDefault();
-        return;
+    if ( e.key === 'd' ) {
+      if (_via_is_region_selected ||
+        _via_is_all_region_selected) {
+      del_sel_regions();
       }
+      e.preventDefault();
+      return;
+    }
+    if ( _via_is_region_selected ) {
       if ( e.key === 'ArrowRight' ||
            e.key === 'ArrowLeft'  ||
            e.key === 'ArrowDown'  ||
