@@ -1871,6 +1871,12 @@ function _via_reg_canvas_mousemove_handler(e) {
 
   _via_current_x = e.offsetX; _via_current_y = e.offsetY;
 
+  // display the cursor coordinates
+  var cc = document.getElementById('cursor_coordinates');
+  if (cc != null) {
+    cc.innerHTML = 'x: ' + _via_current_x + ' y: ' + _via_current_y;
+  }
+
   if ( _via_is_region_selected ) {
     if ( !_via_is_user_resizing_region ) {
       // check if user moved mouse cursor to region boundary
