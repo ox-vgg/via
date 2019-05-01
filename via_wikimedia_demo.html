@@ -220,6 +220,9 @@
       ul.region_shape li:hover { cursor:pointer; fill:#ffffff; stroke:#ff0000; }
       ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
 
+      /* cursor coordinates inside region shape selection panel in leftsidebar */
+      #region_info { font-size:0.8em; margin-bottom:0.4em; }
+
       /* Loaded image list shown in leftsidebar panel */
       #img_fn_list    { display:none; font-size:small; overflow:scroll; min-height:10rem; max-height:25rem; }
       #img_fn_list ul { position:relative; line-height:1.3em; margin:0; padding:0; list-style-type:none;}
@@ -458,6 +461,7 @@
               <li class="submenu_divider"></li>
               <li onclick="toggle_region_boundary_visibility()" title="Show or hide the region boundaries">Show/hide region boundaries (b)</li>
               <li onclick="toggle_region_id_visibility()" title="Show or hide the region id labels">Show/hide region labels (l)</li>
+              <li onclick="toggle_region_info_visibility()" title="Show or hide the image coordinates">Show/hide region info.</li>
             </ul>
           </li>
 
@@ -532,6 +536,7 @@
             <li id="region_shape_point" onclick="select_region_shape('point')" title="Point (Shortcut key 5)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_point"></use></svg></li>
             <li id="region_shape_polyline" onclick="select_region_shape('polyline')" title="Polyline (Shortcut key 6)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polyline"></use></svg></li>
           </ul>
+          <div id="region_info" class="display_none">&nbsp;</div>
         </div>
 
         <!-- Project -->
@@ -934,7 +939,7 @@
             </a>
           </div>
 
-          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.6</a></p>
+          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.7</a></p>
           <p>VGG Image Annotator (VIA) is an image annotation tool that can be used to define regions in an image and create textual descriptions of those regions. VIA is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.</p>
           <p>Here is a list of some salient features of VIA:
             <ul>
@@ -11056,7 +11061,7 @@ var _via_demo_wikimedia_commons_featured_img_list = ["https://upload.wikimedia.o
 
 "use strict";
 
-var VIA_VERSION      = '2.0.6';
+var VIA_VERSION      = '2.0.7';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -11162,6 +11167,7 @@ var _via_is_canvas_zoomed            = false;
 var _via_is_loading_current_image    = false;
 var _via_is_region_id_visible        = true;
 var _via_is_region_boundary_visible  = true;
+var _via_is_region_info_visible      = false;
 var _via_is_ctrl_pressed             = false;
 var _via_is_debug_mode               = false;
 
@@ -12872,6 +12878,14 @@ function _via_reg_canvas_mousemove_handler(e) {
 
   _via_current_x = e.offsetX; _via_current_y = e.offsetY;
 
+  // display the cursor coordinates
+  var rf = document.getElementById('region_info');
+  if ( rf != null && _via_is_region_info_visible ) {
+    var img_x = Math.round( _via_current_x * _via_canvas_scale );
+    var img_y = Math.round( _via_current_y * _via_canvas_scale );
+    rf.innerHTML = 'X:' + img_x + ',' + ' Y:' + img_y;
+  }
+
   if ( _via_is_region_selected ) {
     if ( !_via_is_user_resizing_region ) {
       // check if user moved mouse cursor to region boundary
@@ -13166,6 +13180,36 @@ function _via_move_selected_regions(move_x, move_y) {
   }
 }
 
+function _via_validate_move_region(x, y, canvas_attr) {
+  switch( canvas_attr['name'] ) {
+    case VIA_REGION_SHAPE.RECT:
+      // left and top boundary check
+      if (x < 0 || y < 0) {
+          show_message('Region moved beyond image boundary. Resetting.');
+          return false;
+      }
+      // right and bottom boundary check
+      if ((y + canvas_attr['height']) > _via_current_image_height ||
+          (x + canvas_attr['width']) > _via_current_image_width) {
+            show_message('Region moved beyond image boundary. Resetting.');
+            return false;
+      }
+
+    // same validation for all
+    case VIA_REGION_SHAPE.CIRCLE:
+    case VIA_REGION_SHAPE.ELLIPSE:
+    case VIA_REGION_SHAPE.POINT:
+    case VIA_REGION_SHAPE.POLYLINE:
+    case VIA_REGION_SHAPE.POLYGON:
+      if (x < 0 || y < 0 ||
+          x > _via_current_image_width || y > _via_current_image_height) {
+          show_message('Region moved beyond image boundary. Resetting.');
+          return false;
+      }
+  }
+  return true;
+}
+
 function _via_move_region(region_id, move_x, move_y) {
   var image_attr = _via_img_metadata[_via_image_id].regions[region_id].shape_attributes;
   var canvas_attr = _via_canvas_regions[region_id].shape_attributes;
@@ -13174,6 +13218,10 @@ function _via_move_region(region_id, move_x, move_y) {
   case VIA_REGION_SHAPE.RECT:
     var xnew = image_attr['x'] + Math.round(move_x * _via_canvas_scale);
     var ynew = image_attr['y'] + Math.round(move_y * _via_canvas_scale);
+
+    var is_valid = _via_validate_move_region(xnew, ynew, image_attr);
+    if (! is_valid ) { break; }
+
     image_attr['x'] = xnew;
     image_attr['y'] = ynew;
 
@@ -13186,6 +13234,10 @@ function _via_move_region(region_id, move_x, move_y) {
   case VIA_REGION_SHAPE.POINT:
     var cxnew = image_attr['cx'] + Math.round(move_x * _via_canvas_scale);
     var cynew = image_attr['cy'] + Math.round(move_y * _via_canvas_scale);
+
+    var is_valid = _via_validate_move_region(cxnew, cynew, image_attr);
+    if (! is_valid ) { break; }
+
     image_attr['cx'] = cxnew;
     image_attr['cy'] = cynew;
 
@@ -13197,13 +13249,28 @@ function _via_move_region(region_id, move_x, move_y) {
   case VIA_REGION_SHAPE.POLYGON:
     var img_px = image_attr['all_points_x'];
     var img_py = image_attr['all_points_y'];
+    var canvas_px = canvas_attr['all_points_x'];
+    var canvas_py = canvas_attr['all_points_y'];
+    // clone for reverting if valiation fails
+    var img_px_old = Object.assign({}, img_px);
+    var img_py_old = Object.assign({}, img_py);
+
+    // validate move
+    for (var i=0; i<img_px.length; ++i) {
+      var pxnew = img_px[i] + Math.round(move_x * _via_canvas_scale);
+      var pynew = img_py[i] + Math.round(move_y * _via_canvas_scale);
+      if (! _via_validate_move_region(pxnew, pynew, image_attr) ) {
+        img_px = img_px_old;
+        img_py = img_py_old;
+        break;
+      }
+    }
+    // move points
     for (var i=0; i<img_px.length; ++i) {
       img_px[i] = img_px[i] + Math.round(move_x * _via_canvas_scale);
       img_py[i] = img_py[i] + Math.round(move_y * _via_canvas_scale);
     }
 
-    var canvas_px = canvas_attr['all_points_x'];
-    var canvas_py = canvas_attr['all_points_y'];
     for (var i=0; i<canvas_px.length; ++i) {
       canvas_px[i] = Math.round( img_px[i] / _via_canvas_scale );
       canvas_py[i] = Math.round( img_py[i] / _via_canvas_scale );
@@ -14431,12 +14498,16 @@ function _via_reg_canvas_keydown_handler(e) {
       return;
     }
 
-    if ( _via_is_region_selected ) {
-      if ( e.key === 'd' ) {
+    if ( e.key === 'd' ) {
+      if ( _via_is_region_selected ||
+           _via_is_all_region_selected ) {
         del_sel_regions();
-        e.preventDefault();
-        return;
       }
+      e.preventDefault();
+      return;
+    }
+
+    if ( _via_is_region_selected ) {
       if ( e.key === 'ArrowRight' ||
            e.key === 'ArrowLeft'  ||
            e.key === 'ArrowDown'  ||
@@ -15092,6 +15163,18 @@ function toggle_region_id_visibility() {
   _via_is_region_id_visible = !_via_is_region_id_visible;
   _via_redraw_reg_canvas();
   _via_reg_canvas.focus();
+}
+
+function toggle_region_info_visibility() {
+  var elem = document.getElementById('region_info');
+  // toggle between displaying and not displaying
+  if ( elem.classList.contains('display_none') ) {
+    elem.classList.remove('display_none');
+    _via_is_region_info_visible = true;
+  } else {
+    elem.classList.add('display_none');
+    _via_is_region_info_visible = false;
+  }
 }
 
 //
