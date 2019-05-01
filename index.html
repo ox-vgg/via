@@ -213,7 +213,7 @@
       ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
 
       /* cursor coordinates inside region shape selection panel in leftsidebar */
-      #cursor_coordinates {font-family:mono; font-size:0.8em; margin:0em 1.1em 0.8em;}
+      #region_info { font-size:0.8em; margin-bottom:0.4em; }
 
       /* Loaded image list shown in leftsidebar panel */
       #img_fn_list    { display:none; font-size:small; overflow:scroll; min-height:10rem; max-height:25rem; }
@@ -453,7 +453,7 @@
               <li class="submenu_divider"></li>
               <li onclick="toggle_region_boundary_visibility()" title="Show or hide the region boundaries">Show/hide region boundaries (b)</li>
               <li onclick="toggle_region_id_visibility()" title="Show or hide the region id labels">Show/hide region labels (l)</li>
-              <li onclick="toggle_img_coordinates_visibility()" title="Show or hide the image coordinates">Show/hide image coordinates </li>
+              <li onclick="toggle_region_info_visibility()" title="Show or hide the image coordinates">Show/hide region info.</li>
             </ul>
           </li>
 
@@ -528,9 +528,7 @@
             <li id="region_shape_point" onclick="select_region_shape('point')" title="Point (Shortcut key 5)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_point"></use></svg></li>
             <li id="region_shape_polyline" onclick="select_region_shape('polyline')" title="Polyline (Shortcut key 6)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polyline"></use></svg></li>
           </ul>
-          <div id="cursor_coordinates" class='display_none'>
-              X:0, Y:0
-          </div>
+          <div id="region_info" class="display_none">&nbsp;</div>
         </div>
 
         <!-- Project -->

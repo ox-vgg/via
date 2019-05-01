@@ -161,7 +161,7 @@ var _via_is_canvas_zoomed            = false;
 var _via_is_loading_current_image    = false;
 var _via_is_region_id_visible        = true;
 var _via_is_region_boundary_visible  = true;
-var _via_is_cursor_coordinates_visible  = false;
+var _via_is_region_info_visible      = false;
 var _via_is_ctrl_pressed             = false;
 var _via_is_debug_mode               = false;
 
@@ -1873,11 +1873,11 @@ function _via_reg_canvas_mousemove_handler(e) {
   _via_current_x = e.offsetX; _via_current_y = e.offsetY;
 
   // display the cursor coordinates
-  var cc = document.getElementById('cursor_coordinates');
-  if ( cc != null && _via_is_cursor_coordinates_visible ) {
+  var rf = document.getElementById('region_info');
+  if ( rf != null && _via_is_region_info_visible ) {
     var img_x = Math.round( _via_current_x * _via_canvas_scale );
     var img_y = Math.round( _via_current_y * _via_canvas_scale );
-    cc.innerHTML = 'X:' + img_x + ',' + ' Y:' + img_y;
+    rf.innerHTML = 'X:' + img_x + ',' + ' Y:' + img_y;
   }
 
   if ( _via_is_region_selected ) {
@@ -4155,15 +4155,15 @@ function toggle_region_id_visibility() {
   _via_reg_canvas.focus();
 }
 
-function toggle_img_coordinates_visibility() {
-  var elem = document.getElementById('cursor_coordinates');
+function toggle_region_info_visibility() {
+  var elem = document.getElementById('region_info');
   // toggle between displaying and not displaying
   if ( elem.classList.contains('display_none') ) {
     elem.classList.remove('display_none');
-    _via_is_cursor_coordinates_visible = true;
+    _via_is_region_info_visible = true;
   } else {
     elem.classList.add('display_none');
-    _via_is_cursor_coordinates_visible = false;
+    _via_is_region_info_visible = false;
   }
 }
 
