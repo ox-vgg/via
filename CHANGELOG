@@ -13,7 +13,7 @@
     - label subgroup of images in a group based on a certain variable
 
 ## [2.0.7] - May 01, 2019
- - regions cannot be moved beyond image boundary (issue 173(thank you @zenggyu for bug report)
+ - regions cannot be moved beyond image boundary (issue 173, thank you @zenggyu for bug report)
  - user's mouse cursor coordinate visible (feature request 172)
  - shortcut 'd' now works even when multiple regions are selected (merge request 15)
 
