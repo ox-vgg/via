@@ -1090,7 +1090,7 @@ function pack_via_metadata(return_type) {
     }
     return csvdata;
   } else {
-    return [ JSON.stringify(_via_img_metadata, null, 2) ];
+    return [ JSON.stringify(_via_img_metadata) ];
   }
 }
 
@@ -6589,7 +6589,7 @@ function project_save_confirmed(input) {
                        '_via_attributes': _via_attributes };
 
   var filename = input.project_name.value + '.json';
-  var data_blob = new Blob( [JSON.stringify(_via_project, null, 2)],
+  var data_blob = new Blob( [JSON.stringify(_via_project)],
                             {type: 'text/json;charset=utf-8'});
 
   save_data_to_local_file(data_blob, filename);
@@ -6994,7 +6994,7 @@ function project_filepath_del(path) {
 
 function project_save_attributes() {
   var blob_attr = {type: 'application/json;charset=utf-8'};
-  var all_region_data_blob = new Blob( [ JSON.stringify(_via_attributes, null, 2) ], blob_attr);
+  var all_region_data_blob = new Blob( [ JSON.stringify(_via_attributes) ], blob_attr);
 
   save_data_to_local_file(all_region_data_blob, _via_settings.project.name + '_attributes.json');
 }
