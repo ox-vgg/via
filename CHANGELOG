@@ -12,8 +12,10 @@
     - preload images in adjacent groups to speed up visualization
     - label subgroup of images in a group based on a certain variable
 
-## [2.0.7] - not released yet
- * Add constraints to shape attributes : {0,0} <= {x,y} < {width,height}, see https://gitlab.com/vgg/via/issues/173 (thank you @zenggyu for bug report)
+## [2.0.7] - May 01, 2019
+ - regions cannot be moved beyond image boundary (issue 173(thank you @zenggyu for bug report)
+ - user's mouse cursor coordinate visible (feature request 172)
+ - shortcut 'd' now works even when multiple regions are selected (merge request 15)
 
 ## [2.0.6] - March 25, 2019
  * fixed wrong region location for high zoom levels for large images (Closes: #166, thank you @fredowski) 
