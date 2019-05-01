@@ -4,7 +4,9 @@ These contributions must adhere to the existing [license](LICENSE) of VIA projec
 Here is the list of current contributions to VIA project.
 
 * via-2.0.7
-  - Srinivasan Sankar (@vasan.shrini) pushed fix for issue 173
+  - regions cannot now be moved beyond image boundary (issue 173 fixed by Srinivasan Sankar @vasan.shrini)
+  - user's mouse cursor coordinate visible (feature request 172 added by Srinivasan Sankar @vasan.shrini)
+  - shortcut 'd' now works even when multiple regions are selected (merge request 15 submitted by Simon Brugman @simon_graphkite)
 
 * Friedrich Beckmann (@fredowski) in via-2.0.4 (https://gitlab.com/vgg/via/merge_requests/12, 08 Dec. 2018)
   * fixed wrong region location for high zoom levels for large images (Closes: #166) 
