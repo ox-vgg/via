@@ -206,7 +206,6 @@ _via_file_annotator.prototype._file_html_element_compute_scale = function() {
   this.original_width = cw0;
   this.original_height = ch0;
   this.file_html_element_size_css = 'width:' + cw + 'px;height:' + ch + 'px;';
-  console.log(this.cscale + ':' + this.fscale + ':' + ar)
 
   switch( this.d.store.config.ui.file_content_align ) {
   case 'center':
@@ -479,6 +478,9 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
   e.stopPropagation();
   var cx = e.offsetX;
   var cy = e.offsetY;
+  var x = Math.round( cx * this.cscale );
+  var y = Math.round( cy * this.cscale );
+  document.getElementById('region_info_panel').innerHTML = '(' + x + ',' + y + ')';
 
   var pts = this.user_input_pts.slice(0);
   pts.push(cx, cy);

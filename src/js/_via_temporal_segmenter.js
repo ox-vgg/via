@@ -53,6 +53,8 @@ function _via_temporal_segmenter(container, vid, data, media_element) {
   // _via_event to let this module listen and emit events
   this._EVENT_ID_PREFIX = '_via_temporal_segmenter_';
   _via_event.call( this );
+  this.d.on_event('attribute_update', this._on_event_attribute_update.bind(this));
+  this.d.on_event('metadata_update_bulk', this._on_event_metadata_update_bulk.bind(this));
 
   if ( ! this.m instanceof HTMLMediaElement ) {
     throw 'media element must be an instance of HTMLMediaElement!';
@@ -259,7 +261,7 @@ _via_temporal_segmenter.prototype._vtimeline_init = function() {
   //// and placed just above the full video timeline
   this.vtimeline_mark = document.createElement('canvas');
   this.vtimeline_mark.setAttribute('class', 'video_timeline_mark');
-  this.vtimeline_mark_ctx = this.vtimeline_mark.getContext('2d', {alpha:false});
+  this.vtimeline_mark_ctx = this.vtimeline_mark.getContext('2d', { alpha:false });
   this.vtimeline_mark.width = this.vtimeline.width;
   this.vtimeline_mark.height = this.linehn[2];
 
@@ -334,21 +336,25 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   this.tmetadata_container.setAttribute('class', 'tmetadata_container');
 
   // group timeline container
-  var gtimeline_container = document.createElement('div');
-  gtimeline_container.setAttribute('class', 'gtimeline_container');
-  var gtimeline_grid = document.createElement('div');
-  gtimeline_grid.setAttribute('class', 'twocolgrid');
+  var gheader_container = document.createElement('div');
+  gheader_container.setAttribute('class', 'gheader_container');
+  var gheader_grid = document.createElement('div');
+  gheader_grid.setAttribute('class', 'twocolgrid');
   var group_aname_container = document.createElement('div');
   group_aname_container.setAttribute('class', 'gidcol');
   this.group_aname_input = document.createElement('input');
   this.group_aname_input.setAttribute('type', 'text');
   this.group_aname_input.setAttribute('value', this.d.store.attribute[this.groupby_aid].aname);
+  this.group_aname_input.setAttribute('title', 'Using this "timeline group variable", you can create multiple copies of the video timeline. For example, if you want to annotate temporal segments for different speakers in a video, you can use "speaker-id" as the timeline group variable to create a video timeline for each speaker thereby allowing you to annotate each speaker separately.');
+  this.group_aname_input.addEventListener('change', this._tmetadata_onchange_groupby_aname.bind(this));
   group_aname_container.appendChild(this.group_aname_input);
+
   this.gtimeline_container = document.createElement('div');
-  gtimeline_grid.appendChild(group_aname_container);
-  gtimeline_grid.appendChild(this.gtimeline_container);
-  gtimeline_container.appendChild(gtimeline_grid);
-  this.tmetadata_container.appendChild(gtimeline_container);
+  this.gtimeline_container.setAttribute('class', 'gtimeline_container');
+  gheader_grid.appendChild(group_aname_container);
+  gheader_grid.appendChild(this.gtimeline_container);
+  gheader_container.appendChild(gheader_grid);
+  this.tmetadata_container.appendChild(gheader_container);
   this.c.appendChild(this.tmetadata_container);
 
   // initialise the gtimeline (timeline for temporal segmentation, requires width of container)
@@ -360,12 +366,24 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   this._tmetadata_gtimeline_init();
   this.gtimeline_container.appendChild(this.gtimeline);
 
-  // initialise the gmetadata (temporal segment corresponding to each group)
-  var gmetadata_container = document.createElement('div');
-  gmetadata_container.setAttribute('class', 'gmetadata_container');
-  var gmetadata_grid = document.createElement('div');
-  gmetadata_grid.setAttribute('class', 'twocolgrid');
+  this.gmetadata_container = document.createElement('div');
+  this.gmetadata_container.setAttribute('class', 'gmetadata_container');
+  this.gmetadata_grid = document.createElement('div');
+  this.gmetadata_grid.setAttribute('class', 'twocolgrid');
+  this._tmetadata_gmetadata_update();
+  this.gmetadata_container.appendChild(this.gmetadata_grid);
+  this.tmetadata_container.appendChild(this.gmetadata_container);
+  // Note: this.tmetadata_container has already been added to parent container
 
+  if ( this.gid_list.length ) {
+    this._tmetadata_group_gid_sel(0);
+  }
+}
+
+_via_temporal_segmenter.prototype._tmetadata_gmetadata_update = function() {
+  this.gmetadata_grid.innerHTML = '';
+
+  // initialise the gmetadata (temporal segment corresponding to each group)
   this.gcanvas = {}; // contains a list of canvas for each group
   this.gctx = {};    // contains the corresponding drawing context
   var gindex, gid;
@@ -378,35 +396,88 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
     var gid_input = document.createElement('input');
     gid_input.setAttribute('type', 'text');
     gid_input.setAttribute('value', gid);
-    var down_button = document.createElement('span');
-    down_button.setAttribute('class', 'text_button');
-    down_button.innerHTML = '&darr;';
-    var up_button = document.createElement('span');
-    up_button.setAttribute('class', 'text_button');
-    up_button.innerHTML = '&uarr;';
-    gid_container.appendChild(up_button);
-    gid_container.appendChild(down_button);
+    gid_input.setAttribute('title', this.d.store.attribute[this.groupby_aid].aname +
+                           ' = ' + gid);
+    gid_input.setAttribute('data-gid', gid);
+    gid_input.addEventListener('change', this._tmetadata_group_update_gid.bind(this));
     gid_container.appendChild(gid_input);
-    gmetadata_grid.appendChild(gid_container);
 
     // column containing temporal segments for this value timeline-id
     this._tmetadata_group_gid_init(gid);
     var gid_metadata_container = document.createElement('div');
     gid_metadata_container.appendChild(this.gcanvas[gid]);
-    gmetadata_grid.appendChild(gid_metadata_container);
-  }
-  gmetadata_container.appendChild(gmetadata_grid);
-  this.tmetadata_container.appendChild(gmetadata_container);
-  // Note: this.tmetadata_container has already been added to parent container
 
-  if ( this.gid_list.length ) {
-    this._tmetadata_group_gid_sel(0);
+    this.gmetadata_grid.appendChild(gid_container);
+    this.gmetadata_grid.appendChild(gid_metadata_container);
   }
 }
 
-_via_temporal_segmenter.prototype._tmetadata_on_timeline_id_update = function() {
-  //@todo
-  console.log('timeline-id updated! @todo');
+_via_temporal_segmenter.prototype._tmetadata_onchange_groupby_aname = function(e) {
+  this.d.attribute_update_aname(this.groupby_aid, this.group_aname_input.value.trim());
+}
+
+_via_temporal_segmenter.prototype._tmetadata_onchange_gid_list_input = function(e) {
+  var input_gid_list = this.gid_list_input.value.split(',');
+  if ( _via_util_array_eq(input_gid_list, this.gid_list) ) {
+    _via_util_msg_show('Timeline group variable values remain unchanged!');
+    return;
+  }
+
+  // filter any empty values
+  var new_gid_list = [];
+  var discarded_gid_list = [];
+  for ( var i in input_gid_list ) {
+    if ( input_gid_list[i] === '' ||
+         input_gid_list[i] === ' ' ) {
+      discarded_gid_list.push( input_gid_list[i] );
+    } else {
+      new_gid_list.push( input_gid_list[i].trim() );
+    }
+  }
+
+  if ( discarded_gid_list.length ) {
+    _via_util_msg_show('Discarded following ' + discarded_gid_list.length + ' values: ' +
+                       discarded_gid_list.join(','));
+  }
+
+  // get a list of timeline group variable values that needs to be deleted
+  var del_gid_list = [];
+  for ( var i in this.gid_list ) {
+    if ( new_gid_list.indexOf(this.gid_list[i]) === -1 ) {
+      del_gid_list.push(this.gid_list[i]);
+    }
+  }
+  this._group_del_gid(del_gid_list).then( function(del_mid_list) {
+    this.d.metadata_delete_bulk(this.vid, del_mid_list, false).then( function(ok) {
+      this._group_init(this.groupby_aid);
+      // add the missing gid
+      var gid;
+      for ( var i in new_gid_list ) {
+        gid = new_gid_list[i];
+        if ( ! this.group.hasOwnProperty(gid) ) {
+          this.group[gid] = [];
+          this.gid_list.push(gid);
+        }
+      }
+      this.gid_list = new_gid_list.slice(0); // ensure the order of gid is as set by user
+      this._tmetadata_gmetadata_update();
+      this.gid_list_input.value = this.gid_list.join(',');
+    }.bind(this), function(err) {
+      console.log(err);
+    }.bind(this));
+  }.bind(this), function(err) {
+    console.log(err);
+  }.bind(this));
+
+/*
+  // update selection
+  var selected_gindex = this.gid_list.indexOf(this.selected_gid);
+  var next_gindex = selected_gindex + 1;
+  if ( next_gindex >= this.gid_list.length ) {
+    next_gindex = 0;
+  }
+  this._tmetadata_group_gid_sel(next_gindex);
+  */
 }
 
 _via_temporal_segmenter.prototype._tmetadata_boundary_move = function(dt) {
@@ -661,46 +732,26 @@ _via_temporal_segmenter.prototype._tmetadata_group_update_gid = function(e) {
   var old_gid = e.target.dataset.gid;
   var new_gid = e.target.value.trim();
   var mindex, mid;
-  var update_list = [];
+  var av_update_list = [];
   for ( mindex in this.group[old_gid] ) {
     mid = this.group[old_gid][mindex]
-    update_list.push( {'mid':mid,
-                       'aid':this.groupby_aid,
-                       'value':new_gid,
-                      } );
+    av_update_list.push( {'mid':mid,
+                          'aid':this.groupby_aid,
+                          'avalue':new_gid,
+                         } );
   }
-  this.d.metadata_update_attribute_value_bulk(this.file.fid, update_list);
-}
-
-_via_temporal_segmenter.prototype._tmetadata_group_gid_html = function(gid) {
-  var tr = document.createElement('tr');
-  tr.setAttribute('data-gid', gid);
-  var gid_col = document.createElement('td');
-  gid_col.setAttribute('style', 'width:' + this.gid_width + 'px; padding:0.2em 0.5em;');
-  var gid_label = document.createElement('input');
-  gid_label.setAttribute('type', 'text');
-  gid_label.setAttribute('value', gid);
-  gid_label.setAttribute('data-gid', gid);
-  gid_label.addEventListener('change', this._tmetadata_group_update_gid.bind(this));
-  gid_col.appendChild(gid_label);
-  tr.appendChild(gid_col);
-
-  var gidtimeline = document.createElement('td');
-  this._tmetadata_group_gid_init(gid);
-  gidtimeline.appendChild( this.gcanvas[gid] );
-  tr.appendChild(gidtimeline);
-  return tr;
-}
-
-_via_temporal_segmenter.prototype._tmetadata_group_gid_html_del = function(gid) {
-  var tr_list = this.metadata_tbody.getElementsByTagName('tr');
-  var i;
-  for ( i = 0; i < tr_list.length; ++i ) {
-    if ( tr_list[i].dataset.gid === gid ) {
-      this.metadata_tbody.removeChild(tr_list[i]);
-      break;
-    }
-  }
+  console.log( JSON.stringify(Object.keys(this.group)) );
+  this.d.metadata_update_av_bulk(this.vid, av_update_list).then( function(ok) {
+    console.log(ok);
+    this.group[new_gid] = this.group[old_gid];
+    delete this.group[old_gid];
+    var gindex = this.gid_list.indexOf(old_gid);
+    this.gid_list[gindex] = new_gid;
+    console.log( JSON.stringify(Object.keys(this.group)) );
+    console.log( JSON.stringify(this.gid_list) )
+    this.gid_list_input.value = this.gid_list.join(',');
+  }.bind(this), function(err) {
+  }.bind(this));
 }
 
 _via_temporal_segmenter.prototype._tmetadata_group_gid_init = function(gid) {
@@ -1511,11 +1562,13 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
   var mid, avalue;
   for ( var mindex in this.d.cache.mid_list[this.vid] ) {
     mid = this.d.cache.mid_list[this.vid][mindex];
-    avalue = this.d.store.metadata[mid].av[aid];
-    if ( ! this.group.hasOwnProperty(avalue) ) {
-      this.group[avalue] = [];
+    if ( this.d.store.metadata[mid].flg === _VIA_METADATA_FLAG.VISIBLE ) {
+      avalue = this.d.store.metadata[mid].av[this.groupby_aid];
+      if ( ! this.group.hasOwnProperty(avalue) ) {
+        this.group[avalue] = [];
+      }
+      this.group[avalue].push(mid);
     }
-    this.group[avalue].push(mid);
   }
 
   this.gid_list = Object.keys(this.group).sort();
@@ -1604,35 +1657,29 @@ _via_temporal_segmenter.prototype._group_gid_del_mid = function(gid, mid) {
   this._tmetadata_group_gid_draw(gid);
 }
 
-_via_temporal_segmenter.prototype._group_del_gid = function(gid) {
-  if ( Object.keys(this.group).length === 1 ) {
-    _via_util_msg_show('Cannot delete the last ' +
-                       this.d.attribute_store[this.groupby_aid].aname + '!');
-    return;
-  }
-
-  var mid_list = this.group[gid].slice();
-  delete this.group[gid];
-  delete this.tmetadata_gtimeline_mid[gid];
-  var gindex = this.gid_list.indexOf(gid);
-  this.gid_list.splice(gindex, 1);
-  delete this.gctx[gid];
-  delete this.gcanvas[gid];
-
-  this._tmetadata_group_gid_html_del(gid);
-
-  // remove selection
-  var selected_gindex = this.gid_list.indexOf(this.selected_gid);
-  var next_gindex = selected_gindex + 1;
-  if ( next_gindex >= this.gid_list.length ) {
-    next_gindex = 0;
-  }
-  this._tmetadata_group_gid_sel(next_gindex);
-
-  // delete from store
-  this.d.metadata_del_bulk(this.file.fid, mid_list);
-  _via_util_msg_show('Deleted ' + this.d.attribute_store[this.groupby_aid].aname +
-                     ' [' + gid + ']');
+_via_temporal_segmenter.prototype._group_del_gid = function(gid_list) {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      var del_mid_list = [];
+      var gid;
+      for ( var i in gid_list ) {
+        gid = gid_list[i];
+        for ( var mindex in this.group[gid] ) {
+          del_mid_list.push(this.group[gid][mindex]);
+        }
+        delete this.group[gid];
+        delete this.tmetadata_gtimeline_mid[gid];
+        var gindex = this.gid_list.indexOf(gid);
+        this.gid_list.splice(gindex, 1);
+        delete this.gctx[gid];
+        delete this.gcanvas[gid];
+      }
+      ok_callback(del_mid_list);
+    }
+    catch(ex) {
+      err_callback(ex);
+    }
+  }.bind(this));
 }
 
 _via_temporal_segmenter.prototype._group_add_gid = function(gid) {
@@ -1719,13 +1766,6 @@ _via_temporal_segmenter.prototype._on_event_metadata_add = function(fid, mid) {
 _via_temporal_segmenter.prototype._toolbar_init = function() {
   this.toolbar_container = document.createElement('div');
   this.toolbar_container.setAttribute('class', 'toolbar_container');
-  this.toolbar_container.innerHTML = 'Toolbar: <input type="radio"><label>Review</label>&nbsp;<input type="radio"><label>Annotate</label>';
-  this.c.appendChild(this.toolbar_container);
-
-  return; // *********** DEBUG
-
-  var toolbar_container = document.createElement('div');
-  toolbar_container.setAttribute('class', 'toolbar_container');
 
   var pb_mode_container = document.createElement('div');
   var pb_mode_label = document.createElement('span');
@@ -1769,40 +1809,23 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   pb_annotation_label.innerHTML = 'Review Gaps';
   pb_mode_container.appendChild(pb_annotation_label);
 
-  var control_container = document.createElement('div');
-  var delbtn = document.createElement('button');
-  delbtn.setAttribute('data-gid', this.selected_gid);
-  delbtn.innerHTML = 'Delete Selected ' + this.d.attribute_store[this.groupby_aid].aname;
-  delbtn.addEventListener('click', function(e) {
-    this._group_del_gid(this.selected_gid);
-  }.bind(this));
+  var gid_list_update_container = document.createElement('div');
+  this.gid_list_input = document.createElement('input');
+  this.gid_list_input.setAttribute('type', 'text');
+  this.gid_list_input.setAttribute('style', 'width:20em;');
+  this.gid_list_input.setAttribute('title', 'Use this input to (a) delete an existing value of timeline group variable; (b) update the order of existing values of the timeline group variable.');
+  this.gid_list_input.setAttribute('value', this.gid_list.join(','));
+  var gid_list_update_btn = document.createElement('button');
+  gid_list_update_btn.innerHTML = 'Update';
+  gid_list_update_btn.addEventListener('click', this._tmetadata_onchange_gid_list_input.bind(this));
 
-  this.new_group_id_input = document.createElement('input');
-  this.new_group_id_input.setAttribute('type', 'text');
-  this.new_group_id_input.setAttribute('size', '16');
-  this.new_group_id_input.setAttribute('placeholder', 'New Speaker Name');
+  gid_list_update_container.appendChild(this.gid_list_input);
+  gid_list_update_container.appendChild(gid_list_update_btn);
 
-  var addbtn = document.createElement('button');
-  addbtn.setAttribute('data-gid', this.selected_gid);
-  addbtn.innerHTML = 'Add ' + this.d.attribute_store[this.groupby_aid].aname;
-  addbtn.addEventListener('click', function(e) {
-    var new_gid = this.new_group_id_input.value;
-    if ( new_gid !== '' ) {
-      this._group_add_gid(new_gid.trim());
-    } else {
-      _via_util_msg_show(this.d.attribute_store[this.groupby_aid].aname +
-                         ' id cannot be empty!');
-    }
-  }.bind(this));
+  this.toolbar_container.appendChild(pb_mode_container);
+  this.toolbar_container.appendChild(gid_list_update_container);
 
-  control_container.appendChild(this.new_group_id_input);
-  control_container.appendChild(addbtn);
-  control_container.appendChild(delbtn);
-
-  toolbar_container.appendChild(pb_mode_container);
-  toolbar_container.appendChild(control_container);
-
-  this.c.appendChild(toolbar_container);
+  this.c.appendChild(this.toolbar_container);
 }
 
 _via_temporal_segmenter.prototype._toolbar_playback_mode_on_change = function(e) {
@@ -1815,5 +1838,25 @@ _via_temporal_segmenter.prototype._toolbar_playback_mode_on_change = function(e)
 _via_temporal_segmenter.prototype._toolbar_playback_rate_set = function(rate) {
   if ( this.m.playbackRate !== rate ) {
     this.m.playbackRate = rate;
+  }
+}
+
+_via_temporal_segmenter.prototype._toolbar_init_gid_add_del_container = function() {
+
+}
+
+//
+// external events
+//
+_via_temporal_segmenter.prototype._on_event_attribute_update = function(data, event_payload) {
+  var aid = event_payload.aid;
+  if ( this.groupby_aid === aid ) {
+    _via_util_msg_show('Attribute name updated to [' + event_payload.aname + ']');
+  }
+}
+
+_via_temporal_segmenter.prototype._on_event_metadata_update_bulk = function(data, event_payload) {
+  if ( this.vid === event_payload.vid ) {
+    _via_util_msg_show('Updated ' + event_payload.mid_list.length + ' metadata');
   }
 }

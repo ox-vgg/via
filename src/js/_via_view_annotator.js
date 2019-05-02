@@ -102,8 +102,7 @@ _via_view_annotator.prototype._view_annotate_single_image = function(vid) {
 _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
   console.log('annotate a video');
   this.view_mode = _VIA_VIEW_MODE.VIDEO1;
-  console.log(this.c.clientHeight)
-  this.c.setAttribute('style', 'grid-template-rows:10fr 5fr;')
+  this.c.setAttribute('style', 'grid-template-rows:1fr 25ch;')
   this.view_metadata_container.style.display = 'block';
 
   // occupy the full container with single image
@@ -112,7 +111,7 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
   this.view_content_container.innerHTML = '';
   this.view_metadata_container.innerHTML = '';
   this._view_split_content_container(this.view_content_container, this.file_container, 1, 1);
-  console.log(this.file_container)
+
   this.file_annotator[0] = [];
   var fid0 = this.d.store.view[vid].fid_list[0];
   var vid0 = this.d.view_get_file_vid( fid0 );

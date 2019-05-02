@@ -93,6 +93,18 @@ _via_data.prototype.attribute_anchor_value_to_name = function(anchor_value) {
   return '';
 }
 
+_via_data.prototype.attribute_update_aname = function(aid, new_aname) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( ! this.store.attribute.hasOwnProperty(aid) ) {
+      err_callback('aid does not exist');
+      return;
+    }
+    this.store['attribute'][aid]['aname'] = new_aname;
+    this.emit_event( 'attribute_update', { 'aid':aid, 'aname':new_aname } );
+    ok_callback(aid);
+  }.bind(this));
+}
+
 //
 // file
 //
@@ -216,7 +228,35 @@ _via_data.prototype.metadata_update_av = function(vid, mid, aid, avalue) {
       ok_callback({'vid':vid, 'mid':mid});
     }
     catch(ex) {
-      console.log(xy);
+      console.log(ex);
+      err_callback(ex);
+    }
+  }.bind(this));
+}
+
+_via_data.prototype.metadata_update_av_bulk = function(vid, av_list) {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      if ( ! this.store.view.hasOwnProperty(vid) ) {
+        err_callback({'vid':vid});
+        return;
+      }
+      var updated_mid_list = [];
+      var mid, aid, avalue;
+      for ( var i in av_list ) {
+        mid = av_list[i].mid;
+        aid = av_list[i].aid;
+        avalue = av_list[i].avalue;
+        this.store.metadata[mid].av[aid] = avalue;
+        updated_mid_list.push(mid);
+      }
+      console.log(this.store.metadata)
+      var event_payload = { 'vid':vid, 'mid_list':updated_mid_list };
+      this.emit_event('metadata_update_bulk', event_payload);
+      ok_callback(event_payload);
+    }
+    catch(ex) {
+      console.log(ex);
       err_callback(ex);
     }
   }.bind(this));
@@ -235,6 +275,7 @@ _via_data.prototype.metadata_delete = function(vid, mid) {
       }
 
       this.cache.mid_list[vid][mid] = 0;
+      this.store.metadata[mid].flg = _VIA_METADATA_FLAG.DELETED;
       this.emit_event( 'metadata_delete', { 'vid':vid, 'mid':mid } );
       ok_callback({'vid':vid, 'mid':mid});
     }
@@ -245,32 +286,30 @@ _via_data.prototype.metadata_delete = function(vid, mid) {
   }.bind(this));
 }
 
-_via_data.prototype.metadata_delete_bulk = function(vid, mid_list) {
+_via_data.prototype.metadata_delete_bulk = function(vid, mid_list, emit) {
   return new Promise( function(ok_callback, err_callback) {
     try {
       if ( ! this.store.view.hasOwnProperty(vid) ) {
         err_callback({'vid':vid});
         return;
       }
-      if ( ! this.store.metadata.hasOwnProperty(mid) ) {
-        err_callback({'mid':mid});
-        return;
-      }
-
-      this.cache.mid_list[vid][mid] = 0;
-
       var deleted_mid_list = [];
       var mid;
-      for ( var mid in this.cache.mid_list[vid] ) {
-        this.cache.mid_list[vid][mid] = 0;
+      for ( var mindex in mid_list ) {
+        mid = mid_list[mindex];
+        delete this.cache.mid_list[vid][mid];
+        this.store.metadata[mid].flg = _VIA_METADATA_FLAG.DELETED;
         deleted_mid_list.push(mid);
       }
-
-      this.emit_event( 'view_update', { 'vid':vid, 'mid_list':deleted_mid_list } );
+      console.log(deleted_mid_list)
+      if ( typeof(emit) !== 'undefined' &&
+           emit === true ) {
+        this.emit_event( 'metadata_delete_bulk', { 'vid':vid, 'mid_list':deleted_mid_list } );
+      }
       ok_callback({'vid':vid, 'mid_list':deleted_mid_list});
     }
     catch(ex) {
-      console.log(xy);
+      console.log(ex);
       err_callback(ex);
     }
   }.bind(this));

@@ -23,37 +23,33 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 
 *, *:before, *:after { box-sizing:inherit; }
 
-.via { position:relative; display:flex; flex-direction:column; flex-wrap:nowrap; padding:0.3em 0.2em; background-color:#ffffff; height:100vh; overflow:hidden; }
+.via_container { position:relative; display:grid; grid-template-rows:auto 1fr; grid-row-gap:0.5em; padding:0.3em; background-color:#ffffff; height:100vh; max-height:100vh; width:100vw; border:1px solid red; }
 
-.cpanel { display:flex; border:1px solid #707070; padding:0.4em 0.5em; }
-.cpanel .tool_group { display:inline-block; margin:0 1%; padding:0; }
-.cpanel .tool_group:first-child { margin-left:0; }
-.cpanel .tool_group:last-child { margin-right:0; }
+/* top control panel */
+.cpanel { display:block; border:1px solid #707070; padding:0.4em 0.5em; }
+.cpanel * { display:inline-block; margin:0 0.2em; }
+.cpanel .spacer { padding:0 0.5em; }
+.cpanel #region_info_panel { font-size:0.8em; }
 .cpanel .logo { display:inline-block; line-height:1.4em;}
 .cpanel .logo a { text-decoration:none; }
-.cpanel .tool_group select { background-color:inherit; border:1px solid #cfcfcf; vertical-align:middle; width:10em; }
-.cpanel .tool_group input { background-color:inherit; border:1px solid #cfcfcf; vertical-align:middle; width:4em;}
-.cpanel .tool_group #_via_project_name_input { display:inline-block; vertical-align:middle; font-size:small; width:8em; border:none; border-bottom:1px solid white; }
-.cpanel .tool_group #_via_project_name_input:hover { border-bottom:1px solid #cfcfcf; }
-.cpanel .tool_group #_via_project_name_input:focus { background-color:#f2f2f2; border-bottom:1px solid #cfcfcf; }
+.cpanel select { background-color:inherit; border:1px solid #cfcfcf; vertical-align:middle; width:10em; }
+.cpanel input { background-color:inherit; border:1px solid #cfcfcf; vertical-align:middle; width:4em;}
+.cpanel #_via_project_name_input { display:inline-block; vertical-align:middle; font-size:small; width:8em; border:none; border-bottom:1px solid white; }
+.cpanel #_via_project_name_input:hover { border-bottom:1px solid #cfcfcf; }
+.cpanel #_via_project_name_input:focus { background-color:#f2f2f2; border-bottom:1px solid #cfcfcf; }
 
-#view_manager_container {  }
-#view_manager_container .pname { border:none; border-bottom:1px solid white; width:8em; }
-#view_manager_container .pname:hover { border:none; background-color: #f2f2f2; }
-#view_manager_container .pname:focus { border-bottom:1px solid #cfcfcf; }
-#view_manager_container .view_selector { margin:0 0.5em; width:10em; }
-#view_manager_container .view_filter_regex { width:4em; }
-
-#view_container { display:grid; height:100vh; margin-top:0.4em; } /* grid-template-rows is set dynamically */
+/* View Container : video + temporal segmenter */
+#view_container { display:grid; grid-row-gap:0.5em; } /* grid-template-rows is set dynamically */
 
 /* view content: image, video, audio, image pair, etc. */
-#view_container > .view_content_container { display:grid; }
-#view_container > .view_content_container > .file_container { display:block; position:relative; }
+#view_container > .view_content_container { display:grid; } /* grid-template-rows value set by _view_annotate_single_video(), video_annotate_single_image(), etc methods in _via_view_annotator.js */
+
+#view_container > .view_content_container > .file_container { display:block; position:relative; margin:0; padding:0; }
 #view_container > .view_content_container > .file_container * { position:absolute; top:0; border:0.1em solid white; }
 #view_container > .view_content_container > .file_container .rinput_enabled { border:0.1em solid black; }
 
 /* metadata associated with a view */
-#view_container > .view_metadata_container { margin:0.5em 0; padding:0.2em; max-height:100%; border:1px solid #666666; }
+#view_container > .view_metadata_container { padding:0.2em; border:1px solid #666666; }
 
 /* @todo: to annotate metadata for an image pair */
 .img_pair_annotator_container {}
@@ -65,15 +61,22 @@ to annotate temporal segments of a video: contains 4 rows
  - row3: tmetadata_container (temporal segmentation metadata container)
  - row4: toolbar for temporal segmentation
 */
-.temporal_segmenter_container { display:grid; height:100%; grid-template-rows:auto auto 1fr auto; margin:0; padding:0; position:relative; }
-.temporal_segmenter_container > .tmetadata_container { max-height:100%; overflow:hideen; display:grid; grid-template-rows:auto 1fr; margin:1em 0;}
+.temporal_segmenter_container { display:grid; grid-template-rows:auto auto 1fr auto; margin:0; padding:0; position:relative; height:100%; max-height:100%; }
+.temporal_segmenter_container > .tmetadata_container { display:grid; grid-template-rows:auto 1fr; height:100%; max-height:100%; }
 
-.temporal_segmenter_container > .tmetadata_container > .gtimeline_container {}
-.temporal_segmenter_container > .tmetadata_container > .gmetadata_container { max-height:100%; overflow-y:scroll; }
-.temporal_segmenter_container > .tmetadata_container .twocolgrid { display:grid; width:100%; grid-template-columns:8em 1fr; grid-auto-rows:1fr; }
+.temporal_segmenter_container > .tmetadata_container > .gtimeline_container { }
+/*@todo: height of gmetadata_container must be fixed (and not expandable) */
+.temporal_segmenter_container > .tmetadata_container > .gmetadata_container { max-height:14ch; overflow-y:scroll; }
+.temporal_segmenter_container > .tmetadata_container .twocolgrid { display:grid; width:100%; grid-template-columns:8em 1fr; }
 .temporal_segmenter_container > .tmetadata_container .gidcol { align-self:center; padding-left:0.1em; }
-.temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"] { width:60%; border:none; border-bottom:1px solid #cccccc; }
+.temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"] { width:80%; border:none; border-bottom:1px solid #cccccc; }
 .temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"]:focus { background-color:#f2f2f2; }
+
+.temporal_segmenter_container > .toolbar_container { font-size:small; vertical-align:middle; }
+.temporal_segmenter_container > .toolbar_container div { display:inline; margin-right:1em; }
+.temporal_segmenter_container > .toolbar_container input { vertical-align:middle; font-size:small; }
+.temporal_segmenter_container > .toolbar_container label { vertical-align:middle; }
+.temporal_segmenter_container > .toolbar_container button { font-size:small; }
 
 /* Editor panel for add/update/view metadata and attributes */
 .editor_container { display:none; position:absolute; bottom:0; left:0; right:0; height:30vh; overflow:auto; background-color:white;  }
@@ -112,3 +115,11 @@ to annotate temporal segments of a video: contains 4 rows
 #_via_message_container .message_panel_close_button { position:absolute; top:-0.4em; right:0.3em; color:white; cursor:pointer; font-size:small; }
 #_via_message_container #_via_message { position:relative; display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:medium; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}
 .key { font-family:monospace; padding:1px 6px; background:linear-gradient(to bottom,#f0f0f0,#fcfcfc);; border:1px solid #e0e0e0; white-space:nowrap; color:#303030; border-bottom-width:2px; border-radius:3px; font-size:1.2em; }
+
+/* View manager container in the top control panel */
+#view_manager_container {  }
+#view_manager_container .pname { border:none; border-bottom:1px solid white; width:8em; }
+#view_manager_container .pname:hover { border:none; background-color: #f2f2f2; }
+#view_manager_container .pname:focus { border-bottom:1px solid #cfcfcf; }
+#view_manager_container .view_selector { margin:0 0.5em; width:10em; }
+#view_manager_container .view_filter_regex { width:4em; }

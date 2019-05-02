@@ -13,7 +13,7 @@
 'use strict';
 
 const _VIA_RSHAPE  = { 'POINT':1, 'RECT':2, 'CIRCLE':3, 'ELLIPSE':4, 'LINE':5, 'POLYLINE':6, 'POLYGON':7 };
-const _VIA_METADATA_FLAG = { 'DELETED':1, 'HIDDEN':2, 'RESERVED1':4, 'RESERVED2':8, }
+const _VIA_METADATA_FLAG = { 'VISIBLE':0, 'DELETED':1, 'HIDDEN':2, 'RESERVED1':4, 'RESERVED2':8 }
 
 function _via_metadata(vid, z, xy, av) {
   this.vid = vid;   // view id

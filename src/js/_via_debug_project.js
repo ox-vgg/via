@@ -115,7 +115,7 @@ _via_dp[0]['store']['metadata'] = {
       '1':'spk2'
     }
   },
-  'kHRoMie1': {
+'kHRoMie1': {
     'vid': '1',
     'flg': 0,
     'z': [1.564, 5.852],
