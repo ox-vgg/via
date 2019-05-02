@@ -6643,6 +6643,7 @@ function project_open_parse_json_file(project_file_data) {
     _via_img_metadata = {};
     _via_img_fileref = {};
     _via_img_src = {};
+    _via_attributes = { 'region':{}, 'file':{} };
     _via_buffer_remove_all();
 
     // import image metadata
