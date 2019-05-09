@@ -409,3 +409,60 @@ function _via_util_array_eq(a, b) {
   }
   return true;
 }
+
+function _via_util_obj_to_csv(obj, default_key) {
+  var csv = [];
+  for ( var oid in obj ) {
+    if ( oid === default_key ) {
+      csv.push( '*' + obj[oid] );
+    } else {
+      csv.push( obj[oid] );
+    }
+  }
+  return csv.join(',');
+}
+
+function _via_util_attribute_to_html_element(attr) {
+  var el;
+  switch(attr.type) {
+  case _VIA_ATTRIBUTE_TYPE.TEXT:
+    el = document.createElement('textarea');
+    break;
+
+  case _VIA_ATTRIBUTE_TYPE.SELECT:
+    el = document.createElement('select');
+    var oid;
+    for ( oid in attr.options ) {
+      var oi = document.createElement('option');
+      oi.setAttribute('value', oid);
+      oi.innerHTML = attr.options[oid];
+      if ( oid == attr.default_option_id ) {
+        oi.setAttribute('selected', '');
+      }
+      el.appendChild(oi);
+    }
+    break;
+
+  case _VIA_ATTRIBUTE_TYPE.RADIO:
+    el = document.createElement('table');
+    for ( var oid in attr.options ) {
+      var oi = document.createElement('input');
+      oi.setAttribute('name', attr.aname);
+      oi.setAttribute('type', 'radio');
+      var label = document.createElement('label');
+      label.innerHTML = attr.options[oid];
+      var tr = document.createElement('tr');
+      var td = document.createElement('td');
+      td.appendChild(oi);
+      td.appendChild(label);
+      tr.appendChild(td);
+      el.appendChild(tr);
+    }
+    break;
+
+  default:
+    el = document.createElement('span');
+    el.innerHTML = 'UNKNOWN';
+  }
+  return el;
+}

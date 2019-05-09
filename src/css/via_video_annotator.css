@@ -1,6 +1,6 @@
 /*
 
-CSS style definitions for VIA Speaker Diarisation tool
+CSS style definitions for VIA Video Annotator
 
 Theme: https://material.io/tools/color/#!/?view.left=0&view.right=0&primary.color=9E9E9E&secondary.color=FFEB3B
 Primary:  #9e9e9e
@@ -12,8 +12,6 @@ Secondary: #ffeb3b
 Text
   primary:    #000000
   secondary:  #000000
-
-
 
 Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
 Date: 5 Mar. 2019
@@ -45,8 +43,16 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 #view_container > .view_content_container { display:grid; } /* grid-template-rows value set by _view_annotate_single_video(), video_annotate_single_image(), etc methods in _via_view_annotator.js */
 
 #view_container > .view_content_container > .file_container { display:block; position:relative; margin:0; padding:0; }
-#view_container > .view_content_container > .file_container * { position:absolute; top:0; border:0.1em solid white; }
-#view_container > .view_content_container > .file_container .rinput_enabled { border:0.1em solid black; }
+#view_container > .view_content_container > .file_container * { position:absolute; top:0; }
+#view_container > .view_content_container > .file_container .rinput_enabled { }
+#view_container > .view_content_container > .file_container > .smetadata_container { position:relative; display:inline-block; font-size:small; background-color:white; z-index:1001; }
+#view_container > .view_content_container > .file_container > .smetadata_container * { position:relative; vertical-align:middle; }
+#view_container > .view_content_container > .file_container > .smetadata_container table { border-collapse:collapse; border:none; margin:0.2em; }
+#view_container > .view_content_container > .file_container > .smetadata_container td { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.2em; }
+#view_container > .view_content_container > .file_container > .smetadata_container th { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.2em; }
+#view_container > .view_content_container > .file_container > .smetadata_container input { font-size:small; }
+#view_container > .view_content_container > .file_container > .smetadata_container select { font-size:small; }
+
 
 /* metadata associated with a view */
 #view_container > .view_metadata_container { padding:0.2em; border:1px solid #666666; }

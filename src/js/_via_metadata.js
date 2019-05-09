@@ -18,8 +18,8 @@ const _VIA_METADATA_FLAG = { 'VISIBLE':0, 'DELETED':1, 'HIDDEN':2, 'RESERVED1':4
 function _via_metadata(vid, z, xy, av) {
   this.vid = vid;   // view id
   this.flg = 0;     // flags: [deleted, hidden, ...]
-  this.z   = z;     // time or frame index
-  this.xy  = xy;    // [shape_id, shape_coordinates, ...]
+  this.z   = z;     // [t0, ..., tn] (temporal coordinate e.g. time or frame index)
+  this.xy  = xy;    // [shape_id, shape_coordinates, ...] (i.e. spatial coordinate)
   this.av  = av;    // attribute-value pair e.g. {attribute_id : attribute_value, ...}
 }
 

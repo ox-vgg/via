@@ -2,104 +2,120 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>Video Annotator : VIA</title>
+    <title>VIA</title>
     <meta name="author" content="Abhishek Dutta">
-    <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 400 KB) that runs on most modern web browsers.">
+    <meta name="description" content="VIA is a standalone manual annotator software for image, audio and video. VIA is packaged as a single HTML file (< 500 KB) that runs on most modern web browsers.">
+
+    <!--
+    Development of VIA is supported by the EPSRC programme grant
+    Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1).
+    Using Google Analytics, we record the usage of this application.
+    This data is used in reporting of this programme grant.
+
+    If you do not wish to share this data, you can safely remove the
+    javascript code below.
+    <script type="text/javascript">
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                               m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-20555581-2', 'auto');
+      ga('set', 'page', '/via/3.0.0/via_video_annotator.html');
+      ga('send', 'pageview');
+    </script>
+    -->
     <link rel="stylesheet" type="text/css" href="../css/via_video_annotator.css">
   </head>
 
   <body onresize="_via_on_browser_resize()">
-    <div class="via">
-      <div id="_via_message_container" class="message_container">
+    <div class="via_container" id="via_container" tabindex="0">
+      <div id="_via_message_container" class="message_container" onclick="_via_util_msg_hide()">
         <div id="_via_message"></div>
       </div>
 
       <div class="cpanel">
-        <div class="tool_group">
-          <div class="logo"><a href="http://www.robots.ox.ac.uk/~vgg/software/via/" title="VGG Image Annotator (VIA)">VIA</a></div>
-        </div>
+        <div class="logo"><a href="http://www.robots.ox.ac.uk/~vgg/software/via/" title="Video Annotator">VIA</a></div>
 
+        <div class="spacer"></div>
 
-        <div id="project" class="tool_group">
-          <svg onclick="data.load_local()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_open"></use><title>Open Project</title></svg>
-          <svg onclick="data.save_local()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_save"></use><title>Save Project</title></svg>
-          <!--
-              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_settings"></use><title>Project Settings</title></svg>
-              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Upload Project</title></svg>
-              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_download"></use><title>Download Project</title></svg>
-              -->
-        </div>
+        <div id="view_manager_container"></div>
 
-        <div id="import_export" class="tool_group">
-          <!--
-              <svg onclick="io.metadata_import_csv()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#icon_import"></use><title>Import Metadata from CSV</title></svg>
-              -->
-              <svg onclick="io.metadata_export_csv(1)" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#icon_export"></use><title>Download Metadata as CSV</title></svg>
-        </div>
+        <div class="spacer"></div>
 
-        <div id="file_manager_container" class="tool_group">
-          <svg onclick="file_manager.on_file_show_prev()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_navigate_prev"></use><title>Show previous file</title></svg>
-          <svg onclick="file_manager.on_file_show_next()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_navigate_next"></use><title>Show next file</title></svg>
-          <select id="file_manager_filelist"></select>
-          <input type="text" placeholder="Search" oninput="file_manager._filelist_update_regex(this.value)">
-          <svg onclick="file_manager.on_file_select_local_video()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_video"></use><title>Add video file from this computer</title></svg>
-          <!--
-              <svg onclick="file_manager.on_file_select_local_image()" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_image"></use><title>Add Image</title></svg>
-              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_audio"></use><title>Add Audio</title></svg>
-              -->
-              <svg onclick="file_manager.on_file_bulk_add_uri()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_lib_add"></use><title>Bulk add file URI ( e.g. file:///... or http://... ) contained in a local CSV file where each row is a remote or local filename.</title></svg>
-              <svg onclick="file_manager.on_file_remove_current()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_remove_circle"></use><title>Remove the current file from project</title></svg>
-        </div>
-
-
-        <div id="content_tools" class="tool_group">
-          <!--
-              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_zoomin"></use><title>Zoom In</title></svg>
-              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_zoomout"></use><title>Zoom Out</title></svg>
-              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_copy"></use><title>Copy Selected Regions</title></svg>
-              <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_paste"></use><title>Paste Selected Regions</title></svg>
-              -->
-              <svg onclick="document.getElementById('editor_container').classList.toggle('hide')" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_insertcomment"></use><title>Show/hide metadata and attribute editor</title></svg>
+        <div id="region_shape_selector">
+          <svg id="POINT" onclick="_via_set_region_draw_shape(this)" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_point"></use><title>Point</title></svg>
+          <svg id="RECT" onclick="_via_set_region_draw_shape(this)" class="svg_button" viewbox="0 0 24 24" ><use xlink:href="#shape_rectangle"></use><title>Rectangle</title></svg>
+          <svg id="CIRCLE" onclick="_via_set_region_draw_shape(this)" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_circle"></use><title>Circle</title></svg>
+          <svg id="ELLIPSE" onclick="_via_set_region_draw_shape(this)" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_ellipse"></use><title>Ellipse</title></svg>
+          <svg id="LINE" onclick="_via_set_region_draw_shape(this)" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_line"></use><title>Line</title></svg>
+          <svg id="POLYGON" onclick="_via_set_region_draw_shape(this)" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_polygon"></use><title>Polygon</title></svg>
+          <svg id="POLYLINE" onclick="_via_set_region_draw_shape(this)" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_polyline"></use><title>Polyline</title></svg>
         </div>
 
         <!--
-            <div id="region_shape" class="tool_group" >
-              <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_point"></use><title>Point</title></svg>
-              <svg onclick="" class="svg_button" viewbox="0 0 24 24" ><use xlink:href="#shape_rectangle"></use><title>Rectangle</title></svg>
-              <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_circle"></use><title>Circle</title></svg>
-              <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_ellipse"></use><title>Ellipse</title></svg>
-              <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_polygon"></use><title>Polygon</title></svg>
-              <svg onclick="" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_polyline"></use><title>Polyline</title></svg>
-            </div>
-            -->
+        <div class="spacer"></div>
 
-            <div id="restore" class="tool_group" >
-              <svg id="_via_restore_load_button" onclick="store.prev_session_load()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_restore_load"></use><title>Load VIA project from previous session</title></svg>
+        <svg onclick="file_manager.on_file_select_local_video()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_video"></use><title>Add video file from this computer</title></svg>
 
-              <svg id="_via_restore_save_button" onclick="store.prev_session_save()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_restore_save"></use><title>Restore and save VIA project data from previous session</title></svg>
-            </div>
+        <svg onclick="file_manager.on_file_select_local_image()" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_image"></use><title>Add Image</title></svg>
+        <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_audio"></use><title>Add Audio</title></svg>
 
-            <div id="help" class="tool_group" >
-              <svg onclick="_via_util_show_info_page('keyboard_shortcuts')" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_help"></use><title>Help</title></svg>
-            </div>
+        <svg onclick="file_manager.on_file_bulk_add_uri()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_lib_add"></use><title>Bulk add file URI ( e.g. file:///... or http://... ) contained in a local CSV file where each row is a remote or local filename.</title></svg>
+        <svg onclick="file_manager.on_file_remove_current()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_remove_circle"></use><title>Remove the current file from project</title></svg>
 
-            <div id="region_info_panel" class="tool_group" >
-              <!--
-                  display the (x,y) coordinate of current mouse cursor
-                  display the boundaries of current selected region
-                  ...
-                -->
-            </div>
-      </div>
-      <div id="annotator_container" class="annotator_container"></div>
-      <div id="editor_container" class="editor_container"></div>
+        <div class="spacer"></div>
+
+        <svg onclick="data.load_local()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_open"></use><title>Open Project</title></svg>
+        <svg onclick="data.save_local()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_save"></use><title>Save Project</title></svg>
+        <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_settings"></use><title>Project Settings</title></svg>
+        <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Upload Project</title></svg>
+        <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_download"></use><title>Download Project</title></svg>
+
+        <div class="spacer"></div>
+
+        <svg onclick="io.metadata_import_csv()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#icon_import"></use><title>Import Metadata from CSV</title></svg>
+
+        <svg onclick="io.speaker_diarisation_export_csv()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#icon_export"></use><title>Download Metadata as CSV</title></svg>
+
+        <div class="spacer"></div>
+
+        <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_zoomin"></use><title>Zoom In</title></svg>
+        <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_zoomout"></use><title>Zoom Out</title></svg>
+        <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_copy"></use><title>Copy Selected Regions</title></svg>
+        <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_paste"></use><title>Paste Selected Regions</title></svg>
+        <svg onclick="editor.toggle()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_insertcomment"></use><title>Show/hide metadata and attribute editor</title></svg>
+
+        <div class="spacer"></div>
+
+        <svg id="_via_restore_load_button" onclick="store.prev_session_load()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_restore_load"></use><title>Restore to previous version that was not yet uploaded!</title></svg>
+
+        <svg style="display:none;" id="_via_restore_save_button" onclick="store.prev_session_save()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_restore_save"></use><title>Restore and save VIA project data from previous session</title></svg>
+
+        <div class="spacer"></div>
+
+        <svg onclick="_via_util_show_info_page('keyboard_shortcuts')" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_help"></use><title>Help</title></svg>
+
+        <div class="spacer"></div>
+
+        <svg onclick="data.save_remote()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Share Project</title></svg>
+        <svg onclick="data.save_remote()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Load Shared Project</title></svg>
+
+        <div class="spacer"></div>
+
+        <div id="region_info_panel"></div>
+-->
+      </div> <!-- end of cpanel -->
+
+      <div id="view_container"></div>
+      <div id="editor_container" class="hide"></div>
 
       <!-- Information Panel (displayed when user wants to see them) -->
       <div id="_via_info_page_container" class="info_page_container">
         <div data-pageid="keyboard_shortcuts" class="info_page">
           <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
           <h1>Keyboard Shortcuts</h1>
-          <h3>Video Annotator</h3>
+          <h3>General</h3>
           <table>
             <thead>
               <tr>
@@ -108,28 +124,76 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td>Play/Pause Video (or temporal segment, if selected)</td><td><span class="key">Spc</span></td></tr>
+              <tr><td>Play/Pause Video</td><td><span class="key">Spc</span></td></tr>
+              <tr><td>Toggle Video Mute</td><td><span class="key">m</span></td></tr>
               <tr><td>Increase / Decrease Video Playback Speed</td><td><span class="key">+</span> / <span class="key">-</span></td></tr>
-              <tr><td>Move Video Time Backward 1, ..., 9 sec. (Ctrl to move forward)</td><td><span class="key">Ctrl</span> + <span class="key">1</span>, <span class="key">2</span>, ..., <span class="key">9</span</td></tr>
-
+              <tr><td>Move Video Time Backward by 1, ..., 9 sec. (Ctrl to move forward)</td><td><span class="key">Ctrl</span> + <span class="key">1</span>, <span class="key">2</span>, ..., <span class="key">9</span</td></tr>
               <tr><td>Add Temporal Segment at Current Time</td><td><span class="key">a</span></td></tr>
-              <tr><td>Delete Selected Temporal Segment</td><td><span class="key">Backspace</span></td></tr>
-              <tr><td>Change the displayed attribute (temporal segment must be selected)</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
+              <tr><td>Update the edge (left or right) of last added segment to current time</td><td><span class="key">Shift</span> + <span class="key">a</span></td></tr>
+
+              <tr><td>Select Previous / Next Speaker</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
 
               <tr><td>Select [Previous] Next Temporal Segment</td><td><span class="key">Shift</span> + <span class="key">Tab</span></td></tr>
-              <tr><td>Unselect Temporal Segment</td><td><span class="key">Esc</span></td></tr>
-              <tr><td>Start Editing Metadata (temporal segment must be selected)</td><td><span class="key">Enter</span></td></tr>
-              <tr><td>Finish Editing Metadata (metadata editing is already active)</td><td><span class="key">Esc</span></td></tr>
-              <tr><td>Move to Previous / Next video frame</td><td><span class="key">l</span> / <span class="key">r</span></td></tr>
-              <tr><td>If Temporal Segment is Selected, Increase/Decrease the Extent of Left Edge</td><td><span class="key">l</span> / <span class="key">L</span></td></tr>
-              <tr><td>If Temporal Segment is Selected, Increase/Decrease the Extent of Right edge</td><td><span class="key">r</span> / <span class="key">R</span></td></tr>
+              <tr><td>Select Temporal Segment at Current Time (if any)</td><td><span class="key">Enter</span></td></tr>
 
-              <tr><td>Jump to Start/End of Timeline (of temporal segment, if selected)</td><td><span class="key">s</span> / <span class="key">e</span></td></tr>
+              <tr><td>Move to Previous / Next Video Frame</td><td><span class="key">l</span> / <span class="key">r</span></td></tr>
               <tr><td>Jump to Start/End of Video</td><td><span class="key">Shift</span> + <span class="key">s</span> / <span class="key">e</span></td></tr>
-              <tr><td>If Temporal Segment is Selected, move segment</td><td>Left / Right Arrow</td></tr>
-              <tr><td>Shift temporal segment timeline</td><td>Left / Right Arrow</td></tr>
+              <tr><td>Shift Visible Timeline by 1 sec.</td><td><span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
+              <tr><td>Shift Visible Timeline by 60 sec.</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
+              <tr><td>Zoom In/Out the Temporal Segment Timeline</td><td>Mouse Wheel<br/></td></tr>
+              <tr><td>Pan the Temporal Segment Timeline Horizontally</td><td><span class="key">Shift</span> + Mouse Wheel</td></tr>
             </tbody>
           </table>
+          <h3>When a Temporal Segment is Selected</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Command</th>
+                <th>Shortcut</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Play/Pause Video Locked to Segment Boundary</td><td><span class="key">Spc</span></td></tr>
+              <tr><td>Delete Selected Temporal Segment</td><td><span class="key">Backspace</span></td></tr>
+              <tr><td>Select [Previous] Next Temporal Segment</td><td>[<span class="key">Shift</span>] + <span class="key">Tab</span></td></tr>
+              <tr><td>Unselect Temporal Segment</td><td><span class="key">Esc</span></td></tr>
+              <tr><td>Increase/Decrease the Extent of Left Edge</td><td><span class="key">l</span> / <span class="key">L</span></td></tr>
+              <tr><td>Increase/Decrease the Extent of Right edge</td><td><span class="key">r</span> / <span class="key">R</span></td></tr>
+
+              <tr><td>Jump to Start/End of Temporal Segment</td><td><span class="key">s</span> / <span class="key">e</span></td></tr>
+              <tr><td>Move Selected Temporal Segment</td><td><span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
+              <tr><td>Merge Selected Temporal Segment with the Segment on Left/Right</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
+            </tbody>
+          </table>
+
+          <h1>About VIA</h1>
+          <div>This is a preview release of version 3.0.0 of the VGG Image Annotator (VIA). VIA is an open source project developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause license. For more details, visit the <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">VIA project website</a>.</div>
+          <div>
+          <h3>License</h3>
+          <pre>Copyright (c) 2019, Abhishek Dutta, Visual Geometry Group, Oxford University.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+          </pre>
+          </div>
         </div>
       </div>
     </div>
@@ -142,6 +206,7 @@
     <script src="../js/_via_metadata.js"></script>
     <script src="../js/_via_file.js"></script>
     <script src="../js/_via_attribute.js"></script>
+    <script src="../js/_via_view.js"></script>
     <script src="../js/_via_data.js"></script>
 
     <script src="../js/_via_store_localstorage.js"></script>
@@ -151,14 +216,14 @@
     <script src="../js/_via_project.js"></script>
 
     <script src="../js/_via_video_thumbnail.js"></script>
-    <script src="../js/_via_region_annotator.js"></script>
-    <script src="../js/_via_time_annotator.js"></script>
-    <script src="../js/_via_annotator.js"></script>
+    <script src="../js/_via_file_annotator.js"></script>
+    <script src="../js/_via_temporal_segmenter.js"></script>
+    <script src="../js/_via_view_annotator.js"></script>
 
-    <script src="../js/_via_file_manager.js"></script>
+    <script src="../js/_via_view_manager.js"></script>
 
     <script src="../js/_via_editor.js"></script>
-
+    <script src="../js/_via_debug_project.js"></script>
     <script src="../js/_via_video_annotator.js"></script>
 
     <!--
@@ -190,6 +255,11 @@
           <circle r="2" cx="8" cy="18"></circle>
           <circle r="2" cx="14" cy="6"></circle>
           <circle r="2" cx="20" cy="14"></circle>
+        </symbol>
+        <symbol id="shape_line" stroke-width="1" stroke="black">
+          <line x1="6" y1="6" x2="19" y2="19"/>
+          <circle r="2" cx="6" cy="6"></circle>
+          <circle r="2" cx="19" cy="19"></circle>
         </symbol>
 
         <symbol id="micon_settings">

@@ -26,21 +26,23 @@ via_container.addEventListener('keydown', function(e) {
   }
 });
 
+/*
 var editor_container = document.getElementById('editor_container');
 var editor = new _via_editor(data, view_annotator, editor_container);
 setTimeout( function() {
   //editor.show();
 }, 100);
+*/
 
 var view_manager_container = document.getElementById('view_manager_container');
 var view_manager = new _via_view_manager(data, view_annotator, view_manager_container);
 
 view_manager._init();
 view_annotator.view_show(1);
-//_via_set_region_draw_shape(document.getElementById('RECT'));
+_via_set_region_draw_shape(document.getElementById('RECT'));
 
 function _via_on_browser_resize() {
-  //annotator.emit_event('container_resize', {});
+  view_annotator.view_show(view_annotator.vid);
 }
 
 function _via_set_region_draw_shape(e) {

@@ -12,7 +12,7 @@ import http.client
 import datetime
 import csv
 
-filegroup_fn = '/data/datasets/amir_jamaludin/pair_annotator/sample_dataset/file_group.csv'
+filegroup_fn = '/data/datasets/via/via-3.x.y/img_pair_annotation/file_group.csv'
 
 filename_list = {}
 view_list = {}
@@ -28,7 +28,7 @@ def init_via_project(project_index):
   }
   d['store']['config'] = {
     'file': {
-      'path':'/data/datasets/amir_jamaludin/pair_annotator/sample_dataset/Images/',
+      'path':'/data/datasets/via/via-3.x.y/img_pair_annotation/Images/',
     },
     'ui': {
       'file_content_align':'center'
@@ -73,6 +73,9 @@ with open(filegroup_fn, 'r') as f:
       view_list[view_id] = []
     view_list[view_id].append( filename_list[filename] )
 
+    if file_id > 5:
+      break
+
 d = init_via_project(1)
 for filename in filename_list:
   fid = filename_list[filename]
@@ -90,8 +93,8 @@ for filename in filename_list:
   #d['store']['vid_list'].append(view_id) # we do not add single image views
   file_view_id = file_view_id + 1
 
-#save_via_project(d['store'], '/data/datasets/amir_jamaludin/pair_annotator/via3/via_project.json')
+save_via_project(d['store'], '/data/datasets/via/via-3.x.y/img_pair_annotation/via_project.json')
 
-js_var = 'var _via_debug_project_json_str = \'' + json.dumps( d['store'], indent=None, separators=(',',':') ) + '\';'
-with open('/home/tlm/dev/via/src/js/_via_debug_data.js', 'w') as f:
-  f.write(js_var)
+#js_var = 'var _via_debug_project_json_str = \'' + json.dumps( d['store'], indent=None, separators=(',',':') ) + '\';'
+#with open('/home/tlm/dev/via/src/js/_via_debug_data.js', 'w') as f:
+#  f.write(js_var)

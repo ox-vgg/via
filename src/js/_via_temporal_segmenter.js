@@ -76,7 +76,9 @@ _via_temporal_segmenter.prototype._init = function() {
 
     this._group_init('1'); // for debug
 
-    this._thumbview_init();
+    if ( this.d.store.file[fid].type === _VIA_FILE_TYPE.VIDEO ) {
+      this._thumbview_init();
+    }
     this._vtimeline_init();
     this._tmetadata_init();
     this._toolbar_init();
@@ -1042,7 +1044,7 @@ _via_temporal_segmenter.prototype._tmetadata_mid_move = function(dt) {
   for ( var i = 0; i < n; ++i ) {
     newz[i] = parseFloat((parseFloat(newz[i]) + dt).toFixed(3));
   }
-  this.d.metadata_update_z(this.file.fid, this.selected_mid, newz).then( function(ok) {
+  this.d.metadata_update_z(this.vid, this.selected_mid, newz).then( function(ok) {
     this.m.currentTime = this.d.store.metadata[this.selected_mid].z[0];
     this._tmetadata_group_gid_draw(this.selected_gid);
 
@@ -1175,6 +1177,9 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mousemove = function(e) {
   var gid = e.target.dataset.gid;
   var t = this._tmetadata_gtimeline_canvas2time(x);
   if ( this.metadata_resize_is_ongoing ) {
+    this.m.currentTime = t;
+    // @todo: shown thumbnail
+    //this._thumbview_show(t, 0, 0);
     this.metadata_ongoing_update_x[ this.metadata_resize_edge_index ] = x;
     this._tmetadata_group_gid_draw(gid);
     return;
@@ -1812,9 +1817,11 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   var gid_list_update_container = document.createElement('div');
   this.gid_list_input = document.createElement('input');
   this.gid_list_input.setAttribute('type', 'text');
-  this.gid_list_input.setAttribute('style', 'width:20em;');
   this.gid_list_input.setAttribute('title', 'Use this input to (a) delete an existing value of timeline group variable; (b) update the order of existing values of the timeline group variable.');
-  this.gid_list_input.setAttribute('value', this.gid_list.join(','));
+  var gid_list_str = this.gid_list.join(',');
+  this.gid_list_input.setAttribute('value', gid_list_str);
+  //this.gid_list_input.setAttribute('style', 'width:' + (gid_list_str.length) + 'ch;');
+  this.gid_list_input.setAttribute('style', 'width:8em;');
   var gid_list_update_btn = document.createElement('button');
   gid_list_update_btn.innerHTML = 'Update';
   gid_list_update_btn.addEventListener('click', this._tmetadata_onchange_gid_list_input.bind(this));

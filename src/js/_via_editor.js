@@ -4,18 +4,10 @@
  * @author Abhishek Dutta <adutta@robots.ox.ac.uk>
  * @since 14 Jan. 2019
  */
-function _via_editor(container, data, annotator) {
-  this.c = container;
-  this.d = data;
-  this.a = annotator;
-
-  this.now = {};
-
-  if ( typeof(this.c.innerHTML) === 'undefined' ) {
-    throw 'invalid html container or media element!';
-  }
-
-  this.init();
+function _via_editor(data, view_anntoator, container) {
+  this.d  = data;
+  this.va = view_annotator;
+  this.c  = container;
 
   // initialise event listeners
   this.d.on_event('file_show', this.on_event_file_show.bind(this));
@@ -28,7 +20,20 @@ function _via_editor(container, data, annotator) {
 
 _via_editor.prototype.TYPE = { 'METADATA':2, 'ATTRIBUTE':3 };
 
-_via_editor.prototype.init = function() {
+
+_via_editor.prototype.toggle = function() {
+  if ( this.c.classList.contains('hide') ) {
+    this.show();
+  } else {
+    this.hide();
+  }
+}
+
+_via_editor.prototype.hide = function() {
+  this.c.innerHTML = '';
+  this.c.classList.add('hide');
+}
+_via_editor.prototype.show = function() {
   // top line: editor content selector {metadata, attribute}
   this.editor_content_selector = document.createElement('div');
   this.editor_content_selector.setAttribute('class', 'editor_content_selector');
@@ -53,10 +58,19 @@ _via_editor.prototype.init = function() {
   edit_attribute_label.setAttribute('title', 'Attribute corresponds to fields like name, color, etc. required to describe the region of interest');
 
   this.editor_content_selector.appendChild(title);
-  this.editor_content_selector.appendChild(this.edit_metadata_checkbox);
-  this.editor_content_selector.appendChild(edit_metadata_label);
   this.editor_content_selector.appendChild(this.edit_attribute_checkbox);
   this.editor_content_selector.appendChild(edit_attribute_label);
+  this.editor_content_selector.appendChild(this.edit_metadata_checkbox);
+  this.editor_content_selector.appendChild(edit_metadata_label);
+
+  // toolbar
+  var toolbar = document.createElement('div');
+  toolbar.setAttribute('class', 'toolbar');
+  var close_button = document.createElement('button');
+  close_button.setAttribute('class', 'text_button');
+  close_button.innerHTML = '&times;';
+  close_button.addEventListener('click', this.toggle.bind(this));
+  toolbar.appendChild(close_button);
 
   // metadata
   this.metadata_container = document.createElement('div');
@@ -82,21 +96,24 @@ _via_editor.prototype.init = function() {
 
   this.content_container = document.createElement('div');
   this.content_container.setAttribute('class', 'content_container');
-  this.content_container.appendChild(this.metadata_container);
   this.content_container.appendChild(this.attribute_container);
+  this.content_container.appendChild(this.metadata_container);
 
   // add everything to container
+  this.c.appendChild(toolbar);
   this.c.appendChild(this.editor_content_selector);
   this.c.appendChild(this.content_container);
 
-  this.metadata_update();
   this.attributes_update();
+  this.metadata_update();
 
   // initial state of content
   this.edit_metadata_checkbox.checked = true;
   this.metadata_container.classList.remove('hide');
-  this.edit_attribute_checkbox.checked = false;
-  this.attribute_container.classList.add('hide');
+  this.edit_attribute_checkbox.checked = true;
+  this.attribute_container.classList.remove('hide');
+
+  this.c.classList.remove('hide');
 }
 
 //
@@ -130,13 +147,11 @@ _via_editor.prototype.metadata_clear = function() {
 _via_editor.prototype.metadata_update = function() {
   this.metadata_clear();
 
-  if ( this.a.now.file ) {
-    var fid = this.a.now.file.fid;
-    if ( typeof(this.d.metadata_store[fid]) === 'undefined' ) {
-      return;
-    }
-
-    var metadata_count = Object.keys(this.d.metadata_store[fid]).length;
+  if ( this.va.vid ) {
+    // fetch all metadata associated with this.va.vid
+    this.d._cache_update_mid_list();
+    var metadata_count = this.d.cache.mid_list[this.va.vid].length;
+    console.log(metadata_count)
     if ( metadata_count ) {
       // add header
       this.metadata_view.appendChild( this.get_metadata_header() );
@@ -145,8 +160,9 @@ _via_editor.prototype.metadata_update = function() {
       var tbody = document.createElement('tbody');
       var metadata_index = 1;
       var mid;
-      for ( mid in this.d.metadata_store[fid] ) {
-        tbody.appendChild( this.metadata_get(fid, mid, metadata_index) );
+      for ( var mindex in this.d.cache.mid_list[this.va.vid] ) {
+        mid = this.d.cache.mid_list[this.va.vid][mindex];
+        tbody.appendChild( this.metadata_get(mid, metadata_index) );
         metadata_index = metadata_index + 1;
       }
       this.metadata_view.appendChild(tbody);
@@ -158,74 +174,44 @@ _via_editor.prototype.metadata_update = function() {
   }
 }
 
-_via_editor.prototype.metadata_get = function(fid, mid, metadata_index) {
+_via_editor.prototype.metadata_get = function(mid, metadata_index) {
   var tr = document.createElement('tr');
-  tr.setAttribute('data-fid', fid);
   tr.setAttribute('data-mid', mid);
 
-  // first column: the action tools for metadata (like delete)
+  // column: the action tools for metadata (like delete)
   var action_tools_container = document.createElement('td');
-  this.get_metadata_action_tools(action_tools_container, fid, mid);
+  this.get_metadata_action_tools(action_tools_container, mid);
   tr.appendChild( action_tools_container );
 
-  // second column: index of this metadata
+  // column: index of this metadata
   var metadata_index_container = document.createElement('td');
   metadata_index_container.innerHTML = metadata_index;
+  metadata_index_container.setAttribute('title', mid);
   tr.appendChild(metadata_index_container);
 
-  // third column: where (i.e. location of metadata)
-  var location = document.createElement('td');
-  var where_type = document.createElement('span');
-  location.appendChild(where_type);
-  if ( this.d.metadata_store[fid][mid].where_target() === _VIA_WHERE_TARGET.SEGMENT &&
-       this.d.metadata_store[fid][mid].where_target() === _VIA_WHERE_SHAPE.TIME
-     ) {
-    var n = this.d.metadata_store[fid][mid].where.length;
-    var i;
-    var ul = document.createElement('ul');
-    for ( i = 2; i < n; i = i + 2 ) { // the time coordinates are stored in array[2,...]
-      var li = document.createElement('li');
-      // only one segment
-      var t1 = document.createElement('button');
-      t1.setAttribute('class', 'text_button');
-      t1.setAttribute('data-fid', fid);
-      t1.setAttribute('data-mid', mid);
-      t1.setAttribute('data-where_index', 2);
-      t1.innerHTML = this.d.metadata_store[fid][mid].where[i].toFixed(3).toString();
-      t1.addEventListener('click', this.jump_to_metadata.bind(this));
+  // column: z (temporal coordinate)
+  var tcoordinate = document.createElement('td');
+  tcoordinate.innerHTML = this.d.store.metadata[mid].z.join(', ');
+  tr.appendChild(tcoordinate);
 
-      var arrow = document.createElement('span');
-      arrow.innerHTML = '&rarr;';
-
-      var t2 = t1.cloneNode();
-      t2.setAttribute('data-where_index', 3);
-      t2.innerHTML = this.d.metadata_store[fid][mid].where[i+1].toFixed(3).toString();
-      t2.addEventListener('click', this.jump_to_metadata.bind(this));
-
-      li.appendChild(t1);
-      li.appendChild(arrow);
-      li.appendChild(t2);
-      ul.appendChild(li);
-    }
-    location.appendChild(ul);
-  }
-  tr.appendChild(location);
+  // column: xy (spatial coordinate)
+  var scoordinate = document.createElement('td');
+  scoordinate.innerHTML = this.d.store.metadata[mid].xy.join(', ');
+  tr.appendChild(scoordinate);
 
   // subsequent columns: what (i.e. the attributes for this metadata)
-  var aid;
-  for ( aid in this.d.attribute_store ) {
+  for ( var aid in this.d.store.attribute ) {
     var td = document.createElement('td');
     td.setAttribute('data-aid', aid);
-    td.appendChild( this.get_attribute_html_element(fid, mid, aid) );
+    td.appendChild( this.get_attribute_html_element(mid, aid) );
     tr.appendChild(td);
   }
 
   return tr;
 }
 
-_via_editor.prototype.get_metadata_action_tools = function(container, fid, mid) {
+_via_editor.prototype.get_metadata_action_tools = function(container, mid) {
   var del = _via_util_get_svg_button('micon_delete', 'Delete Metadata');
-  del.setAttribute('data-fid', fid);
   del.setAttribute('data-mid', mid);
   del.addEventListener('click', this.metadata_del.bind(this));
   container.appendChild(del);
@@ -239,12 +225,11 @@ _via_editor.prototype.get_metadata_action_tools = function(container, fid, mid) 
   */
 }
 
-_via_editor.prototype.get_attribute_html_element = function(fid, mid, aid) {
-  var aval  = this.d.metadata_store[fid][mid].what[aid];
-  var dval  = this.d.attribute_store[aid].default_option_id;
-  var atype = this.d.attribute_store[aid].type;
-  var el    = this.d.attribute_store[aid].html_element();
-  el.setAttribute('data-fid', fid);
+_via_editor.prototype.get_attribute_html_element = function(mid, aid) {
+  var aval  = this.d.store.metadata[mid].av[aid];
+  var dval  = this.d.store.attribute[aid].default_option_id;
+  var atype = this.d.store.attribute[aid].type;
+  var el    = _via_util_attribute_to_html_element(this.d.store.attribute[aid]);
   el.setAttribute('data-mid', mid);
   el.setAttribute('data-aid', aid);
 
@@ -285,13 +270,13 @@ _via_editor.prototype.get_attribute_html_element = function(fid, mid, aid) {
 _via_editor.prototype.get_metadata_header = function() {
   var tr = document.createElement('tr');
   tr.appendChild( this.html_element('th', '') );
-    tr.appendChild( this.html_element('th', 'Id') );
-  tr.appendChild( this.html_element('th', 'Location') );
+  tr.appendChild( this.html_element('th', '#') );
+  tr.appendChild( this.html_element('th', 'Temporal Coordinate') );
+  tr.appendChild( this.html_element('th', 'Spatial Coordinate') );
 
-  var aid;
-  for ( aid in this.d.attribute_store ) {
+  for ( var aid in this.d.store.attribute ) {
     tr.appendChild( this.html_element('th',
-                                      this.d.attribute_store[aid].attr_name)
+                                      this.d.store.attribute[aid].aname)
                   );
   }
 
@@ -331,14 +316,12 @@ _via_editor.prototype.attribute_clear = function() {
 _via_editor.prototype.attributes_update = function() {
   this.attribute_clear();
 
-  if ( this.d.aid_list.length ) {
+  if ( Object.keys(this.d.store.attribute).length ) {
     this.attribute_view.appendChild( this.get_attribute_header() );
 
     // add each metadata
     var tbody = document.createElement('tbody');
-    var aindex;
-    for ( aindex in this.d.aid_list ) {
-      var aid = this.d.aid_list[aindex];
+    for ( var aid in this.d.store.attribute ) {
       tbody.appendChild( this.get_attribute(aid) );
     }
     this.attribute_view.appendChild(tbody);
@@ -350,9 +333,11 @@ _via_editor.prototype.get_attribute_header = function() {
   tr.appendChild( this.html_element('th', '') );
   tr.appendChild( this.html_element('th', 'Id') );
   tr.appendChild( this.html_element('th', 'Name') );
-  tr.appendChild( this.html_element('th', 'Type') );
-  tr.appendChild( this.html_element('th', 'Default Value') );
+  tr.appendChild( this.html_element('th', 'Anchor') );
+  tr.appendChild( this.html_element('th', 'Input Type') );
+  tr.appendChild( this.html_element('th', 'Description') );
   tr.appendChild( this.html_element('th', 'Options') );
+  tr.appendChild( this.html_element('th', 'Default Value') );
   tr.appendChild( this.html_element('th', 'Preview') );
 
   var thead = document.createElement('thead');
@@ -364,20 +349,50 @@ _via_editor.prototype.get_attribute = function(aid) {
   var tr = document.createElement('tr');
   tr.setAttribute('data-aid', aid);
 
-  // first column: the action tools for metadata (like delete)
+  // column: the action tools for metadata (like delete)
   var action_tools_container = document.createElement('td');
   this.get_attribute_action_tools(action_tools_container, aid);
   tr.appendChild( action_tools_container );
 
-  // second column: aid (i.e. attribute id)
+  // column: aid (i.e. attribute id)
   tr.appendChild( this.html_element('td', aid) );
 
-  // third column: name
-  tr.appendChild( this.html_element('td', this.d.attribute_store[aid].attr_name) );
+  // column: name
+  var aname_container = document.createElement('td');
+  var aname = document.createElement('input');
+  aname.setAttribute('type', 'text');
+  aname.setAttribute('data-varname', 'aname');
+  aname.setAttribute('value', this.d.store.attribute[aid].aname);
+  aname.addEventListener('change', this.attribute_on_change.bind(this));
+  aname_container.appendChild(aname);
+  tr.appendChild(aname_container);
 
-  // fourth column: type
+  // column: anchor
+  var anchor_select = document.createElement('select');
+  anchor_select.setAttribute('data-aid', aid);
+  anchor_select.setAttribute('data-varname', 'anchor_id');
+  anchor_select.setAttribute('style', 'width:12em;');
+  console.log(this.d.store.attribute[aid].anchor_id);
+  for ( var anchor_id in _VIA_ATTRIBUTE_ANCHOR ) {
+    if ( _VIA_ATTRIBUTE_ANCHOR[anchor_id] !== '__FUTURE__' ) {
+      var oi = document.createElement('option');
+      oi.setAttribute('value', anchor_id);
+      oi.innerHTML = _VIA_ATTRIBUTE_ANCHOR[anchor_id];
+
+      if ( anchor_id === this.d.store.attribute[aid].anchor_id ) {
+        oi.setAttribute('selected', '');
+      }
+      anchor_select.appendChild(oi);
+    }
+  }
+  var anchor = document.createElement('td');
+  anchor.appendChild( anchor_select );
+  tr.appendChild( anchor );
+
+  // column: input type
   var type_select = document.createElement('select');
   type_select.setAttribute('data-aid', aid);
+  type.setAttribute('data-varname', 'type');
   type_select.addEventListener('change', this.attribute_update_type.bind(this));
   var type_str;
   for ( type_str in _VIA_ATTRIBUTE_TYPE ) {
@@ -385,7 +400,7 @@ _via_editor.prototype.get_attribute = function(aid) {
     oi.setAttribute('value', _VIA_ATTRIBUTE_TYPE[type_str]);
     oi.innerHTML = type_str;
 
-    if ( _VIA_ATTRIBUTE_TYPE[type_str] === this.d.attribute_store[aid].type ) {
+    if ( _VIA_ATTRIBUTE_TYPE[type_str] === this.d.store.attribute[aid].type ) {
       oi.setAttribute('selected', '');
     }
     type_select.appendChild(oi);
@@ -394,31 +409,43 @@ _via_editor.prototype.get_attribute = function(aid) {
   type.appendChild( type_select );
   tr.appendChild( type );
 
-  // fifth column: default value (only if other than TEXT)
-  if ( this.d.attribute_store[aid].type === _VIA_ATTRIBUTE_TYPE.TEXT ) {
-    // text has no defaults
-    tr.appendChild( this.html_element('td', '-') );
-  } else {
-    var option = this.d.attribute_store[aid].options[ this.d.attribute_store[aid].default_option_id ];
-    tr.appendChild( this.html_element('td', option) );
-  }
+  // column: description
+  var desc_container = document.createElement('td');
+  var desc = document.createElement('input');
+  desc.setAttribute('type', 'text');
+  desc.setAttribute('data-varname', 'desc');
+  desc.setAttribute('value', this.d.store.attribute[aid].desc);
+  desc.addEventListener('change', this.attribute_on_change.bind(this));
+  desc_container.appendChild(desc);
+  tr.appendChild( desc_container );
 
-  // sixth column: options
-  if ( this.d.attribute_store[aid].type === _VIA_ATTRIBUTE_TYPE.TEXT ) {
+  // column: options
+  if ( this.d.store.attribute[aid].type === _VIA_ATTRIBUTE_TYPE.TEXT ) {
     // text has no defaults
     tr.appendChild( this.html_element('td', '-') );
   } else {
     var option_input = document.createElement('textarea');
     option_input.setAttribute('data-aid', aid);
+    option_input.setAttribute('data-varname', 'options');
     option_input.setAttribute('title', 'Enter options as comma separated value with the default option prefixed using an *. For example: "a,*b,c"');
-    option_input.addEventListener('change', this.attribute_update_options.bind(this));
-    option_input.innerHTML = this.d.attribute_store[aid].options_to_csv();
+    option_input.addEventListener('change', this.attribute_on_change.bind(this));
+    option_input.innerHTML = _via_util_obj_to_csv(this.d.store.attribute[aid].options,
+                                                  this.d.store.attribute[aid].default_option_id);
     tr.appendChild( option_input );
   }
 
-  // sixth column: preview of attribute
+  // column: default value (only if other than TEXT)
+  if ( this.d.store.attribute[aid].type === _VIA_ATTRIBUTE_TYPE.TEXT ) {
+    // text has no defaults
+    tr.appendChild( this.html_element('td', '-') );
+  } else {
+    var default_value = this.d.store.attribute[aid].options[ this.d.store.attribute[aid].default_option_id ];
+    tr.appendChild( this.html_element('td', default_value) );
+  }
+
+  // column: preview of attribute
   var preview = document.createElement('td');
-  preview.appendChild( this.d.attribute_store[aid].html_element() );
+  preview.appendChild( _via_util_attribute_to_html_element(this.d.store.attribute[aid]) );
   tr.appendChild(preview);
 
   return tr;
@@ -460,6 +487,33 @@ _via_editor.prototype.update_attribute_for = function(aid) {
       break;
     }
   }
+}
+
+_via_editor.prototype.attribute_on_change = function(e) {
+  var varname = e.target.dataset.varname;
+  var vartype = e.target.type;
+  var aid = e.target.dataset.aid;
+
+  switch(vartype) {
+  case 'text':
+    this.d.store.attribute[aid][varname] = e.target.value;
+    break;
+  case 'textarea':
+    if ( varname = 'options' ) {
+      var csvdata = e.target.innerHTML.split(',');
+      for ( var i = 0; i < csvdata.length; ++i ) {
+
+      }
+    }
+
+    this.d.store.attribute[aid][varname] = e.target.innerHTML;
+    break;
+  case 'select':
+    this.d.store.attribute[aid][varname] = e.target.options[e.target.selectedIndex].value;
+    break;
+  }
+  console.log(e.target.dataset)
+  console.log('todo')
 }
 
 //
@@ -540,6 +594,5 @@ _via_editor.prototype.on_event_metadata_del = function(data, event_payload) {
 
 _via_editor.prototype.on_event_file_show = function(data, event_payload) {
   console.log(event_payload)
-  //this.now.file = event
   this.metadata_update();
 }

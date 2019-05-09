@@ -56,6 +56,7 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.conf.FIRST_VERTEX_BOUNDARY_WIDTH = 1;
   this.conf.FIRST_VERTEX_BOUNDARY_COLOR = 'black';
   this.conf.FIRST_VERTEX_FILL_COLOR = 'white';
+  this.conf.REGION_SMETADATA_MARGIN = 4; // in pixel
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -86,6 +87,12 @@ _via_file_annotator.prototype._file_load = function() {
       this.file_html_element = this._file_create_html_element(this.file);
       this.file_html_element.setAttribute('title', this.file.fname);
       this.file_html_element.setAttribute('src', file_src);
+
+      this.file_html_element.addEventListener('load', function() {
+        console.log('load')
+        this._file_html_element_ready();
+        ok_callback();
+      }.bind(this));
       this.file_html_element.addEventListener('loadeddata', function() {
         this._file_html_element_ready();
         ok_callback();
@@ -112,7 +119,9 @@ _via_file_annotator.prototype._file_create_html_element = function(file) {
   switch( file.type ) {
   case _VIA_FILE_TYPE.VIDEO:
     media = document.createElement('video');
-    media.setAttribute('controls', '');
+    media.setAttribute('controls', 'true');
+    media.setAttribute('playsinline', 'true');
+    media.setAttribute('loop', 'false');
     // @todo : add subtitle track for video
     media.setAttribute('preload', 'auto');
     media.addEventListener('pause', function(e) {
@@ -127,11 +136,13 @@ _via_file_annotator.prototype._file_create_html_element = function(file) {
 
   case _VIA_FILE_TYPE.IMAGE:
     media = document.createElement('img');
-    media.addEventListener('load', this._file_html_element_ready.bind(this));
     break;
 
   case _VIA_FILE_TYPE.AUDIO:
     media = document.createElement('audio');
+    media.setAttribute('controls', '');
+    // @todo : add subtitle track for video
+    media.setAttribute('preload', 'auto');
     break;
 
   default:
@@ -191,7 +202,12 @@ _via_file_annotator.prototype._file_html_element_compute_scale = function() {
     cw0 = this.file_html_element.naturalWidth;
     ch0 = this.file_html_element.naturalHeight;
     break;
+
+  case _VIA_FILE_TYPE.AUDIO:
+    return;
+    break;
   }
+
   var ar = cw0/ch0;
   var ch = maxh;
   var cw = Math.floor(ar * ch);
@@ -256,10 +272,26 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this._rinput_attach_input_handlers(this.input);
   this.c.appendChild(this.input);
 
+  this.smetadata_container = document.createElement('div');
+  this.smetadata_container.setAttribute('class', 'smetadata_container');
+  this.smetadata_container.classList.add('hide');
+  this.smetadata_container.setAttribute('id', 'smetadata_container');
+  this.smetadata_container.innerHTML = 'Spatial Metadata Editor @todo';
+  this.c.appendChild(this.smetadata_container);
+
   // draw all existing regions
   this._creg_reload();
 
   this._state_set(_VIA_RINPUT_STATE.IDLE);
+
+  //// DEBUG ////////
+  /*  */
+  setTimeout( function() {
+    this._rinput_enable();
+    this._metadata_add(_VIA_RSHAPE.RECT, [30, 40, 100, 120]).then( function(mid) {
+      this._creg_select_one(mid);
+    }.bind(this));
+  }.bind(this), 100);
 }
 
 //
@@ -405,7 +437,7 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
       this.user_input_pts.push(cx, cy);
       if ( this._is_user_input_pts_equal() ) {
         if ( this.va.region_draw_shape !== _VIA_RSHAPE.POINT ) {
-          _via_util_msg_show('Discarded degenerate region');
+          _via_util_msg_show('Discarded degenerate region. Press <span class="key">Space</span> key to play or pause video.');
         } else {
           var canvas_input_pts = this.user_input_pts.slice(0);
           this._metadata_add(this.va.region_draw_shape, canvas_input_pts);
@@ -478,9 +510,6 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
   e.stopPropagation();
   var cx = e.offsetX;
   var cy = e.offsetY;
-  var x = Math.round( cx * this.cscale );
-  var y = Math.round( cy * this.cscale );
-  document.getElementById('region_info_panel').innerHTML = '(' + x + ',' + y + ')';
 
   var pts = this.user_input_pts.slice(0);
   pts.push(cx, cy);
@@ -668,6 +697,7 @@ _via_file_annotator.prototype._metadata_resize_region = function(mindex, cpindex
     var moved_xy = this._creg_move_control_point(this.d.store.metadata[mid].xy,
                                                  cpindex, x, y);
     this.d.metadata_update_xy(this.vid, mid, moved_xy).then( function(ok) {
+      this._creg_draw_all();
       ok_callback(ok.mid);
     }.bind(this), function(err) {
       console.warn(err);
@@ -690,6 +720,7 @@ _via_file_annotator.prototype._metadata_move_region = function(mid_list, cdx, cd
     }
 
     Promise.all( promise_list ).then( function(ok) {
+      this._creg_draw_all();
       ok_callback();
     }.bind(this), function(err) {
       console.log(err)
@@ -702,9 +733,15 @@ _via_file_annotator.prototype._metadata_add = function(region_shape, canvas_inpu
   return new Promise( function(ok_callback, err_callback) {
     var file_input_pts = this._rinput_pts_canvas_to_file(canvas_input_pts);
     var xy = this._metadata_pts_to_xy(region_shape, file_input_pts);
+    var z = [];
+    if ( this.file.type === _VIA_FILE_TYPE.VIDEO ) {
+      z = _via_util_float_to_fixed(this.file_html_element.currentTime, 3);
+    }
     console.log(xy)
-    this.d.metadata_add(this.vid, [], xy, {}).then( function(ok) {
+    this.d.metadata_add(this.vid, z, xy, {}).then( function(ok) {
       console.log(this.d.store.metadata[ok.mid])
+      this._creg_add(this.vid, ok.mid);
+      this._creg_draw(ok.mid);
       ok_callback(ok.mid);
     }.bind(this), function(err) {
       console.warn(err);
@@ -1051,6 +1088,7 @@ _via_file_annotator.prototype._creg_is_on_sel_region_cp = function(cx, cy, toler
 _via_file_annotator.prototype._creg_select_one = function(mid) {
   this.selected_mid_list = [mid];
   this._creg_draw_all();
+  this._smetadata_show();
 }
 
 _via_file_annotator.prototype._creg_select = function(mid) {
@@ -1065,6 +1103,9 @@ _via_file_annotator.prototype._creg_select_multiple = function(mid_list) {
       this.selected_mid_list.push( mid_list[i] );
     }
     this._creg_draw_all();
+    if ( this.selected_mid_list.length === 1 ) {
+      this._smetadata_show();
+    }
   }
 }
 
@@ -1089,6 +1130,7 @@ _via_file_annotator.prototype._creg_select_toggle = function(mid_list) {
 _via_file_annotator.prototype._creg_select_none = function() {
   this.selected_mid_list = [];
   this._creg_draw_all();
+  this._smetadata_hide();
 }
 
 _via_file_annotator.prototype._creg_select_all = function() {
@@ -1115,7 +1157,7 @@ _via_file_annotator.prototype._on_event_metadata_add = function(data, event_payl
   var mid = event_payload.mid;
   if ( this.vid === vid) {
     this._creg_add(vid, mid);
-    this._creg_draw_all();
+    //this._creg_draw_all();
   }
 }
 
@@ -1124,7 +1166,7 @@ _via_file_annotator.prototype._on_event_metadata_update = function(data, event_p
   var mid = event_payload.mid;
   if ( this.vid === vid) {
     this._creg_add(vid, mid);
-    this._creg_draw_all();
+    //this._creg_draw_all();
   }
 }
 
@@ -1378,8 +1420,8 @@ _via_file_annotator.prototype._rinput_enable = function() {
   this._state_set(_VIA_RINPUT_STATE.IDLE);
   this.input.style.pointerEvents = 'auto';
   this.input.classList.add('rinput_enabled');
-  _via_util_msg_show('Region drawing is now enabled. ' +
-                     'Press <span class="key">Space</span> to play the video and disable region drawing.', true);
+  this.file_html_element.removeAttribute('controls');
+  _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.', true);
 }
 
 _via_file_annotator.prototype._rinput_disable = function() {
@@ -1387,6 +1429,203 @@ _via_file_annotator.prototype._rinput_disable = function() {
   this._state_set(_VIA_RINPUT_STATE.SUSPEND);
   this.input.style.pointerEvents = 'none';
   this.input.classList.remove('rinput_enabled');
-  _via_util_msg_show('Region drawing is now disabled. ' +
-                     'Press <span class="key">Space</span> to pause the video and enable region drawing.', true);
+  this.file_html_element.setAttribute('controls', 'true');
+  _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.', true);
+}
+
+//
+// on-screen spatial metadata editor
+//
+_via_file_annotator.prototype._smetadata_hide = function() {
+  this.smetadata_container.classList.add('hide');
+}
+
+_via_file_annotator.prototype._smetadata_set_position = function() {
+  var mid = this.selected_mid_list[0];
+  var x = this.left_pad + this.creg[mid][1];
+  var y = this.conf.REGION_SMETADATA_MARGIN + this.creg[mid][2];
+  var shape_id = this.creg[mid][0];
+  switch(shape_id) {
+  case _VIA_RSHAPE.RECT:
+    y = y + this.creg[mid][4];
+    break;
+  case _VIA_RSHAPE.CIRCLE:
+  case _VIA_RSHAPE.ELLIPSE:
+    y = y + this.creg[mid][3];
+    break;
+  }
+  this.smetadata_container.style.left = x + 'px';
+  this.smetadata_container.style.top  = y + 'px';
+}
+
+_via_file_annotator.prototype._smetadata_show = function() {
+  if ( this.selected_mid_list.length === 1 ) {
+    this._smetadata_update();
+    this._smetadata_set_position();
+    this.smetadata_container.classList.remove('hide');
+  }
+}
+
+_via_file_annotator.prototype._smetadata_update = function() {
+  var mid = this.selected_mid_list[0];
+  var table = document.createElement('table');
+  table.appendChild( this._smetadata_header_html() );
+
+  // show value of each attribute
+  var tbody = document.createElement('tbody');
+  var tr = document.createElement('tr');
+  tr.setAttribute('data-mid', mid);
+  for ( var aid in this.d.cache.attribute_group['FILE1_Z1_XY1'] ) {
+    var td = document.createElement('td');
+    td.setAttribute('data-aid', aid);
+    td.appendChild( this._smetadata_attribute_io_html_element(mid, aid) );
+    tr.appendChild(td);
+  }
+  tbody.appendChild(tr);
+  table.appendChild(tbody);
+
+  //this.smetadata_container.innerHTML = '<table><tr><td>Abc</td><td>8sj</td></tr></table>';
+  this.smetadata_container.innerHTML = '';
+  this.smetadata_container.appendChild(table);
+}
+
+_via_file_annotator.prototype._smetadata_header_html = function() {
+  var tr = document.createElement('tr');
+  for ( var aid in this.d.cache.attribute_group['FILE1_Z1_XY1'] ) {
+    var th = document.createElement('th');
+    th.innerHTML = this.d.store.attribute[aid].aname;
+    tr.appendChild(th);
+  }
+  return tr;
+}
+
+_via_file_annotator.prototype._smetadata_on_change = function(e) {
+  var mid = e.target.dataset.mid;
+  var aid = e.target.dataset.aid;
+  var aval = e.target.value;
+  if ( e.target.type === 'checkbox' &&
+       this.d.store.metadata[mid].av.hasOwnProperty(aid)
+     ) {
+    var values = this.d.store.metadata[mid].av[aid].split(',');
+    if ( this.d.store.metadata[mid].av[aid] !== '' ) {
+      var vindex = values.indexOf(e.target.value);
+      if ( e.target.checked ) {
+        // add this value
+        if ( vindex === -1 ) {
+          values.push(e.target.value);
+        }
+      } else {
+        // remove this value
+        var vindex = values.indexOf(aval);
+        if ( vindex !== -1 ) {
+          values.splice(vindex, 1);
+        }
+      }
+      aval = values.join(',');
+    }
+  }
+
+  this.d.metadata_update_av(this.vid, mid, aid, aval).then( function(ok) {
+    console.log( JSON.stringify(this.d.store.metadata[ok.mid].av) );
+  }.bind(this));
+}
+
+_via_file_annotator.prototype._smetadata_attribute_io_html_element = function(mid, aid) {
+  var aval  = this.d.store.metadata[mid].av[aid];
+  var dval  = this.d.store.attribute[aid].default_option_id;
+  var atype = this.d.store.attribute[aid].type;
+  var el;
+
+  switch(atype) {
+  case _VIA_ATTRIBUTE_TYPE.TEXT:
+    if ( typeof(aval) === 'undefined' ) {
+      aval = dval;
+    }
+    el = document.createElement('textarea');
+    el.addEventListener('change', this._smetadata_on_change.bind(this));
+    el.innerHTML = aval;
+    break;
+
+  case _VIA_ATTRIBUTE_TYPE.SELECT:
+    el = document.createElement('select');
+    if ( typeof(aval) === 'undefined' ) {
+      aval = dval;
+    }
+
+    for ( var oid in this.d.store.attribute[aid].options ) {
+      var oi = document.createElement('option');
+      oi.setAttribute('value', oid);
+      oi.innerHTML = this.d.store.attribute[aid].options[oid];
+      if ( oid === aval ) {
+        oi.setAttribute('selected', 'true');
+      }
+      el.appendChild(oi);
+    }
+    el.addEventListener('change', this._smetadata_on_change.bind(this));
+    break;
+
+  case _VIA_ATTRIBUTE_TYPE.RADIO:
+    el = document.createElement('div');
+
+    if ( typeof(aval) === 'undefined' ) {
+      aval = dval;
+    }
+
+    for ( var oid in this.d.store.attribute[aid].options ) {
+      var radio = document.createElement('input');
+      radio.setAttribute('type', 'radio');
+      radio.setAttribute('value', oid);
+      radio.setAttribute('data-mid', mid);
+      radio.setAttribute('data-aid', aid);
+      radio.setAttribute('name', this.d.store.attribute[aid].aname);
+      if ( oid === aval ) {
+        radio.setAttribute('checked', true);
+      }
+      radio.addEventListener('change', this._smetadata_on_change.bind(this));
+      var label = document.createElement('label');
+      label.innerHTML = this.d.store.attribute[aid].options[oid];
+
+      var br = document.createElement('br');
+      el.appendChild(radio);
+      el.appendChild(label);
+      el.appendChild(br);
+    }
+    break;
+
+  case _VIA_ATTRIBUTE_TYPE.CHECKBOX:
+    el = document.createElement('div');
+
+    if ( typeof(aval) === 'undefined' ) {
+      aval = dval;
+    }
+
+    for ( var oid in this.d.store.attribute[aid].options ) {
+      var checkbox = document.createElement('input');
+      checkbox.setAttribute('type', 'checkbox');
+      checkbox.setAttribute('value', oid);
+      checkbox.setAttribute('data-mid', mid);
+      checkbox.setAttribute('data-aid', aid);
+      checkbox.setAttribute('name', this.d.store.attribute[aid].aname);
+      if ( oid === aval ) {
+        checkbox.setAttribute('checked', true);
+      }
+      checkbox.addEventListener('change', this._smetadata_on_change.bind(this));
+      var label = document.createElement('label');
+      label.innerHTML = this.d.store.attribute[aid].options[oid];
+
+      var br = document.createElement('br');
+      el.appendChild(checkbox);
+      el.appendChild(label);
+      el.appendChild(br);
+    }
+    break;
+
+  default:
+    console.log('attribute type ' + atype + ' not implemented yet!');
+    var el = document.createElement('span');
+    el.innerHTML = aval;
+  }
+  el.setAttribute('data-mid', mid);
+  el.setAttribute('data-aid', aid);
+  return el;
 }

@@ -262,6 +262,41 @@ _via_data.prototype.metadata_update_av_bulk = function(vid, av_list) {
   }.bind(this));
 }
 
+_via_data.prototype.metadata_update_z = function(vid, mid, z) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( ! this.store.view.hasOwnProperty(vid) ) {
+      err_callback({'vid':vid});
+      return;
+    }
+    if ( ! this.store.metadata.hasOwnProperty(mid) ) {
+      err_callback({'mid':mid});
+      return;
+    }
+
+    this.store.metadata[mid].z = z;
+    this.emit_event( 'metadata_update', { 'vid':vid, 'mid':mid } );
+    ok_callback({'vid':vid, 'mid':mid});
+  }.bind(this));
+}
+
+_via_data.prototype.metadata_update_zi = function(vid, mid, zindex, zvalue) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( ! this.store.view.hasOwnProperty(vid) ) {
+      err_callback({'vid':vid});
+      return;
+    }
+    if ( ! this.store.metadata.hasOwnProperty(mid) ) {
+      err_callback({'mid':mid});
+      return;
+    }
+
+    this.store.metadata[mid].z[zindex] = zvalue;
+    this.emit_event( 'metadata_update', { 'vid':vid, 'mid':mid } );
+    ok_callback({'vid':vid, 'mid':mid});
+  }.bind(this));
+}
+
+
 _via_data.prototype.metadata_delete = function(vid, mid) {
   return new Promise( function(ok_callback, err_callback) {
     try {
@@ -378,12 +413,12 @@ _via_data.prototype._cache_update_mid_list = function() {
 }
 
 _via_data.prototype._cache_update_attribute_group = function() {
-  var anchor_name;
+  var anchor_id;
   for ( var aid in this.store.attribute ) {
-    anchor_name = this.attribute_anchor_value_to_name(this.store.attribute[aid].anchor);
-    if ( ! this.cache.attribute_group.hasOwnProperty(anchor_name) ) {
-      this.cache.attribute_group[anchor_name] = {};
+    anchor_id = this.store.attribute[aid].anchor_id;
+    if ( ! this.cache.attribute_group.hasOwnProperty(anchor_id) ) {
+      this.cache.attribute_group[anchor_id] = {};
     }
-    this.cache.attribute_group[anchor_name][aid] = this.store.attribute[aid];
+    this.cache.attribute_group[anchor_id][aid] = this.store.attribute[aid];
   }
 }

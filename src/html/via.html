@@ -40,10 +40,9 @@
         <div class="spacer"></div>
 
         <div id="view_manager_container"></div>
-
+<!--
         <div class="spacer"></div>
 
-        <!-- File Manager -->
         <svg onclick="file_manager.on_file_select_local_video()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_video"></use><title>Add video file from this computer</title></svg>
 
         <svg onclick="file_manager.on_file_select_local_image()" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_add_image"></use><title>Add Image</title></svg>
@@ -54,7 +53,6 @@
 
         <div class="spacer"></div>
 
-        <!-- Project -->
         <svg onclick="data.load_local()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_open"></use><title>Open Project</title></svg>
         <svg onclick="data.save_local()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_save"></use><title>Save Project</title></svg>
         <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_settings"></use><title>Project Settings</title></svg>
@@ -63,23 +61,20 @@
 
         <div class="spacer"></div>
 
-        <!-- Import/Export -->
         <svg onclick="io.metadata_import_csv()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#icon_import"></use><title>Import Metadata from CSV</title></svg>
 
         <svg onclick="io.speaker_diarisation_export_csv()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#icon_export"></use><title>Download Metadata as CSV</title></svg>
 
         <div class="spacer"></div>
 
-        <!-- Content -->
         <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_zoomin"></use><title>Zoom In</title></svg>
         <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_zoomout"></use><title>Zoom Out</title></svg>
         <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_copy"></use><title>Copy Selected Regions</title></svg>
         <svg onclick="" class="svg_button disabled_button" viewbox="0 0 24 24"><use xlink:href="#micon_paste"></use><title>Paste Selected Regions</title></svg>
-        <svg onclick="document.getElementById('editor_container').classList.toggle('hide')" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_insertcomment"></use><title>Show/hide metadata and attribute editor</title></svg>
+        <svg onclick="editor.toggle()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_insertcomment"></use><title>Show/hide metadata and attribute editor</title></svg>
 
         <div class="spacer"></div>
 
-        <!-- Region Shape Selector -->
         <div id="region_shape_selector">
           <svg id="POINT" onclick="_via_set_region_draw_shape(this)" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#shape_point"></use><title>Point</title></svg>
           <svg id="RECT" onclick="_via_set_region_draw_shape(this)" class="svg_button" viewbox="0 0 24 24" ><use xlink:href="#shape_rectangle"></use><title>Rectangle</title></svg>
@@ -92,29 +87,27 @@
 
         <div class="spacer"></div>
 
-        <!-- Browser Storage -->
         <svg id="_via_restore_load_button" onclick="store.prev_session_load()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_restore_load"></use><title>Restore to previous version that was not yet uploaded!</title></svg>
 
         <svg style="display:none;" id="_via_restore_save_button" onclick="store.prev_session_save()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_restore_save"></use><title>Restore and save VIA project data from previous session</title></svg>
 
         <div class="spacer"></div>
 
-        <!-- Help -->
         <svg onclick="_via_util_show_info_page('keyboard_shortcuts')" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_help"></use><title>Help</title></svg>
 
         <div class="spacer"></div>
 
-        <!-- Share and Collaborate -->
         <svg onclick="data.save_remote()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Share Project</title></svg>
         <svg onclick="data.save_remote()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Load Shared Project</title></svg>
 
         <div class="spacer"></div>
-        <!-- Current Mouse Coordinates -->
+
         <div id="region_info_panel"></div>
+-->
       </div> <!-- end of cpanel -->
 
       <div id="view_container"></div>
-      <div id="editor_container" class="editor_container"></div>
+      <div id="editor_container" class="hide"></div>
 
       <!-- Information Panel (displayed when user wants to see them) -->
       <div id="_via_info_page_container" class="info_page_container">
@@ -229,9 +222,10 @@ POSSIBILITY OF SUCH DAMAGE.
     <script src="../js/_via_view_manager.js"></script>
 
     <script src="../js/_via_editor.js"></script>
-
     <script src="../js/_via_debug_project.js"></script>
     <script src="../js/_via_debug.js"></script>
+
+
     <!--
         SVG icons
         Icons prefixed with "micon_" are downloaded from https://material.io/icons

@@ -63,7 +63,11 @@ _via_view_annotator.prototype._view_init = function(vid) {
       if ( this._view_has_only_video(vid) ) {
         this._view_annotate_single_video(vid);
       } else {
-        console.warn('Not supported yet!');
+        if ( this._view_has_only_audio(vid) ) {
+          this._view_annotate_single_audio(vid);
+        } else {
+          console.warn('Not supported yet!');
+        }
       }
     }
     break;
@@ -102,7 +106,7 @@ _via_view_annotator.prototype._view_annotate_single_image = function(vid) {
 _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
   console.log('annotate a video');
   this.view_mode = _VIA_VIEW_MODE.VIDEO1;
-  this.c.setAttribute('style', 'grid-template-rows:1fr 25ch;')
+  this.c.setAttribute('style', 'grid-template-rows:1fr 20ch;')
   this.view_metadata_container.style.display = 'block';
 
   // occupy the full container with single image
@@ -128,7 +132,46 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
                                                           this.d,
                                                           this.file_annotator[0][0].file_html_element
                                                          );
-    _via_util_msg_show('Press <span class="key">Space</span> to Play or Pause the video at any time.', true);
+    //_via_util_msg_show('Press <span class="key">Space</span> to Play or Pause the video at any time.', true);
+  }.bind(this), function(err) {
+    _via_util_msg_show('Failed to load video!', true);
+  }.bind(this));
+  /*
+  this._metadata_show(this.view_metadata_container,
+                      _VIA_ATTRIBUTE_ANCHOR.FILE1_Z1_XY0);
+  */
+}
+
+_via_view_annotator.prototype._view_annotate_single_audio = function(vid) {
+  console.log('annotate an audio');
+  this.view_mode = _VIA_VIEW_MODE.VIDEO1;
+  this.c.setAttribute('style', 'grid-template-rows:1fr 20ch;')
+  this.view_metadata_container.style.display = 'block';
+
+  // occupy the full container with single image
+  this.file_annotator = [];
+  this.file_container = [];
+  this.view_content_container.innerHTML = '';
+  this.view_metadata_container.innerHTML = '';
+  this._view_split_content_container(this.view_content_container, this.file_container, 1, 1);
+
+  this.file_annotator[0] = [];
+  var fid0 = this.d.store.view[vid].fid_list[0];
+  var vid0 = this.d.view_get_file_vid( fid0 );
+  this.file_annotator[0][0] = new _via_file_annotator(this, this.d, vid0, '', this.file_container[0][0]);
+
+  this.file_annotator[0][0]._file_load().then( function(ok) {
+    this.view_metadata_container.innerHTML = '';
+    // setup view metadata editor
+    this.temporal_segmenter_container = document.createElement('div');
+    this.temporal_segmenter_container.classList.add('temporal_segmenter_container');
+    this.view_metadata_container.appendChild(this.temporal_segmenter_container);
+    this.temporal_segmenter = new _via_temporal_segmenter(this.temporal_segmenter_container,
+                                                          vid0,
+                                                          this.d,
+                                                          this.file_annotator[0][0].file_html_element
+                                                         );
+    //_via_util_msg_show('Press <span class="key">Space</span> to Play or Pause the video at any time.', true);
   }.bind(this), function(err) {
     _via_util_msg_show('Failed to load video!', true);
   }.bind(this));
@@ -155,10 +198,23 @@ _via_view_annotator.prototype._view_annotate_two_images = function(vid) {
   this.file_annotator[0][0] = new _via_file_annotator(this, this.d, vid0, 'Image 1', this.file_container[0][0]);
   this.file_annotator[0][1] = new _via_file_annotator(this, this.d, vid1, 'Image 2', this.file_container[0][1]);
 
-  // setup view metadata editor
-  this.view_metadata_container.innerHTML = '';
-  this._metadata_show(this.view_metadata_container,
-                      _VIA_ATTRIBUTE_ANCHOR.FILEN_Z0_XY0);
+  var promise_list = [];
+  promise_list.push( this.file_annotator[0][0]._file_load() );
+  promise_list.push( this.file_annotator[0][1]._file_load() );
+  Promise.all( promise_list ).then( function(ok) {
+    // setup view metadata editor
+    this.img_pair_annotator_container = document.createElement('div');
+    this.img_pair_annotator_container.classList.add('img_pair_annotator_container');
+    this.view_metadata_container.innerHTML = '';
+    this.view_metadata_container.appendChild(this.img_pair_annotator_container);
+
+    this._metadata_show(this.img_pair_annotator_container,
+                        'FILEN_Z0_XY0');
+  }.bind(this), function(err) {
+    console.warn('Failed to load images');
+    _via_util_msg_show('Failed to load images!');
+  }.bind(this));
+
 }
 
 _via_view_annotator.prototype._view_has_only_image = function(vid) {
@@ -177,6 +233,17 @@ _via_view_annotator.prototype._view_has_only_video = function(vid) {
   for ( var vfindex in this.d.store.view[vid].fid_list ) {
     fid = this.d.store.view[vid].fid_list[vfindex];
     if ( this.d.store.file[fid].type !== _VIA_FILE_TYPE.VIDEO ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+_via_view_annotator.prototype._view_has_only_audio = function(vid) {
+  var fid;
+  for ( var vfindex in this.d.store.view[vid].fid_list ) {
+    fid = this.d.store.view[vid].fid_list[vfindex];
+    if ( this.d.store.file[fid].type !== _VIA_FILE_TYPE.AUDIO ) {
       return false;
     }
   }
@@ -226,10 +293,9 @@ _via_view_annotator.prototype._view_clear_all_file_annotator = function() {
 //
 // view metadata editor
 //
-_via_view_annotator.prototype._metadata_show = function(c, anchor_value) {
+_via_view_annotator.prototype._metadata_show = function(c, anchor_id) {
   var table = document.createElement('table');
-  var anchor_name = this.d.attribute_anchor_value_to_name(anchor_value);
-  for ( var aid in this.d.cache.attribute_group[anchor_name] ) {
+  for ( var aid in this.d.cache.attribute_group[anchor_id] ) {
     table.appendChild( this._metadata_table_row(aid) );
   }
   c.appendChild(table);
@@ -326,4 +392,7 @@ _via_view_annotator.prototype._on_event_keydown = function(e) {
     }
     return;
   }
+
+  this.temporal_segmenter._on_event_keydown(e);
+
 }
