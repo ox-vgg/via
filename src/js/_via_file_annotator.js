@@ -125,11 +125,18 @@ _via_file_annotator.prototype._file_create_html_element = function(file) {
     // @todo : add subtitle track for video
     media.setAttribute('preload', 'auto');
     media.addEventListener('pause', function(e) {
+      this._creg_show_current_frame_regions();
       this._rinput_enable();
     }.bind(this));
     media.addEventListener('play', function(e) {
+      this._creg_clear();
       this._rinput_disable();
     }.bind(this));
+    media.addEventListener('seeked', function(e) {
+      this._creg_show_current_frame_regions();
+      this._rinput_enable();
+    }.bind(this));
+
 
     //media.addEventListener('suspend', this._file_html_element_error.bind(this));
     break;
@@ -280,18 +287,9 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this.c.appendChild(this.smetadata_container);
 
   // draw all existing regions
-  this._creg_reload();
+  this._creg_clear();
 
   this._state_set(_VIA_RINPUT_STATE.IDLE);
-
-  //// DEBUG ////////
-  /*  */
-  setTimeout( function() {
-    this._rinput_enable();
-    this._metadata_add(_VIA_RSHAPE.RECT, [30, 40, 100, 120]).then( function(mid) {
-      this._creg_select_one(mid);
-    }.bind(this));
-  }.bind(this), 100);
 }
 
 //
@@ -335,7 +333,7 @@ _via_file_annotator.prototype._rinput_mousedown_handler = function(e) {
   e.stopPropagation();
   var cx = e.offsetX;
   var cy = e.offsetY;
-  console.log('[vid=' + this.vid + ', findex=' + this.findex + ',state=' + this._state_id2str(this.state_id) + '] : mousedown at (cx,cy) = (' + cx + ',' + cy + ')');
+  console.log('[vid=' + this.vid + ', state=' + this._state_id2str(this.state_id) + '] : mousedown at (cx,cy) = (' + cx + ',' + cy + ')');
 
   if ( this.state_id === _VIA_RINPUT_STATE.IDLE ) {
     if ( e.shiftkey ) {
@@ -421,7 +419,7 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
   e.stopPropagation();
   var cx = e.offsetX;
   var cy = e.offsetY;
-  console.log('[vid=' + this.vid + ', findex=' + this.findex + ',state=' + this._state_id2str(this.state_id) + '] : mouseup at (cx,cy) = (' + cx + ',' + cy + ')');
+  console.log('[vid=' + this.vid + ', state=' + this._state_id2str(this.state_id) + '] : mouseup at (cx,cy) = (' + cx + ',' + cy + ')');
 
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_DRAW_ONGOING ) {
     switch ( this.va.region_draw_shape ) {
@@ -624,7 +622,7 @@ _via_file_annotator.prototype._rinput_is_near_first_user_input_point = function(
 //
 _via_file_annotator.prototype._state_set = function(state_id) {
   this.state_id = state_id;
-  console.log('[vid=' + this.vid + ', findex=' + this.findex + '] State = ' + this._state_id2str(this.state_id));
+  console.log('[vid=' + this.vid + '] State = ' + this._state_id2str(this.state_id));
 }
 
 _via_file_annotator.prototype._state_id2str = function(state_id) {
@@ -737,9 +735,8 @@ _via_file_annotator.prototype._metadata_add = function(region_shape, canvas_inpu
     if ( this.file.type === _VIA_FILE_TYPE.VIDEO ) {
       z = _via_util_float_to_fixed(this.file_html_element.currentTime, 3);
     }
-    console.log(xy)
     this.d.metadata_add(this.vid, z, xy, {}).then( function(ok) {
-      console.log(this.d.store.metadata[ok.mid])
+      console.log('z=' + this.d.store.metadata[ok.mid].z + ', xy=' + this.d.store.metadata[ok.mid].xy)
       this._creg_add(this.vid, ok.mid);
       this._creg_draw(ok.mid);
       ok_callback(ok.mid);
@@ -846,16 +843,40 @@ _via_file_annotator.prototype._metadata_pts_to_xy_rect = function(pts) {
 //
 // canvas region maintainers
 //
-_via_file_annotator.prototype._creg_reload = function() {
-  this._creg_add_all(this.vid);
+_via_file_annotator.prototype._on_event_edit_current_frame_regions = function(data, event_payload) {
+  this._creg_show_current_frame_regions();
+}
+
+_via_file_annotator.prototype._on_event_edit_frame_regions = function(data, event_payload) {
+  this.creg = {};
+  var mid;
+  for ( var mindex in event_payload.mid_list ) {
+    mid = event_payload.mid_list[mindex];
+    this.creg[mid] = this._metadata_xy_to_creg(this.vid, mid);
+  }
   this._creg_draw_all();
 }
 
-_via_file_annotator.prototype._creg_add_all = function(vid) {
+_via_file_annotator.prototype._creg_show_current_frame_regions = function() {
+  this._creg_add_current_frame_regions(this.vid);
+  this._creg_draw_all();
+}
+
+_via_file_annotator.prototype._creg_add_current_frame_regions = function(vid) {
   this.creg = {};
-  for ( var mid in this.d.cache.mid_list[vid] ) {
-    if ( this.d.cache.mid_list[vid][mid] === 1 ) {
-      this.creg[mid] = this._metadata_xy_to_creg(vid, mid);
+  if ( ! this.file_html_element.paused ) {
+    return;
+  }
+  var t = this.file_html_element.currentTime;
+  var mid;
+  for ( var mindex in this.d.cache.mid_list[vid] ) {
+    mid = this.d.cache.mid_list[vid][mindex];
+    if ( this.d.store.metadata[mid].z.length === 1 &&
+         this.d.store.metadata[mid].xy.length !== 0
+       ) {
+      if ( Math.abs(this.d.store.metadata[mid].z[0] - t) < 0.1 ) {
+        this.creg[mid] = this._metadata_xy_to_creg(vid, mid);
+      }
     }
   }
 }
@@ -866,6 +887,7 @@ _via_file_annotator.prototype._creg_add = function(vid, mid) {
 
 _via_file_annotator.prototype._creg_clear = function() {
   this.rshapectx.clearRect(0, 0, this.rshape_canvas.width, this.rshape_canvas.height);
+  this._smetadata_hide();
 }
 
 _via_file_annotator.prototype._creg_draw_all = function() {
@@ -930,12 +952,59 @@ _via_file_annotator.prototype._creg_is_inside = function(xy, cx, cy, tolerance) 
     if ( dx <= this.conf.FIRST_VERTEX_CLICK_TOL &&
          dy <= this.conf.FIRST_VERTEX_CLICK_TOL ) {
       is_inside = true;
+    } else {
+      if ( this._creg_is_inside_polygon(xy, cx, cy) !== 0 ) {
+        is_inside = true;
+      }
     }
     break;
   default:
     console.warn('_via_file_annotator._draw() : shape_id=' + shape_id + ' not implemented');
   }
   return is_inside;
+}
+
+// returns 0 when (px,py) is outside the polygon
+// source: http://geomalgorithms.com/a03-_inclusion.html
+_via_file_annotator.prototype._creg_is_inside_polygon = function (xy_pts, px, py) {
+  var xy = xy_pts.slice(0);
+  if ( xy.length === 0 || xy.length === 1 ) {
+    return 0;
+  }
+  xy.push(xy[1], xy[2]); // close the loop
+
+  var wn = 0;    // the  winding number counter
+  // loop through all edges of the polygon
+  for ( var i = 1; i < xy.length; i = i + 2 ) {   // edge from V[i] to  V[i+1]
+    var is_left_value = this._creg_is_left( xy[i], xy[i+1],
+                                            xy[i+2], xy[i+3],
+                                            px, py);
+
+    if (xy[i + 1] <= py) {
+      if (xy[i+3]  > py && is_left_value > 0) {
+        ++wn;
+      }
+    }
+    else {
+      if (xy[i+3]  <= py && is_left_value < 0) {
+        --wn;
+      }
+    }
+  }
+  if ( wn === 0 ) {
+    return 0;
+  }
+  else {
+    return 1;
+  }
+}
+
+// >0 if (x2,y2) lies on the left side of line joining (x0,y0) and (x1,y1)
+// =0 if (x2,y2) lies on the line joining (x0,y0) and (x1,y1)
+// >0 if (x2,y2) lies on the right side of line joining (x0,y0) and (x1,y1)
+ // source: http://geomalgorithms.com/a03-_inclusion.html
+_via_file_annotator.prototype._creg_is_left = function (x0, y0, x1, y1, x2, y2) {
+  return ( ((x1 - x0) * (y2 - y0))  - ((x2 -  x0) * (y1 - y0)) );
 }
 
 _via_file_annotator.prototype._creg_move_control_point = function(xy0, cpindex, new_x, new_y) {
@@ -1416,7 +1485,6 @@ _via_file_annotator.prototype._draw_control_point = function(ctx, cx, cy) {
 // region draw enable/disable
 //
 _via_file_annotator.prototype._rinput_enable = function() {
-  console.log('rinput enabled');
   this._state_set(_VIA_RINPUT_STATE.IDLE);
   this.input.style.pointerEvents = 'auto';
   this.input.classList.add('rinput_enabled');
@@ -1425,7 +1493,6 @@ _via_file_annotator.prototype._rinput_enable = function() {
 }
 
 _via_file_annotator.prototype._rinput_disable = function() {
-  console.log('rinput disabled');
   this._state_set(_VIA_RINPUT_STATE.SUSPEND);
   this.input.style.pointerEvents = 'none';
   this.input.classList.remove('rinput_enabled');
@@ -1484,7 +1551,6 @@ _via_file_annotator.prototype._smetadata_update = function() {
   tbody.appendChild(tr);
   table.appendChild(tbody);
 
-  //this.smetadata_container.innerHTML = '<table><tr><td>Abc</td><td>8sj</td></tr></table>';
   this.smetadata_container.innerHTML = '';
   this.smetadata_container.appendChild(table);
 }
@@ -1598,7 +1664,7 @@ _via_file_annotator.prototype._smetadata_attribute_io_html_element = function(mi
     if ( typeof(aval) === 'undefined' ) {
       aval = dval;
     }
-
+    var values = aval.split(',');
     for ( var oid in this.d.store.attribute[aid].options ) {
       var checkbox = document.createElement('input');
       checkbox.setAttribute('type', 'checkbox');
@@ -1606,7 +1672,8 @@ _via_file_annotator.prototype._smetadata_attribute_io_html_element = function(mi
       checkbox.setAttribute('data-mid', mid);
       checkbox.setAttribute('data-aid', aid);
       checkbox.setAttribute('name', this.d.store.attribute[aid].aname);
-      if ( oid === aval ) {
+
+      if ( values.indexOf(oid) !== -1 ) {
         checkbox.setAttribute('checked', true);
       }
       checkbox.addEventListener('change', this._smetadata_on_change.bind(this));

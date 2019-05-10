@@ -80,7 +80,8 @@ to annotate temporal segments of a video: contains 4 rows
 .temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"] { width:80%; border:none; border-bottom:1px solid #cccccc; }
 .temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"]:focus { background-color:#f2f2f2; }
 
-.temporal_segmenter_container > .toolbar_container { font-size:small; vertical-align:middle; }
+.temporal_segmenter_container > .toolbar_container { font-size:small; vertical-align:middle; margin-top:0.2em;}
+.temporal_segmenter_container > .toolbar_container * { vertical-align:middle; }
 .temporal_segmenter_container > .toolbar_container div { display:inline; margin-right:1em; }
 .temporal_segmenter_container > .toolbar_container input[type="text"] { vertical-align:middle; font-size:small; }
 .temporal_segmenter_container > .toolbar_container label { vertical-align:middle; }

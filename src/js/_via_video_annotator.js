@@ -60,3 +60,24 @@ function _via_set_region_draw_shape(e) {
     }
   }
 }
+
+
+
+/*
+  //// DEBUG ////////
+  setTimeout( function() {
+    console.log('************** DEBUG');
+    this._rinput_enable();
+    this._metadata_add(_VIA_RSHAPE.RECT, [30, 40, 100, 120]).then( function(mid) {
+      this._creg_select_one(mid);
+    }.bind(this));
+  }.bind(this), 100);
+
+  setTimeout( function() {
+    console.log('************** DEBUG');
+    this.file_html_element.currentTime = 0.91;
+    setTimeout( function() {
+      //this._creg_select_one('mR8ks-Aa');
+    }.bind(this), 500);
+  }.bind(this), 100);
+*/

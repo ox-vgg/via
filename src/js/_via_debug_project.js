@@ -370,6 +370,8 @@ _via_dp[2]['store']['attribute'] = {
       'mixer':'Mixer',
       'cup':'Cup',
       'garlic':'Garlic',
+      'knife':'Knife',
+      'teabag':'Tea Bag',
     },
     'default_option_id':'',
   },
@@ -394,6 +396,7 @@ _via_dp[2]['store']['attribute'] = {
       'track':'Track',
       'classify':'Classify',
       'segment':'Segment',
+      'none':'None',
     },
     'default_option_id':'unknown',
   },
@@ -406,15 +409,35 @@ _via_dp[2]['store']['file'] = {
     'loc':1,
     'src':'Alioli_Wikimedia_Wardtmar.mp4',
   },
+  '2':{
+    'fid':2,
+    'fname':'PreparingTea.mp4',
+    'type':2,
+    'loc':1,
+    'src':'PreparingTea.mp4',
+  },
+  '3':{
+    'fid':3,
+    'fname':'Tea.mp4',
+    'type':2,
+    'loc':1,
+    'src':'PreparingTea.mp4',
+  },
 };
 
 _via_dp[2]['store']['view'] = {
   '1': {
     'fid_list':[1],
   },
+  '2': {
+    'fid_list':[2],
+  },
+  '3': {
+    'fid_list':[3],
+  },
 };
 
-_via_dp[2]['store']['vid_list'] = ['1'];
+_via_dp[2]['store']['vid_list'] = ['1', '2', '3'];
 _via_dp[2]['store']['metadata'] = {
   '-glfwaaX': {
     'vid': '1',
@@ -452,13 +475,117 @@ _via_dp[2]['store']['metadata'] = {
       '1':'3. cut garlic',
     }
   },
-'kHRoMie1': {
+  'kHRoMie1': {
     'vid': '1',
     'flg': 0,
     'z': [64, 128],
     'xy': [],
     'av': {
       '1':'4. mix',
+    }
+  },
+  'fH-oMre1': {
+    'vid': '1',
+    'flg': 0,
+    'z': [0.917],
+    'xy': [4, 263, 184, 17, 13],
+    'av': {
+      '2':'egg',
+      '3':'ingredient',
+      '4':'track,classify',
+    }
+  },
+  'vPao-re8': {
+    'vid': '1',
+    'flg': 0,
+    'z': [0.917],
+    'xy': [2, 343, 730, 60, 160],
+    'av': {
+      '2':'bottle',
+      '3':'ingredient',
+      '4':'none',
+    }
+  },
+  'x-PoM9ea': {
+    'vid': '1',
+    'flg': 0,
+    'z': [0.917],
+    'xy': [7, 225, 133, 177, 177, 195, 188, 246, 138],
+    'av': {
+      '2':'knife',
+      '3':'tool',
+      '4':'track,classify,segment',
+    }
+  },
+  'mR8ks-Aa': {
+    'vid': '1',
+    'flg': 0,
+    'z': [7.208],
+    'xy': [4, 328, 110, 25, 21],
+    'av': {
+      '2':'egg',
+      '3':'ingredient',
+      '4':'track,classify',
+    }
+  },
+  'Yh7Klow6': {
+    'vid': '1',
+    'flg': 0,
+    'z': [21.52],
+    'xy': [2, 315, 52, 80, 155],
+    'av': {
+      '2':'bottle',
+      '3':'ingredient',
+      '4':'none',
+    }
+  },
+  'A7jfx8PX': {
+    'vid': '2',
+    'flg': 0,
+    'z': [3, 8],
+    'xy': [],
+    'av': {
+      '1':'1. Add water',
+    }
+  },
+  'M8kl0+Xe': {
+    'vid': '2',
+    'flg': 0,
+    'z': [16, 28],
+    'xy': [],
+    'av': {
+      '1':'2. Warm water',
+    }
+  },
+  'yp-X6Hjy': {
+    'vid': '2',
+    'flg': 0,
+    'z': [35, 39],
+    'xy': [],
+    'av': {
+      '1':'3. Add tea bag',
+    }
+  },
+  'jU4+xekA': {
+    'vid': '2',
+    'flg': 0,
+    'z': [35],
+    'xy': [2, 265, 124, 92, 120],
+    'av': {
+      '2':'teabag',
+      '3':'ingredient',
+      '4':'track,classify',
+    }
+  },
+  'Hycx5-Sa': {
+    'vid': '2',
+    'flg': 0,
+    'z': [0.75],
+    'xy': [2, 144, 132, 150, 138],
+    'av': {
+      '2':'cup',
+      '3':'tool',
+      '4':'track',
     }
   },
 };

@@ -27,6 +27,9 @@ function _via_temporal_segmenter(container, vid, data, media_element) {
   this.edge_show_time = -1;
   this.group_default_gid_list = [];
 
+  // spatial mid
+  this.smid = {};
+
   this.DRAW_LINE_WIDTH = 2;
   this.EDGE_UPDATE_TIME_DELTA = 1/50;  // in sec
   this.TEMPORAL_SEG_MOVE_OFFSET = 1;   // in sec
@@ -37,6 +40,7 @@ function _via_temporal_segmenter(container, vid, data, media_element) {
   this.GID_COL_WIDTH = 15;             // units of char width
   this.METADATA_CONTAINER_HEIGHT = 22; // units of char width
   this.METADATA_EDGE_TOL = 0.1;
+  this.GTIMELINE_REGION_MARKER_MOUSE_TOL = 0.1; // in sec.
 
   this.PLAYBACK_MODE = { NORMAL:'1', REVIEW_SEGMENT:'2', REVIEW_GAP:'3' };
   this.current_playback_mode = this.PLAYBACK_MODE.NORMAL;
@@ -535,9 +539,34 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_all_mid = function()
   var gindex;
   var t0, t1;
 
+  // gather all temporal mid
   for ( gindex in this.gid_list ) {
     this._tmetadata_boundary_fetch_gid_mid( this.gid_list[gindex] );
     this._tmetadata_group_gid_draw( this.gid_list[gindex] );
+  }
+
+  // gather all spatial mid
+  this._tmetadata_boundary_fetch_spatial_mid();
+}
+
+_via_temporal_segmenter.prototype._tmetadata_boundary_fetch_spatial_mid = function() {
+  var mid, avalue, time;
+  this.smid = {};
+  for ( var mindex in this.d.cache.mid_list[this.vid] ) {
+    mid = this.d.cache.mid_list[this.vid][mindex];
+    if ( this.d.store.metadata[mid].flg === _VIA_METADATA_FLAG.VISIBLE &&
+         this.d.store.metadata[mid].z.length === 1 &&
+         this.d.store.metadata[mid].xy.length !== 0
+       ) {
+      time = this.d.store.metadata[mid].z[0].toString();
+      if ( time >= this.tmetadata_gtimeline_tstart &&
+           time <= this.tmetadata_gtimeline_tend ) {
+        if ( ! this.smid.hasOwnProperty(time) ) {
+          this.smid[time] = [];
+        }
+        this.smid[time].push(mid);
+      }
+    }
   }
 }
 
@@ -571,6 +600,7 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_init = function() {
   this.gtimeline.setAttribute('class', 'gtimeline');
   this.gtimeline.addEventListener('mousedown', this._tmetadata_gtimeline_mousedown.bind(this));
   this.gtimeline.addEventListener('mouseup', this._tmetadata_gtimeline_mouseup.bind(this));
+  this.gtimeline.addEventListener('mousemove', this._tmetadata_gtimeline_mousemove.bind(this));
 
   this.gtimeline.width = this.timeline_container_width;
   this.gtimeline.height = this.linehn[this.GTIMELINE_HEIGHT];
@@ -634,16 +664,6 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_draw = function() {
   this.gtimelinectx.stroke();
 
   if ( this.tmetadata_gtimeline_mark_x.length ) {
-    /*
-    // draw tick marks
-    this.gtimelinectx.beginPath();
-    for ( var i = 0; i < this.tmetadata_gtimeline_mark_x.length; ++i ) {
-      this.gtimelinectx.moveTo(this.tmetadata_gtimeline_mark_x[i], this.linehn[3]);
-      this.gtimelinectx.lineTo(this.tmetadata_gtimeline_mark_x[i], this.linehn[4]);
-    }
-    this.gtimelinectx.stroke();
-    */
-
     // draw tick labels
     this.gtimelinectx.fillStyle = '#666666';
     this.gtimelinectx.font = '9px Sans';
@@ -668,6 +688,15 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_draw = function() {
       }
     }
     this.gtimelinectx.stroke();
+
+    // draw marker for frames containing spatial regions
+    this.gtimelinectx.fillStyle = 'black';
+    this.gtimelinectx.beginPath();
+    for ( var time in this.smid ) {
+      var smarkx = this._tmetadata_gtimeline_time2canvas( parseFloat(time) );
+      this.gtimelinectx.arc(smarkx, this.linehn[2] + 4, 4, 0, 2*Math.PI);
+    }
+    this.gtimelinectx.fill();
   }
 }
 
@@ -719,12 +748,48 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_time2canvas = function(t)
   return canvas_x;
 }
 
+_via_temporal_segmenter.prototype._tmetadata_gtimeline_mousemove= function(e) {
+  var t = this._tmetadata_gtimeline_canvas2time(e.offsetX);
+  var smark_time_str = this._tmetadata_gtimeline_is_on_smark(t);
+  if ( smark_time_str !== '' ) {
+    this.gtimeline.style.cursor = 'pointer';
+    var suffix = this.smid[smark_time_str].length + ' region';
+    if ( this.smid[smark_time_str].length > 1 ) {
+      suffix += 's';
+    }
+    this.gtimeline.setAttribute('title',
+                                'Click to jump to this video frame containing ' + suffix);
+  } else {
+    this.gtimeline.style.cursor = 'default';
+  }
+}
+
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_mousedown = function(e) {
   var t = this._tmetadata_gtimeline_canvas2time(e.offsetX);
-  this.m.currentTime = t;
+  var smark_time_str = this._tmetadata_gtimeline_is_on_smark(t);
+  if ( smark_time_str !== '' ) {
+    // draw all regions associated with this frame
+    this.m.currentTime = parseFloat(smark_time_str);
+    this.emit_event('edit_frame_regions', { 't': parseFloat(smark_time_str),
+                                            'mid_list': this.smid[smark_time_str],
+                                          });
+  } else {
+    this.m.currentTime = t;
+  }
 }
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_mouseup = function(e) {
+}
+
+_via_temporal_segmenter.prototype._tmetadata_gtimeline_is_on_smark = function(t) {
+  var smark_time;
+  for ( var smark_time_str in this.smid ) {
+    smark_time = parseFloat(smark_time_str);
+    if ( Math.abs(smark_time - t) <= this.GTIMELINE_REGION_MARKER_MOUSE_TOL ) {
+      return smark_time_str;
+    }
+  }
+  return '';
 }
 
 //
@@ -1567,7 +1632,10 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
   var mid, avalue;
   for ( var mindex in this.d.cache.mid_list[this.vid] ) {
     mid = this.d.cache.mid_list[this.vid][mindex];
-    if ( this.d.store.metadata[mid].flg === _VIA_METADATA_FLAG.VISIBLE ) {
+    if ( this.d.store.metadata[mid].flg === _VIA_METADATA_FLAG.VISIBLE &&
+         this.d.store.metadata[mid].z.length >= 2 &&
+         this.d.store.metadata[mid].xy.length === 0
+       ) {
       avalue = this.d.store.metadata[mid].av[this.groupby_aid];
       if ( ! this.group.hasOwnProperty(avalue) ) {
         this.group[avalue] = [];
@@ -1821,7 +1889,7 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   var gid_list_str = this.gid_list.join(',');
   this.gid_list_input.setAttribute('value', gid_list_str);
   //this.gid_list_input.setAttribute('style', 'width:' + (gid_list_str.length) + 'ch;');
-  this.gid_list_input.setAttribute('style', 'width:8em;');
+  this.gid_list_input.setAttribute('style', 'width:12em;');
   var gid_list_update_btn = document.createElement('button');
   gid_list_update_btn.innerHTML = 'Update';
   gid_list_update_btn.addEventListener('click', this._tmetadata_onchange_gid_list_input.bind(this));

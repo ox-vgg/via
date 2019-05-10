@@ -132,6 +132,8 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
                                                           this.d,
                                                           this.file_annotator[0][0].file_html_element
                                                          );
+    this.temporal_segmenter.on_event('edit_frame_regions', this.file_annotator[0][0]._on_event_edit_frame_regions.bind(this.file_annotator[0][0]));
+
     //_via_util_msg_show('Press <span class="key">Space</span> to Play or Pause the video at any time.', true);
   }.bind(this), function(err) {
     _via_util_msg_show('Failed to load video!', true);
@@ -380,7 +382,6 @@ _via_view_annotator.prototype._attribute_html_element = function(aid, onchange_h
 // keyboard handler
 //
 _via_view_annotator.prototype._on_event_keydown = function(e) {
-  console.log(e.key)
   if ( e.key === ' ' ) {
     if ( this.view_mode === _VIA_VIEW_MODE.VIDEO1 ) {
       e.preventDefault();
