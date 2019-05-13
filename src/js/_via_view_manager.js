@@ -19,9 +19,11 @@ function _via_view_manager(data, view_annotator, container) {
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this.event_prefix = '_via_view_manager_';
+  this._EVENT_ID_PREFIX = '_via_view_manager_';
   _via_event.call( this );
 
+  this.d.on_event('project_loaded', this._on_event_project_loaded.bind(this));
+  this.d.on_event('view_bulk_add', this._on_event_view_bulk_add.bind(this));
   this.va.on_event('view_show', this._on_event_view_show.bind(this));
 
   this._init_ui_elements();
@@ -34,7 +36,7 @@ _via_view_manager.prototype._init = function() {
 _via_view_manager.prototype._init_ui_elements = function() {
   this.pname = document.createElement('input');
   this.pname.setAttribute('type', 'text');
-  this.pname.setAttribute('class', 'pname');
+  this.pname.setAttribute('id', 'via_project_name_input');
   this.pname.setAttribute('value', this.d.store.project.pname);
   this.pname.setAttribute('title', 'Project Name (click to update)');
   this.pname.addEventListener('change', this._on_pname_change.bind(this));
@@ -51,27 +53,21 @@ _via_view_manager.prototype._init_ui_elements = function() {
   this.view_filter_regex.setAttribute('placeholder', 'Search');
   this.view_filter_regex.addEventListener('input', this._on_view_filter_regex_change.bind(this));
 
-  this.next_view = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  this.next_view.setAttributeNS(null, 'class', 'svg_button');
-  this.next_view.setAttributeNS(null, 'viewBox', '0 0 24 24');
-  var next_view_use_element = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-  next_view_use_element.setAttributeNS(null, 'href', '#micon_navigate_next');
-  this.next_view.appendChild(next_view_use_element);
-  var next_view_title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-  next_view_title.innerHTML = 'Show Next File';
-  this.next_view.appendChild(next_view_title);
+  this.next_view = _via_util_get_svg_button('micon_navigate_next', 'Show Next File', 'show_next');
   this.next_view.addEventListener('click', this._on_next_view.bind(this));
 
-  this.prev_view = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  this.prev_view.setAttributeNS(null, 'class', 'svg_button');
-  this.prev_view.setAttributeNS(null, 'viewBox', '0 0 24 24');
-  var prev_view_use_element = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-  prev_view_use_element.setAttributeNS(null, 'href', '#micon_navigate_prev');
-  this.prev_view.appendChild(prev_view_use_element);
-  var prev_view_title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-  prev_view_title.innerHTML = 'Show Prev File';
-  this.prev_view.appendChild(prev_view_title);
+  this.prev_view = _via_util_get_svg_button('micon_navigate_prev', 'Show Previous File', 'show_prev');
   this.prev_view.addEventListener('click', this._on_prev_view.bind(this));
+
+  this.add_media_local = _via_util_get_svg_button('micon_add_circle', 'Add Audio or Video File in Local Computer', 'add_media_local');
+  this.add_media_local.addEventListener('click', this._on_add_media_local.bind(this));
+
+  this.add_media_remote = _via_util_get_svg_button('micon_add_remote', 'Add Audio or Video File hosted at Remote Servers (e.g. http://)', 'add_media_remote');
+  this.add_media_remote.addEventListener('click', this._on_add_media_remote.bind(this));
+
+  this.add_media_bulk = _via_util_get_svg_button('micon_lib_add', 'Bulk add file URI ( e.g. file:///... or http://... ) contained in a local CSV file where each row is a remote or local filename.', 'add_media_bulk');
+
+  this.remove_media = _via_util_get_svg_button('micon_remove_circle', 'Remove the Current File', 'remove_media');
 
   this.c.innerHTML = '';
   this.c.appendChild(this.pname);
@@ -79,6 +75,10 @@ _via_view_manager.prototype._init_ui_elements = function() {
   this.c.appendChild(this.view_filter_regex);
   this.c.appendChild(this.prev_view);
   this.c.appendChild(this.next_view);
+  this.c.appendChild(this.add_media_local);
+  this.c.appendChild(this.add_media_remote);
+  this.c.appendChild(this.add_media_bulk);
+  this.c.appendChild(this.remove_media);
 }
 
 //
@@ -90,11 +90,18 @@ _via_view_manager.prototype._on_pname_change = function() {
 
 _via_view_manager.prototype._on_view_selector_change = function(e) {
   var vid = e.target.options[e.target.selectedIndex].value;
-  this.va.view_show(vid)
+  console.log('change vid to ' + vid);
+  if ( vid !== this.va.vid ) {
+    this.va.view_show(vid);
+  }
 }
 
 _via_view_manager.prototype._on_next_view = function() {
   var vid = this.view_selector.options[this.view_selector.selectedIndex].value;
+  console.log(this.view_selector.selectedIndex)
+  console.log(this.view_selector.options[this.view_selector.selectedIndex].value)
+  console.log( typeof(vid) );
+  console.log(this.d.store.vid_list)
   var vindex = this.d.store.vid_list.indexOf(vid);
   if ( vindex !== -1 ) {
     var next_vindex = vindex + 1;
@@ -123,19 +130,26 @@ _via_view_manager.prototype._on_prev_view = function() {
 
 _via_view_manager.prototype._on_event_view_show = function(data, event_payload) {
   var vid = event_payload.vid.toString();
-  var view_selector_vid = this.view_selector.options[this.view_selector.selectedIndex].value;
-  if ( vid !== view_selector_vid ) {
-    // ensure that the view selector shows the view being displayed
-    var n = this.view_selector.options.length;
-    for ( var i = 0; i < n; ++i ) {
-      if ( this.view_selector.options[i].value === vid ) {
-        this.view_selector.selectedIndex = i;
-        break;
-      }
+  this.view_selector.selectedIndex = -1;
+
+  // ensure that the view selector shows the view being displayed
+  var n = this.view_selector.options.length;
+  for ( var i = 0; i < n; ++i ) {
+    if ( this.view_selector.options[i].value === vid ) {
+      this.view_selector.selectedIndex = i;
+      break;
     }
   }
 }
 
+_via_view_manager.prototype._on_event_project_loaded = function(data, event_payload) {
+  this._init_ui_elements();
+  this._view_selector_update();
+  if ( this.d.store.vid_list.length ) {
+    // show first view by default
+    this.va.view_show( this.d.store.vid_list[0] );
+  }
+}
 //
 // View Selector
 //
@@ -231,4 +245,75 @@ _via_view_manager.prototype._on_view_filter_regex_change = function() {
   var regex = this.view_filter_regex.value;
   console.log(regex)
   this._view_selector_update_regex(regex);
+}
+
+_via_view_manager.prototype._on_add_media_local = function() {
+  _via_util_file_select_local(_VIA_FILE_TYPE.VIDEO | _VIA_FILE_TYPE.AUDIO | _VIA_FILE_TYPE.IMAGE,
+                              this._file_add_local.bind(this),
+                              true);
+}
+
+_via_view_manager.prototype._file_add_local = function(e) {
+  var files = e.target.files;
+  var filelist = [];
+  for ( var findex = 0; findex < files.length; ++findex ) {
+    filelist.push({ 'fname':files[findex].name,
+                    'type':_via_util_infer_file_type_from_filename(files[findex].name),
+                    'loc':_VIA_FILE_LOC.LOCAL,
+                    'src':files[findex],
+                  });
+  }
+  this.d.view_bulk_add_from_filelist(filelist).then( function(ok) {
+    var filetype_summary = {};
+    var fid, ftype_str;
+    for ( var findex in ok.fid_list ) {
+      fid = ok.fid_list[findex];
+      ftype_str = _via_util_file_type_to_str( this.d.store.file[fid].type );
+      if ( ! filetype_summary.hasOwnProperty(ftype_str) ) {
+        filetype_summary[ftype_str] = 0;
+      }
+      filetype_summary[ftype_str] = filetype_summary[ftype_str] + 1;
+    }
+    _via_util_msg_show('Added ' + ok.fid_list.length + ' files. ' + JSON.stringify(filetype_summary));
+  }.bind(this), function(err) {
+    _via_util_msg_show('Failed to add files! [' + err + ']');
+    console.warn(err);
+  }.bind(this));
+}
+
+_via_view_manager.prototype._on_event_view_bulk_add = function(data, event_payload) {
+  this._view_selector_update();
+  this.d._cache_update();
+  if ( event_payload.vid_list.length ) {
+    this.va.view_show( event_payload.vid_list[0] );
+  }
+}
+
+_via_view_manager.prototype._on_add_media_remote = function() {
+  console.log('a')
+  var url = window.prompt('Enter image, audio or video url\ne.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg\ne.g. https://commons.wikimedia.org/wiki/File:Alioli.ogv',
+                          '');
+  var filelist = [ {'fname':url,
+                    'type':_via_util_infer_file_type_from_filename(url),
+                    'loc':_VIA_FILE_LOC.URIHTTP,
+                    'src':url,
+                   }
+                 ];
+
+  this.d.view_bulk_add_from_filelist(filelist).then( function(ok) {
+    var filetype_summary = {};
+    var fid, ftype_str;
+    for ( var findex in ok.fid_list ) {
+      fid = ok.fid_list[findex];
+      ftype_str = _via_util_file_type_to_str( this.d.store.file[fid].type );
+      if ( ! filetype_summary.hasOwnProperty(ftype_str) ) {
+        filetype_summary[ftype_str] = 0;
+      }
+      filetype_summary[ftype_str] = filetype_summary[ftype_str] + 1;
+    }
+    _via_util_msg_show('Added ' + ok.fid_list.length + ' files. ' + JSON.stringify(filetype_summary));
+  }.bind(this), function(err) {
+    _via_util_msg_show('Failed to add files! [' + err + ']');
+    console.warn(err);
+  }.bind(this));
 }

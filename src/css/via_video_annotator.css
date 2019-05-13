@@ -24,17 +24,17 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .via_container { position:relative; display:grid; grid-template-rows:auto 1fr; grid-row-gap:0.5em; padding:0.3em; background-color:#ffffff; height:100vh; max-height:100vh; width:100vw; }
 
 /* top control panel */
-.cpanel { display:block; border:1px solid #707070; padding:0.4em 0.5em; }
-.cpanel * { display:inline-block; margin:0 0.2em; }
-.cpanel .spacer { padding:0 0.5em; }
-.cpanel #region_info_panel { font-size:0.8em; }
-.cpanel .logo { display:inline-block; line-height:1.4em;}
-.cpanel .logo a { text-decoration:none; }
-.cpanel select { background-color:inherit; border:1px solid #cfcfcf; vertical-align:middle; width:15em; }
-.cpanel input { background-color:inherit; border:1px solid #cfcfcf; vertical-align:middle; width:4em;}
-.cpanel #_via_project_name_input { display:inline-block; vertical-align:middle; font-size:small; width:8em; border:none; border-bottom:1px solid white; }
-.cpanel #_via_project_name_input:hover { border-bottom:1px solid #cfcfcf; }
-.cpanel #_via_project_name_input:focus { background-color:#f2f2f2; border-bottom:1px solid #cfcfcf; }
+#via_control_panel_container { display:block; border:1px solid #707070; padding:0.4em 0.5em; }
+#via_control_panel_container * { display:inline-block; margin:0 0.2em; outline:none; vertical-align:middle; }
+#via_control_panel_container .spacer { padding:0 0.5em; }
+#via_control_panel_container #region_info_panel { font-size:0.8em; }
+#via_control_panel_container .logo { position:relative; display:inline-block; font-size:large; top:0px; }
+#via_control_panel_container .logo a { text-decoration:none; }
+#via_control_panel_container select { background-color:inherit; border:1px solid #cfcfcf; width:15em; }
+#via_control_panel_container input { background-color:inherit; border:1px solid #cfcfcf; width:4em;}
+#via_control_panel_container #via_project_name_input { display:inline-block; font-size:small; width:12em; border:none; border-bottom:1px solid #cfcfcf; }
+#via_control_panel_container #via_project_name_input:hover { border-bottom:1px solid #cfcfcf; background-color:#f2f2f2; }
+#via_control_panel_container #via_project_name_input:focus { background-color:#f2f2f2; border-bottom:1px solid #cfcfcf; }
 
 /* View Container : video + temporal segmenter */
 #view_container { display:grid; grid-row-gap:0.5em; } /* grid-template-rows is set dynamically */
@@ -100,7 +100,7 @@ to annotate temporal segments of a video: contains 4 rows
 #editor_container > .content_container input[type="text"] { width:10em; }
 
 /* Misc */
-.svg_button { width:1.2em; height:1.2em; fill:black; stroke:none; vertical-align:middle; }
+.svg_button { position:relative; width:24px; height:24px; top:2px; }
 .svg_button_selected { stroke:blue; fill:none; }
 .svg_button:hover { fill:#707070; cursor:pointer; }
 .svg_button:active { fill:#707070; cursor:pointer; }

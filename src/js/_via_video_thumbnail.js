@@ -67,26 +67,10 @@ _via_video_thumbnail.prototype.load = function() {
 _via_video_thumbnail.prototype._file_read = function() {
   return new Promise( function(ok_callback, err_callback) {
     if ( this.file.src instanceof File ) {
-      var file_reader = new FileReader();
-      file_reader.addEventListener('error', function(e) {
-        console.log('_via_file_annotator._file_read() error');
-        console.warn(e.target.error)
-        err_callback(this.file);
-      }.bind(this));
-      file_reader.addEventListener('abort', function() {
-        console.log('_via_file_annotator._file_read() abort');
-        err_callback(this.file)
-      }.bind(this));
-      file_reader.addEventListener('load', function() {
-        var blob = new Blob( [ file_reader.result ],
-                             { type: this.file.src.type }
-                           );
-        // we keep a reference of file object URL so that we can revoke it when not needed
-        // WARNING: ensure that this._destroy_file_object_url() gets called when "this" not needed
-        this.file_object_url = URL.createObjectURL(blob);
-        ok_callback(this.file_object_url);
-      }.bind(this));
-      file_reader.readAsArrayBuffer( this.file_path + this.file.src );
+      // we keep a reference of file object URL so that we can revoke it when not needed
+      // WARNING: ensure that this._destroy_file_object_url() gets called when "this" not needed
+      this.file_object_url = URL.createObjectURL(this.file.src);
+      ok_callback(this.file_object_url);
     } else {
       ok_callback( this.file_path + this.file.src ); // read from URL
     }

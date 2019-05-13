@@ -26,13 +26,11 @@ via_container.addEventListener('keydown', function(e) {
   }
 });
 
-/*
 var editor_container = document.getElementById('editor_container');
 var editor = new _via_editor(data, view_annotator, editor_container);
 setTimeout( function() {
   //editor.show();
 }, 100);
-*/
 
 var view_manager_container = document.getElementById('view_manager_container');
 var view_manager = new _via_view_manager(data, view_annotator, view_manager_container);

@@ -10,6 +10,15 @@
 'use strict';
 
 function _via_data() {
+  this._init_default_project();
+
+  // registers on_event(), emit_event(), ... methods from
+  // _via_event to let this module listen and emit events
+  this._EVENT_ID_PREFIX = '_via_data_';
+  _via_event.call(this);
+}
+
+_via_data.prototype._init_default_project = function() {
   this.store = {};
   this.store['project'] = {
     'pid': _via_util_gen_project_id(),
@@ -24,7 +33,16 @@ function _via_data() {
       'file_content_align':'center',
     },
   };
-  this.store['attribute'] = {};
+  this.store['attribute'] = {
+    '1': {
+      'aname':'Temporal Group',
+      'anchor_id':'FILE1_Z2_XY0',
+      'type':1,
+      'desc':'Attribute used for definition of temporal regions in audio and video (added by default)',
+      'options':{},
+      'default_option_id':'',
+    },
+  };
   this.store['file'] = {};
   this.store['metadata'] = {};
   this.store['view'] = {};
@@ -33,11 +51,6 @@ function _via_data() {
   this.cache = {};
   this.cache['mid_list'] = {};
   this.cache['attribute_group'] = {};
-
-  // registers on_event(), emit_event(), ... methods from
-  // _via_event to let this module listen and emit events
-  this._EVENT_ID_PREFIX = '_via_data_';
-  _via_event.call(this);
 }
 
 //
@@ -65,7 +78,7 @@ _via_data.prototype._attribute_exist = function(aname) {
   return false;
 }
 
-_via_data.prototype.attribute_add = function(name, anchor, type, options, default_option_id) {
+_via_data.prototype.attribute_add = function(name, anchor_id, type, options, default_option_id) {
   return new Promise( function(ok_callback, err_callback) {
     if ( this._attribute_exist(name) ) {
       err_callback('attribute already exists');
@@ -74,12 +87,48 @@ _via_data.prototype.attribute_add = function(name, anchor, type, options, defaul
 
     var aid = this._attribute_get_new_id();
     this.store['attribute'][aid] = new _via_attribute(name,
-                                                      anchor,
+                                                      anchor_id,
                                                       type,
                                                       options,
                                                       default_option_id);
-    this.store.aid_list.push(aid);
+    this._cache_update_attribute_group();
     this.emit_event( 'attribute_add', { 'aid':aid } );
+    ok_callback(aid);
+  }.bind(this));
+}
+
+_via_data.prototype.attribute_del = function(aid) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( this._attribute_exist(name) ) {
+      err_callback('attribute already exists');
+      return;
+    }
+
+    // delete all metadata entries for aid
+    for ( var mid in this.store.metadata ) {
+      if ( this.store.metadata[mid].av.hasOwnProperty(aid) ) {
+        delete this.store.metadata[mid].av[aid];
+      }
+    }
+
+    // delete aid
+    delete this.store.attribute[aid];
+    this._cache_update_attribute_group();
+    this.emit_event( 'attribute_del', { 'aid':aid } );
+    ok_callback(aid);
+  }.bind(this));
+}
+
+
+_via_data.prototype.attribute_update_anchor_id = function(aid, anchor_id) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( ! this.store.attribute.hasOwnProperty(aid) ) {
+      err_callback('aid does not exist');
+      return;
+    }
+    this.store.attribute[aid].anchor_id = anchor_id;
+    this._cache_update_attribute_group();
+    this.emit_event( 'attribute_update', { 'aid':aid } );
     ok_callback(aid);
   }.bind(this));
 }
@@ -105,6 +154,31 @@ _via_data.prototype.attribute_update_aname = function(aid, new_aname) {
   }.bind(this));
 }
 
+// option_csv = option1,*default_option,option2,...
+_via_data.prototype.attribute_update_options_from_csv = function(aid, options_csv) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( ! this.store.attribute.hasOwnProperty(aid) ) {
+      err_callback('aid does not exist');
+      return;
+    }
+    options_csv = options_csv.trim();
+    this.store['attribute'][aid]['options'] = {};
+    this.store['attribute'][aid]['default_option_id'] = '';
+    var options = options_csv.split(',');
+    for ( var oid = 0; oid < options.length; ++oid ) {
+      var oval = options[oid];
+      oval = oval.trim();
+      if ( oval.startsWith('*') ) {
+        this.store['attribute'][aid]['default_option_id'] = oid.toString();
+        oval = oval.substring(1); // remove *
+      }
+      this.store['attribute'][aid]['options'][oid] = oval;
+    }
+    this.emit_event( 'attribute_update', { 'aid':aid } );
+    ok_callback(aid);
+  }.bind(this));
+}
+
 //
 // file
 //
@@ -125,7 +199,6 @@ _via_data.prototype.file_add = function(name, type, loc, src) {
     try {
       var fid = this._file_get_new_id();
       this.store.file[fid] = new _via_file(fid, name, type, loc, src);
-      this.store.fid_list.push(fid);
       this.emit_event( 'file_add', { 'fid':fid } );
       ok_callback(fid);
     }
@@ -358,9 +431,9 @@ _via_data.prototype._view_get_new_id = function() {
   var vid_list = Object.keys(this.store.view).map(Number).sort();
   var n = vid_list.length;
   if ( n ) {
-    vid = vid_list[n-1] + 1;
+    vid = (vid_list[n-1] + 1).toString();
   } else {
-    vid = 1;
+    vid = '1';
   }
   return vid;
 }
@@ -390,6 +463,38 @@ _via_data.prototype.view_get_file_vid = function(fid) {
   return -1;
 }
 
+// add view with single file
+_via_data.prototype.view_bulk_add_from_filelist = function(filelist) {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      var added_fid_list = [];
+      var added_vid_list = [];
+      for ( var i = 0; i < filelist.length; ++i ) {
+        var fid = this._file_get_new_id();
+        this.store.file[fid] = new _via_file(fid,
+                                             filelist[i].fname,
+                                             filelist[i].type,
+                                             filelist[i].loc,
+                                             filelist[i].src);
+
+        var vid = this._view_get_new_id();
+        this.store.view[vid] = new _via_view( [ fid ] ); // view with single file
+        this.store.vid_list.push(vid);
+
+        added_fid_list.push(fid);
+        added_vid_list.push(vid);
+      }
+      var payload = { 'vid_list':added_vid_list, 'fid_list':added_fid_list };
+      this.emit_event( 'view_bulk_add', payload );
+      ok_callback(payload);
+    }
+    catch(err) {
+      err_callback(err);
+    }
+  }.bind(this));
+}
+
+
 //
 // cache
 //
@@ -413,6 +518,7 @@ _via_data.prototype._cache_update_mid_list = function() {
 }
 
 _via_data.prototype._cache_update_attribute_group = function() {
+  this.cache.attribute_group = {};
   var anchor_id;
   for ( var aid in this.store.attribute ) {
     anchor_id = this.store.attribute[aid].anchor_id;
@@ -421,4 +527,95 @@ _via_data.prototype._cache_update_attribute_group = function() {
     }
     this.cache.attribute_group[anchor_id][aid] = this.store.attribute[aid];
   }
+}
+
+//
+// project
+//
+_via_data.prototype.project_save = function() {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      var data_blob = new Blob( [JSON.stringify(this.store)],
+                                {type: 'text/json;charset=utf-8'});
+      var filename = [];
+      filename.push(this.store.project.pid.substr(0,9) + '_');
+      filename.push(_via_util_date_to_filename_str(Date.now()));
+      filename.push('.json');
+      _via_util_download_as_file(data_blob, filename.join(''));
+      ok_callback();
+    }
+    catch(err) {
+      _via_util_msg_show('Failed to save project! [' + err + ']');
+      err_callback();
+    }
+  }.bind(this));
+}
+
+_via_data.prototype.project_load = function(project_data_str) {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      this.store = JSON.parse(project_data_str);
+      this._cache_update();
+      this.emit_event( 'project_loaded', { 'pid':this.store.project.pid } );
+      console.log('project load done');
+      ok_callback();
+    }
+    catch(err) {
+      _via_util_msg_show('Failed to load project! [' + err + ']');
+      this._init_default_project();
+      console.log('failed to load project')
+      this.emit_event( 'project_load', { 'pid':this.store.project.pid } );
+      err_callback();
+    }
+  }.bind(this));
+}
+
+_via_data.prototype.project_export_csv = function() {
+  return new Promise( function(ok_callback, err_callback) {
+    var csv = [];
+
+    var attribute = {}
+    for ( var aid in this.store.attribute ) {
+      attribute[aid] = this.store.attribute[aid].aname;
+    }
+
+    csv.push('# Exported using VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)');
+    csv.push('# SHAPE_ID = ' + JSON.stringify(_VIA_RSHAPE));
+    csv.push('# FLAG_ID = ' + JSON.stringify(_VIA_METADATA_FLAG));
+    csv.push('# ATTRIBUTES = ' + JSON.stringify(attribute));
+    csv.push('# CSV_HEADER = metadata_id,file_list,flags,temporal_coordinates,spatial_coordinates,metadata');
+
+    // build file_list for each view_id
+    var vid_filesrc_str_list = {};
+    var vid, fid;
+    for ( var vindex in this.store.vid_list ) {
+      vid = this.store.vid_list[vindex];
+      var vid_filesrc_list = [];
+      for ( var findex in this.store.view[vid].fid_list ) {
+        fid = this.store.view[vid].fid_list[findex];
+        vid_filesrc_list.push( this.store.file[fid].src );
+      }
+      vid_filesrc_str_list[vid] = _via_util_obj2csv(vid_filesrc_list);
+    }
+
+    for ( var mid in this.store.metadata ) {
+      var line = [];
+      line.push( '"' + mid + '"');
+      line.push( vid_filesrc_str_list[ this.store.metadata[mid].vid ] );
+      line.push(this.store.metadata[mid].flg);
+      line.push( _via_util_obj2csv(this.store.metadata[mid].z) );
+      line.push( _via_util_obj2csv(this.store.metadata[mid].xy) );
+      line.push( _via_util_obj2csv(this.store.metadata[mid].av) );
+      csv.push(line.join(','));
+    }
+
+    var data_blob = new Blob( [csv.join('\n')],
+                              {type: 'text/csv;charset=utf-8'});
+    var filename = [];
+    filename.push(this.store.project.pid.substr(0,9) + '_');
+    filename.push(_via_util_date_to_filename_str(Date.now()));
+    filename.push('_export.csv');
+    _via_util_download_as_file(data_blob, filename.join(''));
+    console.log(csv.join('\n'));
+  }.bind(this));
 }

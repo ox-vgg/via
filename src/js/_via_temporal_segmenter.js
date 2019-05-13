@@ -21,11 +21,11 @@ function _via_temporal_segmenter(container, vid, data, media_element) {
   this.groupby = false;
   this.groupby_aid = '';
   this.group = {};
-  this.gid_list = ['laughter', 'music'];
+  this.gid_list = [];
   this.selected_gindex = -1;
   this.selected_mindex = -1;
   this.edge_show_time = -1;
-  this.group_default_gid_list = [];
+  this.group_default_gid_list = [ '_DEFAULT' ];
 
   // spatial mid
   this.smid = {};
@@ -78,7 +78,12 @@ _via_temporal_segmenter.prototype._init = function() {
     var fid = this.d.store.view[this.vid].fid_list[0];
     this.file = this.d.store.file[fid];
 
-    this._group_init('1'); // for debug
+    if ( this.d.cache.attribute_group.hasOwnProperty('FILE1_Z2_XY0') ) {
+      var group_aid_list = Object.keys(this.d.cache.attribute_group['FILE1_Z2_XY0']);
+      if ( group_aid_list.length ) {
+        this._group_init( group_aid_list[0]);
+      }
+    }
 
     if ( this.d.store.file[fid].type === _VIA_FILE_TYPE.VIDEO ) {
       this._thumbview_init();
@@ -350,10 +355,30 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   group_aname_container.setAttribute('class', 'gidcol');
   this.group_aname_input = document.createElement('input');
   this.group_aname_input.setAttribute('type', 'text');
+  this.group_aname_input.setAttribute('style', 'width:80%;');
   this.group_aname_input.setAttribute('value', this.d.store.attribute[this.groupby_aid].aname);
   this.group_aname_input.setAttribute('title', 'Using this "timeline group variable", you can create multiple copies of the video timeline. For example, if you want to annotate temporal segments for different speakers in a video, you can use "speaker-id" as the timeline group variable to create a video timeline for each speaker thereby allowing you to annotate each speaker separately.');
   this.group_aname_input.addEventListener('change', this._tmetadata_onchange_groupby_aname.bind(this));
   group_aname_container.appendChild(this.group_aname_input);
+
+  // group variable selector
+  if ( this.d.cache.attribute_group.hasOwnProperty('FILE1_Z2_XY0') ) {
+    var group_aid_list = Object.keys(this.d.cache.attribute_group['FILE1_Z2_XY0']);
+    if ( group_aid_list.length ) {
+      this.group_aname_select = document.createElement('select');
+      this.group_aname_select.setAttribute('style', 'width:1em; border:none;');
+      for ( var aid in this.d.cache.attribute_group['FILE1_Z2_XY0'] ) {
+        var oi = document.createElement('option');
+        oi.innerHTML = this.d.store.attribute[aid].aname;
+        oi.setAttribute('value', aid);
+        if ( aid === this.groupby_aid ) {
+          oi.setAttribute('selected', '');
+        }
+        this.group_aname_select.appendChild(oi);
+      }
+      group_aname_container.appendChild(this.group_aname_select);
+    }
+  }
 
   this.gtimeline_container = document.createElement('div');
   this.gtimeline_container.setAttribute('class', 'gtimeline_container');

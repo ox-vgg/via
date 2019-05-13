@@ -83,27 +83,32 @@ _via_file_annotator.prototype._init = function() {
 
 _via_file_annotator.prototype._file_load = function() {
   return new Promise( function(ok_callback, err_callback) {
+    _via_util_msg_show('Loading file [' + this.file.fname + ']', true);
     this._file_read().then( function(file_src) {
       this.file_html_element = this._file_create_html_element(this.file);
       this.file_html_element.setAttribute('title', this.file.fname);
       this.file_html_element.setAttribute('src', file_src);
 
       this.file_html_element.addEventListener('load', function() {
-        console.log('load')
+        this._destroy_file_object_url();
         this._file_html_element_ready();
         ok_callback();
       }.bind(this));
       this.file_html_element.addEventListener('loadeddata', function() {
+        this._destroy_file_object_url();
         this._file_html_element_ready();
         ok_callback();
       }.bind(this));
-      this.file_html_element.addEventListener('abort', function() {
+      this.file_html_element.addEventListener('abort', function(e) {
+        _via_util_msg_show('Failed to load file [' + this.file.fname + '] (' + e + ')' );
         err_callback();
       }.bind(this));
-      this.file_html_element.addEventListener('stalled', function() {
+      this.file_html_element.addEventListener('stalled', function(e) {
+        _via_util_msg_show('Failed to load file [' + this.file.fname + '] (' + e + ')' );
         err_callback();
       }.bind(this));
-      this.file_html_element.addEventListener('error', function() {
+      this.file_html_element.addEventListener('error', function(e) {
+        _via_util_msg_show('Failed to load file [' + this.file.fname + '] (' + e + ')' );
         err_callback();
       }.bind(this));
     }.bind(this), function(err) {
@@ -161,26 +166,11 @@ _via_file_annotator.prototype._file_create_html_element = function(file) {
 _via_file_annotator.prototype._file_read = function() {
   return new Promise( function(ok_callback, err_callback) {
     if ( this.file.src instanceof File ) {
-      var file_reader = new FileReader();
-      file_reader.addEventListener('error', function(e) {
-        console.log('_via_file_annotator._file_read() error');
-        console.warn(e.target.error)
-        err_callback(this.file);
-      }.bind(this));
-      file_reader.addEventListener('abort', function() {
-        console.log('_via_file_annotator._file_read() abort');
-        err_callback(this.file)
-      }.bind(this));
-      file_reader.addEventListener('load', function() {
-        var blob = new Blob( [ file_reader.result ],
-                             { type: this.file.src.type }
-                           );
-        // we keep a reference of file object URL so that we can revoke it when not needed
-        // WARNING: ensure that this._destroy_file_object_url() gets called when "this" not needed
-        this.file_object_url = URL.createObjectURL(blob);
-        ok_callback(this.file_object_url);
-      }.bind(this));
-      file_reader.readAsArrayBuffer( this.d.store.config.file.path + this.file.src );
+      // we keep a reference of file object URL so that we can revoke it when not needed
+      // WARNING: ensure that this._destroy_file_object_url() gets called when "this" not needed
+      this.file_object_url = URL.createObjectURL(this.file.src);
+      ok_callback(this.file_object_url);
+
     } else {
       ok_callback( this.d.store.config.file.path + this.file.src ); // read from URL
     }
@@ -248,6 +238,7 @@ _via_file_annotator.prototype._file_html_element_compute_scale = function() {
 // event listeners
 //
 _via_file_annotator.prototype._file_html_element_ready = function() {
+  _via_util_msg_show('Loaded file [' + this.file.fname + ']' );
   this._file_html_element_compute_scale();
   this.file_html_element.setAttribute('style', this.file_html_element_size_css);
   this.file_html_element.setAttribute('id', 'file_content');
@@ -1488,16 +1479,24 @@ _via_file_annotator.prototype._rinput_enable = function() {
   this._state_set(_VIA_RINPUT_STATE.IDLE);
   this.input.style.pointerEvents = 'auto';
   this.input.classList.add('rinput_enabled');
-  this.file_html_element.removeAttribute('controls');
-  _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.', true);
+  if ( this.file.type === _VIA_FILE_TYPE.VIDEO ||
+       this.file.type === _VIA_FILE_TYPE.AUDIO
+     ) {
+    this.file_html_element.removeAttribute('controls');
+    _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.', true);
+  }
 }
 
 _via_file_annotator.prototype._rinput_disable = function() {
   this._state_set(_VIA_RINPUT_STATE.SUSPEND);
   this.input.style.pointerEvents = 'none';
   this.input.classList.remove('rinput_enabled');
-  this.file_html_element.setAttribute('controls', 'true');
-  _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.', true);
+  if ( this.file.type === _VIA_FILE_TYPE.VIDEO ||
+       this.file.type === _VIA_FILE_TYPE.AUDIO
+     ) {
+    this.file_html_element.setAttribute('controls', 'true');
+    _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.', true);
+  }
 }
 
 //

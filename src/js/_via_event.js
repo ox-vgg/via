@@ -16,13 +16,13 @@ function _via_event() {
 
   this._event = { 'enabled':true, 'targets':{} };
   if ( typeof(this._EVENT_ID_PREFIX) === 'undefined' ) {
-    this._EVENT_ID_PREFIX = '';
+    this._EVENT_ID_PREFIX = 'NOT_DEFINED';
   }
 }
 
 _via_event.prototype.on_event = function(event_id_suffix, listener_method, listener_param) {
   // initialise event handlers data structure (if not exist)
-  var event_id = this.EVENT_ID_PREFIX + event_id_suffix;
+  var event_id = this._EVENT_ID_PREFIX + event_id_suffix;
   if ( typeof(this._event.targets[event_id]) === 'undefined' ) {
     this._event.targets[event_id] = { 'listener_list':[], 'listener_param_list':[] };
   }
@@ -37,7 +37,7 @@ _via_event.prototype.on_event = function(event_id_suffix, listener_method, liste
 
 _via_event.prototype.emit_event = function(event_id_suffix, event_payload) {
   if ( this._event.enabled ) {
-    var event_id = this.EVENT_ID_PREFIX + event_id_suffix;
+    var event_id = this._EVENT_ID_PREFIX + event_id_suffix;
     if ( typeof(this._event.targets[event_id]) !== 'undefined' ) {
       var i;
       for ( i = 0; i < this._event.targets[event_id].listener_list.length; ++i ) {

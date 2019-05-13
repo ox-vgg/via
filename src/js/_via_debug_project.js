@@ -6,7 +6,7 @@ var _via_dp = []; // debug project
 _via_dp[0] = {};
 _via_dp[0]['store'] = {};
 _via_dp[0]['store']['project'] = {
-  'pid':     'via-98785efcfcd44b3cb11a76838b56ac14',
+  'pid':     'via063e89ef22e548dd92d781fa9f9d089b',
   'pname':   'VIA Debug Project',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
@@ -46,28 +46,28 @@ _via_dp[0]['store']['file'] = {
   '1':{
     'fid':1,
     'fname':'Wikimedia_Interview_Romaine.mp4',
-    'type':2,
+    'type':4,
     'loc':1,
     'src':'Wikimedia_Interview_Romaine.mp4',
   },
   '2':{
     'fid':2,
     'fname':'Wikimedia_HelenHillInterview.mp4',
-    'type':2,
+    'type':4,
     'loc':1,
     'src':'Wikimedia_HelenHillInterview.mp4',
   },
   '3':{
     'fid':3,
     'fname':'Wikimedia_Chomsky_On_Obama_budget.mp4',
-    'type':2,
+    'type':4,
     'loc':1,
     'src':'Wikimedia_Chomsky_On_Obama_budget.mp4',
   },
   '4':{
     'fid':4,
     'fname':'Wikimedia_Anne_Gaylor_A_Second_Look_At_Religion.mp4',
-    'type':2,
+    'type':4,
     'loc':1,
     'src':'Wikimedia_Anne_Gaylor_A_Second_Look_At_Religion.mp4',
   },
@@ -189,7 +189,7 @@ _via_dp[0]['store']['metadata'] = {
 _via_dp[1] = {};
 _via_dp[1]['store'] = {};
 _via_dp[1]['store']['project'] = {
-  'pid':     'via-98785efcfcd44b3cb11a76838b56ac14',
+  'pid':     'viab4e012ae255940029e48622064a57e0a',
   'pname':   'Audio Annotation',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
@@ -236,7 +236,7 @@ _via_dp[1]['store']['file'] = {
   '1':{
     'fid':1,
     'fname':'Drone_liveatc_PRFlyer.mp3',
-    'type':3,
+    'type':8,
     'loc':1,
     'src':'Drone_liveatc_PRFlyer.mp3',
   },
@@ -336,8 +336,8 @@ _via_dp[1]['store']['metadata'] = {
 _via_dp[2] = {};
 _via_dp[2]['store'] = {};
 _via_dp[2]['store']['project'] = {
-  'pid':     'via-98785efcfcd44b3cb11a76838b56ac14',
-  'pname':   'Video Annotation',
+  'pid':     'via81d7a76a8f1d4119abd4766150cdb417',
+  'pname':   'Video Annotation Project',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
   'data_format_version': '3.1.0',
@@ -359,19 +359,27 @@ _via_dp[2]['store']['attribute'] = {
     'options':{},
     'default_option_id':'',
   },
+  '5': {
+    'aname':'Activity2',
+    'anchor_id':'FILE1_Z2_XY0',
+    'type':1,
+    'desc':'Activity2',
+    'options':{},
+    'default_option_id':'',
+  },
   '2': {
     'aname':'Object',
     'anchor_id':'FILE1_Z1_XY1',
     'type':4,
     'desc':'Name of Object',
     'options':{
-      'egg':'Egg',
-      'bottle':'Bottle',
-      'mixer':'Mixer',
-      'cup':'Cup',
-      'garlic':'Garlic',
-      'knife':'Knife',
-      'teabag':'Tea Bag',
+      '1':'Egg',
+      '2':'Bottle',
+      '3':'Mixer',
+      '4':'Cup',
+      '5':'Garlic',
+      '6':'Knife',
+      '7':'Tea Bag',
     },
     'default_option_id':'',
   },
@@ -381,11 +389,11 @@ _via_dp[2]['store']['attribute'] = {
     'type':3,
     'desc':'Type of Object',
     'options':{
-      'ingredient':'Ingredient',
-      'tool':'Tool',
-      'unknown':'Unknown',
+      '1':'Ingredient',
+      '2':'Tool',
+      '3':'Unknown',
     },
-    'default_option_id':'unknown',
+    'default_option_id':'3',
   },
   '4': {
     'aname':'Processing',
@@ -393,33 +401,33 @@ _via_dp[2]['store']['attribute'] = {
     'type':2,
     'desc':'Processing Required',
     'options':{
-      'track':'Track',
-      'classify':'Classify',
-      'segment':'Segment',
-      'none':'None',
+      '1':'Track',
+      '2':'Classify',
+      '3':'Segment',
+      '4':'None',
     },
-    'default_option_id':'unknown',
+    'default_option_id':'4',
   },
 };
 _via_dp[2]['store']['file'] = {
   '1':{
     'fid':1,
     'fname':'Alioli_Wikimedia_Wardtmar.mp4',
-    'type':2,
+    'type':4,
     'loc':1,
     'src':'Alioli_Wikimedia_Wardtmar.mp4',
   },
   '2':{
     'fid':2,
     'fname':'PreparingTea.mp4',
-    'type':2,
+    'type':4,
     'loc':1,
     'src':'PreparingTea.mp4',
   },
   '3':{
     'fid':3,
     'fname':'Tea.mp4',
-    'type':2,
+    'type':4,
     'loc':1,
     'src':'PreparingTea.mp4',
   },

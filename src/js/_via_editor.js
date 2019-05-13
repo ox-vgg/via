@@ -4,7 +4,7 @@
  * @author Abhishek Dutta <adutta@robots.ox.ac.uk>
  * @since 14 Jan. 2019
  */
-function _via_editor(data, view_anntoator, container) {
+function _via_editor(data, view_annotator, container) {
   this.d  = data;
   this.va = view_annotator;
   this.c  = container;
@@ -101,15 +101,15 @@ _via_editor.prototype.show = function() {
 
   // add everything to container
   this.c.appendChild(toolbar);
-  this.c.appendChild(this.editor_content_selector);
+  //this.c.appendChild(this.editor_content_selector);
   this.c.appendChild(this.content_container);
 
   this.attributes_update();
-  this.metadata_update();
+  //this.metadata_update();
 
   // initial state of content
   this.edit_metadata_checkbox.checked = true;
-  this.metadata_container.classList.remove('hide');
+  this.metadata_container.classList.add('hide');
   this.edit_attribute_checkbox.checked = true;
   this.attribute_container.classList.remove('hide');
 
@@ -202,7 +202,6 @@ _via_editor.prototype.metadata_get = function(mid, metadata_index) {
   // subsequent columns: what (i.e. the attributes for this metadata)
   for ( var aid in this.d.store.attribute ) {
     var td = document.createElement('td');
-    td.setAttribute('data-aid', aid);
     td.appendChild( this.get_attribute_html_element(mid, aid) );
     tr.appendChild(td);
   }
@@ -223,48 +222,6 @@ _via_editor.prototype.get_metadata_action_tools = function(container, mid) {
   edit.addEventListener('click', this.metadata_edit.bind(this));
   container.appendChild(edit);
   */
-}
-
-_via_editor.prototype.get_attribute_html_element = function(mid, aid) {
-  var aval  = this.d.store.metadata[mid].av[aid];
-  var dval  = this.d.store.attribute[aid].default_option_id;
-  var atype = this.d.store.attribute[aid].type;
-  var el    = _via_util_attribute_to_html_element(this.d.store.attribute[aid]);
-  el.setAttribute('data-mid', mid);
-  el.setAttribute('data-aid', aid);
-
-  switch(atype) {
-  case _VIA_ATTRIBUTE_TYPE.TEXT:
-    if ( typeof(aval) === 'undefined' ) {
-      aval = dval;
-    }
-    el.innerHTML = aval;
-
-    break;
-
-  case _VIA_ATTRIBUTE_TYPE.SELECT:
-    // set the selected option corresponding to atype
-    var n = el.options.length;
-    var i;
-    if ( typeof(aval) === 'undefined' ) {
-      aval = dval;
-    }
-    for ( i = 0; i < n; ++i ) {
-      if ( el.options[i].value === aval ) {
-        el.options[i].setAttribute('selected', 'true');
-      } else {
-        el.options[i].removeAttribute('selected');
-      }
-    }
-    break;
-
-  default:
-    console.log('attribute type ' + atype + ' not implemented yet!');
-    var el = document.createElement('span');
-    el.innerHTML = aval;
-    return el;
-  }
-  return el;
 }
 
 _via_editor.prototype.get_metadata_header = function() {
@@ -372,7 +329,8 @@ _via_editor.prototype.get_attribute = function(aid) {
   anchor_select.setAttribute('data-aid', aid);
   anchor_select.setAttribute('data-varname', 'anchor_id');
   anchor_select.setAttribute('style', 'width:12em;');
-  console.log(this.d.store.attribute[aid].anchor_id);
+  anchor_select.addEventListener('change', this.attribute_on_change.bind(this));
+
   for ( var anchor_id in _VIA_ATTRIBUTE_ANCHOR ) {
     if ( _VIA_ATTRIBUTE_ANCHOR[anchor_id] !== '__FUTURE__' ) {
       var oi = document.createElement('option');
@@ -392,7 +350,7 @@ _via_editor.prototype.get_attribute = function(aid) {
   // column: input type
   var type_select = document.createElement('select');
   type_select.setAttribute('data-aid', aid);
-  type.setAttribute('data-varname', 'type');
+  type_select.setAttribute('data-varname', 'type');
   type_select.addEventListener('change', this.attribute_update_type.bind(this));
   var type_str;
   for ( type_str in _VIA_ATTRIBUTE_TYPE ) {
@@ -445,10 +403,89 @@ _via_editor.prototype.get_attribute = function(aid) {
 
   // column: preview of attribute
   var preview = document.createElement('td');
-  preview.appendChild( _via_util_attribute_to_html_element(this.d.store.attribute[aid]) );
+  preview.appendChild( this.get_attribute_html_element(aid) );
   tr.appendChild(preview);
 
   return tr;
+}
+
+_via_editor.prototype.get_attribute_html_element = function(aid) {
+  var dval  = this.d.store.attribute[aid].default_option_id;
+  var atype = this.d.store.attribute[aid].type;
+  var el;
+
+  switch(atype) {
+  case _VIA_ATTRIBUTE_TYPE.TEXT:
+    el = document.createElement('textarea');
+    break;
+
+  case _VIA_ATTRIBUTE_TYPE.SELECT:
+    el = document.createElement('select');
+
+    for ( var oid in this.d.store.attribute[aid].options ) {
+      var oi = document.createElement('option');
+      oi.setAttribute('value', oid);
+      oi.innerHTML = this.d.store.attribute[aid].options[oid];
+      if ( oid === this.d.store.attribute[aid].default_option_id ) {
+        oi.setAttribute('selected', 'true');
+      }
+      el.appendChild(oi);
+    }
+    break;
+
+  case _VIA_ATTRIBUTE_TYPE.RADIO:
+    el = document.createElement('div');
+
+    for ( var oid in this.d.store.attribute[aid].options ) {
+      var radio = document.createElement('input');
+      radio.setAttribute('type', 'radio');
+      radio.setAttribute('value', oid);
+      radio.setAttribute('data-aid', aid);
+      radio.setAttribute('name', this.d.store.attribute[aid].aname);
+      if ( oid === this.d.store.attribute[aid].default_option_id ) {
+        radio.setAttribute('checked', 'true');
+      }
+
+      var label = document.createElement('label');
+      label.innerHTML = this.d.store.attribute[aid].options[oid];
+
+      var br = document.createElement('br');
+      el.appendChild(radio);
+      el.appendChild(label);
+      el.appendChild(br);
+    }
+    break;
+
+  case _VIA_ATTRIBUTE_TYPE.CHECKBOX:
+    el = document.createElement('div');
+
+    for ( var oid in this.d.store.attribute[aid].options ) {
+      var checkbox = document.createElement('input');
+      checkbox.setAttribute('type', 'checkbox');
+      checkbox.setAttribute('value', oid);
+      checkbox.setAttribute('data-aid', aid);
+      checkbox.setAttribute('name', this.d.store.attribute[aid].aname);
+      if ( oid === this.d.store.attribute[aid].default_option_id ) {
+        checkbox.setAttribute('checked', 'true');
+      }
+
+      var label = document.createElement('label');
+      label.innerHTML = this.d.store.attribute[aid].options[oid];
+
+      var br = document.createElement('br');
+      el.appendChild(checkbox);
+      el.appendChild(label);
+      el.appendChild(br);
+    }
+    break;
+
+  default:
+    console.log('attribute type ' + atype + ' not implemented yet!');
+    var el = document.createElement('span');
+    el.innerHTML = aval;
+  }
+  el.setAttribute('data-aid', aid);
+  return el;
 }
 
 _via_editor.prototype.get_attribute_name_entry_panel = function() {
@@ -493,6 +530,7 @@ _via_editor.prototype.attribute_on_change = function(e) {
   var varname = e.target.dataset.varname;
   var vartype = e.target.type;
   var aid = e.target.dataset.aid;
+  console.log('aid=' + aid + ', varname=' + varname + ', vartype=' + vartype);
 
   switch(vartype) {
   case 'text':
@@ -500,20 +538,22 @@ _via_editor.prototype.attribute_on_change = function(e) {
     break;
   case 'textarea':
     if ( varname = 'options' ) {
-      var csvdata = e.target.innerHTML.split(',');
-      for ( var i = 0; i < csvdata.length; ++i ) {
-
-      }
+      var options_csv = e.target.value;
+      console.log(options_csv);
+      this.d.attribute_update_options_from_csv(aid, options_csv).then(function(ok) {
+        console.log(ok);
+        console.log(this.d.store.attribute[aid])
+      }.bind(this));
     }
-
-    this.d.store.attribute[aid][varname] = e.target.innerHTML;
     break;
   case 'select':
-    this.d.store.attribute[aid][varname] = e.target.options[e.target.selectedIndex].value;
-    break;
+    if ( varname = 'anchor_id' ) {
+      var new_anchor_id = e.target.options[e.target.selectedIndex];
+      this.d.attribute_update_anchor_id(aid, new_anchor_id);
+    }
   }
-  console.log(e.target.dataset)
-  console.log('todo')
+
+  this.attributes_update();
 }
 
 //
@@ -538,12 +578,14 @@ _via_editor.prototype.metadata_edit = function(e) {
 _via_editor.prototype.on_attribute_create = function(e) {
   var new_attribute_name = this.new_attribute_name_input.value;
   this.d.attribute_add(new_attribute_name,
-                       _VIA_ATTRIBUTE_TYPE.TEXT
-                      ).then( function(ok) {
-                        // attribute was added
-                      }.bind(this), function(err) {
-                        console.log(err);
-                      }.bind(this));
+                       _VIA_ATTRIBUTE_ANCHOR.FILE1_Z2_XY0,
+                       _VIA_ATTRIBUTE_TYPE.TEXT).then( function(ok) {
+    this.attributes_update();
+    console.log(ok)
+    // attribute was added
+  }.bind(this), function(err) {
+    console.log(err);
+  }.bind(this));
 }
 
 _via_editor.prototype.attribute_del = function(e) {
@@ -575,24 +617,21 @@ _via_editor.prototype.on_event_attribute_update = function(data, event_payload) 
 }
 
 _via_editor.prototype.on_event_attribute_del = function(data, event_payload) {
-  this.metadata_update();
   this.attributes_update();
 }
 
 _via_editor.prototype.on_event_attribute_add = function(data, event_payload) {
-  this.metadata_update();
   this.attributes_update();
 }
 
 _via_editor.prototype.on_event_metadata_add = function(data, event_payload) {
-  this.metadata_update();
+  //this.metadata_update();
 }
 
 _via_editor.prototype.on_event_metadata_del = function(data, event_payload) {
-  this.metadata_update();
+  //this.metadata_update();
 }
 
 _via_editor.prototype.on_event_file_show = function(data, event_payload) {
-  console.log(event_payload)
-  this.metadata_update();
+  //this.metadata_update();
 }

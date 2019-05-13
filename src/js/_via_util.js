@@ -10,16 +10,14 @@
 
 var _via_msg_clear_timer; // holds a reference to current message timoout
 
-function _via_util_get_svg_button(id, title, viewbox) {
-  var svg_viewbox = viewbox;
-  if ( typeof(svg_viewbox) === 'undefined' ) {
-    svg_viewbox = '0 0 24 24';
-  }
-
+function _via_util_get_svg_button(icon_id, title, id) {
   var el = document.createElementNS(_VIA_SVG_NS, 'svg');
-  el.setAttributeNS(null, 'viewbox', svg_viewbox);
-  el.innerHTML = '<use xlink:href="#' + id + '"></use><title>' + title + '</title>';
+  el.setAttributeNS(null, 'viewBox', '0 0 24 24');
+  el.innerHTML = '<use xlink:href="#' + icon_id + '"></use><title>' + title + '</title>';
   el.setAttributeNS(null, 'class', 'svg_button');
+  if ( typeof(id) !== 'undefined' ) {
+    el.setAttributeNS(null, 'id', id);
+  }
   return el;
 }
 
@@ -115,21 +113,6 @@ function _via_util_file_loc_str_to_id(loc) {
   }
 }
 
-function _via_util_metadata_target_str(target_id) {
-  switch(target_id) {
-    case _VIA_WHERE_TARGET.SEGMENT:
-      return 'segment';
-      break;
-    case _VIA_WHERE_TARGET.FRAME:
-      return 'frame';
-      break;
-    case _VIA_WHERE_TARGET.IMAGE:
-      return 'image';
-      break;
-    default:
-      return 'unknown';
-  }
-}
 
 function _via_util_metadata_shape_str(shape_id) {
   switch(shape_id) {
@@ -197,17 +180,22 @@ function _via_util_infer_file_loc_from_filename(filename) {
 
 function _via_util_infer_file_type_from_filename(filename) {
   var ext = _via_util_file_ext(filename);
-  switch( ext ) {
+  switch( ext.toLowerCase() ) {
   case 'ogv':
   case 'mp4':
   case 'avi':
     return _VIA_FILE_TYPE.VIDEO;
     break;
   case 'jpg':
+  case 'jpeg':
   case 'png':
   case 'bmp':
     return _VIA_FILE_TYPE.IMAGE;
     break;
+  case 'mp3':
+  case 'wav':
+  case 'ogg':
+    return _VIA_FILE_TYPE.AUDIO;
   }
 }
 
@@ -250,6 +238,12 @@ function _via_util_file_select_local(type, handler, multiple) {
     break;
   case _VIA_FILE_TYPE.JSON:
     fsel.accept = '.json';
+    break;
+  case _VIA_FILE_TYPE.VIDEO | _VIA_FILE_TYPE.AUDIO:
+    fsel.accept = 'video/*,audio/*';
+    break;
+  case _VIA_FILE_TYPE.VIDEO | _VIA_FILE_TYPE.AUDIO | _VIA_FILE_TYPE.IMAGE:
+    fsel.accept = 'video/*,audio/*,image/*';
     break;
   }
 
@@ -325,8 +319,7 @@ function _via_util_pad10(x) {
 function _via_util_date_to_filename_str(date_str) {
   var t = new Date(date_str);
   var month_list = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var ts
-  return _via_util_pad10(t.getDate()) + month_list[t.getMonth()] + t.getFullYear() + '_at_' + _via_util_pad10(t.getHours()) + 'h' + _via_util_pad10(t.getMinutes()) + 'm' + _via_util_pad10(t.getSeconds())+'s';
+  return _via_util_pad10(t.getDate()) + month_list[t.getMonth()] + t.getFullYear() + '_' + _via_util_pad10(t.getHours()) + 'h' + _via_util_pad10(t.getMinutes()) + 'm' + _via_util_pad10(t.getSeconds())+'s';
 }
 
 function _via_util_remote_get(uri) {
@@ -377,7 +370,7 @@ function _via_util_uuid() {
 }
 
 function _via_util_gen_project_id() {
-  return 'via-' + _via_util_uuid();
+  return 'via' + _via_util_uuid();
 }
 
 function _via_util_uid6() {
@@ -466,3 +459,10 @@ function _via_util_attribute_to_html_element(attr) {
   }
   return el;
 }
+
+// ensure the exported json string conforms to RFC 4180
+// see: https://en.wikipedia.org/wiki/Comma-separated_values
+function _via_util_obj2csv(d) {
+  return '"{' + JSON.stringify(d).replace(/["]/g, '""') + '}"';
+}
+

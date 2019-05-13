@@ -12,7 +12,7 @@ import http.client
 import datetime
 import csv
 
-filegroup_fn = '/data/datasets/via/via-3.x.y/img_pair_annotation/file_group.csv'
+filegroup_fn = '/data/datasets/via/via-3.x.y/img_pair_annotation/PairwiseStenosis20190507/file_group.csv'
 
 filename_list = {}
 view_list = {}
