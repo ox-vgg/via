@@ -29,35 +29,8 @@
   </head>
 
   <body onresize="via._hook_on_browser_resize()">
-    <!-- VIA dynamically populates this container with control panel, media (image, video, etc), etc. -->
-    <div class="via_container" id="via_container" tabindex="0"></div>
 
-    <script src="../js/_via_util.js"></script>
-    <script src="../js/_via_const.js"></script>
-    <script src="../js/_via_config.js"></script>
-
-    <script src="../js/_via_event.js"></script>
-    <script src="../js/_via_control_panel.js"></script>
-    <script src="../js/_via_metadata.js"></script>
-    <script src="../js/_via_file.js"></script>
-    <script src="../js/_via_attribute.js"></script>
-    <script src="../js/_via_view.js"></script>
-    <script src="../js/_via_data.js"></script>
-
-    <script src="../js/_via_video_thumbnail.js"></script>
-    <script src="../js/_via_file_annotator.js"></script>
-    <script src="../js/_via_temporal_segmenter.js"></script>
-    <script src="../js/_via_view_annotator.js"></script>
-
-    <script src="../js/_via_view_manager.js"></script>
-
-    <script src="../js/_via_editor.js"></script>
-    <script src="../js/_via_debug_project.js"></script>
-    <script src="../js/_via.js"></script>
-    <script>
-      var via_container = document.getElementById('via_container');
-      var via = new _via(via_container);
-    </script>
+    <!-- Definition of VIA Assets (e.g. about page, info page, shorcut keys, etc.) -->
 
     <!--
         SVG icons
@@ -212,10 +185,170 @@
           <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm-2 16c-2.05 0-3.81-1.24-4.58-3h1.71c.63.9 1.68 1.5 2.87 1.5 1.93 0 3.5-1.57 3.5-3.5S13.93 9.5 12 9.5c-1.35 0-2.52.78-3.1 1.9l1.6 1.6h-4V9l1.3 1.3C8.69 8.92 10.23 8 12 8c2.76 0 5 2.24 5 5s-2.24 5-5 5z"/>
         </symbol>
         <symbol id="micon_restore_save">
-<path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2z"/>
+          <path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2z"/>
         </symbol>
-
+        <symbol id="micon_keyboard">
+          <path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/>
+        </symbol>
       </defs>
     </svg>
+
+    <!-- VIA Information Pages -->
+    <div id="via_info_page_container">
+      <div data-pageid="page_keyboard_shortcut" class="info_page">
+        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
+        <h1>Keyboard Shortcuts</h1>
+        <h3>General</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Command</th>
+              <th>Shortcut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Play/Pause Media</td><td><span class="key">Space</span></td></tr>
+            <tr><td>Toggle Media Mute</td><td><span class="key">m</span></td></tr>
+            <tr><td>Increase / Decrease Media Playback Speed</td><td><span class="key">+</span> / <span class="key">-</span></td></tr>
+            <tr><td>Move Media Time Backward by 1, ..., 9 sec. (Ctrl to move forward)</td><td><span class="key">Ctrl</span> + <span class="key">1</span>, <span class="key">2</span>, ..., <span class="key">9</span</td></tr>
+                                                                                                                                                                                                                <tr><td>Add Temporal Segment at Current Time</td><td><span class="key">a</span></td></tr>
+            <tr><td>Update the edge (left or right) of last added segment to current time</td><td><span class="key">Shift</span> + <span class="key">a</span></td></tr>
+
+            <tr><td>Select Previous / Next Temporal Group (e.g. Speaker)</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
+
+            <tr><td>Select [Previous] Next Temporal Segment (e.g. 3sec to 5sec)</td><td><span class="key">Shift</span> + <span class="key">Tab</span></td></tr>
+            <tr><td>Select Temporal Segment at Current Time (if any)</td><td><span class="key">Enter</span></td></tr>
+
+            <tr><td>Move to Previous / Next Video Frame</td><td><span class="key">l</span> / <span class="key">r</span></td></tr>
+            <tr><td>Jump to Start/End of Video</td><td><span class="key">Shift</span> + <span class="key">s</span> / <span class="key">e</span></td></tr>
+            <tr><td>Shift Visible Timeline by 1 sec.</td><td><span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
+            <tr><td>Shift Visible Timeline by 60 sec.</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
+            <tr><td>Zoom In/Out the Temporal Segment Timeline</td><td>Mouse Wheel<br/></td></tr>
+            <tr><td>Pan the Temporal Segment Timeline Horizontally</td><td><span class="key">Shift</span> + Mouse Wheel</td></tr>
+          </tbody>
+        </table>
+        <h3>When a Temporal Segment is Selected</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Command</th>
+              <th>Shortcut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Play/Pause Video Locked to Segment Boundary</td><td><span class="key">Spc</span></td></tr>
+            <tr><td>Delete Selected Temporal Segment</td><td><span class="key">Backspace</span></td></tr>
+            <tr><td>Select [Previous] Next Temporal Segment</td><td>[<span class="key">Shift</span>] + <span class="key">Tab</span></td></tr>
+            <tr><td>Unselect Temporal Segment</td><td><span class="key">Esc</span></td></tr>
+            <tr><td>Increase/Decrease the Extent of Left Edge (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">l</span> / <span class="key">L</span></td></tr>
+            <tr><td>Increase/Decrease the Extent of Right edge (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">r</span> / <span class="key">R</span></td></tr>
+
+            <tr><td>Jump to Start/End of Temporal Segment</td><td><span class="key">s</span> / <span class="key">e</span></td></tr>
+            <tr><td>Move Selected Temporal Segment</td><td><span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
+            <tr><td>Merge Selected Temporal Segment with the Segment on Left/Right</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
+          </tbody>
+        </table>
+        <p>&nbsp;</p>
+      </div>
+
+      <div data-pageid="page_about" class="info_page">
+        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
+        <h2>VGG Image Annotator (VIA)</h2>
+        <p>Version: <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">__VIA_VERSION__</a></p>
+        <p>VGG Image Annotator (VIA) is a simple and standalone manual annotation tool
+          for image, audio and video. The VIA software is a light weight, standalone
+          and offline software package that does not require any installation or setup
+          and runs solely in a web browser. The complete VIA software fits in a single
+          self-contained HTML page of size less than 500 kilobyte that runs as an
+          offline application in most modern web browsers. VIA software is an open
+          source project created solely using HTML, Javascript and CSS. More details
+          about VIA is available from <a href="http://www.robots.ox.ac.uk/~vgg/software/via">http://www.robots.ox.ac.uk/~vgg/software/via</a>.</p>
+        <h4>Open Source Ecosystem</h4>
+        <p>We have nurtured a large and thriving open source community which not only
+          provides feedback but also contributes code to add new features and improve
+          existing features in the VIA software. The open source ecosystem of VIA
+          thrives around its <a href="https://gitlab.com/vgg/via">source code repository</a>
+          hosted by the Gitlab platform. Most of our users report issues and request
+          new features for future releases using the
+          <a href="https://gitlab.com/vgg/via/issues">issue portal</a>. Many of our
+          users not only submit bug reports but also suggest a potential fix for
+          these software issues. Some of our users also contribute code to add new
+          features to the VIA software using the
+          <a href="https://gitlab.com/vgg/via/merge_requests">merge request</a> portal.
+          A list of our contributors is available
+          <a href="https://gitlab.com/vgg/via/blob/master/Contributors.md">here</a>.</p>
+
+        <p>Thanks to the flexibility provided by our BSD open source software
+          <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>, many
+          industrial projects have adapted the VIA software for internal or commercial use.</p>
+
+        <h4>License</h4>
+        <pre>
+          Copyright (c) 2019, Abhishek Dutta, Visual Geometry Group, Oxford University.
+          All rights reserved.
+
+          Redistribution and use in source and binary forms, with or without
+          modification, are permitted provided that the following conditions are met:
+
+          Redistributions of source code must retain the above copyright notice, this
+          list of conditions and the following disclaimer.
+          Redistributions in binary form must reproduce the above copyright notice,
+          this list of conditions and the following disclaimer in the documentation
+          and/or other materials provided with the distribution.
+          THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+          AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+          IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+          ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+          LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+          CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+          SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+          INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+          CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+          ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+          POSSIBILITY OF SUCH DAMAGE.
+        </pre>
+        <p>Copyright &copy; 2016-2019, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>, Visual Geometry Group, Oxford University.</p>
+      </div>
+    </div>
+
+    <!-- used by _via_view_annotator._show_start_info() -->
+    <div id="via_start_info_content" class="hide">
+      <ul>
+        <li>To start annotation of an image, audio and video, select <span class="text_button" onclick="via.vm._on_add_media_local()">local files</span> or <span class="text_button" onclick="via.vm._on_add_media_remote()">add files</span> (local files using file:// and remote files using http:// URI). You can also add a list of file URI in <span class="text_button" onclick="via.vm._on_add_media_bulk()">bulk</span>.</li>
+        <li>Press <span class="key">Space</span> key to play or pause an audio or video at any time (more keyboard <span class="text_button" onclick="_via_util_show_info_page('page_keyboard_shortcut')">shortcuts</span>).</li>
+        <li>Spatial regions (e.g. 50x80 pixel rectangular bounding box) can be defined for image and video frame when video is paused. Temporal segments (e.g. video segment from time 3.1 sec. to 12.5 sec) can be defined for audio and video files.</li>
+        <li>You can also try preloaded demo for <span class="text_button">image</span>, <span class="text_button">audio</span> and <span class="text_button">video</span> annotation.</li>
+      </ul>
+    </div>
+
+    <!-- VIA dynamically populates this container with control panel, media (image, video, etc), etc. -->
+    <div class="via_container" id="via_container" tabindex="0"></div>
+
+    <script src="../js/_via_util.js"></script>
+    <script src="../js/_via_const.js"></script>
+    <script src="../js/_via_config.js"></script>
+
+    <script src="../js/_via_event.js"></script>
+    <script src="../js/_via_control_panel.js"></script>
+    <script src="../js/_via_metadata.js"></script>
+    <script src="../js/_via_file.js"></script>
+    <script src="../js/_via_attribute.js"></script>
+    <script src="../js/_via_view.js"></script>
+    <script src="../js/_via_data.js"></script>
+
+    <script src="../js/_via_video_thumbnail.js"></script>
+    <script src="../js/_via_file_annotator.js"></script>
+    <script src="../js/_via_temporal_segmenter.js"></script>
+    <script src="../js/_via_view_annotator.js"></script>
+
+    <script src="../js/_via_view_manager.js"></script>
+
+    <script src="../js/_via_editor.js"></script>
+    <script src="../js/_via_debug_project.js"></script>
+    <script src="../js/_via.js"></script>
+    <script>
+      var via_container = document.getElementById('via_container');
+      var via = new _via(via_container);
+    </script>
   </body>
 </html>

@@ -1,6 +1,7 @@
-function _via_control_panel(control_panel_container, data) {
+function _via_control_panel(control_panel_container, data, view_annotator) {
   this.c = control_panel_container;
   this.d = data;
+  this.va = view_annotator;
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -42,6 +43,20 @@ _via_control_panel.prototype._init = function() {
   this._add_spacer();
 
   this._add_project_share_tools();
+
+  this._add_spacer();
+
+  var keyboard = _via_util_get_svg_button('micon_keyboard', 'Keyboard Shortcuts');
+  keyboard.addEventListener('click', function() {
+    _via_util_show_info_page('page_keyboard_shortcut');
+  }.bind(this));
+  this.c.appendChild(keyboard);
+
+  var help = _via_util_get_svg_button('micon_help', 'About VIA');
+  help.addEventListener('click', function() {
+    _via_util_show_info_page('page_about');
+  }.bind(this));
+  this.c.appendChild(help);
 }
 
 _via_control_panel.prototype._add_spacer = function() {

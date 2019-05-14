@@ -25,7 +25,7 @@ function _via_temporal_segmenter(container, vid, data, media_element) {
   this.selected_gindex = -1;
   this.selected_mindex = -1;
   this.edge_show_time = -1;
-  this.group_default_gid_list = [ '_DEFAULT' ];
+  this.group_default_gid_list = [ ]; // group values added by default
 
   // spatial mid
   this.smid = {};
@@ -367,6 +367,7 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
     if ( group_aid_list.length ) {
       this.group_aname_select = document.createElement('select');
       this.group_aname_select.setAttribute('style', 'width:1em; border:none;');
+      this.group_aname_select.addEventListener('change', this._tmetadata_onchange_groupby_aid.bind(this));
       for ( var aid in this.d.cache.attribute_group['FILE1_Z2_XY0'] ) {
         var oi = document.createElement('option');
         oi.innerHTML = this.d.store.attribute[aid].aname;
@@ -445,6 +446,14 @@ _via_temporal_segmenter.prototype._tmetadata_gmetadata_update = function() {
 
 _via_temporal_segmenter.prototype._tmetadata_onchange_groupby_aname = function(e) {
   this.d.attribute_update_aname(this.groupby_aid, this.group_aname_input.value.trim());
+}
+
+_via_temporal_segmenter.prototype._tmetadata_onchange_groupby_aid = function(e) {
+  var new_groupby_aid = e.target.options[e.target.selectedIndex].value;
+  this._group_init( new_groupby_aid );
+  this._tmetadata_gmetadata_update();
+  this.gid_list_input.value = this.gid_list.join(',');
+  this.group_aname_input.value = this.d.store.attribute[this.groupby_aid].aname;
 }
 
 _via_temporal_segmenter.prototype._tmetadata_onchange_gid_list_input = function(e) {
@@ -601,17 +610,22 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_gid_mid = function(g
   var mindex, mid, t0, t1;
   for ( mindex in this.group[gid] ) {
     mid = this.group[gid][mindex];
-    t0 = this.d.store.metadata[mid].z[0];
-    t1 = this.d.store.metadata[mid].z[1];
-
-    if ( (t0 >= this.tmetadata_gtimeline_tstart &&
-          t0 <= this.tmetadata_gtimeline_tend) ||
-         (t1 >= this.tmetadata_gtimeline_tstart &&
-          t1 <= this.tmetadata_gtimeline_tend) ||
-         (t0 <= this.tmetadata_gtimeline_tstart &&
-          t1 >= this.tmetadata_gtimeline_tend)
+    if ( this.d.store.metadata[mid].flg === _VIA_METADATA_FLAG.VISIBLE &&
+         this.d.store.metadata[mid].z.length === 2 &&
+         this.d.store.metadata[mid].xy.length === 0
        ) {
-      this.tmetadata_gtimeline_mid[gid].push(mid);
+      t0 = this.d.store.metadata[mid].z[0];
+      t1 = this.d.store.metadata[mid].z[1];
+
+      if ( (t0 >= this.tmetadata_gtimeline_tstart &&
+            t0 <= this.tmetadata_gtimeline_tend) ||
+           (t1 >= this.tmetadata_gtimeline_tstart &&
+            t1 <= this.tmetadata_gtimeline_tend) ||
+           (t0 <= this.tmetadata_gtimeline_tstart &&
+            t1 >= this.tmetadata_gtimeline_tend)
+         ) {
+        this.tmetadata_gtimeline_mid[gid].push(mid);
+      }
     }
   }
   this.tmetadata_gtimeline_mid[gid].sort( this._compare_mid_by_time.bind(this) );
@@ -832,7 +846,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_update_gid = function(e) {
                           'avalue':new_gid,
                          } );
   }
-  console.log( JSON.stringify(Object.keys(this.group)) );
+
   this.d.metadata_update_av_bulk(this.vid, av_update_list).then( function(ok) {
     console.log(ok);
     this.group[new_gid] = this.group[old_gid];
@@ -1133,6 +1147,11 @@ _via_temporal_segmenter.prototype._tmetadata_mid_move = function(dt) {
   var newz = this.d.store.metadata[this.selected_mid].z.slice();
   for ( var i = 0; i < n; ++i ) {
     newz[i] = parseFloat((parseFloat(newz[i]) + dt).toFixed(3));
+
+    if ( newz[i] < 0 || newz[i] > this.m.duration ) {
+      _via_util_msg_show('Cannot move temporal segment beyond the boundary!');
+      return;
+    }
   }
   this.d.metadata_update_z(this.vid, this.selected_mid, newz).then( function(ok) {
     this.m.currentTime = this.d.store.metadata[this.selected_mid].z[0];
@@ -1142,8 +1161,7 @@ _via_temporal_segmenter.prototype._tmetadata_mid_move = function(dt) {
     this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
   }.bind(this));
 }
-
-_via_temporal_segmenter.prototype._tmetadata_mid_del_sel = function(mid) {
+.prototype._tmetadata_mid_del_sel = function(mid) {
   this._tmetadata_mid_del(this.selected_mid);
   this._tmetadata_group_gid_remove_mid_sel();
 }
@@ -1154,7 +1172,7 @@ _via_temporal_segmenter.prototype._tmetadata_mid_del = function(mid) {
     this.tmetadata_gtimeline_mid[this.selected_gid].splice(mindex, 1);
 
     this._group_gid_del_mid(this.selected_gid, mid);
-    this.d.metadata_del(this.file.fid, mid);
+    this.d.metadata_delete(this.vid, mid);
     this._tmetadata_group_gid_draw(this.selected_gid);
   }
 }
@@ -1210,11 +1228,10 @@ _via_temporal_segmenter.prototype._tmetadata_mid_add_at_time = function(t) {
       return;
     }
   }
-  var fid = this.file.fid;
   var xy = [];
   var metadata = {};
   metadata[ this.groupby_aid ] = this.selected_gid;
-  this.d.metadata_add(fid, z, xy, metadata).then( function(ok) {
+  this.d.metadata_add(this.vid, z, xy, metadata).then( function(ok) {
     this.metadata_last_added_mid = ok.mid;
     this._tmetadata_group_gid_draw(this.selected_gid);
   }.bind(this), function(err) {
@@ -1360,6 +1377,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mouseup = function(e) {
     }
     this.metadata_move_is_ongoing = false;
     this.metadata_ongoing_update_x = [0, 0];
+    this._tmetadata_group_gid_draw(this.selected_gid);
     return;
   }
 }
@@ -1485,12 +1503,15 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
   }
 
   if ( e.key === 'a' || e.key === 'A' ) {
+    console.log(e.key + ':' + e.shiftKey)
     e.preventDefault();
     var t = this.m.currentTime;
     if ( e.key === 'a' ) {
       this._tmetadata_mid_add_at_time(t);
     } else {
-      this._tmetadata_mid_update_last_added_end_edge_to_time(t);
+      if ( e.key === 'A' && e.shiftKey ) {
+        this._tmetadata_mid_update_last_added_end_edge_to_time(t);
+      }
     }
     return;
   }
@@ -1517,10 +1538,15 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     e.preventDefault();
     if ( this.selected_mindex !== -1 ) {
       // resize left edge of selected temporal segment
+      var delta = this.EDGE_UPDATE_TIME_DELTA;
+      if ( e.ctrlKey ) {
+        delta = 1;
+      }
+
       if ( e.key === 'l' ) {
-        this._tmetadata_mid_update_edge(0, -this.EDGE_UPDATE_TIME_DELTA);
+        this._tmetadata_mid_update_edge(0, -delta);
       } else {
-        this._tmetadata_mid_update_edge(0, this.EDGE_UPDATE_TIME_DELTA);
+        this._tmetadata_mid_update_edge(0, delta);
       }
       return;
     } else {
@@ -1536,10 +1562,15 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     e.preventDefault();
     if ( this.selected_mindex !== -1 ) {
       // resize left edge of selected temporal segment
+      var delta = this.EDGE_UPDATE_TIME_DELTA;
+      if ( e.ctrlKey ) {
+        delta = 1;
+      }
+
       if ( e.key === 'r' ) {
-        this._tmetadata_mid_update_edge(1, this.EDGE_UPDATE_TIME_DELTA);
+        this._tmetadata_mid_update_edge(1, delta);
       } else {
-        this._tmetadata_mid_update_edge(1, -this.EDGE_UPDATE_TIME_DELTA);
+        this._tmetadata_mid_update_edge(1, -delta);
       }
       return;
     } else {
@@ -1661,11 +1692,13 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
          this.d.store.metadata[mid].z.length >= 2 &&
          this.d.store.metadata[mid].xy.length === 0
        ) {
-      avalue = this.d.store.metadata[mid].av[this.groupby_aid];
-      if ( ! this.group.hasOwnProperty(avalue) ) {
-        this.group[avalue] = [];
+      if ( this.d.store.metadata[mid].av.hasOwnProperty(this.groupby_aid) ) {
+        avalue = this.d.store.metadata[mid].av[this.groupby_aid];
+        if ( ! this.group.hasOwnProperty(avalue) ) {
+          this.group[avalue] = [];
+        }
+        this.group[avalue].push(mid);
       }
-      this.group[avalue].push(mid);
     }
   }
 
@@ -1679,6 +1712,13 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
       this.group[gid] = [];
       this.gid_list.push(gid);
     }
+  }
+
+  // for clarity, ensure that there is at least one group
+  if ( this.gid_list.length === 0 ) {
+    var default_gid = '_DEFAULT';
+    this.group[default_gid] = [];
+    this.gid_list.push(default_gid);
   }
 
   // sort each group elements based on time
@@ -1858,6 +1898,10 @@ _via_temporal_segmenter.prototype._on_event_metadata_add = function(fid, mid) {
   _via_util_msg_show('Metadata added');
 }
 
+_via_temporal_segmenter.prototype._on_event_metadata_update = function(fid, mid) {
+  _via_util_msg_show('Metadata updated');
+}
+
 //
 // Toolbar
 //
@@ -1939,10 +1983,6 @@ _via_temporal_segmenter.prototype._toolbar_playback_rate_set = function(rate) {
   if ( this.m.playbackRate !== rate ) {
     this.m.playbackRate = rate;
   }
-}
-
-_via_temporal_segmenter.prototype._toolbar_init_gid_add_del_container = function() {
-
 }
 
 //

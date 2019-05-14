@@ -14,6 +14,11 @@ const _VIA_VIEW_MODE = {'UNKNOWN':0,
                         'VIDEO1':101, 'VIDEO2':102, 'VIDEOK':103,
                         'AUDIO1':201, 'AUDIO2':202, 'AUDIOK':203
                        };
+const _VIA_PAGE = {
+  'ABOUT':'page_about',
+  'SHORTCUT':'page_shortcut',
+  'START_INFO':'page_start_info',
+};
 
 function _via_view_annotator(data, container ) {
   this.d = data;
@@ -29,10 +34,25 @@ function _via_view_annotator(data, container ) {
   this._EVENT_ID_PREFIX = '_via_view_annotator_';
   _via_event.call( this );
 
+  this.d.on_event('metadata_add', this._on_event_metadata_add.bind(this));
+  this.d.on_event('metadata_update', this._on_event_metadata_update.bind(this));
+
   this._init();
 }
 
 _via_view_annotator.prototype._init = function() {
+  this._view_clear_all_file_annotator();
+  this._show_start_info();
+  _via_util_msg_show(_VIA_NAME + ' (' + _VIA_NAME_SHORT + ') ' + _VIA_VERSION + ' ready.');
+}
+
+_via_view_annotator.prototype._show_start_info = function() {
+  this.c.setAttribute('style', 'grid-template-rows:1fr;')
+  var via_page = document.createElement('div');
+  via_page.setAttribute('id', 'via_start_info');
+  via_page.innerHTML = document.getElementById('via_start_info_content').innerHTML;
+  this.c.innerHTML = '';
+  this.c.appendChild(via_page);
 }
 
 _via_view_annotator.prototype.view_show = function(vid) {
@@ -40,12 +60,6 @@ _via_view_annotator.prototype.view_show = function(vid) {
   this._view_init(vid);
 
   this.vid = vid;
-
-  /*
-  var i;
-  for ( i = 0; i < this._event.targets[event_id].listener_list.length; ++i ) {
-    console.log(this._event.targets[event_id].listener_list[i] + ':' + this._event.targets[event_id].listener_param_list[i]);
-  }*/
   this.emit_event( 'view_show', { 'vid':this.vid } );
 }
 
@@ -160,7 +174,7 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
 
 _via_view_annotator.prototype._view_annotate_single_audio = function(vid) {
   console.log('annotate an audio');
-  this.view_mode = _VIA_VIEW_MODE.VIDEO1;
+  this.view_mode = _VIA_VIEW_MODE.AUDIO1;
 
   this.c.innerHTML = '';
   // for viewing content of a view and definition of metadata.{xy, z, av} for the view
@@ -421,4 +435,25 @@ _via_view_annotator.prototype._on_event_keydown = function(e) {
   }
 
   this.temporal_segmenter._on_event_keydown(e);
+}
+
+//
+// external events
+//
+_via_view_annotator.prototype._on_event_metadata_add = function(data, event_payload) {
+  var vid = event_payload.vid;
+  var mid = event_payload.mid;
+
+  if ( typeof(this.temporal_segmenter) !== 'undefined' ) {
+    this.temporal_segmenter._on_event_metadata_add(vid, mid);
+  }
+}
+
+_via_view_annotator.prototype._on_event_metadata_update = function(data, event_payload) {
+  var vid = event_payload.vid;
+  var mid = event_payload.mid;
+
+  if ( typeof(this.temporal_segmenter) !== 'undefined' ) {
+    this.temporal_segmenter._on_event_metadata_update(vid, mid);
+  }
 }

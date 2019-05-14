@@ -34,6 +34,8 @@ _via_editor.prototype.hide = function() {
   this.c.classList.add('hide');
 }
 _via_editor.prototype.show = function() {
+  this.c.classList.remove('hide');
+
   // top line: editor content selector {metadata, attribute}
   this.editor_content_selector = document.createElement('div');
   this.editor_content_selector.setAttribute('class', 'editor_content_selector');
@@ -112,8 +114,6 @@ _via_editor.prototype.show = function() {
   this.metadata_container.classList.add('hide');
   this.edit_attribute_checkbox.checked = true;
   this.attribute_container.classList.remove('hide');
-
-  this.c.classList.remove('hide');
 }
 
 //
@@ -271,6 +271,12 @@ _via_editor.prototype.attribute_clear = function() {
 }
 
 _via_editor.prototype.attributes_update = function() {
+  console.log(this.d.store.attribute)
+  console.log(this.c.classList)
+  if ( this.c.classList.contains('hide') ) {
+    return;
+  }
+
   this.attribute_clear();
 
   if ( Object.keys(this.d.store.attribute).length ) {
@@ -613,7 +619,7 @@ _via_editor.prototype.attribute_update_type = function(e) {
 }
 
 _via_editor.prototype.on_event_attribute_update = function(data, event_payload) {
-  this.update_attribute_for(event_payload.aid);
+  this.attributes_update();
 }
 
 _via_editor.prototype.on_event_attribute_del = function(data, event_payload) {

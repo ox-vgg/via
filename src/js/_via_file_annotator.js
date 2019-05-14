@@ -1212,7 +1212,7 @@ _via_file_annotator.prototype._creg_del_sel_regions = function() {
 // external event listener
 //
 _via_file_annotator.prototype._on_event_metadata_add = function(data, event_payload) {
-  console.log('[vid=' + this.vid + ', findex=' + this.findex + ',state=' + this._state_id2str(this.state_id) + '] : _on_event_metadata_add');
+  console.log('[vid=' + this.vid + ',state=' + this._state_id2str(this.state_id) + '] : _on_event_metadata_add');
   var vid = event_payload.vid;
   var mid = event_payload.mid;
   if ( this.vid === vid) {
@@ -1483,7 +1483,7 @@ _via_file_annotator.prototype._rinput_enable = function() {
        this.file.type === _VIA_FILE_TYPE.AUDIO
      ) {
     this.file_html_element.removeAttribute('controls');
-    _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.', true);
+    //_via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.', true);
   }
 }
 
@@ -1495,7 +1495,7 @@ _via_file_annotator.prototype._rinput_disable = function() {
        this.file.type === _VIA_FILE_TYPE.AUDIO
      ) {
     this.file_html_element.setAttribute('controls', 'true');
-    _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.', true);
+    //_via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.', true);
   }
 }
 

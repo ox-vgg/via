@@ -35,7 +35,7 @@ _via_data.prototype._init_default_project = function() {
   };
   this.store['attribute'] = {
     '1': {
-      'aname':'Temporal Group',
+      'aname':'_DEFAULT_TIMELINE',
       'anchor_id':'FILE1_Z2_XY0',
       'type':1,
       'desc':'Attribute used for definition of temporal regions in audio and video (added by default)',
@@ -225,9 +225,9 @@ _via_data.prototype.metadata_add = function(vid, z, xy, av) {
       var mid = this._metadata_get_new_id(vid);
       this.store.metadata[mid] = new _via_metadata(vid, z, xy, av);
       if ( ! this.cache.mid_list.hasOwnProperty(vid) ) {
-        this.cache.mid_list[vid] = {}
+        this.cache.mid_list[vid] = [];
       }
-      this.cache.mid_list[vid][mid] = 1;
+      this.cache.mid_list[vid].push(mid);
 
       this.emit_event( 'metadata_add', { 'vid':vid, 'mid':mid } );
       ok_callback( {'vid':vid, 'mid':mid} );
@@ -382,7 +382,8 @@ _via_data.prototype.metadata_delete = function(vid, mid) {
         return;
       }
 
-      this.cache.mid_list[vid][mid] = 0;
+      var mindex = this.cache.mid_list[vid].indexOf(mid);
+      this.cache.mid_list[vid].splice(mindex, 1);
       this.store.metadata[mid].flg = _VIA_METADATA_FLAG.DELETED;
       this.emit_event( 'metadata_delete', { 'vid':vid, 'mid':mid } );
       ok_callback({'vid':vid, 'mid':mid});
@@ -494,6 +495,48 @@ _via_data.prototype.view_bulk_add_from_filelist = function(filelist) {
   }.bind(this));
 }
 
+_via_data.prototype.view_del = function(vid) {
+    return new Promise( function(ok_callback, err_callback) {
+    try {
+      if ( ! this.store.view.hasOwnProperty(vid) ) {
+        err_callback();
+        return;
+      }
+      var vindex = this.store.vid_list.indexOf(vid);
+      if ( vindex === -1 ) {
+        err_callback();
+        return;
+      }
+
+      // delete all metadata
+      var mid;
+      for ( var mindex in this.cache.mid_list[vid] ) {
+        mid = this.cache.mid_list[vid][mindex];
+        delete this.store.metadata[mid];
+      }
+      // delete all files
+      var fid;
+      for ( var findex in this.store.view[vid].fid_list ) {
+        fid = this.store.view[vid].fid_list[findex];
+        delete this.store.file[fid];
+      }
+      // delete view
+      delete this.store.view[vid];
+      console.log('vid=' + vid + ', at vindex=' + vindex);
+      console.log('before: ' + JSON.stringify(this.store.vid_list))
+      this.store.vid_list.splice(vindex, 1);
+      console.log('after: ' + JSON.stringify(this.store.vid_list))
+
+      this._cache_update_mid_list();
+      this.emit_event( 'view_del', {'vid':vid, 'vindex':vindex} );
+      console.log(JSON.stringify(this.store))
+      ok_callback({'vid':vid, 'vindex':vindex});
+    }
+    catch(err) {
+      err_callback(err);
+    }
+  }.bind(this));
+}
 
 //
 // cache

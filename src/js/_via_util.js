@@ -167,7 +167,7 @@ function _via_util_file_ext(filename) {
 }
 
 function _via_util_infer_file_loc_from_filename(filename) {
-  if ( filename.startsWith('http://') ) {
+  if ( filename.startsWith('http://') || filename.startsWith('https://') ) {
     return _VIA_FILE_LOC.URIHTTP;
   } else {
     if ( filename.startsWith('file://') ) {
@@ -234,7 +234,7 @@ function _via_util_file_select_local(type, handler, multiple) {
     fsel.accept = 'audio/*';
     break;
   case _VIA_FILE_TYPE.TEXT:
-    fsel.accept = '.csv';
+    fsel.accept = '.csv,.txt';
     break;
   case _VIA_FILE_TYPE.JSON:
     fsel.accept = '.json';
@@ -257,7 +257,7 @@ function _via_util_rand_int(min_inclusive, max_exclusive) {
 }
 
 function _via_util_show_info_page(page_id) {
-  var el = document.getElementById('_via_info_page_container');
+  var el = document.getElementById('via_info_page_container');
 
   var pages = el.getElementsByClassName('info_page');
   var n = pages.length;
@@ -274,7 +274,7 @@ function _via_util_show_info_page(page_id) {
 }
 
 function _via_util_hide_info_page() {
-  var el = document.getElementById('_via_info_page_container');
+  var el = document.getElementById('via_info_page_container');
   if ( el.style.display === 'block' ) {
     el.removeEventListener('mousedown', _via_util_hide_info_page);
     el.style.display = 'none';

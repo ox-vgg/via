@@ -24,6 +24,7 @@ function _via_view_manager(data, view_annotator, container) {
 
   this.d.on_event('project_loaded', this._on_event_project_loaded.bind(this));
   this.d.on_event('view_bulk_add', this._on_event_view_bulk_add.bind(this));
+  this.d.on_event('view_del', this._on_event_view_del.bind(this));
   this.va.on_event('view_show', this._on_event_view_show.bind(this));
 
   this._init_ui_elements();
@@ -66,8 +67,10 @@ _via_view_manager.prototype._init_ui_elements = function() {
   this.add_media_remote.addEventListener('click', this._on_add_media_remote.bind(this));
 
   this.add_media_bulk = _via_util_get_svg_button('micon_lib_add', 'Bulk add file URI ( e.g. file:///... or http://... ) contained in a local CSV file where each row is a remote or local filename.', 'add_media_bulk');
+  this.add_media_bulk.addEventListener('click', this._on_add_media_bulk.bind(this));
 
-  this.remove_media = _via_util_get_svg_button('micon_remove_circle', 'Remove the Current File', 'remove_media');
+  this.del_view = _via_util_get_svg_button('micon_remove_circle', 'Remove the Current File', 'remove_media');
+  this.del_view.addEventListener('click', this._on_del_view.bind(this));
 
   this.c.innerHTML = '';
   this.c.appendChild(this.pname);
@@ -78,7 +81,7 @@ _via_view_manager.prototype._init_ui_elements = function() {
   this.c.appendChild(this.add_media_local);
   this.c.appendChild(this.add_media_remote);
   this.c.appendChild(this.add_media_bulk);
-  this.c.appendChild(this.remove_media);
+  this.c.appendChild(this.del_view);
 }
 
 //
@@ -98,10 +101,6 @@ _via_view_manager.prototype._on_view_selector_change = function(e) {
 
 _via_view_manager.prototype._on_next_view = function() {
   var vid = this.view_selector.options[this.view_selector.selectedIndex].value;
-  console.log(this.view_selector.selectedIndex)
-  console.log(this.view_selector.options[this.view_selector.selectedIndex].value)
-  console.log( typeof(vid) );
-  console.log(this.d.store.vid_list)
   var vindex = this.d.store.vid_list.indexOf(vid);
   if ( vindex !== -1 ) {
     var next_vindex = vindex + 1;
@@ -150,6 +149,7 @@ _via_view_manager.prototype._on_event_project_loaded = function(data, event_payl
     this.va.view_show( this.d.store.vid_list[0] );
   }
 }
+
 //
 // View Selector
 //
@@ -223,8 +223,7 @@ _via_view_manager.prototype._view_selector_update_showall = function() {
   this._view_selector_clear();
 
   var vid;
-  var vindex;
-  for ( vindex in this.d.store.vid_list ) {
+  for ( var vindex in this.d.store.vid_list ) {
     vid = this.d.store.vid_list[vindex];
     this.view_selector.appendChild( this._view_selector_option_html(vindex, vid) );
     this.view_selector_vid_list.push(vid);
@@ -237,7 +236,6 @@ _via_view_manager.prototype._view_selector_update_showall = function() {
     } else {
       this.view_selector.selectedIndex = existing_vid_index;
     }
-    console.log(this.view_selector.selectedIndex);
   }
 }
 
@@ -245,6 +243,25 @@ _via_view_manager.prototype._on_view_filter_regex_change = function() {
   var regex = this.view_filter_regex.value;
   console.log(regex)
   this._view_selector_update_regex(regex);
+}
+
+_via_view_manager.prototype._file_add_from_filelist = function(filelist) {
+  this.d.view_bulk_add_from_filelist(filelist).then( function(ok) {
+    var filetype_summary = {};
+    var fid, ftype_str;
+    for ( var findex in ok.fid_list ) {
+      fid = ok.fid_list[findex];
+      ftype_str = _via_util_file_type_to_str( this.d.store.file[fid].type );
+      if ( ! filetype_summary.hasOwnProperty(ftype_str) ) {
+        filetype_summary[ftype_str] = 0;
+      }
+      filetype_summary[ftype_str] = filetype_summary[ftype_str] + 1;
+    }
+    _via_util_msg_show('Added ' + ok.fid_list.length + ' files. ' + JSON.stringify(filetype_summary));
+  }.bind(this), function(err) {
+    _via_util_msg_show('Failed to add files! [' + err + ']');
+    console.warn(err);
+  }.bind(this));
 }
 
 _via_view_manager.prototype._on_add_media_local = function() {
@@ -263,22 +280,7 @@ _via_view_manager.prototype._file_add_local = function(e) {
                     'src':files[findex],
                   });
   }
-  this.d.view_bulk_add_from_filelist(filelist).then( function(ok) {
-    var filetype_summary = {};
-    var fid, ftype_str;
-    for ( var findex in ok.fid_list ) {
-      fid = ok.fid_list[findex];
-      ftype_str = _via_util_file_type_to_str( this.d.store.file[fid].type );
-      if ( ! filetype_summary.hasOwnProperty(ftype_str) ) {
-        filetype_summary[ftype_str] = 0;
-      }
-      filetype_summary[ftype_str] = filetype_summary[ftype_str] + 1;
-    }
-    _via_util_msg_show('Added ' + ok.fid_list.length + ' files. ' + JSON.stringify(filetype_summary));
-  }.bind(this), function(err) {
-    _via_util_msg_show('Failed to add files! [' + err + ']');
-    console.warn(err);
-  }.bind(this));
+  this._file_add_from_filelist(filelist);
 }
 
 _via_view_manager.prototype._on_event_view_bulk_add = function(data, event_payload) {
@@ -290,8 +292,7 @@ _via_view_manager.prototype._on_event_view_bulk_add = function(data, event_paylo
 }
 
 _via_view_manager.prototype._on_add_media_remote = function() {
-  console.log('a')
-  var url = window.prompt('Enter image, audio or video url\ne.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg\ne.g. https://commons.wikimedia.org/wiki/File:Alioli.ogv',
+  var url = window.prompt('Enter URL of an image, audio or video (e.g. http://www....)',
                           '');
   var filelist = [ {'fname':url,
                     'type':_via_util_infer_file_type_from_filename(url),
@@ -300,20 +301,78 @@ _via_view_manager.prototype._on_add_media_remote = function() {
                    }
                  ];
 
-  this.d.view_bulk_add_from_filelist(filelist).then( function(ok) {
-    var filetype_summary = {};
-    var fid, ftype_str;
-    for ( var findex in ok.fid_list ) {
-      fid = ok.fid_list[findex];
-      ftype_str = _via_util_file_type_to_str( this.d.store.file[fid].type );
-      if ( ! filetype_summary.hasOwnProperty(ftype_str) ) {
-        filetype_summary[ftype_str] = 0;
+  this._file_add_from_filelist(filelist);
+}
+
+_via_view_manager.prototype._on_add_media_bulk = function() {
+  _via_util_file_select_local(_VIA_FILE_TYPE.TEXT,
+                              this._on_add_media_bulk_file_selected.bind(this), false);
+}
+
+_via_view_manager.prototype._on_add_media_bulk_file_selected = function(e) {
+  if ( e.target.files.length ) {
+    _via_util_load_text_file(e.target.files[0], this._on_add_media_bulk_file_load.bind(this));
+  }
+}
+
+_via_view_manager.prototype._on_add_media_bulk_file_load = function(file_data) {
+  var url_list = file_data.split('\n');
+  if ( url_list.length ) {
+    var filelist = [];
+    for ( var i = 0; i < url_list.length; ++i ) {
+      if ( url_list[i] === '' ||
+           url_list[i] === ' ' ||
+           url_list[i] === '\n'
+         ) {
+        continue; // skip
       }
-      filetype_summary[ftype_str] = filetype_summary[ftype_str] + 1;
+      filelist.push({ 'fname':url_list[i],
+                      'type':_via_util_infer_file_type_from_filename(url_list[i]),
+                      'loc':_via_util_infer_file_loc_from_filename(url_list[i]),
+                      'src':url_list[i],
+                    });
     }
-    _via_util_msg_show('Added ' + ok.fid_list.length + ' files. ' + JSON.stringify(filetype_summary));
+    this._file_add_from_filelist(filelist);
+  }
+}
+
+_via_view_manager.prototype._on_del_view = function() {
+  console.log('del vid=' + this.va.vid + ', var type=' + typeof(this.va.vid));
+  this.d.view_del(this.va.vid).then( function(ok) {
+    console.log(ok);
   }.bind(this), function(err) {
-    _via_util_msg_show('Failed to add files! [' + err + ']');
     console.warn(err);
   }.bind(this));
+}
+
+_via_view_manager.prototype._on_event_view_del = function(data, event_payload) {
+  console.log('*********** _on_event_view_del() vid=' + event_payload.vid + ', vindex=' + event_payload.vindex + ', length=' + this.d.store.vid_list.length);
+  this._view_selector_update();
+  var vindex = event_payload.vindex;
+  if ( this.d.store.vid_list.length ) {
+    if ( vindex < this.d.store.vid_list.length ) {
+      this.va.view_show( this.d.store.vid_list[vindex] );
+    } else {
+      this.va.view_show( this.d.store.vid_list[ this.d.store.vid_list.length - 1 ] );
+    }
+  } else {
+    this.va._init();
+  }
+
+  /*
+  if ( this.d.store.vid_list.length ) {
+    this._on_next_view();
+  }
+*/
+  /*
+  var vindex = event_payload.vindex;
+  if ( vindex < this.d.store.vid_list.length ) {
+    this.va.show_view( this.d.store.vid_list[vindex] );
+  }
+
+
+  if ( this.d.store.vid_list.length ) {
+    this._on_next_view();
+  }
+*/
 }
