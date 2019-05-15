@@ -1951,7 +1951,7 @@ function _via_reg_canvas_mousemove_handler(e) {
     }
 
     var region_x0 = _via_click_x0;
-    var region_y0 = _via_click_y0;;
+    var region_y0 = _via_click_y0;
 
     var dx = Math.round(Math.abs(_via_current_x - _via_click_x0));
     var dy = Math.round(Math.abs(_via_current_y - _via_click_y0));
@@ -1978,15 +1978,30 @@ function _via_reg_canvas_mousemove_handler(e) {
       }
 
       _via_draw_rect_region(region_x0, region_y0, dx, dy, false);
+
+      // display the current region info
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' W:' + dx + ',' + ' H:' + dy;
+      }
       break;
 
     case VIA_REGION_SHAPE.CIRCLE:
       var circle_radius = Math.round(Math.sqrt( dx*dx + dy*dy ));
       _via_draw_circle_region(region_x0, region_y0, circle_radius, false);
+
+      // display the current region info
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' Radius:' + circle_radius;
+      }
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
       _via_draw_ellipse_region(region_x0, region_y0, dx, dy, false);
+
+      // display the current region info
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' X-radius:' + dx + ',' + ' Y-radius:' + dy;
+      }
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
@@ -2031,6 +2046,10 @@ function _via_reg_canvas_mousemove_handler(e) {
       var w = Math.abs(d[2] - d[0]);
       var h = Math.abs(d[3] - d[1]);
       _via_draw_rect_region(d[0], d[1], w, h, true);
+
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' W:' + w + ',' + ' H:' + h;
+      }
       break;
 
     case VIA_REGION_SHAPE.CIRCLE:
@@ -2041,6 +2060,9 @@ function _via_reg_canvas_mousemove_handler(e) {
                               attr['cy'],
                               new_r,
                               true);
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' R:' + Math.round(new_r);
+      }
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
@@ -2067,6 +2089,9 @@ function _via_reg_canvas_mousemove_handler(e) {
                                new_rx,
                                new_ry,
                                true);
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' X-radius:' + new_rx + ',' + ' Y-radius:' + new_ry;
+      }
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
@@ -2082,6 +2107,9 @@ function _via_reg_canvas_mousemove_handler(e) {
                                moved_all_points_y,
                                true,
                                attr['name']);
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' N:' + attr['all_points_x'].length;
+      }
       break;
     }
     _via_reg_canvas.focus();
@@ -2107,6 +2135,10 @@ function _via_reg_canvas_mousemove_handler(e) {
                             attr['width'],
                             attr['height'],
                             true);
+      // display the current region info
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' W:' + attr['width'] + ',' + ' H:' + attr['height'];
+      }
       break;
 
     case VIA_REGION_SHAPE.CIRCLE:
@@ -2114,6 +2146,10 @@ function _via_reg_canvas_mousemove_handler(e) {
                               attr['cy'] + move_y,
                               attr['r'],
                               true);
+      // display the current region info
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' Radius:' + attr['r'];
+      }
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
@@ -2122,6 +2158,10 @@ function _via_reg_canvas_mousemove_handler(e) {
                                attr['rx'],
                                attr['ry'],
                                true);
+      // display the current region info
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' X-radius:' + attr['rx'] + ',' + ' Y-radius:' + attr['ry'];
+      }
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
@@ -2136,6 +2176,9 @@ function _via_reg_canvas_mousemove_handler(e) {
                                moved_all_points_y,
                                true,
                                attr['name']);
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' N:' + attr['all_points_x'].length;
+      }
       break;
 
     case VIA_REGION_SHAPE.POINT:
@@ -2160,6 +2203,10 @@ function _via_reg_canvas_mousemove_handler(e) {
       var line_x = [all_points_x.slice(npts-1), _via_current_x];
       var line_y = [all_points_y.slice(npts-1), _via_current_y];
       _via_draw_polygon_region(line_x, line_y, false, attr['name']);
+    }
+
+    if ( rf != null && _via_is_region_info_visible ) {
+      rf.innerHTML +=  ',' + ' N:' + npts;
     }
   }
 }
