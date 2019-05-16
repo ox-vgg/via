@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <!--
+        VGG Image Annotator (via)
+        www.robots.ox.ac.uk/~vgg/software/via/
+
+        Copyright (c) 2016, Abhishek Dutta, Visual Geometry Group, Oxford University.
+        All rights reserved.
+
+        Redistribution and use in source and binary forms, with or without
+        modification, are permitted provided that the following conditions are met:
+
+        Redistributions of source code must retain the above copyright notice, this
+        list of conditions and the following disclaimer.
+        Redistributions in binary form must reproduce the above copyright notice,
+        this list of conditions and the following disclaimer in the documentation
+        and/or other materials provided with the distribution.
+        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+        AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+        IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+        ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+        LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+        CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+        SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+        INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+        CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+        ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+        POSSIBILITY OF SUCH DAMAGE.
+
+      -->
+    <title>VGG Image Annotator</title>
+    <meta name="author" content="Abhishek Dutta">
+    <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 200 KB) that runs on most modern web browsers.">
+
+    <!--
+    Development of VIA is supported by the EPSRC programme grant
+    Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1).
+    Using Google Analytics, we record the usage of this application.
+    This data is used in reporting of this programme grant.
+    -->
+    <script type="text/javascript">
+      //<!--AUTO_INSERT_GOOGLE_ANALYTICS_JS_HERE-->
+    </script>
+
+    <!-- CSS style definition -->
+    <style type="text/css">
+      body {
+      min-width: 800px;
+      padding: 0;
+      margin: 0;
+      font-family: sans-serif;
+      }
+
+      /* Top panel : #navbar, #toolbar */
+      .top_panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: block;
+      font-size: medium;
+      background-color: #000000;
+      color: white;
+      z-index: 10;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      }
+
+      .navbar {
+      display: inline-block;
+      }
+      .navbar ul {
+      display: inline;
+      list-style-type: none;
+      overflow: hidden;
+      }
+      .navbar li {
+      float: left;
+      }
+      .navbar li a, .drop_menu_item {
+      display: inline-block;
+      color: white;
+      padding: 0.65em 1.2em;
+      text-decoration: none;
+      }
+      .navbar li a:hover, .dropdown:hover {
+      background-color: #999999;
+      cursor: pointer;
+      }
+      .navbar li.dropdown {
+      display: inline-block;
+      }
+      .navbar .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #333333;
+      min-width: 120px;
+      border: 1px solid #ffffff;
+      font-size: small;
+      }
+      .navbar .dropdown-content a {
+      color: #ffffff;
+      padding: 0.4em 0.6em;
+      text-decoration: none;
+      display: block;
+      text-align: left;
+      background-color: #333333;
+      float: none;
+      }
+      .navbar .dropdown-content a:hover {
+      background-color: #000000;
+      color: #ffff00;
+      }
+      .navbar .dropdown:hover .dropdown-content {
+      display: block;
+      }
+
+      .toolbar {
+      display: inline-block;
+      color: white;
+      vertical-align: top;
+      }
+      .toolbar ul {
+      display: inline;
+      list-style-type: none;
+      overflow: hidden;
+      }
+      .toolbar li {
+      font-size: medium;
+      float: left;
+      padding: 0.65em 0.3em;
+      color: white;
+      }
+      .toolbar li:hover {
+      background-color: #333333;
+      color: red;
+      cursor: pointer;
+      }
+
+      #fileinfo {
+      font-size: small;
+      padding: 1.2em 0.8em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      }
+
+      /* Middle panel: containing #image_panel, #leftsidebar */
+      .middle_panel {
+      position: relative;
+      display: table;
+      table-layout: fixed;
+      width: 100%;
+      z-index: 1;
+      padding: 0;
+      top: 3.5em;
+      /*padding-top: 1.0125em;  ensures the mouse event (x,y) coordinates are integer */
+      }
+      #leftsidebar {
+      display: table-cell;
+      width: 250px;
+      z-index: 10;
+      vertical-align: top;
+      }
+      #display_area {
+      display: table-cell;
+      width: 100%;
+      z-index: 1;
+      margin: 0;
+      padding-left: 1em;
+      vertical-align: top;
+      }
+      #canvas_panel {
+      position: relative;
+      margin: 0;
+      padding: 0;
+      }
+      #canvas_panel canvas:focus {
+      outline: none;
+      }
+      #leftsidebar_collapse_panel {
+      display: table-cell;
+      position: relative;
+      width: 10px;
+      z-index: 1;
+      vertical-align: top;
+      font-size: small;
+      }
+      #leftsidebar_collapse_button {
+      background-color: black;
+      width: 10px;
+      height: 25px;
+      color: white;
+      padding: 0.2em;
+      border-radius: 0px 5px 5px 0px;
+      font-size: large;
+      }
+      #leftsidebar_collapse_button:hover {
+      color: red;
+      cursor: pointer;
+      }
+
+      /* Left sidebar accordion */
+      button.leftsidebar_accordion {
+      font-size: large;
+      background-color: #f2f2f2;
+      cursor: pointer;
+      padding: 0.5em 0.5em;
+      width: 100%;
+      text-align: left;
+      border: 0;
+      outline: none;
+      }
+      button.leftsidebar_accordion:focus {
+      outline: none;
+      }
+      button.leftsidebar_accordion.active, button.leftsidebar_accordion:hover {
+      background-color: #e6e6e6;
+      }
+      button.leftsidebar_accordion:after {
+      content: '\02795';
+      color: #4d4d4d;
+      float: right;
+      }
+      button.leftsidebar_accordion.active:after {
+      content: '\2796';
+      }
+      .leftsidebar_accordion_panel {
+      display: none;
+      padding-top: 0;
+      padding-left: 0.5em;
+      font-size: small;
+      border-right: 2px solid #f2f2f2;
+      border-bottom: 2px solid #f2f2f2;
+      }
+      .leftsidebar_accordion_panel.show {
+      display: block;
+      }
+
+      /* Region shape selection panel inside leftsidebar */
+      ul.region_shape {
+      font-size: xx-large;
+      list-style-type: none;
+      overflow: hidden;
+      padding: 0.4em 0;
+      margin: 0;
+      }
+      ul.region_shape li{
+      float: left;
+      padding: 0 0.2em;
+      fill: #ffffff;
+      stroke: #000000;
+      }
+      ul.region_shape li:hover {
+      cursor: pointer;
+      fill: #ffffff;
+      stroke: #ff0000;
+      }
+      ul.region_shape .selected {
+      fill: #ffffff;
+      stroke: #ff0000;
+      }
+
+      /* Loaded image list shown in leftsidebar panel */
+      #img_fn_list {
+      font-size: small;
+      overflow: scroll;
+      min-height: 10rem;
+      max-height: 30rem;
+      }
+      #img_fn_list_panel input {
+      width: 88%;
+      border: 1px solid #ccc;
+      margin: 0.6rem 0;
+      padding: 0.2rem 0.4rem;
+      }
+      #img_fn_list ul {
+      position: relative;
+      line-height: 1.3em;
+      margin: 0;
+      padding: 0;
+      list-style-type: none;
+      }
+      #img_fn_list li {
+      white-space: nowrap;
+      }
+      #img_fn_list li:hover {
+      background-color: #cccccc;
+      color: #000000;
+      cursor: pointer;
+      }
+
+      #message_panel {
+      position: fixed;
+      left: 0;
+      bottom: 0px;
+      line-height: 3em;
+      width: 100%;
+      background-color: #000000;
+      color: #ffff00;
+      font-size: small;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      z-index: 1000;
+      }
+
+      #invisible_file_input {
+      width: 0.1px;
+      height: 0.1px;
+      opacity: 0;
+      overflow: hidden;
+      position: absolute;
+      z-index: -1;
+      }
+
+      .text_panel {
+      display: none;
+      margin: auto;
+      font-size: medium;
+      line-height: 1.3em;
+      margin: 0;
+      max-width: 700px;
+      }
+      .text_panel li {
+      margin: 1em 0;
+      text-align: left;
+      }
+      .text_panel p {
+      text-align: left;
+      }
+
+      .action_text_link {
+      background-color: #aaeeff;
+      color: #000000;
+      }
+      .action_text_link:hover {
+      cursor: pointer;
+      }
+
+      .svg_button:hover {
+      cursor: pointer;
+      }
+
+      .tool_button {
+      color: blue;
+      cursor: pointer;
+      }
+      .tool_button:hover {
+      color: red;
+      }
+
+      /* region and file attributes input panel (spreadsheet like) */
+      #attributes_panel {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      z-index: 10;
+      width: 100%;
+      max-height: 30%;
+      overflow: auto;
+      background-color: #ffffff;
+      border-top: 4px solid #000000;
+      padding: 0em 0em;
+      padding-bottom: 2em;
+      font-size: small;
+      }
+      #attributes_panel table {
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin: 1em;
+      margin-bottom: 2em;
+      }
+
+      #attributes_panel td {
+      border: 1px solid #999999;
+      padding: 1em 1em;
+      margin: 0;
+      height: 1em;
+      white-space: nowrap;
+      vertical-align: top;
+      }
+      #attributes_panel tr:first-child td, #attributes_panel td:first-child {
+      padding: 1em 1em;
+      text-align: center;
+      }
+      #attributes_panel input {
+      border: none;
+      padding: 0;
+      margin: 0;
+      display: table-cell;
+      height: 1.3em;
+      font-size: small;
+      background-color: #ffffff;
+      vertical-align: top;
+      }
+      #attributes_panel input:hover {
+      background-color: #e6e6e6;
+      }
+      #attributes_panel input:focus {
+      background-color: #e6e6e6;
+      }
+      #attributes_panel input:not(:focus) {
+      text-align: center;
+      }
+      #attributes_panel textarea {
+      border: none;
+      padding: 0;
+      margin: 0;
+      display: table-cell;
+      font-size: small;
+      background-color: #ffffff;
+      }
+      #attributes_panel textarea:hover {
+      background-color: #e6e6e6;
+      }
+      #attributes_panel textarea:focus {
+      background-color: #e6e6e6;
+      }
+
+      #attributes_panel_toolbar {
+      display: block;
+      height: 30px;
+      width: 100%;
+      position: relative;
+      padding: 0;
+      margin: 0;
+      }
+      .attributes_panel_button {
+      width: 10px;
+      color: black;
+      font-size: x-large;
+      margin-left: 0.5em;
+      padding: 0;
+      }
+      .attributes_panel_button:hover {
+      color: red;
+      cursor: pointer;
+      }
+
+      /* layers of canvas */
+      #image_panel {
+      position: relative;
+      display: inline-block;
+      margin: auto;
+      margin-top: 1em;
+      }
+      #image_canvas {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      z-index: 1;
+      }
+      #region_canvas {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      z-index: 2;
+      }
+      /* Loading spinbar */
+      .loading_spinbox {
+      display: inline-block;
+      border: 0.4em solid #cccccc;
+      border-radius: 50%;
+      border-top: 0.4em solid #000000;
+      -webkit-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
+      }
+      @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+      }
+      @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+
+  <body onload="_via_init()" onresize="_via_update_ui_components()">
+    <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+      <defs>
+        <symbol id="shape_rectangle">
+          <title>Rectangular region shape</title>
+          <rect width="20" height="12" x="6" y="10" stroke-width="2"/>
+        </symbol>
+        <symbol id="shape_circle">
+          <title>Circular region shape</title>
+          <circle r="10" cx="16" cy="16" stroke-width="2"/>
+        </symbol>
+        <symbol id="shape_ellipse">
+          <title>Elliptical region shape</title>
+          <ellipse rx="12" ry="8" cx="16" cy="16" stroke-width="2"/>
+        </symbol>
+        <symbol id="shape_polygon">
+          <title>Polygon region shape</title>
+          <path d="M 15.25,2.2372 3.625,11.6122 6,29.9872 l 20.75,-9.625 2.375,-14.75 z" stroke-width="2"/>
+        </symbol>
+        <symbol id="shape_point">
+          <title>Point region shape</title>
+          <circle r="3" cx="16" cy="16" stroke-width="2"/>
+        </symbol>
+        <symbol id="shape_polyline">
+          <title>Polyline region shape</title>
+          <!--<path d="M 15.25,2.2372 3.625,11.6122 6,29.9872 l 20.75,-9.625" stroke-width="2"/>-->
+          <path d="M 2,12 10,24 18,12 24,18" stroke-width="2"/>
+          <circle r="1" cx="2" cy="12" stroke-width="2"/>
+          <circle r="1" cx="10" cy="24" stroke-width="2"/>
+          <circle r="1" cx="18" cy="12" stroke-width="2"/>
+          <circle r="1" cx="24" cy="18" stroke-width="2"/>
+        </symbol>
+      </defs>
+    </svg>
+
+    <div class="top_panel" id="ui_top_panel">
+      <!-- Navigation menu -->
+      <div class="navbar">
+        <ul>
+          <li><a onclick="show_home_panel()" title="Home">Home</a></li>
+          <li class="dropdown"><a title="Image" class="drop_menu_item">Image &#9662;</a>
+            <div class="dropdown-content">
+              <a onclick="sel_local_images()" title="Load (or add) a set of images from local disk">Load or Add Images</a>
+              <a onclick="toggle_img_fn_list_visibility()" title="Browse currently loaded images">List Images</a>
+            </div>
+          </li>
+          <li class="dropdown"><a title="Annotations" class="drop_menu_item">Annotation &#9662;</a>
+            <div class="dropdown-content">
+              <a onclick="show_annotation_data()" title="View annotations">View annotations</a>
+              <a onclick="download_all_region_data('csv')" title="Save image region annotations as a CSV(comma separated value) file">Save as CSV</a>
+              <a onclick="download_all_region_data('json')" title="Save image region annotations as a JSON(Javascript Object Notation) file">Save as JSON</a>
+              <a onclick="sel_local_data_file('annotations')" title="Import existing region data from CSV or JSON file">Import</a>
+            </div>
+          </li>
+          <li class="dropdown"><a title="View" class="drop_menu_item">View &#9662;</a>
+            <div class="dropdown-content">
+              <a onclick="toggle_leftsidebar()" title="Show/hide left sidebar">Show/hide left sidebar</a>
+              <a onclick="toggle_region_boundary_visibility()" title="Show or hide region boundaries">Show/hide region boundaries</a>
+              <a onclick="toggle_region_id_visibility()" title="Show or hide region labels">Show/hide region labels</a>
+            </div>
+          </li>
+          <li class="dropdown"><a onclick="show_about_panel()" title="Help">Help &#9662;</a>
+            <div class="dropdown-content">
+              <a onclick="show_getting_started_panel()" title="Getting started with VGG Image Annotator (VIA)">Getting Started</a>
+              <a onclick="show_license_panel()" title="VIA License">License</a>
+              <a onclick="show_about_panel()" title="About VGG Image Annotator (VIA)">About</a>
+            </div>
+          </li>
+        </ul>
+
+      </div> <!-- end of #navbar -->
+
+      <!-- Shortcut toolbar -->
+      <div class="toolbar">
+        <ul>
+          <!--
+          <li onclick="sel_local_images()" title="Load or Add Images">&ctdot;</li>
+          <li onclick="sel_local_data_file('annotations')" title="Import Annotations">&uarr;</li>
+          <li onclick="download_all_region_data('csv')" title="Save Annotations (as CSV)">&DownArrowBar;</li>
+          -->
+
+          <li id="toolbar_prev_img" style="margin-left: 1em;" onclick="move_to_prev_image()" title="Previous Image">&larr;</li>
+          <li id="toolbar_next_img" onclick="move_to_next_image()" title="Next Image">&rarr;</li>
+          <li id="toolbar_list_img" onclick="toggle_img_list()" title="List Images">&#9776;</li>
+
+          <li id="toolbar_zoom_out" style="margin-left: 2em;" onclick="zoom_out()" title="Zoom Out">&minus;</li>
+          <li id="toolbar_zoom_in" onclick="zoom_in()" title="Zoom In">&plus;</li>
+          <li id="toolbar_zoom_reset" onclick="reset_zoom_level()" title="Zoom Reset">&equals;</li>
+
+          <li id="toolbar_copy_region" style="margin-left: 2em;" onclick="copy_sel_regions()" title="Copy Region">c</li>
+          <li id="toolbar_paste_region" onclick="paste_sel_regions()" title="Paste Region">v</li>
+          <li id="toolbar_sel_all_region" onclick="sel_all_regions()" title="Select All Regions">a</li>
+          <li id="toolbar_del_region" onclick="del_sel_regions()" title="Delete Region">&times;</li>
+        </ul>
+      </div> <!-- endof #toolbar -->
+      <input type="file" id="invisible_file_input" multiple name="files[]" style="display:none">
+    </div> <!-- endof #top_panel -->
+
+    <!-- Middle Panel contains a left-sidebar and image display areas -->
+    <div class="middle_panel">
+      <div id="leftsidebar">
+        <button class="leftsidebar_accordion active">Region Shape</button>
+        <div class="leftsidebar_accordion_panel show">
+          <ul class="region_shape">
+            <li id="region_shape_rect" class="selected" onclick="select_region_shape('rect')" title="Rectangle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></li>
+            <li id="region_shape_circle" onclick="select_region_shape('circle')" title="Circle"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></li>
+            <li id="region_shape_ellipse" onclick="select_region_shape('ellipse')" title="Ellipse"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></li>
+            <li id="region_shape_polygon" onclick="select_region_shape('polygon')" title="Polygon"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></li>
+            <li id="region_shape_point" onclick="select_region_shape('point')" title="Point"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_point"></use></svg></li>
+            <li id="region_shape_polyline" onclick="select_region_shape('polyline')" title="Polyline"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polyline"></use></svg></li>
+          </ul>
+        </div>
+
+        <button class="leftsidebar_accordion active" id="loaded_img_panel_title">Loaded Images</button>
+        <div class="leftsidebar_accordion_panel show" id="img_fn_list_panel">
+          <div>
+            <input type="text" placeholder="Filter using regular expression" oninput="img_fn_list_onregex()" id="img_fn_list_regex">
+          </div>
+          <div id="img_fn_list"></div>
+        </div>
+
+        <button onclick="toggle_reg_attr_panel()" class="leftsidebar_accordion" id="reg_attr_panel_button">Region Attributes</button>
+        <button onclick="toggle_file_attr_panel()" class="leftsidebar_accordion" id="file_attr_panel_button">File Attributes</button>
+
+        <button class="leftsidebar_accordion">Keyboard Shortcuts</button>
+        <div class="leftsidebar_accordion_panel">
+          <table style="padding: 2em 0em;">
+            <tr>
+              <td style="width: 6em;">n/p (&larr;/&rarr;)</td>
+              <td>Next/Previous image</td>
+            </tr>
+            <tr>
+              <td>+&nbsp;/&nbsp;-&nbsp;/&nbsp;=</td>
+              <td>Zoom in/out/reset</td>
+            </tr>
+            <tr>
+              <td>Ctrl + c</td>
+              <td>Copy sel. regions</td>
+            </tr>
+            <tr>
+              <td>Ctrl + v</td>
+              <td>Paste sel. regions</td>
+            </tr>
+            <tr>
+              <td>Ctrl + a</td>
+              <td>Select all regions</td>
+            </tr>
+            <tr>
+              <td>Del, Bkspc</td>
+              <td>Delete image region</td>
+            </tr>
+            <tr>
+              <td>Esc</td>
+              <td>Cancel operation</td>
+            </tr>
+            <tr>
+              <td>Ctrl + s</td>
+              <td>Download annotations</td>
+            </tr>
+            <tr>
+              <td>Spacebar</td>
+              <td>Toggle image list</td>
+            </tr>
+          </table>
+        </div>
+
+      </div> <!-- end of leftsidebar -->
+      <div id="leftsidebar_collapse_panel">
+        <div onclick="toggle_leftsidebar()" id="leftsidebar_collapse_button" title="Show/hide left toolbar">
+          &ltrif;</div>
+      </div>
+
+      <!-- Main display area: contains image canvas, ... -->
+      <div id="display_area">
+        <div id="canvas_panel">
+          <canvas id="image_canvas"></canvas>
+          <canvas id="region_canvas" tabindex="1">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
+        </div>
+
+        <div>
+          <div class="text_panel" id="via_start_info_panel">Starting VGG Image Annotator ...</div>
+
+          <div class="text_panel" style="padding: 1em; border: 1px solid #cccccc;" id="about_panel">
+            <p style="font-size: 2em;">VGG Image Annotator</p>
+            <p style="font-size: 0.8em;">version <a href="https://gitlab.com/vgg/via/blob/via-1.x.y/CHANGELOG">1.0.6</a></p>
+            <p>
+              VGG Image Annotator (VIA) is an <a href="https://gitlab.com/vgg/via/">open source project</a>
+              developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>
+              and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.
+              With this standalone application, you can define regions in an image and create a textual description of those regions.
+              Such image regions and descriptions are useful for supervised training of learning algorithms.
+            </p>
+            <p>Features:</p>
+            <ul>
+              <li>based solely on HTML, CSS and Javascript (no external javascript libraries)</li>
+              <li>can be used off-line (full application in a single html file of size &lt; 200KB)</li>
+              <li>requires nothing more than a modern web browser</li>
+              <li>supported region shapes: rectangle, circle, ellipse, polygon and point</li>
+              <li>import/export of region data in csv and json file format</li>
+            </ul>
+            <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
+            <p>&nbsp;</p>
+            <p>Copyright &copy; 2016-2018, <a href="mailto:adutta@robots.ox.ac.uk">Abhishek Dutta</a> (Visual Geometry Group, Oxford University)</p>
+          </div>
+
+          <div class="text_panel" id="getting_started_panel">
+            <h1>Getting Started</h1>
+            <ol>
+              <li>Click [Image > Load or Add Images] in the top menu bar to load a set of images that you wish to annotate.</li>
+              <li>Press n (or p) to navigate through the loaded images. You can also use the &larr; and &rarr; icons in the top panel toolbar for navigation.</li>
+              <li>Click <b>Region Attributes</b> in the left panel to reveal a panel in the bottom. Click <b>[Add New]</b> tp add a new attribute. For example:
+                <pre>
+                  object_name
+                  object_color
+                </pre>
+                You can add more region attributes according to you needs.
+              <li>In the <b>Region Shape</b> section in the left panel, click the rectangular shape</li>
+              <li>On the image area, keep pressing the right click button as you drag the mouse cursor. This will draw a rectangular region on the image.</li>
+              <li>This newly created region is automatically selected. Now you can enter the attribute value for this region in the bottom panel. For example:
+                <pre>
+                  object_name = dog
+                  object_color = white
+                </pre>
+                You can annotate multiple regions in this image or other images and assign a value to each pre-defined attribute.</li>
+              <li>To download the annotated region data, click <b>[Annotation > Save as CSV]</b> in the top menu bar. This will download a text file containing region shape and attribute data.</li>
+              <li>Next time, you can start from the point your left by first loading the images and then importing the CSV file (downloaded in step 7) by clicking <b>[Annotation > Import]</b>.
+            </li></ol>
+          </div>
+
+          <div class="text_panel" id="license_panel">
+            <pre>
+              Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University.
+              All rights reserved.
+
+              Redistribution and use in source and binary forms, with or without
+              modification, are permitted provided that the following conditions are met:
+
+              Redistributions of source code must retain the above copyright notice, this
+              list of conditions and the following disclaimer.
+              Redistributions in binary form must reproduce the above copyright notice,
+              this list of conditions and the following disclaimer in the documentation
+              and/or other materials provided with the distribution.
+              THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
+              AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+              IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+              ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+              LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+              CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+              SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+              INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+              CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+              ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+              POSSIBILITY OF SUCH DAMAGE.
+            </pre>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- region and file attributes input panel -->
+    <div id="attributes_panel">
+      <div id="attributes_panel_toolbar">
+        <div onclick="toggle_attributes_input_panel()" class="attributes_panel_button">&times;</div>
+      </div>
+      <table id="attributes_panel_table"></table>
+    </div>
+
+    <!-- to show status messages -->
+    <div id="message_panel"></div>
+
+    <!-- this vertical spacer is needed to allow scrollbar to show
+         items like Keyboard Shortcut hidden under the attributes panel -->
+    <div style="width: 100%;" id="vertical_space"></div>
+
+    <script type="text/javascript">
+      //<!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
+    </script>
+    <script type="text/javascript">
+      //<!--AUTO_INSERT_VIA_JS_HERE-->
+    </script>
+    <script type="text/javascript">
+      //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
+    </script>
+
+    <!--
+    <script src="via.js"></script>
+    -->
+
+    <!--
+    <script src="via_demo.js"></script>
+    -->
+
+    <!-- Unit Tests    -->
+    <!--
+    <script src="./tests/via_test_data.js"></script>
+    <script src="./tests/via_test.js"></script>
+    <script src="./tests/via_test_fileio.js"></script>
+    <script src="./tests/via_test_region.js"></script>
+     -->
+  </body>
+</html>
