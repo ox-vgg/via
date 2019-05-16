@@ -55,7 +55,7 @@ with open(OUT_HTML, 'w') as outf:
           outf.write('<!-- END: Contents of file: ' + filename + '-->\n')
         else:
           parsedline = line
-          if "//_ENABLED_BY_PACK_SCRIPT" in line:
+          if "//__ENABLED_BY_PACK_SCRIPT__" in line:
             parsedline = line.replace('//__ENABLED_BY_PACK_SCRIPT__', '');
           if  "<!-- DEMO SCRIPT AUTOMATICALLY INSERTED BY VIA PACKER SCRIPT -->" in line:
             parsedline  = ''

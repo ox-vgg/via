@@ -5,11 +5,15 @@
  * @author Abhishek Dutta <adutta@robots.ox.ac.uk>
  * @date 16 May 2019
  *
+ * Video 1
  * Video title: The making of Alioli in 2 minutes using standard kitchen equipment
  * Video filename: Alioli_Wikimedia_Wardtmar.mp4
  * Video author: Wardtmar at https://commons.wikimedia.org
  * Video source: https://commons.wikimedia.org/wiki/File:Alioli.ogv
  * Video date: 2018-12-28 22:43:56
+ *
+ * Video 2
+ * Video source: https://commons.wikimedia.org/wiki/File:Grilledcheesesandwich.webm
  */
 
 function _via_load_submodules() {

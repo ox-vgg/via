@@ -1,6 +1,7 @@
-# Compute frequency of words
+# Pack self contained VIA application
 #
 # Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
+# Date: 16 May 2019
 
 import string
 import os
@@ -9,14 +10,15 @@ import sys
 DIST_PACK_DIR = os.path.dirname(os.path.realpath(__file__))
 VIA_SRC_DIR = os.path.join(DIST_PACK_DIR, '..')
 if len(sys.argv) != 2:
-  print("Usage: python3 pack.py target_html")
+  print("Usage: python3 pack_via.py target")
+  print("e.g.: python3 pack_via.py video_annotator")
   sys.exit()
 
 TARGET = sys.argv[1]
-TARGET_HTML = os.path.join(VIA_SRC_DIR, 'src', 'html', TARGET)
-OUT_HTML = os.path.join(VIA_SRC_DIR, 'dist', 'html', TARGET)
+TARGET_HTML = os.path.join(VIA_SRC_DIR, 'src', 'html', '_via_' + TARGET + '.html')
+OUT_HTML = os.path.join(VIA_SRC_DIR, 'dist', 'via_' + TARGET + '.html')
 
-def get_file_contents(filename):
+def get_src_file_contents(filename):
   full_filename = os.path.join(VIA_SRC_DIR, 'src', filename)
   with open(full_filename) as f:
     return f.read()
@@ -27,20 +29,24 @@ with open(OUT_HTML, 'w') as outf:
       if '<script src="' in line:
         tok = line.split('"')
         filename = tok[1][3:]
-        outf.write('<!-- Start of file: ' + filename + '-->\n')
+        outf.write('<!-- START: Contents of file: ' + filename + '-->\n')
         outf.write('<script>\n')
-        outf.write( get_file_contents(filename) )
+        outf.write( get_src_file_contents(filename) )
         outf.write('</script>\n')
-        outf.write('<!-- End of file: ' + filename + '-->\n')
+        outf.write('<!-- END: Contents of file: ' + filename + '-->\n')
       else:
         if '<link rel="stylesheet" type="text/css"' in line:
           tok = line.split('"')
           filename = tok[5][3:]
-          outf.write('<!-- Start of file: ' + filename + '-->\n')
+          outf.write('<!-- START: Contents of file: ' + filename + '-->\n')
           outf.write('<style>\n')
-          outf.write( get_file_contents(filename) )
+          outf.write( get_src_file_contents(filename) )
           outf.write('</style>\n')
-          outf.write('<!-- End of file: ' + filename + '-->\n')
+          outf.write('<!-- END: Contents of file: ' + filename + '-->\n')
         else:
-          outf.write(line)
+          parsedline = line
+          if "//__ENABLED_BY_PACK_SCRIPT__" in line:
+            parsedline = line.replace('//__ENABLED_BY_PACK_SCRIPT__', '');
 
+          outf.write(parsedline)
+print("Written packed file to: " + TARGET_HTML)
