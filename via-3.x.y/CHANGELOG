@@ -1,5 +1,11 @@
-## [3.0.0] - not released yet
- * a basic image, audio and video annotator
+## [3.0.0] - 16 May 2019
+ * development of via-3.x.y began in Dec. 2018 with the aim to create a basic audio and video annotator
  * no external dependency, self contained and easy to use
- * light weight (complete application is a single html file of size < 400 KB)
+ * light weight (complete application fits in a single html file of size ~ 275 KB)
+ * manual annotation of local (using file:// uri) and remote (using http:// uri) files
+ * supports definition of both temporal segmentation (e.g. from 3.2sec to 8.7sec) and spatial region (e.g. bounding box in still video frame)
+ * keyboard shorcuts allow human annotators to be quick with manual annotation
+ * annotations can be exported in CSV format
+ * to reduce cognitive load on human annotators, VIA3 support for attributes of different types (plain text, drop down, radio, checkbox)
+
 
