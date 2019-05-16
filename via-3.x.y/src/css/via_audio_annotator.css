@@ -1,17 +1,5 @@
 /*
-
-CSS style definitions for VIA Video Annotator
-
-Theme: https://material.io/tools/color/#!/?view.left=0&view.right=0&primary.color=9E9E9E&secondary.color=FFEB3B
-Primary:  #9e9e9e
-  light:  #cfcfcf
-  dark:   #707070
-Secondary: #ffeb3b
-  light:  #ffff72
-  dark:   #c8b900
-Text
-  primary:    #000000
-  secondary:  #000000
+CSS style definitions for VIA Audio Annotator
 
 Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
 Date: 5 Mar. 2019
@@ -24,8 +12,8 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .via_container { position:relative; display:grid; grid-template-rows:auto 1fr; grid-row-gap:0.5em; padding:0.3em; background-color:#ffffff; height:100vh; max-height:100vh; width:100vw; }
 
 /* top control panel */
-/*#via_control_panel_container { display:block; border:1px solid #707070; padding:0.4em 0.5em; height:2.45em; overflow-y:auto; }*/
-#via_control_panel_container { display:block; border:1px solid #707070; padding:0.4em 0.5em; height:2.2em; overflow-y:hidden; }
+#via_control_panel_container { display:block; border:1px solid #707070; padding:0.4em 0.5em; height:2.45em; overflow-y:auto; }
+/*#via_control_panel_container { display:block; border:1px solid #707070; padding:0.4em 0.5em; height:2.2em; overflow-y:hidden; }*/
 #via_control_panel_container * { display:inline-block; margin:0 0.2em; outline:none; vertical-align:middle; }
 #via_control_panel_container .spacer { padding:0 0.5em; }
 #via_control_panel_container #region_info_panel { font-size:0.8em; }
@@ -45,7 +33,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 
 #view_container > .view_content_container > .file_container { display:block; position:relative; margin:0; padding:0; }
 #view_container > .view_content_container > .file_container * { position:absolute; top:0; }
-#view_container > .view_content_container > .file_container audio { height:3ch; width:98%; }
+#view_container > .view_content_container > .file_container audio { margin-top:1em; height:3ch; width:98%; }
 #view_container > .view_content_container > .file_container .rinput_enabled { }
 #view_container > .view_content_container > .file_container > .smetadata_container { position:relative; display:inline-block; font-size:small; background-color:white; z-index:1001; }
 #view_container > .view_content_container > .file_container > .smetadata_container * { position:relative; vertical-align:middle; }
@@ -75,7 +63,7 @@ to annotate temporal segments of a video: contains 4 rows
 
 .temporal_segmenter_container > .tmetadata_container > .gtimeline_container { }
 /*@todo: height of gmetadata_container must be fixed (and not expandable) */
-.temporal_segmenter_container > .tmetadata_container > .gmetadata_container { max-height:8ch; overflow-y:auto; }
+.temporal_segmenter_container > .tmetadata_container > .gmetadata_container { max-height:50vh; overflow-y:auto; }
 .temporal_segmenter_container > .tmetadata_container .twocolgrid { display:grid; width:100%; grid-template-columns:8em 1fr; }
 .temporal_segmenter_container > .tmetadata_container .gidcol { align-self:center; padding-left:0.1em; }
 .temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"] { width:80%; border:none; border-bottom:1px solid #cccccc; }

@@ -195,7 +195,7 @@ function _via_util_infer_file_type_from_filename(filename) {
     break;
   case 'mp3':
   case 'wav':
-  case 'ogg':
+  case 'oga':
     return _VIA_FILE_TYPE.AUDIO;
   }
 }

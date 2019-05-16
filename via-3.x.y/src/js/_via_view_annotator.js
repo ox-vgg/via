@@ -77,7 +77,7 @@ _via_view_annotator.prototype._view_init = function(vid) {
         if ( this._view_has_only_audio(vid) ) {
           this._view_annotate_single_audio(vid);
         } else {
-          console.warn('Not supported yet!');
+          console.warn('View mode not supported yet!');
         }
       }
     }
@@ -87,17 +87,16 @@ _via_view_annotator.prototype._view_init = function(vid) {
     if ( this._view_has_only_image(vid) ) {
       this._view_annotate_two_images(vid);
     } else {
-      console.warn('Not supported yet!');
+      console.warn('View mode not supported yet!');
     }
     break;
 
   default:
-    console.warn('Not supported yet!');
+    console.warn('View mode not supported yet!');
   }
 }
 
 _via_view_annotator.prototype._view_annotate_single_image = function(vid) {
-  console.log('annotate a image');
   this.view_mode = _VIA_VIEW_MODE.IMAGE1;
 
   this.c.innerHTML = '';
@@ -124,7 +123,6 @@ _via_view_annotator.prototype._view_annotate_single_image = function(vid) {
 }
 
 _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
-  console.log('annotate a video');
   this.view_mode = _VIA_VIEW_MODE.VIDEO1;
 
   this.c.innerHTML = '';
@@ -165,15 +163,12 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
                                                           this.file_annotator[0][0].file_html_element
                                                          );
     this.temporal_segmenter.on_event('edit_frame_regions', this.file_annotator[0][0]._on_event_edit_frame_regions.bind(this.file_annotator[0][0]));
-
-    //_via_util_msg_show('Press <span class="key">Space</span> to Play or Pause the video at any time.', true);
   }.bind(this), function(err) {
     _via_util_msg_show('Failed to load video!', true);
   }.bind(this));
 }
 
 _via_view_annotator.prototype._view_annotate_single_audio = function(vid) {
-  console.log('annotate an audio');
   this.view_mode = _VIA_VIEW_MODE.AUDIO1;
 
   this.c.innerHTML = '';
@@ -185,7 +180,7 @@ _via_view_annotator.prototype._view_annotate_single_audio = function(vid) {
   this.view_metadata_container = document.createElement('div');
   this.view_metadata_container.setAttribute('class', 'view_metadata_container');
 
-  this.c.setAttribute('style', 'grid-template-rows:1fr 17ch;')
+  this.c.setAttribute('style', 'grid-template-rows:5ch 50vh;')
   this.c.appendChild(this.view_content_container);
   this.c.appendChild(this.view_metadata_container);
   this.view_metadata_container.style.display = 'block';
@@ -224,7 +219,6 @@ _via_view_annotator.prototype._view_annotate_single_audio = function(vid) {
 }
 
 _via_view_annotator.prototype._view_annotate_two_images = function(vid) {
-  console.log('annotate an image pair');
   this.view_mode = _VIA_VIEW_MODE.IMAGE2;
   this.c.setAttribute('style', 'grid-template-rows:10fr 2fr;')
   this.view_metadata_container.style.display = 'block';

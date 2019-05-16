@@ -31,6 +31,7 @@ function _via_view_manager(data, view_annotator, container) {
 }
 
 _via_view_manager.prototype._init = function() {
+  this._init_ui_elements();
   this._view_selector_update();
 }
 
@@ -322,7 +323,6 @@ _via_view_manager.prototype._on_del_view = function() {
 }
 
 _via_view_manager.prototype._on_event_view_del = function(data, event_payload) {
-  console.log('*********** _on_event_view_del() vid=' + event_payload.vid + ', vindex=' + event_payload.vindex + ', length=' + this.d.store.vid_list.length);
   this._view_selector_update();
   var vindex = event_payload.vindex;
   if ( this.d.store.vid_list.length ) {
@@ -334,21 +334,4 @@ _via_view_manager.prototype._on_event_view_del = function(data, event_payload) {
   } else {
     this.va._init();
   }
-
-  /*
-  if ( this.d.store.vid_list.length ) {
-    this._on_next_view();
-  }
-*/
-  /*
-  var vindex = event_payload.vindex;
-  if ( vindex < this.d.store.vid_list.length ) {
-    this.va.show_view( this.d.store.vid_list[vindex] );
-  }
-
-
-  if ( this.d.store.vid_list.length ) {
-    this._on_next_view();
-  }
-*/
 }

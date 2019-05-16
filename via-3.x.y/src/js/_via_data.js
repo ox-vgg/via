@@ -578,6 +578,8 @@ _via_data.prototype._cache_update_attribute_group = function() {
 _via_data.prototype.project_save = function() {
   return new Promise( function(ok_callback, err_callback) {
     try {
+      // @todo: decide on whether we want to include the base64 data
+      // of inline files (i.e. this.store.file[fid].loc === _VIA_FILE_LOC.INLINE)
       var data_blob = new Blob( [JSON.stringify(this.store)],
                                 {type: 'text/json;charset=utf-8'});
       var filename = [];
@@ -636,7 +638,9 @@ _via_data.prototype.project_export_csv = function() {
       var vid_filesrc_list = [];
       for ( var findex in this.store.view[vid].fid_list ) {
         fid = this.store.view[vid].fid_list[findex];
-        if ( this.store.file[fid].src instanceof File ) {
+        if ( this.store.file[fid].src instanceof File ||
+             this.store.file[fid].loc === _VIA_FILE_LOC.INLINE
+           ) {
           vid_filesrc_list.push( this.store.file[fid].fname );
         } else {
           vid_filesrc_list.push( this.store.file[fid].src );

@@ -1530,7 +1530,6 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
   }
 
   if ( e.key === 'a' || e.key === 'A' ) {
-    console.log(e.key + ':' + e.shiftKey)
     e.preventDefault();
     var t = this.m.currentTime;
     if ( e.key === 'a' ) {
@@ -1659,7 +1658,6 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
   }
 
   if ( e.key === 'ArrowLeft' || e.key === 'ArrowRight' ) {
-    console.log(e.key + ':' + this.selected_mindex)
     e.preventDefault();
     if ( this.selected_mindex !== -1 ) {
       if ( e.shiftKey ) {
@@ -1675,14 +1673,10 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
         if ( e.ctrlKey ) {
           delta = 1.0;
         }
-        console.log(delta)
-        console.log(e.key)
         if ( e.key === 'ArrowLeft' ) {
           this._tmetadata_mid_move(-delta);
         } else {
-          console.log('a')
           this._tmetadata_mid_move(delta);
-          console.log('b')
         }
       }
     } else {
