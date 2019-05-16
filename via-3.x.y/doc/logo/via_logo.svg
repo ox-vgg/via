@@ -1,0 +1,23 @@
+<svg version="1.1"
+     baseProfile="full"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:ev="http://www.w3.org/2001/xml-events">
+
+    <!-- Logo designed by Abhishek Dutta <adutta@robots.ox.ac.uk>, May 2018 -->
+    <title>VGG Image Annotator Logo</title>
+    <rect width="400" height="160" x="0" y="0" fill="#212121"></rect>
+
+    <text x="56" y="130" font-family="Serif" font-size="100" fill="white">V</text>
+    <text x="180" y="130" font-family="Serif" font-size="100" fill="white">I</text>
+    <text x="270" y="130" font-family="Serif" font-size="100" fill="white">A</text>
+
+    <rect width="80" height="100" x="52" y="40" stroke="yellow" fill="none" stroke-width="2"></rect>
+    <text x="72" y="30" font-family="'Comic Sans MS', cursive, sans-serif" font-size="18" fill="yellow">VGG</text>
+
+    <rect width="50" height="100" x="175" y="45" stroke="yellow" fill="none" stroke-width="2"></rect>
+    <text x="175" y="35" font-family="'Comic Sans MS', cursive, sans-serif" font-size="18" fill="yellow">Image</text>
+
+    <rect width="80" height="100" x="265" y="40" stroke="yellow" fill="none" stroke-width="2"></rect>
+    <text x="265" y="30" font-family="'Comic Sans MS', cursive, sans-serif" font-size="18" fill="yellow">Annotator</text>
+</svg>

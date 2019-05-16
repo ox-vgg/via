@@ -1,0 +1,5 @@
+## [3.0.0] - not released yet
+ * a basic image, audio and video annotator
+ * no external dependency, self contained and easy to use
+ * light weight (complete application is a single html file of size < 400 KB)
+
