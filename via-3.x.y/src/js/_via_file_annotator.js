@@ -200,6 +200,8 @@ _via_file_annotator.prototype._file_html_element_compute_scale = function() {
     break;
 
   case _VIA_FILE_TYPE.AUDIO:
+    this.left_pad = 0;
+    this.file_html_element_size_css = '';
     return;
     break;
   }
