@@ -1,35 +1,50 @@
-# VGG Image Annotator
+# VGG Image Annotator Version 1
 
-VGG Image Annotator (VIA) is an open source project developed at the 
-[Visual Geometry Group](http://www.robots.ox.ac.uk/~vgg/) and released under 
-the BSD-2 clause license. This work is supported by EPSRC programme grant 
-Seebibyte: Visual Search for the Era of Big Data ([EP/M013774/1](http://www.seebibyte.org/index.html)).
-Visit the [VGG software page](http://www.robots.ox.ac.uk/~vgg/software/via/) for more details.
+VGG Image Annotator version 1 is an early version of VIA which is still useful
+for basic image annotation tasks. VIA runs in a web browser and
+does not require any installation or setup. The complete VIA software fits in a 
+single self-contained HTML page of size less than 300 Kilobyte that runs as an 
+offline application in most modern web browsers.
 
+VIA is an [open source](https://gitlab.com/vgg/via) project based solely on 
+HTML, Javascript and CSS (no dependency on external libraries). VIA is 
+developed at the [Visual Geometry Group](http://www.robots.ox.ac.uk/~vgg/) (VGG) 
+and released under the BSD-2 clause [license](https://gitlab.com/vgg/via/blob/master/LICENSE)
+which allows it to be useful for both academic projects and commercial applications.
 
-## Features:
-  * based solely on HTML, CSS and Javascript (no external javascript libraries)
-  * can be used off-line (full application in a single html file of size &lt; 200KB)
-  * requires nothing more than a modern web browser (tested on Firefox, Chrome and Safari)
-  * supported region shapes: rectangle, circle, ellipse, polygon and point
-  * import/export of region data in csv and json file format
+## Screenshots
+![Screenshot showing basic image annotation](via-1.x.y/doc/screenshots/big_ben_annotation.jpg)
 
-
-## Downloads
- * VGG Image Annotator (VIA)
-   * [via-1.0.5.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via-1.0.5.zip) : includes the VIA application (&lt; 200KB) and its demo
-   * [via-src-1.0.5.zip](http://www.robots.ox.ac.uk/~vgg/software/via/downloads/via-src-1.0.5.zip) : source code and [code documentation](https://gitlab.com/vgg/via/blob/master/CodeDoc.md)
-   * [via.html](http://www.robots.ox.ac.uk/~vgg/software/via/via.html) : online version of VIA application
-   * [via_demo.html](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html) : live online demo (with preloadd images and regions)
+## Download
+Detailed instructions for download of VIA are available at http://www.robots.ox.ac.uk/~vgg/software/via/
 
 ## Demo
- * VGG Image Annotator (VIA)
-   * [via_demo-1.0.5.html](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html) : live demo of VIA application with preloaded image
+We have created self contained demo to illustrate the usage of VIA3. These demo
+have been preloaded with some sample audio and video files. Furthermore, we have 
+also added some sample manual annotations to these demo. These demo applications 
+are very useful to get familiar with the commonly used features of VIA3.
+  * [Basic Image Annotation Demo](http://www.robots.ox.ac.uk/~vgg/software/via/via-1.0.6_demo.html)
 
-## Docs
- * Getting Started : this can be accessed by pressing F1 key in the VIA application.
- * [VIA Software page @ VGG](http://www.robots.ox.ac.uk/~vgg/software/via/)
- * [VIA Wikipedia page](https://en.wikipedia.org/wiki/VGG_Image_Annotator)
+## Open Source Ecosystem
+The development of VIA software began in August 2016 and the first public
+release of version 1 was made in April 2017. Many new advanced features
+for image annotation were introduced in version 2 which was released in June 2018. 
+Recently released version 3 of VIA software supports annotation of audio and video. 
+As of May 2019, the VIA software has been used more than 600,000 times (+150,000 unique pageviews).
+
+We have nurtured a large and thriving open source community which not
+only provides feedback but also contributes code to add new features
+and improve existing features in the VIA software. The open source
+ecosystem of VIA thrives around its [source code repository](https://gitlab.com/vgg/via)
+hosted by the Gitlab platform. Most of our users report issues and
+request new features for future releases using the [issue portal](https://gitlab.com/vgg/via/issues). 
+Many of our users not only submit bug reports but also suggest a potential
+fix for these software issues. Some of our users also contribute code
+to add new features to the VIA software using the [merge request portal](https://gitlab.com/vgg/via/merge_requests). 
+
+We welcome all forms of contributions (code update, documentation, bug reports, etc) from users. 
+Such contributions must must adhere to the existing [license](https://gitlab.com/vgg/via/blob/master/LICENSE) of 
+the VIA project.
 
 ## Developer Resources
 For development, [via.js](https://gitlab.com/vgg/via/blob/develop/via.js) 
@@ -41,25 +56,20 @@ packs the VIA application into a single and standalone application file
 Javascript, HTML and CSS.
 
  * Source code
-   * [VGG Image Annotator @ develop branch](https://gitlab.com/vgg/via/blob/develop)
- * [Source code documentation](https://gitlab.com/vgg/via/blob/develop/CodeDoc.md)
- * [Contributing Guidelines](https://gitlab.com/vgg/via/blob/develop/CONTRIBUTING.md)
+   * [VGG Image Annotator @ develop branch](https://gitlab.com/vgg/via/blob/master/via-1.x.y)
+ * [Source code documentation](https://gitlab.com/vgg/via/blob/master/via-1.x.y/CodeDoc.md)
+ * [Contributing Guidelines](https://gitlab.com/vgg/via/blob/master/via-1.x.y/CONTRIBUTING.md)
  * Unit Tests
-   * [tests/via_test_fileio.js](tests/via_test_fileio.js) : tests for import/export of annotations
-   * [tests/via_test_region.js](tests/via_test_region.js) : tests for region create, move, delete operations
+   * [tests/via_test_fileio.js](via-1.x.y/tests/via_test_fileio.js) : tests for import/export of annotations
+   * [tests/via_test_region.js](via-1.x.y/tests/via_test_region.js) : tests for region create, move, delete operations
 
-The [Quality Assessment](https://gitlab.com/vgg/via/blob/develop/QualityAssessment.md) 
+The [Quality Assessment](https://gitlab.com/vgg/via/blob/master/via-1.x.y/QualityAssessment.md) 
 page describes the guidelines to ensure the quality of VIA application, source 
 code and its documentation.
 
-Software bug reports and feature requests should be 
-[submitted here](https://gitlab.com/vgg/via/issues/new) (requires gitlab account).
-For all other queries, please contact [Abhishek Dutta](mailto:adutta@robots.ox.ac.uk).
+## Contact
+Contact [Abhishek Dutta](adutta_remove_me_@robots.ox.ac.uk) for any queries or feedback related to this application.
 
-## License
-VIA is an open source project released under the 
-[BSD-2 clause license](https://gitlab.com/vgg/via/blob/master/LICENSE).
+## Acknowledgements
+This work is supported by EPSRC programme grant Seebibyte: Visual Search for the Era of Big Data ( [EP/M013774/1](http://www.seebibyte.org/index.html) )
 
-## Author
-[Abhishek Dutta](mailto:adutta@robots.ox.ac.uk)  
-Aug. 31, 2016

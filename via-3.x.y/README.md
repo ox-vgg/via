@@ -13,8 +13,8 @@ and released under the BSD-2 clause [license](https://gitlab.com/vgg/via/blob/ma
 which allows it to be useful for both academic projects and commercial applications.
 
 ## Screenshots
-![Screenshot of VIA showing human activities (e.g.\ break egg, pour liquid, etc.) and objects in a video being labelled using VIA.](via-3.x.y/doc/screenshots/via_video_annotator.png "Human activities (e.g.\ break egg, pour liquid, etc.) and objects are labelled in a video describing the preparation of a drink.")
-![Screenshot of VIA showing an audio being manually annotated to delineate speech segments of two individuals in an audio recording of conversation between ATC and pilot.](via-3.x.y/doc/screenshots/via_audio_annotator.png "VIA software being used to manually delineate speech segments of two individuals in an audio recording of conversation between ATC and pilot.")
+![Temporal segments showing different human activities (e.g. break egg, pour liquid, etc.) and spatial regions (e.g. bounding box of cup) occupied by different objects in a still video frame are manually delineated in a video showing preparation of a drink.](via-3.x.y/doc/screenshots/via_video_annotator.png)
+![Speech segments of two individuals is manually delineated in an audio recording of conversation between ATC and pilot](via-3.x.y/doc/screenshots/via_audio_annotator.png)
 
 ## Download
 Detailed instructions for download of VIA3 are available at http://www.robots.ox.ac.uk/~vgg/software/via/
@@ -30,9 +30,9 @@ are very useful to get familiar with the commonly used features of VIA3.
 ## Open Source Ecosystem
 The development of VIA software began in August 2016 and the first public
 release of version 1 was made in April 2017. Many new advanced features
-for image annotation were introduced in version 2 which was released in June 2018~\cite{dutta2019vgg}. 
+for image annotation were introduced in version 2 which was released in June 2018. 
 Recently released version 3 of VIA software supports annotation of audio and video. 
-As of May 2019, the VIA software has been used more than $600,000$ times ($+150,000$ unique pageviews).
+As of May 2019, the VIA software has been used more than 600,000 times (+150,000 unique pageviews).
 
 We have nurtured a large and thriving open source community which not
 only provides feedback but also contributes code to add new features
@@ -53,3 +53,4 @@ Contact [Abhishek Dutta](adutta_remove_me_@robots.ox.ac.uk) for any queries or f
 
 ## Acknowledgements
 This work is supported by EPSRC programme grant Seebibyte: Visual Search for the Era of Big Data ( [EP/M013774/1](http://www.seebibyte.org/index.html) )
+
