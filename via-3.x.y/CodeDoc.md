@@ -8,10 +8,15 @@ report we explain different aspects of the software code powering the VIA3
 software with the aim of nurturing future code contributors to this open source 
 project.
 
-In this report, we will explain the main concepts of VIA3 using [_via_video_annotator.html](via-3.x.y/src/html/_via_video_annotator.html)
-as an example. To help readers guide through the code, we have removed all the details
-and included a simplified view of the show a simplfied view of [_via_video_annotator.html](via-3.x.y/src/html/_via_video_annotator.html) 
-file below:
+The final VIA3 application (e.g. `via_video_annotator.html`) that is used for
+manual annotation is produced by packing together [_via_video_annotator.html](via-3.x.y/src/html/_via_video_annotator.html),
+[via_video_annotator.css](via-3.x.y/src/css/via_video_annotator.css) and the 
+Javascript modules defined in [src/js](via-3.x.y/src/js) folder using
+[pack_via.py](via-3.x.y/scripts/pack_via.py) as described in Section [Packing VIA as a Single HTML File](packing-via-as-a-single-html-file).
+In this report, we will start discussion from [_via_video_annotator.html](via-3.x.y/src/html/_via_video_annotator.html)
+file because this HTML file binds together both the CSS and Javascript portions 
+of VIA3 application. Below, we show a simplified view of [_via_video_annotator.html](via-3.x.y/src/html/_via_video_annotator.html) 
+file:
 
 ```html
 <!DOCTYPE html>
@@ -65,12 +70,10 @@ file below:
 </body>
 </html>+
 ```
-To understand the HTML and CSS portions of the above file, follow this 
-[excellent tutorial](https://developer.mozilla.org/en-US/docs/Web/HTML) developed 
-by Mozilla.
 
 
-## Core Data Structure : _via_data.js
+VIA3 Core Data Structure
+-------------------
 > "Bad programmers worry about the code. Good programmers worry about
 > data structures and their relationships."
 > [Linus Torvalds](https://lwn.net/Articles/193245/)
@@ -185,9 +188,52 @@ for a spatial region in a video frame. There are many more anchor types defined
 in [_via_attribute.js](via-3.x.y/src/js/_via_attribute.js) file. By default, 
 each attribute is visible as a text box to human annotators. To reduce the 
 cognitive load of human annotators, the attribute can be a dropdown, radio or
-checkbox.
+checkbox. The definition and update of attributes is managed by the [_via_editor.js](via-3.x.y/src/js/_via_editor.js) function.
 
-## Packing VIA as a Single HTML File
+
+There are a large number of Javascript modules that work together to power the 
+VIA3 application. The dependency of these modules is shown in figure below. For
+example, [_via_data.js](via-3.x.y/src/js/_via_data.js) initialises object 
+instances of only [_via_file.js](via-3.x.y/src/js/_via_file.js), [_via_metadata.js](via-3.x.y/src/js/_via_metadata.js),
+[_via_attribute.js](via-3.x.y/src/js/_via_attribute.js) and [_via_view.js](via-3.x.y/src/js/_via_view.js).
+There, [_via_data.js](via-3.x.y/src/js/_via_data.js) does not know about 
+existence of any other modules. The aim of VIA3 developers is to reduce the
+amount of dependence between modules in order to simplify the VIA3 codebase.
+
+![VIA3 Dependency Map for Javascript Modules](via-3.x.y/doc/via_modules_dependency_map.png)
+
+VIA3 HTML and CSS
+-----------------
+VIA3 uses [CSS grid layout](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout) 
+to position different components of its user interface as shown in figure below.
+
+![VIA3 User Interface Components Layout](via-3.x.y/doc/ui_layout.png)
+
+The `#via_control_panel_container` is an HTML `<div>` element which is 
+dynamically populated by the [_via_file_annotator.js](via-3.x.y/src/js/_via_file_annotator.js) function.
+A list of all views (or, files for single image annotation) is maintained inside `#via_control_panel_container`
+and is dynamically populated by [_via_view_manager.js](via-3.x.y/src/js/_via_view_manager.js).
+
+The `.view_content_container` shows all the files that are a part of a given view.
+For example, a single image annotation application will only containe 1 `file_container` 
+to show the single image while an annotation project for image pairs 
+will contain two `file_container` placed side-by-side. Each `file_container` is
+an HTML `<div>` element and is dynamically populated by [_via_file_annotator.js](via-3.x.y/src/js/_via_file_annotator.js)
+function.
+
+The `.temporal_segmenter_container` is active only for views containing audio 
+or video files and is maintained and dynamically populated by [_via_file_annotator.js](via-3.x.y/src/js/_via_file_annotator.js)
+function. The [_via_video_thumbnail.js](via-3.x.y/src/js/_via_video_thumbnail.js)
+function loads a video and dynamically creates a thumbnail of video frame when
+the user placed the mouse cursor at a point in the video timeline.
+
+To understand the HTML and CSS portions of the above file, follow this 
+[excellent tutorial](https://developer.mozilla.org/en-US/docs/Web/HTML) developed 
+by Mozilla.
+
+
+Packing VIA as a Single HTML File
+---------------------------------
 All the Javascript modules, CSS style files, HTML code can be packed into a 
 single self contained and standalone HTML file as follows:
 ```
@@ -198,6 +244,8 @@ python3 pack_via.py audio_annotator
 python3 pack_demo.py video_annotator
 python3 pack_demo.py audio_annotator
 ```
+The final packaged application files (e.g. via_video_annotator) is placed in 
+[via-3.x.y/dist](via-3.x.y/dist) folder and are made available to users.
 
 ```
 Author: Abhishek Dutta
