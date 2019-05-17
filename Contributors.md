@@ -5,7 +5,7 @@ must adhere to the existing [license](LICENSE) of the VIA project.
 
 Each version of the VIA software maintains its own list of contributors in the 
 following files:
- * [via-1.x.y/Contributors.md]
- * [via-2.x.y/Contributors.md]
- * [via-3.x.y/Contributors.md]
+ * [via-1.x.y/Contributors.md](via-1.x.y/Contributors.md)
+ * [via-2.x.y/Contributors.md](via-2.x.y/Contributors.md)
+ * [via-3.x.y/Contributors.md](via-3.x.y/Contributors.md)
 
