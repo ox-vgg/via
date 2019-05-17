@@ -13,11 +13,11 @@ and released under the BSD-2 clause [license](https://gitlab.com/vgg/via/blob/ma
 which allows it to be useful for both academic projects and commercial applications.
 
 ## Screenshots
-![Screenshot showing basic image annotation](via-2.x.y/doc/screenshots/via_demo_screenshot2_via-2.0.2.jpg =x360)
-![Temporal segments showing different human activities (e.g. break egg, pour liquid, etc.) and spatial regions (e.g. bounding box of cup) occupied by different objects in a still video frame are manually delineated in a video showing preparation of a drink.](via-3.x.y/doc/screenshots/via_video_annotator.png =x360)
-![Speech segments of two individuals is manually delineated in an audio recording of conversation between ATC and pilot](via-3.x.y/doc/screenshots/via_audio_annotator.png =x360)
-![Screenshot of VIA being used for face annotation](via-2.x.y/doc/screenshots/via_face_demo_screenshot4.jpg =x360)
-![Screenshot of VIA being used for face track annotation](via-2.x.y/doc/screenshots/via_face_track_demo_screenshot1.jpg =x360)
+<img src="via-2.x.y/doc/screenshots/via_demo_screenshot2_via-2.0.2.jpg" alt="Screenshot showing basic image annotation" title="Screenshot showing basic image annotation" height="370">
+<img src="via-3.x.y/doc/screenshots/via_audio_annotator.png" alt="Temporal segments showing different human activities (e.g. break egg, pour liquid, etc.) and spatial regions (e.g. bounding box of cup) occupied by different objects in a still video frame are manually delineated in a video showing preparation of a drink." title="Temporal segments showing different human activities (e.g. break egg, pour liquid, etc.) and spatial regions (e.g. bounding box of cup) occupied by different objects in a still video frame are manually delineated in a video showing preparation of a drink." height="370">
+<img src="via-3.x.y/doc/screenshots/via_audio_annotator.png" alt="Speech segments of two individuals is manually delineated in an audio recording of conversation between ATC and pilot" title="Speech segments of two individuals is manually delineated in an audio recording of conversation between ATC and pilot" height="370">
+<img src="via-2.x.y/doc/screenshots/via_face_demo_screenshot4.jpg" alt="Screenshot of VIA being used for face annotation" title="Screenshot of VIA being used for face annotation" height="370">
+<img src="via-2.x.y/doc/screenshots/via_face_track_demo_screenshot1.jpg" alt="Screenshot of VIA being used for face track annotation" title="Screenshot of VIA being used for face track annotation" height="370">
 
 ## Download
 Detailed instructions for downloading the VIA software is available at http://www.robots.ox.ac.uk/~vgg/software/via/
@@ -63,6 +63,14 @@ If you use this software, please cite it as shown below and acknowledge the Seeb
   author={Dutta, Abhishek and Zisserman, Andrew},
   journal={arXiv preprint arXiv:1904.10699},
   year={2019}
+}
+
+@misc{ dutta2016via,
+  author = "Dutta, A. and Gupta, A. and Zissermann, A.",
+  title = "{VGG} Image Annotator ({VIA})",
+  year = "2016",  
+  howpublished = "http://www.robots.ox.ac.uk/~vgg/software/via/",  
+  note = "Version: X.Y.Z, Accessed: INSERT_DATE_HERE" 
 }
 ```
 

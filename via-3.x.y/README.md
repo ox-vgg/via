@@ -13,8 +13,8 @@ and released under the BSD-2 clause [license](https://gitlab.com/vgg/via/blob/ma
 which allows it to be useful for both academic projects and commercial applications.
 
 ## Screenshots
-![Temporal segments showing different human activities (e.g. break egg, pour liquid, etc.) and spatial regions (e.g. bounding box of cup) occupied by different objects in a still video frame are manually delineated in a video showing preparation of a drink.](via-3.x.y/doc/screenshots/via_video_annotator.png)
-![Speech segments of two individuals is manually delineated in an audio recording of conversation between ATC and pilot](via-3.x.y/doc/screenshots/via_audio_annotator.png)
+<img src="via-3.x.y/doc/screenshots/via_audio_annotator.png" alt="Temporal segments showing different human activities (e.g. break egg, pour liquid, etc.) and spatial regions (e.g. bounding box of cup) occupied by different objects in a still video frame are manually delineated in a video showing preparation of a drink." title="Temporal segments showing different human activities (e.g. break egg, pour liquid, etc.) and spatial regions (e.g. bounding box of cup) occupied by different objects in a still video frame are manually delineated in a video showing preparation of a drink." height="370">
+<img src="via-3.x.y/doc/screenshots/via_audio_annotator.png" alt="Speech segments of two individuals is manually delineated in an audio recording of conversation between ATC and pilot" title="Speech segments of two individuals is manually delineated in an audio recording of conversation between ATC and pilot" height="370">
 
 ## Download
 Detailed instructions for download of VIA3 are available at http://www.robots.ox.ac.uk/~vgg/software/via/
@@ -47,6 +47,17 @@ to add new features to the VIA software using the [merge request portal](https:/
 We welcome all forms of contributions (code update, documentation, bug reports, etc) from users. 
 Such contributions must must adhere to the existing [license](https://gitlab.com/vgg/via/blob/master/LICENSE) of 
 the VIA project.
+
+## Citation
+If you use this software, please cite it as shown below and acknowledge the Seebibyte grant as follows: "Development and maintenance of VGG Image Annotator (VIA) is supported by EPSRC programme grant Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1)" 
+```
+@article{dutta2019vgg,
+  title={{The VGG} Image Annotator ({VIA})},
+  author={Dutta, Abhishek and Zisserman, Andrew},
+  journal={arXiv preprint arXiv:1904.10699},
+  year={2019}
+}
+```
 
 ## Contact
 Contact [Abhishek Dutta](adutta_remove_me_@robots.ox.ac.uk) for any queries or feedback related to this application.
