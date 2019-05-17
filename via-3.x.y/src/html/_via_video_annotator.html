@@ -224,6 +224,18 @@
 
     <!-- VIA Information Pages -->
     <div id="via_info_page_container">
+            <div data-pageid="page_demo_instructions" class="info_page" style="height:40ch;">
+        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
+        <h1>Some Quick Tips</h1>
+        <ul>
+          <li>Press <span class="key">Space</span> key at any time to play or pause the audio or video.</li>
+          <li>Use <span class="key">a</span> key to add a new temporal segment. Here are more <span class="text_button" onclick="_via_util_show_info_page('page_keyboard_shortcut')">shortcuts</span>.</li>
+          <li>Pre-defined temporal segments appear at the bottom (colourful boxes). Using mouse, select them, move them and delete them (using <span class="key">Backspace</span> key)</li>
+          <li>Move your mouse over the temporal segment timeline and roll your mouse button to zoom in/out</li>
+          <li>Add new timeline by adding a new entry to the Timeline List (at the bottom) and press "Update" button. For example, "Speaker1,Speaker2" to add timelines for two speakers.</li>
+        </ul>
+      </div>
+
       <div data-pageid="page_keyboard_shortcut" class="info_page">
         <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
         <h1>Keyboard Shortcuts</h1>
@@ -380,6 +392,7 @@
     <script>
       var via_container = document.getElementById('via_container');
       var via = new _via(via_container);
+      //__ENABLED_BY_DEMO_PACK_SCRIPT___via_util_show_info_page('page_demo_instructions');
     </script>
   </body>
 </html>

@@ -1,4 +1,4 @@
-# VIA 3
+# VGG Image Annotator Version 3 (VIA3)
 
 VGG Image Annotator version 3 (i.e. VIA3) is a simple and standalone manual 
 annotation software for image, audio and video. VIA3 runs in a web browser and
@@ -18,11 +18,6 @@ which allows it to be useful for both academic projects and commercial applicati
 
 ## Download
 Detailed instructions for download of VIA3 are available at http://www.robots.ox.ac.uk/~vgg/software/via/
-
-Here are some quick links:
-  * [VIA3 source code (latest)](https://gitlab.com/vgg/via/-/archive/via-3.x.y/via-via-3.x.y.zip)
-  * [Video Annotation Application]()
-  * [Audio Annotation Application]()
 
 ## Demo
 We have created self contained demo to illustrate the usage of VIA3. These demo

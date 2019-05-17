@@ -166,6 +166,7 @@ to annotate temporal segments of a video: contains 4 rows
 #via_info_page_container > .info_page th { border:1px solid #cccccc; padding:0.3em 0.4em; }
 #via_info_page_container > .info_page td { border:1px solid #cccccc; padding:0.3em 0.4em; }
 #via_info_page_container > .info_page div { width:45em; }
+#via_info_page_container > .info_page li { margin:1em 0; }
 
 /* Message Panel */
 #_via_message_container { display:none; width:100vw; position:fixed; bottom:0px; z-index:9999; text-align:center; }
@@ -200,36 +201,6 @@ to annotate temporal segments of a video: contains 4 rows
       -->
     <svg style="display:none;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
-        <symbol id="shape_rectangle">
-          <rect width="20" height="14" x="2" y="5" ></rect>
-        </symbol>
-        <symbol id="shape_circle">
-          <circle r="10" cx="12" cy="12"></circle>
-        </symbol>
-        <symbol id="shape_ellipse">
-          <ellipse rx="10" ry="8" cx="12" cy="12"></ellipse>
-        </symbol>
-        <symbol id="shape_point">
-          <circle r="3" cx="12" cy="12"></circle>
-        </symbol>
-        <symbol id="shape_polygon">
-          <path d="M 4 12 L 10 2 L 20 6 L 18 16 L 8 20 z"></path>
-        </symbol>
-        <symbol id="shape_polyline" stroke-width="1" stroke="black">
-          <line x1="3" y1="4" x2="8" y2="18"/>
-          <line x1="8" y1="18" x2="14" y2="6"/>
-          <line x1="14" y1="6" x2="20" y2="14"/>
-          <circle r="2" cx="3" cy="4"></circle>
-          <circle r="2" cx="8" cy="18"></circle>
-          <circle r="2" cx="14" cy="6"></circle>
-          <circle r="2" cx="20" cy="14"></circle>
-        </symbol>
-        <symbol id="shape_line" stroke-width="1" stroke="black">
-          <line x1="6" y1="6" x2="19" y2="19"/>
-          <circle r="2" cx="6" cy="6"></circle>
-          <circle r="2" cx="19" cy="19"></circle>
-        </symbol>
-
         <symbol id="micon_settings">
           <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
         </symbol>
@@ -357,6 +328,18 @@ to annotate temporal segments of a video: contains 4 rows
 
     <!-- VIA Information Pages -->
     <div id="via_info_page_container">
+      <div data-pageid="page_demo_instructions" class="info_page" style="height:40ch;">
+        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
+        <h1>Some Quick Tips</h1>
+        <ul>
+          <li>Press <span class="key">Space</span> key at any time to play or pause the audio or video.</li>
+          <li>Use <span class="key">a</span> key to add a new temporal segment. Here are more <span class="text_button" onclick="_via_util_show_info_page('page_keyboard_shortcut')">shortcuts</span>.</li>
+          <li>Pre-defined temporal segments appear at the bottom (colourful boxes). Using mouse, select them, move them and delete them (using <span class="key">Backspace</span> key)</li>
+          <li>Move your mouse over the temporal segment timeline and roll your mouse button to zoom in/out</li>
+          <li>Add new timeline by adding a new entry to the Timeline List (at the bottom) and press "Update" button. For example, "Speaker1,Speaker2" to add timelines for two speakers.</li>
+        </ul>
+      </div>
+
       <div data-pageid="page_keyboard_shortcut" class="info_page">
         <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
         <h1>Keyboard Shortcuts</h1>
@@ -1153,6 +1136,10 @@ _via_control_panel.prototype._add_view_manager_tools = function() {
 }
 
 _via_control_panel.prototype._add_region_shape_selector = function() {
+  if ( document.getElementById('shape_point') === null ) {
+    return;
+  }
+
   var point = _via_util_get_svg_button('shape_point', 'Point', 'POINT');
   point.addEventListener('click', function() {
     this._set_region_shape('POINT');
@@ -2392,6 +2379,8 @@ _via_file_annotator.prototype._file_html_element_compute_scale = function() {
     break;
 
   case _VIA_FILE_TYPE.AUDIO:
+    this.left_pad = 0;
+    this.file_html_element_size_css = '';
     return;
     break;
   }
@@ -5868,8 +5857,16 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   gid_list_update_container.appendChild(this.gid_list_input);
   gid_list_update_container.appendChild(gid_list_update_btn);
 
+  var keyboard_shortcut = document.createElement('span');
+  keyboard_shortcut.setAttribute('class', 'text_button');
+  keyboard_shortcut.innerHTML = 'Keyboard Shortcuts';
+  keyboard_shortcut.addEventListener('click', function() {
+    _via_util_show_info_page('page_keyboard_shortcut');
+  });
+
   this.toolbar_container.appendChild(gid_list_update_container);
   this.toolbar_container.appendChild(pb_mode_container);
+  this.toolbar_container.appendChild(keyboard_shortcut);
 
   this.c.appendChild(this.toolbar_container);
 }
@@ -8072,9 +8069,8 @@ function _via(via_container) {
   this.d  = new _via_data();
 
   // debug code
-  if ( false ) {
+  if ( true ) {
     this.d.store = _via_dp[2]['store'];
-    console.log(this.d.store)
     this.d._cache_update();
 
     setTimeout( function() {
@@ -8179,6 +8175,7 @@ _via.prototype._keydown_handler = function(e) {
     <script>
       var via_container = document.getElementById('via_container');
       var via = new _via(via_container);
+      //__ENABLED_BY_DEMO_PACK_SCRIPT___via_util_show_info_page('page_demo_instructions');
     </script>
   </body>
 </html>

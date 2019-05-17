@@ -1,4 +1,4 @@
-## [3.0.0] - 16 May 2019
+## [3.0.0] - 17 May 2019
  * development of via-3.x.y began in Dec. 2018 with the aim to create a basic audio and video annotator
  * no external dependency, self contained and easy to use
  * light weight (complete application fits in a single html file of size ~ 275 KB)
@@ -7,5 +7,5 @@
  * keyboard shorcuts allow human annotators to be quick with manual annotation
  * annotations can be exported in CSV format
  * to reduce cognitive load on human annotators, VIA3 support for attributes of different types (plain text, drop down, radio, checkbox)
-
+ * self contained demo for audio and video annotation
 

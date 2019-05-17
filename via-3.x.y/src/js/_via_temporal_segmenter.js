@@ -1974,8 +1974,16 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   gid_list_update_container.appendChild(this.gid_list_input);
   gid_list_update_container.appendChild(gid_list_update_btn);
 
+  var keyboard_shortcut = document.createElement('span');
+  keyboard_shortcut.setAttribute('class', 'text_button');
+  keyboard_shortcut.innerHTML = 'Keyboard Shortcuts';
+  keyboard_shortcut.addEventListener('click', function() {
+    _via_util_show_info_page('page_keyboard_shortcut');
+  });
+
   this.toolbar_container.appendChild(gid_list_update_container);
   this.toolbar_container.appendChild(pb_mode_container);
+  this.toolbar_container.appendChild(keyboard_shortcut);
 
   this.c.appendChild(this.toolbar_container);
 }

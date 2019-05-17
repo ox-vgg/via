@@ -108,6 +108,7 @@ to annotate temporal segments of a video: contains 4 rows
 #via_info_page_container > .info_page th { border:1px solid #cccccc; padding:0.3em 0.4em; }
 #via_info_page_container > .info_page td { border:1px solid #cccccc; padding:0.3em 0.4em; }
 #via_info_page_container > .info_page div { width:45em; }
+#via_info_page_container > .info_page li { margin:1em 0; }
 
 /* Message Panel */
 #_via_message_container { display:none; width:100vw; position:fixed; bottom:0px; z-index:9999; text-align:center; }

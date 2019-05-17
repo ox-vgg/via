@@ -100,6 +100,10 @@ _via_control_panel.prototype._add_view_manager_tools = function() {
 }
 
 _via_control_panel.prototype._add_region_shape_selector = function() {
+  if ( document.getElementById('shape_point') === null ) {
+    return;
+  }
+
   var point = _via_util_get_svg_button('shape_point', 'Point', 'POINT');
   point.addEventListener('click', function() {
     this._set_region_shape('POINT');

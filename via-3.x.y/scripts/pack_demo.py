@@ -57,6 +57,8 @@ with open(OUT_HTML, 'w') as outf:
           parsedline = line
           if "//__ENABLED_BY_PACK_SCRIPT__" in line:
             parsedline = line.replace('//__ENABLED_BY_PACK_SCRIPT__', '');
+          if "//__ENABLED_BY_DEMO_PACK_SCRIPT__" in line:
+            parsedline = line.replace('//__ENABLED_BY_DEMO_PACK_SCRIPT__', '');
           if  "<!-- DEMO SCRIPT AUTOMATICALLY INSERTED BY VIA PACKER SCRIPT -->" in line:
             parsedline  = ''
             parsedline += '<!-- START: Contents of file: ' + TARGET_DEMO_DATA_FILENAME + '-->\n'

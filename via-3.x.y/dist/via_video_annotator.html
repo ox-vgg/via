@@ -167,7 +167,7 @@ to annotate temporal segments of a video: contains 4 rows
 #via_info_page_container > .info_page th { border:1px solid #cccccc; padding:0.3em 0.4em; }
 #via_info_page_container > .info_page td { border:1px solid #cccccc; padding:0.3em 0.4em; }
 #via_info_page_container > .info_page div { width:45em; }
-
+#via_info_page_container > .info_page li { margin:1em 0; }
 /* Message Panel */
 #_via_message_container { display:none; width:100vw; position:fixed; bottom:0px; z-index:9999; text-align:center; }
 #_via_message_container .message_panel_close_button { position:absolute; top:-0.4em; right:0.3em; color:white; cursor:pointer; font-size:small; }
@@ -358,6 +358,18 @@ to annotate temporal segments of a video: contains 4 rows
 
     <!-- VIA Information Pages -->
     <div id="via_info_page_container">
+            <div data-pageid="page_demo_instructions" class="info_page" style="height:40ch;">
+        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
+        <h1>Some Quick Tips</h1>
+        <ul>
+          <li>Press <span class="key">Space</span> key at any time to play or pause the audio or video.</li>
+          <li>Use <span class="key">a</span> key to add a new temporal segment. Here are more <span class="text_button" onclick="_via_util_show_info_page('page_keyboard_shortcut')">shortcuts</span>.</li>
+          <li>Pre-defined temporal segments appear at the bottom (colourful boxes). Using mouse, select them, move them and delete them (using <span class="key">Backspace</span> key)</li>
+          <li>Move your mouse over the temporal segment timeline and roll your mouse button to zoom in/out</li>
+          <li>Add new timeline by adding a new entry to the Timeline List (at the bottom) and press "Update" button. For example, "Speaker1,Speaker2" to add timelines for two speakers.</li>
+        </ul>
+      </div>
+
       <div data-pageid="page_keyboard_shortcut" class="info_page">
         <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
         <h1>Keyboard Shortcuts</h1>
@@ -1154,6 +1166,10 @@ _via_control_panel.prototype._add_view_manager_tools = function() {
 }
 
 _via_control_panel.prototype._add_region_shape_selector = function() {
+  if ( document.getElementById('shape_point') === null ) {
+    return;
+  }
+
   var point = _via_util_get_svg_button('shape_point', 'Point', 'POINT');
   point.addEventListener('click', function() {
     this._set_region_shape('POINT');
@@ -2393,6 +2409,8 @@ _via_file_annotator.prototype._file_html_element_compute_scale = function() {
     break;
 
   case _VIA_FILE_TYPE.AUDIO:
+    this.left_pad = 0;
+    this.file_html_element_size_css = '';
     return;
     break;
   }
@@ -5869,8 +5887,16 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   gid_list_update_container.appendChild(this.gid_list_input);
   gid_list_update_container.appendChild(gid_list_update_btn);
 
+  var keyboard_shortcut = document.createElement('span');
+  keyboard_shortcut.setAttribute('class', 'text_button');
+  keyboard_shortcut.innerHTML = 'Keyboard Shortcuts';
+  keyboard_shortcut.addEventListener('click', function() {
+    _via_util_show_info_page('page_keyboard_shortcut');
+  });
+
   this.toolbar_container.appendChild(gid_list_update_container);
   this.toolbar_container.appendChild(pb_mode_container);
+  this.toolbar_container.appendChild(keyboard_shortcut);
 
   this.c.appendChild(this.toolbar_container);
 }
@@ -8073,9 +8099,8 @@ function _via(via_container) {
   this.d  = new _via_data();
 
   // debug code
-  if ( false ) {
+  if ( true ) {
     this.d.store = _via_dp[2]['store'];
-    console.log(this.d.store)
     this.d._cache_update();
 
     setTimeout( function() {
@@ -8179,6 +8204,7 @@ _via.prototype._keydown_handler = function(e) {
     <script>
       var via_container = document.getElementById('via_container');
       var via = new _via(via_container);
+      //__ENABLED_BY_DEMO_PACK_SCRIPT___via_util_show_info_page('page_demo_instructions');
     </script>
   </body>
 </html>

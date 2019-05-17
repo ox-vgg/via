@@ -16,9 +16,8 @@ function _via(via_container) {
   this.d  = new _via_data();
 
   // debug code
-  if ( false ) {
+  if ( true ) {
     this.d.store = _via_dp[2]['store'];
-    console.log(this.d.store)
     this.d._cache_update();
 
     setTimeout( function() {
