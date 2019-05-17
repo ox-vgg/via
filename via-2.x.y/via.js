@@ -1202,10 +1202,13 @@ function _via_load_canvas_regions() {
       var cy = regions[i].shape_attributes['cy'] / _via_canvas_scale;
       var rx = regions[i].shape_attributes['rx'] / _via_canvas_scale;
       var ry = regions[i].shape_attributes['ry'] / _via_canvas_scale;
+      // rotation in radians
+      var rr = regions[i].shape_attributes['rr'];
       _via_canvas_regions[i].shape_attributes['cx'] = Math.round(cx);
       _via_canvas_regions[i].shape_attributes['cy'] = Math.round(cy);
       _via_canvas_regions[i].shape_attributes['rx'] = Math.round(rx);
       _via_canvas_regions[i].shape_attributes['ry'] = Math.round(ry);
+      _via_canvas_regions[i].shape_attributes['rr'] = rr;
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
@@ -1565,29 +1568,45 @@ function _via_reg_canvas_mouseup_handler(e) {
     case VIA_REGION_SHAPE.ELLIPSE:
       var new_rx = canvas_attr['rx'];
       var new_ry = canvas_attr['ry'];
+      var new_rr = canvas_attr['rr'];
       var dx = Math.abs(canvas_attr['cx'] - _via_current_x);
       var dy = Math.abs(canvas_attr['cy'] - _via_current_y);
 
       switch(_via_region_edge[1]) {
       case 5:
-        new_ry = dy;
+        new_ry = Math.sqrt(dx*dx + dy*dy);
+        new_rr = Math.atan2(- (_via_current_x - canvas_attr['cx']), (_via_current_y - canvas_attr['cy']));
         break;
 
       case 6:
-        new_rx = dx;
+        new_rx = Math.sqrt(dx*dx + dy*dy);
+        new_rr = Math.atan2((_via_current_y - canvas_attr['cy']), (_via_current_x - canvas_attr['cx']));
         break;
 
       default:
         new_rx = dx;
         new_ry = dy;
+        new_rr = 0;
         break;
       }
 
+      // if (Math.abs(new_rr) > Math.PI / 4) {
+      //   // swap values
+      //   new_ry = [new_rx, new_rx = new_ry][0];
+      //   if (new_rr < 0) {
+      //     new_rr += Math.PI / 2;
+      //   } else {
+      //     new_rr -= Math.PI / 2;
+      //   }
+      // }
+
       image_attr['rx'] = Math.round(new_rx * _via_canvas_scale);
       image_attr['ry'] = Math.round(new_ry * _via_canvas_scale);
+      image_attr['rr'] = new_rr;
 
       canvas_attr['rx'] = Math.round(image_attr['rx'] / _via_canvas_scale);
       canvas_attr['ry'] = Math.round(image_attr['ry'] / _via_canvas_scale);
+      canvas_attr['rr'] = new_rr;
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
@@ -1807,18 +1826,21 @@ function _via_reg_canvas_mouseup_handler(e) {
         var cy = Math.round(region_y0 * _via_canvas_scale);
         var rx = Math.round(region_dx * _via_canvas_scale);
         var ry = Math.round(region_dy * _via_canvas_scale);
+        var rr = 0;
 
         original_img_region.shape_attributes['name'] = 'ellipse';
         original_img_region.shape_attributes['cx'] = cx;
         original_img_region.shape_attributes['cy'] = cy;
         original_img_region.shape_attributes['rx'] = rx;
         original_img_region.shape_attributes['ry'] = ry;
+        original_img_region.shape_attributes['rr'] = rr;
 
         canvas_img_region.shape_attributes['name'] = 'ellipse';
         canvas_img_region.shape_attributes['cx'] = Math.round( cx / _via_canvas_scale );
         canvas_img_region.shape_attributes['cy'] = Math.round( cy / _via_canvas_scale );
         canvas_img_region.shape_attributes['rx'] = Math.round( rx / _via_canvas_scale );
         canvas_img_region.shape_attributes['ry'] = Math.round( ry / _via_canvas_scale );
+        canvas_img_region.shape_attributes['rr'] = rr;
 
         new_region_added = true;
         break;
@@ -1996,7 +2018,7 @@ function _via_reg_canvas_mousemove_handler(e) {
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
-      _via_draw_ellipse_region(region_x0, region_y0, dx, dy, false);
+      _via_draw_ellipse_region(region_x0, region_y0, dx, dy, 0, false);
 
       // display the current region info
       if ( rf != null && _via_is_region_info_visible ) {
@@ -2068,26 +2090,42 @@ function _via_reg_canvas_mousemove_handler(e) {
     case VIA_REGION_SHAPE.ELLIPSE:
       var new_rx = attr['rx'];
       var new_ry = attr['ry'];
+      var new_rr = attr['rr'];
       var dx = Math.abs(attr['cx'] - _via_current_x);
       var dy = Math.abs(attr['cy'] - _via_current_y);
       switch(_via_region_edge[1]) {
       case 5:
-        new_ry = dy;
+        new_ry = Math.sqrt(dx*dx + dy*dy);
+        new_rr = Math.atan2(- (_via_current_x - attr['cx']), (_via_current_y - attr['cy']));
         break;
 
       case 6:
-        new_rx = dx;
+        new_rx = Math.sqrt(dx*dx + dy*dy);
+        new_rr = Math.atan2((_via_current_y - attr['cy']), (_via_current_x - attr['cx']));
         break;
 
       default:
         new_rx = dx;
         new_ry = dy;
+        new_rr = 0;
         break;
       }
+
+      // if (Math.abs(new_rr) > Math.PI / 4) {
+      //   // swap values
+      //   new_ry = [new_rx, new_rx = new_ry][0];
+      //   if (new_rr < 0) {
+      //     new_rr += Math.PI / 2;
+      //   } else {
+      //     new_rr -= Math.PI / 2;
+      //   }
+      // }
+
       _via_draw_ellipse_region(attr['cx'],
                                attr['cy'],
                                new_rx,
                                new_ry,
+                               new_rr,
                                true);
       if ( rf != null && _via_is_region_info_visible ) {
         rf.innerHTML +=  ',' + ' X-radius:' + new_rx + ',' + ' Y-radius:' + new_ry;
@@ -2157,6 +2195,7 @@ function _via_reg_canvas_mousemove_handler(e) {
                                attr['cy'] + move_y,
                                attr['rx'],
                                attr['ry'],
+                               attr['rr'],
                                true);
       // display the current region info
       if ( rf != null && _via_is_region_info_visible ) {
@@ -2405,6 +2444,7 @@ function draw_all_regions() {
                                attr['cy'],
                                attr['rx'],
                                attr['ry'],
+                               attr['rr'],
                                is_selected);
       break;
 
@@ -2532,9 +2572,9 @@ function _via_draw_circle(cx, cy, r) {
   _via_reg_ctx.closePath();
 }
 
-function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
+function _via_draw_ellipse_region(cx, cy, rx, ry, rr, is_selected) {
   if (is_selected) {
-    _via_draw_ellipse(cx, cy, rx, ry);
+    _via_draw_ellipse(cx, cy, rx, ry, rr);
 
     _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
@@ -2545,12 +2585,15 @@ function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
     _via_reg_ctx.fill();
     _via_reg_ctx.globalAlpha = 1.0;
 
-    _via_draw_control_point(cx + rx, cy);
-    _via_draw_control_point(cx     , cy - ry);
+    _via_draw_control_point(cx + rx * Math.cos(rr), cy + rx * Math.sin(rr));
+    _via_draw_control_point(cx - rx * Math.cos(rr), cy - rx * Math.sin(rr));
+    _via_draw_control_point(cx + ry * Math.sin(rr), cy - ry * Math.cos(rr));
+    _via_draw_control_point(cx - ry * Math.sin(rr), cy + ry * Math.cos(rr));
+
   } else {
     // draw a fill line
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
-    _via_draw_ellipse(cx, cy, rx, ry);
+    _via_draw_ellipse(cx, cy, rx, ry, rr);
     _via_reg_ctx.stroke();
 
     if ( rx > VIA_THEME_REGION_BOUNDARY_WIDTH &&
@@ -2560,27 +2603,26 @@ function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
       _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
       _via_draw_ellipse(cx, cy,
                         rx + VIA_THEME_REGION_BOUNDARY_WIDTH/2,
-                        ry + VIA_THEME_REGION_BOUNDARY_WIDTH/2);
+                        ry + VIA_THEME_REGION_BOUNDARY_WIDTH/2,
+                        rr);
       _via_reg_ctx.stroke();
       _via_draw_ellipse(cx, cy,
                         rx - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
-                        ry - VIA_THEME_REGION_BOUNDARY_WIDTH/2);
+                        ry - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
+                        rr);
       _via_reg_ctx.stroke();
     }
   }
 }
 
-function _via_draw_ellipse(cx, cy, rx, ry) {
+function _via_draw_ellipse(cx, cy, rx, ry, rr) {
   _via_reg_ctx.save();
 
   _via_reg_ctx.beginPath();
-  _via_reg_ctx.translate(cx-rx, cy-ry);
-  _via_reg_ctx.scale(rx, ry);
-  _via_reg_ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
+  _via_reg_ctx.ellipse(cx, cy, rx, ry, rr, 0, 2 * Math.PI);
 
   _via_reg_ctx.restore(); // restore to original state
   _via_reg_ctx.closePath();
-
 }
 
 function _via_draw_polygon_region(all_points_x, all_points_y, is_selected, shape) {
@@ -2763,10 +2805,20 @@ function get_region_bounding_box(region) {
     break;
 
   case 'ellipse':
-    bbox[0] = d['cx'] - d['rx'];
-    bbox[1] = d['cy'] - d['ry'];
-    bbox[2] = d['cx'] + d['rx'];
-    bbox[3] = d['cy'] + d['ry'];
+    let radians = d['rr'];
+    let radians90 = radians + Math.PI / 2;
+    let ux = d['rx'] * Math.cos(radians);
+    let uy = d['rx'] * Math.sin(radians);
+    let vx = d['ry'] * Math.cos(radians90);
+    let vy = d['ry'] * Math.sin(radians90);
+
+    let width = Math.sqrt(ux * ux + vx * vx) * 2;
+    let height = Math.sqrt(uy * uy + vy * vy) * 2;
+
+    bbox[0] = d['cx'] - (width / 2);
+    bbox[1] = d['cy'] - (height / 2);
+    bbox[2] = d['cx'] + (width / 2);
+    bbox[3] = d['cy'] + (height / 2);
     break;
 
   case 'polyline': // handled by polygon
@@ -2864,6 +2916,7 @@ function is_inside_this_region(px, py, region_id) {
                                attr['cy'],
                                attr['rx'],
                                attr['ry'],
+                               attr['rr'],
                                px, py);
     break;
 
@@ -2896,9 +2949,11 @@ function is_inside_rect(x, y, w, h, px, py) {
     py < (y + h);
 }
 
-function is_inside_ellipse(cx, cy, rx, ry, px, py) {
-  var dx = (cx - px);
-  var dy = (cy - py);
+function is_inside_ellipse(cx, cy, rx, ry, rr, px, py) {
+  // Inverse rotation of pixel coordinates
+  var dx = Math.cos(-rr) * (cx - px) - Math.sin(-rr) * (cy - py)
+  var dy = Math.sin(-rr) * (cx - px) + Math.cos(-rr) * (cy - py)
+
   return ((dx * dx) / (rx * rx)) + ((dy * dy) / (ry * ry)) < 1;
 }
 
@@ -2999,6 +3054,7 @@ function is_on_region_corner(px, py) {
                                   attr['cy'],
                                   attr['rx'],
                                   attr['ry'],
+                                  attr['rr'],
                                   px, py);
       break;
 
@@ -3107,7 +3163,15 @@ function is_on_circle_edge(cx, cy, r, px, py) {
   }
 }
 
-function is_on_ellipse_edge(cx, cy, rx, ry, px, py) {
+function is_on_ellipse_edge(cx, cy, rx, ry, rr, px, py) {
+  // Inverse rotation of pixel coordinates
+  px = px - cx;
+  py = py - cy;
+  var px_ = Math.cos(-rr) * px - Math.sin(-rr) * py;
+  var py_ = Math.sin(-rr) * px + Math.cos(-rr) * py;
+  px = px_ + cx;
+  py = py_ + cy;
+
   var dx = (cx - px)/rx;
   var dy = (cy - py)/ry;
 
@@ -5681,8 +5745,8 @@ function annotation_editor_get_placement(region_id) {
     html_position.left = r['cx'];
     break;
   case 'ellipse':
-    html_position.top = r['cy'] + r['ry'];
-    html_position.left = r['cx'];
+    html_position.top = r['cy'] + r['ry'] * Math.cos(r['rr']);
+    html_position.left = r['cx'] - r['ry'] * Math.sin(r['rr']);
     break;
   case 'polygon':
   case 'polyline':
@@ -8226,7 +8290,7 @@ function _via_region( shape, id, data_img_space, view_scale_factor, view_offset_
   // d[]   : (in view space) data whose meaning depend on region shape as follows:
   //        rect     : d[x1,y1,x2,y2] or d[corner1_x, corner1_y, corner2_x, corner2_y]
   //        circle   : d[x1,y1,x2,y2] or d[center_x, center_y, circumference_x, circumference_y]
-  //        ellipse  : d[x1,y1,x2,y2]
+  //        ellipse  : d[x1,y1,x2,y2,transform]
   //        line     : d[x1,y1,x2,y2]
   //        polyline : d[x1,y1,...,xn,yn]
   //        polygon  : d[x1,y1,...,xn,yn]
@@ -8278,7 +8342,7 @@ function _via_region( shape, id, data_img_space, view_scale_factor, view_offset_
     break;
   case "ellipse":
     _via_region_ellipse.call( this );
-    this.svg_attributes = ['cx', 'cy', 'rx', 'ry'];
+    this.svg_attributes = ['cx', 'cy', 'rx', 'ry','transform'];
     break;
   case "line":
     _via_region_line.call( this );

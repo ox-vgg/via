@@ -1,2 +1,0 @@
-# VGG Image Annotator
-
