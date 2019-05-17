@@ -1,3 +1,12 @@
+/**
+ *
+ * @class
+ * @classdesc VIA Control Panel
+ * @author Abhishek Dutta <adutta@robots.ox.ac.uk>
+ * @date 16 May 2019
+ *
+ */
+
 function _via_control_panel(control_panel_container, data, view_annotator, view_manager) {
   this.c = control_panel_container;
   this.d = data;
@@ -65,13 +74,13 @@ _via_control_panel.prototype._add_spacer = function() {
 }
 
 _via_control_panel.prototype._add_view_manager_tools = function() {
-  var next_view = _via_util_get_svg_button('micon_navigate_next', 'Show Next File', 'show_next');
-  next_view.addEventListener('click', this.vm._on_next_view.bind(this.vm));
-  this.c.appendChild(next_view);
-
   var prev_view = _via_util_get_svg_button('micon_navigate_prev', 'Show Previous File', 'show_prev');
   prev_view.addEventListener('click', this.vm._on_prev_view.bind(this.vm));
   this.c.appendChild(prev_view);
+
+  var next_view = _via_util_get_svg_button('micon_navigate_next', 'Show Next File', 'show_next');
+  next_view.addEventListener('click', this.vm._on_next_view.bind(this.vm));
+  this.c.appendChild(next_view);
 
   var add_media_local = _via_util_get_svg_button('micon_add_circle', 'Add Audio or Video File in Local Computer', 'add_media_local');
   add_media_local.addEventListener('click', this.vm._on_add_media_local.bind(this.vm));

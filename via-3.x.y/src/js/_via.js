@@ -10,11 +10,13 @@
 'use strict'
 
 function _via(via_container) {
+  console.log('Initializing VGG Image Annotator (VIA) version ' + _VIA_VERSION)
   this.via_container = via_container;
 
   this.d  = new _via_data();
 
-  if ( true ) { // debug
+  // debug code
+  if ( false ) {
     this.d.store = _via_dp[2]['store'];
     console.log(this.d.store)
     this.d._cache_update();
@@ -81,6 +83,21 @@ function _via(via_container) {
       pages[i].innerHTML = content0.replace('__VIA_VERSION__', _VIA_VERSION);
     }
   }
+
+  // load any external modules (e.g. demo) which should be defined as follows
+  // function _via_load_submodules()
+  if (typeof _via_load_submodules === 'function') {
+    console.log('VIA submodule detected, invoking _via_load_submodules()');
+    this._load_submodule = new Promise( function(ok_callback, err_callback) {
+      try {
+        _via_load_submodules.call(this);
+      }
+      catch(err) {
+        console.warn('VIA submodule load failed: ' + err);
+        err_callback(err);
+      }
+    }.bind(this));
+  }
 }
 
 _via.prototype._hook_on_browser_resize = function() {
@@ -90,12 +107,10 @@ _via.prototype._hook_on_browser_resize = function() {
 }
 
 _via.prototype._keydown_handler = function(e) {
-  console.log(e.key)
   // avoid handling events when text input field is in focus
   if ( e.target.type !== 'text' &&
        e.target.type !== 'textarea'
      ) {
-    console.log(e.key)
     this.va._on_event_keydown(e);
   }
 }

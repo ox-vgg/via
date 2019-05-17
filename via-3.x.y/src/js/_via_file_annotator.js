@@ -200,6 +200,8 @@ _via_file_annotator.prototype._file_html_element_compute_scale = function() {
     break;
 
   case _VIA_FILE_TYPE.AUDIO:
+    this.left_pad = 0;
+    this.file_html_element_size_css = '';
     return;
     break;
   }
@@ -612,7 +614,7 @@ _via_file_annotator.prototype._rinput_is_near_first_user_input_point = function(
 //
 _via_file_annotator.prototype._state_set = function(state_id) {
   this.state_id = state_id;
-  console.log('[vid=' + this.vid + '] State = ' + this._state_id2str(this.state_id));
+  //console.log('[vid=' + this.vid + '] State = ' + this._state_id2str(this.state_id));
 }
 
 _via_file_annotator.prototype._state_id2str = function(state_id) {
@@ -1481,8 +1483,10 @@ _via_file_annotator.prototype._rinput_enable = function() {
   if ( this.file.type === _VIA_FILE_TYPE.VIDEO ||
        this.file.type === _VIA_FILE_TYPE.AUDIO
      ) {
-    //this.file_html_element.removeAttribute('controls');
-    //_via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.', true);
+    if ( this.file.type === _VIA_FILE_TYPE.VIDEO ) {
+      this.file_html_element.removeAttribute('controls');
+    }
+    _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.');
   }
 }
 
