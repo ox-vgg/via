@@ -13,15 +13,14 @@ and released under the BSD-2 clause [license](https://gitlab.com/vgg/via/blob/ma
 which allows it to be useful for both academic projects and commercial applications.
 
 ## Screenshots
-/home/tlm/dev/via/
-![Screenshot showing basic image annotation](via-2.x.y/doc/screenshots/via_demo_screenshot2_via-2.0.2.jpg)
-![Temporal segments showing different human activities (e.g. break egg, pour liquid, etc.) and spatial regions (e.g. bounding box of cup) occupied by different objects in a still video frame are manually delineated in a video showing preparation of a drink.](via-3.x.y/doc/screenshots/via_video_annotator.png)
-![Speech segments of two individuals is manually delineated in an audio recording of conversation between ATC and pilot](via-3.x.y/doc/screenshots/via_audio_annotator.png)
-![Screenshot of VIA being used for face annotation](via-2.x.y/doc/screenshots/via_face_demo_screenshot4.jpg)
-![Screenshot of VIA being used for face track annotation](via-2.x.y/doc/screenshots/via_face_track_demo_screenshot1.jpg)
+![Screenshot showing basic image annotation](via-2.x.y/doc/screenshots/via_demo_screenshot2_via-2.0.2.jpg =x360)
+![Temporal segments showing different human activities (e.g. break egg, pour liquid, etc.) and spatial regions (e.g. bounding box of cup) occupied by different objects in a still video frame are manually delineated in a video showing preparation of a drink.](via-3.x.y/doc/screenshots/via_video_annotator.png =x360)
+![Speech segments of two individuals is manually delineated in an audio recording of conversation between ATC and pilot](via-3.x.y/doc/screenshots/via_audio_annotator.png =x360)
+![Screenshot of VIA being used for face annotation](via-2.x.y/doc/screenshots/via_face_demo_screenshot4.jpg =x360)
+![Screenshot of VIA being used for face track annotation](via-2.x.y/doc/screenshots/via_face_track_demo_screenshot1.jpg =x360)
 
 ## Download
-Detailed instructions for download of VIA3 are available at http://www.robots.ox.ac.uk/~vgg/software/via/
+Detailed instructions for downloading the VIA software is available at http://www.robots.ox.ac.uk/~vgg/software/via/
 
 ## Demo
 We have created self contained demo to illustrate the usage of VIA3. These demo
@@ -55,6 +54,17 @@ to add new features to the VIA software using the [merge request portal](https:/
 We welcome all forms of contributions (code update, documentation, bug reports, etc) from users. 
 Such contributions must must adhere to the existing [license](https://gitlab.com/vgg/via/blob/master/LICENSE) of 
 the VIA project.
+
+## Citation
+If you use this software, please cite it as shown below and acknowledge the Seebibyte grant as follows: "Development and maintenance of VGG Image Annotator (VIA) is supported by EPSRC programme grant Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1)" 
+```
+@article{dutta2019vgg,
+  title={{The VGG} Image Annotator ({VIA})},
+  author={Dutta, Abhishek and Zisserman, Andrew},
+  journal={arXiv preprint arXiv:1904.10699},
+  year={2019}
+}
+```
 
 ## Contact
 Contact [Abhishek Dutta](adutta_remove_me_@robots.ox.ac.uk) for any queries or feedback related to this application.
