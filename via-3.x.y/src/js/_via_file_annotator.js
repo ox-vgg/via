@@ -171,7 +171,11 @@ _via_file_annotator.prototype._file_read = function() {
       ok_callback(this.file_object_url);
 
     } else {
-      ok_callback( this.d.store.config.file.path + this.file.src ); // read from URL
+      if ( this.file.loc === _VIA_FILE_LOC.LOCAL ) {
+        ok_callback( this.d.store.config.file.path + this.file.src ); // read local file
+      } else {
+        ok_callback( this.file.src ); // read remote file
+      }
     }
   }.bind(this));
 }

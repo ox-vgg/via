@@ -42,6 +42,10 @@ function _via_temporal_segmenter(container, vid, data, media_element) {
   this.METADATA_EDGE_TOL = 0.1;
   this.GTIMELINE_REGION_MARKER_MOUSE_TOL = 0.1; // in sec.
 
+  this.is_audio_spectrum_enabled = false; //  (DISABLED EXPERIMENTAL FEATURE)
+  this.AUDIO_SPECTRUM_MAX_DURATION = 0; // in sec.
+  this.AUDIO_SPECTRUM_HEIGHT = 15;      // in units of char width
+
   this.PLAYBACK_MODE = { NORMAL:'1', REVIEW_SEGMENT:'2', REVIEW_GAP:'3' };
   this.current_playback_mode = this.PLAYBACK_MODE.NORMAL;
 
@@ -88,6 +92,8 @@ _via_temporal_segmenter.prototype._init = function() {
     if ( this.d.store.file[this.fid].type === _VIA_FILE_TYPE.VIDEO ) {
       this._thumbview_init();
     }
+
+    this._audio_spectrum_init();
     this._vtimeline_init();
     this._tmetadata_init();
     this._toolbar_init();
@@ -392,6 +398,17 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   this.gtimeline_container.setAttribute('class', 'gtimeline_container');
   gheader_grid.appendChild(group_aname_container);
   gheader_grid.appendChild(this.gtimeline_container);
+
+  // audio spectrum
+  if ( this.is_audio_spectrum_enabled ) {
+    this.spectrum_label_container = document.createElement('div');
+    this.spectrum_label_container.innerHTML = 'Audio Amplitude';
+    this.spectrum_container = document.createElement('div');
+    this.spectrum_container.setAttribute('class', 'spectrum_container');
+    gheader_grid.appendChild(this.spectrum_label_container);
+    gheader_grid.appendChild(this.spectrum_container);
+  }
+
   gheader_container.appendChild(gheader_grid);
   this.tmetadata_container.appendChild(gheader_container);
   this.c.appendChild(this.tmetadata_container);
@@ -416,6 +433,18 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
 
   if ( this.gid_list.length ) {
     this._tmetadata_group_gid_sel(0);
+  }
+
+  // update audio spectrum
+  if ( this.is_audio_spectrum_enabled ) {
+    this.audio_spectrum._init(this.spectrum_container,
+                              this.timeline_container_width,
+                              this.linehn[this.AUDIO_SPECTRUM_HEIGHT],
+                             );
+    this.audio_spectrum._update(this.tmetadata_gtimeline_tstart,
+                                this.tmetadata_gtimeline_tend,
+                                this.tmetadata_width_per_sec
+                               );
   }
 }
 
@@ -574,6 +603,14 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_update = function(tstart) 
   // asynchronously pull out the metadata in the current group timeline boundary
   this.tmetadata_gtimeline_mid = {};
   setTimeout( this._tmetadata_boundary_fetch_all_mid.bind(this), 0);
+
+  if ( this.is_audio_spectrum_enabled) {
+    this.audio_spectrum._update(this.tmetadata_gtimeline_tstart,
+                                this.tmetadata_gtimeline_tend,
+                                this.tmetadata_width_per_sec
+                               );
+  }
+
 }
 
 _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_all_mid = function() {
@@ -2014,5 +2051,26 @@ _via_temporal_segmenter.prototype._on_event_attribute_update = function(data, ev
 _via_temporal_segmenter.prototype._on_event_metadata_update_bulk = function(data, event_payload) {
   if ( this.vid === event_payload.vid ) {
     _via_util_msg_show('Updated ' + event_payload.mid_list.length + ' metadata');
+  }
+}
+
+//
+// Audio Spectrum
+//
+_via_temporal_segmenter.prototype._audio_spectrum_init = function() {
+  if ( this.m.duration <= this.AUDIO_SPECTRUM_MAX_DURATION &&
+       this.file.type === _VIA_FILE_TYPE.AUDIO &&
+       this.file.loc === _VIA_FILE_LOC.URIHTTP
+     ) {
+    this.audio_spectrum = new _via_audio_spectrum(this.file, this.d.store.config.file.path);
+    this.audio_spectrum.load().then( function(ok) {
+      console.log('load done');
+      this.audio_spectrum._update(this.tmetadata_gtimeline_tstart,
+                                  this.tmetadata_gtimeline_tend,
+                                  this.tmetadata_width_per_sec
+                                 );
+    }.bind(this), function(err) {
+      console.log('load error' + err);
+    }.bind(this));
   }
 }

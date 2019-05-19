@@ -72,7 +72,11 @@ _via_video_thumbnail.prototype._file_read = function() {
       this.file_object_url = URL.createObjectURL(this.file.src);
       ok_callback(this.file_object_url);
     } else {
-      ok_callback( this.file_path + this.file.src ); // read from URL
+      if ( this.file.loc === _VIA_FILE_LOC.LOCAL ) {
+        ok_callback( this.d.store.config.file.path + this.file.src ); // read local file
+      } else {
+        ok_callback( this.file.src ); // read remote file
+      }
     }
   }.bind(this));
 }
@@ -88,6 +92,7 @@ _via_video_thumbnail.prototype._load_video = function(src) {
     //this.video.setAttribute('crossorigin', 'anonymous');
 
     this.video.addEventListener('loadeddata', function() {
+      this._on_event_destroy(); // no longer needed
       var aspect_ratio = this.video.videoHeight / this.video.videoWidth;
       this.fheight = Math.floor(this.fwidth * aspect_ratio);
       this.thumbnail_canvas.width = this.fwidth;

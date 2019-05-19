@@ -240,15 +240,46 @@ _via_dp[1]['store']['file'] = {
     'loc':1,
     'src':'Drone_liveatc_PRFlyer.mp3',
   },
+  '2':{
+    'fid':2,
+    'fname':'https://upload.wikimedia.org/wikipedia/commons/c/ce/Interview_Debora_Weber-Wulff_2.oga',
+    'type':8,
+    'loc':2,
+    'src':'https://upload.wikimedia.org/wikipedia/commons/c/ce/Interview_Debora_Weber-Wulff_2.oga',
+  },
+  '3':{
+    'fid':3,
+    'fname':'The_ENIAC_Programmers_%28As_Told_By_U.S._Chief_Technology_Officer_Megan_Smith%29.ogg',
+    'type':8,
+    'loc':2,
+    'src':'https://upload.wikimedia.org/wikipedia/commons/1/15/The_ENIAC_Programmers_%28As_Told_By_U.S._Chief_Technology_Officer_Megan_Smith%29.ogg',
+  },
+  '4':{
+    'fid':4,
+    'fname':'Calibration.ogg',
+    'type':8,
+    'loc':2,
+    'src':'https://upload.wikimedia.org/wikipedia/commons/8/81/Heart_Monitor_Beep--freesound.org.oga',
+  },
+
 };
 
 _via_dp[1]['store']['view'] = {
   '1': {
     'fid_list':[1],
   },
+  '2': {
+    'fid_list':[2],
+  },
+  '3': {
+    'fid_list':[3],
+  },
+  '4': {
+    'fid_list':[4],
+  },
 };
 
-_via_dp[1]['store']['vid_list'] = ['1'];
+_via_dp[1]['store']['vid_list'] = ['1', '2', '3', '4'];
 _via_dp[1]['store']['metadata'] = {
   '-glfwaaX': {
     'vid': '1',
@@ -325,6 +356,114 @@ _via_dp[1]['store']['metadata'] = {
       '1':'Pilot',
       '2':'its dark green',
       '3':'1',
+    }
+  },
+  "2_Z+LXp1s8": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      0,
+      1.183
+    ],
+    "xy": [],
+    "av": {
+      "1": "Interviewer"
+    }
+  },
+  "2_AG1+bmSA": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      1.137,
+      2.436121
+    ],
+    "xy": [],
+    "av": {
+      "1": "Prof. Debora"
+    }
+  },
+  "2_S5L7szM-": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      2.436,
+      3.816733
+    ],
+    "xy": [],
+    "av": {
+      "1": "Interviewer"
+    }
+  },
+  "2_cMYHLELJ": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      4.017,
+      5.624805
+    ],
+    "xy": [],
+    "av": {
+      "1": "Prof. Debora"
+    }
+  },
+  "2_DaiuIloC": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      5.921,
+      15.101221
+    ],
+    "xy": [],
+    "av": {
+      "1": "Interviewer"
+    }
+  },
+  "2_zp-ru14v": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      15.101,
+      41.008681
+    ],
+    "xy": [],
+    "av": {
+      "1": "Prof. Debora"
+    }
+  },
+  "2_dIFoc30m": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      41.147,
+      62.644961
+    ],
+    "xy": [],
+    "av": {
+      "1": "Interviewer"
+    }
+  },
+  "3_Xp-au12v": {
+    "vid": "3",
+    "flg": 0,
+    "z": [
+      2.101,
+      6.008681
+    ],
+    "xy": [],
+    "av": {
+      "1": "A"
+    }
+  },
+  "3_sIxEc10m": {
+    "vid": "3",
+    "flg": 0,
+    "z": [
+      16.147,
+      27.644961
+    ],
+    "xy": [],
+    "av": {
+      "1": "B"
     }
   },
 };

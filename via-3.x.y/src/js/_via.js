@@ -16,14 +16,14 @@ function _via(via_container) {
   this.d  = new _via_data();
 
   // debug code
-  if ( false ) {
-    this.d.store = _via_dp[2]['store'];
+  if ( true ) {
+    this.d.store = _via_dp[1]['store'];
     this.d._cache_update();
 
     setTimeout( function() {
       this.va.view_show('1');
       //this.editor.show();
-    }.bind(this), 1000);
+    }.bind(this), 200);
   }
 
   //// define the html containers

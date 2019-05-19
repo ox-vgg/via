@@ -102,7 +102,7 @@ to annotate temporal segments of a video: contains 4 rows
 /* info pages */
 #via_info_page_container { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:1001; text-align:center; }
 #via_info_page_container > .toolbar { position:relative; display:block; text-align:right; padding:1em; }
-#via_info_page_container > .info_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow-y:auto; text-align:left; content:"close"; width:80ch; height:98vh; }
+#via_info_page_container > .info_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow-y:auto; text-align:left; content:"close"; width:80ch; height:60vh; }
 #via_info_page_container > .info_page .toolbar { display:block; text-align:right; }
 #via_info_page_container > .info_page table { border-collapse:collapse; border:1px solid #cccccc; }
 #via_info_page_container > .info_page th { border:1px solid #cccccc; padding:0.3em 0.4em; }
