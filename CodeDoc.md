@@ -14,9 +14,9 @@ prepared by Mozilla is also very helpful in understanding the basic concepts of
 HTML/CSS/Javascript platform.
 
 The development of VIA software began in August 2016 and the first public
-release of Version~1 was made in April 2017. Many new advanced features
-for image annotation were introduced in Version~2 which was released in
-June 2018. The recently released Version~3 supports annotation of audio and video.
+release of Version 1 was made in April 2017. Many new advanced features
+for image annotation were introduced in Version 2 which was released in
+June 2018. The recently released Version 3 supports annotation of audio and video.
 Therefore, the VIA source code repository contains a separate folder for each 
 major version of VIA: [via-1.x.y](via-1.x.y/), [via-2.x.y](via-2.x.y/) and [via-3.x.y](via-3.x.y/).
 The development of each version is carried out in a separate branch (e.g. [via-2.x.y branch](https://gitlab.com/vgg/via/tree/via-2.x.y).

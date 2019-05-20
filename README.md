@@ -24,8 +24,8 @@ Detailed instructions for downloading the VIA software is available at http://ww
 
 ## Demo
 We have created self contained demo to illustrate the usage of VIA. These demo
-have been preloaded with some sample audio and video files. Furthermore, we have 
-also added some sample manual annotations to these demo. These demo applications 
+have been preloaded with some sample images, audio and video. Furthermore, we have 
+also added some sample manual annotations. These demo applications 
 are very useful to get familiar with the commonly used features of VIA.
   * [Basic Image Annotation Demo](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html)
   * [Face Annotation Demo](http://www.robots.ox.ac.uk/~vgg/software/via/via_face_demo.html)
