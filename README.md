@@ -3,7 +3,7 @@
 VGG Image Annotator is a simple and standalone manual 
 annotation software for image, audio and video. VIA runs in a web browser and
 does not require any installation or setup. The complete VIA software fits in a 
-single self-contained HTML page of size less than 300 Kilobyte that runs as an 
+single self-contained HTML page of size less than 400 Kilobyte that runs as an 
 offline application in most modern web browsers.
 
 VIA is an [open source](https://gitlab.com/vgg/via) project based solely on 
@@ -73,6 +73,9 @@ If you use this software, please cite it as shown below and acknowledge the Seeb
   note = "Version: X.Y.Z, Accessed: INSERT_DATE_HERE" 
 }
 ```
+
+## Developer Resources
+**Please send all pull requests for a specific version (e.g. via-2.x.y) to their respective branch (e.g. branch via-2.x.y). Please **do not** send pull requests to the master branch. All contributions made to VIA code repository will be licensed under the [BSD-2 clause license](https://gitlab.com/vgg/via/blob/master/LICENSE).**
 
 ## Contact
 Contact [Abhishek Dutta](adutta_remove_me_@robots.ox.ac.uk) for any queries or feedback related to this application.
