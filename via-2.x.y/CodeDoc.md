@@ -1,7 +1,7 @@
 Code Documentation for VGG Image Annotator 1.0
 ==============================================
 
-Author: [Abhishek Dutta](mailto:adutta_REMOVE_@robots.ox.ac.uk)
+Author: [Abhishek Dutta](mailto:adutta_REMOVE_@robots.ox.ac.uk), Version: Jan. 2017
 
 > This code documentation is based on VIA-1.0.x version codebase. There are some 
 > major differences between VIA-1.0.x and VIA-2.0.y codebase.
@@ -570,6 +570,4 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
-
-Last Updated: Jan. 2017
 

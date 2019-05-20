@@ -4,20 +4,20 @@ VGG Image Annotator is a simple and standalone manual
 annotation software for image, audio and video. VIA runs in a web browser and
 does not require any installation or setup. The complete VIA software fits in a 
 single self-contained HTML page of size less than 400 Kilobyte that runs as an 
-offline application in most modern web browsers.
-
-VIA is an [open source](https://gitlab.com/vgg/via) project based solely on 
+offline application in most modern web browsers. VIA is an [open source](https://gitlab.com/vgg/via) project based solely on 
 HTML, Javascript and CSS (no dependency on external libraries). VIA is 
 developed at the [Visual Geometry Group](http://www.robots.ox.ac.uk/~vgg/) (VGG) 
 and released under the BSD-2 clause [license](https://gitlab.com/vgg/via/blob/master/LICENSE)
 which allows it to be useful for both academic projects and commercial applications.
 
+More details are available at: http://www.robots.ox.ac.uk/~vgg/software/via/
+
 ## Screenshots
-<img src="via-2.x.y/doc/screenshots/via_demo_screenshot2_via-2.0.2.jpg" alt="Screenshot showing basic image annotation" title="Screenshot showing basic image annotation" height="370">
-<img src="via-3.x.y/doc/screenshots/via_video_annotator.png" alt="Temporal segments showing different human activities (e.g. break egg, pour liquid, etc.) and spatial regions (e.g. bounding box of cup) occupied by different objects in a still video frame are manually delineated in a video showing preparation of a drink." title="Temporal segments showing different human activities (e.g. break egg, pour liquid, etc.) and spatial regions (e.g. bounding box of cup) occupied by different objects in a still video frame are manually delineated in a video showing preparation of a drink." height="370">
-<img src="via-3.x.y/doc/screenshots/via_audio_annotator.png" alt="Speech segments of two individuals is manually delineated in an audio recording of conversation between ATC and pilot" title="Speech segments of two individuals is manually delineated in an audio recording of conversation between ATC and pilot" height="370">
-<img src="via-2.x.y/doc/screenshots/via_face_demo_screenshot4.jpg" alt="Screenshot of VIA being used for face annotation" title="Screenshot of VIA being used for face annotation" height="370">
-<img src="via-2.x.y/doc/screenshots/via_face_track_demo_screenshot1.jpg" alt="Screenshot of VIA being used for face track annotation" title="Screenshot of VIA being used for face track annotation" height="370">
+<a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html" target="_blank"><img src="via-2.x.y/doc/screenshots/via_demo_screenshot2_via-2.0.2.jpg" alt="Screenshot showing basic image annotation" title="Screenshot showing basic image annotation" height="370"></a>
+<a href="http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_video_annotator.html" target="_blank"><img src="via-3.x.y/doc/screenshots/via_video_annotator.png" alt="Temporal segments showing different human activities (e.g. break egg, pour liquid, etc.) and spatial regions (e.g. bounding box of cup) occupied by different objects in a still video frame are manually delineated in a video showing preparation of a drink." title="Temporal segments showing different human activities (e.g. break egg, pour liquid, etc.) and spatial regions (e.g. bounding box of cup) occupied by different objects in a still video frame are manually delineated in a video showing preparation of a drink." height="370"></a>
+<a href="http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_audio_annotator.html" target="_blank"><img src="via-3.x.y/doc/screenshots/via_audio_annotator.png" alt="Speech segments of two individuals is manually delineated in an audio recording of conversation between ATC and pilot" title="Speech segments of two individuals is manually delineated in an audio recording of conversation between ATC and pilot" height="370"></a>
+<a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_face_demo.html" target="_blank"><img src="via-2.x.y/doc/screenshots/via_face_demo_screenshot4.jpg" alt="Screenshot of VIA being used for face annotation" title="Screenshot of VIA being used for face annotation" height="370"></a>
+<a href="http://www.robots.ox.ac.uk/~vgg/software/via/docs/face_track_annotation.html" target="_blank"><img src="via-2.x.y/doc/screenshots/via_face_track_demo_screenshot1.jpg" alt="Screenshot of VIA being used for face track annotation" title="Screenshot of VIA being used for face track annotation" height="370"></a>
 
 ## Download
 Detailed instructions for downloading the VIA software is available at http://www.robots.ox.ac.uk/~vgg/software/via/
