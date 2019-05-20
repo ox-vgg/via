@@ -23,10 +23,10 @@ More details are available at: http://www.robots.ox.ac.uk/~vgg/software/via/
 Detailed instructions for downloading the VIA software is available at http://www.robots.ox.ac.uk/~vgg/software/via/
 
 ## Demo
-We have created self contained demo to illustrate the usage of VIA3. These demo
+We have created self contained demo to illustrate the usage of VIA. These demo
 have been preloaded with some sample audio and video files. Furthermore, we have 
 also added some sample manual annotations to these demo. These demo applications 
-are very useful to get familiar with the commonly used features of VIA3.
+are very useful to get familiar with the commonly used features of VIA.
   * [Basic Image Annotation Demo](http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html)
   * [Face Annotation Demo](http://www.robots.ox.ac.uk/~vgg/software/via/via_face_demo.html)
   * [Remote Image Annotation Demo](http://www.robots.ox.ac.uk/~vgg/software/via/via_wikimedia_demo.html)
