@@ -25,11 +25,11 @@ Here is the list of current contributions to VIA project.
   16. Fixed spelling errors in comments, string values, variable names and function names.
 
 * Ernesto Coto (@ecoto, 12 Feb. 2017)
- - carried an independent code review of via-1.0.0 release (https://gitlab.com/vgg/via/issues/54)
+  - carried an independent code review of via-1.0.0 release (https://gitlab.com/vgg/via/issues/54)
 
 * Matilde Malaspina (2016, 2017)
- - Tested early versions of via-1.x.y
+  - Tested early versions of via-1.x.y
 
 * Ankush Gupta (Sep. 2016)
- - Provided feedback about user interface and functionality of the early prototype of VIA ( created in Sep 2016)
- - Tested early prototype and some early versions of via-1.x.y
+  - Provided feedback about user interface and functionality of the early prototype of VIA ( created in Sep 2016)
+  - Tested early prototype and some early versions of via-1.x.y
