@@ -55,6 +55,40 @@ We welcome all forms of contributions (code update, documentation, bug reports, 
 Such contributions must must adhere to the existing [license](https://gitlab.com/vgg/via/blob/master/LICENSE) of 
 the VIA project.
 
+## Developer's Resources
+VIA software is developed using HTML, CSS and Javascript and is based solely on 
+standard features available in modern web browsers. 
+VIA does not depend on any external libraries. These design
+decisions has helped us create a very light weight and feature rich manaul
+annotation software that can run on most modern web browsers without
+requiring any installation or setup. The full VIA software sprouted from an
+[early prototype](http://www.robots.ox.ac.uk/~vgg/software/via/via-0.0.1.txt)
+of VIA which implemented a minimal -- yet functional -- image annotation tool
+using only 40 lines of HTML/CSS/Javascript code that runs as
+an offline application in most modern web browsers. This early prototype
+provides a springboard for understanding the current codebase of VIA which
+is just an extension of the early prototype. The [introductory tutorials](https://developer.mozilla.org/en-US/docs/Web/HTML) 
+prepared by Mozilla is also very helpful in understanding the basic concepts of
+HTML/CSS/Javascript platform.
+
+The VIA source code repository contains a separate folder for each 
+major version of VIA: [via-1.x.y](via-1.x.y/), [via-2.x.y](via-2.x.y/) and [via-3.x.y](via-3.x.y/).
+The development of each version is carried out in a separate branch (e.g. [via-2.x.y branch](https://gitlab.com/vgg/via/tree/via-2.x.y).
+If you wish to contribute code to VIA (we encourage you to do so), please send 
+a pull request to one of the branches. Please do not send pull requests to the 
+[master branch](https://gitlab.com/vgg/via/tree/master). All contributions
+must adhere to the existing [license](LICENSE) of the VIA project.
+
+We have prepared the following code documentation for each major version of VIA:
+ * [Code Documentation for via-1.x.y](https://gitlab.com/vgg/via/blob/master/via-1.x.y/CodeDoc.md)
+ * [Code Documentation for via-2.x.y](https://gitlab.com/vgg/via/blob/master/via-2.x.y/CodeDoc.md)
+ * [Code Documentation for via-3.x.y](https://gitlab.com/vgg/via/blob/master/via-3.x.y/CodeDoc.md)
+
+[Code review of via-1.0.0](https://gitlab.com/vgg/via/issues/54) was compelted 
+by @ecoto in Feb. 2017. We are [always looking](https://gitlab.com/vgg/via/issues/152) 
+for external developers who can help us with regular code reviews of the VIA software 
+code.
+
 ## Citation
 If you use this software, please cite it as shown below and acknowledge the Seebibyte grant as follows: "Development and maintenance of VGG Image Annotator (VIA) is supported by EPSRC programme grant Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1)" 
 ```
@@ -73,9 +107,6 @@ If you use this software, please cite it as shown below and acknowledge the Seeb
   note = "Version: X.Y.Z, Accessed: INSERT_DATE_HERE" 
 }
 ```
-
-## Developer Resources
-**Please send all pull requests for a specific version (e.g. via-2.x.y) to their respective branch (e.g. branch via-2.x.y). Please **do not** send pull requests to the master branch. All contributions made to VIA code repository will be licensed under the [BSD-2 clause license](https://gitlab.com/vgg/via/blob/master/LICENSE).**
 
 ## Contact
 Contact [Abhishek Dutta](adutta_remove_me_@robots.ox.ac.uk) for any queries or feedback related to this application.
