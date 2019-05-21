@@ -1,6 +1,6 @@
 ## [3.0.2] - 21 May 2019
  * shape selector icon now gets highlighted
- * rename of temporal segment variable value repaints the timeline (used to be blank)
+ * fixed issues caused by rename of temporal segment variable's value
  * fixed issue in thumbnail caused by files added using file:// uri (path issue)
  * minor UI updates
 
