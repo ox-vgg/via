@@ -65,7 +65,7 @@ Date: 5 Mar. 2019
 
 html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-size:1em; }
 
-*, *:before, *:after { box-sizing:inherit; }
+*, *:before, *:after { box-sizing:inherit; outline:none; }
 
 .via_container { position:relative; display:grid; grid-template-rows:auto 1fr; grid-row-gap:0.5em; padding:0.3em; background-color:#ffffff; height:100vh; max-height:100vh; width:100vw; }
 
@@ -160,7 +160,7 @@ to annotate temporal segments of a video: contains 4 rows
 /* info pages */
 #via_info_page_container { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:1001; text-align:center; }
 #via_info_page_container > .toolbar { position:relative; display:block; text-align:right; padding:1em; }
-#via_info_page_container > .info_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow-y:auto; text-align:left; content:"close"; width:80ch; height:98vh; }
+#via_info_page_container > .info_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow-y:auto; text-align:left; content:"close"; width:80ch; height:80vh; }
 #via_info_page_container > .info_page .toolbar { display:block; text-align:right; }
 #via_info_page_container > .info_page table { border-collapse:collapse; border:1px solid #cccccc; }
 #via_info_page_container > .info_page th { border:1px solid #cccccc; padding:0.3em 0.4em; }
@@ -467,7 +467,7 @@ to annotate temporal segments of a video: contains 4 rows
     </div>
 
     <!-- VIA dynamically populates this container with control panel, media (image, video, etc), etc. -->
-    <div class="via_container" id="via_container" tabindex="0"></div>
+    <div class="via_container" id="via_container"></div>
 
 <!-- START: Contents of file: js/_via_util.js-->
 <script>
@@ -939,7 +939,6 @@ function _via_util_attribute_to_html_element(attr) {
 function _via_util_obj2csv(d) {
   return '"{' + JSON.stringify(d).replace(/["]/g, '""') + '}"';
 }
-
 </script>
 <!-- END: Contents of file: js/_via_util.js-->
 <!-- START: Contents of file: js/_via_const.js-->
@@ -959,7 +958,7 @@ var _VIA_SVG_NS = "http://www.w3.org/2000/svg";
 
 const _VIA_NAME = 'VGG Image Annotator';
 const _VIA_NAME_SHORT = 'VIA';
-const _VIA_VERSION = '3.0.0';
+const _VIA_VERSION = '3.0.2';
 const _VIA_URL_CODE_REPO = 'https://gitlab.com/vgg/via';
 const _VIA_URL_PROJECT_PAGE = 'http://www.robots.ox.ac.uk/~vgg/software/via/';
 
@@ -1180,20 +1179,18 @@ _via_control_panel.prototype._add_region_shape_selector = function() {
   polyline.addEventListener('click', function() {
     this._set_region_shape('POLYLINE');
   }.bind(this));
+
   this.c.appendChild(polyline);
+  this.shape_selector_list = { 'POINT':point, 'RECTANGLE':rect, 'CIRCLE':circle, 'ELLIPSE':ellipse, 'LINE':line, 'POLYGON':polygon, 'POLYLINE':polyline };
 }
 
 _via_control_panel.prototype._set_region_shape = function(shape) {
   this.emit_event( 'region_shape', {'shape':shape});
-  var shapes = this.shape_selector.getElementsByTagName('svg');
-  for ( var si in shapes ) {
-    if ( shapes[si].classList.contains('svg_button') ) {
-      if ( shapes[si].getAttribute('id') === shape ) {
-        shapes[si].classList.add('svg_button_selected');
-      } else {
-        shapes[si].classList.remove('svg_button_selected');
-      }
-      console.log(shapes[si])
+  for ( var si in this.shape_selector_list ) {
+    if ( si === shape ) {
+      this.shape_selector_list[si].classList.add('svg_button_selected');
+    } else {
+      this.shape_selector_list[si].classList.remove('svg_button_selected');
     }
   }
 }
@@ -1694,7 +1691,6 @@ _via_data.prototype.metadata_update_av_bulk = function(vid, av_list) {
         this.store.metadata[mid].av[aid] = avalue;
         updated_mid_list.push(mid);
       }
-      console.log(this.store.metadata)
       var event_payload = { 'vid':vid, 'mid_list':updated_mid_list };
       this.emit_event('metadata_update_bulk', event_payload);
       ok_callback(event_payload);
@@ -1781,7 +1777,6 @@ _via_data.prototype.metadata_delete_bulk = function(vid, mid_list, emit) {
         this.store.metadata[mid].flg = _VIA_METADATA_FLAG.DELETED;
         deleted_mid_list.push(mid);
       }
-      console.log(deleted_mid_list)
       if ( typeof(emit) !== 'undefined' &&
            emit === true ) {
         this.emit_event( 'metadata_delete_bulk', { 'vid':vid, 'mid_list':deleted_mid_list } );
@@ -2119,7 +2114,11 @@ _via_video_thumbnail.prototype._file_read = function() {
       this.file_object_url = URL.createObjectURL(this.file.src);
       ok_callback(this.file_object_url);
     } else {
-      ok_callback( this.file_path + this.file.src ); // read from URL
+      if ( this.file.loc === _VIA_FILE_LOC.LOCAL ) {
+        ok_callback( this.file_path + this.file.src ); // read local file
+      } else {
+        ok_callback( this.file.src ); // read remote file
+      }
     }
   }.bind(this));
 }
@@ -2135,6 +2134,7 @@ _via_video_thumbnail.prototype._load_video = function(src) {
     //this.video.setAttribute('crossorigin', 'anonymous');
 
     this.video.addEventListener('loadeddata', function() {
+      this._on_event_destroy(); // no longer needed
       var aspect_ratio = this.video.videoHeight / this.video.videoWidth;
       this.fheight = Math.floor(this.fwidth * aspect_ratio);
       this.thumbnail_canvas.width = this.fwidth;
@@ -2175,6 +2175,265 @@ _via_video_thumbnail.prototype._on_seeked = function() {
 }
 </script>
 <!-- END: Contents of file: js/_via_video_thumbnail.js-->
+<!-- START: Contents of file: js/_via_audio_spectrum.js-->
+<script>
+/**
+ * @class
+ * @classdesc Visualisation of audio amplitude and spectrogram
+ *
+ * @author Abhishek Dutta <adutta@robots.ox.ac.uk>
+ * @since 18 May 2019
+ *
+ */
+
+'use strict';
+
+function _via_audio_spectrum(file, path) {
+  this.file = file;
+  this.file_path = path;
+  this.file_object_url = undefined; // file contents are in this the object url
+  this.frames = {}; // indexed by second
+
+  if ( this.file.type !== _VIA_FILE_TYPE.VIDEO &&
+       this.file.type !== _VIA_FILE_TYPE.AUDIO
+     ) {
+    console.log('_via_audio_spectrum() : file type must be ' +
+                _VIA_FILE_TYPE.VIDEO + ' or ' + _VIA_FILE_TYPE.AUDIO +
+                ' (got ' + this.file.type + ')');
+    return;
+  }
+
+  // state
+  this.is_spectrum_read_ongoing = false;
+  this.thumbnail_time = 0;
+  this.thumbnail_canvas = document.createElement('canvas');
+
+  // registers on_event(), emit_event(), ... methods from
+  // _via_event to let this module listen and emit events
+  this._EVENT_ID_PREFIX = '_via_audio_spectrum_';
+  _via_event.call( this );
+}
+
+_via_audio_spectrum.prototype._init = function(container, swidth, sheight) {
+  console.log(container)
+  this.c = container;
+  this.swidth = swidth;
+  this.sheight = sheight;
+  this.scanvas = document.createElement('canvas');
+  this.scanvas.width = this.swidth;
+  this.scanvas.height = this.sheight;
+  this.sctx = this.scanvas.getContext('2d', {alpha:false});
+  this.c.appendChild(this.scanvas);
+}
+
+_via_audio_spectrum.prototype._update = function(tstart, tend, width_per_sec) {
+  if ( this.audio_data_len ) {
+    this.tstart = tstart;
+    this.tend = tend;
+    this.width_per_sec = width_per_sec;
+    this.sample_per_pixel = Math.floor(this.sample_rate / this.width_per_sec);
+    var start_sample_index = tstart * this.sample_rate;
+    var end_sample_index = tend * this.sample_rate;
+    var amp_spectrum_len = Math.floor((end_sample_index - start_sample_index) / this.sample_per_pixel);
+    console.log(amp_spectrum_len)
+    this.current_amp_spectrum = new Float32Array(amp_spectrum_len);
+
+    console.log('this.sample_per_pixel=' + this.sample_per_pixel);
+    var index = 0;
+    var min_val = +Infinity;
+    var max_val = -Infinity;
+    for ( var i = start_sample_index; i < end_sample_index; i = i + this.sample_per_pixel ) {
+      var avg = 0;
+      for ( var j = 0; j < this.sample_per_pixel; ++j ) {
+        avg = avg + this.audio_data[i + j];
+      }
+      this.current_amp_spectrum[index] = Math.round(avg / this.sample_per_pixel);
+      if ( this.current_amp_spectrum[index] < min_val ) {
+        min_val = this.current_amp_spectrum[index];
+      }
+      if ( this.current_amp_spectrum[index] > max_val ) {
+        max_val = this.current_amp_spectrum[index];
+      }
+      index = index + 1;
+    }
+
+    var mid = Math.round(this.scanvas.height / 2);
+    var norm = mid / Math.max(min_val, max_val);
+    for ( var i = 0; i < amp_spectrum_len; ++i ) {
+      this.current_amp_spectrum[i] = mid - Math.round( this.current_amp_spectrum[i] * norm );
+    }
+
+    //console.log('_via_audio_spectrum.prototype._update() : ' + tstart + '->' + tend);
+    console.log(this.current_amp_spectrum);
+    this._draw();
+  }
+}
+
+_via_audio_spectrum.prototype._clear = function() {
+  this.sctx.fillStyle = '#ffffff';
+  this.sctx.fillRect(0, 0, this.scanvas.width, this.scanvas.height);
+}
+
+_via_audio_spectrum.prototype._draw = function() {
+  this._clear();
+  this.sctx.strokeStyle = '#707070';
+  this.sctx.lineWidth = this.DRAW_LINE_WIDTH;
+  this.sctx.beginPath();
+  var n = this.current_amp_spectrum.length;
+  var mid = Math.floor( this.scanvas.height / 2 );
+  this.sctx.moveTo(0, this.current_amp_spectrum[i]);
+  for ( var i = 1; i < n; ++i ) {
+    this.sctx.lineTo(i, this.current_amp_spectrum[i]);
+    //this.sctx.lineTo(i, Math.log(this.current_amp_spectrum[i]));
+  }
+  this.sctx.stroke();
+}
+
+// WARNING: not invoking this method will result in
+// resources being allocated to things that are no longer needed
+_via_audio_spectrum.prototype._on_event_destroy = function() {
+  if ( typeof(this.file_object_url) !== 'undefined' ) {
+    console.log('_via_audio_spectrum(): revoking object uri for fid=' + this.file.fid);
+    URL.revokeObjectURL(this.file_object_url);
+  }
+}
+
+_via_audio_spectrum.prototype.load = function() {
+  return new Promise( function(ok_callback, err_callback) {
+    this._file_read().then( function() {
+      console.log('file read done');
+      ok_callback();
+    }.bind(this), function(file_src_err) {
+      console.log(file_src_err);
+      err_callback();
+    }.bind(this));
+  }.bind(this));
+}
+
+_via_audio_spectrum.prototype._file_read = function() {
+  return new Promise( function(ok_callback, err_callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', this.file.src);
+    xhr.responseType = 'arraybuffer';
+    xhr.addEventListener('load', function() {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      var actx = new AudioContext();
+
+      actx.decodeAudioData(xhr.response).then( function(buf) {
+        var oactx = new OfflineAudioContext(1, buf.length, buf.sampleRate);
+        var osrc = oactx.createBufferSource();
+        osrc.buffer = buf;
+        osrc.connect(oactx.destination);
+        osrc.start();
+        oactx.startRendering().then( function(rendered_buf) {
+          var fdata = rendered_buf.getChannelData(0);
+          // downsample audio data
+          var in_sample_rate = buf.sampleRate;
+          var out_sample_rate = 882;
+          //var out_sample_rate = 11025;
+
+          var sample_ratio = in_sample_rate / out_sample_rate;
+          var downsample_buf_len = Math.round(fdata.length / sample_ratio);
+          var in_offset = 0;
+          var out_offset = 0;
+          this.audio_data = new Int16Array( downsample_buf_len );
+          var min_val = +Infinity;
+          var max_val = -Infinity;
+          while ( in_offset < fdata.length ) {
+            var next_offset = Math.round( (out_offset + 1) * sample_ratio );
+            var avg = 0;
+            var count = 0;
+            for ( var i = in_offset; i < next_offset && i < buf.length; ++i ) {
+              avg = avg + fdata[i];
+              count = count + 1;
+            }
+
+            //this.audio_data[out_offset] = Math.min(1, avg/count) * 0x7FFF; // 0x7FFF = 11...11
+            this.audio_data[out_offset] = (avg/count) * 0x7FFF; // 0x7FFF = 11...11
+            if ( this.audio_data[out_offset] > max_val ) {
+              max_val = this.audio_data[out_offset];
+            }
+            if ( this.audio_data[out_offset] < min_val ) {
+              min_val = this.audio_data[out_offset];
+            }
+
+            out_offset = out_offset + 1;
+            in_offset = next_offset;
+          }
+
+          this.sample_rate = out_sample_rate;
+          this.duration = buf.duration;
+          this.audio_data_len = this.audio_data.length;
+          console.log(this.audio_data);
+          console.log(this.sample_rate);
+          ok_callback();
+        }.bind(this));
+      }.bind(this), function(err) {
+        console.log(err);
+        err_callback();
+      });
+    }.bind(this));
+    xhr.send();
+  }.bind(this));
+}
+
+_via_audio_spectrum.prototype._load_video = function(src) {
+  return new Promise( function(ok_callback, err_callback) {
+    this.video = document.createElement('video');
+    this.video.setAttribute('src', src);
+    //this.video.setAttribute('autoplay', false);
+    //this.video.setAttribute('loop', false);
+    //this.video.setAttribute('controls', '');
+    this.video.setAttribute('preload', 'auto');
+    //this.video.setAttribute('crossorigin', 'anonymous');
+
+    this.video.addEventListener('loadeddata', function() {
+      this._on_event_destroy(); // no longer needed
+      var aspect_ratio = this.video.videoHeight / this.video.videoWidth;
+      this.fheight = Math.floor(this.fwidth * aspect_ratio);
+      this.thumbnail_canvas.width = this.fwidth;
+      this.thumbnail_canvas.height = this.fheight;
+      this.thumbnail_context = this.thumbnail_canvas.getContext('2d', { alpha:false });
+      ok_callback();
+    }.bind(this));
+    this.video.addEventListener('error', function() {
+      console.log('_via_video_thumnnail._load_video() error')
+      err_callback('error');
+    }.bind(this));
+    this.video.addEventListener('abort', function() {
+      console.log('_via_audio_spectrum._load_video() abort')
+      err_callback('abort');
+    }.bind(this));
+
+    this.video.addEventListener('seeked', this._on_seeked.bind(this));
+  }.bind(this));
+}
+
+_via_audio_spectrum.prototype.get_thumbnail = function(time_float) {
+  this.is_thumbnail_read_ongoing = true;
+  this.thumbnail_time = parseInt(time_float);
+  this.video.currentTime = this.thumbnail_time;
+  return this.thumbnail_canvas;
+}
+
+_via_audio_spectrum.prototype._on_seeked = function() {
+  if ( this.is_thumbnail_read_ongoing &&
+       this.thumbnail_context
+     ) {
+    this.is_thumbnail_read_ongoing = false;
+    this.thumbnail_context.drawImage(this.video,
+                                     0, 0, this.video.videoWidth, this.video.videoHeight,
+                                     0, 0, this.fwidth, this.fheight
+                                    );
+  }
+}
+
+_via_audio_spectrum.prototype._downsample = function(buffer, in_sample_rate, out_sample_rate) {
+
+}
+</script>
+<!-- END: Contents of file: js/_via_audio_spectrum.js-->
+
 <!-- START: Contents of file: js/_via_file_annotator.js-->
 <script>
 /**
@@ -2350,7 +2609,11 @@ _via_file_annotator.prototype._file_read = function() {
       ok_callback(this.file_object_url);
 
     } else {
-      ok_callback( this.d.store.config.file.path + this.file.src ); // read from URL
+      if ( this.file.loc === _VIA_FILE_LOC.LOCAL ) {
+        ok_callback( this.d.store.config.file.path + this.file.src ); // read local file
+      } else {
+        ok_callback( this.file.src ); // read remote file
+      }
     }
   }.bind(this));
 }
@@ -3665,7 +3928,7 @@ _via_file_annotator.prototype._rinput_enable = function() {
     if ( this.file.type === _VIA_FILE_TYPE.VIDEO ) {
       this.file_html_element.removeAttribute('controls');
     }
-    _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.');
+    // _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.');
   }
 }
 
@@ -3925,6 +4188,10 @@ function _via_temporal_segmenter(container, vid, data, media_element) {
   this.METADATA_EDGE_TOL = 0.1;
   this.GTIMELINE_REGION_MARKER_MOUSE_TOL = 0.1; // in sec.
 
+  this.is_audio_spectrum_enabled = false; //  (DISABLED EXPERIMENTAL FEATURE)
+  this.AUDIO_SPECTRUM_MAX_DURATION = 0; // in sec.
+  this.AUDIO_SPECTRUM_HEIGHT = 15;      // in units of char width
+
   this.PLAYBACK_MODE = { NORMAL:'1', REVIEW_SEGMENT:'2', REVIEW_GAP:'3' };
   this.current_playback_mode = this.PLAYBACK_MODE.NORMAL;
 
@@ -3971,6 +4238,8 @@ _via_temporal_segmenter.prototype._init = function() {
     if ( this.d.store.file[this.fid].type === _VIA_FILE_TYPE.VIDEO ) {
       this._thumbview_init();
     }
+
+    this._audio_spectrum_init();
     this._vtimeline_init();
     this._tmetadata_init();
     this._toolbar_init();
@@ -4275,6 +4544,17 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   this.gtimeline_container.setAttribute('class', 'gtimeline_container');
   gheader_grid.appendChild(group_aname_container);
   gheader_grid.appendChild(this.gtimeline_container);
+
+  // audio spectrum
+  if ( this.is_audio_spectrum_enabled ) {
+    this.spectrum_label_container = document.createElement('div');
+    this.spectrum_label_container.innerHTML = 'Audio Amplitude';
+    this.spectrum_container = document.createElement('div');
+    this.spectrum_container.setAttribute('class', 'spectrum_container');
+    gheader_grid.appendChild(this.spectrum_label_container);
+    gheader_grid.appendChild(this.spectrum_container);
+  }
+
   gheader_container.appendChild(gheader_grid);
   this.tmetadata_container.appendChild(gheader_container);
   this.c.appendChild(this.tmetadata_container);
@@ -4299,6 +4579,18 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
 
   if ( this.gid_list.length ) {
     this._tmetadata_group_gid_sel(0);
+  }
+
+  // update audio spectrum
+  if ( this.is_audio_spectrum_enabled ) {
+    this.audio_spectrum._init(this.spectrum_container,
+                              this.timeline_container_width,
+                              this.linehn[this.AUDIO_SPECTRUM_HEIGHT],
+                             );
+    this.audio_spectrum._update(this.tmetadata_gtimeline_tstart,
+                                this.tmetadata_gtimeline_tend,
+                                this.tmetadata_width_per_sec
+                               );
   }
 }
 
@@ -4457,6 +4749,14 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_update = function(tstart) 
   // asynchronously pull out the metadata in the current group timeline boundary
   this.tmetadata_gtimeline_mid = {};
   setTimeout( this._tmetadata_boundary_fetch_all_mid.bind(this), 0);
+
+  if ( this.is_audio_spectrum_enabled) {
+    this.audio_spectrum._update(this.tmetadata_gtimeline_tstart,
+                                this.tmetadata_gtimeline_tend,
+                                this.tmetadata_width_per_sec
+                               );
+  }
+
 }
 
 _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_all_mid = function() {
@@ -4744,12 +5044,17 @@ _via_temporal_segmenter.prototype._tmetadata_group_update_gid = function(e) {
     this.gid_list[gindex] = new_gid;
     this.gid_list_input.value = this.gid_list.join(',');
 
-    if ( this.selected_gid === old_gid ) {
-      this.selected_gid = new_gid;
-      this.selected_gindex = this.gid_list.indexOf(this.selected_gid);
-    }
-
     this._tmetadata_gmetadata_update();
+    delete this.tmetadata_gtimeline_mid[old_gid];
+    this._tmetadata_boundary_fetch_gid_mid(new_gid);
+    console.log(this.tmetadata_gtimeline_mid)
+    this._tmetadata_group_gid_draw(new_gid);
+
+    // update selection to new_gid
+    if ( this.selected_gid === old_gid ) {
+      var new_gindex = this.gid_list.indexOf(new_gid);
+      this._tmetadata_group_gid_sel(new_gindex);
+    }
   }.bind(this), function(err) {
     console.warn('_via_data.metadata_update_av_bulk() failed');
   }.bind(this));
@@ -5899,6 +6204,27 @@ _via_temporal_segmenter.prototype._on_event_metadata_update_bulk = function(data
     _via_util_msg_show('Updated ' + event_payload.mid_list.length + ' metadata');
   }
 }
+
+//
+// Audio Spectrum
+//
+_via_temporal_segmenter.prototype._audio_spectrum_init = function() {
+  if ( this.m.duration <= this.AUDIO_SPECTRUM_MAX_DURATION &&
+       this.file.type === _VIA_FILE_TYPE.AUDIO &&
+       this.file.loc === _VIA_FILE_LOC.URIHTTP
+     ) {
+    this.audio_spectrum = new _via_audio_spectrum(this.file, this.d.store.config.file.path);
+    this.audio_spectrum.load().then( function(ok) {
+      console.log('load done');
+      this.audio_spectrum._update(this.tmetadata_gtimeline_tstart,
+                                  this.tmetadata_gtimeline_tend,
+                                  this.tmetadata_width_per_sec
+                                 );
+    }.bind(this), function(err) {
+      console.log('load error' + err);
+    }.bind(this));
+  }
+}
 </script>
 <!-- END: Contents of file: js/_via_temporal_segmenter.js-->
 <!-- START: Contents of file: js/_via_view_annotator.js-->
@@ -6217,6 +6543,29 @@ _via_view_annotator.prototype._view_split_content_container = function(container
 _via_view_annotator.prototype.set_region_draw_shape = function(shape) {
   if ( _VIA_RSHAPE.hasOwnProperty(shape) ) {
     this.region_draw_shape = _VIA_RSHAPE[shape];
+    switch(this.region_draw_shape) {
+    case _VIA_RSHAPE.POINT:
+      _via_util_msg_show('Click to define feature points');
+      break;
+    case _VIA_RSHAPE.RECT:
+      _via_util_msg_show('Click and drag mouse cursor to define a rectangular region');
+      break;
+    case _VIA_RSHAPE.CIRCLE:
+      _via_util_msg_show('Click and drag mouse cursor to define a circular region');
+      break;
+    case _VIA_RSHAPE.ELLIPSE:
+      _via_util_msg_show('Click and drag mouse cursor to define a elliptical region');
+      break;
+    case _VIA_RSHAPE.LINE:
+      _via_util_msg_show('Click and drag mouse cursor to define a line region');
+      break;
+    case _VIA_RSHAPE.POLYLINE:
+      _via_util_msg_show('Click to define vertices of polyline and to finish click at the last vertex.');
+      break;
+    case _VIA_RSHAPE.POLYGON:
+      _via_util_msg_show('Click to define vertices of polygon and to finish click at the last vertex.');
+      break;
+    }
   }
 }
 
@@ -7592,15 +7941,46 @@ _via_dp[1]['store']['file'] = {
     'loc':1,
     'src':'Drone_liveatc_PRFlyer.mp3',
   },
+  '2':{
+    'fid':2,
+    'fname':'https://upload.wikimedia.org/wikipedia/commons/c/ce/Interview_Debora_Weber-Wulff_2.oga',
+    'type':8,
+    'loc':2,
+    'src':'https://upload.wikimedia.org/wikipedia/commons/c/ce/Interview_Debora_Weber-Wulff_2.oga',
+  },
+  '3':{
+    'fid':3,
+    'fname':'The_ENIAC_Programmers_%28As_Told_By_U.S._Chief_Technology_Officer_Megan_Smith%29.ogg',
+    'type':8,
+    'loc':2,
+    'src':'https://upload.wikimedia.org/wikipedia/commons/1/15/The_ENIAC_Programmers_%28As_Told_By_U.S._Chief_Technology_Officer_Megan_Smith%29.ogg',
+  },
+  '4':{
+    'fid':4,
+    'fname':'Calibration.ogg',
+    'type':8,
+    'loc':2,
+    'src':'https://upload.wikimedia.org/wikipedia/commons/8/81/Heart_Monitor_Beep--freesound.org.oga',
+  },
+
 };
 
 _via_dp[1]['store']['view'] = {
   '1': {
     'fid_list':[1],
   },
+  '2': {
+    'fid_list':[2],
+  },
+  '3': {
+    'fid_list':[3],
+  },
+  '4': {
+    'fid_list':[4],
+  },
 };
 
-_via_dp[1]['store']['vid_list'] = ['1'];
+_via_dp[1]['store']['vid_list'] = ['1', '2', '3', '4'];
 _via_dp[1]['store']['metadata'] = {
   '-glfwaaX': {
     'vid': '1',
@@ -7677,6 +8057,114 @@ _via_dp[1]['store']['metadata'] = {
       '1':'Pilot',
       '2':'its dark green',
       '3':'1',
+    }
+  },
+  "2_Z+LXp1s8": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      0,
+      1.183
+    ],
+    "xy": [],
+    "av": {
+      "1": "Interviewer"
+    }
+  },
+  "2_AG1+bmSA": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      1.137,
+      2.436121
+    ],
+    "xy": [],
+    "av": {
+      "1": "Prof. Debora"
+    }
+  },
+  "2_S5L7szM-": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      2.436,
+      3.816733
+    ],
+    "xy": [],
+    "av": {
+      "1": "Interviewer"
+    }
+  },
+  "2_cMYHLELJ": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      4.017,
+      5.624805
+    ],
+    "xy": [],
+    "av": {
+      "1": "Prof. Debora"
+    }
+  },
+  "2_DaiuIloC": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      5.921,
+      15.101221
+    ],
+    "xy": [],
+    "av": {
+      "1": "Interviewer"
+    }
+  },
+  "2_zp-ru14v": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      15.101,
+      41.008681
+    ],
+    "xy": [],
+    "av": {
+      "1": "Prof. Debora"
+    }
+  },
+  "2_dIFoc30m": {
+    "vid": "2",
+    "flg": 0,
+    "z": [
+      41.147,
+      62.644961
+    ],
+    "xy": [],
+    "av": {
+      "1": "Interviewer"
+    }
+  },
+  "3_Xp-au12v": {
+    "vid": "3",
+    "flg": 0,
+    "z": [
+      2.101,
+      6.008681
+    ],
+    "xy": [],
+    "av": {
+      "1": "A"
+    }
+  },
+  "3_sIxEc10m": {
+    "vid": "3",
+    "flg": 0,
+    "z": [
+      16.147,
+      27.644961
+    ],
+    "xy": [],
+    "av": {
+      "1": "B"
     }
   },
 };
@@ -8068,15 +8556,15 @@ function _via(via_container) {
 
   this.d  = new _via_data();
 
-  // debug code
-  if ( false ) {
+  // debug code (disabled for release)
+  if ( true ) {
     this.d.store = _via_dp[2]['store'];
     this.d._cache_update();
 
     setTimeout( function() {
       this.va.view_show('1');
       //this.editor.show();
-    }.bind(this), 1000);
+    }.bind(this), 200);
   }
 
   //// define the html containers
@@ -8122,8 +8610,9 @@ function _via(via_container) {
   }.bind(this));
 
   // keyboard event handlers
-  this.via_container.focus()
-  this.via_container.addEventListener('keydown', this._keydown_handler.bind(this));
+  //this.via_container.focus()
+  //this.via_container.addEventListener('keydown', this._keydown_handler.bind(this));
+  window.addEventListener('keydown', this._keydown_handler.bind(this)); // @todo: should be attached only to VIA application container
 
   // update VIA version number
   var el = document.getElementById('via_info_page_container');

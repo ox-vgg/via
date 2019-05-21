@@ -409,7 +409,6 @@ _via_data.prototype.metadata_delete_bulk = function(vid, mid_list, emit) {
         this.store.metadata[mid].flg = _VIA_METADATA_FLAG.DELETED;
         deleted_mid_list.push(mid);
       }
-      console.log(deleted_mid_list)
       if ( typeof(emit) !== 'undefined' &&
            emit === true ) {
         this.emit_event( 'metadata_delete_bulk', { 'vid':vid, 'mid_list':deleted_mid_list } );

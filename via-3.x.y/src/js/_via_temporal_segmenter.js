@@ -898,13 +898,17 @@ _via_temporal_segmenter.prototype._tmetadata_group_update_gid = function(e) {
     this.gid_list[gindex] = new_gid;
     this.gid_list_input.value = this.gid_list.join(',');
 
-    if ( this.selected_gid === old_gid ) {
-      this.selected_gid = new_gid;
-      this.selected_gindex = this.gid_list.indexOf(this.selected_gid);
-    }
-
-    this._tmetadata_group_gid_draw(new_gid);
     this._tmetadata_gmetadata_update();
+    delete this.tmetadata_gtimeline_mid[old_gid];
+    this._tmetadata_boundary_fetch_gid_mid(new_gid);
+    console.log(this.tmetadata_gtimeline_mid)
+    this._tmetadata_group_gid_draw(new_gid);
+
+    // update selection to new_gid
+    if ( this.selected_gid === old_gid ) {
+      var new_gindex = this.gid_list.indexOf(new_gid);
+      this._tmetadata_group_gid_sel(new_gindex);
+    }
   }.bind(this), function(err) {
     console.warn('_via_data.metadata_update_av_bulk() failed');
   }.bind(this));
