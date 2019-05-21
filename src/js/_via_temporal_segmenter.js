@@ -863,6 +863,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_sel = function(gindex) {
   this.selected_gid = this.gid_list[this.selected_gindex];
   this.selected_mindex = -1;
   this.selected_mid = '';
+  this.metadata_last_added_mid = '';
 
   this.edge_show_time = -1;
   this._tmetadata_group_gid_draw(this.selected_gid);
@@ -991,12 +992,31 @@ _via_temporal_segmenter.prototype._tmetadata_mid_move = function(dt) {
   var newz = this.d.metadata_store[this.selected_mid].z.slice();
   for ( var i = 0; i < n; ++i ) {
     newz[i] = parseFloat((parseFloat(newz[i]) + dt).toFixed(3));
+    if ( newz[i] < 0 || newz[i] > this.m.duration ) {
+      _via_util_msg_show('Cannot move temporal segment beyond the boundary!');
+      return;
+    }
   }
   this.d.metadata_update_z(this.file.fid, this.selected_mid, newz).then( function(ok) {
     this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
-    this._tmetadata_group_gid_draw(this.selected_gid);
+
     // the move operation may have changed the sequential order of mid
     this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
+
+    // check if we need to shift timeline to show the recently moved metadata
+    if ( newz[0] <= this.tmetadata_gtimeline_tstart ||
+         newz[1] >= this.tmetadata_gtimeline_tend ) {
+      var new_tstart = this.tmetadata_gtimeline_tstart - 1;
+      if ( newz[1] >= this.tmetadata_gtimeline_tend ) {
+        new_tstart = this.tmetadata_gtimeline_tstart + 1;
+      }
+      if ( new_tstart >= 0 ) {
+        this._tmetadata_boundary_update(new_tstart)
+        this._tmetadata_gtimeline_draw();
+      }
+    } else {
+      this._tmetadata_group_gid_draw(this.selected_gid);
+    }
   }.bind(this));
 }
 
@@ -1012,7 +1032,7 @@ _via_temporal_segmenter.prototype._tmetadata_mid_del = function(mid) {
 
     this._group_gid_del_mid(this.selected_gid, mid);
     this.d.metadata_del(this.file.fid, mid);
-    this._tmetadata_group_gid_draw(this.selected_gid);
+    //this._tmetadata_group_gid_draw(this.selected_gid);
   }
 }
 
@@ -1125,6 +1145,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mousemove = function(e) {
   var gid = e.target.dataset.gid;
   var t = this._tmetadata_gtimeline_canvas2time(x);
   if ( this.metadata_resize_is_ongoing ) {
+    this.m.currentTime = t;
     this.metadata_ongoing_update_x[ this.metadata_resize_edge_index ] = x;
     this._tmetadata_group_gid_draw(gid);
     return;
@@ -1369,14 +1390,19 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     return;
   }
 
-  if ( e.key === 'l' || e.key === 'L') {
+    if ( e.key === 'l' || e.key === 'L') {
     e.preventDefault();
     if ( this.selected_mindex !== -1 ) {
       // resize left edge of selected temporal segment
+      var delta = this.EDGE_UPDATE_TIME_DELTA;
+      if ( e.ctrlKey ) {
+        delta = 1;
+      }
+
       if ( e.key === 'l' ) {
-        this._tmetadata_mid_update_edge(0, -this.EDGE_UPDATE_TIME_DELTA);
+        this._tmetadata_mid_update_edge(0, -delta);
       } else {
-        this._tmetadata_mid_update_edge(0, this.EDGE_UPDATE_TIME_DELTA);
+        this._tmetadata_mid_update_edge(0, delta);
       }
       return;
     } else {
@@ -1392,10 +1418,15 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     e.preventDefault();
     if ( this.selected_mindex !== -1 ) {
       // resize left edge of selected temporal segment
+      var delta = this.EDGE_UPDATE_TIME_DELTA;
+      if ( e.ctrlKey ) {
+        delta = 1;
+      }
+
       if ( e.key === 'r' ) {
-        this._tmetadata_mid_update_edge(1, this.EDGE_UPDATE_TIME_DELTA);
+        this._tmetadata_mid_update_edge(1, delta);
       } else {
-        this._tmetadata_mid_update_edge(1, -this.EDGE_UPDATE_TIME_DELTA);
+        this._tmetadata_mid_update_edge(1, -delta);
       }
       return;
     } else {
@@ -1470,10 +1501,14 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
         }
       } else {
         // move selected temporal segment
+        var delta = this.EDGE_UPDATE_TIME_DELTA;
+        if ( e.ctrlKey ) {
+          delta = 1.0;
+        }
         if ( e.key === 'ArrowLeft' ) {
-          this._tmetadata_mid_move(-this.EDGE_UPDATE_TIME_DELTA);
+          this._tmetadata_mid_move(-delta);
         } else {
-          this._tmetadata_mid_move(this.EDGE_UPDATE_TIME_DELTA);
+          this._tmetadata_mid_move(delta);
         }
       }
     } else {
@@ -1597,7 +1632,7 @@ _via_temporal_segmenter.prototype._group_gid_add_mid = function(gid, new_mid) {
 
   // if the insertion was not possible, simply push at the end
   this.group[gid].push(new_mid);
-  this._tmetadata_group_gid_draw(gid);
+  //this._tmetadata_group_gid_draw(gid);
 }
 
 _via_temporal_segmenter.prototype._group_gid_del_mid = function(gid, mid) {

@@ -5,10 +5,12 @@
 import string
 import os
 
+DIST_PACK_DIR = os.path.dirname(os.path.realpath(__file__))
+VIA_SRC_DIR = os.path.join(DIST_PACK_DIR, '..', '..')
 
-TARGET_HTML = '/home/tlm/dev/via/src/html/chimp_video_annotation.html'
-OUT_HTML = '/home/tlm/dev/via/dist/chimp_video_annotation.html'
-SRC_DIR='/home/tlm/dev/via/src/'
+TARGET_HTML = os.path.join(VIA_SRC_DIR, 'src/html/chimp_video_annotation.html')
+OUT_HTML = os.path.join(VIA_SRC_DIR, 'dist/chimp_video_annotation.html')
+SRC_DIR = os.path.join(VIA_SRC_DIR, 'src')
 
 def get_file_contents(filename):
   full_filename = os.path.join(SRC_DIR, filename)

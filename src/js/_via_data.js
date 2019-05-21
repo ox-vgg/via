@@ -653,8 +653,7 @@ _via_data.prototype.save_remote = function(username) {
   }.bind(this));
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.setRequestHeader('Accept', 'application/json');
-  //xhr.send( JSON.stringify(data) );
-  console.log(data)
+  xhr.send( JSON.stringify(data) );
 }
 
 _via_data.prototype.load_local = function() {
