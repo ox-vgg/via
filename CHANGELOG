@@ -1,3 +1,9 @@
+## [3.0.2] - 21 May 2019
+ * shape selector icon now gets highlighted
+ * fixed issues caused by rename of temporal segment variable's value
+ * fixed issue in thumbnail caused by files added using file:// uri (path issue)
+ * minor UI updates
+
 ## [3.0.1] - 20 May 2019
  * keyboard event listener attached to window instead of via_container to avoid missing keydown events when something else is in focus
 
