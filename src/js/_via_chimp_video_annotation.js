@@ -64,11 +64,14 @@ var project_name_element = document.getElementById('_via_filemanager_project_nam
 var file_manager = new _via_file_manager(data, annotator, filelist_element, project_name_element);
 file_manager._init();
 
+data._project_import_from_json(chimp_2012_001);
+console.log(data);
+
 function _via_on_browser_resize() {
   annotator.emit_event('container_resize', {});
 }
 
-if ( true ) {
+if ( false ) {
   var project_data = { '2012': [1,18], '2013': [1,9] };
 
   var project_list = document.getElementById('project_list');

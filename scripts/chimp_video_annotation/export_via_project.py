@@ -12,10 +12,13 @@ import http.client
 import datetime
 import csv
 
-COUCHDB_IP = '127.0.0.1'
-COUCHDB_PORT = '5984'
+#COUCHDB_IP = '127.0.0.1'
+#COUCHDB_PORT = '5984'
+COUCHDB_IP = 'zeus.robots.ox.ac.uk'
+COUCHDB_PORT = ''
+
 VIA_FOLDER = '/data/datasets/arsha/chimp/chimp_video_annotation/via_projects'
-metadata_fn = '/data/datasets/arsha/chimp/chimp_video_annotation/initial_metadata/2012_2013.csv'
+metadata_fn = '/data/datasets/arsha/chimp/chimp_video_annotation/initial_metadata/2013_timestamps_16Apr2019.csv'
 metadata = {}
 
 def init_via_project(project_index, year):
@@ -46,12 +49,13 @@ def push_via_project_to_couchdb(data):
   print('  %s : %d %s' % (uri, r.status, r.reason))
 
 ## create a new database for the via project
-conn = http.client.HTTPConnection(COUCHDB_IP, COUCHDB_PORT)
-baseuri = '/chimp_2012_2013'
-conn.request('PUT', baseuri )
+conn = http.client.HTTPConnection(COUCHDB_IP)
+baseuri = '/via/ds/chimp_2012_2013'
+conn.request('GET', baseuri )
 r = conn.getresponse()
-r.read()
-print('Create couchdb database : %d %s' % (r.status, r.reason) )
+response = r.read()
+print('couchdb database %s : %d %s' % (baseuri, r.status, r.reason) )
+
 
 with open(metadata_fn, 'r') as f:
   csvreader = csv.reader(f, delimiter=',')
@@ -75,7 +79,7 @@ year_list = list(metadata.keys())
 year_list.sort()
 filename_project_id_map = {}
 for year in year_list:
-  project_index = 1
+  project_index = 10
   fid = 1
 
   filename_list = list(metadata[year].keys())

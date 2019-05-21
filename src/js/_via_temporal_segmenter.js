@@ -376,11 +376,24 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   this.tmetadata_container.appendChild(header_container);
 
   // metadata
-  var metadata_container = document.createElement('div');
-  metadata_container.setAttribute('class', 'metadata_container');
-  metadata_container.setAttribute('style', 'display:inline-block; max-height:' +
-                                  this.lineh * this.METADATA_CONTAINER_HEIGHT +
-                                  'px; width:100%; overflow:auto;');
+  this.metadata_container = document.createElement('div');
+  this.metadata_container.setAttribute('class', 'metadata_container');
+  this.metadata_container.setAttribute('style', 'display:inline-block; max-height:' +
+                                       this.lineh * this.METADATA_CONTAINER_HEIGHT +
+                                       'px; width:100%; overflow:auto;');
+
+  this._tmetadata_update();
+  this.tmetadata_container.appendChild(this.metadata_container);
+  this.c.appendChild(this.tmetadata_container);
+
+  if ( this.gid_list.length ) {
+    this._tmetadata_group_gid_sel(0);
+  }
+}
+
+_via_temporal_segmenter.prototype._tmetadata_update = function() {
+  // metadata
+  this.metadata_container.innerHTML = '';
 
   var metadata_table = document.createElement('table');
   this.metadata_tbody = document.createElement('tbody');
@@ -392,15 +405,8 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
     gid = this.gid_list[gindex];
     this.metadata_tbody.appendChild( this._tmetadata_group_gid_html(gid) );
   }
-
   metadata_table.appendChild(this.metadata_tbody);
-  metadata_container.appendChild(metadata_table);
-  this.tmetadata_container.appendChild(metadata_container);
-  this.c.appendChild(this.tmetadata_container);
-
-  if ( this.gid_list.length ) {
-    this._tmetadata_group_gid_sel(0);
-  }
+  this.metadata_container.appendChild(metadata_table);
 }
 
 _via_temporal_segmenter.prototype._tmetadata_boundary_move = function(dt) {
@@ -1715,88 +1721,62 @@ _via_temporal_segmenter.prototype._on_event_metadata_add = function(fid, mid) {
 // Toolbar
 //
 _via_temporal_segmenter.prototype._toolbar_init = function() {
-  var toolbar_container = document.createElement('div');
-  toolbar_container.setAttribute('class', 'toolbar_container');
+  this.toolbar_container = document.createElement('div');
+  this.toolbar_container.setAttribute('class', 'toolbar_container');
 
   var pb_mode_container = document.createElement('div');
-  var pb_mode_label = document.createElement('span');
-  pb_mode_label.innerHTML = 'Playback Mode:';
-  pb_mode_container.appendChild(pb_mode_label);
+  var pb_mode_select = document.createElement('select');
+  pb_mode_select.setAttribute('style', 'width:11em;');
+  pb_mode_select.setAttribute('title', 'Normal playback shows media in the normal 1X speed. To review existing segments, use the Segment Review playback mode to speed up playback in the gap areas and normal playback in the segments.');
+  pb_mode_select.addEventListener('change', this._toolbar_playback_mode_on_change.bind(this));
+  var pb_mode_option_list = {'Normal':this.PLAYBACK_MODE.NORMAL,
+                             'Segments Review':this.PLAYBACK_MODE.REVIEW_SEGMENT,
+                             'Gaps Review':this.PLAYBACK_MODE.REVIEW_GAP
+                            };
+  for ( var pb_mode_name in pb_mode_option_list ) {
+    var oi = document.createElement('option');
+    oi.setAttribute('value', pb_mode_option_list[pb_mode_name]);
+    oi.innerHTML = 'Playback: ' + pb_mode_name;
+    pb_mode_select.appendChild(oi);
+  }
+  pb_mode_container.appendChild(pb_mode_select);
 
-  var pb_normal = document.createElement('input');
-  pb_normal.setAttribute('type', 'radio');
-  pb_normal.setAttribute('id', 'playback_mode_normal');
-  pb_normal.setAttribute('name', 'via_temporal_segmenter_playback_mode');
-  pb_normal.setAttribute('value', this.PLAYBACK_MODE.NORMAL);
-  pb_normal.setAttribute('checked', '');
-  pb_normal.addEventListener('change', this._toolbar_playback_mode_on_change.bind(this));
-  pb_mode_container.appendChild(pb_normal);
-  var pb_normal_label = document.createElement('label');
-  pb_normal_label.setAttribute('for', 'playback_mode_normal');
-  pb_normal_label.innerHTML = 'Normal';
-  pb_mode_container.appendChild(pb_normal_label);
 
-  var pb_review = document.createElement('input');
-  pb_review.setAttribute('type', 'radio');
-  pb_review.setAttribute('id', 'playback_mode_review_segment');
-  pb_review.setAttribute('name', 'via_temporal_segmenter_playback_mode');
-  pb_review.setAttribute('value', this.PLAYBACK_MODE.REVIEW_SEGMENT);
-  pb_review.addEventListener('change', this._toolbar_playback_mode_on_change.bind(this));
-  pb_mode_container.appendChild(pb_review);
-  var pb_review_label = document.createElement('label');
-  pb_review_label.setAttribute('for', 'playback_mode_review_segment');
-  pb_review_label.innerHTML = 'Review Segments';
-  pb_mode_container.appendChild(pb_review_label);
+  var gid_list_update_container = document.createElement('div');
+  var label = document.createElement('span');
+  label.innerHTML = 'Timeline List: ';
+  gid_list_update_container.appendChild(label);
 
-  var pb_annotation = document.createElement('input');
-  pb_annotation.setAttribute('type', 'radio');
-  pb_annotation.setAttribute('id', 'playback_mode_review_gap');
-  pb_annotation.setAttribute('name', 'via_temporal_segmenter_playback_mode');
-  pb_annotation.setAttribute('value', this.PLAYBACK_MODE.REVIEW_GAP);
-  pb_annotation.addEventListener('change', this._toolbar_playback_mode_on_change.bind(this));
-  pb_mode_container.appendChild(pb_annotation);
-  var pb_annotation_label = document.createElement('label');
-  pb_annotation_label.setAttribute('for', 'playback_mode_review_gap');
-  pb_annotation_label.innerHTML = 'Review Gaps';
-  pb_mode_container.appendChild(pb_annotation_label);
+  this.gid_list_input = document.createElement('input');
+  this.gid_list_input.setAttribute('type', 'text');
+  this.gid_list_input.setAttribute('title', 'Use this input to (a) delete an existing value of timeline group variable; (b) update the order of existing values of the timeline group variable.');
+  var gid_list_str = this.gid_list.join(',');
+  this.gid_list_input.setAttribute('value', gid_list_str);
+  //this.gid_list_input.setAttribute('style', 'width:' + (gid_list_str.length) + 'ch;');
+  this.gid_list_input.setAttribute('style', 'width:15em;');
+  var gid_list_update_btn = document.createElement('button');
+  gid_list_update_btn.innerHTML = 'Update';
+  gid_list_update_btn.addEventListener('click', this._tmetadata_onchange_gid_list_input.bind(this));
 
-  var control_container = document.createElement('div');
-  var delbtn = document.createElement('button');
-  delbtn.setAttribute('data-gid', this.selected_gid);
-  delbtn.innerHTML = 'Delete Selected';
-  delbtn.addEventListener('click', function(e) {
-    this._group_del_gid(this.selected_gid);
-  }.bind(this));
+  gid_list_update_container.appendChild(this.gid_list_input);
+  gid_list_update_container.appendChild(gid_list_update_btn);
 
-  this.new_group_id_input = document.createElement('input');
-  this.new_group_id_input.setAttribute('type', 'text');
-  this.new_group_id_input.setAttribute('size', '16');
-  this.new_group_id_input.setAttribute('placeholder', 'New ' + this.d.attribute_store[this.groupby_aid].aname);
+  var keyboard_shortcut = document.createElement('span');
+  keyboard_shortcut.setAttribute('class', 'text_button');
+  keyboard_shortcut.innerHTML = 'Keyboard Shortcuts';
+  keyboard_shortcut.addEventListener('click', function() {
+    _via_util_show_info_page('keyboard_shortcuts');
+  });
 
-  var addbtn = document.createElement('button');
-  addbtn.setAttribute('data-gid', this.selected_gid);
-  addbtn.innerHTML = 'Add';
-  addbtn.addEventListener('click', function(e) {
-    var new_gid = this.new_group_id_input.value;
-    if ( new_gid !== '' ) {
-      this._group_add_gid(new_gid.trim());
-    } else {
-      _via_util_msg_show(this.d.attribute_store[this.groupby_aid].aname +
-                         ' id cannot be empty!');
-    }
-  }.bind(this));
+  this.toolbar_container.appendChild(gid_list_update_container);
+  this.toolbar_container.appendChild(pb_mode_container);
+  this.toolbar_container.appendChild(keyboard_shortcut);
 
-  control_container.appendChild(this.new_group_id_input);
-  control_container.appendChild(addbtn);
-  control_container.appendChild(delbtn);
-
-  toolbar_container.appendChild(pb_mode_container);
-  //toolbar_container.appendChild(control_container);
-
-  this.c.appendChild(toolbar_container);
+  this.c.appendChild(this.toolbar_container);
 }
 
 _via_temporal_segmenter.prototype._toolbar_playback_mode_on_change = function(e) {
+  e.preventDefault();
   this.current_playback_mode = e.target.value;
   if ( this.current_playback_mode === this.PLAYBACK_MODE.NORMAL ) {
     this._toolbar_playback_rate_set(1);
@@ -1807,4 +1787,86 @@ _via_temporal_segmenter.prototype._toolbar_playback_rate_set = function(rate) {
   if ( this.m.playbackRate !== rate ) {
     this.m.playbackRate = rate;
   }
+}
+
+_via_temporal_segmenter.prototype._tmetadata_onchange_gid_list_input = function(e) {
+  e.preventDefault();
+  var input_gid_list = this.gid_list_input.value.split(',');
+  if ( _via_util_array_eq(input_gid_list, this.gid_list) ) {
+    _via_util_msg_show('Timeline group variable values remain unchanged!');
+    return;
+  }
+
+  // filter any empty values
+  var new_gid_list = [];
+  var discarded_gid_list = [];
+  for ( var i in input_gid_list ) {
+    if ( input_gid_list[i] === '' ||
+         input_gid_list[i] === ' ' ) {
+      discarded_gid_list.push( input_gid_list[i] );
+    } else {
+      new_gid_list.push( input_gid_list[i].trim() );
+    }
+  }
+
+  if ( discarded_gid_list.length ) {
+    _via_util_msg_show('Discarded following ' + discarded_gid_list.length + ' values: ' +
+                       discarded_gid_list.join(','));
+  }
+
+  // get a list of timeline group variable values that needs to be deleted
+  var del_gid_list = [];
+  for ( var i in this.gid_list ) {
+    if ( new_gid_list.indexOf(this.gid_list[i]) === -1 ) {
+      del_gid_list.push(this.gid_list[i]);
+    }
+  }
+
+  this._group_del_gid(del_gid_list).then( function(del_mid_list) {
+    this.d.metadata_del_bulk(this.file.fid, del_mid_list, false).then( function(ok) {
+      this._group_init(this.groupby_aid);
+      // add the missing gid
+      var gid;
+      for ( var i in new_gid_list ) {
+        gid = new_gid_list[i];
+        if ( ! this.group.hasOwnProperty(gid) ) {
+          this.group[gid] = [];
+          this.gid_list.push(gid);
+        }
+      }
+      this.gid_list = new_gid_list.slice(0); // ensure the order of gid is as set by user
+      this._tmetadata_update();
+      this.gid_list_input.value = this.gid_list.join(',');
+    }.bind(this), function(err) {
+      console.log(err);
+    }.bind(this));
+  }.bind(this), function(err) {
+    console.log(err);
+  }.bind(this));
+}
+
+
+_via_temporal_segmenter.prototype._group_del_gid = function(gid_list) {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      var del_mid_list = [];
+      var gid;
+      for ( var i in gid_list ) {
+        gid = gid_list[i];
+        for ( var mindex in this.group[gid] ) {
+          del_mid_list.push(this.group[gid][mindex]);
+        }
+        delete this.group[gid];
+        delete this.tmetadata_gtimeline_mid[gid];
+        var gindex = this.gid_list.indexOf(gid);
+        this.gid_list.splice(gindex, 1);
+        delete this.gctx[gid];
+        delete this.gcanvas[gid];
+      }
+      ok_callback(del_mid_list);
+    }
+    catch(ex) {
+      err_callback(ex);
+    }
+  }.bind(this));
 }

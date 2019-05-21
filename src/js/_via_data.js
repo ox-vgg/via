@@ -425,7 +425,7 @@ _via_data.prototype.metadata_del = function(fid, mid) {
   }.bind(this));
 }
 
-_via_data.prototype.metadata_del_bulk = function(fid, mid_list) {
+_via_data.prototype.metadata_del_bulk = function(fid, mid_list, emit) {
   return new Promise( function(ok_callback, err_callback) {
     if ( typeof(this.file_store[fid]) === 'undefined' ) {
       err_callback('invalid fid=' + fid);
@@ -442,7 +442,10 @@ _via_data.prototype.metadata_del_bulk = function(fid, mid_list) {
       this._store_transaction('metadata_store', 'del', {'fid':fid, 'mid':mid});
     }
     this._hook_on_data_update();
-    this.emit_event( 'metadata_del_bulk', { 'fid':fid, 'mid_list':mid_list } );
+    if ( typeof(emit) !== 'undefined' && emit === true ) {
+      this.emit_event( 'metadata_del_bulk', { 'fid':fid, 'mid_list':mid_list } );
+    }
+
     ok_callback({'fid':fid, 'mid':mid});
   }.bind(this));
 }
@@ -535,7 +538,7 @@ _via_data.prototype._project_load = function(data) {
   }
 
   _via_util_msg_show('Loaded project [' + this.project_store['project_name'] + ']');
-  this.emit_event( 'project_load', {}  );
+  this.emit_event( 'project_load', {} );
 }
 
 _via_data.prototype._project_pack_data = function() {
@@ -644,13 +647,14 @@ _via_data.prototype.save_remote = function(username) {
       }
       break;
     default:
-      _via_util_msg_show('Upload failed with response [' + xhr.statusText + ']', true);
+      _via_util_msg_show('Upload failed with response [' + xhr.statusText + ': ' + xhr.responseText + ']', true);
       break;
     }
   }.bind(this));
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.setRequestHeader('Accept', 'application/json');
-  xhr.send( JSON.stringify(data) );
+  //xhr.send( JSON.stringify(data) );
+  console.log(data)
 }
 
 _via_data.prototype.load_local = function() {

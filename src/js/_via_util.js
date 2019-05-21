@@ -353,3 +353,20 @@ function _via_util_float_arr_to_fixed(arr, fixed) {
 function _via_util_float_to_fixed(value, fixed) {
   return parseFloat( value.toFixed(fixed) );
 }
+
+function _via_util_array_eq(a, b) {
+  if ( a == null || b == null ) {
+    return false;
+  }
+  if ( a.length != b.length ) {
+    return false;
+  }
+  var n = a.length;
+  for ( var i = 0; i < n; ++i ) {
+    if ( a[i] !== b[i] ) {
+      return false;
+    }
+  }
+  return true;
+}
+
