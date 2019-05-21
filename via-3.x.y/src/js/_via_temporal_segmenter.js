@@ -903,6 +903,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_update_gid = function(e) {
       this.selected_gindex = this.gid_list.indexOf(this.selected_gid);
     }
 
+    this._tmetadata_group_gid_draw(new_gid);
     this._tmetadata_gmetadata_update();
   }.bind(this), function(err) {
     console.warn('_via_data.metadata_update_av_bulk() failed');

@@ -1490,7 +1490,7 @@ _via_file_annotator.prototype._rinput_enable = function() {
     if ( this.file.type === _VIA_FILE_TYPE.VIDEO ) {
       this.file_html_element.removeAttribute('controls');
     }
-    _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.');
+    //_via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.');
   }
 }
 

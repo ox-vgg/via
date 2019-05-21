@@ -323,7 +323,6 @@ _via_data.prototype.metadata_update_av_bulk = function(vid, av_list) {
         this.store.metadata[mid].av[aid] = avalue;
         updated_mid_list.push(mid);
       }
-      console.log(this.store.metadata)
       var event_payload = { 'vid':vid, 'mid_list':updated_mid_list };
       this.emit_event('metadata_update_bulk', event_payload);
       ok_callback(event_payload);

@@ -15,9 +15,9 @@ function _via(via_container) {
 
   this.d  = new _via_data();
 
-  // debug code
-  if ( true ) {
-    this.d.store = _via_dp[1]['store'];
+  // debug code (disabled for release)
+  if ( false ) {
+    this.d.store = _via_dp[2]['store'];
     this.d._cache_update();
 
     setTimeout( function() {
@@ -69,8 +69,9 @@ function _via(via_container) {
   }.bind(this));
 
   // keyboard event handlers
-  this.via_container.focus()
-  this.via_container.addEventListener('keydown', this._keydown_handler.bind(this));
+  //this.via_container.focus()
+  //this.via_container.addEventListener('keydown', this._keydown_handler.bind(this));
+  window.addEventListener('keydown', this._keydown_handler.bind(this)); // @todo: should be attached only to VIA application container
 
   // update VIA version number
   var el = document.getElementById('via_info_page_container');
