@@ -373,11 +373,24 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   this.tmetadata_container.appendChild(header_container);
 
   // metadata
-  var metadata_container = document.createElement('div');
-  metadata_container.setAttribute('class', 'metadata_container');
-  metadata_container.setAttribute('style', 'display:inline-block; max-height:' +
-                                  this.lineh * this.METADATA_CONTAINER_HEIGHT +
-                                  'px; width:100%; overflow:auto;');
+  this.metadata_container = document.createElement('div');
+  this.metadata_container.setAttribute('class', 'metadata_container');
+  this.metadata_container.setAttribute('style', 'display:inline-block; max-height:' +
+                                       this.lineh * this.METADATA_CONTAINER_HEIGHT +
+                                       'px; width:100%; overflow:auto;');
+
+  this._tmetadata_update();
+  this.tmetadata_container.appendChild(this.metadata_container);
+  this.c.appendChild(this.tmetadata_container);
+
+  if ( this.gid_list.length ) {
+    this._tmetadata_group_gid_sel(0);
+  }
+}
+
+_via_temporal_segmenter.prototype._tmetadata_update = function() {
+  // metadata
+  this.metadata_container.innerHTML = '';
 
   var metadata_table = document.createElement('table');
   this.metadata_tbody = document.createElement('tbody');
@@ -389,15 +402,8 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
     gid = this.gid_list[gindex];
     this.metadata_tbody.appendChild( this._tmetadata_group_gid_html(gid) );
   }
-
   metadata_table.appendChild(this.metadata_tbody);
-  metadata_container.appendChild(metadata_table);
-  this.tmetadata_container.appendChild(metadata_container);
-  this.c.appendChild(this.tmetadata_container);
-
-  if ( this.gid_list.length ) {
-    this._tmetadata_group_gid_sel(0);
-  }
+  this.metadata_container.appendChild(metadata_table);
 }
 
 _via_temporal_segmenter.prototype._tmetadata_boundary_move = function(dt) {
@@ -981,13 +987,31 @@ _via_temporal_segmenter.prototype._tmetadata_mid_move = function(dt) {
   var newz = this.d.metadata_store[this.selected_mid].z.slice();
   for ( var i = 0; i < n; ++i ) {
     newz[i] = parseFloat((parseFloat(newz[i]) + dt).toFixed(3));
+    if ( newz[i] < 0 || newz[i] > this.m.duration ) {
+      _via_util_msg_show('Cannot move temporal segment beyond the boundary!');
+      return;
+    }
   }
   this.d.metadata_update_z(this.file.fid, this.selected_mid, newz).then( function(ok) {
     this.m.currentTime = this.d.metadata_store[this.selected_mid].z[0];
-    this._tmetadata_group_gid_draw(this.selected_gid);
 
     // the move operation may have changed the sequential order of mid
     this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
+
+    // check if we need to shift timeline to show the recently moved metadata
+    if ( newz[0] <= this.tmetadata_gtimeline_tstart ||
+         newz[1] >= this.tmetadata_gtimeline_tend ) {
+      var new_tstart = this.tmetadata_gtimeline_tstart - 1;
+      if ( newz[1] >= this.tmetadata_gtimeline_tend ) {
+        new_tstart = this.tmetadata_gtimeline_tstart + 1;
+      }
+      if ( new_tstart >= 0 ) {
+        this._tmetadata_boundary_update(new_tstart)
+        this._tmetadata_gtimeline_draw();
+      }
+    } else {
+      this._tmetadata_group_gid_draw(this.selected_gid);
+    }
   }.bind(this));
 }
 
@@ -1115,6 +1139,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mousemove = function(e) {
   var gid = e.target.dataset.gid;
   var t = this._tmetadata_gtimeline_canvas2time(x);
   if ( this.metadata_resize_is_ongoing ) {
+    this.m.currentTime = t;
     this.metadata_ongoing_update_x[ this.metadata_resize_edge_index ] = x;
     this._tmetadata_group_gid_draw(gid);
     return;
@@ -1362,10 +1387,15 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     e.preventDefault();
     if ( this.selected_mindex !== -1 ) {
       // resize left edge of selected temporal segment
+      var delta = this.EDGE_UPDATE_TIME_DELTA;
+      if ( e.ctrlKey ) {
+        delta = 1;
+      }
+
       if ( e.key === 'l' ) {
-        this._tmetadata_mid_update_edge(0, -this.EDGE_UPDATE_TIME_DELTA);
+        this._tmetadata_mid_update_edge(0, -delta);
       } else {
-        this._tmetadata_mid_update_edge(0, this.EDGE_UPDATE_TIME_DELTA);
+        this._tmetadata_mid_update_edge(0, delta);
       }
       return;
     } else {
@@ -1381,10 +1411,15 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     e.preventDefault();
     if ( this.selected_mindex !== -1 ) {
       // resize left edge of selected temporal segment
+      var delta = this.EDGE_UPDATE_TIME_DELTA;
+      if ( e.ctrlKey ) {
+        delta = 1;
+      }
+
       if ( e.key === 'r' ) {
-        this._tmetadata_mid_update_edge(1, this.EDGE_UPDATE_TIME_DELTA);
+        this._tmetadata_mid_update_edge(1, delta);
       } else {
-        this._tmetadata_mid_update_edge(1, -this.EDGE_UPDATE_TIME_DELTA);
+        this._tmetadata_mid_update_edge(1, -delta);
       }
       return;
     } else {
@@ -1459,10 +1494,15 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
         }
       } else {
         // move selected temporal segment
+        var delta = this.EDGE_UPDATE_TIME_DELTA;
+        if ( e.ctrlKey ) {
+          delta = 1.0;
+        }
+
         if ( e.key === 'ArrowLeft' ) {
-          this._tmetadata_mid_move(-this.EDGE_UPDATE_TIME_DELTA);
+          this._tmetadata_mid_move(-delta);
         } else {
-          this._tmetadata_mid_move(this.EDGE_UPDATE_TIME_DELTA);
+          this._tmetadata_mid_move(delta);
         }
       }
     } else {
@@ -1604,15 +1644,13 @@ _via_temporal_segmenter.prototype._group_del_gid = function(gid) {
     return;
   }
 
+
   var mid_list = this.group[gid].slice();
   delete this.group[gid];
   delete this.tmetadata_gtimeline_mid[gid];
   var gindex = this.gid_list.indexOf(gid);
   this.gid_list.splice(gindex, 1);
-  delete this.gctx[gid];
-  delete this.gcanvas[gid];
-
-  this._tmetadata_group_gid_html_del(gid);
+  this._tmetadata_update();
 
   // remove selection
   var selected_gindex = this.gid_list.indexOf(this.selected_gid);
@@ -1760,6 +1798,7 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   delbtn.setAttribute('data-gid', this.selected_gid);
   delbtn.innerHTML = 'Delete Selected ' + this.d.attribute_store[this.groupby_aid].aname;
   delbtn.addEventListener('click', function(e) {
+    e.preventDefault();
     this._group_del_gid(this.selected_gid);
   }.bind(this));
 
@@ -1792,6 +1831,7 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
 }
 
 _via_temporal_segmenter.prototype._toolbar_playback_mode_on_change = function(e) {
+  e.preventDefault();
   this.current_playback_mode = e.target.value;
   if ( this.current_playback_mode === this.PLAYBACK_MODE.NORMAL ) {
     this._toolbar_playback_rate_set(1);

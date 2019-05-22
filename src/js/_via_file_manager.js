@@ -9,11 +9,12 @@
 
 'use strict';
 
-function _via_file_manager(data, annotator, filelist_element, project_name_element) {
+function _via_file_manager(data, annotator, filelist_element, project_name_element, project_rev_selector) {
   this.d = data;
   this.a = annotator;
   this.filelist = filelist_element;
   this.project_name_element = project_name_element;
+  this.project_rev_selector = project_rev_selector;
 
   var is_filelist_regex_active = false;
   this.filelist_fid_list = [];
@@ -35,8 +36,102 @@ function _via_file_manager(data, annotator, filelist_element, project_name_eleme
 
 _via_file_manager.prototype._init = function() {
   this.project_name_element.innerHTML = "Video: " + this.d.project_store.project_name;
+  if ( typeof(this.d.couchdb_id) !== 'undefined' &&
+       this.project_rev_selector
+     ) {
+    this.project_rev_selector.innerHTML = '';
+    this._project_revs_info_fetch();
+  }
+
   // trigger update of filelist (for the first time)
   this._filelist_update();
+}
+
+_via_file_manager.prototype._project_revs_info_fetch = function() {
+  var project_uri = _VIA_PROJECT_DS_URI + this.d.project_store.project_id + '?revs_info=true';
+  _via_util_remote_get(project_uri).then( function(file_content) {
+    try {
+      var project_data = JSON.parse(file_content);
+      this.d.couchdb_revs_info = project_data['_revs_info'];
+      this.d.couchdb_update_history = project_data['project_store']['update_history'];
+      this._project_rev_update();
+    }
+    catch(err) {
+      _via_util_msg_show('Failed to parse project revisions [' + project_id + '] from malformed json data!', true);
+      console.log(err)
+    }
+  }.bind(this), function(err) {
+    _via_util_msg_show('Failed to load project revisions [' + project_id + ']', true);
+  }.bind(this));
+
+}
+
+_via_file_manager.prototype._project_rev_update = function() {
+  if ( typeof(this.d.couchdb_revs_info) === 'undefined' ) {
+    this.project_rev_selector.setAttribute('title', 'Past versions of this project not available!');
+    return;
+  } else {
+    this.project_rev_selector.setAttribute('title', 'Past revision of this project.');
+    this.project_rev_selector.setAttribute('style', 'width:24em;');
+  }
+
+  this.project_rev_selector.innerHTML = '';
+  var options_count = 0;
+  for ( var revindex in this.d.couchdb_revs_info ) {
+    if ( this.d.couchdb_revs_info[revindex].status === 'available' ) {
+      var oi = document.createElement('option');
+      var revid = this.d.couchdb_revs_info[revindex]['rev'];
+      var author = this._project_rev_find_author(revid);
+
+      oi.setAttribute('data-rev', revid);
+      oi.setAttribute('data-id', this.d.project_store.project_id);
+      if ( author !== '' ) {
+        if ( revindex === '0' ) {
+          oi.innerHTML = author + ' (latest)';
+        } else {
+          oi.innerHTML = author;
+        }
+        if ( revid === this.d.couchdb_rev ) {
+          oi.setAttribute('selected', 'true');
+        }
+
+        this.project_rev_selector.appendChild(oi);
+        options_count = options_count + 1;
+      }
+    }
+  }
+
+  if ( options_count ) {
+    this.project_rev_selector.addEventListener('change', function(e) {
+      var id = e.target.options[e.target.selectedIndex].dataset['id'];
+      var rev = e.target.options[e.target.selectedIndex].dataset['rev'];
+      _via_project_load_remote(id, rev);
+    }.bind(this));
+  }
+}
+
+_via_file_manager.prototype._project_rev_find_author = function(revid) {
+  var prev_revid = '';
+  for ( var revindex in this.d.couchdb_revs_info ) {
+    if ( this.d.couchdb_revs_info[revindex]['rev'] === revid ) {
+      var next_index = parseInt(revindex) + 1;
+      if ( this.d.couchdb_revs_info.hasOwnProperty(next_index) ) {
+        prev_revid = this.d.couchdb_revs_info[next_index]['rev'];
+        break;
+      }
+    }
+  }
+  if ( prev_revid === '' ) {
+    return '';
+  }
+
+  for ( var i in this.d.couchdb_update_history ) {
+    var tokens = this.d.couchdb_update_history[i].split(',');
+    if ( prev_revid === tokens[3] ) {
+      return tokens[2] + ' : ' + tokens[0];
+    }
+  }
+  return '';
 }
 
 _via_file_manager.prototype._filelist_clear = function() {

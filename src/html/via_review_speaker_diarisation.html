@@ -64,6 +64,7 @@
           <select id="project_list" title="List of Videos" style="width:10em;"></select>
           <div title="Current Video Id" id="_via_filemanager_project_name" class="project_name_container"></div>
 
+          <select id="_via_filemanager_project_rev_selector" style="width:1em;" title="Past revisions of this project are not available!"></select>
           <select style="display:none;" id="file_manager_filelist" title="List of files in this project"></select>
           <input style="display:none;" type="text" placeholder="Search" oninput="file_manager._filelist_update_regex(this.value)">
           <!--
@@ -116,8 +117,8 @@
             </div>
 
             <div id="remote" class="tool_group" >
-              <input id="remote_push_username" type="text" title="To upload, you must enter your username (min 5 characters and no special characters or spaces)" placeholder="Enter username" style="width:10em;" autocomplete="on">
-              <svg onclick="data.save_remote()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Upload</title></svg>
+              <input style="display:none;" id="remote_push_username" type="text" title="To upload, you must enter your username (min 5 characters and no special characters or spaces)" placeholder="Enter username" style="width:10em;" autocomplete="on">
+              <svg style="display:none;" onclick="data.save_remote()" class="svg_button" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Upload</title></svg>
 
             </div>
 
@@ -146,16 +147,16 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td>Play/Pause Media</td><td><span class="key">Space</span></td></tr>
-              <tr><td>Toggle Media Mute</td><td><span class="key">m</span></td></tr>
-              <tr><td>Increase / Decrease Media Playback Speed</td><td><span class="key">+</span> / <span class="key">-</span></td></tr>
-              <tr><td>Move Media Time Backward by 1, ..., 9 sec. (Ctrl to move forward)</td><td><span class="key">Ctrl</span> + <span class="key">1</span>, <span class="key">2</span>, ..., <span class="key">9</span</td></tr>
-                                                                                                                                                                                                                  <tr><td>Add Temporal Segment at Current Time</td><td><span class="key">a</span></td></tr>
+              <tr><td>Play/Pause Video</td><td><span class="key">Spc</span></td></tr>
+              <tr><td>Toggle Video Mute</td><td><span class="key">m</span></td></tr>
+              <tr><td>Increase / Decrease Video Playback Speed</td><td><span class="key">+</span> / <span class="key">-</span></td></tr>
+              <tr><td>Move Video Time Backward by 1, ..., 9 sec. (Ctrl to move forward)</td><td><span class="key">Ctrl</span> + <span class="key">1</span>, <span class="key">2</span>, ..., <span class="key">9</span</td></tr>
+              <tr><td>Add Temporal Segment at Current Time</td><td><span class="key">a</span></td></tr>
               <tr><td>Update the edge (left or right) of last added segment to current time</td><td><span class="key">Shift</span> + <span class="key">a</span></td></tr>
 
-              <tr><td>Select Previous / Next Temporal Group (e.g. Speaker)</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
+              <tr><td>Select Previous / Next Speaker</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
 
-              <tr><td>Select [Previous] Next Temporal Segment (e.g. 3sec to 5sec)</td><td><span class="key">Shift</span> + <span class="key">Tab</span></td></tr>
+              <tr><td>Select [Previous] Next Temporal Segment</td><td><span class="key">Shift</span> + <span class="key">Tab</span></td></tr>
               <tr><td>Select Temporal Segment at Current Time (if any)</td><td><span class="key">Enter</span></td></tr>
 
               <tr><td>Move to Previous / Next Video Frame</td><td><span class="key">l</span> / <span class="key">r</span></td></tr>
@@ -175,19 +176,18 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td>Video Play/Pause Locked to Segment Boundary</td><td><span class="key">Spc</span></td></tr>
+              <tr><td>Play/Pause Video Locked to Segment Boundary</td><td><span class="key">Spc</span></td></tr>
               <tr><td>Delete Selected Temporal Segment</td><td><span class="key">Backspace</span></td></tr>
               <tr><td>Select [Previous] Next Temporal Segment</td><td>[<span class="key">Shift</span>] + <span class="key">Tab</span></td></tr>
               <tr><td>Unselect Temporal Segment</td><td><span class="key">Esc</span></td></tr>
-              <tr><td>Increase/Decrease the Extent of Left Edge (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">l</span> / <span class="key">L</span></td></tr>
-              <tr><td>Increase/Decrease the Extent of Right edge (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">r</span> / <span class="key">R</span></td></tr>
+              <tr><td>Increase/Decrease the Extent of Left Edge</td><td><span class="key">l</span> / <span class="key">L</span></td></tr>
+              <tr><td>Increase/Decrease the Extent of Right edge</td><td><span class="key">r</span> / <span class="key">R</span></td></tr>
 
               <tr><td>Jump to Start/End of Temporal Segment</td><td><span class="key">s</span> / <span class="key">e</span></td></tr>
-              <tr><td>Move Selected Temporal Segment (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
+              <tr><td>Move Selected Temporal Segment</td><td><span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
               <tr><td>Merge Selected Temporal Segment with the Segment on Left/Right</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
             </tbody>
           </table>
-          <p>&nbsp;</p>
 
           <h1>About VIA</h1>
           <div>This is a preview release of version 3.0.0 of the VGG Image Annotator (VIA). VIA is an open source project developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause license. For more details, visit the <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">VIA project website</a>.</div>

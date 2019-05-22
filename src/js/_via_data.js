@@ -425,7 +425,7 @@ _via_data.prototype.metadata_del = function(fid, mid) {
   }.bind(this));
 }
 
-_via_data.prototype.metadata_del_bulk = function(fid, mid_list) {
+_via_data.prototype.metadata_del_bulk = function(fid, mid_list, emit) {
   return new Promise( function(ok_callback, err_callback) {
     if ( typeof(this.file_store[fid]) === 'undefined' ) {
       err_callback('invalid fid=' + fid);
@@ -442,7 +442,10 @@ _via_data.prototype.metadata_del_bulk = function(fid, mid_list) {
       this._store_transaction('metadata_store', 'del', {'fid':fid, 'mid':mid});
     }
     this._hook_on_data_update();
-    this.emit_event( 'metadata_del_bulk', { 'fid':fid, 'mid_list':mid_list } );
+    if ( typeof(emit) !== 'undefined' && emit === true ) {
+      this.emit_event( 'metadata_del_bulk', { 'fid':fid, 'mid_list':mid_list } );
+    }
+
     ok_callback({'fid':fid, 'mid':mid});
   }.bind(this));
 }
@@ -595,13 +598,19 @@ _via_data.prototype.save_remote = function(username) {
 
   var commit_msg = [];
   commit_msg.push(username);
-  if ( this._store_list.hasOwnProperty('localStorage') ) {
-    commit_msg.push( this._store_list['localStorage'].BROWSER_ID_VALUE );
+  if ( window.localStorage ) {
+    var browser_id = window.localStorage.getItem('_VIA_BROWSER_ID');
+    if ( browser_id === null ) {
+      browser_id = this._uuid();
+      window.localStorage.setItem('_VIA_BROWSER_ID', browser_id);
+    }
+    commit_msg.push(browser_id);
   } else {
     commit_msg.push('unknown');
   }
   commit_msg.push( new Date().toJSON() );
   commit_msg.push(this.couchdb_rev);
+
   this.project_store['update_history'].push( commit_msg.join(',') );
 
   var data = {
@@ -644,7 +653,7 @@ _via_data.prototype.save_remote = function(username) {
       }
       break;
     default:
-      _via_util_msg_show('Upload failed with response [' + xhr.statusText + ']', true);
+      _via_util_msg_show('Upload failed with response [' + xhr.statusText + ':' + xhr.responseText + ']', true);
       break;
     }
   }.bind(this));

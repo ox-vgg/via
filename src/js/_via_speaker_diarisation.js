@@ -61,7 +61,8 @@ window.addEventListener('keydown', function(e) {
 
 var filelist_element = document.getElementById('file_manager_filelist');
 var project_name_element = document.getElementById('_via_filemanager_project_name');
-var file_manager = new _via_file_manager(data, annotator, filelist_element, project_name_element);
+var project_rev_selector = document.getElementById('_via_filemanager_project_rev_selector');
+var file_manager = new _via_file_manager(data, annotator, filelist_element, project_name_element, project_rev_selector);
 file_manager._init();
 
 function _via_on_browser_resize() {
@@ -91,8 +92,12 @@ if ( true ) {
   }.bind(this));
 }
 
-function _via_project_load_remote(project_id) {
+function _via_project_load_remote(project_id, revid) {
   var project_uri = _VIA_PROJECT_DS_URI + project_id;
+  if ( typeof(revid) !== 'undefined' ) {
+    project_uri = project_uri + '?rev=' + revid;
+  }
+
   _via_util_remote_get(project_uri).then( function(file_content) {
     try {
       var project_data = JSON.parse(file_content);
