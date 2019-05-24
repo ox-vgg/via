@@ -64,7 +64,7 @@ to annotate temporal segments of a video: contains 4 rows
 
 .temporal_segmenter_container > .tmetadata_container > .gtimeline_container { }
 /*@todo: height of gmetadata_container must be fixed (and not expandable) */
-.temporal_segmenter_container > .tmetadata_container > .gmetadata_container { max-height:10ch; overflow-y:auto; }
+.temporal_segmenter_container > .tmetadata_container > .gmetadata_container { max-height:8ch; overflow-y:auto; }
 .temporal_segmenter_container > .tmetadata_container .twocolgrid { display:grid; width:100%; grid-template-columns:8em 1fr; }
 .temporal_segmenter_container > .tmetadata_container .gidcol { align-self:center; padding-left:0.1em; }
 .temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"] { width:80%; border:none; border-bottom:1px solid #cccccc; }

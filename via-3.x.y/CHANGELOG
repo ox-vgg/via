@@ -1,3 +1,7 @@
+## [3.0.3] - not release yet!
+ * csv export: spatial metadata export contains option-id, added notes, removed extra curley brances from csv JSON export "{...}"
+ * temporal (z) and spatial coordinates (xy) are represented numbers with 3 decimal places
+
 ## [3.0.2] - 21 May 2019
  * shape selector icon now gets highlighted
  * fixed issues caused by rename of temporal segment variable's value

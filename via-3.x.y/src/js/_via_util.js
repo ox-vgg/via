@@ -338,10 +338,11 @@ function _via_util_remote_get(uri) {
 }
 
 function _via_util_float_arr_to_fixed(arr, fixed) {
+  var farr = [];
   for ( var i in arr ) {
-    arr[i] = parseFloat( arr[i].toFixed(fixed) );
+    farr[i] = parseFloat( arr[i].toFixed(fixed) );
   }
-  return arr;
+  return farr;
 }
 
 function _via_util_float_to_fixed(value, fixed) {
@@ -464,5 +465,5 @@ function _via_util_attribute_to_html_element(attr) {
 // ensure the exported json string conforms to RFC 4180
 // see: https://en.wikipedia.org/wiki/Comma-separated_values
 function _via_util_obj2csv(d) {
-  return '"{' + JSON.stringify(d).replace(/["]/g, '""') + '}"';
+  return '"' + JSON.stringify(d).replace(/["]/g, '""') + '"';
 }
