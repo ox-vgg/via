@@ -284,7 +284,7 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
 
   // draw all existing regions
   this._creg_clear();
-
+  this._creg_draw_file_label();
   this._state_set(_VIA_RINPUT_STATE.IDLE);
 }
 
@@ -891,7 +891,10 @@ _via_file_annotator.prototype._creg_draw_all = function() {
     this._creg_draw(mid);
   }
 
-  // add file label (if any)
+  this._creg_draw_file_label();
+}
+
+_via_file_annotator.prototype._creg_draw_file_label = function() {
   if ( this.file_label.length !== 0 ) {
     this.rshapectx.fillStyle = 'yellow';
     this.rshapectx.font = '16px mono';
@@ -1216,12 +1219,11 @@ _via_file_annotator.prototype._creg_del_sel_regions = function() {
 // external event listener
 //
 _via_file_annotator.prototype._on_event_metadata_add = function(data, event_payload) {
-  console.log('[vid=' + this.vid + ',state=' + this._state_id2str(this.state_id) + '] : _on_event_metadata_add');
   var vid = event_payload.vid;
   var mid = event_payload.mid;
   if ( this.vid === vid) {
     this._creg_add(vid, mid);
-    //this._creg_draw_all();
+    this._creg_draw_all();
   }
 }
 
@@ -1230,7 +1232,7 @@ _via_file_annotator.prototype._on_event_metadata_update = function(data, event_p
   var mid = event_payload.mid;
   if ( this.vid === vid) {
     this._creg_add(vid, mid);
-    //this._creg_draw_all();
+    this._creg_draw_all();
   }
 }
 

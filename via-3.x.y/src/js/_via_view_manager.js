@@ -26,6 +26,8 @@ function _via_view_manager(data, view_annotator, container) {
   this.d.on_event('view_bulk_add', this._on_event_view_bulk_add.bind(this));
   this.d.on_event('view_del', this._on_event_view_del.bind(this));
   this.va.on_event('view_show', this._on_event_view_show.bind(this));
+  this.va.on_event('view_next', this._on_event_view_next.bind(this));
+  this.va.on_event('view_prev', this._on_event_view_prev.bind(this));
 
   this._init_ui_elements();
 }
@@ -118,6 +120,14 @@ _via_view_manager.prototype._on_event_view_show = function(data, event_payload) 
   }
 }
 
+_via_view_manager.prototype._on_event_view_next = function(data, event_payload) {
+  this._on_next_view();
+}
+
+_via_view_manager.prototype._on_event_view_prev = function(data, event_payload) {
+  this._on_prev_view();
+}
+
 _via_view_manager.prototype._on_event_project_loaded = function(data, event_payload) {
   this._init_ui_elements();
   this._view_selector_update();
@@ -136,18 +146,24 @@ _via_view_manager.prototype._view_selector_clear = function() {
 }
 
 _via_view_manager.prototype._view_selector_option_html = function(vindex, vid) {
-  var file_count = this.d.store.view[vid].fid_list.length;
-  var filename_list = [];
-  var fid;
-  for ( var i = 0; i < file_count; ++i ) {
-    fid = this.d.store.view[vid].fid_list[i];
-    filename_list.push(this.d.store.file[fid].fname);
-  }
-  var view_name = filename_list.join(', ');
-
   var oi = document.createElement('option');
   oi.setAttribute('value', vid);
-  oi.innerHTML = '[' + (parseInt(vindex)+1) + '] ' + decodeURI(view_name);
+
+  var file_count = this.d.store.view[vid].fid_list.length;
+  var view_name;
+  if ( file_count === 1 ) {
+    var fid = this.d.store.view[vid].fid_list[0];
+    view_name = this.d.store.file[fid].fname;
+    oi.innerHTML = '[' + (parseInt(vindex)+1) + '] ' + decodeURI(view_name);
+  } else {
+    var filelist = [];
+    var fid;
+    for ( var findex in this.d.store.view[vid].fid_list ) {
+      fid = this.d.store.view[vid].fid_list[findex];
+      filelist.push(this.d.store.file[fid].fname);
+    }
+    oi.innerHTML = '[' + (parseInt(vindex)+1) + '] ' + filelist.join(', ');
+  }
   return oi;
 }
 

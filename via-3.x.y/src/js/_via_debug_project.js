@@ -731,88 +731,105 @@ _via_dp[3]['store']['project'] = {
 };
 _via_dp[3]['store']['config'] = {
   'file': {
-    'path':'/data/datasets/via/via-3.x.y/img_pair_annotation/Images/',
+    'path':'/data/datasets/via/via-3.x.y/img_pair_annotation/PairwiseStenosis20190507/Images/',
   },
   'ui': {
     'file_content_align':'center'
   }
 };
 _via_dp[3]['store']['attribute'] = {
-  '1': {
-    'aname': 'central_canal_stenosis',
-    'anchor_id':'FILEN_Z0_XY0',
-    'type': 3,
-    'desc': 'Of the above two images, which has more central canval stenosis?',
-    'options': {
-      '0': 'Image 1',
-      '1': 'Not Sure',
-      '2': 'Image 2',
+  "1": {
+    "aname": "structural_central_canal_stenosis",
+    "anchor_id": "FILEN_Z0_XY0",
+    "type": 3,
+    "desc": "Of the above two images, which has more structural central canal stenosis?",
+    "options": {
+      "0": "Image 1",
+      "1": "Not Sure",
+      "2": "Image 2"
     },
-    'default_option_id': '',
+    "default_option_id": ""
+  },
+  "2": {
+    "aname": "soft_tissue_encroachment",
+    "anchor_id": "FILEN_Z0_XY0",
+    "type": 3,
+    "desc": "Of the above two images, which has more soft tissue encroachment (disc herniation and/or synovial cyst)?",
+    "options": {
+      "0": "Image 1",
+      "1": "Not Sure",
+      "2": "Image 2"
+    },
+    "default_option_id": ""
+  },
+  "3": {
+    "aname": "crowding_cauda_equina_rootlets",
+    "anchor_id": "FILEN_Z0_XY0",
+    "type": 3,
+    "desc": "Of the above two images, which has more crowding of cauda equina rootlets?",
+    "options": {
+      "0": "Image 1",
+      "1": "Not Sure",
+      "2": "Image 2"
+    },
+    "default_option_id": ""
   },
 };
 
 _via_dp[3]['store']['file'] = {
-  '1': {
-    'fid': 1,
-    'fname': 'Normal-SC0917-L3_L4-D20150420.png',
-    'type': 1,
-    'loc': 1,
-    'src': 'Normal-SC0917-L3_L4-D20150420.png',
+  "1": {
+    "fid": 1,
+    "fname": "0-SC0001-D20140108-T2-L5S1.png",
+    "type": 2,
+    "loc": 1,
+    "src": "0-SC0001-D20140108-T2-L5S1.png"
   },
-  '2': {
-    'fid': 2,
-    'fname': 'Normal-SC0904-L4_L5-D20090327.png',
-    'type': 1,
-    'loc': 1,
-    'src': 'Normal-SC0904-L4_L5-D20090327.png',
+  "2": {
+    "fid": 2,
+    "fname": "0-SC1692-D20090204-T2-L5S1.png",
+    "type": 2,
+    "loc": 1,
+    "src": "0-SC1692-D20090204-T2-L5S1.png"
   },
-  '3': {
-    'fid': 3,
-    'fname': 'Normal-SC1111-L4_L5-D20090402.png',
-    'type': 1,
-    'loc': 1,
-    'src': 'Normal-SC1111-L4_L5-D20090402.png',
+  "3": {
+    "fid": 3,
+    "fname": "1-SC1417-D20150411-T2-L5S1.png",
+    "type": 2,
+    "loc": 1,
+    "src": "1-SC1417-D20150411-T2-L5S1.png"
   },
-  '4': {
-    'fid': 4,
-    'fname': 'Normal-SC1674-L2_L3-D20110913.png',
-    'type': 1,
-    'loc': 1,
-    'src': 'Normal-SC1674-L2_L3-D20110913.png',
+  "4": {
+    "fid": 4,
+    "fname": "1-SC1521-D20151211-T2-L5S1.png",
+    "type": 2,
+    "loc": 1,
+    "src": "1-SC1521-D20151211-T2-L5S1.png"
   },
-  '5': {
-    'fid': 5,
-    'fname': 'Normal-SC1284-L4_L5-D20080131.png',
-    'type': 1,
-    'loc': 1,
-    'src': 'Normal-SC1284-L4_L5-D20080131.png',
-  }
 };
 
 _via_dp[3]['store']['view'] = {
-  '1': {
-    'fid_list': [
+  "1": {
+    "fid_list": [
       1,
-      2,
+      2
     ]
   },
-  '2': {
-    'fid_list': [
+  "2": {
+    "fid_list": [
       1,
       3
     ]
   },
-  '3': {
-    'fid_list': [
-      1,
-      4,
+  "3": {
+    "fid_list": [
+      2,
+      3
     ]
   },
-  '4': {
-    'fid_list': [
+  "4": {
+    "fid_list": [
       1,
-      5,
+      4
     ]
   },
   '5': {
@@ -827,10 +844,6 @@ _via_dp[3]['store']['view'] = {
   '8': {
     'fid_list': [4],
   },
-  '9': {
-    'fid_list': [5],
-  },
-
 };
 _via_dp[3]['store']['vid_list'] = ['1', '2', '3', '4'];
 _via_dp[3]['store']['metadata'] = {};

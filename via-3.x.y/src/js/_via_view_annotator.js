@@ -57,9 +57,8 @@ _via_view_annotator.prototype._show_start_info = function() {
 
 _via_view_annotator.prototype.view_show = function(vid) {
   this._view_clear_all_file_annotator();
-  this._view_init(vid);
-
   this.vid = vid;
+  this._view_init(vid);
   this.emit_event( 'view_show', { 'vid':this.vid } );
 }
 
@@ -220,7 +219,19 @@ _via_view_annotator.prototype._view_annotate_single_audio = function(vid) {
 
 _via_view_annotator.prototype._view_annotate_two_images = function(vid) {
   this.view_mode = _VIA_VIEW_MODE.IMAGE2;
-  this.c.setAttribute('style', 'grid-template-rows:10fr 2fr;')
+
+  this.c.innerHTML = '';
+  // for viewing content of a view and definition of metadata.{xy, z, av} for the view
+  this.view_content_container = document.createElement('div');
+  this.view_content_container.setAttribute('class', 'view_content_container');
+
+  // for definition of metadata.{z, v} for a view
+  this.view_metadata_container = document.createElement('div');
+  this.view_metadata_container.setAttribute('class', 'view_metadata_container');
+
+  this.c.setAttribute('style', 'grid-template-rows:1fr auto;')
+  this.c.appendChild(this.view_content_container);
+  this.c.appendChild(this.view_metadata_container);
   this.view_metadata_container.style.display = 'block';
 
   this.file_annotator = [];
@@ -234,18 +245,18 @@ _via_view_annotator.prototype._view_annotate_two_images = function(vid) {
   this.file_annotator[0][0] = new _via_file_annotator(this, this.d, vid0, 'Image 1', this.file_container[0][0]);
   this.file_annotator[0][1] = new _via_file_annotator(this, this.d, vid1, 'Image 2', this.file_container[0][1]);
 
+  // first setup view metadata editor
+  this.img_pair_annotator_container = document.createElement('div');
+  this.img_pair_annotator_container.classList.add('img_pair_annotator_container');
+  this.view_metadata_container.innerHTML = '';
+  this.view_metadata_container.appendChild(this.img_pair_annotator_container);
+  this._metadata_update();
+
+  // then load files
   var promise_list = [];
   promise_list.push( this.file_annotator[0][0]._file_load() );
   promise_list.push( this.file_annotator[0][1]._file_load() );
   Promise.all( promise_list ).then( function(ok) {
-    // setup view metadata editor
-    this.img_pair_annotator_container = document.createElement('div');
-    this.img_pair_annotator_container.classList.add('img_pair_annotator_container');
-    this.view_metadata_container.innerHTML = '';
-    this.view_metadata_container.appendChild(this.img_pair_annotator_container);
-
-    this._metadata_show(this.img_pair_annotator_container,
-                        'FILEN_Z0_XY0');
   }.bind(this), function(err) {
     console.warn('Failed to load images');
     _via_util_msg_show('Failed to load images!');
@@ -352,35 +363,44 @@ _via_view_annotator.prototype._view_clear_all_file_annotator = function() {
 //
 // view metadata editor
 //
-_via_view_annotator.prototype._metadata_show = function(c, anchor_id) {
+_via_view_annotator.prototype._metadata_update = function() {
+  var anchor_id = 'FILEN_Z0_XY0';
   var table = document.createElement('table');
+  // this view has no metadata
   for ( var aid in this.d.cache.attribute_group[anchor_id] ) {
-    table.appendChild( this._metadata_table_row(aid) );
+    var mid = '';
+    if ( this.d.cache.mid_list.hasOwnProperty(this.vid) ) {
+      mid = this.d.cache.mid_list[this.vid][0];
+    }
+    table.appendChild( this._metadata_table_row(aid, mid) );
   }
-  c.appendChild(table);
+
+  this.img_pair_annotator_container.innerHTML = '';
+  this.img_pair_annotator_container.appendChild(table);
 }
 
-_via_view_annotator.prototype._metadata_table_row = function(aid) {
+_via_view_annotator.prototype._metadata_table_row = function(aid, mid) {
   var tr = document.createElement('tr');
+
   var adesc_col = document.createElement('td');
   adesc_col.innerHTML = this.d.store.attribute[aid].desc;
   tr.appendChild(adesc_col);
 
   var aopt_col = document.createElement('td');
-  aopt_col.appendChild(this._attribute_html_element(aid, this._metadata_on_update.bind(this)));
+  aopt_col.appendChild(this._attribute_html_element(aid, this._metadata_on_update.bind(this), mid));
   tr.appendChild(aopt_col);
   return tr;
 }
 
 _via_view_annotator.prototype._metadata_on_update = function(e) {
-  console.log(e.target.value)
-  var aid = e.target.name;
-  var oid = e.target.id;
-  var mid = e.target.parentNode.dataset.mid;
-
+  var aid = e.target.dataset.aid;
+  var oid = e.target.dataset.oid;
+  var mid = e.target.dataset.mid;
   if ( mid ) {
+    var mid = e.target.dataset.mid;
     // update existing metadata
     this.d.metadata_update_av(this.vid, mid, aid, oid).then( function(ok) {
+      _via_util_msg_show('Update metadata');
     }.bind(this), function(err) {
       _via_util_msg_show('Failed to update metadata!');
     }.bind(this));
@@ -389,7 +409,8 @@ _via_view_annotator.prototype._metadata_on_update = function(e) {
     var av = {};
     av[aid] = oid;
     this.d.metadata_add(this.vid, [], [], av).then( function(ok) {
-      e.target.parentNode.setAttribute('data-mid', ok.mid);
+      _via_util_msg_show('Created metadata');
+      this._metadata_update();
     }.bind(this), function(err) {
       _via_util_msg_show('Failed to update metadata!');
     }.bind(this));
@@ -400,27 +421,72 @@ _via_view_annotator.prototype._metadata_on_update = function(e) {
 //
 // attribute helper methods
 //
-_via_view_annotator.prototype._attribute_html_element = function(aid, onchange_handler) {
+_via_view_annotator.prototype._attribute_html_element = function(aid, onchange_handler, mid) {
   var el;
   switch(this.d.store.attribute[aid].type) {
   case _VIA_ATTRIBUTE_TYPE.TEXT:
     el = document.createElement('textarea');
+    if ( mid !== '' &&
+         this.d.store.metadata[mid].av.hasOwnProperty(aid)
+       ) {
+      el.innerHTML = this.d.store.metadata[mid].av[aid];
+    }
     break;
 
   case _VIA_ATTRIBUTE_TYPE.SELECT:
-    //@todo
+    el = document.createElement('select');
+    var selected_oid = '';
+    if ( mid!== '' &&
+         this.d.store.metadata[mid].av.hasOwnProperty(aid)
+       ) {
+      selected_oid = this.d.store.metadata[mid].av[aid];
+    }
+
+    var oid;
+    for ( oid in this.d.store.attribute[aid].options ) {
+      var oi = document.createElement('option');
+      oi.setAttribute('value', oid);
+      oi.setAttribute('data-oid', oid);
+      oi.setAttribute('data-aid', aid);
+      if ( mid !== '' ) {
+        oi.setAttribute('data-mid', mid);
+      }
+      if ( selected_oid === oid ) {
+        oi.setAttribute('selected', 'true');
+      }
+      oi.setAttribute('name', this.d.store.attribute[aid].options[oid]);
+      oi.addEventListener('change', onchange_handler);
+      el.appendChild(oi);
+    }
     break;
 
   case _VIA_ATTRIBUTE_TYPE.RADIO:
     el = document.createElement('div');
+    var selected_oid = '';
+    if ( mid!== '' &&
+         this.d.store.metadata[mid].av.hasOwnProperty(aid)
+       ) {
+      selected_oid = this.d.store.metadata[mid].av[aid];
+    }
+
     var oid;
     for ( oid in this.d.store.attribute[aid].options ) {
       var inp = document.createElement('input');
       inp.setAttribute('type', 'radio');
       inp.setAttribute('value', oid);
-      inp.setAttribute('id', oid);
-      inp.setAttribute('name', aid);
+      inp.setAttribute('data-oid', oid);
+      inp.setAttribute('data-aid', aid);
+      if ( mid !== '' ) {
+        inp.setAttribute('data-mid', mid);
+      }
+
+      inp.setAttribute('name', this.d.store.attribute[aid].aname);
       inp.addEventListener('change', onchange_handler);
+      if ( selected_oid === oid ) {
+        inp.checked = true;
+      } else {
+        inp.checked = false;
+      }
 
       var label = document.createElement('label');
       label.setAttribute('for', oid);
@@ -429,6 +495,7 @@ _via_view_annotator.prototype._attribute_html_element = function(aid, onchange_h
       el.appendChild(label);
     }
     break;
+
   default:
     console.warn('undefined attribute type = ' + this.type);
   }
@@ -453,7 +520,21 @@ _via_view_annotator.prototype._on_event_keydown = function(e) {
     return;
   }
 
-  this.temporal_segmenter._on_event_keydown(e);
+  if ( e.key === 'ArrowLeft' || e.key === 'ArrowRight' ) {
+    if ( this.view_mode === _VIA_VIEW_MODE.IMAGE2 ) {
+      e.preventDefault();
+      if ( e.key === 'ArrowRight' ) {
+        this.emit_event('view_next', {});
+      } else {
+        this.emit_event('view_prev', {});
+      }
+      return;
+    }
+  }
+
+  if ( this.temporal_segmenter ) {
+    this.temporal_segmenter._on_event_keydown(e);
+  }
 }
 
 //

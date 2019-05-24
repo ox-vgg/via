@@ -1,9 +1,9 @@
 /**
  *
  * @class
- * @classdesc VIA
+ * @classdesc VIA MRI Stenosis Annotator
  * @author Abhishek Dutta <adutta@robots.ox.ac.uk>
- * @date 12 May 2019
+ * @date 24 May 2019
  *
  */
 
@@ -16,8 +16,8 @@ function _via(via_container) {
   this.d  = new _via_data();
 
   // debug code (disabled for release)
-  if ( true ) {
-    this.d.store = _via_dp[3]['store'];
+  if ( false ) {
+    this.d.store = _via_dp[0]['store'];
     this.d._cache_update();
 
     setTimeout( function() {
@@ -35,11 +35,6 @@ function _via(via_container) {
   this.view_container.setAttribute('id', 'view_container');
   this.via_container.appendChild(this.view_container);
 
-  this.editor_container = document.createElement('div');
-  this.editor_container.setAttribute('id', 'editor_container');
-  this.editor_container.classList.add('hide');
-  this.via_container.appendChild(this.editor_container);
-
   this.message_container = document.createElement('div');
   this.message_container.setAttribute('id', '_via_message_container');
   this.message_container.setAttribute('class', 'message_container');
@@ -51,7 +46,6 @@ function _via(via_container) {
 
   //// initialise content creators and managers
   this.va = new _via_view_annotator(this.d, this.view_container);
-  this.editor = new _via_editor(this.d, this.va, this.editor_container);
 
   this.view_manager_container = document.createElement('div');
   this.vm = new _via_view_manager(this.d, this.va, this.view_manager_container);
@@ -59,14 +53,6 @@ function _via(via_container) {
 
   // control panel shows the view_manager_container
   this.cp = new _via_control_panel(this.control_panel_container, this.d, this.va, this.vm);
-
-  // event handlers for buttons in the control panel
-  this.cp.on_event('region_shape', function(data, event_payload) {
-    this.va.set_region_draw_shape(event_payload.shape);
-  }.bind(this));
-  this.cp.on_event('editor_toggle', function(data, event_payload) {
-    this.editor.toggle();
-  }.bind(this));
 
   // keyboard event handlers
   //this.via_container.focus()
@@ -114,4 +100,3 @@ _via.prototype._keydown_handler = function(e) {
     this.va._on_event_keydown(e);
   }
 }
-

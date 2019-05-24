@@ -21,7 +21,7 @@ function _via_control_panel(control_panel_container, data, view_annotator, view_
   this._init();
 }
 
-_via_control_panel.prototype._init = function() {
+_via_control_panel.prototype._init = function(type) {
   this.c.innerHTML = '';
 
   var logo_panel = document.createElement('div');
