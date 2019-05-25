@@ -11,6 +11,7 @@
 
 function _via(via_container) {
   console.log('Initializing VGG Image Annotator (VIA) version ' + _VIA_VERSION)
+  this._VIA_PROJECT_DS_URI = ''
   this.via_container = via_container;
 
   this.d  = new _via_data();
@@ -99,4 +100,82 @@ _via.prototype._keydown_handler = function(e) {
      ) {
     this.va._on_event_keydown(e);
   }
+}
+
+_via.prototype.save_remote = function(username) {
+  if ( ! this.couchdb_id || ! this.couchdb_rev ) {
+    _via_util_msg_show('Upload feature not available!', true);
+    return;
+  }
+
+  var username = document.getElementById('remote_push_username').value;
+  username = username.trim();
+  if ( username === '' ) {
+    _via_util_msg_show('To upload, you must enter your username!', true);
+    return;
+  }
+  var constraint = new RegExp("^([a-z0-9]{5,})$");
+  if ( ! constraint.test(username) ) {
+    _via_util_msg_show('Username must be 5 characters long and cannot contain spaces or special characters.', true);
+    return;
+  }
+
+  var commit_msg = [];
+  commit_msg.push(username);
+  if ( this._store_list.hasOwnProperty('localStorage') ) {
+    commit_msg.push( this._store_list['localStorage'].BROWSER_ID_VALUE );
+  } else {
+    commit_msg.push('unknown');
+  }
+  commit_msg.push( new Date().toJSON() );
+  commit_msg.push(this.couchdb_rev);
+  this.project_store['update_history'].push( commit_msg.join(',') );
+
+  var data = {
+    'project_store':this.project_store,
+    'metadata_store':this.metadata_store,
+    'attribute_store':this.attribute_store,
+    'aid_list':this.aid_list,
+    'file_store':this.file_store,
+    'fid_list':this.fid_list,
+    'file_mid_store':this.file_mid_store,
+  };
+
+  var uri = this._VIA_PROJECT_DS_URI + this.couchdb_id + '?rev=' + this.couchdb_rev;
+  var xhr = new XMLHttpRequest();
+  xhr.open('PUT', uri);
+  xhr.addEventListener('error', function(e) {
+    _via_util_msg_show('Failed to upload!', true);
+  }.bind(this));
+  xhr.addEventListener('abort', function(e) {
+    _via_util_msg_show('Upload aborted!', true);
+    err_callback(false);
+  }.bind(this));
+  xhr.addEventListener('load', function(e) {
+    switch(xhr.statusText) {
+    case 'Created':
+    case 'Accepted':
+      try {
+        var response = JSON.parse(xhr.responseText);
+        if ( response.ok ) {
+          this.couchdb_rev = response.rev;
+          this.couchdb_id = response.id;
+          var revision = this.couchdb_rev.split('-')[0];
+          _via_util_msg_show('Upload successful (revision = ' + revision + ')', true);
+        } else {
+          _via_util_msg_show('Upload failed. Please report this: ' + xhr.responseText + ')', true);
+        }
+      }
+      catch(e) {
+        _via_util_msg_show('Malformed server response. Please report this: ' + xhr.responseText, true);
+      }
+      break;
+    default:
+      _via_util_msg_show('Upload failed with response [' + xhr.statusText + ': ' + xhr.responseText + ']', true);
+      break;
+    }
+  }.bind(this));
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('Accept', 'application/json');
+  xhr.send( JSON.stringify(data) );
 }
