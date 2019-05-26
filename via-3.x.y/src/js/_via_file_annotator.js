@@ -1547,7 +1547,11 @@ _via_file_annotator.prototype._smetadata_update = function() {
   var tbody = document.createElement('tbody');
   var tr = document.createElement('tr');
   tr.setAttribute('data-mid', mid);
-  for ( var aid in this.d.cache.attribute_group['FILE1_Z1_XY1'] ) {
+  var aid_list = _via_util_merge_object(this.d.cache.attribute_group['FILE1_Z1_XY1'],
+                                        this.d.cache.attribute_group['FILE1_Z0_XY1']);
+  var aid;
+  for ( var aindex in aid_list ) {
+    aid = aid_list[aindex];
     var td = document.createElement('td');
     td.setAttribute('data-aid', aid);
     td.appendChild( this._smetadata_attribute_io_html_element(mid, aid) );
@@ -1562,7 +1566,11 @@ _via_file_annotator.prototype._smetadata_update = function() {
 
 _via_file_annotator.prototype._smetadata_header_html = function() {
   var tr = document.createElement('tr');
-  for ( var aid in this.d.cache.attribute_group['FILE1_Z1_XY1'] ) {
+  var aid_list = _via_util_merge_object(this.d.cache.attribute_group['FILE1_Z1_XY1'],
+                                        this.d.cache.attribute_group['FILE1_Z0_XY1']);
+  var aid;
+  for ( var aindex in aid_list ) {
+    aid = aid_list[aindex];
     var th = document.createElement('th');
     th.innerHTML = this.d.store.attribute[aid].aname;
     tr.appendChild(th);

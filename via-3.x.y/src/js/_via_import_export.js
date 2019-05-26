@@ -1,0 +1,101 @@
+/**
+ *
+ * @class
+ * @classdesc Manages import and export of annotations
+ * @author Abhishek Dutta <adutta@robots.ox.ac.uk>
+ * @date 26 May 2019
+ *
+ */
+
+'use strict';
+
+function _via_import_export(data) {
+  this.d = data;
+
+  // registers on_event(), emit_event(), ... methods from
+  // _via_event to let this module listen and emit events
+  this._EVENT_ID_PREFIX = '_via_import_export_';
+  _via_event.call(this);
+}
+
+_via_import_export.prototype.import_from_file = function(data_format, file) {
+  console.log(data_format)
+  console.log(file)
+}
+
+_via_import_export.prototype.export_to_file = function(data_format) {
+  console.log(data_format)
+  switch(data_format) {
+    case 'via3_csv':
+      this.export_to_via3_csv();
+      break;
+    default:
+      console.warn('Unknown data format: ' + data_format);
+  }
+}
+
+_via_import_export.prototype.export_to_via3_csv = function() {
+  return new Promise( function(ok_callback, err_callback) {
+    var csv = [];
+
+    var attribute = {}
+    for ( var aid in this.d.store.attribute ) {
+      attribute[aid] = this.d.store.attribute[aid].aname;
+    }
+
+    csv.push('# Exported using VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)');
+    csv.push('# Notes:');
+    csv.push('# - spatial_coordinates of [2,10,20,50,80] denotes a rectangle (shape_id=2) of size 50x80 placed at (10,20)');
+    csv.push('# - temporal coordinate of [1.349,2.741] denotes a temporal segment from time 1.346 sec. to 2.741 sec.');
+    csv.push('# - temporal coordinate of [4.633] denotes a still video frame at 4.633 sec.');
+    csv.push('# - metadata of {""1"":""3""} indicates attribute with id "1" set to an attribute option with id "3"');
+
+    csv.push('# SHAPE_ID = ' + JSON.stringify(_VIA_RSHAPE));
+    csv.push('# FLAG_ID = ' + JSON.stringify(_VIA_METADATA_FLAG));
+    var attribute_short = Object.assign({}, this.d.store.attribute);
+    for ( var aid in attribute_short ) {
+      delete attribute_short[aid].anchor_id;
+      delete attribute_short[aid].type;
+    }
+    csv.push('# ATTRIBUTE = ' + JSON.stringify(attribute_short));
+    csv.push('# CSV_HEADER = metadata_id,file_list,flags,temporal_coordinates,spatial_coordinates,metadata');
+    // build file_list for each view_id
+    var vid_filesrc_str_list = {};
+    var vid, fid;
+    for ( var vindex in this.d.store.vid_list ) {
+      vid = this.d.store.vid_list[vindex];
+      var vid_filesrc_list = [];
+      for ( var findex in this.d.store.view[vid].fid_list ) {
+        fid = this.d.store.view[vid].fid_list[findex];
+        if ( this.d.store.file[fid].src instanceof File ||
+             this.d.store.file[fid].loc === _VIA_FILE_LOC.INLINE
+           ) {
+          vid_filesrc_list.push( this.d.store.file[fid].fname );
+        } else {
+          vid_filesrc_list.push( this.d.store.file[fid].src );
+        }
+      }
+      vid_filesrc_str_list[vid] = _via_util_obj2csv(vid_filesrc_list);
+    }
+
+    for ( var mid in this.d.store.metadata ) {
+      var line = [];
+      line.push( '"' + mid + '"');
+      line.push( vid_filesrc_str_list[ this.d.store.metadata[mid].vid ] );
+      line.push(this.d.store.metadata[mid].flg);
+      line.push( _via_util_obj2csv(this.d.store.metadata[mid].z) );
+      line.push( _via_util_obj2csv(this.d.store.metadata[mid].xy) );
+      line.push( _via_util_obj2csv(this.d.store.metadata[mid].av) );
+      csv.push(line.join(','));
+    }
+
+    var data_blob = new Blob( [csv.join('\n')],
+                              {type: 'text/csv;charset=utf-8'});
+    var filename = [];
+    filename.push(this.d.store.project.pid.substr(0,9) + '_');
+    filename.push(_via_util_date_to_filename_str(Date.now()));
+    filename.push('_export.csv');
+    console.log(csv.join('\n'));
+    _via_util_download_as_file(data_blob, filename.join(''));
+  }.bind(this));
+}

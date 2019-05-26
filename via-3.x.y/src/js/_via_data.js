@@ -570,9 +570,9 @@ _via_data.prototype._cache_update_attribute_group = function() {
   for ( var aid in this.store.attribute ) {
     anchor_id = this.store.attribute[aid].anchor_id;
     if ( ! this.cache.attribute_group.hasOwnProperty(anchor_id) ) {
-      this.cache.attribute_group[anchor_id] = {};
+      this.cache.attribute_group[anchor_id] = [];
     }
-    this.cache.attribute_group[anchor_id][aid] = this.store.attribute[aid];
+    this.cache.attribute_group[anchor_id].push(aid);
   }
 }
 

@@ -16,13 +16,14 @@ function _via(via_container) {
   this.d  = new _via_data();
 
   // debug code (disabled for release)
-  if ( false ) {
-    this.d.store = _via_dp[2]['store'];
+  if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
+    this.d.store = _via_dp[4]['store'];
     this.d._cache_update();
 
     setTimeout( function() {
       this.va.view_show('1');
       //this.editor.show();
+      this.cp._page_show_import_export();
     }.bind(this), 200);
   }
 
@@ -50,6 +51,8 @@ function _via(via_container) {
   this.via_container.appendChild(this.message_container);
 
   //// initialise content creators and managers
+  this.ie = new _via_import_export(this.d);
+
   this.va = new _via_view_annotator(this.d, this.view_container);
   this.editor = new _via_editor(this.d, this.va, this.editor_container);
 
@@ -58,7 +61,7 @@ function _via(via_container) {
   this.vm._init();
 
   // control panel shows the view_manager_container
-  this.cp = new _via_control_panel(this.control_panel_container, this.d, this.va, this.vm);
+  this.cp = new _via_control_panel(this.control_panel_container, this.d, this.va, this.vm, this.ie);
 
   // event handlers for buttons in the control panel
   this.cp.on_event('region_shape', function(data, event_payload) {
@@ -74,8 +77,8 @@ function _via(via_container) {
   window.addEventListener('keydown', this._keydown_handler.bind(this)); // @todo: should be attached only to VIA application container
 
   // update VIA version number
-  var el = document.getElementById('via_info_page_container');
-  var pages = el.getElementsByClassName('info_page');
+  var el = document.getElementById('via_page_container');
+  var pages = el.getElementsByClassName('via_page');
   var n = pages.length;
   for ( var i = 0; i < n; ++i ) {
     if ( pages[i].dataset.pageid === 'page_about' ) {

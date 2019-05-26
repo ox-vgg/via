@@ -453,7 +453,9 @@ _via_view_annotator.prototype._on_event_keydown = function(e) {
     return;
   }
 
-  this.temporal_segmenter._on_event_keydown(e);
+  if ( this.temporal_segmenter ) {
+    this.temporal_segmenter._on_event_keydown(e);
+  }
 }
 
 //
