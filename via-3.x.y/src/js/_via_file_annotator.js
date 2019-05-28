@@ -283,7 +283,9 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this.c.appendChild(this.smetadata_container);
 
   // draw all existing regions
-  this._creg_clear();
+  this._creg_draw_file_label();
+  this._creg_update();
+  this._creg_draw_all();
 
   this._state_set(_VIA_RINPUT_STATE.IDLE);
 }
@@ -838,6 +840,14 @@ _via_file_annotator.prototype._metadata_pts_to_xy_rect = function(pts) {
 //
 // canvas region maintainers
 //
+_via_file_annotator.prototype._creg_update = function(vid) {
+  var mid;
+  for ( var mindex in this.d.cache.mid_list[this.vid] ) {
+    mid = this.d.cache.mid_list[this.vid][mindex];
+    this.creg[mid] = this._metadata_xy_to_creg(this.vid, mid);
+  }
+}
+
 _via_file_annotator.prototype._on_event_edit_current_frame_regions = function(data, event_payload) {
   this._creg_show_current_frame_regions();
 }
@@ -891,7 +901,10 @@ _via_file_annotator.prototype._creg_draw_all = function() {
     this._creg_draw(mid);
   }
 
-  // add file label (if any)
+  this._creg_draw_file_label();
+}
+
+_via_file_annotator.prototype._creg_draw_file_label = function() {
   if ( this.file_label.length !== 0 ) {
     this.rshapectx.fillStyle = 'yellow';
     this.rshapectx.font = '16px mono';

@@ -10,7 +10,7 @@
 'use strict';
 
 function _via_data() {
-  this._init_default_project();
+  this.store = this._init_default_project();
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -19,21 +19,21 @@ function _via_data() {
 }
 
 _via_data.prototype._init_default_project = function() {
-  this.store = {};
-  this.store['project'] = {
+  var p = {};
+  p['project'] = {
     'pid': _via_util_gen_project_id(),
     'pname':'Default Project',
     'data_format_version':'3.1.0',
     'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
     'created': Date.now(),
   }
-  this.store['config'] = {
+  p['config'] = {
     'file': { 'path':'' },
     'ui': {
       'file_content_align':'center',
     },
   };
-  this.store['attribute'] = {
+  p['attribute'] = {
     '1': {
       'aname':'_DEFAULT_TIMELINE',
       'anchor_id':'FILE1_Z2_XY0',
@@ -43,14 +43,16 @@ _via_data.prototype._init_default_project = function() {
       'default_option_id':'',
     },
   };
-  this.store['file'] = {};
-  this.store['metadata'] = {};
-  this.store['view'] = {};
-  this.store['vid_list'] = [];
+  p['file'] = {};
+  p['metadata'] = {};
+  p['view'] = {};
+  p['vid_list'] = [];
 
   this.cache = {};
   this.cache['mid_list'] = {};
   this.cache['attribute_group'] = {};
+
+  return p;
 }
 
 //
@@ -619,68 +621,21 @@ _via_data.prototype.project_load = function(project_data_str) {
   }.bind(this));
 }
 
-_via_data.prototype.project_export_csv = function() {
+_via_data.prototype.project_load_json = function(project_json_data) {
   return new Promise( function(ok_callback, err_callback) {
-    var csv = [];
-
-    var attribute = {}
-    for ( var aid in this.store.attribute ) {
-      attribute[aid] = this.store.attribute[aid].aname;
+    try {
+      this.store = Object.assign({}, project_json_data);
+      this._cache_update();
+      this.emit_event( 'project_loaded', { 'pid':this.store.project.pid } );
+      console.log('project load done');
+      ok_callback();
     }
-
-    csv.push('# Exported using VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)');
-    csv.push('# Notes:');
-    csv.push('# - spatial_coordinates of [2,10,20,50,80] denotes a rectangle (shape_id=2) of size 50x80 placed at (10,20)');
-    csv.push('# - temporal coordinate of [1.349,2.741] denotes a temporal segment from time 1.346 sec. to 2.741 sec.');
-    csv.push('# - temporal coordinate of [4.633] denotes a still video frame at 4.633 sec.');
-    csv.push('# - metadata of {""1"":""3""} indicates attribute with id "1" set to an attribute option with id "3"');
-
-    csv.push('# SHAPE_ID = ' + JSON.stringify(_VIA_RSHAPE));
-    csv.push('# FLAG_ID = ' + JSON.stringify(_VIA_METADATA_FLAG));
-    var attribute_short = Object.assign({}, this.store.attribute);
-    for ( var aid in attribute_short ) {
-      delete attribute_short[aid].anchor_id;
-      delete attribute_short[aid].type;
+    catch(err) {
+      _via_util_msg_show('Failed to load project! [' + err + ']');
+      this._init_default_project();
+      console.log('failed to load project')
+      this.emit_event( 'project_load', { 'pid':this.store.project.pid } );
+      err_callback();
     }
-    csv.push('# ATTRIBUTE = ' + JSON.stringify(attribute_short));
-    csv.push('# CSV_HEADER = metadata_id,file_list,flags,temporal_coordinates,spatial_coordinates,metadata');
-    // build file_list for each view_id
-    var vid_filesrc_str_list = {};
-    var vid, fid;
-    for ( var vindex in this.store.vid_list ) {
-      vid = this.store.vid_list[vindex];
-      var vid_filesrc_list = [];
-      for ( var findex in this.store.view[vid].fid_list ) {
-        fid = this.store.view[vid].fid_list[findex];
-        if ( this.store.file[fid].src instanceof File ||
-             this.store.file[fid].loc === _VIA_FILE_LOC.INLINE
-           ) {
-          vid_filesrc_list.push( this.store.file[fid].fname );
-        } else {
-          vid_filesrc_list.push( this.store.file[fid].src );
-        }
-      }
-      vid_filesrc_str_list[vid] = _via_util_obj2csv(vid_filesrc_list);
-    }
-
-    for ( var mid in this.store.metadata ) {
-      var line = [];
-      line.push( '"' + mid + '"');
-      line.push( vid_filesrc_str_list[ this.store.metadata[mid].vid ] );
-      line.push(this.store.metadata[mid].flg);
-      line.push( _via_util_obj2csv(this.store.metadata[mid].z) );
-      line.push( _via_util_obj2csv(this.store.metadata[mid].xy) );
-      line.push( _via_util_obj2csv(this.store.metadata[mid].av) );
-      csv.push(line.join(','));
-    }
-
-    var data_blob = new Blob( [csv.join('\n')],
-                              {type: 'text/csv;charset=utf-8'});
-    var filename = [];
-    filename.push(this.store.project.pid.substr(0,9) + '_');
-    filename.push(_via_util_date_to_filename_str(Date.now()));
-    filename.push('_export.csv');
-    console.log(csv.join('\n'));
-    _via_util_download_as_file(data_blob, filename.join(''));
   }.bind(this));
 }

@@ -19,8 +19,88 @@ function _via_import_export(data) {
 }
 
 _via_import_export.prototype.import_from_file = function(data_format, file) {
-  console.log(data_format)
-  console.log(file)
+  switch(data_format) {
+  case 'coco':
+    _via_util_load_text_file(file[0], this.import_from_coco.bind(this));
+    break;
+  default:
+    console.warn('Unknown data format: ' + data_format);
+  }
+}
+
+_via_import_export.prototype.import_from_coco = function(json_str) {
+  try {
+    var d = JSON.parse(json_str);
+    if ( ! ( d.hasOwnProperty('annotations') &&
+             d.hasOwnProperty('categories') &&
+             d.hasOwnProperty('images')
+           )
+       ) {
+      _via_util_msg_show('Cannot import annotations from malformed JSON!');
+      return;
+    }
+    var p = this.d._init_default_project();
+
+    // add files
+    for ( var i in d.images ) {
+      var fid = d.images[i].id;
+      var fname = d.images[i].file_name;
+      var src = d.images[i].coco_url;
+      var type = _VIA_FILE_TYPE.IMAGE;
+      var loc = _VIA_FILE_LOC.URIHTTP;
+      p.file[fid] = new _via_file(fid, fname, type, loc, src);
+
+      // add a view for each file
+      var vid = fid;
+      p.view[vid] = new _via_view( [ fid ] ); // view with single file
+      p.vid_list.push(vid);
+    }
+
+    // add attributes
+    for ( var i in d.categories ) {
+      var aid = d.categories[i].id;
+      var aname = d.categories[i].name;
+      p.attribute[aid] = new _via_attribute(aname, 'FILE1_Z0_XY1', _VIA_ATTRIBUTE_TYPE.TEXT, {}, {});
+/*
+      var aid = d.categories[i].supercategory;
+      var option_id = d.categories[i].id;
+      var option_value = d.categories[i].name;
+
+      if ( p.attribute.hasOwnProperty(aid) ) {
+        // add as an option
+        p.attribute[aid].options[option_id] = option_value;
+      } else {
+        var options = {};
+        options[option_id] = option_value;
+        p.attribute[aid] = new _via_attribute(aid, 'FILE1_Z0_XY1', _VIA_ATTRIBUTE_TYPE.SELECT, options, {});
+      }
+*/
+    }
+
+    // add metadata
+    for ( var i in d.annotations ) {
+      var mid = d.annotations[i].id;
+      var vid = d.annotations[i].image_id;
+      if ( p.file.hasOwnProperty(vid) ) {
+        var aid = d.annotations[i].category_id;
+        var shape = [_VIA_RSHAPE.POLYGON];
+        var av = {}
+        av[aid] = p.attribute[aid].aname;
+
+        for ( var j = 0; j < d.annotations[i].segmentation[0].length; ++j ) {
+          shape.push(d.annotations[i].segmentation[0][j]);
+        }
+
+        p.metadata[mid] = new _via_metadata(vid, [], shape, av);
+      }
+    }
+
+    this.d.project_load_json(p);
+  }
+  catch(e) {
+    _via_util_msg_show('Failed to import annotations: ' + e);
+    console.warn(e)
+  }
 }
 
 _via_import_export.prototype.export_to_file = function(data_format) {

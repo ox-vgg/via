@@ -189,8 +189,8 @@ _via_control_panel.prototype._page_show_import_export = function(d) {
 
 _via_control_panel.prototype._page_on_action_import = function(d) {
   if ( d._action_id === 'via_page_button_import' ) {
-    if ( via_page_import_file.length ) {
-      this.ie.import_from_file(d.via_page_import_format, via_page_import_file);
+    if ( d.via_page_import_file.length ) {
+      this.ie.import_from_file(d.via_page_import_format, d.via_page_import_file);
     } else {
       _via_util_msg_show('To import annotations, you must select a file which contains the annotations');
     }
