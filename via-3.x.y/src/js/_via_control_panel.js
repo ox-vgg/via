@@ -7,11 +7,12 @@
  *
  */
 
-function _via_control_panel(control_panel_container, data, view_annotator, view_manager) {
+function _via_control_panel(control_panel_container, data, view_annotator, view_manager, import_export) {
   this.c = control_panel_container;
   this.d = data;
   this.va = view_annotator;
   this.vm = view_manager;
+  this.ie = import_export;
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -56,13 +57,13 @@ _via_control_panel.prototype._init = function(type) {
 
   var keyboard = _via_util_get_svg_button('micon_keyboard', 'Keyboard Shortcuts');
   keyboard.addEventListener('click', function() {
-    _via_util_show_info_page('page_keyboard_shortcut');
+    _via_util_page_show('page_keyboard_shortcut');
   }.bind(this));
   this.c.appendChild(keyboard);
 
   var help = _via_util_get_svg_button('micon_help', 'About VIA');
   help.addEventListener('click', function() {
-    _via_util_show_info_page('page_about');
+    _via_util_page_show('page_about');
   }.bind(this));
   this.c.appendChild(help);
 }
@@ -173,11 +174,33 @@ _via_control_panel.prototype._add_project_tools = function() {
   }.bind(this));
   this.c.appendChild(save);
 
-  var export_annotation = _via_util_get_svg_button('micon_export', 'Export Annotations (as CSV)');
-  export_annotation.addEventListener('click', function() {
-    this.d.project_export_csv();
-  }.bind(this));
-  this.c.appendChild(export_annotation);
+  var import_export_annotation = _via_util_get_svg_button('micon_import_export', 'Import or Export Annotations');
+  import_export_annotation.addEventListener('click', this._page_show_import_export.bind(this));
+  this.c.appendChild(import_export_annotation);
+}
+
+_via_control_panel.prototype._page_show_import_export = function(d) {
+  var action_map = { 
+                    'via_page_button_import':this._page_on_action_import.bind(this),
+                    'via_page_button_export':this._page_on_action_export.bind(this),
+                   }
+  _via_util_page_show('page_import_export', action_map);
+}
+
+_via_control_panel.prototype._page_on_action_import = function(d) {
+  if ( d._action_id === 'via_page_button_import' ) {
+    if ( d.via_page_import_file.length ) {
+      this.ie.import_from_file(d.via_page_import_format, d.via_page_import_file);
+    } else {
+      _via_util_msg_show('To import annotations, you must select a file which contains the annotations');
+    }
+  }
+}
+
+_via_control_panel.prototype._page_on_action_export = function(d) {
+  if ( d._action_id === 'via_page_button_export' ) {
+    this.ie.export_to_file(d.via_page_export_format);
+  }
 }
 
 _via_control_panel.prototype._project_load_on_local_file_select = function(e) {

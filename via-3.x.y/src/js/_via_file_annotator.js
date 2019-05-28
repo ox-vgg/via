@@ -283,8 +283,10 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this.c.appendChild(this.smetadata_container);
 
   // draw all existing regions
-  this._creg_clear();
   this._creg_draw_file_label();
+  this._creg_update();
+  this._creg_draw_all();
+
   this._state_set(_VIA_RINPUT_STATE.IDLE);
 }
 
@@ -838,6 +840,14 @@ _via_file_annotator.prototype._metadata_pts_to_xy_rect = function(pts) {
 //
 // canvas region maintainers
 //
+_via_file_annotator.prototype._creg_update = function(vid) {
+  var mid;
+  for ( var mindex in this.d.cache.mid_list[this.vid] ) {
+    mid = this.d.cache.mid_list[this.vid][mindex];
+    this.creg[mid] = this._metadata_xy_to_creg(this.vid, mid);
+  }
+}
+
 _via_file_annotator.prototype._on_event_edit_current_frame_regions = function(data, event_payload) {
   this._creg_show_current_frame_regions();
 }
@@ -1549,7 +1559,11 @@ _via_file_annotator.prototype._smetadata_update = function() {
   var tbody = document.createElement('tbody');
   var tr = document.createElement('tr');
   tr.setAttribute('data-mid', mid);
-  for ( var aid in this.d.cache.attribute_group['FILE1_Z1_XY1'] ) {
+  var aid_list = _via_util_merge_object(this.d.cache.attribute_group['FILE1_Z1_XY1'],
+                                        this.d.cache.attribute_group['FILE1_Z0_XY1']);
+  var aid;
+  for ( var aindex in aid_list ) {
+    aid = aid_list[aindex];
     var td = document.createElement('td');
     td.setAttribute('data-aid', aid);
     td.appendChild( this._smetadata_attribute_io_html_element(mid, aid) );
@@ -1564,7 +1578,11 @@ _via_file_annotator.prototype._smetadata_update = function() {
 
 _via_file_annotator.prototype._smetadata_header_html = function() {
   var tr = document.createElement('tr');
-  for ( var aid in this.d.cache.attribute_group['FILE1_Z1_XY1'] ) {
+  var aid_list = _via_util_merge_object(this.d.cache.attribute_group['FILE1_Z1_XY1'],
+                                        this.d.cache.attribute_group['FILE1_Z0_XY1']);
+  var aid;
+  for ( var aindex in aid_list ) {
+    aid = aid_list[aindex];
     var th = document.createElement('th');
     th.innerHTML = this.d.store.attribute[aid].aname;
     tr.appendChild(th);

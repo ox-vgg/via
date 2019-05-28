@@ -847,3 +847,67 @@ _via_dp[3]['store']['view'] = {
 };
 _via_dp[3]['store']['vid_list'] = ['1', '2', '3', '4'];
 _via_dp[3]['store']['metadata'] = {};
+
+
+//
+// Image Annotations
+//
+_via_dp[4] = {};
+_via_dp[4]['store'] = {};
+_via_dp[4]['store']['project'] = {
+  'pid':     'via-45715efcfcd44b3cb11a76838b56ac14',
+  'pname':   'Image Annotation',
+  'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
+  'created': Date.now(),
+  'data_format_version': '3.1.0',
+};
+_via_dp[4]['store']['config'] = {
+  'file': {
+    'path':'/data/datasets/via/via-3.x.y/img_annotation/',
+  },
+  'ui': {
+    'file_content_align':'center'
+  }
+};
+_via_dp[4]['store']['attribute'] = {
+  '1': {
+    'aname': 'name',
+    'anchor_id':'FILE1_Z0_XY1',
+    'type': 1,
+    'desc': 'Name of Object',
+    'options': {},
+    'default_option_id': '',
+  },
+};
+
+_via_dp[4]['store']['file'] = {
+  '1': {
+    'fid': 1,
+    'fname': 'adutta_swan.jpg',
+    'type': 2,
+    'loc': 1,
+    'src': 'adutta_swan.jpg',
+  },
+  '2': {
+    'fid': 2,
+    'fname': 'wikimedia_death_of_socrates.jpg',
+    'type': 2,
+    'loc': 1,
+    'src': 'wikimedia_death_of_socrates.jpg',
+  },
+};
+
+_via_dp[4]['store']['view'] = {
+  '1': {
+    'fid_list': [
+      1,
+    ]
+  },
+  '2': {
+    'fid_list': [
+      2,
+    ]
+  },
+};
+_via_dp[4]['store']['vid_list'] = ['1', '2'];
+_via_dp[4]['store']['metadata'] = {};

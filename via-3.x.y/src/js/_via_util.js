@@ -9,6 +9,8 @@
 'use strict'
 
 var _via_msg_clear_timer; // holds a reference to current message timoout
+var _via_page_current;    // holds a reference to current info page
+var _via_page_action_map; // holds a reference to action map for current info page
 
 function _via_util_get_svg_button(icon_id, title, id) {
   var el = document.createElementNS(_VIA_SVG_NS, 'svg');
@@ -257,29 +259,71 @@ function _via_util_rand_int(min_inclusive, max_exclusive) {
   return Math.floor(Math.random() * (max_exclusive - min_inclusive)) + min_inclusive;
 }
 
-function _via_util_show_info_page(page_id) {
-  var el = document.getElementById('via_info_page_container');
+function _via_util_page_show(page_id, action_map) {
+  _via_page_action_map = action_map;
+  var el = document.getElementById('via_page_container');
 
-  var pages = el.getElementsByClassName('info_page');
+  var pages = el.getElementsByClassName('via_page');
   var n = pages.length;
-  var i;
-  for ( i = 0; i < n; ++i ) {
+  for ( var i = 0; i < n; ++i ) {
     if ( pages[i].dataset.pageid === page_id ) {
       pages[i].style.display = 'inline-block';
       el.style.display = 'block';
-      el.addEventListener('mousedown', _via_util_hide_info_page);
+      _via_page_current = pages[i];
     } else {
       pages[i].style.display = 'none';
     }
   }
 }
 
-function _via_util_hide_info_page() {
-  var el = document.getElementById('via_info_page_container');
+function _via_util_page_process_action(e) {
+  for ( var action_id in _via_page_action_map ) {
+    if ( e.target.id === action_id ) {
+      var page_data = _via_util_page_gather_user_input();
+      page_data['_action_id'] = e.target.id;
+      _via_page_action_map[action_id].call(this, page_data);
+      _via_util_page_hide();
+    }
+  }
+}
+
+function _via_util_page_gather_user_input() {
+  var user_input = {};
+
+  // dropdown
+  var select_list = _via_page_current.getElementsByTagName('select');
+  for ( var i = 0; i < select_list.length; ++i ) {
+    user_input[select_list[i].id] = select_list[i].options[ select_list[i].selectedIndex ].value;
+  }
+
+  // input
+  var input_list = _via_page_current.getElementsByTagName('input');
+  for ( var i = 0; i < input_list.length; ++i ) {
+    switch(input_list[i].type) {
+      case 'file':
+        user_input[input_list[i].id] = input_list[i].files;
+        break;
+      case 'text':
+        user_input[input_list[i].id] = input_list[i].value;
+        break;
+      default:
+        console.warn('Input type=' + input_list[i].type + ' not yet implemented!');
+    }
+  }
+  var textarea_list = _via_page_current.getElementsByTagName('textarea');
+  for ( var i = 0; i < textarea_list.length; ++i ) {
+    user_input[textarea_list[i].id] = textarea_list[i].innerHTML;
+  }
+
+  return user_input;
+}
+
+function _via_util_page_hide() {
+  var el = document.getElementById('via_page_container');
   if ( el.style.display === 'block' ) {
-    el.removeEventListener('mousedown', _via_util_hide_info_page);
     el.style.display = 'none';
   }
+  _via_page_current = null;
 }
 
 function _via_util_msg_show(msg, sticky) {
@@ -466,5 +510,12 @@ function _via_util_attribute_to_html_element(attr) {
 // see: https://en.wikipedia.org/wiki/Comma-separated_values
 function _via_util_obj2csv(d) {
   return '"' + JSON.stringify(d).replace(/["]/g, '""') + '"';
+}
+
+function _via_util_merge_object(obj1, obj2) {
+  var merged_obj = {};
+  Object.assign(merged_obj, obj1);
+  Object.assign(merged_obj, obj2);
+  return merged_obj;
 }
 

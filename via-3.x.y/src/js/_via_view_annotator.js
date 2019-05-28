@@ -117,7 +117,6 @@ _via_view_annotator.prototype._view_annotate_single_image = function(vid) {
   this.file_annotator[0][0] = new _via_file_annotator(this, this.d, vid0, '', this.file_container[0][0]);
   this.file_annotator[0][0]._file_load().then( function(ok) {
     this.file_annotator[0][0]._rinput_enable();
-    console.log('load done')
   }.bind(this));
 }
 
