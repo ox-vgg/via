@@ -684,3 +684,6 @@ _via_data.prototype.project_export_csv = function() {
     _via_util_download_as_file(data_blob, filename.join(''));
   }.bind(this));
 }
+
+_via_data.prototype.project_load_remote_couchdb = function(couchdb_uri, project_id) {
+}

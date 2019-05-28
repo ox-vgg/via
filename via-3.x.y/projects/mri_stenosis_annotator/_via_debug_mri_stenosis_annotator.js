@@ -14,7 +14,7 @@ _via_dp[0]['store']['project'] = {
 };
 _via_dp[0]['store']['config'] = {
   'file': {
-    'path':'/data/datasets/via/via-3.x.y/img_pair_annotation/PairwiseStenosis20190507/Images/',
+    'path':'/data/datasets/via/via-3.x.y/img_pair_annotation/PairwiseStenosis20190507/images/',
   },
   'ui': {
     'file_content_align':'center'

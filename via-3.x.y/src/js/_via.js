@@ -16,11 +16,12 @@ function _via(via_container) {
   this.d  = new _via_data();
 
   // debug code (disabled for release)
-  if ( true ) {
-    this.d.store = _via_dp[3]['store'];
+  if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
+    this.d.store = _via_dp[0]['store'];
     this.d._cache_update();
-
+      console.log('a')
     setTimeout( function() {
+      console.log('a')
       this.va.view_show('1');
       //this.editor.show();
     }.bind(this), 200);

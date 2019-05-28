@@ -50,6 +50,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 
 /* @todo: to annotate metadata for an image pair */
 .img_pair_annotator_container { display:block; max-height:100%; font-size:medium; }
+.img_pair_annotator_container .nobreak { white-space:nowrap; }
 .img_pair_annotator_container input[type="radio"] { }
 .img_pair_annotator_container label { margin-right:0.5em; white-space:nowrap; }
 .img_pair_annotator_container table { margin:1em auto; border-collapse:collapse; }

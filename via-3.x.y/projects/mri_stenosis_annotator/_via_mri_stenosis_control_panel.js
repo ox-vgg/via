@@ -59,4 +59,3 @@ _via_control_panel.prototype._add_view_manager_tools = function() {
   next_view.addEventListener('click', this.vm._on_next_view.bind(this.vm));
   this.c.appendChild(next_view);
 }
-

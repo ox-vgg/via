@@ -17,10 +17,9 @@ function _via(via_container) {
   this.d  = new _via_data();
 
   // debug code (disabled for release)
-  if ( false ) {
+  if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
     this.d.store = _via_dp[0]['store'];
     this.d._cache_update();
-
     setTimeout( function() {
       this.va.view_show('1');
       //this.editor.show();

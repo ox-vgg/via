@@ -314,7 +314,7 @@ _via_view_annotator.prototype._view_split_content_container = function(container
   container.setAttribute('style',
                          'grid-template-columns:repeat(' + ncol + ',1fr);' +
                          'grid-template-rows:repeat(' + nrow + ',1fr);' +
-                         'grid-gap:0;');
+                         'grid-gap:0.5em;');
 }
 
 //
@@ -471,6 +471,8 @@ _via_view_annotator.prototype._attribute_html_element = function(aid, onchange_h
 
     var oid;
     for ( oid in this.d.store.attribute[aid].options ) {
+      var container = document.createElement('span');
+      container.setAttribute('class', 'nobreak');
       var inp = document.createElement('input');
       inp.setAttribute('type', 'radio');
       inp.setAttribute('value', oid);
@@ -491,8 +493,9 @@ _via_view_annotator.prototype._attribute_html_element = function(aid, onchange_h
       var label = document.createElement('label');
       label.setAttribute('for', oid);
       label.innerHTML = this.d.store.attribute[aid].options[oid];
-      el.appendChild(inp);
-      el.appendChild(label);
+      container.appendChild(inp);
+      container.appendChild(label);
+      el.appendChild(container);
     }
     break;
 
