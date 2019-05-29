@@ -28,7 +28,9 @@ _via_data.prototype._init_default_project = function() {
     'created': Date.now(),
   }
   p['config'] = {
-    'file': { 'path':'' },
+    'file': {
+      'loc_prefix': { '1':'', '2':'', '3':'', '4':'' }, // see _via_file._VIA_FILE_LOC
+    },
     'ui': {
       'file_content_align':'center',
     },
@@ -615,6 +617,7 @@ _via_data.prototype.project_load = function(project_data_str) {
       _via_util_msg_show('Failed to load project! [' + err + ']');
       this._init_default_project();
       console.log('failed to load project')
+      console.log(err)
       this.emit_event( 'project_load', { 'pid':this.store.project.pid } );
       err_callback();
     }
@@ -627,18 +630,15 @@ _via_data.prototype.project_load_json = function(project_json_data) {
       this.store = Object.assign({}, project_json_data);
       this._cache_update();
       this.emit_event( 'project_loaded', { 'pid':this.store.project.pid } );
-      console.log('project load done');
       ok_callback();
     }
     catch(err) {
       _via_util_msg_show('Failed to load project! [' + err + ']');
       this._init_default_project();
-      console.log('failed to load project')
+      console.warn('failed to load project')
+      console.log(err)
       this.emit_event( 'project_load', { 'pid':this.store.project.pid } );
       err_callback();
     }
   }.bind(this));
-}
-
-_via_data.prototype.project_load_remote_couchdb = function(couchdb_uri, project_id) {
 }

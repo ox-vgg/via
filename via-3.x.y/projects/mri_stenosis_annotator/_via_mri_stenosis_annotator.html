@@ -78,6 +78,10 @@
           <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
         </symbol>
 
+        <symbol id="micon_save">
+          <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"></path>
+        </symbol>
+
         <!-- Help -->
         <symbol id="micon_help">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
@@ -86,77 +90,40 @@
     </svg>
 
     <!-- VIA Information Pages -->
-    <div id="via_info_page_container">
-            <div data-pageid="page_demo_instructions" class="info_page" style="height:40ch;">
-        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
-        <h1>Some Quick Tips</h1>
-        <ul>
-          <li>Press <span class="key">Space</span> key at any time to play or pause the audio or video.</li>
-          <li>Use <span class="key">a</span> key to add a new temporal segment. Here are more <span class="text_button" onclick="_via_util_show_info_page('page_keyboard_shortcut')">shortcuts</span>.</li>
-          <li>Pre-defined temporal segments appear at the bottom (colourful boxes). Using mouse, select them, move them and delete them (using <span class="key">Backspace</span> key)</li>
-          <li>Move your mouse over the temporal segment timeline and roll your mouse button to zoom in/out</li>
-          <li>Add new timeline by adding a new entry to the Timeline List (at the bottom) and press "Update" button. For example, "Speaker1,Speaker2" to add timelines for two speakers.</li>
-        </ul>
+    <div id="via_page_container">
+      <div data-pageid="page_login" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
+        <h2>Please Identify Youself</h2>
+        <table>
+          <tr>
+            <td><label for="username">Name of Annotator</label></td>
+            <!--<td><input id="via_page_login_username" value="cliniciandemo" name="username" placeholder="cliniciandemo" type="text" size="20" required></td>-->
+            <td>
+              <select id="via_page_login_username">
+                <option value="clinician1">Jeremy Fairbank</option>
+                <option value="clinician2">Sarim Ather</option>
+                <option value="clinician3">Clinician 3</option>
+                <option value="clinician4">Clinician 4</option>
+                <option value="clinician5">Clinician 5</option>
+                <option selected="selected" value="cliniciandemo">Demonstrator (contains sample images)</option>
+              </select>
+            </td>
+          </tr>
+          <!--
+              <tr>
+                <td><label for="password">Password</label></td>
+                <td><input id="via_page_login_password" value="demo123" name="password" type="password" size="20" required></td>
+              </tr>
+              -->
+        </table>
+        <div class="controls">
+          <button id="via_page_button_signin" onclick="_via_util_page_process_action(event)">Sign in</button>
+          <button onclick="_via_util_page_hide()">Cancel</button>
+        </div>
       </div>
 
-      <div data-pageid="page_keyboard_shortcut" class="info_page">
-        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
-        <h1>Keyboard Shortcuts</h1>
-        <h3>General</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Command</th>
-              <th>Shortcut</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Play/Pause Media</td><td><span class="key">Space</span></td></tr>
-            <tr><td>Toggle Media Mute</td><td><span class="key">m</span></td></tr>
-            <tr><td>Increase / Decrease Media Playback Speed</td><td><span class="key">+</span> / <span class="key">-</span></td></tr>
-            <tr><td>Move Media Time Backward by 1, ..., 9 sec. (Ctrl to move forward)</td><td><span class="key">Ctrl</span> + <span class="key">1</span>, <span class="key">2</span>, ..., <span class="key">9</span</td></tr>
-                                                                                                                                                                                                                <tr><td>Add Temporal Segment at Current Time</td><td><span class="key">a</span></td></tr>
-            <tr><td>Update the edge (left or right) of last added segment to current time</td><td><span class="key">Shift</span> + <span class="key">a</span></td></tr>
-
-            <tr><td>Select Previous / Next Temporal Group (e.g. Speaker)</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
-
-            <tr><td>Select [Previous] Next Temporal Segment (e.g. 3sec to 5sec)</td><td><span class="key">Shift</span> + <span class="key">Tab</span></td></tr>
-            <tr><td>Select Temporal Segment at Current Time (if any)</td><td><span class="key">Enter</span></td></tr>
-
-            <tr><td>Move to Previous / Next Video Frame</td><td><span class="key">l</span> / <span class="key">r</span></td></tr>
-            <tr><td>Jump to Start/End of Video</td><td><span class="key">Shift</span> + <span class="key">s</span> / <span class="key">e</span></td></tr>
-            <tr><td>Shift Visible Timeline by 1 sec.</td><td><span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
-            <tr><td>Shift Visible Timeline by 60 sec.</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
-            <tr><td>Zoom In/Out the Temporal Segment Timeline</td><td>Mouse Wheel<br/></td></tr>
-            <tr><td>Pan the Temporal Segment Timeline Horizontally</td><td><span class="key">Shift</span> + Mouse Wheel</td></tr>
-          </tbody>
-        </table>
-        <h3>When a Temporal Segment is Selected</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Command</th>
-              <th>Shortcut</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Play/Pause Video Locked to Segment Boundary</td><td><span class="key">Spc</span></td></tr>
-            <tr><td>Delete Selected Temporal Segment</td><td><span class="key">Backspace</span></td></tr>
-            <tr><td>Select [Previous] Next Temporal Segment</td><td>[<span class="key">Shift</span>] + <span class="key">Tab</span></td></tr>
-            <tr><td>Unselect Temporal Segment</td><td><span class="key">Esc</span></td></tr>
-            <tr><td>Increase/Decrease the Extent of Left Edge (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">l</span> / <span class="key">L</span></td></tr>
-            <tr><td>Increase/Decrease the Extent of Right edge (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">r</span> / <span class="key">R</span></td></tr>
-
-            <tr><td>Jump to Start/End of Temporal Segment</td><td><span class="key">s</span> / <span class="key">e</span></td></tr>
-            <tr><td>Move Selected Temporal Segment (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
-            <tr><td>Merge Selected Temporal Segment with the Segment on Left/Right</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
-          </tbody>
-        </table>
-        <p>&nbsp;</p>
-      </div>
-
-      <div data-pageid="page_about" class="info_page">
-        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
+      <div data-pageid="page_about" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <h2>VGG Image Annotator (VIA)</h2>
         <p>Version: <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">__VIA_VERSION__</a></p>
         <p>VGG Image Annotator (VIA) is a simple and standalone manual annotation tool
@@ -213,7 +180,7 @@
         </pre>
         <p>Copyright &copy; 2016-2019, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>, Visual Geometry Group, Oxford University.</p>
       </div>
-    </div>
+    </div> <!-- end of via_page_container -->
 
     <!-- used by _via_view_annotator._show_start_info() -->
     <div id="via_start_info_content" class="hide">
@@ -240,21 +207,22 @@
     <script src="../../src/js/_via_view.js"></script>
     <script src="../../src/js/_via_data.js"></script>
 
-    <!--DISABLED EXPERIMENTAL FEATURE<script src="../js/_via_audio_spectrum.js"></script>-->
     <script src="../../src/js/_via_file_annotator.js"></script>
     <script src="../../src/js/_via_view_annotator.js"></script>
 
-    <script src="../../src/js/_via_view_manager.js"></script>
+    <script src="_via_mri_stenosis_view_manager.js"></script>
 
     <script src="_via_debug_mri_stenosis_annotator.js"></script>
     <script src="_via_mri_stenosis_annotator.js"></script>
     <!-- DEMO SCRIPT AUTOMATICALLY INSERTED BY VIA PACKER SCRIPT -->
 
     <script>
-      //__ENABLED_BY_DEMO_PACK_SCRIPT__var _VIA_DEBUG = false;
+      //__ENABLED_BY_PACK_SCRIPT__var _VIA_DEBUG = false;
       var via_container = document.getElementById('via_container');
       var via = new _via(via_container);
-      //__ENABLED_BY_DEMO_PACK_SCRIPT___via_util_show_info_page('page_demo_instructions');
+      //__ENABLED_BY_PACK_SCRIPT__var action_map = { 'via_page_button_signin':via._page_on_action_signin.bind(via) };
+      //__ENABLED_BY_PACK_SCRIPT___via_util_page_show('page_login', action_map);
+      //__ENABLED_BY_PACK_SCRIPT__via.prevent_accidental_close();
     </script>
   </body>
 </html>

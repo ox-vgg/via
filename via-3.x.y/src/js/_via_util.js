@@ -303,7 +303,15 @@ function _via_util_page_gather_user_input() {
       case 'file':
         user_input[input_list[i].id] = input_list[i].files;
         break;
+      case 'select':
+        if ( input_list[i].selectedIndex === -1 ) {
+          user_input[input_list[i].id] = '';
+        } else {
+          user_input[input_list[i].id] = input_list[i].options[input_list[i].selectedIndex];
+        }
+        break;
       case 'text':
+      case 'password':
         user_input[input_list[i].id] = input_list[i].value;
         break;
       default:
@@ -372,6 +380,9 @@ function _via_util_remote_get(uri) {
     var xhr = new XMLHttpRequest();
     xhr.addEventListener('load', function() {
       ok_callback(xhr.responseText);
+    });
+    xhr.addEventListener('timeout', function(e) {   
+      err_callback(e);
     });
     xhr.addEventListener('error', function(e) {
       err_callback(e)

@@ -20,9 +20,7 @@ function _via(via_container) {
     this.d.store = _via_dp[0]['store'];
 
     this.d._cache_update();
-      console.log('a')
     setTimeout( function() {
-      console.log('a')
       this.va.view_show('1');
       //this.editor.show();
       this.cp._page_show_import_export();

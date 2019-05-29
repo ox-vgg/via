@@ -366,8 +366,9 @@ _via_view_annotator.prototype._metadata_update = function() {
   var anchor_id = 'FILEN_Z0_XY0';
   var table = document.createElement('table');
   // this view has no metadata
-  for ( var aid in this.d.cache.attribute_group[anchor_id] ) {
+  for ( var aindex in this.d.cache.attribute_group[anchor_id] ) {
     var mid = '';
+    var aid = this.d.cache.attribute_group[anchor_id][aindex];
     if ( this.d.cache.mid_list.hasOwnProperty(this.vid) ) {
       mid = this.d.cache.mid_list[this.vid][0];
     }

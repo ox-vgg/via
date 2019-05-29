@@ -7,11 +7,12 @@
  *
  */
 
-function _via_control_panel(control_panel_container, data, view_annotator, view_manager) {
+function _via_control_panel(control_panel_container, data, view_annotator, view_manager, via) {
   this.c = control_panel_container;
   this.d = data;
   this.va = view_annotator;
   this.vm = view_manager;
+  this.via = via;
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -35,9 +36,16 @@ _via_control_panel.prototype._init = function(type) {
   this._add_view_manager_tools();
 
   this._add_spacer();
+  var save = _via_util_get_svg_button('micon_save', 'Save Annotations');
+  save.addEventListener('click', function() {
+    this.via.save_remote();
+  }.bind(this));
+  this.c.appendChild(save);
+
+  this._add_spacer();
   var help = _via_util_get_svg_button('micon_help', 'About VIA');
   help.addEventListener('click', function() {
-    _via_util_show_info_page('page_about');
+    _via_util_page_show('page_about');
   }.bind(this));
   this.c.appendChild(help);
 }

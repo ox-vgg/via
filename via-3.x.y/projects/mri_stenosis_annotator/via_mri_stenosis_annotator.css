@@ -20,11 +20,11 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 #via_control_panel_container #region_info_panel { font-size:0.8em; }
 #via_control_panel_container .logo { position:relative; display:inline-block; font-size:large; top:0px; }
 #via_control_panel_container .logo a { text-decoration:none; }
-#via_control_panel_container select { background-color:inherit; border:1px solid #cfcfcf; width:17.5em; }
+#via_control_panel_container select { background-color:inherit; border:1px solid #cfcfcf; width:4em; }
 #via_control_panel_container input { background-color:inherit; border:1px solid #cfcfcf; width:4em;}
-#via_control_panel_container #via_project_name_input { display:inline-block; font-size:small; width:11.5em; border:none; border-bottom:1px solid #cfcfcf; }
-#via_control_panel_container #via_project_name_input:hover { border-bottom:1px solid #cfcfcf; background-color:#f2f2f2; }
-#via_control_panel_container #via_project_name_input:focus { background-color:#f2f2f2; border-bottom:1px solid #cfcfcf; }
+#via_control_panel_container #via_project_name_input { display:inline-block; font-size:small; width:20em; border:none; border-bottom:0px solid #cfcfcf; }
+#via_control_panel_container #via_project_name_input:hover {}
+#via_control_panel_container #via_project_name_input:focus {}
 
 /* View Container : video + temporal segmenter */
 #view_container { display:grid; grid-row-gap:0.5em; } /* grid-template-rows is set dynamically */
@@ -104,15 +104,19 @@ to annotate temporal segments of a video: contains 4 rows
 .text_button:hover { color:black; }
 
 /* info pages */
-#via_info_page_container { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:1001; text-align:center; }
-#via_info_page_container > .toolbar { position:relative; display:block; text-align:right; padding:1em; }
-#via_info_page_container > .info_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow-y:auto; text-align:left; content:"close"; width:80ch; height:80vh; }
-#via_info_page_container > .info_page .toolbar { display:block; text-align:right; }
-#via_info_page_container > .info_page table { border-collapse:collapse; border:1px solid #cccccc; }
-#via_info_page_container > .info_page th { border:1px solid #cccccc; padding:0.3em 0.4em; }
-#via_info_page_container > .info_page td { border:1px solid #cccccc; padding:0.3em 0.4em; }
-#via_info_page_container > .info_page div { width:45em; }
-#via_info_page_container > .info_page li { margin:1em 0; }
+#via_page_container { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:1001; text-align:center; }
+#via_page_container > .via_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow-y:auto; text-align:left; content:"close"; width:80ch; max-height:80vh; }
+#via_page_container > .via_page > .toolbar { display:block; text-align:right; }
+#via_page_container > .via_page > .controls { position:relative; display:block; text-align:center; margin-top:2em; padding-top:1em; border-top:1px solid #cccccc; }
+#via_page_container > .via_page > .controls button { margin:0 1em; }
+#via_page_container > .via_page table { border-collapse:collapse; border:1px solid #cccccc; }
+#via_page_container > .via_page th { border:1px solid #cccccc; padding:0.3em 0.4em; }
+#via_page_container > .via_page td { border:1px solid #cccccc; padding:0.3em 0.4em; }
+#via_page_container > .via_page li { margin:1em 0; }
+#via_page_container > .via_page ul_nobullet { list-style-type:none; }
+#via_page_container > .via_page input[type="text"] { width:10em; }
+#via_page_container > .via_page input[type="password"] { width:10em; }
+
 /* Message Panel */
 #_via_message_container { display:none; width:100vw; position:fixed; bottom:0px; z-index:9999; text-align:center; }
 #_via_message_container .message_panel_close_button { position:absolute; top:-0.4em; right:0.3em; color:white; cursor:pointer; font-size:small; }
