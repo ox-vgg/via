@@ -433,9 +433,12 @@
             <ul>
               <li onclick="download_all_region_data('csv')" title="Export annotations to a CSV file">Export Annotations (as csv)</li>
               <li onclick="download_all_region_data('json')" title="Export annotaitons to a JSON file">Export Annotations (as json)</li>
+              <li onclick="download_all_region_data('coco')" title="Export annotaitons to COCO (http://cocodataset.org) format">Export Annotations (COCO format)</li>
               <li onclick="" class="submenu_divider"></li>
               <li onclick="sel_local_data_file('annotations')" title="Import annotations from a CSV file">Import Annotations (from csv)</li>
               <li onclick="sel_local_data_file('annotations')" title="Import annotations from a JSON file">Import Annotations (from json)</li>
+              <li onclick="sel_local_data_file('coco_annotations')" title="Import annotations from a COCO (http://cocodataset.org) formatted JSON file">Import Annotations (COCO format)</li>
+
               <li class="submenu_divider"></li>
               <li onclick="show_annotation_data()" title="Show a preview of annotations (opens in a new browser windows)">Preview Annotations</li>
               <li onclick="download_as_image()" title="Download an image containing the annotations">Download as Image</li>
@@ -990,8 +993,8 @@ POSSIBILITY OF SUCH DAMAGE.
       //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
     </script>
 
-    <!-- scripts code debugging
-    <script src="via.js"></script>    -->
+    <!-- scripts code debugging    -->
+    <script src="via.js"></script>
 
     <!--<script src="./demo/_via_basic_demo.js"></script>-->
     <!--<script src="./demo/_via_face_demo.js"></script>-->

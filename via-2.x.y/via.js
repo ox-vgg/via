@@ -1090,9 +1090,25 @@ function pack_via_metadata(return_type) {
       }
     }
     return csvdata;
-  } else {
-    return [ JSON.stringify(_via_img_metadata) ];
   }
+
+  // see http://cocodataset.org/#format-data
+  if( return_type === 'coco' ) {
+    var d = { 'info':{}, 'images':[], 'annotation':[], 'licenses':[] };
+    d.info = {
+      'year': new Date().getFullYear(),
+      'version': '1',
+      'description': '',
+      'contributor': 'Exported using VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via/)',
+      'url': '',
+      'date_created', new Date().toString(),
+    };
+    d.license = [ { 'id':1, 'name':'Unknown', 'url':'' } ];
+    d.image = [];
+  }
+
+  // default format is JSON
+  return [ JSON.stringify(_via_img_metadata) ];
 }
 
 function save_data_to_local_file(data, filename) {
