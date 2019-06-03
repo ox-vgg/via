@@ -92,7 +92,7 @@ if you would like to contribute to VIA project by reviewing its software code.
 If you use this software, please cite it as shown below and acknowledge the Seebibyte grant as follows: "Development and maintenance of VGG Image Annotator (VIA) is supported by EPSRC programme grant Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1)" 
 ```
 @article{dutta2019vgg,
-  title={{The VGG} Image Annotator ({VIA})},
+  title={The {VIA} Annotation Software for Images, Audio and Video},
   author={Dutta, Abhishek and Zisserman, Andrew},
   journal={arXiv preprint arXiv:1904.10699},
   year={2019}
