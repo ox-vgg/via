@@ -1,4 +1,4 @@
-## [2.0.8] - not released yet
+## [2.0.9] - not released yet
  * fast annotation mode @todo
     - keyboard input '123' denotes the following operation: select region 1, set 3 as the value of region attribute 2.
     - if there is a single region attribute, the '13' sets 3 as the value of region 1
@@ -12,18 +12,26 @@
     - preload images in adjacent groups to speed up visualization
     - label subgroup of images in a group based on a certain variable
 
+## [2.0.8] - June 14, 2019
+* rotating ellipse and rectangle (feature request 72, thank you @rdroste for the merge request)
+  - ellipse rotation has been merged, rectangle rotation has been removed
+  - variable names have been changed to follow VIA naming convention
+  - function to draw horizontal and vertical lines across the ellipse have been removed
+* show properties of current region (feature request 118)
+* Load project fails to import annotation correctly from a new project when a project is already loaded in VIA (issue 185)
+
 ## [2.0.7] - May 01, 2019
  - regions cannot be moved beyond image boundary (issue 173, thank you @zenggyu for bug report)
  - user's mouse cursor coordinate visible (feature request 172)
  - shortcut 'd' now works even when multiple regions are selected (merge request 15)
 
 ## [2.0.6] - March 25, 2019
- * fixed wrong region location for high zoom levels for large images (Closes: #166, thank you @fredowski) 
+ * fixed wrong region location for high zoom levels for large images (Closes: #166, thank you @fredowski)
  * Update region colour based on value of a region attribute (issue 175)
  * Relative paths now gets resolved (issue 171)
  * Grid view filter issue with "only first,middle and last image" fixed (issue 167)
  * grid view should only consider files filtered using filename regex in sidebar (issue 176)
- 
+
 ## [2.0.5] - December 03, 2018
  * reverted back to a.dispatchEvent() from a.link() which does not work in Firefox 63
 
