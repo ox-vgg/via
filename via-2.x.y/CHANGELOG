@@ -1,4 +1,4 @@
-## [2.0.8] - not released yet
+## [2.0.9] - not released yet
  * fast annotation mode @todo
     - keyboard input '123' denotes the following operation: select region 1, set 3 as the value of region attribute 2.
     - if there is a single region attribute, the '13' sets 3 as the value of region 1
@@ -11,6 +11,11 @@
     - add a "UNASSIGNED" group to denote all the files that do not have a value for the group variable
     - preload images in adjacent groups to speed up visualization
     - label subgroup of images in a group based on a certain variable
+
+## [2.0.8] - not released yet
+ - user selected files are loaded more efficiently using URL.createObjectURL() instead of FileReader()
+ - annotations import and export in COCO format (http://cocodataset.org/#format-data)
+ - removed unused variables and code segments (cleanup)
 
 ## [2.0.7] - May 01, 2019
  - regions cannot be moved beyond image boundary (issue 173, thank you @zenggyu for bug report)

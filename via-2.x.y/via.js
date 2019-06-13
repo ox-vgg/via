@@ -2,7 +2,7 @@
   VGG Image Annotator (via)
   www.robots.ox.ac.uk/~vgg/software/via/
 
-  Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University.
+  Copyright (c) 2016-2019, Abhishek Dutta, Visual Geometry Group, Oxford University.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -27,12 +27,12 @@
 */
 
 /*
-  See Contributors.md file for a list of developers who have contributed code
-  to VIA codebase.
-  /*
+  Links:
+  - https://gitlab.com/vgg/via/blob/master/Contributors.md : list of developers who have contributed code to the VIA project.
+  - https://gitlab.com/vgg/via/blob/master/CodeDoc.md : source code documentation
+  - https://gitlab.com/vgg/via/blob/master/CONTRIBUTING.md : guide for contributors
 
-  This source code (version 1.0.x) is organized in the following groups:
-
+  This source code can be grouped into the following categories:
   - Data structure for annotations
   - Initialization routine
   - Handlers for top navigation bar
@@ -46,16 +46,11 @@
   - Shortcut key handlers
   - Persistence of annotation data in browser cache (i.e. localStorage)
   - Handlers for attributes input panel (spreadsheet like user input panel)
-
-  See [Source code documentation](https://gitlab.com/vgg/via/blob/develop/CodeDoc.md)
-  and [Contributing Guidelines](https://gitlab.com/vgg/via/blob/develop/CONTRIBUTING.md)
-  for more details.
-
 */
 
 "use strict";
 
-var VIA_VERSION      = '2.0.7';
+var VIA_VERSION      = '2.0.8';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -130,6 +125,11 @@ var _via_current_image;
 var _via_current_image_width;
 var _via_current_image_height;
 
+// a record of image statistics (e.g. width, height)
+var _via_img_stat     = {};
+var _via_is_all_img_stat_read_ongoing = false;
+var _via_img_stat_current_img_index = false;
+
 // image canvas
 var _via_display_area = document.getElementById('display_area');
 var _via_img_panel    = document.getElementById('image_panel');
@@ -150,9 +150,6 @@ var _via_is_user_moving_region   = false;
 var _via_is_user_drawing_polygon = false;
 var _via_is_region_selected      = false;
 var _via_is_all_region_selected  = false;
-var _via_is_user_updating_attribute_name  = false;
-var _via_is_user_updating_attribute_value = false;
-var _via_is_user_adding_attribute_name    = false;
 var _via_is_loaded_img_list_visible  = false;
 var _via_is_attributes_panel_visible = false;
 var _via_is_reg_attr_panel_visible   = false;
@@ -163,7 +160,7 @@ var _via_is_region_id_visible        = true;
 var _via_is_region_boundary_visible  = true;
 var _via_is_region_info_visible      = false;
 var _via_is_ctrl_pressed             = false;
-var _via_is_debug_mode               = false;
+var _via_is_debug_mode               = true;
 
 // region
 var _via_current_shape             = VIA_REGION_SHAPE.RECT;
@@ -243,11 +240,6 @@ var _via_image_grid_group_var               = []; // {type, name, value}
 var _via_image_grid_group_show_all          = false;
 var _via_image_grid_stack_prev_page         = []; // stack of first img index of every page navigated so far
 
-// fast annotation (quick update of annotation using keyboard shortcuts)
-var _via_is_fast_annotation_ongoing     = false;
-var _via_fast_annotation_stack          = [];
-var _via_fast_annotation_keys           = ['0','1','2','3','4','5','6','7','8','9'];
-
 // image buffer
 var VIA_IMG_PRELOAD_INDICES         = [1, -1, 2, 3, -2, 4]; // for any image, preload previous 2 and next 4 images
 var VIA_IMG_PRELOAD_COUNT           = 4;
@@ -307,8 +299,10 @@ var BBOX_SELECTED_FILL_COLOR           = "#ffffff";
 
 var VIA_ANNOTATION_EDITOR_HEIGHT_CHANGE   = 5;   // in percent
 var VIA_ANNOTATION_EDITOR_FONTSIZE_CHANGE = 0.1; // in rem
-var VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE      = 20; // in percent
-var VIA_LEFTSIDEBAR_WIDTH_CHANGE          = 1; // in rem
+var VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE      = 20;  // in percent
+var VIA_LEFTSIDEBAR_WIDTH_CHANGE          = 1;   // in rem
+var VIA_POLYGON_SEGMENT_SUBTENDED_ANGLE   = 5;   // in degree (used to approximate shapes using polygon)
+var VIA_FLOAT_PRECISION = 3; // number of decimal places to include in float values
 
 //
 // Data structure to store metadata about file and regions
@@ -529,14 +523,25 @@ function sel_local_images() {
   }
 }
 
-function download_all_region_data(type) {
+function download_all_region_data(type, file_extension) {
+  if ( typeof(file_extension) === 'undefined' ) {
+    file_extension = type;
+  }
+
   // Javascript strings (DOMString) is automatically converted to utf-8
   // see: https://developer.mozilla.org/en-US/docs/Web/API/Blob/Blob
-  var all_region_data = pack_via_metadata(type);
-  var blob_attr = {type: 'text/'+type+';charset=utf-8'};
-  var all_region_data_blob = new Blob(all_region_data, blob_attr);
+  pack_via_metadata(type).then( function(data) {
+    var blob_attr = {type: 'text/'+file_extension+';charset=utf-8'};
+    var all_region_data_blob = new Blob(data, blob_attr);
 
-  save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
+    var filename = 'via_export';
+    if ( file_extension !== 'csv' || file_extension !== 'json' ) {
+      filename += '_' + type + '.' + file_extension;
+    }
+    save_data_to_local_file(all_region_data_blob, filename);
+  }.bind(this), function(err) {
+    show_message('Failed to download data: [' + err + ']');
+  }.bind(this));
 }
 
 function sel_local_data_file(type) {
@@ -544,6 +549,11 @@ function sel_local_data_file(type) {
     switch(type) {
     case 'annotations':
       invisible_file_input.accept='.csv,.json';
+      invisible_file_input.onchange = import_annotations_from_file;
+      break;
+
+    case 'annotations_coco':
+      invisible_file_input.accept='.json';
       invisible_file_input.onchange = import_annotations_from_file;
       break;
 
@@ -758,31 +768,32 @@ function parse_csv_header_line(line) {
   }
 }
 
-function import_annotations_from_json(data) {
+function import_annotations_from_json(data_str) {
   return new Promise( function(ok_callback, err_callback) {
-    if (data === '' || typeof(data) === 'undefined') {
+    if (data_str === '' || typeof(data_str) === 'undefined') {
       return;
     }
 
-    var d = JSON.parse(data);
+    var data = JSON.parse(data_str);
+    var d;
+
+    if ( data.hasOwnProperty('info') && data.hasOwnProperty('categories') &&
+         data.hasOwnProperty('images') && data.hasOwnProperty('annotations')
+       ) {
+      // import annotations in COCO format
+      d = coco_to_via(data);
+    } else {
+      d = data;
+    }
 
     var region_import_count = 0;
     var file_added_count    = 0;
     var malformed_entries_count    = 0;
     for (var img_id in d) {
-      var filename = d[img_id].filename;
-      var size     = d[img_id].size;
-      var comp_img_id = _via_get_image_id(filename, size);
-      if ( comp_img_id !== img_id ) {
-        // discard malformed entry
-        malformed_entries_count += 1;
-        continue;
-      }
-
       if ( ! _via_img_metadata.hasOwnProperty(img_id) ) {
-        img_id = project_add_new_file(filename, size);
+        project_add_new_file(d[img_id].filename, d[img_id].size, img_id);
         if ( _via_settings.core.default_filepath === '' ) {
-          _via_img_src[img_id] = filename;
+          _via_img_src[img_id] = d[img_id].filename;
         } else {
           _via_file_resolve_file_to_default_filepath(img_id);
         }
@@ -857,6 +868,69 @@ function import_annotations_from_json(data) {
 
     ok_callback([file_added_count, region_import_count, malformed_entries_count]);
   });
+}
+
+// convert from coco JSON format to VIA JSON format
+// see http://cocodataset.org/#format-data
+function coco_to_via(coco) {
+  var d = {};
+
+  // create an index of all categories
+  var category_list = {}
+  for ( var cat_index in coco.categories ) {
+    var catid = coco.categories[cat_index]['id'];
+    category_list[catid] = coco.categories[cat_index]['name'];
+  }
+
+  // create an index of all annotations
+  var annotation_list = {}
+  for ( var annotation_index in coco.annotations ) {
+    var coco_image_id = coco.annotations[annotation_index]['image_id'];
+    if ( ! annotation_list.hasOwnProperty(coco_image_id) ) {
+      annotation_list[coco_image_id] = [];
+    }
+    annotation_list[coco_image_id].push( annotation_index );
+  }
+
+  // add all files and annotations
+  for ( var coco_img_index in coco.images ) {
+    var filename = coco.images[coco_img_index]['file_name'];
+    if ( coco.images[coco_img_index].hasOwnProperty('coco_url') ) {
+      filename = coco.images[coco_img_index]['coco_url'];
+    }
+    var size = -1;
+    var via_img_id = _via_get_image_id(filename, size);
+    var coco_img_id = coco.images[coco_img_index]['id'];
+    var width = coco.images[coco_img_index]['width'];
+    var height = coco.images[coco_img_index]['height'];
+
+    d[via_img_id] = { 'filename':filename,
+                      'size':size,
+                      'regions':[],
+                      'file_attributes':{'width':width, 'height':height},
+                    };
+
+    // add all annotations associated with this file
+    if ( annotation_list.hasOwnProperty(coco_img_id) ) {
+      for ( var i in annotation_list[coco_img_id] ) {
+        var annotation = coco.annotations[ annotation_list[coco_img_id][i] ];
+        var bbox = polygon_to_bbox(annotation['segmentation']);
+        var area = bbox[2] * bbox[3];
+        var r = { 'shape_attributes': { 'name':'polygon', 'all_points_x':[], 'all_points_y':[] },
+                  'region_attributes': {},
+                };
+
+        for ( var j = 0; j < annotation['segmentation'].length; j = j + 2 ) {
+          r['shape_attributes']['all_points_x'].push( annotation['segmentation'][j] );
+          r['shape_attributes']['all_points_y'].push( annotation['segmentation'][j+1] );
+        }
+        var cat_name = category_list[ annotation['category_id'] ];
+        r['region_attributes']['category'] = cat_name;
+        d[via_img_id].regions.push(r);
+      }
+    }
+  }
+  return d;
 }
 
 // assumes that csv line follows the RFC 4180 standard
@@ -1053,62 +1127,199 @@ function import_files_url_from_csv(data) {
 // Data Exporter
 //
 function pack_via_metadata(return_type) {
-  if( return_type === 'csv' ) {
-    var csvdata = [];
-    var csvheader = 'filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes';
-    csvdata.push(csvheader);
+  return new Promise( function(ok_callback, err_callback) {
+    if( return_type === 'csv' ) {
+      var csvdata = [];
+      var csvheader = 'filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes';
+      csvdata.push(csvheader);
 
-    for ( var image_id in _via_img_metadata ) {
-      var fattr = map_to_json( _via_img_metadata[image_id].file_attributes );
-      fattr = escape_for_csv( fattr );
+      for ( var image_id in _via_img_metadata ) {
+        var fattr = map_to_json( _via_img_metadata[image_id].file_attributes );
+        fattr = escape_for_csv( fattr );
 
-      var prefix = '\n' + _via_img_metadata[image_id].filename;
-      prefix += ',' + _via_img_metadata[image_id].size;
-      prefix += ',"' + fattr + '"';
+        var prefix = '\n' + _via_img_metadata[image_id].filename;
+        prefix += ',' + _via_img_metadata[image_id].size;
+        prefix += ',"' + fattr + '"';
 
-      var r = _via_img_metadata[image_id].regions;
+        var r = _via_img_metadata[image_id].regions;
 
-      if ( r.length !==0 ) {
-        for ( var i = 0; i < r.length; ++i ) {
-          var csvline = [];
-          csvline.push(prefix);
-          csvline.push(r.length);
-          csvline.push(i);
+        if ( r.length !==0 ) {
+          for ( var i = 0; i < r.length; ++i ) {
+            var csvline = [];
+            csvline.push(prefix);
+            csvline.push(r.length);
+            csvline.push(i);
 
-          var sattr = map_to_json( r[i].shape_attributes );
-          sattr = '"' +  escape_for_csv( sattr ) + '"';
-          csvline.push(sattr);
+            var sattr = map_to_json( r[i].shape_attributes );
+            sattr = '"' +  escape_for_csv( sattr ) + '"';
+            csvline.push(sattr);
 
-          var rattr = map_to_json( r[i].region_attributes );
-          rattr = '"' +  escape_for_csv( rattr ) + '"';
-          csvline.push(rattr);
-          csvdata.push( csvline.join(VIA_CSV_SEP) );
+            var rattr = map_to_json( r[i].region_attributes );
+            rattr = '"' +  escape_for_csv( rattr ) + '"';
+            csvline.push(rattr);
+            csvdata.push( csvline.join(VIA_CSV_SEP) );
+          }
+        } else {
+          // @todo: reconsider this practice of adding an empty entry
+          csvdata.push(prefix + ',0,0,"{}","{}"');
         }
-      } else {
-        // @todo: reconsider this practice of adding an empty entry
-        csvdata.push(prefix + ',0,0,"{}","{}"');
+      }
+      ok_callback(csvdata);
+    }
+
+    // see http://cocodataset.org/#format-data
+    if( return_type === 'coco' ) {
+      img_stat_set_all().then( function(ok) {
+        var d = { 'info':{}, 'images':[], 'annotations':[], 'licenses':[], 'categories':[] };
+        d.info = {
+          'year': new Date().getFullYear(),
+          'version': '1',
+          'description': 'Exported using VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via/)',
+          'contributor': '',
+          'url': 'http://www.robots.ox.ac.uk/~vgg/software/via/',
+          'date_created': new Date().toString(),
+        };
+        d.licenses = [ { 'id':1, 'name':'Unknown', 'url':'' } ];
+
+        // initialise categories
+        var attrval_to_catid = {};
+        var cat_id = 1;
+        for ( var rid in _via_attributes['region'] ) {
+          if ( _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.CHECKBOX ||
+               _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.DROPDOWN ||
+               _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.RADIO ) {
+            for ( var oid in _via_attributes['region'][rid]['options'] ) {
+              d.categories.push( { 'id':cat_id, 'name':oid, 'supercategory':rid } );
+              attrval_to_catid[oid] = cat_id;
+              cat_id = cat_id + 1;
+            }
+          }
+        }
+
+        // add files
+        var img_id, file_src;
+        var annotation_id = 0;
+        var export_aid = Object.keys(_via_attributes['region'])[0];
+        for ( var img_index in _via_image_id_list ) {
+          img_id = _via_image_id_list[img_index];
+
+          // add file
+          if ( _via_img_fileref[img_id] instanceof File ) {
+            file_src = _via_img_fileref[img_id].filename;
+          } else {
+            //file_src = _via_img_src[img_id];
+            file_src = _via_img_metadata[img_id].filename;
+          }
+          d.images.push( {
+            'id':parseInt(img_index),
+            'width':_via_img_stat[img_index][0],
+            'height':_via_img_stat[img_index][1],
+            'file_name':_via_img_metadata[img_id].filename,
+            'license':1,
+            'flickr_url':file_src,
+            'coco_url':file_src,
+            'date_captured':'',
+          } );
+
+          // add metadata
+          var shape_name, region;
+          for ( var rindex in _via_img_metadata[img_id].regions ) {
+            region = _via_img_metadata[img_id].regions[rindex];
+            if ( region.shape_attributes['name'] === 'rect' ||
+                 region.shape_attributes['name'] === 'circle' ||
+                 region.shape_attributes['name'] === 'ellipse' ||
+                 region.shape_attributes['name'] === 'polygon' ) {
+              var annotation = via_region_shape_to_coco_annotation(region.shape_attributes);
+              var cat_id = '';
+              if ( typeof(export_aid) !== 'undefined' ) {
+                var avalue = _via_img_metadata[img_id].regions[rindex].region_attributes[export_aid];
+                cat_id = attrval_to_catid[avalue];
+              }
+
+              d.annotations.push( Object.assign({
+                'id':annotation_id,
+                'image_id':img_index,
+                'category_id':cat_id,
+              }, annotation) );
+              annotation_id = annotation_id + 1;
+            }
+          }
+        }
+        ok_callback( [ JSON.stringify(d) ] );
+      }.bind(this), function(err) {
+        err_callback(err);
+      }.bind(this));
+    } else {
+      // default format is JSON
+      ok_callback( [ JSON.stringify(_via_img_metadata) ] );
+    }
+  }.bind(this));
+}
+
+function via_region_shape_to_coco_annotation(shape_attributes) {
+  var annotation = { 'segmentation':[], 'area':[], 'bbox':[], 'iscrowd':0 };
+
+  switch(shape_attributes['name']) {
+  case 'rect':
+    var x0 = shape_attributes['x'];
+    var y0 = shape_attributes['y'];
+    var w  = shape_attributes['width'];
+    var h  = shape_attributes['height'];
+    var x1 = x0 + w;
+    var y1 = y0 + h;
+    annotation['segmentation'] = [x0, y0, x1, y0, x1, y1, x0, y1];
+    annotation['area'] = fixfloat( parseFloat(w)*parseFloat(h) );
+    annotation['bbox'] = [x0, y0, w, h];
+    break;
+  case 'circle':
+  case 'ellipse':
+    var a,b;
+    if ( shape_attributes.hasOwnProperty('rx') && shape_attributes.hasOwnProperty('ry')) {
+      a = shape_attributes['rx'];
+      b = shape_attributes['ry'];
+    } else {
+      a = shape_attributes['r'];
+      b = shape_attributes['r'];
+    }
+    var theta_to_radian = Math.PI/180;
+    for ( var theta = 0; theta < 360; theta = theta + VIA_POLYGON_SEGMENT_SUBTENDED_ANGLE ) {
+      var theta_radian = theta * theta_to_radian;
+      var x = shape_attributes['cx'] + a * Math.cos(theta_radian);
+      var y = shape_attributes['cy'] + b * Math.sin(theta_radian);
+      annotation['segmentation'].push( fixfloat(x), fixfloat(y) );
+    }
+    annotation['bbox'] = polygon_to_bbox(annotation['segmentation']);
+    annotation['area'] = annotation['bbox'][2] * annotation['bbox'][3];
+    break;
+
+  case 'polygon':
+    annotation['segmentation'] = [];
+    var x0 = +Infinity;
+    var y0 = +Infinity;
+    var x1 = -Infinity;
+    var y1 = -Infinity;
+    for ( var i in shape_attributes['all_points_x'] ) {
+      annotation['segmentation'].push( shape_attributes['all_points_x'][i] );
+      annotation['segmentation'].push( shape_attributes['all_points_y'][i] );
+      if ( shape_attributes['all_points_x'][i] < x0 ) {
+        x0 = shape_attributes['all_points_x'][i];
+      }
+      if ( shape_attributes['all_points_y'][i] < y0 ) {
+        y0 = shape_attributes['all_points_y'][i];
+      }
+      if ( shape_attributes['all_points_x'][i] > x1 ) {
+        x1 = shape_attributes['all_points_x'][i];
+      }
+      if ( shape_attributes['all_points_y'][i] > y1 ) {
+        y1 = shape_attributes['all_points_y'][i];
       }
     }
-    return csvdata;
+    var w = x1 - x0;
+    var h = y1 - y0;
+    annotation['bbox'] = [x0, y0, w, h];
+    annotation['area'] = w * h; // approximate area
   }
-
-  // see http://cocodataset.org/#format-data
-  if( return_type === 'coco' ) {
-    var d = { 'info':{}, 'images':[], 'annotation':[], 'licenses':[] };
-    d.info = {
-      'year': new Date().getFullYear(),
-      'version': '1',
-      'description': '',
-      'contributor': 'Exported using VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via/)',
-      'url': '',
-      'date_created', new Date().toString(),
-    };
-    d.license = [ { 'id':1, 'name':'Unknown', 'url':'' } ];
-    d.image = [];
-  }
-
-  // default format is JSON
-  return [ JSON.stringify(_via_img_metadata) ];
+  return annotation;
 }
 
 function save_data_to_local_file(data, filename) {
@@ -1370,11 +1581,15 @@ function set_region_select_state(region_id, is_selected) {
 }
 
 function show_annotation_data() {
-  var hstr = '<pre>' + pack_via_metadata('csv').join('') + '</pre>';
-  var window_features = 'toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no';
-  window_features += ',width=800,height=600';
-  var annotation_data_window = window.open('', 'Annotations (preview) ', window_features);
-  annotation_data_window.document.body.innerHTML = hstr;
+  pack_via_metadata('csv').then( function(data) {
+    var hstr = '<pre>' + data.join('') + '</pre>';
+    var window_features = 'toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no';
+    window_features += ',width=800,height=600';
+    var annotation_data_window = window.open('', 'Annotations (preview) ', window_features);
+    annotation_data_window.document.body.innerHTML = hstr;
+  }.bind(this), function(err) {
+    show_message('Failed to collect annotation data!');
+  }.bind(this));
 }
 
 //
@@ -1605,16 +1820,6 @@ function _via_reg_canvas_mouseup_handler(e) {
         new_rr = 0;
         break;
       }
-
-      // if (Math.abs(new_rr) > Math.PI / 4) {
-      //   // swap values
-      //   new_ry = [new_rx, new_rx = new_ry][0];
-      //   if (new_rr < 0) {
-      //     new_rr += Math.PI / 2;
-      //   } else {
-      //     new_rr -= Math.PI / 2;
-      //   }
-      // }
 
       image_attr['rx'] = Math.round(new_rx * _via_canvas_scale);
       image_attr['ry'] = Math.round(new_ry * _via_canvas_scale);
@@ -2126,16 +2331,6 @@ function _via_reg_canvas_mousemove_handler(e) {
         new_rr = 0;
         break;
       }
-
-      // if (Math.abs(new_rr) > Math.PI / 4) {
-      //   // swap values
-      //   new_ry = [new_rx, new_rx = new_ry][0];
-      //   if (new_rr < 0) {
-      //     new_rr += Math.PI / 2;
-      //   } else {
-      //     new_rr -= Math.PI / 2;
-      //   }
-      // }
 
       _via_draw_ellipse_region(attr['cx'],
                                attr['cy'],
@@ -3480,12 +3675,6 @@ function _via_handle_global_keydown_event(e) {
     return;
   }
 
-  if ( _via_fast_annotation_keys.includes(e.key) ) {
-    // fast annotation mode
-    // @todo
-    console.log('@todo: fast annotation mode');
-  }
-
   if ( e.key === 'a' ) {
     if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
       // select all in image grid
@@ -3522,13 +3711,6 @@ function _via_handle_global_keydown_event(e) {
 
     if ( _via_is_user_resizing_region ) {
       _via_is_user_resizing_region = false
-    }
-
-    if ( _via_is_user_updating_attribute_name ||
-         _via_is_user_updating_attribute_value) {
-      _via_is_user_updating_attribute_name = false;
-      _via_is_user_updating_attribute_value = false;
-
     }
 
     if ( _via_is_user_moving_region ) {
@@ -6934,12 +7116,14 @@ function project_remove_file(img_index) {
   _via_img_count -= 1;
 }
 
-function project_add_new_file(filename, size) {
-  if ( typeof(size) === 'undefined' ) {
-    size = -1;
+function project_add_new_file(filename, size, file_id) {
+  var img_id = file_id;
+  if ( typeof(img_id) === 'undefined' ) {
+    if ( typeof(size) === 'undefined' ) {
+      size = -1;
+    }
+    img_id = _via_get_image_id(filename, size);
   }
-
-  var img_id = _via_get_image_id(filename, size);
 
   if ( ! _via_img_metadata.hasOwnProperty(img_id) ) {
     _via_img_metadata[img_id] = new file_metadata(filename, size);
@@ -6969,6 +7153,7 @@ function project_file_add_local(event) {
         if ( _via_img_metadata.hasOwnProperty(img_id2) ) {
           img_id = img_id2;
         }
+
         _via_img_fileref[img_id] = user_selected_images[i];
         if ( _via_img_metadata[img_id].size === -1 ) {
           _via_img_metadata[img_id].size = size;
@@ -8793,35 +8978,30 @@ function _via_img_buffer_add_image(img_index) {
     // check if user has given access to local file using
     // browser's file selector
     if ( _via_img_fileref[img_id] instanceof File ) {
-      var file_reader = new FileReader();
-      file_reader.readAsDataURL( _via_img_fileref[img_id] );
-      file_reader.addEventListener('error', function() {
-        console.log('fileread err');
+      var tmp_file_object_url = URL.createObjectURL(_via_img_fileref[img_id]);
+      var img_id = _via_image_id_list[img_index];
+      var bimg = document.createElement('img');
+      bimg.setAttribute('id', _via_img_buffer_get_html_id(img_index));
+      bimg.setAttribute('src', tmp_file_object_url);
+      bimg.setAttribute('alt', 'Image loaded from base64 data of a local file selected by user.');
+      bimg.addEventListener('error', function() {
+        URL.revokeObjectURL(tmp_file_object_url);
         project_file_load_on_fail(img_index);
         err_callback(img_index);
-      }, false);
-      file_reader.addEventListener('load', function() {
-        var img_id = _via_image_id_list[img_index];
-        var bimg = document.createElement('img');
-        bimg.setAttribute('id', _via_img_buffer_get_html_id(img_index));
-        bimg.setAttribute('src', file_reader.result);
-        bimg.setAttribute('alt', 'Image loaded from base64 data of a local file selected by user.');
-        bimg.addEventListener('error', function() {
-          project_file_load_on_fail(img_index);
-          err_callback(img_index);
-        });
-        bimg.addEventListener('load', function() {
-          _via_img_panel.insertBefore(bimg, _via_reg_canvas);
-          project_file_load_on_success(img_index);
-          img_fn_list_ith_entry_add_css_class(img_index, 'buffered')
-          // add timestamp so that we can apply Least Recently Used (LRU)
-          // scheme to remove elements when buffer is full
-          var arr_index = _via_buffer_img_index_list.length;
-          _via_buffer_img_index_list.push(img_index);
-          _via_buffer_img_shown_timestamp[arr_index] = Date.now(); // though, not seen yet
-          ok_callback(img_index);
-        });
-      }, false);
+      });
+      bimg.addEventListener('load', function() {
+        URL.revokeObjectURL(tmp_file_object_url);
+        img_stat_set(img_index, [bimg.naturalWidth, bimg.naturalHeight]);
+        _via_img_panel.insertBefore(bimg, _via_reg_canvas);
+        project_file_load_on_success(img_index);
+        img_fn_list_ith_entry_add_css_class(img_index, 'buffered')
+        // add timestamp so that we can apply Least Recently Used (LRU)
+        // scheme to remove elements when buffer is full
+        var arr_index = _via_buffer_img_index_list.length;
+        _via_buffer_img_index_list.push(img_index);
+        _via_buffer_img_shown_timestamp[arr_index] = Date.now(); // though, not seen yet
+        ok_callback(img_index);
+      });
       return;
     }
 
@@ -8849,6 +9029,7 @@ function _via_img_buffer_add_image(img_index) {
       // Note: _via_current_image.{naturalWidth,naturalHeight} is only accessible after
       // the "load" event. Therefore, all processing must happen inside this event handler.
       bimg.addEventListener('load', function() {
+        img_stat_set(img_index, [bimg.naturalWidth, bimg.naturalHeight]);
         _via_img_panel.insertBefore(bimg, _via_reg_canvas);
 
         project_file_load_on_success(img_index);
@@ -9486,4 +9667,105 @@ if ( ! _via_is_debug_mode ) {
     // For Safari
     return 'Did you save your data?';
   };
+}
+
+//
+// keep a record of image statistics (e.g. width, height, ...)
+//
+function img_stat_set(img_index, stat) {
+  if ( stat.length ) {
+    _via_img_stat[img_index] = stat;
+  } else {
+    delete _via_img_stat[img_index];
+  }
+}
+
+function img_stat_set_all() {
+  return new Promise( function(ok_callback, err_callback) {
+    var promise_list = [];
+    var img_id;
+    for ( var img_index in _via_image_id_list ) {
+      if ( ! _via_img_stat.hasOwnProperty(img_index) ) {
+        img_id = _via_image_id_list[img_index];
+        if ( _via_img_metadata[img_id].file_attributes.hasOwnProperty('width') &&
+             _via_img_metadata[img_id].file_attributes.hasOwnProperty('height')
+           ) {
+          _via_img_stat[img_index] = [_via_img_metadata[img_id].file_attributes['width'],
+                                      _via_img_metadata[img_id].file_attributes['height'],
+                                     ];
+        } else {
+          promise_list.push( img_stat_get(img_index) );
+        }
+      }
+    }
+    if ( promise_list.length ) {
+      Promise.all(promise_list).then( function(ok) {
+        ok_callback();
+      }.bind(this), function(err) {
+        console.warn('Failed to read statistics of all images!');
+        err_callback();
+      });
+    } else {
+      ok_callback();
+    }
+  }.bind(this));
+}
+
+function img_stat_get(img_index) {
+  return new Promise( function(ok_callback, err_callback) {
+    var img_id = _via_image_id_list[img_index];
+    var tmp_img = document.createElement('img');
+    var tmp_file_object_url = null;
+    tmp_img.addEventListener('load', function() {
+      _via_img_stat[img_index] = [tmp_img.naturalWidth, tmp_img.naturalHeight];
+      if ( tmp_file_object_url !== null ) {
+        URL.revokeObjectURL(tmp_file_object_url);
+      }
+      ok_callback();
+    }.bind(this));
+    tmp_img.addEventListener('error', function() {
+      _via_img_stat[img_index] = [-1, -1];
+      if ( tmp_file_object_url !== null ) {
+        URL.revokeObjectURL(tmp_file_object_url);
+      }
+      ok_callback();
+    }.bind(this));
+
+    if ( _via_img_fileref[img_id] instanceof File ) {
+      tmp_file_object_url = URL.createObjectURL(_via_img_fileref[img_id]);
+      tmp_img.src = tmp_file_object_url;
+    } else {
+      tmp_img.src = _via_img_src[img_id];
+    }
+  }.bind(this));
+}
+
+//
+// util
+//
+function fixfloat(x) {
+  return parseFloat( x.toFixed(VIA_FLOAT_PRECISION) );
+}
+
+// pts = [x0,y0,x1,y1,....]
+function polygon_to_bbox(pts) {
+  var xmin = +Infinity;
+  var xmax = -Infinity;
+  var ymin = +Infinity;
+  var ymax = -Infinity;
+  for ( var i = 0; i < pts.length; i = i + 2 ) {
+    if ( pts[i] > xmax ) {
+      xmax = pts[i];
+    }
+    if ( pts[i] < xmin ) {
+      xmin = pts[i];
+    }
+    if ( pts[i+1] > ymax ) {
+      ymax = pts[i+1];
+    }
+    if ( pts[i+1] < ymin ) {
+      ymin = pts[i+1];
+    }
+  }
+  return [xmin, ymin, xmax-xmin, ymax-ymin];
 }
