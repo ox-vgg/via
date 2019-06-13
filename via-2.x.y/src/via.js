@@ -1,1003 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <!--
-        VGG Image Annotator (via)
-        www.robots.ox.ac.uk/~vgg/software/via/
-
-        Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University.
-        All rights reserved.
-
-        Redistribution and use in source and binary forms, with or without
-        modification, are permitted provided that the following conditions are met:
-
-        Redistributions of source code must retain the above copyright notice, this
-        list of conditions and the following disclaimer.
-        Redistributions in binary form must reproduce the above copyright notice,
-        this list of conditions and the following disclaimer in the documentation
-        and/or other materials provided with the distribution.
-        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-        AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-        IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-        ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-        LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-        CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-        SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-        INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-        CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-        ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-        POSSIBILITY OF SUCH DAMAGE.
-
-      -->
-    <title>VGG Image Annotator</title>
-    <meta name="author" content="Abhishek Dutta">
-    <meta name="description" content="VIA is a standalone image annotator application packaged as a single HTML file (< 400 KB) that runs on most modern web browsers.">
-
-    <!--
-    Development of VIA is supported by the EPSRC programme grant
-    Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1).
-    Using Google Analytics, we record the usage of this application.
-    This data is used in reporting of this programme grant.
-
-    If you do not wish to share this data, you can safely remove the
-    javascript code below.
-    -->
-    <script type="text/javascript">
-      //<!--AUTO_INSERT_GOOGLE_ANALYTICS_JS_HERE-->
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-      ga('create', 'UA-20555581-2', 'auto');
-      ga('set', 'page', '/via-2.0.0.html');
-      ga('send', 'pageview');
-    </script>
-
-    <!-- CSS style definition -->
-    <style type="text/css">
-      body { min-width:200px; padding:0; margin:0; font-family:sans-serif; }
-      * { box-sizing: border-box; }
-      input[type=text] { border:1px solid #cccccc; margin:0.6rem 0; padding:0.2rem 0.4rem; }
-      a { text-decoration:none; }
-      textarea { border:1px solid #cccccc; margin:0.6rem 0; padding:0.2rem 0.4rem; }
-
-      /* Top panel : #navbar, #toolbar */
-      .top_panel { font-size:0.9rem; display:block; background-color:#212121; color:#ffffff; z-index:1001; margin-bottom:1rem;}
-
-      /* Navigation menu bar that appear at the top */
-      .menubar { display:inline-block; height:1.8rem; } /* height needed to avoid extra bottom border */
-      .menubar a:link { color:#eeeeee; text-decoration:none; }
-      .menubar a:visited { color:#eeeeee; text-decoration:none; }
-      .menubar ul { display:block; padding:0; margin:0; }
-      .menubar li { display:inline; float:left; padding:0.45rem 1rem; }
-      .menubar li:hover { background-color:#616161; cursor:default; }
-
-      .menubar li ul { display:none; background-color:#212121; border:1px solid #616161; min-width:10rem; position:absolute; z-index:100; margin:0.4rem -1rem;}
-      .menubar li ul li { display:block; float:none; color:#eeeeee; margin:0; padding:0.6rem 1rem; }
-      .menubar li ul li:hover { cursor:pointer; }
-      .menubar li ul li.submenu_divider { margin:0 0.4rem; padding:0; height:1px; border-bottom:1px solid #424242; }
-      .menubar li:hover ul { display:block; }
-
-      /* toolbar containing small icons for tools */
-      .toolbar { display:inline-block; margin-left:1rem; }
-      .toolbar svg { fill:white; margin: 0.2rem 0.1rem; height:1.2rem;  -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none;}
-      .toolbar svg:hover { fill:yellow; cursor:pointer; }
-      .toolbar svg:active { fill:white; }
-      .toolbar ul { display:inline-block; padding:0.2rem; margin:0; }
-      .toolbar li { display:inline; float:left; padding:0rem 0.3rem; border:1px solid white;} /* main menu items */
-      .toolbar li:hover { color:red; cursor:pointer; }
-
-      /* Middle panel: containing #image_panel, #leftsidebar */
-      .middle_panel { display:table; table-layout:fixed; width:100%; z-index:1; padding:0;}
-      #leftsidebar { display:none; z-index:10; vertical-align:top;}
-      #display_area { display:table-cell; width:100%; z-index:1; margin:0; padding-left:1em; vertical-align:top; }
-      /* layers of canvas */
-      #image_panel        { position:relative; outline:none; }
-      #image_panel img    { visibility:hidden; opacity:0; position:absolute; top:0px; left:0px; width:100%; height:100%; outline:none; }
-      #image_panel canvas { position:absolute; top:0px; left:0px; outline:none;}
-      #image_panel .visible { visibility:visible !important; opacity:1 !important; }
-      #image_panel label>img { visibility:visible; opacity:1; position:relative; width:auto; height:4em; outline:none; }
-
-      /* image buffer
-      #image_panel .fadein { visibility:visible; opacity:1; transition: visibility 0s linear 0s, opacity 300ms; }
-      #image_panel .fadeout { visibility:hidden; opacity:0; transition: visibility 0s linear 300ms, opacity 300ms; }
-      */
-
-      /* image grid view */
-      #image_grid_panel { position:relative; margin:0; padding:0; width:100%; }
-      #image_grid_panel #image_grid_toolbar { display:block; font-size:small; padding:0.5rem 0;}
-      #image_grid_panel #image_grid_toolbar select { font-size:small; }
-      #image_grid_panel #image_grid_toolbar .tool { display:inline; margin:0 0.5rem;}
-      #image_grid_panel #image_grid_group_panel { font-size:small; }
-      #image_grid_panel #image_grid_group_panel select { font-size:small; }
-      #image_grid_panel #image_grid_group_panel .image_grid_group_toolbar { display:inline; margin-left: 2rem;}
-      #image_grid_panel #image_grid_group_panel .image_grid_group_toolbar select { margin:0 0.2rem; padding:0; font-size:small;}
-
-      #image_grid_panel #image_grid_nav { display:inline; font-size:small; padding-left:0.5rem; margin-top:0.2rem; }
-      #image_grid_panel #image_grid_nav span { margin: 0 0.2rem; }
-      #image_grid_panel #image_grid_content { position:relative; overflow:hidden; margin:0; padding:0; outline:none; }
-      #image_grid_panel #image_grid_content #image_grid_content_img img { margin:0.3em; padding:0; border:0.2em solid #ffffff; outline:0.1em solid #0066ff;}
-      #image_grid_panel #image_grid_content #image_grid_content_img .not_sel { opacity:0.6; outline:none; }
-      #image_grid_panel #image_grid_content #image_grid_content_img { position:absolute; top:0; left:0; width:100%; height:100%; }
-      #image_grid_panel #image_grid_content #image_grid_content_rshape { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
-      #image_grid_panel #image_grid_content img { float:left; margin:0; }
-
-      #leftsidebar_collapse_panel { display:none; position:relative; z-index:10; vertical-align:top; }
-      #leftsidebar_show_button { font-size:large; margin-left:0.1rem; }
-      #leftsidebar_show_button:hover { color:red; cursor: pointer; }
-
-      /* Left sidebar accordion */
-      button.leftsidebar_accordion { font-size:large; background-color:#f2f2f2; cursor:pointer; padding:0.5em 0.5em; width:100%; text-align:left; border:0; outline:none; }
-      button.leftsidebar_accordion:focus { outline: none; }
-      button.leftsidebar_accordion.active, button.leftsidebar_accordion:hover { background-color: #e6e6e6; }
-      button.leftsidebar_accordion:after { content:'\02795'; color:#4d4d4d; float:right; }
-      button.leftsidebar_accordion.active:after { content: '\2796'; }
-      .leftsidebar_accordion_panel { display:none; padding:0 0.5em; font-size:small; border-right:2px solid #f2f2f2; border-bottom:2px solid #f2f2f2; }
-      .leftsidebar_accordion_panel.show { display:block; }
-
-      /* Keyboard shortcut panel */
-      .leftsidebar_accordion_panel table { border-collapse:collapse; }
-      .leftsidebar_accordion_panel td { border:1px solid #f2f2f2; padding:0.2rem 0.4rem; }
-
-      /* buttons */
-      .button_panel { display:inline-block; width:100%; margin:0.2rem 0; }
-      .button_panel .text_button, .text_button { color: #0000ff; padding: 0.2rem 0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
-      .button_panel .flush_right { float:right; }
-      .button_panel .text_button:hover, .text_button:hover { cursor:pointer; }
-      .button_panel .text_button:active, .text_button:active { color: #000000; }
-      .button_panel .active { border-bottom:1px solid black; }
-      .button_panel .button { display:inline-block; padding:0.35rem 0.5rem; margin:0 0.05rem; cursor:pointer; background-color:#cccccc; border-radius:0.2rem; -moz-user-select:none; -webkit-user-select:none; -ms-user-select:none; }
-      .button_panel .button:hover { background-color:black; color:white; }
-
-      /* Attributes properties: name, description, type, ... */
-      #attribute_properties { display:table; width:100%; border-collapse:collapse; margin:1rem 0; border:1px solid #cccccc; }
-      #attribute_properties .property { display:table-row;}
-      #attribute_properties .property span { display:table-cell; padding: 0.2rem 0.4rem; }
-      #attribute_properties .property span input { width: 100%; border:1px solid #cccccc; margin: 0;}
-      #attribute_properties .property span input:focus { border:1px solid black; }
-      #attribute_properties .property span select { width: 100%; border:1px solid #cccccc; margin: 0;}
-
-      /* Attributes options: options for attribute type={checkbox,radio,...} */
-      #attribute_options { display:table; width:100%; border-collapse:collapse; margin:1rem 0; border:1px solid #cccccc; table-layout:fixed; }
-      #attribute_options .new_option_id_entry { display:inline-block; padding:1rem 0.2rem; }
-      #attribute_options .new_option_id_entry input {border:none; border-bottom:1px solid #cccccc; margin: 0; font-size: 0.8rem;}
-      #attribute_options .property { display:table-row;}
-      #attribute_options .property span { display:table-cell; padding: 0.2rem 0.2rem; font-weight:bold; }
-      #attribute_options .property input { display:table-cell; width:94%; border:none; border-bottom:1px solid #cccccc; margin: 0; font-size: 0.8rem;}
-      #attribute_options .property input:focus { border-bottom:1px solid #000000; background-color:#f2f2f2; color:#000000; }
-      #attribute_options .property span input[type=checkbox] { vertical-align:middle; }
-      #attribute_options .property span input[type=radio] { vertical-align:middle; }
-
-      /* overlay panel used to gather user inputs before invoking a function using invoke_with_user_inputs() */
-      #user_input_panel { position:fixed; display:none; width:100%; height:100%; top:0; left:0; right:0; bottom:0; background-color: rgba(0,0,0,0.6); z-index:1002; }
-      #user_input_panel .content { position:fixed; background-color:white; top:50%; left:50%; transform:translate(-50%,-50%);  -webkit-transform: translate(-50%, -50%); -moz-transform: translate(-50%, -50%);  -o-transform: translate(-50%, -50%); -ms-transform: translate(-50%, -50%); padding:2rem 4rem;}
-      #user_input_panel .content .title { font-size:large; font-weight:bold; }
-      #user_input_panel .content .user_inputs { display:table; width:100%; border-collapse:collapse;}
-      #user_input_panel .content .user_inputs .row { display:table-row; }
-      #user_input_panel .content .user_inputs .cell { display:table-cell; padding:1rem 0.5rem; vertical-align:middle; border:1px solid #f2f2f2; }
-      #user_input_panel .content .user_confirm { display:table; width:100%; text-align:center; margin:2rem 0;}
-      #user_input_panel .content .user_confirm .ok { display:table-cell; width:48%; }
-      #user_input_panel .content .user_confirm .cancel { display:table-cell; width:48%; }
-      #user_input_panel .content .warning { color:red; }
-
-      /* Attribute editor */
-      #annotation_editor_panel { position:fixed; display:none; width:100%; left:0; bottom:0; background-color:white; border-top:2px solid #cccccc; padding:0.2em 1em; overflow:auto; z-index:1001; box-shadow: 0 0 1em #cccccc;}
-      #annotation_editor { display:table; margin-bottom:3em; border-collapse:collapse; font-size:inherit; position: absolute; background-color:white; }
-      #annotation_editor .row { display:table-row; }
-      #annotation_editor .highlight .col { background-color:#e6e6e6;}
-
-      #annotation_editor .col { display:table-cell; padding:0.4em 0.6em; border:1px solid #000000; vertical-align:middle; font-size:inherit; }
-      #annotation_editor .header { font-weight:bold; }
-      #annotation_editor .id { font-weight:bold; }
-      #annotation_editor .col input[type=checkbox] { vertical-align:middle; }
-      #annotation_editor .col input[type=radio] { vertical-align:middle; font-size:inherit; }
-      #annotation_editor .col label { vertical-align:middle; font-size:inherit; }
-      #annotation_editor .col textarea { border:0.1em solid #cccccc; padding:0; margin:0; font-size:inherit; background-color:#ffffff; }
-      #annotation_editor .col textarea:focus { border:0.1em dashed #cccccc; }
-      #annotation_editor .col span { display:block; }
-      #annotation_editor .col horizontal_container { display:inline-block; }
-
-      #annotation_editor .col .img_options { display:inline; }
-      #annotation_editor .col .img_options .imrow { display:block; }
-      #annotation_editor .col .img_options span { display:inline-block; margin: 0.2rem 0.4rem;}
-      #annotation_editor .col .img_options span img { height:4em; }
-      #annotation_editor .col .img_options p { margin:0; padding:0; font-size:inherit; }
-      #annotation_editor .col .img_options input[type=radio] { display:none; }
-      #annotation_editor .col .img_options input[type=radio] + label { display:block; cursor:pointer; text-align:center;}
-      #annotation_editor .col .img_options input[type=radio]:checked + label { border: 0.1em solid black; background-color:#cccccc; cursor:default; font-size:inherit; }
-
-      #project_info_panel      { display:table; border-collapse:collapse; font-size:0.8rem; }
-      #project_info_panel .row { display:table-row; }
-      #project_info_panel .col { display:table-cell; padding:0.4rem 0.1rem; border:none;  }
-      #project_info_panel .col input[type=text] { font-size:0.8rem; border:none; border-bottom:1px solid #cccccc; margin: 0; width:100%;}
-      #project_info_panel .col input:focus      { border-bottom:1px solid #000000; background-color:#f2f2f2; color:#000000; }
-
-      /* Region shape selection panel inside leftsidebar */
-      ul.region_shape          { font-size:xx-large; list-style-type:none; overflow:hidden; padding:0.4em 0; margin:0; }
-      ul.region_shape li       { float:left; padding:0 0.2em; fill:#ffffff; stroke:#000000; }
-      ul.region_shape li:hover { cursor:pointer; fill:#ffffff; stroke:#ff0000; }
-      ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
-
-      /* cursor coordinates inside region shape selection panel in leftsidebar */
-      #region_info { font-size:0.8em; margin-bottom:0.4em; }
-
-      /* Loaded image list shown in leftsidebar panel */
-      #img_fn_list    { display:none; font-size:small; overflow:scroll; min-height:10rem; max-height:25rem; }
-      #img_fn_list ul { position:relative; line-height:1.3em; margin:0; padding:0; list-style-type:none;}
-      #img_fn_list li { white-space:nowrap; display:block; padding:0 0.4rem; }
-      #img_fn_list li:hover   { background-color:#d5e5ff; cursor:pointer; }
-      #img_fn_list .error     { color:red; }
-      #img_fn_list .sel       { border-left:0.2rem solid black !important; font-weight:bold; }
-      #img_fn_list .buffered  { border-left:0.2rem solid #cccccc; }
-
-      #message_panel         { display:block; width:100%; position:fixed; bottom:0px; z-index:9999; text-align:center; }
-      #message_panel .content { display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}
-
-      .text_panel    { display:none; margin:auto; font-size:medium; line-height:1.3em; margin: 0; max-width:700px; }
-      .text_panel li { margin:1em 0; text-align:left; }
-      .text_panel p  { text-align:left; }
-
-      .svg_button:hover { cursor:pointer; }
-
-      /* Loading spinbar */
-      .loading_spinbox        { display:inline-block; border:0.4em solid #cccccc; border-radius:50%; border-top:0.4em solid black; border-bottom:0.4em solid black;-webkit-animation:spin 2s linear infinite; animation:spin 2s linear infinite; }
-      @-webkit-keyframes spin { 0% { -webkit-transform: rotate(0deg); } 100% { -webkit-transform: rotate(360deg); } }
-      @keyframes spin         { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-      #invisible_file_input { width:0.1px; height:0.1px; opacity:0; overflow:hidden; position:absolute; z-index:-1; }
-
-      .display_none  { display:none !important; }
-      .display_block { display:block !important; }
-
-      /* project settings */
-      #settings_panel { font-size:1rem; border-collapse:collapse; width:95%; }
-      #settings_panel a { border: 1px solid #f2f2f2; }
-      #settings_panel .row { display:table-row; border-bottom:1px solid #f2f2f2; }
-      #settings_panel .variable { display:table-cell; width:60%; padding:0.5rem 0.5rem; }
-      #settings_panel .variable div { display:block; }
-      #settings_panel .variable .name { }
-      #settings_panel .variable .desc { font-size:0.7em; color:#808080; padding:0.2rem 0rem; }
-      #settings_panel .value { display:table-cell; vertical-align:middle; padding-left:1rem; }
-
-      /* page {about, help, file not found, etc.} */
-      .display_area_content { } /* this class is used to clear the display area content */
-      .narrow_page_content li { font-size:0.9rem; margin: 0.4rem 0; }
-      .narrow_page_content { width:60%; }
-
-      .force_small_font { font-size:small !important; }
-      .key { font-family:monospace; padding:1px 6px; background:linear-gradient(to bottom,#f0f0f0,#fcfcfc);; border:1px solid #e0e0e0; white-space:nowrap; color:#303030; border-bottom-width:2px; border-radius:3px; font-size:1.2em; }
-    </style>
-  </head>
-
-  <body onload="_via_init()" onresize="_via_update_ui_components()">
-    <!--
-        SVG icon set definitions
-        Material icons downloaded from https://material.io/icons
-      -->
-    <svg style="display:none;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-      <defs>
-        <symbol id="via_logo">
-          <!-- Logo designed by Abhishek Dutta <adutta@robots.ox.ac.uk>, May 2018 -->
-          <title>VGG Image Annotator Logo</title>
-          <rect width="400" height="160" x="0" y="0" fill="#212121"></rect>
-
-          <text x="56" y="130" font-family="Serif" font-size="100" fill="white">V</text>
-          <text x="180" y="130" font-family="Serif" font-size="100" fill="white">I</text>
-          <text x="270" y="130" font-family="Serif" font-size="100" fill="white">A</text>
-
-          <rect width="80" height="100" x="52" y="40" stroke="yellow" fill="none" stroke-width="2"></rect>
-          <text x="72" y="30" font-family="'Comic Sans MS', cursive, sans-serif" font-size="18" fill="yellow">VGG</text>
-
-          <rect width="50" height="100" x="175" y="45" stroke="yellow" fill="none" stroke-width="2"></rect>
-          <text x="175" y="35" font-family="'Comic Sans MS', cursive, sans-serif" font-size="18" fill="yellow">Image</text>
-
-          <rect width="80" height="100" x="265" y="40" stroke="yellow" fill="none" stroke-width="2"></rect>
-          <text x="265" y="30" font-family="'Comic Sans MS', cursive, sans-serif" font-size="18" fill="yellow">Annotator</text>
-        </symbol>
-        <symbol id="shape_rectangle">
-          <title>Rectangular region shape</title>
-          <rect width="20" height="12" x="6" y="10" stroke-width="2"></rect>
-        </symbol>
-        <symbol id="shape_circle">
-          <title>Circular region shape</title>
-          <circle r="10" cx="16" cy="16" stroke-width="2"></circle>
-        </symbol>
-        <symbol id="shape_ellipse">
-          <title>Elliptical region shape</title>
-          <ellipse rx="12" ry="8" cx="16" cy="16" stroke-width="2"></ellipse>
-        </symbol>
-        <symbol id="shape_polygon">
-          <title>Polygon region shape</title>
-          <path d="M 15.25,2.2372 3.625,11.6122 6,29.9872 l 20.75,-9.625 2.375,-14.75 z" stroke-width="2"></path>
-        </symbol>
-        <symbol id="shape_point">
-          <title>Point region shape</title>
-          <circle r="3" cx="16" cy="16" stroke-width="2"></circle>
-        </symbol>
-        <symbol id="shape_polyline">
-          <title>Polyline region shape</title>
-          <path d="M 2,12 10,24 18,12 24,18" stroke-width="2"></path>
-          <circle r="1" cx="2" cy="12" stroke-width="2"></circle>
-          <circle r="1" cx="10" cy="24" stroke-width="2"></circle>
-          <circle r="1" cx="18" cy="12" stroke-width="2"></circle>
-          <circle r="1" cx="24" cy="18" stroke-width="2"></circle>
-        </symbol>
-
-        <!-- Material icons downloaded from https://material.io/icons -->
-        <symbol id="icon_settings">
-          <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
-        </symbol>
-        <symbol id="icon_save">
-          <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"></path>
-        </symbol>
-        <symbol id="icon_open">
-          <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"></path>
-        </symbol>
-        <symbol id="icon_gridon">
-          <path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 20H4v-4h4v4zm0-6H4v-4h4v4zm0-6H4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4z"></path>
-        </symbol>
-        <symbol id="icon_gridoff">
-          <path d="M8 4v1.45l2 2V4h4v4h-3.45l2 2H14v1.45l2 2V10h4v4h-3.45l2 2H20v1.45l2 2V4c0-1.1-.9-2-2-2H4.55l2 2H8zm8 0h4v4h-4V4zM1.27 1.27L0 2.55l2 2V20c0 1.1.9 2 2 2h15.46l2 2 1.27-1.27L1.27 1.27zM10 12.55L11.45 14H10v-1.45zm-6-6L5.45 8H4V6.55zM8 20H4v-4h4v4zm0-6H4v-4h3.45l.55.55V14zm6 6h-4v-4h3.45l.55.54V20zm2 0v-1.46L17.46 20H16z"></path>
-        </symbol>
-        <symbol id="icon_next">
-          <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
-        </symbol>
-        <symbol id="icon_prev">
-          <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path>
-        </symbol>
-        <symbol id="icon_list">
-          <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"></path>
-        </symbol>
-        <symbol id="icon_zoomin">
-          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
-          <path d="M12 10h-2v2H9v-2H7V9h2V7h1v2h2v1z"/>
-        </symbol>
-        <symbol id="icon_zoomout">
-          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zM7 9h5v1H7z"></path>
-        </symbol>
-        <symbol id="icon_copy">
-          <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path>
-        </symbol>
-        <symbol id="icon_paste">
-          <path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"></path>
-        </symbol>
-        <symbol id="icon_pasten">
-          <path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"></path>
-          <text x="8" y="18">n</text>
-        </symbol>
-        <symbol id="icon_pasteundo">
-          <path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"></path>
-          <text x="8" y="18">x</text>
-        </symbol>
-        <symbol id="icon_selectall">
-          <path d="M3 5h2V3c-1.1 0-2 .9-2 2zm0 8h2v-2H3v2zm4 8h2v-2H7v2zM3 9h2V7H3v2zm10-6h-2v2h2V3zm6 0v2h2c0-1.1-.9-2-2-2zM5 21v-2H3c0 1.1.9 2 2 2zm-2-4h2v-2H3v2zM9 3H7v2h2V3zm2 18h2v-2h-2v2zm8-8h2v-2h-2v2zm0 8c1.1 0 2-.9 2-2h-2v2zm0-12h2V7h-2v2zm0 8h2v-2h-2v2zm-4 4h2v-2h-2v2zm0-16h2V3h-2v2zM7 17h10V7H7v10zm2-8h6v6H9V9z"></path>
-        </symbol>
-        <symbol id="icon_close">
-          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
-        </symbol>
-        <symbol id="icon_insertcomment">
-          <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"></path>
-        </symbol>
-        <symbol id="icon_checkbox">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path>
-        </symbol>
-        <symbol id="icon_fileupload">
-          <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"></path>
-        </symbol>
-        <symbol id="icon_filedownload">
-          <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-        </symbol>
-      </defs>
-    </svg>
-
-    <!-- used by invoke_with_user_inputs() to gather user inputs -->
-    <div id="user_input_panel"></div>
-
-    <!-- to show status messages -->
-    <div id="message_panel">
-      <div id="message_panel_content" class="content"></div>
-    </div>
-
-    <!-- spreadsheet like editor for annotations -->
-    <div id="annotation_editor_panel">
-      <div class="button_panel">
-        <span class="text_button" onclick="edit_region_metadata_in_annotation_editor()" id="button_edit_region_metadata" title="Manual annotations of regions">Region Annotations</span>
-        <span class="text_button" onclick="edit_file_metadata_in_annotation_editor()" id="button_edit_file_metadata" title="Manual annotations of a file">File Annotations</span>
-
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_toggle_all_regions_editor()" title="Close this window of annotation editor">&times;</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_panel_height()" title="Increase the height of this panel">&uarr;</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_panel_height()" title="Decrease the height of this panel">&darr;</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_increase_content_size()" title="Increase size of contents in annotation editor">&plus;</span>
-        <span class="button" style="float:right;margin-right:0.2rem;" onclick="annotation_editor_decrease_content_size()" title="Decrease size of contents in annotation editor">&minus;</span>
-      </div>
-      <!-- here, a child div with id="annotation_editor" is added by javascript -->
-    </div>
-
-    <div class="top_panel" id="ui_top_panel">
-      <!-- menu bar -->
-      <div class="menubar">
-        <ul>
-          <li onclick="show_home_panel()" style="cursor:pointer;">Home</li>
-          <li>Project
-            <ul>
-              <li onclick="project_open_select_project_file()" title="Load a VIA project (from a JSON file)">Load</li>
-              <li onclick="project_save_with_confirm()" title="Save this VIA project (as a JSON file)">Save</li>
-              <li onclick="settings_panel_toggle()" title="Show/edit project settings">Settings</li>
-              <li class="submenu_divider"></li>
-              <li onclick="sel_local_images()" title="Add images locally stored in this computer">Add local files</li>
-              <li onclick="project_file_add_url_with_input()" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)">Add files from URL</li>
-              <li onclick="project_file_add_abs_path_with_input()" title="Add images using absolute path of file (e.g. /home/abhishek/image1.jpg)">Add file using absolute path</li>
-              <li onclick="sel_local_data_file('files_url')" title="Add images from a list of web url or absolute path stored in a text file (one url or path per line)">Add url or path from text file</li>
-              <li onclick="project_file_remove_with_confirm()" title="Remove selected file (i.e. file currently being shown)">Remove file</li>
-              <li class="submenu_divider"></li>
-              <li onclick="sel_local_data_file('attributes')" title="Import region and file attributes from a JSON file">Import region/file attributes</li>
-              <li onclick="project_save_attributes()" title="Export region and file attributes to a JSON file">Export region/file attributes</li>
-            </ul>
-          </li>
-
-          <li>Annotation
-            <ul>
-              <li onclick="download_all_region_data('csv')" title="Export annotations to a CSV file">Export Annotations (as csv)</li>
-              <li onclick="download_all_region_data('json')" title="Export annotaitons to a JSON file">Export Annotations (as json)</li>
-              <li onclick="" class="submenu_divider"></li>
-              <li onclick="sel_local_data_file('annotations')" title="Import annotations from a CSV file">Import Annotations (from csv)</li>
-              <li onclick="sel_local_data_file('annotations')" title="Import annotations from a JSON file">Import Annotations (from json)</li>
-              <li class="submenu_divider"></li>
-              <li onclick="show_annotation_data()" title="Show a preview of annotations (opens in a new browser windows)">Preview Annotations</li>
-              <li onclick="download_as_image()" title="Download an image containing the annotations">Download as Image</li>
-            </ul>
-          </li>
-
-          <li>View
-            <ul>
-              <li onclick="image_grid_toggle()" title="Toggle between single image view and image grid view">Toggle image grid view</li>
-              <li onclick="leftsidebar_toggle()" title="Show or hide the sidebar shown in left hand side">Toggle left sidebar</li>
-<li onclick="toggle_img_fn_list_visibility()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle image filename list</li>
-              <li class="submenu_divider"></li>
-              <li onclick="toggle_attributes_editor()" title="Show or hide a panel to update file and region attributes">Toggle attributes editor</li>
-              <li onclick="annotation_editor_toggle_all_regions_editor()" title="Show or hide a panel to update annotations corresponding to file and region">Toggle annotation editor (Space)</li>
-              <li class="submenu_divider"></li>
-              <li onclick="toggle_region_boundary_visibility()" title="Show or hide the region boundaries">Show/hide region boundaries (b)</li>
-              <li onclick="toggle_region_id_visibility()" title="Show or hide the region id labels">Show/hide region labels (l)</li>
-              <li onclick="toggle_region_info_visibility()" title="Show or hide the image coordinates">Show/hide region info.</li>
-            </ul>
-          </li>
-
-          <li>Help
-            <ul>
-              <li onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_GETTING_STARTED)" title="Show a guide to get started with this application">Getting Started</li>
-              <li title="Visit the project page for this application"><a href="http://www.robots.ox.ac.uk/~vgg/software/via/" target="_blank">VGG Project Page</a></li>
-              <li onclick="" title="Report an issue to the developers of this application (requires an account at gitlab.com)"><a href="https://gitlab.com/vgg/via/issues" target="_blank">Report issues</a></li>
-              <li class="submenu_divider"></li>
-              <li><a target="_blank" href="https://gitlab.com/vgg/via/blob/master/Contributors.md" title="List of people who have contributed towards the development of VIA">Contributors</a></li>
-              <li onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_LICENSE)" title="View license of this application">License</li>
-              <li onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_ABOUT)" title="Show more details about this application">About VIA</li>
-            </ul>
-          </li>
-        </ul>
-      </div> <!-- end of menubar -->
-
-      <!-- Shortcut toolbar -->
-      <div class="toolbar">
-        <svg onclick="project_open_select_project_file()" viewbox="0 0 24 24"><use xlink:href="#icon_open"></use><title>Open Project</title></svg>
-        <svg onclick="project_save_with_confirm()" viewbox="0 0 24 24"><use xlink:href="#icon_save"></use><title>Save Project</title></svg>
-        <svg onclick="settings_panel_toggle()" viewbox="0 0 24 24"><use xlink:href="#icon_settings"></use><title>Update Project Settings</title></svg>
-        <!--
-        <svg onclick="" viewbox="0 0 24 24"><use xlink:href="#icon_checkbox"></use><title>Locate Files</title></svg>
-        -->
-
-        <svg onclick="sel_local_data_file('annotations')" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_fileupload"></use><title>Import Annotations from CSV</title></svg>
-        <svg onclick="download_all_region_data('csv')" viewbox="0 0 24 24"><use xlink:href="#icon_filedownload"></use><title>Download Annotations as CSV</title></svg>
-
-        <svg onclick="image_grid_toggle()" id="toolbar_image_grid_toggle" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_gridon"></use><title>Switch to Image Grid View</title></svg>
-        <svg onclick="annotation_editor_toggle_all_regions_editor()" viewbox="0 0 24 24"><use xlink:href="#icon_insertcomment"></use><title>Toggle Annotation Editor</title></svg>
-
-        <svg onclick="move_to_prev_image()" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_prev"></use><title>Previous</title></svg>
-        <svg onclick="toggle_img_fn_list_visibility()" viewbox="0 0 24 24"><use xlink:href="#icon_list"></use><title>Toggle Filename List</title></svg>
-        <svg onclick="move_to_next_image()" viewbox="0 0 24 24"><use xlink:href="#icon_next"></use><title>Next</title></svg>
-
-        <svg onclick="zoom_in()" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_zoomin"></use><title>Zoom In</title></svg>
-        <svg onclick="zoom_out()" viewbox="0 0 24 24"><use xlink:href="#icon_zoomout"></use><title>Zoom Out</title></svg>
-
-        <svg onclick="sel_all_regions()" viewbox="0 0 24 24" style="margin-left:1rem;"><use xlink:href="#icon_selectall"></use><title>Select All Regions</title></svg>
-        <svg onclick="copy_sel_regions()" viewbox="0 0 24 24"><use xlink:href="#icon_copy"></use><title>Copy Regions</title></svg>
-        <svg onclick="paste_sel_regions_in_current_image()" viewbox="0 0 24 24"><use xlink:href="#icon_paste"></use><title>Paste Regions</title></svg>
-        <svg onclick="paste_to_multiple_images_with_confirm()" viewbox="0 0 24 24"><use xlink:href="#icon_pasten"></use><title>Paste Region in Multiple Images</title></svg>
-        <svg onclick="del_sel_regions_with_confirm()" viewbox="0 0 24 24"><use xlink:href="#icon_pasteundo"></use><title>Undo Regions Pasted in Multiple Images</title></svg>
-        <svg onclick="del_sel_regions()" viewbox="0 0 24 24"><use xlink:href="#icon_close"></use><title>Delete Region</title></svg>
-      </div>
-      <!-- end of shortcut toolbar -->
-      <input type="file" id="invisible_file_input" name="files[]" style="display:none">
-    </div> <!-- endof #top_panel -->
-
-    <!-- Middle Panel contains a left-sidebar and image display areas -->
-    <div class="middle_panel">
-      <!-- this panel contains a button to shows the left side bar -->
-      <div id="leftsidebar_collapse_panel">
-        <span class="text_button" onclick="leftsidebar_toggle()" title="Show left sidebar">&rtrif;</span>
-      </div>
-
-      <div id="leftsidebar">
-        <div class="leftsidebar_accordion_panel show" style="float:right; border:2px solid #f2f2f2;">
-          <span class="text_button" onclick="leftsidebar_decrease_width()" title="Reduce width of this toolbar panel">&larr;</span>
-          <span class="text_button" onclick="leftsidebar_increase_width()" title="Increase width of this toolbar panel">&rarr;</span>
-          <span class="text_button" onclick="leftsidebar_toggle()" title="Show/hide this toolbar panel">&ltrif;</span>
-        </div>
-
-        <button class="leftsidebar_accordion active">Region Shape</button>
-        <div class="leftsidebar_accordion_panel show">
-          <ul class="region_shape">
-            <li id="region_shape_rect" class="selected" onclick="select_region_shape('rect')" title="Rectangle (Shortcut key 1)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_rectangle"></use></svg></li>
-            <li id="region_shape_circle" onclick="select_region_shape('circle')" title="Circle (Shortcut key 2)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_circle"></use></svg></li>
-            <li id="region_shape_ellipse" onclick="select_region_shape('ellipse')" title="Ellipse (Shortcut key 3)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_ellipse"></use></svg></li>
-            <li id="region_shape_polygon" onclick="select_region_shape('polygon')" title="Polygon (Shortcut key 4)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polygon"></use></svg></li>
-            <li id="region_shape_point" onclick="select_region_shape('point')" title="Point (Shortcut key 5)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_point"></use></svg></li>
-            <li id="region_shape_polyline" onclick="select_region_shape('polyline')" title="Polyline (Shortcut key 6)"><svg height="32" viewbox="0 0 32 32"><use xlink:href="#shape_polyline"></use></svg></li>
-          </ul>
-          <div id="region_info" class="display_none">&nbsp;</div>
-        </div>
-
-        <!-- Project -->
-        <button class="leftsidebar_accordion active" id="project_panel_title">Project</button>
-        <div class="leftsidebar_accordion_panel show" id="img_fn_list_panel">
-          <div id="project_info_panel">
-            <div class="row">
-              <span class="col"><label for="project_name">Name: </label></span>
-              <span class="col"><input type="text" value="" onchange="project_on_name_update(this)" id="project_name" title="VIA project name"></span>
-            </div>
-          </div>
-          <div id="project_tools_panel">
-            <div class="button_panel" style="margin:0.1rem 0;" >
-              <select style="width:48%" id="filelist_preset_filters_list" onchange="img_fn_list_onpresetfilter_select()" title="Filter file list using predefined filters">
-                <option value="all">All files</option>
-                <option value="files_without_region">Show files without regions</option>
-                <option value="files_missing_region_annotations">Show files missing region annotations</option>
-                <option value="files_missing_file_annotations">Show files missing file annotations</option>
-                <option value="files_error_loading">Files that could not be loaded</option>
-                <option value="regex">Regular Expression</option>
-              </select>
-              <input style="width:50%" type="text" placeholder="regular expression" oninput="img_fn_list_onregex()" id="img_fn_list_regex" title="Filter using regular expression">
-            </div>
-          </div>
-          <div id="img_fn_list"></div>
-          <p>
-            <div class="button_panel">
-              <span class="button" onclick="sel_local_images()" title="Add new file from local disk">Add Files</span>
-              <span class="button" onclick="project_file_add_url_with_input()" title="Add new file using URL">Add URL</span>
-              <span class="button" onclick="project_file_remove_with_confirm()" title="Remove selected file (i.e. file currently being shown) from project">Remove</span>
-            </div>
-          </p>
-        </div>
-
-        <!-- Attributes -->
-        <button class="leftsidebar_accordion" id="attributes_editor_panel_title">Attributes</button>
-        <div class="leftsidebar_accordion_panel" id="attributes_editor_panel">
-          <div class="button_panel" style="padding:1rem 0;">
-            <span class="text_button" onclick="show_region_attributes_update_panel()" id="button_show_region_attributes" title="Show region attributes">Region Attributes</span>
-            <span class="text_button" onclick="show_file_attributes_update_panel()" id="button_show_file_attributes" title="Show file attributes">File Attributes</span>
-          </div>
-          <div id="attributes_update_panel">
-            <div class="button_panel">
-              <input style="width:70%" type="text" placeholder="attribute name" id="user_input_attribute_id" value="">
-              <span id="button_add_new_attribute" class="button" onclick="add_new_attribute_from_user_input()" title="Add new attribute">&plus;</span>
-              <span id="button_del_attribute" class="button" onclick="delete_existing_attribute_with_confirm()" title="Delete existing attribute">&minus;</span>
-            </div>
-            <div class="button_panel" style="margin:0.1rem 0;" >
-              <select style="width:100%" id="attributes_name_list" onchange="update_current_attribute_id(this)" title="List of existing attributes"></select>
-            </div>
-            <div id="attribute_properties"></div>
-            <div id="attribute_options"></div>
-            <p style="text-align:center">
-              <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="annotation_editor_toggle_all_regions_editor()">Toggle Annotation Editor</span>
-            </p>
-          </div>
-        </div>
-
-        <button class="leftsidebar_accordion">Keyboard Shortcuts</button>
-        <div class="leftsidebar_accordion_panel">
-          <div style="display:block; text-align:center; padding:1rem;">Available only on image focus</div>
-          <table>
-            <tr>
-              <td style="width:8em;"><span class="key">&larr;</span>&nbsp;<span class="key">&uarr;</span>&nbsp;<span class="key">&rarr;</span>&nbsp;<span class="key">&darr;</span></td>
-              <td>Move selected region by 1 px (Shift to jump)</td>
-            </tr>
-            <tr>
-              <td><span class="key">a</span></td>
-              <td>Select all regions</td>
-            </tr>
-
-            <tr>
-              <td><span class="key">c</span></td>
-              <td>Copy selected regions</td>
-            </tr>
-            <tr>
-              <td><span class="key">v</span></td>
-              <td>Paste selected regions</td>
-            </tr>
-            <tr>
-              <td><span class="key">d</span></td>
-              <td>Delete selected regions</td>
-            </tr>
-            <tr>
-              <td><span class="key">Ctrl</span> + Wheel</td>
-              <td>Zoom in/out (mouse cursor is over image)</td>
-            </tr>
-            <tr>
-              <td><span class="key">l</span></td>
-              <td>Toggle region label</td>
-            </tr>
-            <tr>
-              <td><span class="key">b</span></td>
-              <td>Toggle region boundary</td>
-            </tr>
-            <tr>
-              <td><span class="key">Enter</span></td>
-              <td>Finish drawing polyshape</td>
-            </tr>
-            <tr>
-              <td><span class="key">Backspace</span></td>
-              <td>Delete last polyshape vertex</td>
-            </tr>
-          </table>
-
-          <div style="display:block; text-align:center; padding:1rem;">Always Available</div>
-          <table>
-            <tr>
-              <td style="width:8em;"><span class="key">&larr;</span>&nbsp;<span class="key">&rarr;</span></td>
-              <td>Move to next/previous image</td>
-            </tr>
-            <tr>
-              <td><span class="key">+</span>&nbsp;<span class="key">-</span>&nbsp;<span class="key">=</span></td>
-              <td>Zoom in/out/reset</td>
-            </tr>
-            <tr>
-              <td><span class="key">&uarr;</span></td>
-              <td>Update region label</td>
-            </tr>
-            <tr>
-              <td><span class="key">&darr;</span></td>
-              <td>Update region colour</td>
-            </tr>
-            <tr>
-              <td><span class="key">Spacebar</span></td>
-              <td>Toggle annotation editor (Ctrl to toggle on image editor)</td>
-            </tr>
-            <tr>
-              <td><span class="key">Home</span> / <span class="key">h</span></td>
-              <td>Jump to first image</td>
-            </tr>
-            <tr>
-              <td><span class="key">End</span> / <span class="key">e</span></td>
-              <td>Jump to last image</td>
-            </tr>
-            <tr>
-              <td><span class="key">PgUp</span> / <span class="key">u</span></td>
-              <td>Jump several images</td>
-            </tr>
-            <tr>
-              <td><span class="key">PgDown</span> / <span class="key">d</span></td>
-              <td>Jump several images</td>
-            </tr>
-
-            <tr>
-              <td><span class="key">Esc</span></td>
-              <td>Cancel ongoing task</td>
-            </tr>
-          </table>
-        </div>
-
-      </div> <!-- end of leftsidebar -->
-
-      <!-- Main display area: contains image canvas, ... -->
-      <div id="display_area">
-        <div id="image_panel" class="display_area_content display_none">
-          <!-- buffer images using <img> element will be added here -->
-
-          <!-- @todo: in future versions, this canvas will be replaced by a <svg> element -->
-            <canvas id="region_canvas" width="1" height="1" tabindex="1">Sorry, your browser does not support HTML5 Canvas functionality which is required for this application.</canvas>
-            <!-- here, a child div with id="annotation_editor" is added by javascript -->
-        </div>
-        <div id="image_grid_panel" class="display_area_content display_none">
-
-          <div id="image_grid_group_panel">
-            <span class="tool">Group by&nbsp; <select id="image_grid_toolbar_group_by_select" onchange="image_grid_toolbar_onchange_group_by_select(this)"></select></span>
-          </div>
-
-          <div id="image_grid_toolbar">
-            <span>Selected</span>
-            <span id="image_grid_group_by_sel_img_count">0</span>
-            <span>of</span>
-            <span id="image_grid_group_by_img_count">0</span>
-            <span>images in current group, show</span>
-
-            <span>
-              <select id="image_grid_show_image_policy" onchange="image_grid_onchange_show_image_policy(this)">
-                <option value="all">all images (paginated)</option>
-                <option value="first_mid_last">only first, middle and last image</option>
-                <option value="even_indexed">even indexed images (i.e. 0,2,4,...)</option>
-                <option value="odd_indexed">odd indexed images (i.e. 1,3,5,...)</option>
-                <option value="gap5">images 1, 5, 10, 15,...</option>
-                <option value="gap25">images 1, 25, 50, 75, ...</option>
-                <option value="gap50">images 1, 50, 100, 150, ...</option>
-              </select>
-            </span>
-
-            <div id="image_grid_nav"></div>
-          </div>
-
-          <div id="image_grid_content">
-            <div id="image_grid_content_img"></div>
-            <svg xmlns:xlink="http://www.w3.org/2000/svg" id="image_grid_content_rshape"></svg>
-          </div>
-
-          <div id="image_grid_info">
-          </div>
-        </div> <!-- end of image grid panel -->
-
-        <div id="settings_panel" class="display_area_content display_none">
-          <h2>Settings</h2>
-          <div class="row">
-            <div class="variable">
-              <div class="name">Project Name</div>
-            </div>
-
-            <div class="value">
-              <input type="text" id="_via_settings.project.name"/>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="variable">
-              <div class="name">Default Path</div>
-              <div class="desc">If all images in your project are saved in a single folder, set the default path to the location of this folder. The VIA application will load images from this folder by default. Note: a default path of <code>"./"</code> indicates that the folder containing <code>via.html</code> application file also contains the images in this project. For example: <code>/datasets/VOC2012/JPEGImages/</code> or <code>C:\Documents\data\</code>&nbsp;<strong>(note the trailing <code>/</code> and <code>\</code></strong>)</div>
-            </div>
-
-            <div class="value">
-              <input type="text" id="_via_settings.core.default_filepath" placeholder="/datasets/pascal/voc2012/VOCdevkit/VOC2012/JPEGImages/"/>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="variable">
-              <div class="name">Search Path List</div>
-              <div class="desc">If you define multiple paths, all these folders will be searched to find images in this project. We do not recommend this approach as it is computationally expensive to search for images in multiple folders. <ol id="_via_settings.core.filepath"></ol></div>
-            </div>
-
-            <div class="value">
-              <input type="text" id="settings_input_new_filepath" placeholder="/datasets/pascal/voc2012/VOCdevkit/VOC2012/JPEGImages"/>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="variable">
-              <div class="name">Region Label</div>
-              <div class="desc">By default, each region in an image is labelled using the region-id. Here, you can select a more descriptive labelling of regions.</div>
-            </div>
-
-            <div class="value">
-              <select id="_via_settings.ui.image.region_label"></select>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="variable">
-              <div class="name">Region Colour</div>
-              <div class="desc">By default, each region is drawn using a single colour. Using this setting, you can assign a unique colour to regions grouped according to a region attribute.</div>
-            </div>
-
-            <div class="value">
-              <select id="_via_settings.ui.image.region_color"></select>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="variable">
-              <div class="name">Region Label Font</div>
-              <div class="desc">Font size and font family for showing region labels.</div>
-            </div>
-
-            <div class="value">
-              <input id="_via_settings.ui.image.region_label_font" placeholder="12px Arial"/>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="variable">
-              <div class="name">Preload Buffer Size</div>
-              <div class="desc">Images are preloaded in buffer to allow smoother navigation of next/prev images. A large buffer size may slow down the overall browser performance. To disable preloading, set buffer size to 0.</div>
-            </div>
-            <div class="value">
-              <input type="text" id="_via_settings.core.buffer_size" />
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="variable">
-              <div class="name">On-image Annotation Editor</div>
-              <div class="desc">When a single region is selected, the on-image annotation editor is gets activated which the user to update annotations of this region. By default, this on-image annotation editor is placed near the selected region.</div>
-            </div>
-
-            <div class="value">
-              <select id="_via_settings.ui.image.on_image_annotation_editor_placement">
-                <option value="NEAR_REGION">close to selected region</option>
-                <option value="IMAGE_BOTTOM">at the bottom of image being annotated</option>
-                <option value="DISABLE">DISABLE on-image annotation editor</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row" style="border:none;">
-            <button onclick="settings_save()" value="save_settings" style="margin-top:2rem">Save</button>
-            <button onclick="settings_panel_toggle()" value="cancel_settings" style="margin-left:2rem;">Cancel</button>
-          </div>
-        </div> <!-- end of settings panel -->
-
-        <div id="page_404" class="display_area_content display_none narrow_page_content">
-          <h2>File Not Found</h2>
-          <p>Filename: <span style="font-family:Mono;" id="page_404_filename"></span></p>
-
-          <p>We recommend that you update the default path in <span class="text_button" title="Show Project Settings" onclick="settings_panel_toggle()">project settings</span> to the folder which contains this image.</p>
-
-          <p>A temporary fix is to use <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">browser's file selector</span> to manually locate and add this file. We do not recommend this approach because it requires you to repeat this process every time your load this project in the VIA application.</p>
-        </div> <!-- end of file not found panel -->
-
-        <div id="page_start_info" class="display_area_content display_none narrow_page_content">
-          <ul>
-            <li>To start annotation, <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">select images</span> (or, add images from <span class="text_button" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)" onclick="project_file_add_url_with_input()">URL</span> or <span class="text_button" title="Add images using absolute path of file (e.g. /home/abhishek/image1.jpg)" onclick="project_file_add_abs_path_with_input()">absolute path</span>) and draw regions</li>
-            <li>Use <span class="text_button" title="Toggle attributes editor panel" onclick="toggle_attributes_editor()">attribute editor</span> to define attributes (e.g. name) and <span class="text_button" title="Toggle annotations editor panel" onclick="annotation_editor_toggle_all_regions_editor()">annotation editor</span> to describe each region (e.g. cat) using these attributes.</li>
-            <li>Remember to <span class="text_button" onclick="project_save_with_confirm()">save</span> your project before closing this application so that you can <span class="text_button" onclick="project_open_select_project_file()">load</span> it later to continue annotation.</li>
-            <li>For help, see the <span class="text_button" onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_GETTING_STARTED)">Getting Started</span> page and pre-loaded demo: <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html">image annotation</a> and <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_face_demo.html">face annotation</a>.</li>
-          </ul>
-
-        </div>
-
-        <div id="page_getting_started" class="display_area_content display_none narrow_page_content">
-          <p>A more detailed user guide (with screenshots and descriptions) is <a href="http://www.robots.ox.ac.uk/~vgg/software/via/docs/user_guide.html">available here</a>.</p>
-          <ol>
-            <li><strong>Load Images</strong>: The first step is to load all the images that you wish to annotate. There are multiple ways to add images to a VIA project. Choose the method that suits your use case.
-              <ul>
-                <li>Method 1: Selecting local files using browser's file selector
-                  <ol>
-                    <li>Click <span class="text_button" title="Load or Add Images" onclick="sel_local_images()"><code>Project &rarr; Add local files</code></span></li>
-                    <li>Select desired images and click <code>Open</code></li>
-                  </ol>
-                </li>
-                <li>Method 2: Adding files from URL or absolute path
-                  <ol>
-                    <li>Click <span class="text_button" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)" onclick="project_file_add_url_with_input()"><code>Project &rarr; Add files from URL</code></span></li>
-                    <li>Enter URL and click <code>OK</code></li>
-                  </ol>
-                </li>
-                <li>Method 3: Adding files from list of url or absolute path stored in text file
-                  <ol>
-                    <li>Create a text file containing URL and absolute path (one per line)</li>
-                    <li>Click <span class="text_button" title="Add images from a list of web url or absolute path stored in a text file (one url or path per line)" onclick="sel_local_data_file('files_url')"><code>Project &rarr; Add url or path from text file</code></span></li>
-                    <li>Select the text file and click <code>Open</code></li>
-                  </ol>
-                </li>
-              </ul>
-            </li>
-            <li><strong>Draw Regions</strong>: Select a region shape (<span class="text_button" onclick="select_region_shape('rect')">rectangle</span>, <span class="text_button" onclick="select_region_shape('circle')">circle</span>, <span class="text_button" onclick="select_region_shape('ellipse')">ellipse</span>, <span class="text_button" onclick="select_region_shape('polygon')">polygon</span>, <span class="text_button" onclick="select_region_shape('point')">point</span>, <span class="text_button" onclick="select_region_shape('polyline')">polyline</span>) from the left sidebar and draw regions as follows:
-
-              <ul>
-                <li>Rectangle, Circle and Ellipse
-                  <ul>
-                    <li>Press left mouse button, drag mouse cursor and release mouse button.</li>
-                    <li>To define a point inside an existing region, click inside the region to select it (if not already selected), now press left mouse button, drag and release to draw region inside existing region.</li>
-                    <li>To select, click inside the region. If the click point contains multiple regions, then clicking multiple times at that location shuffles selection through those regions.</li>
-                  </ul>
-                </li>
-              </ul>
-
-              <ul>
-                <li>Point
-                  <ul>
-                    <li>Click to define points.</li>
-                    <li>To draw a region inside existing region, click inside the region to select it (if not already selected), now click again to define the point.</li>
-                    <li>To select, click on (or near) the existing point.</li>
-                  </ul>
-                </li>
-              </ul>
-
-              <ul>
-                <li>Polygon and Polyline
-                  <ul>
-                    <li>Click to define vertices.</li>
-                    <li>Press <strong>[Enter]</strong> to finish drawing the region or press [Esc] to cancel.</li>
-                    <li>If the first vertex needs to be defined inside an existing region, click inside the region to select it (if not already selected), now click again to define the vertex.</li>
-                    <li>To select, click inside the region. If the click point contains multiple regions, then clicking multiple times at that location shuffles selection through those regions.</li>
-                  </ul>
-                </li>
-              </ul>
-            </li>
-
-            <li><strong>Create Annotations</strong>: For a more detailed description of this step, see <a href="http://www.robots.ox.ac.uk/~vgg/software/via/docs/creating_annotations.html">Creating Annotations : VIA User Guide</a>. Click the <span class="text_button" onclick="annotation_editor_toggle_all_regions_editor()"><code>View &rarr; Toggle attributes editor</code></span> to show attributes editor panel in left sidebar and add the desired file or region attributes (e.g. name). Now click <span class="text_button" onclick="annotation_editor_toggle_all_regions_editor()"><code>View &rarr; Toggle annotations editor</code></span> to show the annotation editor panel in the bottom side. Update the annotations for each region.</li>
-            <li><strong>Export Annotations</strong>: To export the annotations in json or csv format, click <span class="text_button" onclick="download_all_region_data('csv')"><code>Annotation &rarr; Export annotations</code></span> in top menubar.</li>
-            <li><strong>Save Project</strong>: To save the project, click <span class="text_button" onclick="project_save_with_confirm()"><code>Project &rarr; Save</code></span> in top menubar.</li>
-          </ol>
-        </div>
-
-        <div id="page_load_ongoing" class="display_area_content narrow_page_content">
-          <div style="text-align:center">
-            <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">
-              <svg height="160" viewbox="0 0 400 160" style="background-color:#212121;">
-                <use xlink:href="#via_logo"></use>
-              </svg>
-            </a>
-            <div style="margin-top:4rem">Loading ...</div>
-          </div>
-        </div>
-
-        <div id="page_about" class="display_area_content display_none" style="width:40rem !important">
-          <div style="text-align:center">
-            <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">
-              <svg height="160" viewbox="0 0 400 160" style="background-color:#212121;">
-                <use xlink:href="#via_logo"></use>
-              </svg>
-            </a>
-          </div>
-
-          <p style="font-family:mono; font-size:0.8em;text-align:center;"><a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">Version 2.0.7</a></p>
-          <p>VGG Image Annotator (VIA) is an image annotation tool that can be used to define regions in an image and create textual descriptions of those regions. VIA is an <a href="https://gitlab.com/vgg/via/">open source project</a> developed at the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a> and released under the BSD-2 clause <a href="https://gitlab.com/vgg/via/blob/master/LICENSE">license</a>.</p>
-          <p>Here is a list of some salient features of VIA:
-            <ul>
-              <li>based solely on HTML, CSS and Javascript (no external javascript libraries)</li>
-              <li>can be used off-line (full application in a single html file of size &lt; 400KB)</li>
-              <li>requires nothing more than a modern web browser (tested on Firefox, Chrome and Safari)</li>
-              <li>supported region shapes: rectangle, circle, ellipse, polygon, point and polyline</li>
-              <li>import/export of region data in csv and json file format</li>
-            </ul>
-          </p>
-          <p>For more details, visit <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">http://www.robots.ox.ac.uk/~vgg/software/via/</a>.</p>
-          <p>&nbsp;</p>
-          <p>Copyright &copy; 2016-2019, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>,Visual Geometry Group, Oxford University and <a target="_blank" href="https://gitlab.com/vgg/via/blob/master/Contributors.md">VIA Contributors</a>.</p>
-        </div> <!-- end of page_about -->
-
-        <div id="page_license" class="display_area_content display_none narrow_page_content">
-          <pre>
-Copyright (c) 2016-2019, Abhishek Dutta, Visual Geometry Group, Oxford University and VIA Contributors.
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
-          </pre>
-        </div>
-      </div> <!-- end of display_area -->
-    </div> <!-- end of middle_panel -->
-
-    <!-- this vertical spacer is needed to allow scrollbar to show
-         items like Keyboard Shortcut hidden under the attributes panel -->
-    <div style="width: 100%;" id="vertical_space"></div>
-
-    <script type="text/javascript">
-      //<!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
-    </script>
-    <script type="text/javascript">
-      //<!--AUTO_INSERT_VIA_JS_HERE-->
 /*
   VGG Image Annotator (via)
   www.robots.ox.ac.uk/~vgg/software/via/
 
-  Copyright (c) 2016-2018, Abhishek Dutta, Visual Geometry Group, Oxford University.
+  Copyright (c) 2016-2019, Abhishek Dutta, Visual Geometry Group, Oxford University and VIA Contributors.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -1022,12 +27,12 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 /*
-  See Contributors.md file for a list of developers who have contributed code
-  to VIA codebase.
-  /*
+  Links:
+  - https://gitlab.com/vgg/via/blob/master/Contributors.md : list of developers who have contributed code to the VIA project.
+  - https://gitlab.com/vgg/via/blob/master/CodeDoc.md : source code documentation
+  - https://gitlab.com/vgg/via/blob/master/CONTRIBUTING.md : guide for contributors
 
-  This source code (version 1.0.x) is organized in the following groups:
-
+  This source code can be grouped into the following categories:
   - Data structure for annotations
   - Initialization routine
   - Handlers for top navigation bar
@@ -1041,16 +46,11 @@ POSSIBILITY OF SUCH DAMAGE.
   - Shortcut key handlers
   - Persistence of annotation data in browser cache (i.e. localStorage)
   - Handlers for attributes input panel (spreadsheet like user input panel)
-
-  See [Source code documentation](https://gitlab.com/vgg/via/blob/develop/CodeDoc.md)
-  and [Contributing Guidelines](https://gitlab.com/vgg/via/blob/develop/CONTRIBUTING.md)
-  for more details.
-
 */
 
 "use strict";
 
-var VIA_VERSION      = '2.0.7';
+var VIA_VERSION      = '2.0.8';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -1125,6 +125,11 @@ var _via_current_image;
 var _via_current_image_width;
 var _via_current_image_height;
 
+// a record of image statistics (e.g. width, height)
+var _via_img_stat     = {};
+var _via_is_all_img_stat_read_ongoing = false;
+var _via_img_stat_current_img_index = false;
+
 // image canvas
 var _via_display_area = document.getElementById('display_area');
 var _via_img_panel    = document.getElementById('image_panel');
@@ -1145,9 +150,6 @@ var _via_is_user_moving_region   = false;
 var _via_is_user_drawing_polygon = false;
 var _via_is_region_selected      = false;
 var _via_is_all_region_selected  = false;
-var _via_is_user_updating_attribute_name  = false;
-var _via_is_user_updating_attribute_value = false;
-var _via_is_user_adding_attribute_name    = false;
 var _via_is_loaded_img_list_visible  = false;
 var _via_is_attributes_panel_visible = false;
 var _via_is_reg_attr_panel_visible   = false;
@@ -1238,11 +240,6 @@ var _via_image_grid_group_var               = []; // {type, name, value}
 var _via_image_grid_group_show_all          = false;
 var _via_image_grid_stack_prev_page         = []; // stack of first img index of every page navigated so far
 
-// fast annotation (quick update of annotation using keyboard shortcuts)
-var _via_is_fast_annotation_ongoing     = false;
-var _via_fast_annotation_stack          = [];
-var _via_fast_annotation_keys           = ['0','1','2','3','4','5','6','7','8','9'];
-
 // image buffer
 var VIA_IMG_PRELOAD_INDICES         = [1, -1, 2, 3, -2, 4]; // for any image, preload previous 2 and next 4 images
 var VIA_IMG_PRELOAD_COUNT           = 4;
@@ -1302,8 +299,10 @@ var BBOX_SELECTED_FILL_COLOR           = "#ffffff";
 
 var VIA_ANNOTATION_EDITOR_HEIGHT_CHANGE   = 5;   // in percent
 var VIA_ANNOTATION_EDITOR_FONTSIZE_CHANGE = 0.1; // in rem
-var VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE      = 20; // in percent
-var VIA_LEFTSIDEBAR_WIDTH_CHANGE          = 1; // in rem
+var VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE      = 20;  // in percent
+var VIA_LEFTSIDEBAR_WIDTH_CHANGE          = 1;   // in rem
+var VIA_POLYGON_SEGMENT_SUBTENDED_ANGLE   = 5;   // in degree (used to approximate shapes using polygon)
+var VIA_FLOAT_PRECISION = 3; // number of decimal places to include in float values
 
 //
 // Data structure to store metadata about file and regions
@@ -1524,14 +523,25 @@ function sel_local_images() {
   }
 }
 
-function download_all_region_data(type) {
+function download_all_region_data(type, file_extension) {
+  if ( typeof(file_extension) === 'undefined' ) {
+    file_extension = type;
+  }
+
   // Javascript strings (DOMString) is automatically converted to utf-8
   // see: https://developer.mozilla.org/en-US/docs/Web/API/Blob/Blob
-  var all_region_data = pack_via_metadata(type);
-  var blob_attr = {type: 'text/'+type+';charset=utf-8'};
-  var all_region_data_blob = new Blob(all_region_data, blob_attr);
+  pack_via_metadata(type).then( function(data) {
+    var blob_attr = {type: 'text/'+file_extension+';charset=utf-8'};
+    var all_region_data_blob = new Blob(data, blob_attr);
 
-  save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
+    var filename = 'via_export';
+    if ( file_extension !== 'csv' || file_extension !== 'json' ) {
+      filename += '_' + type + '.' + file_extension;
+    }
+    save_data_to_local_file(all_region_data_blob, filename);
+  }.bind(this), function(err) {
+    show_message('Failed to download data: [' + err + ']');
+  }.bind(this));
 }
 
 function sel_local_data_file(type) {
@@ -1539,6 +549,11 @@ function sel_local_data_file(type) {
     switch(type) {
     case 'annotations':
       invisible_file_input.accept='.csv,.json';
+      invisible_file_input.onchange = import_annotations_from_file;
+      break;
+
+    case 'annotations_coco':
+      invisible_file_input.accept='.json';
       invisible_file_input.onchange = import_annotations_from_file;
       break;
 
@@ -1753,31 +768,32 @@ function parse_csv_header_line(line) {
   }
 }
 
-function import_annotations_from_json(data) {
+function import_annotations_from_json(data_str) {
   return new Promise( function(ok_callback, err_callback) {
-    if (data === '' || typeof(data) === 'undefined') {
+    if (data_str === '' || typeof(data_str) === 'undefined') {
       return;
     }
 
-    var d = JSON.parse(data);
+    var data = JSON.parse(data_str);
+    var d;
+
+    if ( data.hasOwnProperty('info') && data.hasOwnProperty('categories') &&
+         data.hasOwnProperty('images') && data.hasOwnProperty('annotations')
+       ) {
+      // import annotations in COCO format
+      d = coco_to_via(data);
+    } else {
+      d = data;
+    }
 
     var region_import_count = 0;
     var file_added_count    = 0;
     var malformed_entries_count    = 0;
     for (var img_id in d) {
-      var filename = d[img_id].filename;
-      var size     = d[img_id].size;
-      var comp_img_id = _via_get_image_id(filename, size);
-      if ( comp_img_id !== img_id ) {
-        // discard malformed entry
-        malformed_entries_count += 1;
-        continue;
-      }
-
       if ( ! _via_img_metadata.hasOwnProperty(img_id) ) {
-        img_id = project_add_new_file(filename, size);
+        project_add_new_file(d[img_id].filename, d[img_id].size, img_id);
         if ( _via_settings.core.default_filepath === '' ) {
-          _via_img_src[img_id] = filename;
+          _via_img_src[img_id] = d[img_id].filename;
         } else {
           _via_file_resolve_file_to_default_filepath(img_id);
         }
@@ -1852,6 +868,69 @@ function import_annotations_from_json(data) {
 
     ok_callback([file_added_count, region_import_count, malformed_entries_count]);
   });
+}
+
+// convert from coco JSON format to VIA JSON format
+// see http://cocodataset.org/#format-data
+function coco_to_via(coco) {
+  var d = {};
+
+  // create an index of all categories
+  var category_list = {}
+  for ( var cat_index in coco.categories ) {
+    var catid = coco.categories[cat_index]['id'];
+    category_list[catid] = coco.categories[cat_index]['name'];
+  }
+
+  // create an index of all annotations
+  var annotation_list = {}
+  for ( var annotation_index in coco.annotations ) {
+    var coco_image_id = coco.annotations[annotation_index]['image_id'];
+    if ( ! annotation_list.hasOwnProperty(coco_image_id) ) {
+      annotation_list[coco_image_id] = [];
+    }
+    annotation_list[coco_image_id].push( annotation_index );
+  }
+
+  // add all files and annotations
+  for ( var coco_img_index in coco.images ) {
+    var filename = coco.images[coco_img_index]['file_name'];
+    if ( coco.images[coco_img_index].hasOwnProperty('coco_url') ) {
+      filename = coco.images[coco_img_index]['coco_url'];
+    }
+    var size = -1;
+    var via_img_id = _via_get_image_id(filename, size);
+    var coco_img_id = coco.images[coco_img_index]['id'];
+    var width = coco.images[coco_img_index]['width'];
+    var height = coco.images[coco_img_index]['height'];
+
+    d[via_img_id] = { 'filename':filename,
+                      'size':size,
+                      'regions':[],
+                      'file_attributes':{'width':width, 'height':height},
+                    };
+
+    // add all annotations associated with this file
+    if ( annotation_list.hasOwnProperty(coco_img_id) ) {
+      for ( var i in annotation_list[coco_img_id] ) {
+        var annotation = coco.annotations[ annotation_list[coco_img_id][i] ];
+        var bbox = polygon_to_bbox(annotation['segmentation']);
+        var area = bbox[2] * bbox[3];
+        var r = { 'shape_attributes': { 'name':'polygon', 'all_points_x':[], 'all_points_y':[] },
+                  'region_attributes': {},
+                };
+
+        for ( var j = 0; j < annotation['segmentation'].length; j = j + 2 ) {
+          r['shape_attributes']['all_points_x'].push( annotation['segmentation'][j] );
+          r['shape_attributes']['all_points_y'].push( annotation['segmentation'][j+1] );
+        }
+        var cat_name = category_list[ annotation['category_id'] ];
+        r['region_attributes']['category'] = cat_name;
+        d[via_img_id].regions.push(r);
+      }
+    }
+  }
+  return d;
 }
 
 // assumes that csv line follows the RFC 4180 standard
@@ -2048,46 +1127,199 @@ function import_files_url_from_csv(data) {
 // Data Exporter
 //
 function pack_via_metadata(return_type) {
-  if( return_type === 'csv' ) {
-    var csvdata = [];
-    var csvheader = 'filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes';
-    csvdata.push(csvheader);
+  return new Promise( function(ok_callback, err_callback) {
+    if( return_type === 'csv' ) {
+      var csvdata = [];
+      var csvheader = 'filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes';
+      csvdata.push(csvheader);
 
-    for ( var image_id in _via_img_metadata ) {
-      var fattr = map_to_json( _via_img_metadata[image_id].file_attributes );
-      fattr = escape_for_csv( fattr );
+      for ( var image_id in _via_img_metadata ) {
+        var fattr = map_to_json( _via_img_metadata[image_id].file_attributes );
+        fattr = escape_for_csv( fattr );
 
-      var prefix = '\n' + _via_img_metadata[image_id].filename;
-      prefix += ',' + _via_img_metadata[image_id].size;
-      prefix += ',"' + fattr + '"';
+        var prefix = '\n' + _via_img_metadata[image_id].filename;
+        prefix += ',' + _via_img_metadata[image_id].size;
+        prefix += ',"' + fattr + '"';
 
-      var r = _via_img_metadata[image_id].regions;
+        var r = _via_img_metadata[image_id].regions;
 
-      if ( r.length !==0 ) {
-        for ( var i = 0; i < r.length; ++i ) {
-          var csvline = [];
-          csvline.push(prefix);
-          csvline.push(r.length);
-          csvline.push(i);
+        if ( r.length !==0 ) {
+          for ( var i = 0; i < r.length; ++i ) {
+            var csvline = [];
+            csvline.push(prefix);
+            csvline.push(r.length);
+            csvline.push(i);
 
-          var sattr = map_to_json( r[i].shape_attributes );
-          sattr = '"' +  escape_for_csv( sattr ) + '"';
-          csvline.push(sattr);
+            var sattr = map_to_json( r[i].shape_attributes );
+            sattr = '"' +  escape_for_csv( sattr ) + '"';
+            csvline.push(sattr);
 
-          var rattr = map_to_json( r[i].region_attributes );
-          rattr = '"' +  escape_for_csv( rattr ) + '"';
-          csvline.push(rattr);
-          csvdata.push( csvline.join(VIA_CSV_SEP) );
+            var rattr = map_to_json( r[i].region_attributes );
+            rattr = '"' +  escape_for_csv( rattr ) + '"';
+            csvline.push(rattr);
+            csvdata.push( csvline.join(VIA_CSV_SEP) );
+          }
+        } else {
+          // @todo: reconsider this practice of adding an empty entry
+          csvdata.push(prefix + ',0,0,"{}","{}"');
         }
-      } else {
-        // @todo: reconsider this practice of adding an empty entry
-        csvdata.push(prefix + ',0,0,"{}","{}"');
+      }
+      ok_callback(csvdata);
+    }
+
+    // see http://cocodataset.org/#format-data
+    if( return_type === 'coco' ) {
+      img_stat_set_all().then( function(ok) {
+        var d = { 'info':{}, 'images':[], 'annotations':[], 'licenses':[], 'categories':[] };
+        d.info = {
+          'year': new Date().getFullYear(),
+          'version': '1',
+          'description': 'Exported using VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via/)',
+          'contributor': '',
+          'url': 'http://www.robots.ox.ac.uk/~vgg/software/via/',
+          'date_created': new Date().toString(),
+        };
+        d.licenses = [ { 'id':1, 'name':'Unknown', 'url':'' } ];
+
+        // initialise categories
+        var attrval_to_catid = {};
+        var cat_id = 1;
+        for ( var rid in _via_attributes['region'] ) {
+          if ( _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.CHECKBOX ||
+               _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.DROPDOWN ||
+               _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.RADIO ) {
+            for ( var oid in _via_attributes['region'][rid]['options'] ) {
+              d.categories.push( { 'id':cat_id, 'name':oid, 'supercategory':rid } );
+              attrval_to_catid[oid] = cat_id;
+              cat_id = cat_id + 1;
+            }
+          }
+        }
+
+        // add files
+        var img_id, file_src;
+        var annotation_id = 0;
+        var export_aid = Object.keys(_via_attributes['region'])[0];
+        for ( var img_index in _via_image_id_list ) {
+          img_id = _via_image_id_list[img_index];
+
+          // add file
+          if ( _via_img_fileref[img_id] instanceof File ) {
+            file_src = _via_img_fileref[img_id].filename;
+          } else {
+            //file_src = _via_img_src[img_id];
+            file_src = _via_img_metadata[img_id].filename;
+          }
+          d.images.push( {
+            'id':parseInt(img_index),
+            'width':_via_img_stat[img_index][0],
+            'height':_via_img_stat[img_index][1],
+            'file_name':_via_img_metadata[img_id].filename,
+            'license':1,
+            'flickr_url':file_src,
+            'coco_url':file_src,
+            'date_captured':'',
+          } );
+
+          // add metadata
+          var shape_name, region;
+          for ( var rindex in _via_img_metadata[img_id].regions ) {
+            region = _via_img_metadata[img_id].regions[rindex];
+            if ( region.shape_attributes['name'] === 'rect' ||
+                 region.shape_attributes['name'] === 'circle' ||
+                 region.shape_attributes['name'] === 'ellipse' ||
+                 region.shape_attributes['name'] === 'polygon' ) {
+              var annotation = via_region_shape_to_coco_annotation(region.shape_attributes);
+              var cat_id = '';
+              if ( typeof(export_aid) !== 'undefined' ) {
+                var avalue = _via_img_metadata[img_id].regions[rindex].region_attributes[export_aid];
+                cat_id = attrval_to_catid[avalue];
+              }
+
+              d.annotations.push( Object.assign({
+                'id':annotation_id,
+                'image_id':img_index,
+                'category_id':cat_id,
+              }, annotation) );
+              annotation_id = annotation_id + 1;
+            }
+          }
+        }
+        ok_callback( [ JSON.stringify(d) ] );
+      }.bind(this), function(err) {
+        err_callback(err);
+      }.bind(this));
+    } else {
+      // default format is JSON
+      ok_callback( [ JSON.stringify(_via_img_metadata) ] );
+    }
+  }.bind(this));
+}
+
+function via_region_shape_to_coco_annotation(shape_attributes) {
+  var annotation = { 'segmentation':[], 'area':[], 'bbox':[], 'iscrowd':0 };
+
+  switch(shape_attributes['name']) {
+  case 'rect':
+    var x0 = shape_attributes['x'];
+    var y0 = shape_attributes['y'];
+    var w  = shape_attributes['width'];
+    var h  = shape_attributes['height'];
+    var x1 = x0 + w;
+    var y1 = y0 + h;
+    annotation['segmentation'] = [x0, y0, x1, y0, x1, y1, x0, y1];
+    annotation['area'] = fixfloat( parseFloat(w)*parseFloat(h) );
+    annotation['bbox'] = [x0, y0, w, h];
+    break;
+  case 'circle':
+  case 'ellipse':
+    var a,b;
+    if ( shape_attributes.hasOwnProperty('rx') && shape_attributes.hasOwnProperty('ry')) {
+      a = shape_attributes['rx'];
+      b = shape_attributes['ry'];
+    } else {
+      a = shape_attributes['r'];
+      b = shape_attributes['r'];
+    }
+    var theta_to_radian = Math.PI/180;
+    for ( var theta = 0; theta < 360; theta = theta + VIA_POLYGON_SEGMENT_SUBTENDED_ANGLE ) {
+      var theta_radian = theta * theta_to_radian;
+      var x = shape_attributes['cx'] + a * Math.cos(theta_radian);
+      var y = shape_attributes['cy'] + b * Math.sin(theta_radian);
+      annotation['segmentation'].push( fixfloat(x), fixfloat(y) );
+    }
+    annotation['bbox'] = polygon_to_bbox(annotation['segmentation']);
+    annotation['area'] = annotation['bbox'][2] * annotation['bbox'][3];
+    break;
+
+  case 'polygon':
+    annotation['segmentation'] = [];
+    var x0 = +Infinity;
+    var y0 = +Infinity;
+    var x1 = -Infinity;
+    var y1 = -Infinity;
+    for ( var i in shape_attributes['all_points_x'] ) {
+      annotation['segmentation'].push( shape_attributes['all_points_x'][i] );
+      annotation['segmentation'].push( shape_attributes['all_points_y'][i] );
+      if ( shape_attributes['all_points_x'][i] < x0 ) {
+        x0 = shape_attributes['all_points_x'][i];
+      }
+      if ( shape_attributes['all_points_y'][i] < y0 ) {
+        y0 = shape_attributes['all_points_y'][i];
+      }
+      if ( shape_attributes['all_points_x'][i] > x1 ) {
+        x1 = shape_attributes['all_points_x'][i];
+      }
+      if ( shape_attributes['all_points_y'][i] > y1 ) {
+        y1 = shape_attributes['all_points_y'][i];
       }
     }
-    return csvdata;
-  } else {
-    return [ JSON.stringify(_via_img_metadata) ];
+    var w = x1 - x0;
+    var h = y1 - y0;
+    annotation['bbox'] = [x0, y0, w, h];
+    annotation['area'] = w * h; // approximate area
   }
+  return annotation;
 }
 
 function save_data_to_local_file(data, filename) {
@@ -2106,7 +1338,6 @@ function save_data_to_local_file(data, filename) {
   // @todo: replace a.dispatchEvent() with a.click()
   // a.click() based trigger is supported in Chrome 70 and Safari 11/12 but **not** in Firefox 63
   //a.click();
-
 }
 
 //
@@ -2197,10 +1428,13 @@ function _via_load_canvas_regions() {
       var cy = regions[i].shape_attributes['cy'] / _via_canvas_scale;
       var rx = regions[i].shape_attributes['rx'] / _via_canvas_scale;
       var ry = regions[i].shape_attributes['ry'] / _via_canvas_scale;
+      // rotation in radians
+      var theta = regions[i].shape_attributes['theta'];
       _via_canvas_regions[i].shape_attributes['cx'] = Math.round(cx);
       _via_canvas_regions[i].shape_attributes['cy'] = Math.round(cy);
       _via_canvas_regions[i].shape_attributes['rx'] = Math.round(rx);
       _via_canvas_regions[i].shape_attributes['ry'] = Math.round(ry);
+      _via_canvas_regions[i].shape_attributes['theta'] = theta;
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
@@ -2346,11 +1580,15 @@ function set_region_select_state(region_id, is_selected) {
 }
 
 function show_annotation_data() {
-  var hstr = '<pre>' + pack_via_metadata('csv').join('') + '</pre>';
-  var window_features = 'toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no';
-  window_features += ',width=800,height=600';
-  var annotation_data_window = window.open('', 'Annotations (preview) ', window_features);
-  annotation_data_window.document.body.innerHTML = hstr;
+  pack_via_metadata('csv').then( function(data) {
+    var hstr = '<pre>' + data.join('') + '</pre>';
+    var window_features = 'toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes,status=no';
+    window_features += ',width=800,height=600';
+    var annotation_data_window = window.open('', 'Annotations (preview) ', window_features);
+    annotation_data_window.document.body.innerHTML = hstr;
+  }.bind(this), function(err) {
+    show_message('Failed to collect annotation data!');
+  }.bind(this));
 }
 
 //
@@ -2553,36 +1791,42 @@ function _via_reg_canvas_mouseup_handler(e) {
       var dy = Math.abs(canvas_attr['cy'] - _via_current_y);
       var new_r = Math.sqrt( dx*dx + dy*dy );
 
-      image_attr['r'] = Math.round(new_r * _via_canvas_scale);
+      image_attr['r'] = fixfloat(new_r * _via_canvas_scale);
       canvas_attr['r'] = Math.round( image_attr['r'] / _via_canvas_scale);
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
       var new_rx = canvas_attr['rx'];
       var new_ry = canvas_attr['ry'];
+      var new_theta = canvas_attr['theta'];
       var dx = Math.abs(canvas_attr['cx'] - _via_current_x);
       var dy = Math.abs(canvas_attr['cy'] - _via_current_y);
 
       switch(_via_region_edge[1]) {
       case 5:
-        new_ry = dy;
+        new_ry = Math.sqrt(dx*dx + dy*dy);
+        new_theta = Math.atan2(- (_via_current_x - canvas_attr['cx']), (_via_current_y - canvas_attr['cy']));
         break;
 
       case 6:
-        new_rx = dx;
+        new_rx = Math.sqrt(dx*dx + dy*dy);
+        new_theta = Math.atan2((_via_current_y - canvas_attr['cy']), (_via_current_x - canvas_attr['cx']));
         break;
 
       default:
         new_rx = dx;
         new_ry = dy;
+        new_theta = 0;
         break;
       }
 
-      image_attr['rx'] = Math.round(new_rx * _via_canvas_scale);
-      image_attr['ry'] = Math.round(new_ry * _via_canvas_scale);
+      image_attr['rx'] = fixfloat(new_rx * _via_canvas_scale);
+      image_attr['ry'] = fixfloat(new_ry * _via_canvas_scale);
+      image_attr['theta'] = fixfloat(new_theta);
 
       canvas_attr['rx'] = Math.round(image_attr['rx'] / _via_canvas_scale);
       canvas_attr['ry'] = Math.round(image_attr['ry'] / _via_canvas_scale);
+      canvas_attr['theta'] = fixfloat(new_theta);
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
@@ -2802,18 +2046,21 @@ function _via_reg_canvas_mouseup_handler(e) {
         var cy = Math.round(region_y0 * _via_canvas_scale);
         var rx = Math.round(region_dx * _via_canvas_scale);
         var ry = Math.round(region_dy * _via_canvas_scale);
+        var theta = 0;
 
         original_img_region.shape_attributes['name'] = 'ellipse';
         original_img_region.shape_attributes['cx'] = cx;
         original_img_region.shape_attributes['cy'] = cy;
         original_img_region.shape_attributes['rx'] = rx;
         original_img_region.shape_attributes['ry'] = ry;
+        original_img_region.shape_attributes['theta'] = theta;
 
         canvas_img_region.shape_attributes['name'] = 'ellipse';
         canvas_img_region.shape_attributes['cx'] = Math.round( cx / _via_canvas_scale );
         canvas_img_region.shape_attributes['cy'] = Math.round( cy / _via_canvas_scale );
         canvas_img_region.shape_attributes['rx'] = Math.round( rx / _via_canvas_scale );
         canvas_img_region.shape_attributes['ry'] = Math.round( ry / _via_canvas_scale );
+        canvas_img_region.shape_attributes['theta'] = theta;
 
         new_region_added = true;
         break;
@@ -2946,7 +2193,7 @@ function _via_reg_canvas_mousemove_handler(e) {
     }
 
     var region_x0 = _via_click_x0;
-    var region_y0 = _via_click_y0;;
+    var region_y0 = _via_click_y0;
 
     var dx = Math.round(Math.abs(_via_current_x - _via_click_x0));
     var dy = Math.round(Math.abs(_via_current_y - _via_click_y0));
@@ -2973,15 +2220,30 @@ function _via_reg_canvas_mousemove_handler(e) {
       }
 
       _via_draw_rect_region(region_x0, region_y0, dx, dy, false);
+
+      // display the current region info
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' W:' + dx + ',' + ' H:' + dy;
+      }
       break;
 
     case VIA_REGION_SHAPE.CIRCLE:
       var circle_radius = Math.round(Math.sqrt( dx*dx + dy*dy ));
       _via_draw_circle_region(region_x0, region_y0, circle_radius, false);
+
+      // display the current region info
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' Radius:' + circle_radius;
+      }
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
-      _via_draw_ellipse_region(region_x0, region_y0, dx, dy, false);
+      _via_draw_ellipse_region(region_x0, region_y0, dx, dy, 0, false);
+
+      // display the current region info
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' X-radius:' + dx + ',' + ' Y-radius:' + dy;
+      }
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
@@ -3026,6 +2288,10 @@ function _via_reg_canvas_mousemove_handler(e) {
       var w = Math.abs(d[2] - d[0]);
       var h = Math.abs(d[3] - d[1]);
       _via_draw_rect_region(d[0], d[1], w, h, true);
+
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' W:' + w + ',' + ' H:' + h;
+      }
       break;
 
     case VIA_REGION_SHAPE.CIRCLE:
@@ -3036,32 +2302,44 @@ function _via_reg_canvas_mousemove_handler(e) {
                               attr['cy'],
                               new_r,
                               true);
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' R:' + Math.round(new_r);
+      }
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
       var new_rx = attr['rx'];
       var new_ry = attr['ry'];
+      var new_theta = attr['theta'];
       var dx = Math.abs(attr['cx'] - _via_current_x);
       var dy = Math.abs(attr['cy'] - _via_current_y);
       switch(_via_region_edge[1]) {
       case 5:
-        new_ry = dy;
+        new_ry = Math.sqrt(dx*dx + dy*dy);
+        new_theta = Math.atan2(- (_via_current_x - attr['cx']), (_via_current_y - attr['cy']));
         break;
 
       case 6:
-        new_rx = dx;
+        new_rx = Math.sqrt(dx*dx + dy*dy);
+        new_theta = Math.atan2((_via_current_y - attr['cy']), (_via_current_x - attr['cx']));
         break;
 
       default:
         new_rx = dx;
         new_ry = dy;
+        new_theta = 0;
         break;
       }
+
       _via_draw_ellipse_region(attr['cx'],
                                attr['cy'],
                                new_rx,
                                new_ry,
+                               new_theta,
                                true);
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' X-radius:' + new_rx + ',' + ' Y-radius:' + new_ry;
+      }
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
@@ -3077,6 +2355,9 @@ function _via_reg_canvas_mousemove_handler(e) {
                                moved_all_points_y,
                                true,
                                attr['name']);
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' N:' + attr['all_points_x'].length;
+      }
       break;
     }
     _via_reg_canvas.focus();
@@ -3102,6 +2383,10 @@ function _via_reg_canvas_mousemove_handler(e) {
                             attr['width'],
                             attr['height'],
                             true);
+      // display the current region info
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' W:' + attr['width'] + ',' + ' H:' + attr['height'];
+      }
       break;
 
     case VIA_REGION_SHAPE.CIRCLE:
@@ -3109,6 +2394,10 @@ function _via_reg_canvas_mousemove_handler(e) {
                               attr['cy'] + move_y,
                               attr['r'],
                               true);
+      // display the current region info
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' Radius:' + attr['r'];
+      }
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
@@ -3116,7 +2405,12 @@ function _via_reg_canvas_mousemove_handler(e) {
                                attr['cy'] + move_y,
                                attr['rx'],
                                attr['ry'],
+                               attr['theta'],
                                true);
+      // display the current region info
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' X-radius:' + attr['rx'] + ',' + ' Y-radius:' + attr['ry'];
+      }
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
@@ -3131,6 +2425,9 @@ function _via_reg_canvas_mousemove_handler(e) {
                                moved_all_points_y,
                                true,
                                attr['name']);
+      if ( rf != null && _via_is_region_info_visible ) {
+        rf.innerHTML +=  ',' + ' N:' + attr['all_points_x'].length;
+      }
       break;
 
     case VIA_REGION_SHAPE.POINT:
@@ -3155,6 +2452,10 @@ function _via_reg_canvas_mousemove_handler(e) {
       var line_x = [all_points_x.slice(npts-1), _via_current_x];
       var line_y = [all_points_y.slice(npts-1), _via_current_y];
       _via_draw_polygon_region(line_x, line_y, false, attr['name']);
+    }
+
+    if ( rf != null && _via_is_region_info_visible ) {
+      rf.innerHTML +=  ',' + ' N:' + npts;
     }
   }
 }
@@ -3353,6 +2654,7 @@ function draw_all_regions() {
                                attr['cy'],
                                attr['rx'],
                                attr['ry'],
+                               attr['theta'],
                                is_selected);
       break;
 
@@ -3480,9 +2782,9 @@ function _via_draw_circle(cx, cy, r) {
   _via_reg_ctx.closePath();
 }
 
-function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
+function _via_draw_ellipse_region(cx, cy, rx, ry, rr, is_selected) {
   if (is_selected) {
-    _via_draw_ellipse(cx, cy, rx, ry);
+    _via_draw_ellipse(cx, cy, rx, ry, rr);
 
     _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
@@ -3493,12 +2795,15 @@ function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
     _via_reg_ctx.fill();
     _via_reg_ctx.globalAlpha = 1.0;
 
-    _via_draw_control_point(cx + rx, cy);
-    _via_draw_control_point(cx     , cy - ry);
+    _via_draw_control_point(cx + rx * Math.cos(rr), cy + rx * Math.sin(rr));
+    _via_draw_control_point(cx - rx * Math.cos(rr), cy - rx * Math.sin(rr));
+    _via_draw_control_point(cx + ry * Math.sin(rr), cy - ry * Math.cos(rr));
+    _via_draw_control_point(cx - ry * Math.sin(rr), cy + ry * Math.cos(rr));
+
   } else {
     // draw a fill line
     _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/2;
-    _via_draw_ellipse(cx, cy, rx, ry);
+    _via_draw_ellipse(cx, cy, rx, ry, rr);
     _via_reg_ctx.stroke();
 
     if ( rx > VIA_THEME_REGION_BOUNDARY_WIDTH &&
@@ -3508,27 +2813,26 @@ function _via_draw_ellipse_region(cx, cy, rx, ry, is_selected) {
       _via_reg_ctx.lineWidth   = VIA_THEME_REGION_BOUNDARY_WIDTH/4;
       _via_draw_ellipse(cx, cy,
                         rx + VIA_THEME_REGION_BOUNDARY_WIDTH/2,
-                        ry + VIA_THEME_REGION_BOUNDARY_WIDTH/2);
+                        ry + VIA_THEME_REGION_BOUNDARY_WIDTH/2,
+                        rr);
       _via_reg_ctx.stroke();
       _via_draw_ellipse(cx, cy,
                         rx - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
-                        ry - VIA_THEME_REGION_BOUNDARY_WIDTH/2);
+                        ry - VIA_THEME_REGION_BOUNDARY_WIDTH/2,
+                        rr);
       _via_reg_ctx.stroke();
     }
   }
 }
 
-function _via_draw_ellipse(cx, cy, rx, ry) {
+function _via_draw_ellipse(cx, cy, rx, ry, rr) {
   _via_reg_ctx.save();
 
   _via_reg_ctx.beginPath();
-  _via_reg_ctx.translate(cx-rx, cy-ry);
-  _via_reg_ctx.scale(rx, ry);
-  _via_reg_ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
+  _via_reg_ctx.ellipse(cx, cy, rx, ry, rr, 0, 2 * Math.PI);
 
   _via_reg_ctx.restore(); // restore to original state
   _via_reg_ctx.closePath();
-
 }
 
 function _via_draw_polygon_region(all_points_x, all_points_y, is_selected, shape) {
@@ -3711,10 +3015,20 @@ function get_region_bounding_box(region) {
     break;
 
   case 'ellipse':
-    bbox[0] = d['cx'] - d['rx'];
-    bbox[1] = d['cy'] - d['ry'];
-    bbox[2] = d['cx'] + d['rx'];
-    bbox[3] = d['cy'] + d['ry'];
+    let radians = d['theta'];
+    let radians90 = radians + Math.PI / 2;
+    let ux = d['rx'] * Math.cos(radians);
+    let uy = d['rx'] * Math.sin(radians);
+    let vx = d['ry'] * Math.cos(radians90);
+    let vy = d['ry'] * Math.sin(radians90);
+
+    let width = Math.sqrt(ux * ux + vx * vx) * 2;
+    let height = Math.sqrt(uy * uy + vy * vy) * 2;
+
+    bbox[0] = d['cx'] - (width / 2);
+    bbox[1] = d['cy'] - (height / 2);
+    bbox[2] = d['cx'] + (width / 2);
+    bbox[3] = d['cy'] + (height / 2);
     break;
 
   case 'polyline': // handled by polygon
@@ -3812,6 +3126,7 @@ function is_inside_this_region(px, py, region_id) {
                                attr['cy'],
                                attr['rx'],
                                attr['ry'],
+                               attr['theta'],
                                px, py);
     break;
 
@@ -3844,9 +3159,11 @@ function is_inside_rect(x, y, w, h, px, py) {
     py < (y + h);
 }
 
-function is_inside_ellipse(cx, cy, rx, ry, px, py) {
-  var dx = (cx - px);
-  var dy = (cy - py);
+function is_inside_ellipse(cx, cy, rx, ry, rr, px, py) {
+  // Inverse rotation of pixel coordinates
+  var dx = Math.cos(-rr) * (cx - px) - Math.sin(-rr) * (cy - py)
+  var dy = Math.sin(-rr) * (cx - px) + Math.cos(-rr) * (cy - py)
+
   return ((dx * dx) / (rx * rx)) + ((dy * dy) / (ry * ry)) < 1;
 }
 
@@ -3947,6 +3264,7 @@ function is_on_region_corner(px, py) {
                                   attr['cy'],
                                   attr['rx'],
                                   attr['ry'],
+                                  attr['theta'],
                                   px, py);
       break;
 
@@ -4055,7 +3373,15 @@ function is_on_circle_edge(cx, cy, r, px, py) {
   }
 }
 
-function is_on_ellipse_edge(cx, cy, rx, ry, px, py) {
+function is_on_ellipse_edge(cx, cy, rx, ry, rr, px, py) {
+  // Inverse rotation of pixel coordinates
+  px = px - cx;
+  py = py - cy;
+  var px_ = Math.cos(-rr) * px - Math.sin(-rr) * py;
+  var py_ = Math.sin(-rr) * px + Math.cos(-rr) * py;
+  px = px_ + cx;
+  py = py_ + cy;
+
   var dx = (cx - px)/rx;
   var dy = (cy - py)/ry;
 
@@ -4348,12 +3674,6 @@ function _via_handle_global_keydown_event(e) {
     return;
   }
 
-  if ( _via_fast_annotation_keys.includes(e.key) ) {
-    // fast annotation mode
-    // @todo
-    console.log('@todo: fast annotation mode');
-  }
-
   if ( e.key === 'a' ) {
     if ( _via_display_area_content_name === VIA_DISPLAY_AREA_CONTENT_NAME.IMAGE_GRID ) {
       // select all in image grid
@@ -4390,13 +3710,6 @@ function _via_handle_global_keydown_event(e) {
 
     if ( _via_is_user_resizing_region ) {
       _via_is_user_resizing_region = false
-    }
-
-    if ( _via_is_user_updating_attribute_name ||
-         _via_is_user_updating_attribute_value) {
-      _via_is_user_updating_attribute_name = false;
-      _via_is_user_updating_attribute_value = false;
-
     }
 
     if ( _via_is_user_moving_region ) {
@@ -6629,8 +5942,8 @@ function annotation_editor_get_placement(region_id) {
     html_position.left = r['cx'];
     break;
   case 'ellipse':
-    html_position.top = r['cy'] + r['ry'];
-    html_position.left = r['cx'];
+    html_position.top = r['cy'] + r['ry'] * Math.cos(r['theta']);
+    html_position.left = r['cx'] - r['ry'] * Math.sin(r['theta']);
     break;
   case 'polygon':
   case 'polyline':
@@ -7638,6 +6951,7 @@ function project_open_parse_json_file(project_file_data) {
     _via_img_metadata = {};
     _via_img_fileref = {};
     _via_img_src = {};
+    _via_attributes = { 'region':{}, 'file':{} };
     _via_buffer_remove_all();
 
     // import image metadata
@@ -7801,12 +7115,14 @@ function project_remove_file(img_index) {
   _via_img_count -= 1;
 }
 
-function project_add_new_file(filename, size) {
-  if ( typeof(size) === 'undefined' ) {
-    size = -1;
+function project_add_new_file(filename, size, file_id) {
+  var img_id = file_id;
+  if ( typeof(img_id) === 'undefined' ) {
+    if ( typeof(size) === 'undefined' ) {
+      size = -1;
+    }
+    img_id = _via_get_image_id(filename, size);
   }
-
-  var img_id = _via_get_image_id(filename, size);
 
   if ( ! _via_img_metadata.hasOwnProperty(img_id) ) {
     _via_img_metadata[img_id] = new file_metadata(filename, size);
@@ -7836,6 +7152,7 @@ function project_file_add_local(event) {
         if ( _via_img_metadata.hasOwnProperty(img_id2) ) {
           img_id = img_id2;
         }
+
         _via_img_fileref[img_id] = user_selected_images[i];
         if ( _via_img_metadata[img_id].size === -1 ) {
           _via_img_metadata[img_id].size = size;
@@ -9173,7 +8490,7 @@ function _via_region( shape, id, data_img_space, view_scale_factor, view_offset_
   // d[]   : (in view space) data whose meaning depend on region shape as follows:
   //        rect     : d[x1,y1,x2,y2] or d[corner1_x, corner1_y, corner2_x, corner2_y]
   //        circle   : d[x1,y1,x2,y2] or d[center_x, center_y, circumference_x, circumference_y]
-  //        ellipse  : d[x1,y1,x2,y2]
+  //        ellipse  : d[x1,y1,x2,y2,transform]
   //        line     : d[x1,y1,x2,y2]
   //        polyline : d[x1,y1,...,xn,yn]
   //        polygon  : d[x1,y1,...,xn,yn]
@@ -9225,7 +8542,7 @@ function _via_region( shape, id, data_img_space, view_scale_factor, view_offset_
     break;
   case "ellipse":
     _via_region_ellipse.call( this );
-    this.svg_attributes = ['cx', 'cy', 'rx', 'ry'];
+    this.svg_attributes = ['cx', 'cy', 'rx', 'ry','transform'];
     break;
   case "line":
     _via_region_line.call( this );
@@ -9660,35 +8977,30 @@ function _via_img_buffer_add_image(img_index) {
     // check if user has given access to local file using
     // browser's file selector
     if ( _via_img_fileref[img_id] instanceof File ) {
-      var file_reader = new FileReader();
-      file_reader.readAsDataURL( _via_img_fileref[img_id] );
-      file_reader.addEventListener('error', function() {
-        console.log('fileread err');
+      var tmp_file_object_url = URL.createObjectURL(_via_img_fileref[img_id]);
+      var img_id = _via_image_id_list[img_index];
+      var bimg = document.createElement('img');
+      bimg.setAttribute('id', _via_img_buffer_get_html_id(img_index));
+      bimg.setAttribute('src', tmp_file_object_url);
+      bimg.setAttribute('alt', 'Image loaded from base64 data of a local file selected by user.');
+      bimg.addEventListener('error', function() {
+        URL.revokeObjectURL(tmp_file_object_url);
         project_file_load_on_fail(img_index);
         err_callback(img_index);
-      }, false);
-      file_reader.addEventListener('load', function() {
-        var img_id = _via_image_id_list[img_index];
-        var bimg = document.createElement('img');
-        bimg.setAttribute('id', _via_img_buffer_get_html_id(img_index));
-        bimg.setAttribute('src', file_reader.result);
-        bimg.setAttribute('alt', 'Image loaded from base64 data of a local file selected by user.');
-        bimg.addEventListener('error', function() {
-          project_file_load_on_fail(img_index);
-          err_callback(img_index);
-        });
-        bimg.addEventListener('load', function() {
-          _via_img_panel.insertBefore(bimg, _via_reg_canvas);
-          project_file_load_on_success(img_index);
-          img_fn_list_ith_entry_add_css_class(img_index, 'buffered')
-          // add timestamp so that we can apply Least Recently Used (LRU)
-          // scheme to remove elements when buffer is full
-          var arr_index = _via_buffer_img_index_list.length;
-          _via_buffer_img_index_list.push(img_index);
-          _via_buffer_img_shown_timestamp[arr_index] = Date.now(); // though, not seen yet
-          ok_callback(img_index);
-        });
-      }, false);
+      });
+      bimg.addEventListener('load', function() {
+        URL.revokeObjectURL(tmp_file_object_url);
+        img_stat_set(img_index, [bimg.naturalWidth, bimg.naturalHeight]);
+        _via_img_panel.insertBefore(bimg, _via_reg_canvas);
+        project_file_load_on_success(img_index);
+        img_fn_list_ith_entry_add_css_class(img_index, 'buffered')
+        // add timestamp so that we can apply Least Recently Used (LRU)
+        // scheme to remove elements when buffer is full
+        var arr_index = _via_buffer_img_index_list.length;
+        _via_buffer_img_index_list.push(img_index);
+        _via_buffer_img_shown_timestamp[arr_index] = Date.now(); // though, not seen yet
+        ok_callback(img_index);
+      });
       return;
     }
 
@@ -9716,6 +9028,7 @@ function _via_img_buffer_add_image(img_index) {
       // Note: _via_current_image.{naturalWidth,naturalHeight} is only accessible after
       // the "load" event. Therefore, all processing must happen inside this event handler.
       bimg.addEventListener('load', function() {
+        img_stat_set(img_index, [bimg.naturalWidth, bimg.naturalHeight]);
         _via_img_panel.insertBefore(bimg, _via_reg_canvas);
 
         project_file_load_on_success(img_index);
@@ -10354,23 +9667,125 @@ if ( ! _via_is_debug_mode ) {
     return 'Did you save your data?';
   };
 }
-    </script>
-    <script type="text/javascript">
-      //<!--AUTO_INSERT_VIA_TEST_JS_HERE-->
-    </script>
 
-    <!-- scripts code debugging
-    <script src="via.js"></script>    -->
+//
+// keep a record of image statistics (e.g. width, height, ...)
+//
+function img_stat_set(img_index, stat) {
+  if ( stat.length ) {
+    _via_img_stat[img_index] = stat;
+  } else {
+    delete _via_img_stat[img_index];
+  }
+}
 
-    <!--<script src="./demo/_via_basic_demo.js"></script>-->
-    <!--<script src="./demo/_via_face_demo.js"></script>-->
-    <!--<script src="./demo/_via_face_track_annotation_demo.js"></script>-->
-    <!--<script src="./demo/_via_friends_track_annotation_demo.js"></script>-->
+function img_stat_set_all() {
+  return new Promise( function(ok_callback, err_callback) {
+    var promise_list = [];
+    var img_id;
+    for ( var img_index in _via_image_id_list ) {
+      if ( ! _via_img_stat.hasOwnProperty(img_index) ) {
+        img_id = _via_image_id_list[img_index];
+        if ( _via_img_metadata[img_id].file_attributes.hasOwnProperty('width') &&
+             _via_img_metadata[img_id].file_attributes.hasOwnProperty('height')
+           ) {
+          _via_img_stat[img_index] = [_via_img_metadata[img_id].file_attributes['width'],
+                                      _via_img_metadata[img_id].file_attributes['height'],
+                                     ];
+        } else {
+          promise_list.push( img_stat_get(img_index) );
+        }
+      }
+    }
+    if ( promise_list.length ) {
+      Promise.all(promise_list).then( function(ok) {
+        ok_callback();
+      }.bind(this), function(err) {
+        console.warn('Failed to read statistics of all images!');
+        err_callback();
+      });
+    } else {
+      ok_callback();
+    }
+  }.bind(this));
+}
 
-    <!-- for regression tests
-    <script src="./tests/_via_test_data.js"></script>
-    <script src="./tests/_via_test.js"></script>
-    <script src="./tests/_via_test_region.js"></script>
-    -->
-  </body>
-</html>
+function img_stat_get(img_index) {
+  return new Promise( function(ok_callback, err_callback) {
+    var img_id = _via_image_id_list[img_index];
+    var tmp_img = document.createElement('img');
+    var tmp_file_object_url = null;
+    tmp_img.addEventListener('load', function() {
+      _via_img_stat[img_index] = [tmp_img.naturalWidth, tmp_img.naturalHeight];
+      if ( tmp_file_object_url !== null ) {
+        URL.revokeObjectURL(tmp_file_object_url);
+      }
+      ok_callback();
+    }.bind(this));
+    tmp_img.addEventListener('error', function() {
+      _via_img_stat[img_index] = [-1, -1];
+      if ( tmp_file_object_url !== null ) {
+        URL.revokeObjectURL(tmp_file_object_url);
+      }
+      ok_callback();
+    }.bind(this));
+
+    if ( _via_img_fileref[img_id] instanceof File ) {
+      tmp_file_object_url = URL.createObjectURL(_via_img_fileref[img_id]);
+      tmp_img.src = tmp_file_object_url;
+    } else {
+      tmp_img.src = _via_img_src[img_id];
+    }
+  }.bind(this));
+}
+
+//
+// util
+//
+function fixfloat(x) {
+  return parseFloat( x.toFixed(VIA_FLOAT_PRECISION) );
+}
+
+function shape_attribute_fixfloat(sa) {
+  for ( var attr in sa ) {
+    switch(attr) {
+    case 'x':
+    case 'y':
+    case 'width':
+    case 'height':
+    case 'r':
+    case 'rx':
+    case 'ry':
+      sa[attr] = fixfloat( sa[attr] );
+      break;
+    case 'all_points_x':
+    case 'all_points_y':
+      for ( var i in sa[attr] ) {
+        sa[attr][i] = fixfloat( sa[attr][i] );
+      }
+    }
+  }
+}
+
+// pts = [x0,y0,x1,y1,....]
+function polygon_to_bbox(pts) {
+  var xmin = +Infinity;
+  var xmax = -Infinity;
+  var ymin = +Infinity;
+  var ymax = -Infinity;
+  for ( var i = 0; i < pts.length; i = i + 2 ) {
+    if ( pts[i] > xmax ) {
+      xmax = pts[i];
+    }
+    if ( pts[i] < xmin ) {
+      xmin = pts[i];
+    }
+    if ( pts[i+1] > ymax ) {
+      ymax = pts[i+1];
+    }
+    if ( pts[i+1] < ymin ) {
+      ymin = pts[i+1];
+    }
+  }
+  return [xmin, ymin, xmax-xmin, ymax-ymin];
+}

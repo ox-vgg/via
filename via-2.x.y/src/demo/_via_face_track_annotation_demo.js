@@ -35,7 +35,7 @@ function _via_load_submodules() {
   _via_face_track_annotation_demo_import();
 
   setTimeout( function() {
-    image_grid_toggle();
+    //image_grid_toggle();
   }, 200);
 /*
   setTimeout( function() {
