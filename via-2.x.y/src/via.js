@@ -920,9 +920,16 @@ function coco_to_via(coco) {
                   'region_attributes': {},
                 };
 
-        for ( var j = 0; j < annotation['segmentation'].length; j = j + 2 ) {
-          r['shape_attributes']['all_points_x'].push( annotation['segmentation'][j] );
-          r['shape_attributes']['all_points_y'].push( annotation['segmentation'][j+1] );
+        // fix for variations in segmentation:
+        // annotation['segmentation'] = [x0,y0,x1,y1,...]
+        // annotation['segmentation'] = [[x0,y0,x1,y1,...]]
+        var seg = annotation['segmentation'];
+        if ( seg.length === 1 && seg[0].length !== 0 ) {
+          seg = annotation['segmentation'][0];
+        }
+        for ( var j = 0; j < seg.length; j = j + 2 ) {
+          r['shape_attributes']['all_points_x'].push( seg[j] );
+          r['shape_attributes']['all_points_y'].push( seg[j+1] );
         }
         var cat_name = category_list[ annotation['category_id'] ];
         r['region_attributes']['category'] = cat_name;
