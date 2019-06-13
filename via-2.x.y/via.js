@@ -1101,7 +1101,7 @@ function pack_via_metadata(return_type) {
       'description': '',
       'contributor': 'Exported using VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via/)',
       'url': '',
-      'date_created', new Date().toString(),
+      'date_created': new Date().toString(),
     };
     d.license = [ { 'id':1, 'name':'Unknown', 'url':'' } ];
     d.image = [];
@@ -1219,12 +1219,12 @@ function _via_load_canvas_regions() {
       var rx = regions[i].shape_attributes['rx'] / _via_canvas_scale;
       var ry = regions[i].shape_attributes['ry'] / _via_canvas_scale;
       // rotation in radians
-      var rr = regions[i].shape_attributes['rr'];
+      var theta = regions[i].shape_attributes['theta'];
       _via_canvas_regions[i].shape_attributes['cx'] = Math.round(cx);
       _via_canvas_regions[i].shape_attributes['cy'] = Math.round(cy);
       _via_canvas_regions[i].shape_attributes['rx'] = Math.round(rx);
       _via_canvas_regions[i].shape_attributes['ry'] = Math.round(ry);
-      _via_canvas_regions[i].shape_attributes['rr'] = rr;
+      _via_canvas_regions[i].shape_attributes['theta'] = theta;
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
@@ -1584,45 +1584,35 @@ function _via_reg_canvas_mouseup_handler(e) {
     case VIA_REGION_SHAPE.ELLIPSE:
       var new_rx = canvas_attr['rx'];
       var new_ry = canvas_attr['ry'];
-      var new_rr = canvas_attr['rr'];
+      var new_theta = canvas_attr['theta'];
       var dx = Math.abs(canvas_attr['cx'] - _via_current_x);
       var dy = Math.abs(canvas_attr['cy'] - _via_current_y);
 
       switch(_via_region_edge[1]) {
       case 5:
         new_ry = Math.sqrt(dx*dx + dy*dy);
-        new_rr = Math.atan2(- (_via_current_x - canvas_attr['cx']), (_via_current_y - canvas_attr['cy']));
+        new_theta = Math.atan2(- (_via_current_x - canvas_attr['cx']), (_via_current_y - canvas_attr['cy']));
         break;
 
       case 6:
         new_rx = Math.sqrt(dx*dx + dy*dy);
-        new_rr = Math.atan2((_via_current_y - canvas_attr['cy']), (_via_current_x - canvas_attr['cx']));
+        new_theta = Math.atan2((_via_current_y - canvas_attr['cy']), (_via_current_x - canvas_attr['cx']));
         break;
 
       default:
         new_rx = dx;
         new_ry = dy;
-        new_rr = 0;
+        new_theta = 0;
         break;
       }
 
-      // if (Math.abs(new_rr) > Math.PI / 4) {
-      //   // swap values
-      //   new_ry = [new_rx, new_rx = new_ry][0];
-      //   if (new_rr < 0) {
-      //     new_rr += Math.PI / 2;
-      //   } else {
-      //     new_rr -= Math.PI / 2;
-      //   }
-      // }
-
       image_attr['rx'] = Math.round(new_rx * _via_canvas_scale);
       image_attr['ry'] = Math.round(new_ry * _via_canvas_scale);
-      image_attr['rr'] = new_rr;
+      image_attr['theta'] = new_theta;
 
       canvas_attr['rx'] = Math.round(image_attr['rx'] / _via_canvas_scale);
       canvas_attr['ry'] = Math.round(image_attr['ry'] / _via_canvas_scale);
-      canvas_attr['rr'] = new_rr;
+      canvas_attr['theta'] = new_theta;
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
@@ -1842,21 +1832,21 @@ function _via_reg_canvas_mouseup_handler(e) {
         var cy = Math.round(region_y0 * _via_canvas_scale);
         var rx = Math.round(region_dx * _via_canvas_scale);
         var ry = Math.round(region_dy * _via_canvas_scale);
-        var rr = 0;
+        var theta = 0;
 
         original_img_region.shape_attributes['name'] = 'ellipse';
         original_img_region.shape_attributes['cx'] = cx;
         original_img_region.shape_attributes['cy'] = cy;
         original_img_region.shape_attributes['rx'] = rx;
         original_img_region.shape_attributes['ry'] = ry;
-        original_img_region.shape_attributes['rr'] = rr;
+        original_img_region.shape_attributes['theta'] = theta;
 
         canvas_img_region.shape_attributes['name'] = 'ellipse';
         canvas_img_region.shape_attributes['cx'] = Math.round( cx / _via_canvas_scale );
         canvas_img_region.shape_attributes['cy'] = Math.round( cy / _via_canvas_scale );
         canvas_img_region.shape_attributes['rx'] = Math.round( rx / _via_canvas_scale );
         canvas_img_region.shape_attributes['ry'] = Math.round( ry / _via_canvas_scale );
-        canvas_img_region.shape_attributes['rr'] = rr;
+        canvas_img_region.shape_attributes['theta'] = theta;
 
         new_region_added = true;
         break;
@@ -2106,42 +2096,32 @@ function _via_reg_canvas_mousemove_handler(e) {
     case VIA_REGION_SHAPE.ELLIPSE:
       var new_rx = attr['rx'];
       var new_ry = attr['ry'];
-      var new_rr = attr['rr'];
+      var new_theta = attr['theta'];
       var dx = Math.abs(attr['cx'] - _via_current_x);
       var dy = Math.abs(attr['cy'] - _via_current_y);
       switch(_via_region_edge[1]) {
       case 5:
         new_ry = Math.sqrt(dx*dx + dy*dy);
-        new_rr = Math.atan2(- (_via_current_x - attr['cx']), (_via_current_y - attr['cy']));
+        new_theta = Math.atan2(- (_via_current_x - attr['cx']), (_via_current_y - attr['cy']));
         break;
 
       case 6:
         new_rx = Math.sqrt(dx*dx + dy*dy);
-        new_rr = Math.atan2((_via_current_y - attr['cy']), (_via_current_x - attr['cx']));
+        new_theta = Math.atan2((_via_current_y - attr['cy']), (_via_current_x - attr['cx']));
         break;
 
       default:
         new_rx = dx;
         new_ry = dy;
-        new_rr = 0;
+        new_theta = 0;
         break;
       }
-
-      // if (Math.abs(new_rr) > Math.PI / 4) {
-      //   // swap values
-      //   new_ry = [new_rx, new_rx = new_ry][0];
-      //   if (new_rr < 0) {
-      //     new_rr += Math.PI / 2;
-      //   } else {
-      //     new_rr -= Math.PI / 2;
-      //   }
-      // }
 
       _via_draw_ellipse_region(attr['cx'],
                                attr['cy'],
                                new_rx,
                                new_ry,
-                               new_rr,
+                               new_theta,
                                true);
       if ( rf != null && _via_is_region_info_visible ) {
         rf.innerHTML +=  ',' + ' X-radius:' + new_rx + ',' + ' Y-radius:' + new_ry;
@@ -2211,7 +2191,7 @@ function _via_reg_canvas_mousemove_handler(e) {
                                attr['cy'] + move_y,
                                attr['rx'],
                                attr['ry'],
-                               attr['rr'],
+                               attr['theta'],
                                true);
       // display the current region info
       if ( rf != null && _via_is_region_info_visible ) {
@@ -2460,7 +2440,7 @@ function draw_all_regions() {
                                attr['cy'],
                                attr['rx'],
                                attr['ry'],
-                               attr['rr'],
+                               attr['theta'],
                                is_selected);
       break;
 
@@ -2821,7 +2801,7 @@ function get_region_bounding_box(region) {
     break;
 
   case 'ellipse':
-    let radians = d['rr'];
+    let radians = d['theta'];
     let radians90 = radians + Math.PI / 2;
     let ux = d['rx'] * Math.cos(radians);
     let uy = d['rx'] * Math.sin(radians);
@@ -2932,7 +2912,7 @@ function is_inside_this_region(px, py, region_id) {
                                attr['cy'],
                                attr['rx'],
                                attr['ry'],
-                               attr['rr'],
+                               attr['theta'],
                                px, py);
     break;
 
@@ -3070,7 +3050,7 @@ function is_on_region_corner(px, py) {
                                   attr['cy'],
                                   attr['rx'],
                                   attr['ry'],
-                                  attr['rr'],
+                                  attr['theta'],
                                   px, py);
       break;
 
@@ -5761,8 +5741,8 @@ function annotation_editor_get_placement(region_id) {
     html_position.left = r['cx'];
     break;
   case 'ellipse':
-    html_position.top = r['cy'] + r['ry'] * Math.cos(r['rr']);
-    html_position.left = r['cx'] - r['ry'] * Math.sin(r['rr']);
+    html_position.top = r['cy'] + r['ry'] * Math.cos(r['theta']);
+    html_position.left = r['cx'] - r['ry'] * Math.sin(r['theta']);
     break;
   case 'polygon':
   case 'polyline':
