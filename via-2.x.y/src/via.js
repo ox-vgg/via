@@ -2249,7 +2249,7 @@ function _via_reg_canvas_mousemove_handler(e) {
 
       // display the current region info
       if ( rf != null && _via_is_region_info_visible ) {
-        rf.innerHTML +=  ',' + ' X-radius:' + dx + ',' + ' Y-radius:' + dy;
+        rf.innerHTML +=  ',' + ' X-radius:' + fixfloat(dx) + ',' + ' Y-radius:' + fixfloat(dy);
       }
       break;
 
@@ -2345,7 +2345,7 @@ function _via_reg_canvas_mousemove_handler(e) {
                                new_theta,
                                true);
       if ( rf != null && _via_is_region_info_visible ) {
-        rf.innerHTML +=  ',' + ' X-radius:' + new_rx + ',' + ' Y-radius:' + new_ry;
+        rf.innerHTML +=  ',' + ' X-radius:' + fixfloat(new_rx) + ',' + ' Y-radius:' + fixfloat(new_ry);
       }
       break;
 
@@ -2363,7 +2363,7 @@ function _via_reg_canvas_mousemove_handler(e) {
                                true,
                                attr['name']);
       if ( rf != null && _via_is_region_info_visible ) {
-        rf.innerHTML +=  ',' + ' N:' + attr['all_points_x'].length;
+        rf.innerHTML +=  ',' + ' Vertices:' + attr['all_points_x'].length;
       }
       break;
     }
@@ -2433,7 +2433,7 @@ function _via_reg_canvas_mousemove_handler(e) {
                                true,
                                attr['name']);
       if ( rf != null && _via_is_region_info_visible ) {
-        rf.innerHTML +=  ',' + ' N:' + attr['all_points_x'].length;
+        rf.innerHTML +=  ',' + ' Vertices:' + attr['all_points_x'].length;
       }
       break;
 
@@ -2462,7 +2462,7 @@ function _via_reg_canvas_mousemove_handler(e) {
     }
 
     if ( rf != null && _via_is_region_info_visible ) {
-      rf.innerHTML +=  ',' + ' N:' + npts;
+      rf.innerHTML +=  ',' + ' Vertices:' + npts;
     }
   }
 }
