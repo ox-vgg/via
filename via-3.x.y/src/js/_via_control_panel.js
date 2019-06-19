@@ -178,7 +178,7 @@ _via_control_panel.prototype._add_project_tools = function() {
 
 _via_control_panel.prototype._page_show_import_export = function(d) {
   var action_map = {
-    'via_page_button_import':this._page_on_action_import.bind(this),
+//    'via_page_button_import':this._page_on_action_import.bind(this),
     'via_page_button_export':this._page_on_action_export.bind(this),
   }
   _via_util_page_show('page_import_export', action_map);

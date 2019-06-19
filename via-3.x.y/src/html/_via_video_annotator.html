@@ -161,6 +161,9 @@
         <symbol id="micon_export">
           <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
         </symbol>
+        <symbol id="micon_import_export">
+          <path d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/>
+        </symbol>
 
         <!-- composed by Abhishek Dutta from existing materian icons, 31 Jan. 2019 -->
         <symbol id="micon_add_image">
@@ -224,6 +227,23 @@
 
     <!-- VIA Information Pages -->
     <div id="via_page_container">
+      <div data-pageid="page_import_export" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
+        <h2>Export</h2>
+        <ul>
+          <li>Select Export Format:
+            <select id="via_page_export_format">
+              <option value="via3_csv">VIA3 (CSV)</option>
+            </select>
+          </li>
+        </ul>
+        <p style="font-size:small;">Note: Import of annotations will be available in one of the future versions of VIA.</p>
+        <div class="controls">
+          <button id="via_page_button_export" onclick="_via_util_page_process_action(event)">Export</button>
+          <button onclick="_via_util_page_hide()">Cancel</button>
+        </div>
+      </div>
+
       <div data-pageid="page_share_not_shared_yet" class="via_page">
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <h2>Sharing this Project</h2>
