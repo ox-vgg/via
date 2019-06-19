@@ -10,11 +10,16 @@ _via_dp[0]['store']['project'] = {
   'pname':   'VIA Debug Project',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
-  'data_format_version': '3.1.0',
+  'data_format_version': '3.1.1',
 };
 _via_dp[0]['store']['config'] = {
   'file': {
-    'path':'/data/datasets/via/via-3.x.y/speaker_diarisation/',
+    'loc_prefix': {
+      '1':'/data/datasets/via/via-3.x.y/speaker_diarisation/',
+      '2':'',
+      '3':'',
+      '4':'',
+    },
   },
   'ui': {
     'file_content_align':'center'
@@ -479,11 +484,17 @@ _via_dp[2]['store']['project'] = {
   'pname':   'Video Annotation Project',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
-  'data_format_version': '3.1.0',
+  'data_format_version': '3.1.1',
+  'vid_list': ['1', '2', '3'],
 };
 _via_dp[2]['store']['config'] = {
   'file': {
-    'path':'/data/datasets/via/via-3.x.y/activity/',
+    'loc_prefix': {
+      '1':'',
+      '2':'',
+      '3':'file:///data/datasets/via/via-3.x.y/activity/',
+      '4':'',
+    },
   },
   'ui': {
     'file_content_align':'center'
@@ -540,7 +551,7 @@ _via_dp[2]['store']['file'] = {
     'fid':1,
     'fname':'Alioli_Wikimedia_Wardtmar.mp4',
     'type':4,
-    'loc':1,
+    'loc':3,
     'src':'Alioli_Wikimedia_Wardtmar.mp4',
   },
   '2':{
@@ -571,7 +582,6 @@ _via_dp[2]['store']['view'] = {
   },
 };
 
-_via_dp[2]['store']['vid_list'] = ['1', '2', '3'];
 _via_dp[2]['store']['metadata'] = {
   '-glfwaaX': {
     'vid': '1',
@@ -727,11 +737,16 @@ _via_dp[3]['store']['project'] = {
   'pname':   'MRI Stenosis',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
-  'data_format_version': '3.1.0',
+  'data_format_version': '3.1.1',
 };
 _via_dp[3]['store']['config'] = {
   'file': {
-    'path':'/data/datasets/via/via-3.x.y/img_pair_annotation/PairwiseStenosis20190507/Images/',
+    'loc_prefix': {
+      '1':'/data/datasets/via/via-3.x.y/img_pair_annotation/PairwiseStenosis20190507/Images/',
+      '2':'',
+      '3':'',
+      '4':'',
+    },
   },
   'ui': {
     'file_content_align':'center'
@@ -859,11 +874,16 @@ _via_dp[4]['store']['project'] = {
   'pname':   'Image Annotation',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
-  'data_format_version': '3.1.0',
+  'data_format_version': '3.1.1',
 };
 _via_dp[4]['store']['config'] = {
   'file': {
-    'path':'/data/datasets/via/via-3.x.y/img_annotation/',
+    'loc_prefix': {
+      '1':'/data/datasets/via/via-3.x.y/img_annotation/',
+      '2':'',
+      '3':'',
+      '4':'',
+    },
   },
   'ui': {
     'file_content_align':'center'

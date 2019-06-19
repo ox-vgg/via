@@ -83,9 +83,8 @@ _via_temporal_segmenter.prototype._init = function() {
     this.file = this.d.store.file[this.fid];
 
     if ( this.d.cache.attribute_group.hasOwnProperty('FILE1_Z2_XY0') ) {
-      var group_aid_list = Object.keys(this.d.cache.attribute_group['FILE1_Z2_XY0']);
-      if ( group_aid_list.length ) {
-        this._group_init( group_aid_list[0]);
+      if ( this.d.cache.attribute_group['FILE1_Z2_XY0'].length ) {
+        this._group_init( this.d.cache.attribute_group['FILE1_Z2_XY0'][0] );
       }
     }
 
@@ -185,7 +184,7 @@ _via_temporal_segmenter.prototype._thumbview_init = function() {
     this.c.appendChild(this.thumbnail_container);
 
     // initialise thumbnail viewer
-    this.thumbnail = new _via_video_thumbnail(this.file, this.d.store.config.file.path);
+    this.thumbnail = new _via_video_thumbnail(this.fid, this.d);
     this.thumbnail.load();
   }
 }
@@ -381,7 +380,8 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
       this.group_aname_select.setAttribute('style', 'width:1em; border:none;');
       this.group_aname_select.setAttribute('tabIndex', '-1')
       this.group_aname_select.addEventListener('change', this._tmetadata_onchange_groupby_aid.bind(this));
-      for ( var aid in this.d.cache.attribute_group['FILE1_Z2_XY0'] ) {
+      for ( var aindex in this.d.cache.attribute_group['FILE1_Z2_XY0'] ) {
+        var aid = this.d.cache.attribute_group['FILE1_Z2_XY0'][aindex];
         var oi = document.createElement('option');
         oi.innerHTML = this.d.store.attribute[aid].aname;
         oi.setAttribute('value', aid);
@@ -589,7 +589,6 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_update = function(tstart) 
 
     t = t + 1;
     tx = tx + this.tmetadata_width_per_sec;
-    //console.log('t='+t + ',tx=' + tx+', dur='+this.m.duration+',endx='+endx);
   }
   if ( t >= this.m.duration ) {
     this.tmetadata_gtimeline_tend = this.m.duration;
@@ -597,8 +596,6 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_update = function(tstart) 
     this.tmetadata_gtimeline_tend = t - 1;
   }
   this.tmetadata_gtimeline_xend = this.tmetadata_gtimeline_xstart + (this.tmetadata_gtimeline_tend - this.tmetadata_gtimeline_tstart) * this.tmetadata_width_per_sec;
-
-  //console.log(this.tmetadata_gtimeline_xstart+':'+this.tmetadata_gtimeline_tstart+' - ' + this.tmetadata_gtimeline_xend + ':' + this.tmetadata_gtimeline_tend);
 
   // asynchronously pull out the metadata in the current group timeline boundary
   this.tmetadata_gtimeline_mid = {};
@@ -632,8 +629,7 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_spatial_mid = functi
   this.smid = {};
   for ( var mindex in this.d.cache.mid_list[this.vid] ) {
     mid = this.d.cache.mid_list[this.vid][mindex];
-    if ( this.d.store.metadata[mid].flg === _VIA_METADATA_FLAG.VISIBLE &&
-         this.d.store.metadata[mid].z.length === 1 &&
+    if ( this.d.store.metadata[mid].z.length === 1 &&
          this.d.store.metadata[mid].xy.length !== 0
        ) {
       time = this.d.store.metadata[mid].z[0].toString();
@@ -648,14 +644,40 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_spatial_mid = functi
   }
 }
 
+_via_temporal_segmenter.prototype._tmetadata_boundary_add_spatial_mid = function(mid) {
+  if ( this.d.store.metadata[mid].z.length === 1 &&
+       this.d.store.metadata[mid].xy.length !== 0
+     ) {
+    var time = this.d.store.metadata[mid].z[0].toString();
+    if ( time >= this.tmetadata_gtimeline_tstart &&
+         time <= this.tmetadata_gtimeline_tend ) {
+      if ( ! this.smid.hasOwnProperty(time) ) {
+        this.smid[time] = [];
+      }
+      this.smid[time].push(mid);
+    }
+  }
+}
+
+_via_temporal_segmenter.prototype._tmetadata_boundary_del_spatial_mid = function(mid) {
+  for ( var time in this.smid ) {
+    if ( this.smid[time].length ) {
+      var mindex = this.smid[time].indexOf(mid);
+      if ( mindex !== -1 ) {
+        this.smid[time].splice(mindex, 1);
+        return;
+      }
+    }
+  }
+}
+
 _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_gid_mid = function(gid) {
   this.tmetadata_gtimeline_mid[gid] = [];
   var mid_list = [];
   var mindex, mid, t0, t1;
   for ( mindex in this.group[gid] ) {
     mid = this.group[gid][mindex];
-    if ( this.d.store.metadata[mid].flg === _VIA_METADATA_FLAG.VISIBLE &&
-         this.d.store.metadata[mid].z.length === 2 &&
+    if ( this.d.store.metadata[mid].z.length === 2 &&
          this.d.store.metadata[mid].xy.length === 0
        ) {
       t0 = this.d.store.metadata[mid].z[0];
@@ -776,8 +798,10 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_draw = function() {
     this.gtimelinectx.fillStyle = 'black';
     this.gtimelinectx.beginPath();
     for ( var time in this.smid ) {
-      var smarkx = this._tmetadata_gtimeline_time2canvas( parseFloat(time) );
-      this.gtimelinectx.arc(smarkx, this.linehn[2] + 4, 4, 0, 2*Math.PI);
+      if ( this.smid[time].length ) {
+        var smarkx = this._tmetadata_gtimeline_time2canvas( parseFloat(time) );
+        this.gtimelinectx.arc(smarkx, this.linehn[2] + 4, 4, 0, 2*Math.PI);
+      }
     }
     this.gtimelinectx.fill();
   }
@@ -1571,7 +1595,7 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     return;
   }
 
-  if ( e.key === 'a' || e.key === 'A' ) {
+  if ( e.key === 'a' || e.key === 'A' && !e.ctrlKey ) {
     e.preventDefault();
     var t = this.m.currentTime;
     if ( e.key === 'a' ) {
@@ -1759,8 +1783,7 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
   var mid, avalue;
   for ( var mindex in this.d.cache.mid_list[this.vid] ) {
     mid = this.d.cache.mid_list[this.vid][mindex];
-    if ( this.d.store.metadata[mid].flg === _VIA_METADATA_FLAG.VISIBLE &&
-         this.d.store.metadata[mid].z.length >= 2 &&
+    if ( this.d.store.metadata[mid].z.length >= 2 &&
          this.d.store.metadata[mid].xy.length === 0
        ) {
       if ( this.d.store.metadata[mid].av.hasOwnProperty(this.groupby_aid) ) {
@@ -1959,17 +1982,22 @@ _via_temporal_segmenter.prototype._vtimeline_playbackrate2str = function(t) {
 //
 // external events
 //
-_via_temporal_segmenter.prototype._on_event_metadata_del = function(fid, mid) {
+_via_temporal_segmenter.prototype._on_event_metadata_del = function(vid, mid) {
   _via_util_msg_show('Metadata deleted');
 }
 
-_via_temporal_segmenter.prototype._on_event_metadata_add = function(fid, mid) {
-  this._group_gid_add_mid(this.selected_gid, mid); // add at correct location
-  this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
-  _via_util_msg_show('Metadata added');
+_via_temporal_segmenter.prototype._on_event_metadata_add = function(vid, mid) {
+  if ( this.vid === vid &&
+       this.d.store.metadata[mid].z.length === 2 &&
+       this.d.store.metadata[mid].xy.length === 0
+     ) {
+    this._group_gid_add_mid(this.selected_gid, mid); // add at correct location
+    this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
+    _via_util_msg_show('Metadata added');
+  }
 }
 
-_via_temporal_segmenter.prototype._on_event_metadata_update = function(fid, mid) {
+_via_temporal_segmenter.prototype._on_event_metadata_update = function(vid, mid) {
   _via_util_msg_show('Metadata updated');
 }
 
@@ -2020,7 +2048,7 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   keyboard_shortcut.setAttribute('class', 'text_button');
   keyboard_shortcut.innerHTML = 'Keyboard Shortcuts';
   keyboard_shortcut.addEventListener('click', function() {
-    _via_util_show_info_page('page_keyboard_shortcut');
+    _via_util_page_show('page_keyboard_shortcut');
   });
 
   this.toolbar_container.appendChild(gid_list_update_container);

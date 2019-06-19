@@ -223,9 +223,51 @@
     </svg>
 
     <!-- VIA Information Pages -->
-    <div id="via_info_page_container">
-            <div data-pageid="page_demo_instructions" class="info_page" style="height:40ch;">
-        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
+    <div id="via_page_container">
+      <div data-pageid="page_share_not_shared_yet" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
+        <h2>Sharing this Project</h2>
+        <p id="page_share_info_not_shared_yet">This project has not been shared yet. Click <svg class="svg_button" onclick="" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Share this project and your updates with others</title></svg> button in the toolbar to share this project with others.</p>
+        <div class="controls">
+          <button onclick="_via_util_page_hide()">Close</button>
+        </div>
+      </div>
+
+      <div data-pageid="page_share_already_shared" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
+        <h2>Sharing this Project</h2>
+        <p>This project has already been shared. To contribute to this project, other users have to follow these steps:
+          <ol>
+            <li>Open the latest version of VIA application (only available in version 3)</li>
+            <li>Click <svg class="svg_button" onclick="" viewbox="0 0 24 24"><use xlink:href="#micon_download"></use><title>Share this project and your updates with others</title></svg> button in the top toolbar.</li>
+            <li>Enter the following project-id: <span id="via_page_share_project_id"></span></li>
+          </ol>
+        </p>
+        <div class="controls">
+          <button onclick="_via_util_page_hide()">Close</button>
+        </div>
+      </div>
+
+      <div data-pageid="page_share_open_shared" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
+        <h2>Open a Shared VIA Project</h2>
+        <p>You must have received a VIA project-id (e.g. via81d7a76a8f1d4119abd4766150cdb417) when someone shared a VIA project with you. Enter this project-id below to open the shared project.</p>
+        <table>
+          <tr>
+            <td><label for="via_page_input_pid">VIA Project Id</label></td>
+            <td>
+              <input style="width:25em;" type="text" value="via81d7a76a8f1d4119abd4766150cdb417" placeholder="e.g. via81d7a76a8f1d4119abd4766150cdb417" id="via_page_input_pid">
+            </td>
+          </tr>
+        </table>
+        <div class="controls">
+          <button id="via_page_button_open_shared" onclick="_via_util_page_process_action(event)">Open Shared Project</button>
+          <button onclick="_via_util_page_hide()">Cancel</button>
+        </div>
+      </div>
+
+      <div data-pageid="page_demo_instructions" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <h1>Some Quick Tips</h1>
         <ul>
           <li>Press <span class="key">Space</span> key at any time to play or pause the audio or video.</li>
@@ -236,8 +278,8 @@
         </ul>
       </div>
 
-      <div data-pageid="page_keyboard_shortcut" class="info_page">
-        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
+      <div data-pageid="page_keyboard_shortcut" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <h1>Keyboard Shortcuts</h1>
         <h3>General</h3>
         <table>
@@ -292,8 +334,8 @@
         <p>&nbsp;</p>
       </div>
 
-      <div data-pageid="page_about" class="info_page">
-        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
+      <div data-pageid="page_about" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <h2>VGG Image Annotator (VIA)</h2>
         <p>Version: <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">__VIA_VERSION__</a></p>
         <p>VGG Image Annotator (VIA) is a simple and standalone manual annotation tool
@@ -350,7 +392,7 @@
         </pre>
         <p>Copyright &copy; 2016-2019, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>, Visual Geometry Group, Oxford University.</p>
       </div>
-    </div>
+    </div> <!-- end of page container -->
 
     <!-- used by _via_view_annotator._show_start_info() -->
     <div id="via_start_info_content" class="hide">
@@ -376,6 +418,8 @@
     <script src="../js/_via_attribute.js"></script>
     <script src="../js/_via_view.js"></script>
     <script src="../js/_via_data.js"></script>
+    <script src="../js/_via_share_couchdb.js"></script>
+    <script src="../js/_via_import_export.js"></script>
 
     <script src="../js/_via_video_thumbnail.js"></script>
     <!--DISABLED EXPERIMENTAL FEATURE<script src="../js/_via_audio_spectrum.js"></script>-->
@@ -391,6 +435,7 @@
     <!-- DEMO SCRIPT AUTOMATICALLY INSERTED BY VIA PACKER SCRIPT -->
 
     <script>
+      //__ENABLED_BY_PACK_SCRIPT__var _VIA_DEBUG = false;
       var via_container = document.getElementById('via_container');
       var via = new _via(via_container);
       //__ENABLED_BY_DEMO_PACK_SCRIPT___via_util_show_info_page('page_demo_instructions');

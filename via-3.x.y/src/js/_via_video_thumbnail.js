@@ -9,16 +9,16 @@
 
 'use strict';
 
-function _via_video_thumbnail(file, path) {
-  this.file = file;
-  this.file_path = path;
+function _via_video_thumbnail(fid, data) {
+  this.fid = fid;
+  this.d = data;
   this.fwidth = 160;
   this.file_object_url = undefined; // file contents are in this the object url
   this.frames = {}; // indexed by second
 
-  if ( this.file.type !== _VIA_FILE_TYPE.VIDEO ) {
+  if ( this.d.store.file[this.fid].type !== _VIA_FILE_TYPE.VIDEO ) {
     console.log('_via_video_thumbnail() : file type must be ' +
-                _VIA_FILE_TYPE.VIDEO + ' (got ' + this.file.type + ')');
+                _VIA_FILE_TYPE.VIDEO + ' (got ' + this.d.store.file[this.fid].type + ')');
     return;
   }
 
@@ -38,49 +38,22 @@ function _via_video_thumbnail(file, path) {
 _via_video_thumbnail.prototype._init = function() {
 }
 
-// WARNING: not invoking this method will result in
-// resources being allocated to things that are no longer needed
-_via_video_thumbnail.prototype._on_event_destroy = function() {
-  if ( typeof(this.file_object_url) !== 'undefined' ) {
-    console.log('_via_video_thumbnail(): revoking object uri for fid=' + this.file.fid);
-    URL.revokeObjectURL(this.file_object_url);
-  }
-}
-
 _via_video_thumbnail.prototype.load = function() {
   return new Promise( function(ok_callback, err_callback) {
-    this._file_read().then( function(file_src_ok) {
-      this._load_video(file_src_ok).then( function() {
-        this.video.currentTime = 0.0;
-        ok_callback();
-      }.bind(this), function(load_err) {
-        console.log(load_err);
-        err_callback();
-      }.bind(this));
-    }.bind(this), function(file_src_err) {
-      console.log(file_src_err);
+    this._load_video().then( function() {
+      this.video.currentTime = 0.0;
+      ok_callback();
+    }.bind(this), function(load_err) {
+      console.log(load_err);
       err_callback();
     }.bind(this));
   }.bind(this));
 }
 
-_via_video_thumbnail.prototype._file_read = function() {
-  return new Promise( function(ok_callback, err_callback) {
-    if ( this.file.src instanceof File ) {
-      // we keep a reference of file object URL so that we can revoke it when not needed
-      // WARNING: ensure that this._destroy_file_object_url() gets called when "this" not needed
-      this.file_object_url = URL.createObjectURL(this.file.src);
-      ok_callback(this.file_object_url);
-    } else {
-      ok_callback( this.d.store.config.file.loc_prefix[this.file.loc] + this.file.src );
-    }
-  }.bind(this));
-}
-
-_via_video_thumbnail.prototype._load_video = function(src) {
+_via_video_thumbnail.prototype._load_video = function() {
   return new Promise( function(ok_callback, err_callback) {
     this.video = document.createElement('video');
-    this.video.setAttribute('src', src);
+    this.video.setAttribute('src', this.d.file_get_src(this.fid));
     //this.video.setAttribute('autoplay', false);
     //this.video.setAttribute('loop', false);
     //this.video.setAttribute('controls', '');
@@ -88,7 +61,7 @@ _via_video_thumbnail.prototype._load_video = function(src) {
     //this.video.setAttribute('crossorigin', 'anonymous');
 
     this.video.addEventListener('loadeddata', function() {
-      this._on_event_destroy(); // no longer needed
+      this.d.file_free_resources(this.fid);
       var aspect_ratio = this.video.videoHeight / this.video.videoWidth;
       this.fheight = Math.floor(this.fwidth * aspect_ratio);
       this.thumbnail_canvas.width = this.fwidth;
@@ -97,10 +70,12 @@ _via_video_thumbnail.prototype._load_video = function(src) {
       ok_callback();
     }.bind(this));
     this.video.addEventListener('error', function() {
+      this.d.file_free_resources(this.fid);
       console.log('_via_video_thumnnail._load_video() error')
       err_callback('error');
     }.bind(this));
     this.video.addEventListener('abort', function() {
+      this.d.file_free_resources(this.fid);
       console.log('_via_video_thumbnail._load_video() abort')
       err_callback('abort');
     }.bind(this));

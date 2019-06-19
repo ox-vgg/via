@@ -15,16 +15,14 @@ function _via(via_container) {
 
   this.d  = new _via_data();
 
-  // debug code (disabled for release)
   if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
-    this.d.store = _via_dp[0]['store'];
-
-    this.d._cache_update();
-    setTimeout( function() {
-      this.va.view_show('1');
-      //this.editor.show();
-      this.cp._page_show_import_export();
-    }.bind(this), 200);
+    if ( typeof(_via_share) === 'function' ) {
+      var conf = { 'COUCHDB_URI': _VIA_REMOTE_STORE,
+                   'PROJECT_PREFIX': 'projects/',
+                   'METADATA_PREFIX': 'metadata/',
+                 };
+      this.s  = new _via_share(this.d, conf);
+    }
   }
 
   //// define the html containers
@@ -61,7 +59,7 @@ function _via(via_container) {
   this.vm._init();
 
   // control panel shows the view_manager_container
-  this.cp = new _via_control_panel(this.control_panel_container, this.d, this.va, this.vm, this.ie);
+  this.cp = new _via_control_panel(this.control_panel_container, this);
 
   // event handlers for buttons in the control panel
   this.cp.on_event('region_shape', function(data, event_payload) {
@@ -100,6 +98,17 @@ function _via(via_container) {
         err_callback(err);
       }
     }.bind(this));
+  } else {
+    // debug code (disabled for release)
+    if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
+      this.d.project_load_json(_via_dp[2]['store']);
+      setTimeout( function() {
+        //this.va.view_show('1');
+        //this.editor.show();
+        //this.cp._page_show_import_export();
+        //this.cp._share_show_info();
+      }.bind(this), 200);
+    }
   }
 }
 
@@ -117,4 +126,3 @@ _via.prototype._keydown_handler = function(e) {
     this.va._on_event_keydown(e);
   }
 }
-

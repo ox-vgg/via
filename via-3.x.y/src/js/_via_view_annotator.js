@@ -162,7 +162,8 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
                                                          );
     this.temporal_segmenter.on_event('edit_frame_regions', this.file_annotator[0][0]._on_event_edit_frame_regions.bind(this.file_annotator[0][0]));
   }.bind(this), function(err) {
-    _via_util_msg_show('Failed to load video!', true);
+    this.c.removeChild(this.view_metadata_container);
+    this.c.setAttribute('style', 'grid-template-rows:1fr;')
   }.bind(this));
 }
 
@@ -352,11 +353,7 @@ _via_view_annotator.prototype.set_region_draw_shape = function(shape) {
 // cleanup
 //
 _via_view_annotator.prototype._view_clear_all_file_annotator = function() {
-  for ( var i = 0; i < this.file_annotator.length; ++i ) {
-    for ( var j = 0; j < this.file_annotator[i].length; ++j ) {
-      this.file_annotator[i][j]._destroy_file_object_url();
-    }
-  }
+  // cleanup resources acquired by each of this.file_annotator[i][j]
 }
 
 //
@@ -533,6 +530,16 @@ _via_view_annotator.prototype._on_event_keydown = function(e) {
       }
       return;
     }
+  }
+
+  if ( (this.view_mode === _VIA_VIEW_MODE.IMAGE1 ||
+        this.view_mode === _VIA_VIEW_MODE.VIDEO1) &&
+       this.file_annotator[0][0].selected_mid_list.length
+     ) {
+    // a spatial region has been selected
+    // @todo
+    this.file_annotator[0][0]._rinput_keydown_handler(e);
+    return;
   }
 
   if ( this.temporal_segmenter ) {

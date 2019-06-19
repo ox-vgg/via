@@ -11,6 +11,10 @@
 
 function _via_data() {
   this.store = this._init_default_project();
+  this.file_ref = {};        // ref. to files selected using browser's file selector
+  this.file_object_uri = {}; // WARNING: cleanup using file_object_url[fid]._destroy_file_object_url()
+
+  this.DATA_FORMAT_VERSION = '3.1.1';
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -22,14 +26,16 @@ _via_data.prototype._init_default_project = function() {
   var p = {};
   p['project'] = {
     'pid': _via_util_gen_project_id(),
-    'pname':'Default Project',
-    'data_format_version':'3.1.0',
+    'rev': 1,
+    'pname': 'Default Project',
+    'data_format_version': this.DATA_FORMAT_VERSION,
     'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
     'created': Date.now(),
+    'vid_list': [],
   }
   p['config'] = {
     'file': {
-      'loc_prefix': { '1':'', '2':'', '3':'', '4':'' }, // see _via_file._VIA_FILE_LOC
+      'loc_prefix': { '1':'', '2':'', '3':'', '4':'' }, // constants defined in _via_file._VIA_FILE_LOC
     },
     'ui': {
       'file_content_align':'center',
@@ -48,7 +54,6 @@ _via_data.prototype._init_default_project = function() {
   p['file'] = {};
   p['metadata'] = {};
   p['view'] = {};
-  p['vid_list'] = [];
 
   this.cache = {};
   this.cache['mid_list'] = {};
@@ -210,6 +215,66 @@ _via_data.prototype.file_add = function(name, type, loc, src) {
       err_callback(ex);
     }
   }.bind(this));
+}
+
+
+_via_data.prototype.file_update = function(fid, name, value) {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      if ( this.store.file.hasOwnProperty(fid) ) {
+        if ( name === 'src' ) {
+          if ( this.store.file[fid].loc === _VIA_FILE_LOC.LOCAL ) {
+            this.file_ref[fid] = value;
+            this.store.file[fid]['src'] = '';
+          } else {
+            this.store.file[fid]['src'] = value;
+          }
+        } else {
+          if ( name === 'loc_prefix' ) {
+            this.store.config.file.loc_prefix[this.store.file[fid].loc] = value;
+          } else {
+            this.store.file[fid][name] = value;
+          }
+        }
+        this.emit_event( 'file_update', { 'fid':fid } );
+        ok_callback(fid);
+      } else {
+        err_callback('fid=' + fid + ' does not exist!');
+      }
+    }
+    catch(ex) {
+      err_callback(ex);
+    }
+  }.bind(this));
+}
+
+_via_data.prototype.file_get_src = function(fid) {
+  if ( this.store.file[fid].loc === _VIA_FILE_LOC.LOCAL ) {
+    this.file_free_resources(fid);
+    if ( this.file_ref.hasOwnProperty(fid) ) {
+      this.file_object_uri[fid] = URL.createObjectURL( this.file_ref[fid] );
+    } else {
+      this.file_object_uri[fid] = '';
+    }
+    return this.file_object_uri[fid];
+  } else {
+    return this.store.config.file.loc_prefix[ this.store.file[fid].loc ] + this.store.file[fid].src;
+  }
+}
+
+_via_data.prototype.file_get_uri = function(fid) {
+  if ( this.store.file[fid].loc === _VIA_FILE_LOC.LOCAL ) {
+    return this.store.file[fid].fname;
+  } else {
+    return this.store.config.file.loc_prefix[ this.store.file[fid].loc ] + this.store.file[fid].src;
+  }
+}
+
+_via_data.prototype.file_free_resources = function(fid) {
+  if ( this.file_object_uri.hasOwnProperty(fid) ) {
+    URL.revokeObjectURL( this.file_object_uri[fid] );
+    delete this.file_object_uri[fid];
+  }
 }
 
 //
@@ -391,9 +456,8 @@ _via_data.prototype.metadata_delete = function(vid, mid) {
         return;
       }
 
-      var mindex = this.cache.mid_list[vid].indexOf(mid);
-      this.cache.mid_list[vid].splice(mindex, 1);
-      this.store.metadata[mid].flg = _VIA_METADATA_FLAG.DELETED;
+      this._cache_mid_list_del(vid, [mid]);
+      delete this.store.metadata[mid];
       this.emit_event( 'metadata_delete', { 'vid':vid, 'mid':mid } );
       ok_callback({'vid':vid, 'mid':mid});
     }
@@ -412,13 +476,13 @@ _via_data.prototype.metadata_delete_bulk = function(vid, mid_list, emit) {
         return;
       }
       var deleted_mid_list = [];
-      var mid;
+      var mid, cindex;
       for ( var mindex in mid_list ) {
         mid = mid_list[mindex];
-        delete this.cache.mid_list[vid][mid];
-        this.store.metadata[mid].flg = _VIA_METADATA_FLAG.DELETED;
+        delete this.store.metadata[mid];
         deleted_mid_list.push(mid);
       }
+      this._cache_mid_list_del(vid, deleted_mid_list);
       if ( typeof(emit) !== 'undefined' &&
            emit === true ) {
         this.emit_event( 'metadata_delete_bulk', { 'vid':vid, 'mid_list':deleted_mid_list } );
@@ -452,7 +516,7 @@ _via_data.prototype.view_add = function(fid_list) {
     try {
       var vid = this._view_get_new_id();
       this.store.view[vid] = new _via_view(fid_list);
-      this.store.vid_list.push(vid);
+      this.store.project.vid_list.push(vid);
       this.emit_event( 'view_add', { 'vid':vid } );
       ok_callback(vid);
     }
@@ -480,6 +544,10 @@ _via_data.prototype.view_bulk_add_from_filelist = function(filelist) {
       var added_vid_list = [];
       for ( var i = 0; i < filelist.length; ++i ) {
         var fid = this._file_get_new_id();
+        if ( filelist[i].loc === _VIA_FILE_LOC.LOCAL ) {
+          this.file_ref[fid] = filelist[i].src; // local file ref. stored separately
+          filelist[i].src = '';                 // no need to store duplicate of file ref.
+        }
         this.store.file[fid] = new _via_file(fid,
                                              filelist[i].fname,
                                              filelist[i].type,
@@ -488,7 +556,7 @@ _via_data.prototype.view_bulk_add_from_filelist = function(filelist) {
 
         var vid = this._view_get_new_id();
         this.store.view[vid] = new _via_view( [ fid ] ); // view with single file
-        this.store.vid_list.push(vid);
+        this.store.project.vid_list.push(vid);
 
         added_fid_list.push(fid);
         added_vid_list.push(vid);
@@ -504,13 +572,13 @@ _via_data.prototype.view_bulk_add_from_filelist = function(filelist) {
 }
 
 _via_data.prototype.view_del = function(vid) {
-    return new Promise( function(ok_callback, err_callback) {
+  return new Promise( function(ok_callback, err_callback) {
     try {
       if ( ! this.store.view.hasOwnProperty(vid) ) {
         err_callback();
         return;
       }
-      var vindex = this.store.vid_list.indexOf(vid);
+      var vindex = this.store.project.vid_list.indexOf(vid);
       if ( vindex === -1 ) {
         err_callback();
         return;
@@ -531,9 +599,9 @@ _via_data.prototype.view_del = function(vid) {
       // delete view
       delete this.store.view[vid];
       console.log('vid=' + vid + ', at vindex=' + vindex);
-      console.log('before: ' + JSON.stringify(this.store.vid_list))
-      this.store.vid_list.splice(vindex, 1);
-      console.log('after: ' + JSON.stringify(this.store.vid_list))
+      console.log('before: ' + JSON.stringify(this.store.project.vid_list))
+      this.store.project.vid_list.splice(vindex, 1);
+      console.log('after: ' + JSON.stringify(this.store.project.vid_list))
 
       this._cache_update_mid_list();
       this.emit_event( 'view_del', {'vid':vid, 'vindex':vindex} );
@@ -554,6 +622,17 @@ _via_data.prototype._cache_update = function() {
   this._cache_update_attribute_group();
 }
 
+_via_data.prototype._cache_mid_list_del = function(vid, del_mid_list) {
+  var mid;
+  for ( var mindex in del_mid_list ) {
+    mid = del_mid_list[mindex];
+    var cindex = this.cache.mid_list[vid].indexOf(mid);
+    if ( cindex !== -1 ) {
+      this.cache.mid_list[vid].splice(cindex, 1);
+    }
+  }
+}
+
 _via_data.prototype._cache_update_mid_list = function() {
   var vid;
   this.cache.mid_list = {};
@@ -562,9 +641,7 @@ _via_data.prototype._cache_update_mid_list = function() {
     if ( ! this.cache.mid_list.hasOwnProperty(vid) ) {
       this.cache.mid_list[vid] = [];
     }
-    if ( ! (this.store.metadata[mid].flg & _VIA_METADATA_FLAG.DELETED) ) {
-      this.cache.mid_list[vid].push(mid);
-    }
+    this.cache.mid_list[vid].push(mid);
   }
 }
 
@@ -607,7 +684,8 @@ _via_data.prototype.project_save = function() {
 _via_data.prototype.project_load = function(project_data_str) {
   return new Promise( function(ok_callback, err_callback) {
     try {
-      this.store = JSON.parse(project_data_str);
+      var project_data = JSON.parse(project_data_str);
+      this.store = this.project_store_apply_version_fix(project_data);
       this._cache_update();
       this.emit_event( 'project_loaded', { 'pid':this.store.project.pid } );
       console.log('project load done');
@@ -627,7 +705,8 @@ _via_data.prototype.project_load = function(project_data_str) {
 _via_data.prototype.project_load_json = function(project_json_data) {
   return new Promise( function(ok_callback, err_callback) {
     try {
-      this.store = Object.assign({}, project_json_data);
+      var project_data = Object.assign({}, project_json_data);
+      this.store = this.project_store_apply_version_fix(project_data);
       this._cache_update();
       this.emit_event( 'project_loaded', { 'pid':this.store.project.pid } );
       ok_callback();
@@ -641,4 +720,22 @@ _via_data.prototype.project_load_json = function(project_json_data) {
       err_callback();
     }
   }.bind(this));
+}
+
+_via_data.prototype.project_store_apply_version_fix = function(d) {
+  switch(d['project']['data_format_version']) {
+  case '3.1.0':
+    var local_prefix = d['config']['file']['path'];
+    delete d['config']['file']['path'];
+    d['config']['file']['loc_prefix'] = { '1':'', '2':'', '3':'', '4':'' };
+    d['config']['file']['loc_prefix'][_VIA_FILE_LOC.LOCAL] = local_prefix;
+    d['project']['data_format_version'] = this.DATA_FORMAT_VERSION;
+    d['project']['vid_list'] = d['vid_list'];
+    delete d['vid_list'];
+    return d;
+    break;
+  default:
+    return d;
+    break;
+  }
 }

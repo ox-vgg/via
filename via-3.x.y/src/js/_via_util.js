@@ -381,13 +381,36 @@ function _via_util_remote_get(uri) {
     xhr.addEventListener('load', function() {
       ok_callback(xhr.responseText);
     });
-    xhr.addEventListener('timeout', function(e) {   
+    xhr.addEventListener('timeout', function(e) {
       err_callback(e);
     });
     xhr.addEventListener('error', function(e) {
       err_callback(e)
     });
     xhr.open('GET', uri);
+    xhr.send();
+  });
+}
+
+function _via_util_remote_head(uri) {
+  return new Promise( function(ok_callback, err_callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener('load', function() {
+      switch(xhr.statusText) {
+        case 'OK':
+          ok_callback(xhr.responseText);
+          break;
+        default:
+          err_callback(xhr.statusText);
+      }
+    });
+    xhr.addEventListener('timeout', function(e) {
+      err_callback(e);
+    });
+    xhr.addEventListener('error', function(e) {
+      err_callback(e)
+    });
+    xhr.open('HEAD', uri);
     xhr.send();
   });
 }
@@ -440,8 +463,7 @@ function _via_util_uid6() {
   for ( var i = n - 12; i < n; i = i + 2 ) {
     uuid_suffix_str += String.fromCharCode( parseInt(uuid.substr(i, 2), 16) );
   }
-  var uid = btoa(uuid_suffix_str).replace('/', '-');
-  return uid;
+  return btoa(uuid_suffix_str).replace(/[-+/_]/gi, 'X');
 }
 
 function _via_util_array_eq(a, b) {
@@ -529,4 +551,3 @@ function _via_util_merge_object(obj1, obj2) {
   Object.assign(merged_obj, obj2);
   return merged_obj;
 }
-

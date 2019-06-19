@@ -81,13 +81,13 @@ _via_view_manager.prototype._on_view_selector_change = function(e) {
 _via_view_manager.prototype._on_next_view = function() {
   if ( this.view_selector.options.length ) {
     var vid = this.view_selector.options[this.view_selector.selectedIndex].value;
-    var vindex = this.d.store.vid_list.indexOf(vid);
+    var vindex = this.d.store.project.vid_list.indexOf(vid);
     if ( vindex !== -1 ) {
       var next_vindex = vindex + 1;
-      if ( next_vindex >= this.d.store.vid_list.length ) {
+      if ( next_vindex >= this.d.store.project.vid_list.length ) {
         next_vindex = 0;
       }
-      this.va.view_show( this.d.store.vid_list[next_vindex] );
+      this.va.view_show( this.d.store.project.vid_list[next_vindex] );
     } else {
       _via_util_msg_show('Cannot move to next view!');
     }
@@ -97,13 +97,13 @@ _via_view_manager.prototype._on_next_view = function() {
 _via_view_manager.prototype._on_prev_view = function() {
   if ( this.view_selector.options.length ) {
     var vid = this.view_selector.options[this.view_selector.selectedIndex].value;
-    var vindex = this.d.store.vid_list.indexOf(vid);
+    var vindex = this.d.store.project.vid_list.indexOf(vid);
     if ( vindex !== -1 ) {
       var prev_vindex = vindex - 1;
       if ( prev_vindex < 0 ) {
-        prev_vindex = this.d.store.vid_list.length - 1;
+        prev_vindex = this.d.store.project.vid_list.length - 1;
       }
-      this.va.view_show( this.d.store.vid_list[prev_vindex] );
+      this.va.view_show( this.d.store.project.vid_list[prev_vindex] );
     } else {
       _via_util_msg_show('Cannot move to next view!');
     }
@@ -135,9 +135,9 @@ _via_view_manager.prototype._on_event_view_prev = function(data, event_payload) 
 _via_view_manager.prototype._on_event_project_loaded = function(data, event_payload) {
   this._init_ui_elements();
   this._view_selector_update();
-  if ( this.d.store.vid_list.length ) {
+  if ( this.d.store.project.vid_list.length ) {
     // show first view by default
-    this.va.view_show( this.d.store.vid_list[0] );
+    this.va.view_show( this.d.store.project.vid_list[0] );
   }
 }
 
@@ -188,8 +188,8 @@ _via_view_manager.prototype._view_selector_update_regex = function(regex) {
     var existing_vid = this.view_selector.options[this.view_selector.selectedIndex].value;
     this._view_selector_clear();
     var vid, fid;
-    for ( var vindex in this.d.store.vid_list ) {
-      vid = this.d.store.vid_list[vindex];
+    for ( var vindex in this.d.store.project.vid_list ) {
+      vid = this.d.store.project.vid_list[vindex];
       for ( var findex in this.d.store.view[vid].fid_list ) {
         fid = this.d.store.view[vid].fid_list[findex];
         if ( this.d.store.file[fid].fname.match(regex) !== null ) {
@@ -220,8 +220,8 @@ _via_view_manager.prototype._view_selector_update_showall = function() {
   this._view_selector_clear();
 
   var vid;
-  for ( var vindex in this.d.store.vid_list ) {
-    vid = this.d.store.vid_list[vindex];
+  for ( var vindex in this.d.store.project.vid_list ) {
+    vid = this.d.store.project.vid_list[vindex];
     this.view_selector.appendChild( this._view_selector_option_html(vindex, vid) );
     this.view_selector_vid_list.push(vid);
   }
@@ -334,9 +334,7 @@ _via_view_manager.prototype._on_add_media_bulk_file_load = function(file_data) {
 }
 
 _via_view_manager.prototype._on_del_view = function() {
-  console.log('del vid=' + this.va.vid + ', var type=' + typeof(this.va.vid));
   this.d.view_del(this.va.vid).then( function(ok) {
-    console.log(ok);
   }.bind(this), function(err) {
     console.warn(err);
   }.bind(this));
@@ -345,11 +343,11 @@ _via_view_manager.prototype._on_del_view = function() {
 _via_view_manager.prototype._on_event_view_del = function(data, event_payload) {
   this._view_selector_update();
   var vindex = event_payload.vindex;
-  if ( this.d.store.vid_list.length ) {
-    if ( vindex < this.d.store.vid_list.length ) {
-      this.va.view_show( this.d.store.vid_list[vindex] );
+  if ( this.d.store.project.vid_list.length ) {
+    if ( vindex < this.d.store.project.vid_list.length ) {
+      this.va.view_show( this.d.store.project.vid_list[vindex] );
     } else {
-      this.va.view_show( this.d.store.vid_list[ this.d.store.vid_list.length - 1 ] );
+      this.va.view_show( this.d.store.project.vid_list[ this.d.store.vid_list.length - 1 ] );
     }
   } else {
     this.va._init();

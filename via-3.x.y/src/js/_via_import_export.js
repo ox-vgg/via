@@ -53,7 +53,7 @@ _via_import_export.prototype.import_from_coco = function(json_str) {
       // add a view for each file
       var vid = fid;
       p.view[vid] = new _via_view( [ fid ] ); // view with single file
-      p.vid_list.push(vid);
+      p.project.vid_list.push(vid);
     }
 
     // add attributes
@@ -142,8 +142,8 @@ _via_import_export.prototype.export_to_via3_csv = function() {
     // build file_list for each view_id
     var vid_filesrc_str_list = {};
     var vid, fid;
-    for ( var vindex in this.d.store.vid_list ) {
-      vid = this.d.store.vid_list[vindex];
+    for ( var vindex in this.d.store.project.vid_list ) {
+      vid = this.d.store.project.vid_list[vindex];
       var vid_filesrc_list = [];
       for ( var findex in this.d.store.view[vid].fid_list ) {
         fid = this.d.store.view[vid].fid_list[findex];
