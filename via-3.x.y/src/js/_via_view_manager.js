@@ -81,13 +81,13 @@ _via_view_manager.prototype._on_view_selector_change = function(e) {
 _via_view_manager.prototype._on_next_view = function() {
   if ( this.view_selector.options.length ) {
     var vid = this.view_selector.options[this.view_selector.selectedIndex].value;
-    var vindex = this.d.store.project.vid_list.indexOf(vid);
+    var vindex = this.view_selector_vid_list.indexOf(vid);
     if ( vindex !== -1 ) {
       var next_vindex = vindex + 1;
-      if ( next_vindex >= this.d.store.project.vid_list.length ) {
+      if ( next_vindex >= this.view_selector_vid_list.length ) {
         next_vindex = 0;
       }
-      this.va.view_show( this.d.store.project.vid_list[next_vindex] );
+      this.va.view_show( this.view_selector_vid_list[next_vindex] );
     } else {
       _via_util_msg_show('Cannot move to next view!');
     }
@@ -97,13 +97,13 @@ _via_view_manager.prototype._on_next_view = function() {
 _via_view_manager.prototype._on_prev_view = function() {
   if ( this.view_selector.options.length ) {
     var vid = this.view_selector.options[this.view_selector.selectedIndex].value;
-    var vindex = this.d.store.project.vid_list.indexOf(vid);
+    var vindex = this.view_selector_vid_list.indexOf(vid);
     if ( vindex !== -1 ) {
       var prev_vindex = vindex - 1;
       if ( prev_vindex < 0 ) {
-        prev_vindex = this.d.store.project.vid_list.length - 1;
+        prev_vindex = this.view_selector_vid_list.length - 1;
       }
-      this.va.view_show( this.d.store.project.vid_list[prev_vindex] );
+      this.va.view_show( this.view_selector_vid_list[prev_vindex] );
     } else {
       _via_util_msg_show('Cannot move to next view!');
     }
@@ -201,13 +201,11 @@ _via_view_manager.prototype._view_selector_update_regex = function(regex) {
     }
     this.is_view_selector_regex_active = true;
     var existing_vid_index = this.view_selector_vid_list.indexOf(existing_vid);
-    console.log(existing_vid +','+existing_vid_index)
     if ( existing_vid_index === -1 ) {
-      this.view_selector.selectedIndex = -1;
+      this.view_selector.selectedIndex = 0;
     } else {
       this.view_selector.selectedIndex = existing_vid_index;
     }
-    console.log(this.view_selector.selectedIndex);
   }
 }
 
@@ -238,7 +236,6 @@ _via_view_manager.prototype._view_selector_update_showall = function() {
 
 _via_view_manager.prototype._on_view_filter_regex_change = function() {
   var regex = this.view_filter_regex.value;
-  console.log(regex)
   this._view_selector_update_regex(regex);
 }
 
