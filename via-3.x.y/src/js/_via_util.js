@@ -227,25 +227,25 @@ function _via_util_file_select_local(type, handler, multiple) {
   }
 
   switch(type) {
-  case _VIA_FILE_TYPE.IMAGE:
+  case _VIA_FILE_SELECT_TYPE.IMAGE:
     fsel.accept = 'image/*';
     break;
-  case _VIA_FILE_TYPE.VIDEO:
+  case _VIA_FILE_SELECT_TYPE.VIDEO:
     fsel.accept = 'video/*';
     break;
-  case _VIA_FILE_TYPE.AUDIO:
+  case _VIA_FILE_SELECT_TYPE.AUDIO:
     fsel.accept = 'audio/*';
     break;
-  case _VIA_FILE_TYPE.TEXT:
+  case _VIA_FILE_SELECT_TYPE.TEXT:
     fsel.accept = '.csv,.txt';
     break;
-  case _VIA_FILE_TYPE.JSON:
+  case _VIA_FILE_SELECT_TYPE.JSON:
     fsel.accept = '.json';
     break;
-  case _VIA_FILE_TYPE.VIDEO | _VIA_FILE_TYPE.AUDIO:
+  case _VIA_FILE_SELECT_TYPE.VIDEO | _VIA_FILE_SELECT_TYPE.AUDIO:
     fsel.accept = 'video/*,audio/*';
     break;
-  case _VIA_FILE_TYPE.VIDEO | _VIA_FILE_TYPE.AUDIO | _VIA_FILE_TYPE.IMAGE:
+  case _VIA_FILE_SELECT_TYPE.VIDEO | _VIA_FILE_SELECT_TYPE.AUDIO | _VIA_FILE_SELECT_TYPE.IMAGE:
     fsel.accept = 'video/*,audio/*,image/*';
     break;
   }

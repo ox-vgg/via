@@ -23,6 +23,7 @@ function _via_view_manager(data, view_annotator, container) {
   _via_event.call( this );
 
   this.d.on_event('project_loaded', this._on_event_project_loaded.bind(this));
+  this.d.on_event('project_updated', this._on_event_project_updated.bind(this));
   this.d.on_event('view_bulk_add', this._on_event_view_bulk_add.bind(this));
   this.d.on_event('view_del', this._on_event_view_del.bind(this));
   this.va.on_event('view_show', this._on_event_view_show.bind(this));
@@ -138,6 +139,20 @@ _via_view_manager.prototype._on_event_project_loaded = function(data, event_payl
   if ( this.d.store.project.vid_list.length ) {
     // show first view by default
     this.va.view_show( this.d.store.project.vid_list[0] );
+  }
+}
+
+_via_view_manager.prototype._on_event_project_updated = function(data, event_payload) {
+  var current_vid = this.va.vid;
+  this._init_ui_elements();
+  this._view_selector_update();
+  if ( this.d.store.project.vid_list.length ) {
+    if ( current_vid in this.d.store.project.vid_list ) {
+      this.va.view_show( current_vid );
+    } else {
+      // show first view by default
+      this.va.view_show( this.d.store.project.vid_list[0] );
+    }
   }
 }
 
@@ -259,7 +274,7 @@ _via_view_manager.prototype._file_add_from_filelist = function(filelist) {
 }
 
 _via_view_manager.prototype._on_add_media_local = function() {
-  _via_util_file_select_local(_VIA_FILE_TYPE.VIDEO | _VIA_FILE_TYPE.AUDIO | _VIA_FILE_TYPE.IMAGE,
+  _via_util_file_select_local(_VIA_FILE_SELECT_TYPE.VIDEO | _VIA_FILE_SELECT_TYPE.AUDIO,
                               this._file_add_local.bind(this),
                               true);
 }
@@ -299,7 +314,7 @@ _via_view_manager.prototype._on_add_media_remote = function() {
 }
 
 _via_view_manager.prototype._on_add_media_bulk = function() {
-  _via_util_file_select_local(_VIA_FILE_TYPE.TEXT,
+  _via_util_file_select_local(_VIA_FILE_SELECT_TYPE.TEXT,
                               this._on_add_media_bulk_file_selected.bind(this), false);
 }
 

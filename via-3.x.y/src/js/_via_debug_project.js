@@ -6,7 +6,9 @@ var _via_dp = []; // debug project
 _via_dp[0] = {};
 _via_dp[0]['store'] = {};
 _via_dp[0]['store']['project'] = {
-  'pid':     'via063e89ef22e548dd92d781fa9f9d089b',
+  'pid': '__VIA_PROJECT_ID__',
+  'rev': '__VIA_PROJECT_REV_ID__',
+  'rev_timestamp': '__VIA_PROJECT_REV_TIMESTAMP__',
   'pname':   'VIA Debug Project',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
@@ -194,7 +196,9 @@ _via_dp[0]['store']['metadata'] = {
 _via_dp[1] = {};
 _via_dp[1]['store'] = {};
 _via_dp[1]['store']['project'] = {
-  'pid':     'viab4e012ae255940029e48622064a57e0a',
+  'pid': '__VIA_PROJECT_ID__',
+  'rev': '__VIA_PROJECT_REV_ID__',
+  'rev_timestamp': '__VIA_PROJECT_REV_TIMESTAMP__',
   'pname':   'Audio Annotation',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
@@ -480,7 +484,12 @@ _via_dp[1]['store']['metadata'] = {
 _via_dp[2] = {};
 _via_dp[2]['store'] = {};
 _via_dp[2]['store']['project'] = {
-  'pid':     'via81d7a76a8f1d4119abd4766150cdb417',
+//  'pid': '__VIA_PROJECT_ID__',
+//  'rev': '__VIA_PROJECT_REV_ID__',
+  //  'rev_timestamp': '__VIA_PROJECT_REV_TIMESTAMP__',
+  "pid":"71578187-3cd3-45d0-8198-7c441fbc06af",
+  "rev":"1",
+  "rev_timestamp":"1561373349251",
   'pname':   'Video Annotation Project',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
@@ -733,7 +742,9 @@ _via_dp[2]['store']['metadata'] = {
 _via_dp[3] = {};
 _via_dp[3]['store'] = {};
 _via_dp[3]['store']['project'] = {
-  'pid':     'via-98785efcfcd44b3cb11a76838b56ac14',
+  'pid': '__VIA_PROJECT_ID__',
+  'rev': '__VIA_PROJECT_REV_ID__',
+  'rev_timestamp': '__VIA_PROJECT_REV_TIMESTAMP__',
   'pname':   'MRI Stenosis',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
@@ -870,7 +881,9 @@ _via_dp[3]['store']['metadata'] = {};
 _via_dp[4] = {};
 _via_dp[4]['store'] = {};
 _via_dp[4]['store']['project'] = {
-  'pid':     'via-45715efcfcd44b3cb11a76838b56ac14',
+  'pid': '__VIA_PROJECT_ID__',
+  'rev': '__VIA_PROJECT_REV_ID__',
+  'rev_timestamp': '__VIA_PROJECT_REV_TIMESTAMP__',
   'pname':   'Image Annotation',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),

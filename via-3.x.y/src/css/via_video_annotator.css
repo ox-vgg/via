@@ -101,6 +101,7 @@ to annotate temporal segments of a video: contains 4 rows
 .svg_button_selected { stroke:blue; fill:none; }
 .svg_button:hover { fill:#707070; cursor:pointer; }
 .svg_button:active { fill:#707070; cursor:pointer; }
+.svg_icon { position:relative; width:24px; height:24px; top:2px; }
 .disabled_button { fill:#cfcfcf !important; cursor:auto !important; }
 .disabled_button:hover { fill:#cfcfcf !important; cursor:auto !important; }
 .disabled_button:active { fill:#cfcfcf !important; cursor:auto !important; }

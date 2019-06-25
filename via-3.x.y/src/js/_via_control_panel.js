@@ -161,7 +161,7 @@ _via_control_panel.prototype._set_region_shape = function(shape) {
 _via_control_panel.prototype._add_project_tools = function() {
   var load = _via_util_get_svg_button('micon_open', 'Open a VIA Project');
   load.addEventListener('click', function() {
-    _via_util_file_select_local(_VIA_FILE_TYPE.JSON, this._project_load_on_local_file_select.bind(this), false);
+    _via_util_file_select_local(_VIA_FILE_SELECT_TYPE.JSON, this._project_load_on_local_file_select.bind(this), false);
   }.bind(this));
   this.c.appendChild(load);
 
@@ -218,7 +218,7 @@ _via_control_panel.prototype._add_project_share_tools = function() {
     }.bind(this));
     var push = _via_util_get_svg_button('micon_upload', 'Share this project and your updates with others');
     push.addEventListener('click', function() {
-      this.via.s.remote_push();
+      this.via.s.push();
     }.bind(this));
 
     var pull = _via_util_get_svg_button('micon_download', 'Fetch updates made by others');
@@ -233,19 +233,77 @@ _via_control_panel.prototype._add_project_share_tools = function() {
 }
 
 _via_control_panel.prototype._share_show_info = function() {
-  this.via.s.remote_project_exists().then( function(ok) {
-    document.getElementById('via_page_share_project_id').innerHTML = ok;
-    _via_util_page_show('page_share_already_shared');
-  }.bind(this), function(err) {
+  console.log(this.via.d.project_is_remote())
+  if ( this.via.d.project_is_remote() ) {
+    this.via.s.exists(this.via.d.store.project.pid).then( function() {
+      this.via.s._project_pull(this.via.d.store.project.pid).then( function(ok) {
+        console.log(ok)
+        try {
+          var d = JSON.parse(ok);
+          var remote_rev_timestamp = new Date( parseInt(d.project.rev_timestamp) );
+          var local_rev_timestamp = new Date( parseInt(this.via.d.store.project.rev_timestamp) );
+
+          var pinfo = '<table>';
+          pinfo += '<tr><td>Project Id</td><td>' + d.project.pid + '</td></tr>';
+          pinfo += '<tr><td>Remote Revision</td><td>' + d.project.rev + ' (' + remote_rev_timestamp.toUTCString() + ')</td></tr>';
+          pinfo += '<tr><td>Local Revision</td><td>' + this.via.d.store.project.rev + ' (' + local_rev_timestamp.toUTCString() + ')</td></tr>';
+          pinfo += '</table>';
+          console.log(pinfo);
+          if ( d.project.rev !== this.via.d.store.project.rev ) {
+            pinfo += '<p>Your version of this project is <span style="color:red;">old</span>. Press <svg class="svg_icon" onclick="" viewbox="0 0 24 24"><use xlink:href="#micon_download"></use></svg> to fetch the most recent version of this project.</p>';
+          } else {
+            pinfo += '<p>You already have the <span style="color:blue;">latest</span> revision of this project.</p>';
+          }
+
+          document.getElementById('via_page_share_project_info').innerHTML = pinfo;
+          document.getElementById('via_page_share_project_id').innerHTML = d.project.pid;
+          _via_util_page_show('page_share_already_shared');
+        }
+        catch(e) {
+          console.log(e)
+          _via_util_msg_show('Malformed server response.' + e);
+        }
+      }.bind(this), function(pull_err) {
+        _via_util_msg_show('Failed to pull project.');
+        console.warn(pull_err);
+      }.bind(this));
+    }.bind(this), function(exists_err) {
+      _via_util_page_show('page_share_not_shared_yet');
+      console.warn(exists_err);
+    }.bind(this));
+  } else {
     _via_util_page_show('page_share_not_shared_yet');
-  }.bind(this));
+  }
 }
 
 _via_control_panel.prototype._share_show_pull = function() {
-  var action_map = {
-                    'via_page_button_open_shared':this._page_on_action_open_shared.bind(this),
-                   }
-  _via_util_page_show('page_share_open_shared', action_map);
+  if ( this.via.d.project_is_remote() ) {
+    // check if remote project has newer version
+    this.via.s._project_pull(this.via.d.store.project.pid).then( function(ok) {
+      console.log(ok)
+      try {
+        var d = JSON.parse(ok);
+        if ( d.project.rev === this.via.d.store.project.rev ) {
+          _via_util_msg_show('You already have the latest revision of this project');
+          return;
+        } else {
+          this.via.d.project_merge_rev(d);
+        }
+      }
+      catch(e) {
+        _via_util_msg_show('Malformed response from server.');
+        console.warn(e);
+      }
+    }.bind(this), function(err) {
+      _via_util_msg_show('Failed to pull project.');
+      console.warn(err);
+    }.bind(this));
+  } else {
+    var action_map = {
+      'via_page_button_open_shared':this._page_on_action_open_shared.bind(this),
+    }
+    _via_util_page_show('page_share_open_shared', action_map);
+  }
 }
 
 _via_control_panel.prototype._page_on_action_open_shared = function(d) {

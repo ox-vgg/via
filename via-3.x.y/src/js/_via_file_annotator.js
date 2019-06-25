@@ -383,7 +383,7 @@ _via_file_annotator.prototype._file_html_element_compute_scale = function() {
 // event listeners
 //
 _via_file_annotator.prototype._file_html_element_ready = function() {
-  _via_util_msg_show('Loaded file [' + this.d.store.file[this.fid].fname + ']' );
+  //_via_util_msg_show('Loaded file [' + this.d.store.file[this.fid].fname + ']' );
   this._file_html_element_compute_scale();
   this.file_html_element.setAttribute('style', this.file_html_element_size_css);
   this.file_html_element.setAttribute('id', 'file_content');

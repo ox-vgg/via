@@ -6,3 +6,9 @@ const _VIA_STORE_TYPE = { 'LOCALSTORAGE':1, 'COUCHDB':2 };
 
 var _VIA_SVG_NS = "http://www.w3.org/2000/svg";
 var _VIA_FLOAT_FIXED_POINT = 3; // floats are stored as 3 decimal places
+
+var _VIA_PROJECT_ID_MARKER = '__VIA_PROJECT_ID__';
+var _VIA_PROJECT_REV_ID_MARKER = '__VIA_PROJECT_REV_ID__';
+var _VIA_PROJECT_REV_TIMESTAMP_MARKER = '__VIA_PROJECT_REV_TIMESTAMP__';
+
+var _VIA_FILE_SELECT_TYPE = { 'JSON':2, 'CSV':4, 'TEXT':8, 'IMAGE':16, 'VIDEO':32, 'AUDIO':64 };

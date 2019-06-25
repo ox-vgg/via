@@ -247,7 +247,7 @@
       <div data-pageid="page_share_not_shared_yet" class="via_page">
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <h2>Sharing this Project</h2>
-        <p id="page_share_info_not_shared_yet">This project has not been shared yet. Click <svg class="svg_button" onclick="" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use><title>Share this project and your updates with others</title></svg> button in the toolbar to share this project with others.</p>
+        <p id="page_share_info_not_shared_yet">This project has not been shared yet. If you want to share this project with others and allow them to contribute to this VIA project, click <svg class="svg_icon" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use></svg> button in the toolbar.</p>
         <div class="controls">
           <button onclick="_via_util_page_hide()">Close</button>
         </div>
@@ -255,14 +255,25 @@
 
       <div data-pageid="page_share_already_shared" class="via_page">
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
-        <h2>Sharing this Project</h2>
-        <p>This project has already been shared. To contribute to this project, other users have to follow these steps:
+
+        <h3>Information about this shared project</h3>
+        <p id="via_page_share_project_info"></p>
+        <h3>How can others contribute to this project?</h3>
+        <p>This project has already been shared and therefore anyone can contribute to this project. To contribute to this project, other users should to follow these steps:
           <ol>
-            <li>Open the latest version of VIA application (only available in version 3)</li>
-            <li>Click <svg class="svg_button" onclick="" viewbox="0 0 24 24"><use xlink:href="#micon_download"></use><title>Share this project and your updates with others</title></svg> button in the top toolbar.</li>
+            <li>Open the VIA application (version 3.0.3 or higher) in a web browser.</li>
+            <li>Click <svg class="svg_icon" onclick="" viewbox="0 0 24 24"><use xlink:href="#micon_download"></use><title>Share this project and your updates with others</title></svg> button in the top toolbar.</li>
             <li>Enter the following project-id: <span id="via_page_share_project_id"></span></li>
+            <li>Make changes to the project and click <svg class="svg_icon" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use></svg> to share your updates with others.</li>
           </ol>
         </p>
+        <h3>Important Notes</h3>
+        <ul>
+          <li>Do not store private or confidential information in a shared VIA project. Furthermore, be careful when you share your project-id with others as it allows them to make any changes to your project.</li>
+          <li>The VIA servers do not maintain backup copy of the shared VIA projects. In the event of disk failure, all data will be lost. So, we strongly advise you to always keep a local copy of your project data.</li>
+          <li>We <strong>cannot guarantee</strong> 24/7 availability of VIA project share servers. In the event of hardware or disk failure, the VIA project share servers will be offline for an extended period of time.</li>
+          <li>This VIA share feature should <strong>not</strong> be used for large scale collaborative annotation projects. For such use cases, we advise you to setup a dedicated server with sufficient backup and secutiry.</li>
+        </ul>
         <div class="controls">
           <button onclick="_via_util_page_hide()">Close</button>
         </div>
@@ -271,12 +282,12 @@
       <div data-pageid="page_share_open_shared" class="via_page">
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <h2>Open a Shared VIA Project</h2>
-        <p>You must have received a VIA project-id (e.g. via81d7a76a8f1d4119abd4766150cdb417) when someone shared a VIA project with you. Enter this project-id below to open the shared project.</p>
+        <p>You must have received a VIA project-id (e.g. 71578187-3cd3-45d0-8198-7c441fbc06af) when someone shared a VIA project with you. Enter this project-id below to open the shared project.</p>
         <table>
           <tr>
             <td><label for="via_page_input_pid">VIA Project Id</label></td>
             <td>
-              <input style="width:25em;" type="text" value="via81d7a76a8f1d4119abd4766150cdb417" placeholder="e.g. via81d7a76a8f1d4119abd4766150cdb417" id="via_page_input_pid">
+              <input style="width:25em;" type="text" value="71578187-3cd3-45d0-8198-7c441fbc06af" placeholder="e.g. 71578187-3cd3-45d0-8198-7c441fbc06af" id="via_page_input_pid">
             </td>
           </tr>
         </table>
@@ -438,7 +449,7 @@
     <script src="../js/_via_attribute.js"></script>
     <script src="../js/_via_view.js"></script>
     <script src="../js/_via_data.js"></script>
-    <script src="../js/_via_share_couchdb.js"></script>
+    <script src="../js/_via_share.js"></script>
     <script src="../js/_via_import_export.js"></script>
 
     <script src="../js/_via_video_thumbnail.js"></script>

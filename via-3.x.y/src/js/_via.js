@@ -17,9 +17,7 @@ function _via(via_container) {
 
   if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
     if ( typeof(_via_share) === 'function' ) {
-      var conf = { 'COUCHDB_URI': _VIA_REMOTE_STORE,
-                   'PROJECT_PREFIX': 'projects/',
-                   'METADATA_PREFIX': 'metadata/',
+      var conf = { 'ENDPOINT': _VIA_REMOTE_STORE,
                  };
       this.s  = new _via_share(this.d, conf);
     }

@@ -25,8 +25,9 @@ function _via_data() {
 _via_data.prototype._init_default_project = function() {
   var p = {};
   p['project'] = {
-    'pid': _via_util_gen_project_id(),
-    'rev': 1,
+    'pid': '__VIA_PROJECT_ID__',
+    'rev': '__VIA_PROJECT_REV_ID__',
+    'rev_timestamp': '__VIA_PROJECT_REV_TIMESTAMP__',
     'pname': 'Default Project',
     'data_format_version': this.DATA_FORMAT_VERSION,
     'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
@@ -302,6 +303,34 @@ _via_data.prototype.metadata_add = function(vid, z, xy, av) {
 
       this.emit_event( 'metadata_add', { 'vid':vid, 'mid':mid } );
       ok_callback( {'vid':vid, 'mid':mid} );
+    }
+    catch(ex) {
+      err_callback(ex);
+    }
+  }.bind(this));
+}
+
+_via_data.prototype.metadata_add_bulk = function(metadata_list, emit) {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      var added_mid_list = [];
+      for ( var mindex in metadata_list ) {
+        var vid = metadata_list[mindex].vid;
+        var mid = this._metadata_get_new_id(vid);
+        var z_fp = _via_util_float_arr_to_fixed(metadata_list[mindex].z, _VIA_FLOAT_FIXED_POINT);
+        var xy_fp = _via_util_float_arr_to_fixed(metadata_list[mindex].xy, _VIA_FLOAT_FIXED_POINT);
+        this.store.metadata[mid] = new _via_metadata(vid, z_fp, xy_fp, metadata_list[mindex].av);
+        if ( ! this.cache.mid_list.hasOwnProperty(vid) ) {
+          this.cache.mid_list[vid] = [];
+        }
+        this.cache.mid_list[vid].push(mid);
+        added_mid_list.push(mid);
+      }
+      if ( typeof(emit) !== 'undefined' &&
+           emit === true ) {
+        this.emit_event( 'metadata_add_bulk', { 'mid_list':added_mid_list } );
+      }
+      ok_callback( { 'mid_list':added_mid_list } );
     }
     catch(ex) {
       err_callback(ex);
@@ -668,7 +697,11 @@ _via_data.prototype.project_save = function() {
       var data_blob = new Blob( [JSON.stringify(this.store)],
                                 {type: 'text/json;charset=utf-8'});
       var filename = [];
-      filename.push(this.store.project.pid.substr(0,9) + '_');
+      if ( this.store.project.pid === _VIA_PROJECT_ID_MARKER ) {
+        filename.push('via_project_');
+      } else {
+        filename.push(this.store.project.pid.substr(0,8) + '_');
+      }
       filename.push(_via_util_date_to_filename_str(Date.now()));
       filename.push('.json');
       _via_util_download_as_file(data_blob, filename.join(''));
@@ -738,4 +771,192 @@ _via_data.prototype.project_store_apply_version_fix = function(d) {
     return d;
     break;
   }
+}
+
+_via_data.prototype.project_is_remote = function() {
+  if ( this.store.project.pid === _VIA_PROJECT_ID_MARKER &&
+       this.store.project.rev === _VIA_PROJECT_REV_ID_MARKER &&
+       this.store.project.rev_timestamp === _VIA_PROJECT_REV_TIMESTAMP_MARKER
+     ) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
+//
+// merge
+//
+_via_data.prototype.project_merge_rev = function(d) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( this.store.project.pid !== d.project.pid ) {
+      err_callback('pid mismatch');
+      return;
+    }
+
+    var rev0 = this.store.project.rev;
+    var rev1 = d.project.rev;
+    var merge_stat = { 'rev':d.project.rev, 'rev_timestamp':d.project.rev_timestamp };
+
+    try {
+      // merge project
+      if ( this.store.project['pname'] !== d.project['pname'] ) {
+        this.store.project['pname'] = this.conflict_merge_str(rev0, this.store.project['pname'],
+                                                              rev1, d.project['pname']);
+      }
+      var added_vid_list = [];
+      if ( ! _via_util_array_eq(this.store.project['vid_list'], d.project['vid_list']) ) {
+        for ( var vindex in d.project['vid_list'] ) {
+          if ( ! d.project['vid_list'][vindex] in this.store.project['vid_list'] ) {
+            this.store.project['vid_list'].push( d.project['vid_list'][vindex] );
+            added_vid_list.push( d.project['vid_list'][vindex] );
+          }
+        }
+      }
+      merge_stat['vid_list'] = added_vid_list.length;
+
+      // merge config
+      for ( var lid in d.config.file.loc_prefix ) {
+        if ( this.store.config.file.loc_prefix[lid] !== d.config.file.loc_prefix[lid] ) {
+          this.store.config.file.loc_prefix[lid] = this.conflict_merge_str(rev0, this.store.config.file.loc_prefix[lid],
+                                                                           rev1, d.config.file.loc_prefix[lid]);
+        }
+      }
+
+      // merge attribute
+      var new_aid_list = [];
+      for ( var aid in d.attribute ) {
+        if ( this.store.attribute.hasOwnProperty(aid) ) {
+          // update existing attribute (if needed)
+          if ( this.store.attribute[aid]['aname'] !== d.attribute[aid]['aname'] ) {
+            this.store.attribute[aid]['aname'] = this.conflict_merge_str(rev0, this.store.attribute[aid]['aname'],
+                                                                         rev1, d.attribute[aid]['aname']);
+          }
+          if ( this.store.attribute[aid]['desc'] !== d.attribute[aid]['desc'] ) {
+            this.store.attribute[aid]['desc'] = this.conflict_merge_str(rev0, this.store.attribute[aid]['desc'],
+                                                                        rev1, d.attribute[aid]['desc']);
+          }
+          for ( var oid in d.attribute[aid]['options'] ) {
+            if ( this.store.attribute[aid]['options'].hasOwnProperty(oid) ) {
+              // update existing option
+              this.store.attribute[aid]['options'][oid] = this.conflict_merge_str(rev0, this.store.attribute[aid]['options'][oid],
+                                                                                   rev1, d.attribute[aid]['options'][oid]);
+            } else {
+              // add new options
+              this.store.attribute[aid]['options'][oid] = d.attribute[aid]['options'][oid];
+            }
+          }
+        } else {
+          // add new attribute
+          this.store.attribute[aid] = d.attribute[aid];
+          new_aid_list.push(aid);
+        }
+      }
+      console.log(new_aid_list)
+      merge_stat['aid_list'] = new_aid_list.length;
+
+      // merge file
+      var new_fid_list = [];
+      for ( var fid in d.file ) {
+        if ( this.store.file.hasOwnProperty(fid) ) {
+          // update existing file (if needed)
+          if ( this.store.file[fid]['fname'] !== d.file[fid]['fname'] ) {
+            this.store.file[fid]['fname'] = this.conflict_merge_str(rev0, this.store.file[fid]['fname'],
+                                                                    rev1, d.file[fid]['fname']);
+          }
+          if ( this.store.file[fid]['src'] !== d.file[fid]['src'] ) {
+            this.store.file[fid]['src'] = this.conflict_merge_str(rev0, this.store.file[fid]['src'],
+                                                                  rev1, d.file[fid]['src']);
+          }
+        } else {
+          // add new file
+          this.store.file[fid] = d.file[fid];
+          new_fid_list.push(fid);
+        }
+      }
+      console.log(new_fid_list)
+      merge_stat['fid_list'] = new_fid_list.length;
+
+      // merge view
+      for ( var vid in d.view ) {
+        if ( this.store.view.hasOwnProperty(vid) ) {
+          for ( var findex in d.view[vid]['fid_list'] ) {
+            var fid = d.view[vid]['fid_list'][findex];
+            if ( ! fid in this.store.view[vid]['fid_list'] ) {
+              this.store.view[vid]['fid_list'].push(fid);
+            }
+          }
+        } else {
+          this.store.view[vid] = d.view[vid];
+        }
+      }
+
+      // merge metadata
+      var conflict_metadata_list = [];
+      var new_mid_list = [];
+      for ( var mid in d.metadata ) {
+        if ( this.store.metadata.hasOwnProperty(mid) ) {
+          // has something changed?
+          var mine  = JSON.stringify(this.store.metadata[mid]);
+          var their = JSON.stringify(d.metadata[mid]);
+          if ( mine !== their ) {
+            // add remote metadata as a new metadata
+            conflict_metadata_list.push( d.metadata[mid] );
+          }
+        } else {
+          // add new metadata
+          this.store.metadata[mid] = d.metadata[mid];
+          new_mid_list.push(mid);
+        }
+      }
+      merge_stat['mid_list'] = new_mid_list.length;
+      console.log(conflict_metadata_list)
+      console.log(new_mid_list)
+      if ( conflict_metadata_list.length ) {
+        this.metadata_add_bulk(conflict_metadata_list, false).then( function(ok) {
+          merge_stat['conflict_mid_list'] = ok.length;
+          this.project_merge_on_success(merge_stat);
+        }.bind(this), function(err) {
+          err_callback();
+        }.bind(this));
+      } else {
+        this.project_merge_on_success(merge_stat);
+      }
+    }
+    catch (e) {
+      _via_util_msg_show('Merge failed: ' + e, true);
+      console.warn(e);
+      err_callback(e);
+    }
+  }.bind(this));
+}
+
+_via_data.prototype.project_merge_on_success = function(merge_stat) {
+  this.store.project.rev = merge_stat.rev;
+  this.store.project.rev_timestamp = merge_stat.rev_timestamp;
+  this._cache_update();
+  delete merge_stat['rev_timestamp'];
+  this.emit_event( 'project_updated', { 'pid':this.store.project.pid } );
+
+  var summary = [];
+  if ( merge_stat['vid_list'] !== 0 ) {
+    summary.push(merge_stat['vid_list'] + ' new views');
+  }
+  if ( merge_stat['aid_list'] !== 0 ) {
+    summary.push(merge_stat['aid_list'] + ' new attributes');
+  }
+  if ( merge_stat['fid_list'] !== 0 ) {
+    summary.push(merge_stat['fid_list'] + ' new files');
+  }
+  if ( merge_stat['mid_list'] !== 0 ) {
+    summary.push(merge_stat['mid_list'] + ' new metadata');
+  }
+  if ( merge_stat.hasOwnProperty('conflict_mid_list') ) {
+    summary.push(merge_stat['conflict_mid_list'] + ' metadata with conflicts');
+  }
+  _via_util_msg_show('Successfully merged to revision ' + merge_stat['rev'] + ' (with ' + summary.join(', ') + ')', true);
+}
+
+_via_data.prototype.conflict_merge_str = function(rev0, s0, rev1, s1) {
+  return 'CONFLICT{rev' + rev0 + '=' + s0 + '|rev' + rev1 + '=' + s1 + '}';
 }
