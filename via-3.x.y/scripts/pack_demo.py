@@ -73,4 +73,4 @@ with open(OUT_HTML, 'w') as outf:
             parsedline += '<!-- END: Contents of file: ' + TARGET_DEMO_JS_FILENAME + '-->\n'
 
           outf.write(parsedline)
-print("Written packed file to: " + TARGET_HTML)
+print("Written packed file to: " + OUT_HTML)

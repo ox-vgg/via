@@ -209,7 +209,7 @@ _via_view_annotator.prototype._view_annotate_single_audio = function(vid) {
                                                          );
     //_via_util_msg_show('Press <span class="key">Space</span> to Play or Pause the video at any time.', true);
   }.bind(this), function(err) {
-    _via_util_msg_show('Failed to load video!', true);
+    _via_util_msg_show('Failed to load audio!', true);
   }.bind(this));
   /*
   this._metadata_show(this.view_metadata_container,

@@ -49,4 +49,4 @@ with open(OUT_HTML, 'w') as outf:
             parsedline = line.replace('//__ENABLED_BY_PACK_SCRIPT__', '');
 
           outf.write(parsedline)
-print("Written packed file to: " + TARGET_HTML)
+print("Written packed file to: " + OUT_HTML)

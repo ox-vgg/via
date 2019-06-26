@@ -21,15 +21,18 @@ function _via_load_submodules() {
   _via_demo_project = { 'store':{} };
   _via_demo_project['store'] = {};
   _via_demo_project['store']['project'] = {
-    'pid':     'viac6e7075bd6d749e3ae5edc983898ec63',
-    'pname':   'Video Annotation Project',
+    'pid': '__VIA_PROJECT_ID__',
+    'rev': '__VIA_PROJECT_REV_ID__',
+    'rev_timestamp': '__VIA_PROJECT_REV_TIMESTAMP__',
+    'pname': 'Demo Video Annotation',
     'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
     'created': Date.now(),
-    'data_format_version': '3.1.0',
+    'data_format_version': '3.1.1',
+    'vid_list':['1', '2'],
   };
   _via_demo_project['store']['config'] = {
     'file': {
-      'path':'',
+      'loc_prefix': { '1':'', '2':'', '3':'', '4':'' }, // constants defined in _via_file._VIA_FILE_LOC
     },
     'ui': {
       'file_content_align':'center'
@@ -107,7 +110,6 @@ function _via_load_submodules() {
     },
   };
 
-  _via_demo_project['store']['vid_list'] = ['1', '2'];
   _via_demo_project['store']['metadata'] = {
     '-glfwaaX': {
       'vid': '1',
