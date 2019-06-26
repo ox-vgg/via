@@ -20,14 +20,12 @@ function _via_share(data, conf) {
 }
 
 _via_share.prototype.push = function() {
-  console.log('_via_share.push()');
-  console.log(this.d.store.project)
   if ( this.d.store.project.pid === _VIA_PROJECT_ID_MARKER &&
        this.d.store.project.rev === _VIA_PROJECT_REV_ID_MARKER &&
        this.d.store.project.rev_timestamp === _VIA_PROJECT_REV_TIMESTAMP_MARKER
      ) {
     // create a new project
-    console.log(this.conf)
+    _via_util_msg_show('Initializing new shared project ...');
     this._project_push().then( function(ok) {
       this._project_on_push_ok_response(ok);
     }.bind(this), function(err) {
@@ -35,16 +33,11 @@ _via_share.prototype.push = function() {
     }.bind(this));
   } else {
     // update existing project
-    this._project_pull(this.d.store.project.pid).then( function(ok) {
-      try {
-        var d = JSON.parse(ok);
-        if ( d.project.hasOwnProperty('pid') &&
-             d.project.hasOwnProperty('rev') &&
-             d.project.hasOwnProperty('rev_timestamp')
-           ) {
-          console.log(this.d.store.project.rev + ':' + typeof(this.d.store.project.rev));
-          console.log(d['rev'] + ':' + typeof(d['rev']));
-          if ( this.d.store.project.rev === d.project['rev'] ) {
+    this._project_pull(this.d.store.project.pid).then( function(remote_rev) {
+      this.d.project_is_different(remote_rev).then( function(yes) {
+        try {
+          var d = JSON.parse(yes);
+          if ( this.d.store.project.rev === d.project.rev ) {
             // push new revision
             var pid = this.d.store.project.pid;
             var rev = this.d.store.project.rev;
@@ -58,28 +51,34 @@ _via_share.prototype.push = function() {
             _via_util_msg_show('You must first pull remote revision first. (local revision=' + this.d.store.project.rev + ', remote rev=' + d['rev'] + ')', true);
             return;
           }
-        } else {
-          _via_util_msg_show('Malformed response from server: ' + ok);
         }
-      }
-      catch(e) {
-        _via_util_msg_show('Error parsing response from server: ' + e);
-      }
+        catch(e) {
+          _via_util_msg_show('Error parsing response from server: ' + e);
+        }
+      }.bind(this), function(no) {
+        _via_util_msg_show('There are no new changes to push!');
+      }.bind(this));
     }.bind(this), function(err) {
       _via_util_msg_show('Failed to retrive remote VIA project: ' + err);
     }.bind(this));
   }
 }
 
-_via_share.prototype.pull = function(project_id) {
+_via_share.prototype.pull = function(pid) {
+  console.log('pull: ' + pid)
+  this._project_pull(pid).then( function(remote_rev) {
+    this.d.project_load(remote_rev).then( function() {
+      console.log('ok');
+    }.bind(this), function(err) {
+      console.warn(err)
+    }.bind(this));
+  }.bind(this));
 }
 
 _via_share.prototype.exists = function(pid) {
   return new Promise( function(ok_callback, err_callback) {
     var xhr = new XMLHttpRequest();
     xhr.addEventListener('load', function() {
-      console.log(xhr.statusText)
-      console.log(xhr.responseText);
       switch(xhr.statusText) {
       case 'OK':
         ok_callback(pid);
@@ -117,7 +116,6 @@ _via_share.prototype._project_on_push_ok_response = function(ok_response) {
   catch(e) {
     _via_util_msg_show('Malformed response from server: ' + ok_response);
   }
-  console.log(ok);
 }
 
 _via_share.prototype._project_on_push_err_response = function(err_response) {
@@ -131,7 +129,6 @@ _via_share.prototype._project_pull = function(pid) {
     xhr.addEventListener('load', function() {
       switch(xhr.statusText) {
       case 'OK':
-        console.log(xhr.responseText)
         ok_callback(xhr.responseText);
         break;
       default:

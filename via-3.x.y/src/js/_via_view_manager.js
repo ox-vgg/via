@@ -73,7 +73,6 @@ _via_view_manager.prototype._on_pname_change = function() {
 
 _via_view_manager.prototype._on_view_selector_change = function(e) {
   var vid = e.target.options[e.target.selectedIndex].value;
-  console.log('change vid to ' + vid);
   if ( vid !== this.va.vid ) {
     this.va.view_show(vid);
   }
@@ -200,7 +199,12 @@ _via_view_manager.prototype._view_selector_update_regex = function(regex) {
      ) {
     this._view_selector_update_showall();
   } else {
-    var existing_vid = this.view_selector.options[this.view_selector.selectedIndex].value;
+    var existing_vid = '';
+    if ( this.view_selector.options.length ) {
+      if ( this.view_selector.selectedIndex !== -1 ) {
+        existing_vid = this.view_selector.options[this.view_selector.selectedIndex].value;
+      }
+    }
     this._view_selector_clear();
     var vid, fid;
     for ( var vindex in this.d.store.project.vid_list ) {
@@ -217,7 +221,9 @@ _via_view_manager.prototype._view_selector_update_regex = function(regex) {
     this.is_view_selector_regex_active = true;
     var existing_vid_index = this.view_selector_vid_list.indexOf(existing_vid);
     if ( existing_vid_index === -1 ) {
-      this.view_selector.selectedIndex = 0;
+      if ( this.view_selector_vid_list.length ) {
+        this.va.view_show( this.view_selector_vid_list[0] );
+      }
     } else {
       this.view_selector.selectedIndex = existing_vid_index;
     }
@@ -347,6 +353,7 @@ _via_view_manager.prototype._on_add_media_bulk_file_load = function(file_data) {
 
 _via_view_manager.prototype._on_del_view = function() {
   this.d.view_del(this.va.vid).then( function(ok) {
+    _via_util_msg_show('Deleted view ' + ( parseInt(ok.vindex) + 1));
   }.bind(this), function(err) {
     console.warn(err);
   }.bind(this));
@@ -359,7 +366,7 @@ _via_view_manager.prototype._on_event_view_del = function(data, event_payload) {
     if ( vindex < this.d.store.project.vid_list.length ) {
       this.va.view_show( this.d.store.project.vid_list[vindex] );
     } else {
-      this.va.view_show( this.d.store.project.vid_list[ this.d.store.vid_list.length - 1 ] );
+      this.va.view_show( this.d.store.project.vid_list[ this.d.store.project.vid_list.length - 1 ] );
     }
   } else {
     this.va._init();

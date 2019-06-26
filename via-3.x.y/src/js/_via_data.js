@@ -627,14 +627,10 @@ _via_data.prototype.view_del = function(vid) {
       }
       // delete view
       delete this.store.view[vid];
-      console.log('vid=' + vid + ', at vindex=' + vindex);
-      console.log('before: ' + JSON.stringify(this.store.project.vid_list))
       this.store.project.vid_list.splice(vindex, 1);
-      console.log('after: ' + JSON.stringify(this.store.project.vid_list))
 
       this._cache_update_mid_list();
       this.emit_event( 'view_del', {'vid':vid, 'vindex':vindex} );
-      console.log(JSON.stringify(this.store))
       ok_callback({'vid':vid, 'vindex':vindex});
     }
     catch(err) {
@@ -838,9 +834,11 @@ _via_data.prototype.project_merge_rev = function(d) {
           }
           for ( var oid in d.attribute[aid]['options'] ) {
             if ( this.store.attribute[aid]['options'].hasOwnProperty(oid) ) {
-              // update existing option
-              this.store.attribute[aid]['options'][oid] = this.conflict_merge_str(rev0, this.store.attribute[aid]['options'][oid],
-                                                                                   rev1, d.attribute[aid]['options'][oid]);
+              if ( this.store.attribute[aid]['options'][oid] !== d.attribute[aid]['options'][oid] ) {
+                // update existing option
+                this.store.attribute[aid]['options'][oid] = this.conflict_merge_str(rev0, this.store.attribute[aid]['options'][oid],
+                                                                                    rev1, d.attribute[aid]['options'][oid]);
+              }
             } else {
               // add new options
               this.store.attribute[aid]['options'][oid] = d.attribute[aid]['options'][oid];
@@ -852,7 +850,6 @@ _via_data.prototype.project_merge_rev = function(d) {
           new_aid_list.push(aid);
         }
       }
-      console.log(new_aid_list)
       merge_stat['aid_list'] = new_aid_list.length;
 
       // merge file
@@ -874,7 +871,6 @@ _via_data.prototype.project_merge_rev = function(d) {
           new_fid_list.push(fid);
         }
       }
-      console.log(new_fid_list)
       merge_stat['fid_list'] = new_fid_list.length;
 
       // merge view
@@ -910,8 +906,6 @@ _via_data.prototype.project_merge_rev = function(d) {
         }
       }
       merge_stat['mid_list'] = new_mid_list.length;
-      console.log(conflict_metadata_list)
-      console.log(new_mid_list)
       if ( conflict_metadata_list.length ) {
         this.metadata_add_bulk(conflict_metadata_list, false).then( function(ok) {
           merge_stat['conflict_mid_list'] = ok.length;
@@ -959,4 +953,16 @@ _via_data.prototype.project_merge_on_success = function(merge_stat) {
 
 _via_data.prototype.conflict_merge_str = function(rev0, s0, rev1, s1) {
   return 'CONFLICT{rev' + rev0 + '=' + s0 + '|rev' + rev1 + '=' + s1 + '}';
+}
+
+// is there any difference between local project and remote project?
+_via_data.prototype.project_is_different = function(others_str) {
+  return new Promise( function(ok_callback, err_callback) {
+    var ours_str = JSON.stringify(this.store);
+    if ( ours_str === others_str ) {
+      err_callback();
+    } else {
+      ok_callback(others_str);
+    }
+  }.bind(this));
 }

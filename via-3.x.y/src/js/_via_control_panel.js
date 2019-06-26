@@ -178,7 +178,7 @@ _via_control_panel.prototype._add_project_tools = function() {
 
 _via_control_panel.prototype._page_show_import_export = function(d) {
   var action_map = {
-//    'via_page_button_import':this._page_on_action_import.bind(this),
+    'via_page_button_import':this._page_on_action_import.bind(this),
     'via_page_button_export':this._page_on_action_export.bind(this),
   }
   _via_util_page_show('page_import_export', action_map);
@@ -186,10 +186,24 @@ _via_control_panel.prototype._page_show_import_export = function(d) {
 
 _via_control_panel.prototype._page_on_action_import = function(d) {
   if ( d._action_id === 'via_page_button_import' ) {
-    if ( d.via_page_import_file.length ) {
-      this.via.ie.import_from_file(d.via_page_import_format, d.via_page_import_file);
+    if ( d.via_page_import_pid !== '' ) {
+      this.via.s._project_pull(d.via_page_import_pid).then( function(remote_rev) {
+        try {
+          var project = JSON.parse(remote_rev);
+          // clear remote project identifiers
+          project.project.pid = _VIA_PROJECT_ID_MARKER;
+          project.project.rev = _VIA_PROJECT_REV_ID_MARKER;
+          project.project.rev_timestamp = _VIA_PROJECT_REV_TIMESTAMP_MARKER;
+          this.via.d.project_load_json(project);
+        }
+        catch(e) {
+          _via_util_msg_show('Malformed response from server: ' + e);
+        }
+      }.bind(this), function(err) {
+        _via_util_msg_show(err + ': ' + d.via_page_import_pid);
+      }.bind(this));
     } else {
-      _via_util_msg_show('To import annotations, you must select a file which contains the annotations');
+      _via_util_msg_show('To import an existing shared project, you must enter its project-id.');
     }
   }
 }
@@ -233,11 +247,9 @@ _via_control_panel.prototype._add_project_share_tools = function() {
 }
 
 _via_control_panel.prototype._share_show_info = function() {
-  console.log(this.via.d.project_is_remote())
   if ( this.via.d.project_is_remote() ) {
     this.via.s.exists(this.via.d.store.project.pid).then( function() {
       this.via.s._project_pull(this.via.d.store.project.pid).then( function(ok) {
-        console.log(ok)
         try {
           var d = JSON.parse(ok);
           var remote_rev_timestamp = new Date( parseInt(d.project.rev_timestamp) );
@@ -248,7 +260,6 @@ _via_control_panel.prototype._share_show_info = function() {
           pinfo += '<tr><td>Remote Revision</td><td>' + d.project.rev + ' (' + remote_rev_timestamp.toUTCString() + ')</td></tr>';
           pinfo += '<tr><td>Local Revision</td><td>' + this.via.d.store.project.rev + ' (' + local_rev_timestamp.toUTCString() + ')</td></tr>';
           pinfo += '</table>';
-          console.log(pinfo);
           if ( d.project.rev !== this.via.d.store.project.rev ) {
             pinfo += '<p>Your version of this project is <span style="color:red;">old</span>. Press <svg class="svg_icon" onclick="" viewbox="0 0 24 24"><use xlink:href="#micon_download"></use></svg> to fetch the most recent version of this project.</p>';
           } else {
@@ -280,7 +291,6 @@ _via_control_panel.prototype._share_show_pull = function() {
   if ( this.via.d.project_is_remote() ) {
     // check if remote project has newer version
     this.via.s._project_pull(this.via.d.store.project.pid).then( function(ok) {
-      console.log(ok)
       try {
         var d = JSON.parse(ok);
         if ( d.project.rev === this.via.d.store.project.rev ) {

@@ -14,12 +14,11 @@ function _via(via_container) {
   this.via_container = via_container;
 
   this.d  = new _via_data();
+  var conf = { 'ENDPOINT': _VIA_REMOTE_STORE };
+  this.s  = new _via_share(this.d, conf);
 
   if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
     if ( typeof(_via_share) === 'function' ) {
-      var conf = { 'ENDPOINT': _VIA_REMOTE_STORE,
-                 };
-      this.s  = new _via_share(this.d, conf);
     }
   }
 
@@ -99,7 +98,7 @@ function _via(via_container) {
   } else {
     // debug code (disabled for release)
     if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
-      this.d.project_load_json(_via_dp[2]['store']);
+      //this.d.project_load_json(_via_dp[2]['store']);
       setTimeout( function() {
         //this.va.view_show('1');
         //this.editor.show();

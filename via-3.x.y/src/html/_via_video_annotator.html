@@ -237,8 +237,14 @@
             </select>
           </li>
         </ul>
-        <p style="font-size:small;">Note: Import of annotations will be available in one of the future versions of VIA.</p>
+        <h2>Import</h2>
+        <ul>
+          <li>Import the following VIA shared project: <input id="via_page_import_pid" type="text" placeholder="e.g. 71578187-3cd3-45d0-8198-7c441fbc06af" size="30" value="71578187-3cd3-45d0-8198-7c441fbc06af">
+          </li>
+        </ul>
+
         <div class="controls">
+          <button id="via_page_button_import" onclick="_via_util_page_process_action(event)">Import</button>
           <button id="via_page_button_export" onclick="_via_util_page_process_action(event)">Export</button>
           <button onclick="_via_util_page_hide()">Cancel</button>
         </div>
@@ -255,7 +261,7 @@
 
       <div data-pageid="page_share_already_shared" class="via_page">
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
-
+        <p style="color:red;">This feature is not stable yet. If you encounter any issues, please <a href="https://gitlab.com/vgg/via/issues">report</a> it.</p>
         <h3>Information about this shared project</h3>
         <p id="via_page_share_project_info"></p>
         <h3>How can others contribute to this project?</h3>
@@ -273,6 +279,7 @@
           <li>The VIA servers do not maintain backup copy of the shared VIA projects. In the event of disk failure, all data will be lost. So, we strongly advise you to always keep a local copy of your project data.</li>
           <li>We <strong>cannot guarantee</strong> 24/7 availability of VIA project share servers. In the event of hardware or disk failure, the VIA project share servers will be offline for an extended period of time.</li>
           <li>This VIA share feature should <strong>not</strong> be used for large scale collaborative annotation projects. For such use cases, we advise you to setup a dedicated server with sufficient backup and secutiry.</li>
+          <li>The shared VIA project should not exceed 1MB in size.</li>
         </ul>
         <div class="controls">
           <button onclick="_via_util_page_hide()">Close</button>
