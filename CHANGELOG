@@ -27,6 +27,17 @@
  * to reduce cognitive load on human annotators, VIA3 support for attributes of different types (plain text, drop down, radio, checkbox)
  * self contained demo for audio and video annotation
 
+## [2.0.8] - June 14, 2019
+ * user selected files are loaded more efficiently using URL.createObjectURL() instead of FileReader()
+ * annotations import and export in COCO format (http://cocodataset.org/#format-data)
+ * removed unused variables and code segments (cleanup)
+ * rotated ellipse (feature request 72, thank you @rdroste for the merge request)
+  - ellipse rotation has been merged, rectangle rotation has been removed
+  - variable names have been changed to follow VIA naming convention
+  - function to draw horizontal and vertical lines across the ellipse have been removed
+ * show properties of current region (feature request 118)
+ * fixed issue with loading a new project when a VIA project is already loaded (issue 185)
+
 ## [2.0.7] - May 01, 2019
  - regions cannot be moved beyond image boundary (issue 173, thank you @zenggyu for bug report)
  - user's mouse cursor coordinate visible (feature request 172)

@@ -3,6 +3,11 @@ We welcome all forms of contributions (code update, documentation, etc) from use
 These contributions must adhere to the existing [license](LICENSE) of VIA project.
 Here is the list of current contributions to VIA project.
 
+* via-2.0.8
+  - Richard Droste (@rdroste) contributed code to allow freehand rotation of ellipse regions (merge request 14 merged into VIA source by Srinivasan Sankar @vasan.shrini)
+  - Mouse cursor coordinates and region shape description is now shown (feature request 118 was implemented by Srinivasan Sankar @vasan.shrini )
+  - fixed issue 185 (by Srinivasan Sankar @vasan.shrini)
+
 * via-2.0.7
   - regions cannot now be moved beyond image boundary (issue 173 fixed by Srinivasan Sankar @vasan.shrini)
   - user's mouse cursor coordinate visible (feature request 172 added by Srinivasan Sankar @vasan.shrini)
