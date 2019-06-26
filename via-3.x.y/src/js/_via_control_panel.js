@@ -226,16 +226,16 @@ _via_control_panel.prototype._project_load_on_local_file_read = function(project
 
 _via_control_panel.prototype._add_project_share_tools = function() {
   if ( this.via.s ) {
-    var share = _via_util_get_svg_button('micon_share', 'Information about sharing this project');
+    var share = _via_util_get_svg_button('micon_share', 'Information about sharing this VIA project with others for collaborative annotation');
     share.addEventListener('click', function() {
       this._share_show_info();
     }.bind(this));
-    var push = _via_util_get_svg_button('micon_upload', 'Share this project and your updates with others');
+    var push = _via_util_get_svg_button('micon_upload', 'Push (i.e. share this project or share your updates made to this project)');
     push.addEventListener('click', function() {
       this.via.s.push();
     }.bind(this));
 
-    var pull = _via_util_get_svg_button('micon_download', 'Fetch updates made by others');
+    var pull = _via_util_get_svg_button('micon_download', 'Pull (i.e. open a shared project or fetch updates for the current project)');
     pull.addEventListener('click', function() {
       this._share_show_pull();
     }.bind(this));

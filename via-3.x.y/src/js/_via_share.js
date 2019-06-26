@@ -24,6 +24,14 @@ _via_share.prototype.push = function() {
        this.d.store.project.rev === _VIA_PROJECT_REV_ID_MARKER &&
        this.d.store.project.rev_timestamp === _VIA_PROJECT_REV_TIMESTAMP_MARKER
      ) {
+    // avoid pushing empty projects
+    if ( Object.keys(this.d.store.file).length === 0 ||
+         Object.keys(this.d.store.view).length === 0
+       ) {
+      _via_util_msg_show('Cannot push empty project');
+      return;
+    }
+
     // create a new project
     _via_util_msg_show('Initializing new shared project ...');
     this._project_push().then( function(ok) {
