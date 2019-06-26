@@ -98,7 +98,8 @@ function _via(via_container) {
   } else {
     // debug code (disabled for release)
     if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
-      //this.d.project_load_json(_via_dp[2]['store']);
+      //this.d.project_load_json(_via_dp[2]['store']); // video
+      //this.d.project_load_json(_via_dp[1]['store']); // audio
       setTimeout( function() {
         //this.va.view_show('1');
         //this.editor.show();

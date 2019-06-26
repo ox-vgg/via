@@ -239,7 +239,7 @@
         </ul>
         <h2>Import</h2>
         <ul>
-          <li>Import the following VIA shared project: <input id="via_page_import_pid" type="text" placeholder="e.g. 71578187-3cd3-45d0-8198-7c441fbc06af" size="30" value="71578187-3cd3-45d0-8198-7c441fbc06af">
+          <li>VIA Shared Project: <input id="via_page_import_pid" type="text" placeholder="e.g. 71578187-3cd3-45d0-8198-7c441fbc06af" style="width:25em;">
           </li>
         </ul>
 
@@ -289,15 +289,22 @@
       <div data-pageid="page_share_open_shared" class="via_page">
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <h2>Open a Shared VIA Project</h2>
-        <p>You must have received a VIA project-id (e.g. 71578187-3cd3-45d0-8198-7c441fbc06af) when someone shared a VIA project with you. Enter this project-id below to open the shared project.</p>
+        <p>A unique project-id is assigned to every shared VIA project. For example, the following two project-id have been publicly shared for demonstration purposes:
+          <ul>
+            <li>Video Annotation: e302eadf-aa53-4a5a-b958-11175692c928</li>
+            <li>Audio Annotation: d4a9bc87-9652-42c3-a336-f41e18d638e6</li>
+          </ul>
+        </p>
+        <p>To open a shared project, enter the project-id below:</p>
         <table>
           <tr>
             <td><label for="via_page_input_pid">VIA Project Id</label></td>
             <td>
-              <input style="width:25em;" type="text" value="71578187-3cd3-45d0-8198-7c441fbc06af" placeholder="e.g. 71578187-3cd3-45d0-8198-7c441fbc06af" id="via_page_input_pid">
+              <input style="width:25em;" type="text" placeholder="e.g. 71578187-3cd3-45d0-8198-7c441fbc06af" id="via_page_input_pid">
             </td>
           </tr>
         </table>
+
         <div class="controls">
           <button id="via_page_button_open_shared" onclick="_via_util_page_process_action(event)">Open Shared Project</button>
           <button onclick="_via_util_page_hide()">Cancel</button>
@@ -460,7 +467,6 @@
     <script src="../js/_via_import_export.js"></script>
 
     <script src="../js/_via_video_thumbnail.js"></script>
-    <!--DISABLED EXPERIMENTAL FEATURE<script src="../js/_via_audio_spectrum.js"></script>-->
     <script src="../js/_via_file_annotator.js"></script>
     <script src="../js/_via_temporal_segmenter.js"></script>
     <script src="../js/_via_view_annotator.js"></script>
@@ -470,6 +476,7 @@
     <script src="../js/_via_editor.js"></script>
     <script src="../js/_via_debug_project.js"></script>
     <script src="../js/_via.js"></script>
+
     <!-- DEMO SCRIPT AUTOMATICALLY INSERTED BY VIA PACKER SCRIPT -->
 
     <script>

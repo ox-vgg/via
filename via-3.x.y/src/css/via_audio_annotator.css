@@ -42,6 +42,13 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 #view_container > .view_content_container > .file_container > .smetadata_container th { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.2em; }
 #view_container > .view_content_container > .file_container > .smetadata_container input { font-size:small; }
 #view_container > .view_content_container > .file_container > .smetadata_container select { font-size:small; }
+#view_container > .view_content_container > .file_container > .error_page { margin-left:1em; width:50em; }
+#view_container > .view_content_container > .file_container > .error_page * { position:relative; }
+#view_container > .view_content_container > .file_container > .error_page input { font-size:small; width:100%; }
+#view_container > .view_content_container > .file_container > .error_page select { font-size:small; }
+#view_container > .view_content_container > .file_container > .error_page textarea { font-size:small; }
+#view_container > .view_content_container > .file_container > .error_page table { border-collapse:collapse; border:1px solid #cccccc;  width:40em;}
+#view_container > .view_content_container > .file_container > .error_page td { padding:0.4em 1em; border:1px solid #cccccc; }
 
 
 /* metadata associated with a view */
@@ -93,6 +100,7 @@ to annotate temporal segments of a video: contains 4 rows
 .svg_button_selected { stroke:blue; fill:none; }
 .svg_button:hover { fill:#707070; cursor:pointer; }
 .svg_button:active { fill:#707070; cursor:pointer; }
+.svg_icon { position:relative; width:24px; height:24px; top:2px; }
 .disabled_button { fill:#cfcfcf !important; cursor:auto !important; }
 .disabled_button:hover { fill:#cfcfcf !important; cursor:auto !important; }
 .disabled_button:active { fill:#cfcfcf !important; cursor:auto !important; }
@@ -100,15 +108,15 @@ to annotate temporal segments of a video: contains 4 rows
 .text_button:hover { color:black; }
 
 /* info pages */
-#via_info_page_container { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:1001; text-align:center; }
-#via_info_page_container > .toolbar { position:relative; display:block; text-align:right; padding:1em; }
-#via_info_page_container > .info_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow-y:auto; text-align:left; content:"close"; width:80ch; height:80vh; }
-#via_info_page_container > .info_page .toolbar { display:block; text-align:right; }
-#via_info_page_container > .info_page table { border-collapse:collapse; border:1px solid #cccccc; }
-#via_info_page_container > .info_page th { border:1px solid #cccccc; padding:0.3em 0.4em; }
-#via_info_page_container > .info_page td { border:1px solid #cccccc; padding:0.3em 0.4em; }
-#via_info_page_container > .info_page div { width:45em; }
-#via_info_page_container > .info_page li { margin:1em 0; }
+#via_page_container { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:1001; text-align:center; }
+#via_page_container > .via_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow-y:auto; text-align:left; content:"close"; width:80ch; max-height:80vh; }
+#via_page_container > .via_page > .toolbar { display:block; text-align:right; }
+#via_page_container > .via_page > .controls { position:relative; display:block; text-align:center; margin-top:2em; padding-top:1em; border-top:1px solid #cccccc; }
+#via_page_container > .via_page > .controls button { margin:0 1em; }
+#via_page_container > .via_page table { border-collapse:collapse; border:1px solid #cccccc; }
+#via_page_container > .via_page th { border:1px solid #cccccc; padding:0.3em 0.4em; }
+#via_page_container > .via_page td { border:1px solid #cccccc; padding:0.3em 0.4em; }
+#via_page_container > .via_page li { margin:1em 0; }
 
 /* Message Panel */
 #_via_message_container { display:none; width:100vw; position:fixed; bottom:0px; z-index:9999; text-align:center; }

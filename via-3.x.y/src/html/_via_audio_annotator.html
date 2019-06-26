@@ -131,6 +131,9 @@
         <symbol id="micon_export">
           <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
         </symbol>
+        <symbol id="micon_import_export">
+          <path d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/>
+        </symbol>
 
         <!-- composed by Abhishek Dutta from existing materian icons, 31 Jan. 2019 -->
         <symbol id="micon_add_image">
@@ -193,9 +196,93 @@
     </svg>
 
     <!-- VIA Information Pages -->
-    <div id="via_info_page_container">
-      <div data-pageid="page_demo_instructions" class="info_page" style="height:40ch;">
-        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
+    <div id="via_page_container">
+      <div data-pageid="page_import_export" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
+        <h2>Export</h2>
+        <ul>
+          <li>Select Export Format:
+            <select id="via_page_export_format">
+              <option value="via3_csv">VIA3 (CSV)</option>
+            </select>
+          </li>
+        </ul>
+        <h2>Import</h2>
+        <ul>
+          <li>VIA Shared Project: <input id="via_page_import_pid" type="text" placeholder="e.g. 71578187-3cd3-45d0-8198-7c441fbc06af" style="width:25em;">
+          </li>
+        </ul>
+
+        <div class="controls">
+          <button id="via_page_button_import" onclick="_via_util_page_process_action(event)">Import</button>
+          <button id="via_page_button_export" onclick="_via_util_page_process_action(event)">Export</button>
+          <button onclick="_via_util_page_hide()">Cancel</button>
+        </div>
+      </div>
+
+      <div data-pageid="page_share_not_shared_yet" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
+        <h2>Sharing this Project</h2>
+        <p id="page_share_info_not_shared_yet">This project has not been shared yet. If you want to share this project with others and allow them to contribute to this VIA project, click <svg class="svg_icon" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use></svg> button in the toolbar.</p>
+        <div class="controls">
+          <button onclick="_via_util_page_hide()">Close</button>
+        </div>
+      </div>
+
+      <div data-pageid="page_share_already_shared" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
+        <p style="color:red;">This feature is not stable yet. If you encounter any issues, please <a href="https://gitlab.com/vgg/via/issues">report</a> it.</p>
+        <h3>Information about this shared project</h3>
+        <p id="via_page_share_project_info"></p>
+        <h3>How can others contribute to this project?</h3>
+        <p>This project has already been shared and therefore anyone can contribute to this project. To contribute to this project, other users should to follow these steps:
+          <ol>
+            <li>Open the VIA application (version 3.0.3 or higher) in a web browser.</li>
+            <li>Click <svg class="svg_icon" onclick="" viewbox="0 0 24 24"><use xlink:href="#micon_download"></use><title>Share this project and your updates with others</title></svg> button in the top toolbar.</li>
+            <li>Enter the following project-id: <span id="via_page_share_project_id"></span></li>
+            <li>Make changes to the project and click <svg class="svg_icon" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use></svg> to share your updates with others.</li>
+          </ol>
+        </p>
+        <h3>Important Notes</h3>
+        <ul>
+          <li>Do not store private or confidential information in a shared VIA project. Furthermore, be careful when you share your project-id with others as it allows them to make any changes to your project.</li>
+          <li>The VIA servers do not maintain backup copy of the shared VIA projects. In the event of disk failure, all data will be lost. So, we strongly advise you to always keep a local copy of your project data.</li>
+          <li>We <strong>cannot guarantee</strong> 24/7 availability of VIA project share servers. In the event of hardware or disk failure, the VIA project share servers will be offline for an extended period of time.</li>
+          <li>This VIA share feature should <strong>not</strong> be used for large scale collaborative annotation projects. For such use cases, we advise you to setup a dedicated server with sufficient backup and secutiry.</li>
+          <li>The shared VIA project should not exceed 1MB in size.</li>
+        </ul>
+        <div class="controls">
+          <button onclick="_via_util_page_hide()">Close</button>
+        </div>
+      </div>
+
+      <div data-pageid="page_share_open_shared" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
+        <h2>Open a Shared VIA Project</h2>
+        <p>A unique project-id is assigned to every shared VIA project. For example, the following two project-id have been publicly shared for demonstration purposes:
+          <ul>
+            <li>Video Annotation: e302eadf-aa53-4a5a-b958-11175692c928</li>
+            <li>Audio Annotation: d4a9bc87-9652-42c3-a336-f41e18d638e6</li>
+          </ul>
+        </p>
+        <p>To open a shared project, enter the project-id below:</p>
+        <table>
+          <tr>
+            <td><label for="via_page_input_pid">VIA Project Id</label></td>
+            <td>
+              <input style="width:25em;" type="text" placeholder="e.g. 71578187-3cd3-45d0-8198-7c441fbc06af" id="via_page_input_pid">
+            </td>
+          </tr>
+        </table>
+
+        <div class="controls">
+          <button id="via_page_button_open_shared" onclick="_via_util_page_process_action(event)">Open Shared Project</button>
+          <button onclick="_via_util_page_hide()">Cancel</button>
+        </div>
+      </div>
+
+      <div data-pageid="page_demo_instructions" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <h1>Some Quick Tips</h1>
         <ul>
           <li>Press <span class="key">Space</span> key at any time to play or pause the audio or video.</li>
@@ -206,8 +293,8 @@
         </ul>
       </div>
 
-      <div data-pageid="page_keyboard_shortcut" class="info_page">
-        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
+      <div data-pageid="page_keyboard_shortcut" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <h1>Keyboard Shortcuts</h1>
         <h3>General</h3>
         <table>
@@ -262,8 +349,8 @@
         <p>&nbsp;</p>
       </div>
 
-      <div data-pageid="page_about" class="info_page">
-        <div class="toolbar"><span onclick="_via_util_hide_info_page()" class="text_button">&times;</span></div>
+      <div data-pageid="page_about" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <h2>VGG Image Annotator (VIA)</h2>
         <p>Version: <a href="https://gitlab.com/vgg/via/blob/master/CHANGELOG">__VIA_VERSION__</a></p>
         <p>VGG Image Annotator (VIA) is a simple and standalone manual annotation tool
@@ -320,7 +407,7 @@
         </pre>
         <p>Copyright &copy; 2016-2019, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>, Visual Geometry Group, Oxford University.</p>
       </div>
-    </div>
+    </div> <!-- end of page container -->
 
     <!-- used by _via_view_annotator._show_start_info() -->
     <div id="via_start_info_content" class="hide">
@@ -346,10 +433,10 @@
     <script src="../js/_via_attribute.js"></script>
     <script src="../js/_via_view.js"></script>
     <script src="../js/_via_data.js"></script>
+    <script src="../js/_via_share.js"></script>
+    <script src="../js/_via_import_export.js"></script>
 
     <script src="../js/_via_video_thumbnail.js"></script>
-    <!--DISABLED EXPERIMENTAL FEATURE<script src="../js/_via_audio_spectrum.js"></script>-->
-
     <script src="../js/_via_file_annotator.js"></script>
     <script src="../js/_via_temporal_segmenter.js"></script>
     <script src="../js/_via_view_annotator.js"></script>
@@ -363,6 +450,7 @@
     <!-- DEMO SCRIPT AUTOMATICALLY INSERTED BY VIA PACKER SCRIPT -->
 
     <script>
+      //__ENABLED_BY_PACK_SCRIPT__var _VIA_DEBUG = false;
       var via_container = document.getElementById('via_container');
       var via = new _via(via_container);
       //__ENABLED_BY_DEMO_PACK_SCRIPT___via_util_show_info_page('page_demo_instructions');

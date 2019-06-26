@@ -65,10 +65,9 @@ _via_share.prototype.push = function() {
 }
 
 _via_share.prototype.pull = function(pid) {
-  console.log('pull: ' + pid)
   this._project_pull(pid).then( function(remote_rev) {
     this.d.project_load(remote_rev).then( function() {
-      console.log('ok');
+      _via_util_msg_show('Loaded shared project ' + pid);
     }.bind(this), function(err) {
       console.warn(err)
     }.bind(this));
@@ -152,7 +151,6 @@ _via_share.prototype._project_push = function(pid, rev) {
     xhr.addEventListener('load', function() {
       switch(xhr.statusText) {
       case 'OK':
-        console.log(xhr.responseText)
         ok_callback(xhr.responseText);
         break;
       default:
