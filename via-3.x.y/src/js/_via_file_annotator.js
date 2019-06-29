@@ -91,7 +91,7 @@ _via_file_annotator.prototype._file_load_show_error_page = function() {
   page.appendChild(title);
 
   var msg = document.createElement('p');
-  msg.innerHTML = 'File "<code>' + this.d.file_get_uri(this.fid) + '</code>". ';
+  msg.innerHTML = 'File "<code>' + this.d.file_get_uri(this.fid) + '</code>" not found. ';
   msg.innerHTML += 'VIA application will automatically reload this file when you update one of the properties below.';
   page.appendChild(msg);
 
@@ -1375,12 +1375,18 @@ _via_file_annotator.prototype._on_event_metadata_add = function(data, event_payl
   var vid = event_payload.vid;
   var mid = event_payload.mid;
   if ( this.vid === vid &&
-       this.d.store.metadata[mid].z.length === 1 &&
-       this.d.store.metadata[mid].xy.length !== 0
-     ) {
-    this.va.temporal_segmenter._tmetadata_boundary_add_spatial_mid(mid);
-    this._creg_add(vid, mid);
-    this._creg_draw_all();
+       this.d.store.metadata[mid].xy.length !== 0 ) {
+    // spatial region was added, but added to what?
+    if ( this.d.store.metadata[mid].z.length === 1 ) {
+      // spatial region in a video frame was added
+      this.va.temporal_segmenter._tmetadata_boundary_add_spatial_mid(mid);
+      this._creg_add(vid, mid);
+      this._creg_draw_all();
+    } else {
+      // spatial region in an image was added
+      this._creg_add(vid, mid);
+      this._creg_draw_all();
+    }
   }
 }
 

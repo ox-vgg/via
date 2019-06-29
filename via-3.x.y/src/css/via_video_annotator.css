@@ -13,7 +13,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 .via_container { position:relative; display:grid; grid-template-rows:auto 1fr; grid-row-gap:0.5em; padding:0.3em; background-color:#ffffff; height:100vh; max-height:100vh; width:100vw; }
 
 /* top control panel */
-#via_control_panel_container { display:block; border:1px solid #707070; padding:0.4em 0.5em; height:2.45em; overflow-y:auto; }
+#via_control_panel_container { display:block; border:1px solid #707070; padding:0.4em 0.5em; }
 /*#via_control_panel_container { display:block; border:1px solid #707070; padding:0.4em 0.5em; height:2.2em; overflow-y:hidden; }*/
 #via_control_panel_container * { display:inline-block; margin:0 0.2em; outline:none; vertical-align:middle; }
 #via_control_panel_container .spacer { padding:0 0.5em; }

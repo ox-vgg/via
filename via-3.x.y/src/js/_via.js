@@ -18,8 +18,7 @@ function _via(via_container) {
   this.s  = new _via_share(this.d, conf);
 
   if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
-    if ( typeof(_via_share) === 'function' ) {
-    }
+    // ADD DEBUG CODE HERE (IF NEEDED)
   }
 
   //// define the html containers
@@ -100,6 +99,7 @@ function _via(via_container) {
     if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
       //this.d.project_load_json(_via_dp[2]['store']); // video
       //this.d.project_load_json(_via_dp[1]['store']); // audio
+      //this.d.project_load_json(_via_dp[4]['store']); // image
       setTimeout( function() {
         //this.va.view_show('1');
         //this.editor.show();

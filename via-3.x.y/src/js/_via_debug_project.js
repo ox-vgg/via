@@ -12,7 +12,7 @@ _via_dp[0]['store']['project'] = {
   'pname':   'VIA Debug Project',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
-  'data_format_version': '3.1.1',
+  'data_format_version': '3.1.0',
 };
 _via_dp[0]['store']['config'] = {
   'file': {
@@ -480,7 +480,6 @@ _via_dp[1]['store']['metadata'] = {
 //
 // human activity
 // source: https://commons.wikimedia.org/wiki/File:Alioli.ogv
-
 _via_dp[2] = {};
 _via_dp[2]['store'] = {};
 _via_dp[2]['store']['project'] = {
@@ -888,13 +887,14 @@ _via_dp[4]['store']['project'] = {
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
   'data_format_version': '3.1.1',
+  'vid_list':['1', '2'],
 };
 _via_dp[4]['store']['config'] = {
   'file': {
     'loc_prefix': {
-      '1':'/data/datasets/via/via-3.x.y/img_annotation/',
+      '1':'',
       '2':'',
-      '3':'',
+      '3':'../../data/sample_img/',
       '4':'',
     },
   },
@@ -918,14 +918,14 @@ _via_dp[4]['store']['file'] = {
     'fid': 1,
     'fname': 'adutta_swan.jpg',
     'type': 2,
-    'loc': 1,
+    'loc': 3,
     'src': 'adutta_swan.jpg',
   },
   '2': {
     'fid': 2,
     'fname': 'wikimedia_death_of_socrates.jpg',
     'type': 2,
-    'loc': 1,
+    'loc': 3,
     'src': 'wikimedia_death_of_socrates.jpg',
   },
 };
@@ -942,5 +942,4 @@ _via_dp[4]['store']['view'] = {
     ]
   },
 };
-_via_dp[4]['store']['vid_list'] = ['1', '2'];
 _via_dp[4]['store']['metadata'] = {};
