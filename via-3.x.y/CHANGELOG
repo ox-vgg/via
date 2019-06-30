@@ -1,7 +1,11 @@
+## [3.0.5] - not release yet!
+ * spatial region label (@todo)
+
 ## [3.0.4] - not release yet!
  * issue with spatial region attribute definition fixed (@todo)
  * spatial region drawn on image is not shown after region draw operation completes (@todo)
  * rectangular region selection shows unwanted marker (@todo)
+ * reduced the z-index of screen annotation editor to avoid collison with VIA page
 
 ## [3.0.3] - 26 June 2019
  * csv export: spatial metadata export contains option-id, added notes, removed extra curley brances from csv JSON export "{...}"

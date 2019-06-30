@@ -162,8 +162,8 @@ function _via_load_submodules() {
       'z': [0.917],
       'xy': [4, 263, 184, 17, 13],
       'av': {
-        '2':'egg',
-        '3':'ingredient',
+        '2':'1',
+        '3':'1',
       }
     },
     'vPao-re8': {
@@ -172,8 +172,8 @@ function _via_load_submodules() {
       'z': [0.917],
       'xy': [2, 343, 730, 60, 160],
       'av': {
-        '2':'bottle',
-        '3':'ingredient',
+        '2':'2',
+        '3':'1',
       }
     },
     'x-PoM9ea': {
@@ -182,8 +182,8 @@ function _via_load_submodules() {
       'z': [0.917],
       'xy': [7, 225, 133, 177, 177, 195, 188, 246, 138],
       'av': {
-        '2':'knife',
-        '3':'tool',
+        '2':'6',
+        '3':'2',
       }
     },
     'mR8ks-Aa': {
@@ -192,8 +192,8 @@ function _via_load_submodules() {
       'z': [7.208],
       'xy': [4, 328, 110, 25, 21],
       'av': {
-        '2':'egg',
-        '3':'ingredient',
+        '2':'1',
+        '3':'1',
       }
     },
     'Yh7Klow6': {
@@ -202,8 +202,8 @@ function _via_load_submodules() {
       'z': [21.52],
       'xy': [2, 315, 52, 80, 155],
       'av': {
-        '2':'bottle',
-        '3':'ingredient',
+        '2':'2',
+        '3':'1',
       }
     },
     'A7jfx8PX': {
@@ -240,6 +240,10 @@ function _via_load_submodules() {
 
   setTimeout( function() {
     this.va.view_show('1');
+    if ( this.s ) {
+      this.s._disable_share();
+    }
+
     //this.editor.show();
   }.bind(this), 500);
 }

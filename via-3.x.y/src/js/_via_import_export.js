@@ -116,6 +116,7 @@ _via_import_export.prototype.export_to_file = function(data_format) {
 
 _via_import_export.prototype.export_to_via3_csv = function() {
   return new Promise( function(ok_callback, err_callback) {
+    console.log(JSON.stringify(this.d.store.attribute))
     var csv = [];
 
     var attribute = {}
@@ -132,12 +133,7 @@ _via_import_export.prototype.export_to_via3_csv = function() {
 
     csv.push('# SHAPE_ID = ' + JSON.stringify(_VIA_RSHAPE));
     csv.push('# FLAG_ID = ' + JSON.stringify(_VIA_METADATA_FLAG));
-    var attribute_short = Object.assign({}, this.d.store.attribute);
-    for ( var aid in attribute_short ) {
-      delete attribute_short[aid].anchor_id;
-      delete attribute_short[aid].type;
-    }
-    csv.push('# ATTRIBUTE = ' + JSON.stringify(attribute_short));
+    csv.push('# ATTRIBUTE = ' + JSON.stringify(this.d.store.attribute));
     csv.push('# CSV_HEADER = metadata_id,file_list,flags,temporal_coordinates,spatial_coordinates,metadata');
     // build file_list for each view_id
     var vid_filesrc_str_list = {};
@@ -172,10 +168,9 @@ _via_import_export.prototype.export_to_via3_csv = function() {
     var data_blob = new Blob( [csv.join('\n')],
                               {type: 'text/csv;charset=utf-8'});
     var filename = [];
-    filename.push(this.d.store.project.pid.substr(0,9) + '_');
+    filename.push(this.d.store.project.pname.replace(' ', '-'));
     filename.push(_via_util_date_to_filename_str(Date.now()));
     filename.push('_export.csv');
-    console.log(csv.join('\n'));
     _via_util_download_as_file(data_blob, filename.join(''));
   }.bind(this));
 }

@@ -242,6 +242,9 @@ function _via_load_submodules() {
 
   setTimeout( function() {
     this.va.view_show('1');
+    if ( this.s ) {
+      this.s._disable_share();
+    }
     //this.editor.show();
   }.bind(this), 500);
 }

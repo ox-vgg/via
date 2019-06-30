@@ -93,7 +93,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 #view_container > .view_content_container > .file_container * { position:absolute; top:0; }
 #view_container > .view_content_container > .file_container audio { margin-top:1em; height:3ch; width:98%; }
 #view_container > .view_content_container > .file_container .rinput_enabled { }
-#view_container > .view_content_container > .file_container > .smetadata_container { position:relative; display:inline-block; font-size:small; background-color:white; z-index:1001; }
+#view_container > .view_content_container > .file_container > .smetadata_container { position:relative; display:inline-block; font-size:small; background-color:white; }
 #view_container > .view_content_container > .file_container > .smetadata_container * { position:relative; vertical-align:middle; }
 #view_container > .view_content_container > .file_container > .smetadata_container table { border-collapse:collapse; border:none; margin:0.2em; }
 #view_container > .view_content_container > .file_container > .smetadata_container td { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.2em; }
@@ -432,6 +432,7 @@ to annotate temporal segments of a video: contains 4 rows
           <li>Pre-defined temporal segments appear at the bottom (colourful boxes). Using mouse, select them, move them and delete them (using <span class="key">Backspace</span> key)</li>
           <li>Move your mouse over the temporal segment timeline and roll your mouse button to zoom in/out</li>
           <li>Add new timeline by adding a new entry to the Timeline List (at the bottom) and press "Update" button. For example, "Speaker1,Speaker2" to add timelines for two speakers.</li>
+          <li>Use the <span class="text_button" onclick="via.editor.show()">attribute editor</span> to define or update attributes (e.g. speaker_id) of user defined temporal segments.</li>
         </ul>
       </div>
 
@@ -1145,13 +1146,15 @@ var _VIA_FILE_SELECT_TYPE = { 'JSON':2, 'CSV':4, 'TEXT':8, 'IMAGE':16, 'VIDEO':3
 
 const _VIA_NAME = 'VGG Image Annotator';
 const _VIA_NAME_SHORT = 'VIA';
-const _VIA_VERSION = '3.0.3';
+const _VIA_VERSION = '3.0.4';
 const _VIA_URL_CODE_REPO = 'https://gitlab.com/vgg/via';
 const _VIA_URL_PROJECT_PAGE = 'http://www.robots.ox.ac.uk/~vgg/software/via/';
 
 const _VIA_CONFIG = { MSG_TIMEOUT:3000 };
-const _VIA_REMOTE_STORE = 'http://zeus.robots.ox.ac.uk/via/store/3.x.y/';
+const _VIA_REMOTE_STORE = 'https://zeus.robots.ox.ac.uk/via/store/3.x.y/';
 //const _VIA_REMOTE_STORE = 'http://localhost:9669/'; // for debug
+
+const _VIA_DEFAULT_ATTRIBUTE_ANCHOR_ID = '';
 
 </script>
 <!-- END: Contents of file: js/_via_config.js-->
@@ -1725,16 +1728,7 @@ _via_data.prototype._init_default_project = function() {
       'file_content_align':'center',
     },
   };
-  p['attribute'] = {
-    '1': {
-      'aname':'_DEFAULT_TIMELINE',
-      'anchor_id':'FILE1_Z2_XY0',
-      'type':1,
-      'desc':'Attribute used for definition of temporal regions in audio and video (added by default)',
-      'options':{},
-      'default_option_id':'',
-    },
-  };
+  p['attribute'] = {};
   p['file'] = {};
   p['metadata'] = {};
   p['view'] = {};
@@ -1771,7 +1765,7 @@ _via_data.prototype._attribute_exist = function(aname) {
   return false;
 }
 
-_via_data.prototype.attribute_add = function(name, anchor_id, type, options, default_option_id) {
+_via_data.prototype.attribute_add = function(name, anchor_id, type, desc, options, default_option_id) {
   return new Promise( function(ok_callback, err_callback) {
     if ( this._attribute_exist(name) ) {
       err_callback('attribute already exists');
@@ -1779,9 +1773,13 @@ _via_data.prototype.attribute_add = function(name, anchor_id, type, options, def
     }
 
     var aid = this._attribute_get_new_id();
+    var desc = desc || '';
+    var options = options || {};
+    var default_option_id = default_option_id || '';
     this.store['attribute'][aid] = new _via_attribute(name,
                                                       anchor_id,
                                                       type,
+                                                      desc,
                                                       options,
                                                       default_option_id);
     this._cache_update_attribute_group();
@@ -1843,6 +1841,19 @@ _via_data.prototype.attribute_update_aname = function(aid, new_aname) {
     }
     this.store['attribute'][aid]['aname'] = new_aname;
     this.emit_event( 'attribute_update', { 'aid':aid, 'aname':new_aname } );
+    ok_callback(aid);
+  }.bind(this));
+}
+
+_via_data.prototype.attribute_update_type = function(aid, new_type) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( ! this.store.attribute.hasOwnProperty(aid) ) {
+      err_callback('aid does not exist');
+      return;
+    }
+    this.store['attribute'][aid]['type'] = new_type;
+    console.log(JSON.stringify(this.store.attribute[aid]))
+    this.emit_event( 'attribute_update', { 'aid':aid, 'type':new_type } );
     ok_callback(aid);
   }.bind(this));
 }
@@ -2674,6 +2685,16 @@ function _via_share(data, conf) {
   _via_event.call(this);
 }
 
+_via_share.prototype._disable_share = function() {
+  this.push   = this._disabled_info;
+  this.pull   = this._disabled_info;
+  this.exists = this._disabled_info;
+}
+
+_via_share.prototype._disabled_info = function() {
+  _via_util_msg_show('Share feature has been disabled in demo applications!');
+}
+
 _via_share.prototype.push = function() {
   if ( this.d.store.project.pid === _VIA_PROJECT_ID_MARKER &&
        this.d.store.project.rev === _VIA_PROJECT_REV_ID_MARKER &&
@@ -2733,7 +2754,10 @@ _via_share.prototype.pull = function(pid) {
       _via_util_msg_show('Loaded shared project ' + pid);
     }.bind(this), function(err) {
       console.warn(err)
+      _via_util_msg_show('Failed to load shared project: ' + err);
     }.bind(this));
+  }.bind(this), function(err_msg) {
+    _via_util_msg_show(err_msg + ' fetching remote shared project: ' + pid);
   }.bind(this));
 }
 
@@ -2798,10 +2822,10 @@ _via_share.prototype._project_pull = function(pid) {
       }
     });
     xhr.addEventListener('timeout', function(e) {
-      err_callback(pid, 'timeout');
+      err_callback('Timeout');
     });
     xhr.addEventListener('error', function(e) {
-      err_callback(pid, 'error')
+      err_callback('Error' )
     });
     xhr.open('GET', this.conf['ENDPOINT'] + pid);
     xhr.send();
@@ -2963,6 +2987,7 @@ _via_import_export.prototype.export_to_file = function(data_format) {
 
 _via_import_export.prototype.export_to_via3_csv = function() {
   return new Promise( function(ok_callback, err_callback) {
+    console.log(JSON.stringify(this.d.store.attribute))
     var csv = [];
 
     var attribute = {}
@@ -2979,12 +3004,7 @@ _via_import_export.prototype.export_to_via3_csv = function() {
 
     csv.push('# SHAPE_ID = ' + JSON.stringify(_VIA_RSHAPE));
     csv.push('# FLAG_ID = ' + JSON.stringify(_VIA_METADATA_FLAG));
-    var attribute_short = Object.assign({}, this.d.store.attribute);
-    for ( var aid in attribute_short ) {
-      delete attribute_short[aid].anchor_id;
-      delete attribute_short[aid].type;
-    }
-    csv.push('# ATTRIBUTE = ' + JSON.stringify(attribute_short));
+    csv.push('# ATTRIBUTE = ' + JSON.stringify(this.d.store.attribute));
     csv.push('# CSV_HEADER = metadata_id,file_list,flags,temporal_coordinates,spatial_coordinates,metadata');
     // build file_list for each view_id
     var vid_filesrc_str_list = {};
@@ -3019,10 +3039,9 @@ _via_import_export.prototype.export_to_via3_csv = function() {
     var data_blob = new Blob( [csv.join('\n')],
                               {type: 'text/csv;charset=utf-8'});
     var filename = [];
-    filename.push(this.d.store.project.pid.substr(0,9) + '_');
+    filename.push(this.d.store.project.pname.replace(' ', '-'));
     filename.push(_via_util_date_to_filename_str(Date.now()));
     filename.push('_export.csv');
-    console.log(csv.join('\n'));
     _via_util_download_as_file(data_blob, filename.join(''));
   }.bind(this));
 }
@@ -3232,7 +3251,7 @@ _via_file_annotator.prototype._file_load_show_error_page = function() {
   page.appendChild(title);
 
   var msg = document.createElement('p');
-  msg.innerHTML = 'File "<code>' + this.d.file_get_uri(this.fid) + '</code>". ';
+  msg.innerHTML = 'File "<code>' + this.d.file_get_uri(this.fid) + '</code>" not found. ';
   msg.innerHTML += 'VIA application will automatically reload this file when you update one of the properties below.';
   page.appendChild(msg);
 
@@ -3385,38 +3404,43 @@ _via_file_annotator.prototype._file_load = function() {
     this.file_html_element = this._file_create_html_element();
     this.file_html_element.setAttribute('title', this.d.store.file[this.fid].fname);
     var file_src = this.d.file_get_src(this.d.store.file[this.fid].fid);
-    if ( file_src !== '' ) {
-      this.file_html_element.setAttribute('src', file_src);
-    } else {
+    if ( file_src === '' ) {
       this.d.file_free_resources(this.fid);
       this._file_load_show_error_page();
       err_callback();
       return;
+    } else {
+      this.file_html_element.setAttribute('src', file_src);
     }
 
     this.file_html_element.addEventListener('load', function() {
-      this.d.file_free_resources(this.fid);
+      //console.log('load:' + this.fid + ', now freeing resources')
+      //this.d.file_free_resources(this.fid);
       this._file_html_element_ready();
       ok_callback();
     }.bind(this));
     this.file_html_element.addEventListener('loadeddata', function() {
+      //console.log('loaddata:' + this.fid + ', now freeing resources')
       this.d.file_free_resources(this.fid);
       this._file_html_element_ready();
       ok_callback();
     }.bind(this));
     this.file_html_element.addEventListener('abort', function(e) {
+      //console.log('abort:' + this.fid + ', now freeing resources')
       this.d.file_free_resources(this.fid);
       _via_util_msg_show('Failed to load file [' + this.d.store.file[this.fid].fname + '] (' + e + ')' );
       this._file_load_show_error_page();
       err_callback();
     }.bind(this));
     this.file_html_element.addEventListener('stalled', function(e) {
+      //console.log('stalled:' + this.fid + ', now freeing resources')
       this.d.file_free_resources(this.fid);
       _via_util_msg_show('Failed to load file [' + this.d.store.file[this.fid].fname + '] (' + e + ')' );
       this._file_load_show_error_page();
       err_callback();
     }.bind(this));
     this.file_html_element.addEventListener('error', function(e) {
+      //console.log('error:' + this.fid + ', now freeing resources')
       this.d.file_free_resources(this.fid);
       _via_util_msg_show('Failed to load file [' + this.d.store.file[this.fid].fname + '] (' + e + ')' );
       this._file_load_show_error_page();
@@ -3560,7 +3584,7 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this.smetadata_container.setAttribute('class', 'smetadata_container');
   this.smetadata_container.classList.add('hide');
   this.smetadata_container.setAttribute('id', 'smetadata_container');
-  this.smetadata_container.innerHTML = 'Spatial Metadata Editor @todo';
+  this.smetadata_container.innerHTML = 'Spatial Metadata Editor';
   this.c.appendChild(this.smetadata_container);
 
   // draw all existing regions
@@ -4516,12 +4540,18 @@ _via_file_annotator.prototype._on_event_metadata_add = function(data, event_payl
   var vid = event_payload.vid;
   var mid = event_payload.mid;
   if ( this.vid === vid &&
-       this.d.store.metadata[mid].z.length === 1 &&
-       this.d.store.metadata[mid].xy.length !== 0
-     ) {
-    this.va.temporal_segmenter._tmetadata_boundary_add_spatial_mid(mid);
-    this._creg_add(vid, mid);
-    this._creg_draw_all();
+       this.d.store.metadata[mid].xy.length !== 0 ) {
+    // spatial region was added, but added to what?
+    if ( this.d.store.metadata[mid].z.length === 1 ) {
+      // spatial region in a video frame was added
+      this.va.temporal_segmenter._tmetadata_boundary_add_spatial_mid(mid);
+      this._creg_add(vid, mid);
+      this._creg_draw_all();
+    } else {
+      // spatial region in an image was added
+      this._creg_add(vid, mid);
+      this._creg_draw_all();
+    }
   }
 }
 
@@ -4841,21 +4871,32 @@ _via_file_annotator.prototype._smetadata_set_position = function() {
     y = y + this.creg[mid][3];
     break;
   }
-  this.smetadata_container.style.left = x + 'px';
-  this.smetadata_container.style.top  = y + 'px';
+  this.smetadata_container.style.left = Math.round(x) + 'px';
+  this.smetadata_container.style.top  = Math.round(y) + 'px';
 }
 
 _via_file_annotator.prototype._smetadata_show = function() {
   if ( this.selected_mid_list.length === 1 ) {
+    this.smetadata_container.classList.remove('hide');
     this._smetadata_update();
     this._smetadata_set_position();
-    this.smetadata_container.classList.remove('hide');
   } else {
     this._smetadata_hide();
   }
 }
 
 _via_file_annotator.prototype._smetadata_update = function() {
+
+  var aid_list = _via_util_merge_object(this.d.cache.attribute_group['FILE1_Z1_XY1'],
+                                        this.d.cache.attribute_group['FILE1_Z0_XY1']);
+
+  if ( Object.keys(aid_list).length === 0 ) {
+    // no attributes to display
+    this.smetadata_container.innerHTML = '';
+    this._smetadata_hide();
+    return;
+  }
+
   var mid = this.selected_mid_list[0];
   var table = document.createElement('table');
   table.appendChild( this._smetadata_header_html() );
@@ -4864,8 +4905,7 @@ _via_file_annotator.prototype._smetadata_update = function() {
   var tbody = document.createElement('tbody');
   var tr = document.createElement('tr');
   tr.setAttribute('data-mid', mid);
-  var aid_list = _via_util_merge_object(this.d.cache.attribute_group['FILE1_Z1_XY1'],
-                                        this.d.cache.attribute_group['FILE1_Z0_XY1']);
+
   var aid;
   for ( var aindex in aid_list ) {
     aid = aid_list[aindex];
@@ -4922,7 +4962,7 @@ _via_file_annotator.prototype._smetadata_on_change = function(e) {
   }
 
   this.d.metadata_update_av(this.vid, mid, aid, aval).then( function(ok) {
-    console.log( JSON.stringify(this.d.store.metadata[ok.mid].av) );
+    //console.log( JSON.stringify(this.d.store.metadata[ok.mid].av) );
   }.bind(this));
 }
 
@@ -7675,15 +7715,28 @@ _via_view_annotator.prototype._on_event_keydown = function(e) {
       }
       return;
     }
+    if ( ( this.view_mode === _VIA_VIEW_MODE.IMAGE1 ||
+           this.view_mode === _VIA_VIEW_MODE.VIDEO1 ) &&
+         ! this.file_annotator[0][0].selected_mid_list.length
+       ) {
+      e.preventDefault();
+      if ( e.key === 'ArrowRight' ) {
+        this.emit_event('view_next', {});
+      } else {
+        this.emit_event('view_prev', {});
+      }
+      return;
+    }
   }
 
-  if ( (this.view_mode === _VIA_VIEW_MODE.IMAGE1 ||
-        this.view_mode === _VIA_VIEW_MODE.VIDEO1) &&
-       this.file_annotator[0][0].selected_mid_list.length
+  if ( this.view_mode === _VIA_VIEW_MODE.IMAGE1 ||
+       this.view_mode === _VIA_VIEW_MODE.VIDEO1
      ) {
-    // a spatial region has been selected
-    // @todo
-    this.file_annotator[0][0]._rinput_keydown_handler(e);
+    if ( this.file_annotator[0][0].selected_mid_list.length ) {
+      // a spatial region has been selected
+      // @todo
+      this.file_annotator[0][0]._rinput_keydown_handler(e);
+    }
     return;
   }
 
@@ -7999,7 +8052,7 @@ _via_view_manager.prototype._file_add_from_filelist = function(filelist) {
 }
 
 _via_view_manager.prototype._on_add_media_local = function() {
-  _via_util_file_select_local(_VIA_FILE_SELECT_TYPE.VIDEO | _VIA_FILE_SELECT_TYPE.AUDIO,
+  _via_util_file_select_local(_VIA_FILE_SELECT_TYPE.IMAGE | _VIA_FILE_SELECT_TYPE.VIDEO | _VIA_FILE_SELECT_TYPE.AUDIO,
                               this._file_add_local.bind(this),
                               true);
 }
@@ -8420,6 +8473,7 @@ _via_editor.prototype.get_attribute = function(aid) {
   var aname_container = document.createElement('td');
   var aname = document.createElement('input');
   aname.setAttribute('type', 'text');
+  aname.setAttribute('data-aid', aid);
   aname.setAttribute('data-varname', 'aname');
   aname.setAttribute('value', this.d.store.attribute[aid].aname);
   aname.addEventListener('change', this.attribute_on_change.bind(this));
@@ -8432,7 +8486,7 @@ _via_editor.prototype.get_attribute = function(aid) {
   anchor_select.setAttribute('data-varname', 'anchor_id');
   anchor_select.setAttribute('style', 'width:12em;');
   anchor_select.addEventListener('change', this.attribute_on_change.bind(this));
-
+  var option_selected = false;
   for ( var anchor_id in _VIA_ATTRIBUTE_ANCHOR ) {
     if ( _VIA_ATTRIBUTE_ANCHOR[anchor_id] !== '__FUTURE__' ) {
       var oi = document.createElement('option');
@@ -8441,6 +8495,7 @@ _via_editor.prototype.get_attribute = function(aid) {
 
       if ( anchor_id === this.d.store.attribute[aid].anchor_id ) {
         oi.setAttribute('selected', '');
+        option_selected = true;
       }
       anchor_select.appendChild(oi);
     }
@@ -8448,6 +8503,9 @@ _via_editor.prototype.get_attribute = function(aid) {
   var anchor = document.createElement('td');
   anchor.appendChild( anchor_select );
   tr.appendChild( anchor );
+  if ( ! option_selected ) {
+    anchor_select.selectedIndex = -1;
+  }
 
   // column: input type
   var type_select = document.createElement('select');
@@ -8473,6 +8531,7 @@ _via_editor.prototype.get_attribute = function(aid) {
   var desc_container = document.createElement('td');
   var desc = document.createElement('input');
   desc.setAttribute('type', 'text');
+  desc.setAttribute('data-aid', aid);
   desc.setAttribute('data-varname', 'desc');
   desc.setAttribute('value', this.d.store.attribute[aid].desc);
   desc.addEventListener('change', this.attribute_on_change.bind(this));
@@ -8487,6 +8546,7 @@ _via_editor.prototype.get_attribute = function(aid) {
     var option_input = document.createElement('textarea');
     option_input.setAttribute('data-aid', aid);
     option_input.setAttribute('data-varname', 'options');
+    option_input.setAttribute('placeholder', 'e.g. a,*b,c,d');
     option_input.setAttribute('title', 'Enter options as comma separated value with the default option prefixed using an *. For example: "a,*b,c"');
     option_input.addEventListener('change', this.attribute_on_change.bind(this));
     option_input.innerHTML = _via_util_obj_to_csv(this.d.store.attribute[aid].options,
@@ -8500,7 +8560,11 @@ _via_editor.prototype.get_attribute = function(aid) {
     tr.appendChild( this.html_element('td', '-') );
   } else {
     var default_value = this.d.store.attribute[aid].options[ this.d.store.attribute[aid].default_option_id ];
-    tr.appendChild( this.html_element('td', default_value) );
+    if ( typeof(default_value) === 'undefined' ) {
+      tr.appendChild( this.html_element('td', 'Not Defined') );
+    } else {
+      tr.appendChild( this.html_element('td', default_value) );
+    }
   }
 
   // column: preview of attribute
@@ -8632,27 +8696,28 @@ _via_editor.prototype.attribute_on_change = function(e) {
   var varname = e.target.dataset.varname;
   var vartype = e.target.type;
   var aid = e.target.dataset.aid;
-  console.log('aid=' + aid + ', varname=' + varname + ', vartype=' + vartype);
 
   switch(vartype) {
   case 'text':
     this.d.store.attribute[aid][varname] = e.target.value;
     break;
   case 'textarea':
-    if ( varname = 'options' ) {
+    if ( varname === 'options' ) {
       var options_csv = e.target.value;
       console.log(options_csv);
       this.d.attribute_update_options_from_csv(aid, options_csv).then(function(ok) {
-        console.log(ok);
-        console.log(this.d.store.attribute[aid])
       }.bind(this));
     }
     break;
   case 'select':
-    if ( varname = 'anchor_id' ) {
-      var new_anchor_id = e.target.options[e.target.selectedIndex];
+  case 'select-one':
+    if ( varname === 'anchor_id' ) {
+      var new_anchor_id = e.target.options[e.target.selectedIndex].value;
       this.d.attribute_update_anchor_id(aid, new_anchor_id);
     }
+    break;
+  default:
+    console.warn('Unknown varname=' + varname + ', vartype=' + vartype);
   }
 
   this.attributes_update();
@@ -8680,10 +8745,9 @@ _via_editor.prototype.metadata_edit = function(e) {
 _via_editor.prototype.on_attribute_create = function(e) {
   var new_attribute_name = this.new_attribute_name_input.value;
   this.d.attribute_add(new_attribute_name,
-                       _VIA_ATTRIBUTE_ANCHOR.FILE1_Z2_XY0,
+                       _VIA_DEFAULT_ATTRIBUTE_ANCHOR_ID,
                        _VIA_ATTRIBUTE_TYPE.TEXT).then( function(ok) {
     this.attributes_update();
-    console.log(ok)
     // attribute was added
   }.bind(this), function(err) {
     console.log(err);
@@ -8702,16 +8766,13 @@ _via_editor.prototype.attribute_del = function(e) {
 _via_editor.prototype.attribute_update_options = function(e) {
   var aid = e.target.dataset.aid;
   var new_options_csv = e.target.value;
-  console.log(e.target.innerHTML)
   this.d.attribute_update_options(aid, new_options_csv);
-  console.log('aid='+aid+', new_options_csv='+new_options_csv);
 }
 
 _via_editor.prototype.attribute_update_type = function(e) {
   var aid = e.target.dataset.aid;
-  var new_type = e.target.options[ e.target.selectedIndex ].value;
+  var new_type = parseInt(e.target.options[ e.target.selectedIndex ].value);
   this.d.attribute_update_type(aid, new_type);
-  console.log('aid='+aid+', new_type='+new_type);
 }
 
 _via_editor.prototype.on_event_attribute_update = function(data, event_payload) {
@@ -8755,7 +8816,7 @@ _via_dp[0]['store']['project'] = {
   'pname':   'VIA Debug Project',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
-  'data_format_version': '3.1.1',
+  'data_format_version': '3.1.0',
 };
 _via_dp[0]['store']['config'] = {
   'file': {
@@ -9223,7 +9284,6 @@ _via_dp[1]['store']['metadata'] = {
 //
 // human activity
 // source: https://commons.wikimedia.org/wiki/File:Alioli.ogv
-
 _via_dp[2] = {};
 _via_dp[2]['store'] = {};
 _via_dp[2]['store']['project'] = {
@@ -9631,13 +9691,14 @@ _via_dp[4]['store']['project'] = {
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
   'data_format_version': '3.1.1',
+  'vid_list':['1', '2'],
 };
 _via_dp[4]['store']['config'] = {
   'file': {
     'loc_prefix': {
-      '1':'/data/datasets/via/via-3.x.y/img_annotation/',
+      '1':'',
       '2':'',
-      '3':'',
+      '3':'../../data/sample_img/',
       '4':'',
     },
   },
@@ -9645,30 +9706,21 @@ _via_dp[4]['store']['config'] = {
     'file_content_align':'center'
   }
 };
-_via_dp[4]['store']['attribute'] = {
-  '1': {
-    'aname': 'name',
-    'anchor_id':'FILE1_Z0_XY1',
-    'type': 1,
-    'desc': 'Name of Object',
-    'options': {},
-    'default_option_id': '',
-  },
-};
+_via_dp[4]['store']['attribute'] = {};
 
 _via_dp[4]['store']['file'] = {
   '1': {
     'fid': 1,
     'fname': 'adutta_swan.jpg',
     'type': 2,
-    'loc': 1,
+    'loc': 3,
     'src': 'adutta_swan.jpg',
   },
   '2': {
     'fid': 2,
     'fname': 'wikimedia_death_of_socrates.jpg',
     'type': 2,
-    'loc': 1,
+    'loc': 3,
     'src': 'wikimedia_death_of_socrates.jpg',
   },
 };
@@ -9685,7 +9737,6 @@ _via_dp[4]['store']['view'] = {
     ]
   },
 };
-_via_dp[4]['store']['vid_list'] = ['1', '2'];
 _via_dp[4]['store']['metadata'] = {};
 </script>
 <!-- END: Contents of file: js/_via_debug_project.js-->
@@ -9711,8 +9762,7 @@ function _via(via_container) {
   this.s  = new _via_share(this.d, conf);
 
   if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
-    if ( typeof(_via_share) === 'function' ) {
-    }
+    // ADD DEBUG CODE HERE (IF NEEDED)
   }
 
   //// define the html containers
@@ -9793,6 +9843,7 @@ function _via(via_container) {
     if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
       //this.d.project_load_json(_via_dp[2]['store']); // video
       //this.d.project_load_json(_via_dp[1]['store']); // audio
+      //this.d.project_load_json(_via_dp[4]['store']); // image
       setTimeout( function() {
         //this.va.view_show('1');
         //this.editor.show();

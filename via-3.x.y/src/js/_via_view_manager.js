@@ -280,7 +280,7 @@ _via_view_manager.prototype._file_add_from_filelist = function(filelist) {
 }
 
 _via_view_manager.prototype._on_add_media_local = function() {
-  _via_util_file_select_local(_VIA_FILE_SELECT_TYPE.VIDEO | _VIA_FILE_SELECT_TYPE.AUDIO,
+  _via_util_file_select_local(_VIA_FILE_SELECT_TYPE.IMAGE | _VIA_FILE_SELECT_TYPE.VIDEO | _VIA_FILE_SELECT_TYPE.AUDIO,
                               this._file_add_local.bind(this),
                               true);
 }

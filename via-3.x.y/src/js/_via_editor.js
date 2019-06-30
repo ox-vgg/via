@@ -322,6 +322,7 @@ _via_editor.prototype.get_attribute = function(aid) {
   var aname_container = document.createElement('td');
   var aname = document.createElement('input');
   aname.setAttribute('type', 'text');
+  aname.setAttribute('data-aid', aid);
   aname.setAttribute('data-varname', 'aname');
   aname.setAttribute('value', this.d.store.attribute[aid].aname);
   aname.addEventListener('change', this.attribute_on_change.bind(this));
@@ -334,7 +335,7 @@ _via_editor.prototype.get_attribute = function(aid) {
   anchor_select.setAttribute('data-varname', 'anchor_id');
   anchor_select.setAttribute('style', 'width:12em;');
   anchor_select.addEventListener('change', this.attribute_on_change.bind(this));
-
+  var option_selected = false;
   for ( var anchor_id in _VIA_ATTRIBUTE_ANCHOR ) {
     if ( _VIA_ATTRIBUTE_ANCHOR[anchor_id] !== '__FUTURE__' ) {
       var oi = document.createElement('option');
@@ -343,6 +344,7 @@ _via_editor.prototype.get_attribute = function(aid) {
 
       if ( anchor_id === this.d.store.attribute[aid].anchor_id ) {
         oi.setAttribute('selected', '');
+        option_selected = true;
       }
       anchor_select.appendChild(oi);
     }
@@ -350,6 +352,9 @@ _via_editor.prototype.get_attribute = function(aid) {
   var anchor = document.createElement('td');
   anchor.appendChild( anchor_select );
   tr.appendChild( anchor );
+  if ( ! option_selected ) {
+    anchor_select.selectedIndex = -1;
+  }
 
   // column: input type
   var type_select = document.createElement('select');
@@ -375,6 +380,7 @@ _via_editor.prototype.get_attribute = function(aid) {
   var desc_container = document.createElement('td');
   var desc = document.createElement('input');
   desc.setAttribute('type', 'text');
+  desc.setAttribute('data-aid', aid);
   desc.setAttribute('data-varname', 'desc');
   desc.setAttribute('value', this.d.store.attribute[aid].desc);
   desc.addEventListener('change', this.attribute_on_change.bind(this));
@@ -389,6 +395,7 @@ _via_editor.prototype.get_attribute = function(aid) {
     var option_input = document.createElement('textarea');
     option_input.setAttribute('data-aid', aid);
     option_input.setAttribute('data-varname', 'options');
+    option_input.setAttribute('placeholder', 'e.g. a,*b,c,d');
     option_input.setAttribute('title', 'Enter options as comma separated value with the default option prefixed using an *. For example: "a,*b,c"');
     option_input.addEventListener('change', this.attribute_on_change.bind(this));
     option_input.innerHTML = _via_util_obj_to_csv(this.d.store.attribute[aid].options,
@@ -402,7 +409,11 @@ _via_editor.prototype.get_attribute = function(aid) {
     tr.appendChild( this.html_element('td', '-') );
   } else {
     var default_value = this.d.store.attribute[aid].options[ this.d.store.attribute[aid].default_option_id ];
-    tr.appendChild( this.html_element('td', default_value) );
+    if ( typeof(default_value) === 'undefined' ) {
+      tr.appendChild( this.html_element('td', 'Not Defined') );
+    } else {
+      tr.appendChild( this.html_element('td', default_value) );
+    }
   }
 
   // column: preview of attribute
@@ -534,27 +545,28 @@ _via_editor.prototype.attribute_on_change = function(e) {
   var varname = e.target.dataset.varname;
   var vartype = e.target.type;
   var aid = e.target.dataset.aid;
-  console.log('aid=' + aid + ', varname=' + varname + ', vartype=' + vartype);
 
   switch(vartype) {
   case 'text':
     this.d.store.attribute[aid][varname] = e.target.value;
     break;
   case 'textarea':
-    if ( varname = 'options' ) {
+    if ( varname === 'options' ) {
       var options_csv = e.target.value;
       console.log(options_csv);
       this.d.attribute_update_options_from_csv(aid, options_csv).then(function(ok) {
-        console.log(ok);
-        console.log(this.d.store.attribute[aid])
       }.bind(this));
     }
     break;
   case 'select':
-    if ( varname = 'anchor_id' ) {
-      var new_anchor_id = e.target.options[e.target.selectedIndex];
+  case 'select-one':
+    if ( varname === 'anchor_id' ) {
+      var new_anchor_id = e.target.options[e.target.selectedIndex].value;
       this.d.attribute_update_anchor_id(aid, new_anchor_id);
     }
+    break;
+  default:
+    console.warn('Unknown varname=' + varname + ', vartype=' + vartype);
   }
 
   this.attributes_update();
@@ -582,10 +594,9 @@ _via_editor.prototype.metadata_edit = function(e) {
 _via_editor.prototype.on_attribute_create = function(e) {
   var new_attribute_name = this.new_attribute_name_input.value;
   this.d.attribute_add(new_attribute_name,
-                       _VIA_ATTRIBUTE_ANCHOR.FILE1_Z2_XY0,
+                       _VIA_DEFAULT_ATTRIBUTE_ANCHOR_ID,
                        _VIA_ATTRIBUTE_TYPE.TEXT).then( function(ok) {
     this.attributes_update();
-    console.log(ok)
     // attribute was added
   }.bind(this), function(err) {
     console.log(err);
@@ -604,16 +615,13 @@ _via_editor.prototype.attribute_del = function(e) {
 _via_editor.prototype.attribute_update_options = function(e) {
   var aid = e.target.dataset.aid;
   var new_options_csv = e.target.value;
-  console.log(e.target.innerHTML)
   this.d.attribute_update_options(aid, new_options_csv);
-  console.log('aid='+aid+', new_options_csv='+new_options_csv);
 }
 
 _via_editor.prototype.attribute_update_type = function(e) {
   var aid = e.target.dataset.aid;
-  var new_type = e.target.options[ e.target.selectedIndex ].value;
+  var new_type = parseInt(e.target.options[ e.target.selectedIndex ].value);
   this.d.attribute_update_type(aid, new_type);
-  console.log('aid='+aid+', new_type='+new_type);
 }
 
 _via_editor.prototype.on_event_attribute_update = function(data, event_payload) {

@@ -902,16 +902,7 @@ _via_dp[4]['store']['config'] = {
     'file_content_align':'center'
   }
 };
-_via_dp[4]['store']['attribute'] = {
-  '1': {
-    'aname': 'name',
-    'anchor_id':'FILE1_Z0_XY1',
-    'type': 1,
-    'desc': 'Name of Object',
-    'options': {},
-    'default_option_id': '',
-  },
-};
+_via_dp[4]['store']['attribute'] = {};
 
 _via_dp[4]['store']['file'] = {
   '1': {

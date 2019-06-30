@@ -544,15 +544,13 @@ _via_view_annotator.prototype._on_event_keydown = function(e) {
     }
   }
 
-  if ( this.file_annotator[0][0].selected_mid_list.length ) {
-    if ( this.view_mode === _VIA_VIEW_MODE.IMAGE1 ||
-         this.view_mode === _VIA_VIEW_MODE.VIDEO1
-       ) {
-      if ( this.file_annotator[0][0].selected_mid_list.length ) {
-        // a spatial region has been selected
-        // @todo
-        this.file_annotator[0][0]._rinput_keydown_handler(e);
-      }
+  if ( this.view_mode === _VIA_VIEW_MODE.IMAGE1 ||
+       this.view_mode === _VIA_VIEW_MODE.VIDEO1
+     ) {
+    if ( this.file_annotator[0][0].selected_mid_list.length ) {
+      // a spatial region has been selected
+      // @todo
+      this.file_annotator[0][0]._rinput_keydown_handler(e);
     }
     return;
   }

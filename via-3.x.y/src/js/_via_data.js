@@ -42,16 +42,7 @@ _via_data.prototype._init_default_project = function() {
       'file_content_align':'center',
     },
   };
-  p['attribute'] = {
-    '1': {
-      'aname':'_DEFAULT_TIMELINE',
-      'anchor_id':'FILE1_Z2_XY0',
-      'type':1,
-      'desc':'Attribute used for definition of temporal regions in audio and video (added by default)',
-      'options':{},
-      'default_option_id':'',
-    },
-  };
+  p['attribute'] = {};
   p['file'] = {};
   p['metadata'] = {};
   p['view'] = {};
@@ -88,7 +79,7 @@ _via_data.prototype._attribute_exist = function(aname) {
   return false;
 }
 
-_via_data.prototype.attribute_add = function(name, anchor_id, type, options, default_option_id) {
+_via_data.prototype.attribute_add = function(name, anchor_id, type, desc, options, default_option_id) {
   return new Promise( function(ok_callback, err_callback) {
     if ( this._attribute_exist(name) ) {
       err_callback('attribute already exists');
@@ -96,9 +87,13 @@ _via_data.prototype.attribute_add = function(name, anchor_id, type, options, def
     }
 
     var aid = this._attribute_get_new_id();
+    var desc = desc || '';
+    var options = options || {};
+    var default_option_id = default_option_id || '';
     this.store['attribute'][aid] = new _via_attribute(name,
                                                       anchor_id,
                                                       type,
+                                                      desc,
                                                       options,
                                                       default_option_id);
     this._cache_update_attribute_group();
@@ -160,6 +155,19 @@ _via_data.prototype.attribute_update_aname = function(aid, new_aname) {
     }
     this.store['attribute'][aid]['aname'] = new_aname;
     this.emit_event( 'attribute_update', { 'aid':aid, 'aname':new_aname } );
+    ok_callback(aid);
+  }.bind(this));
+}
+
+_via_data.prototype.attribute_update_type = function(aid, new_type) {
+  return new Promise( function(ok_callback, err_callback) {
+    if ( ! this.store.attribute.hasOwnProperty(aid) ) {
+      err_callback('aid does not exist');
+      return;
+    }
+    this.store['attribute'][aid]['type'] = new_type;
+    console.log(JSON.stringify(this.store.attribute[aid]))
+    this.emit_event( 'attribute_update', { 'aid':aid, 'type':new_type } );
     ok_callback(aid);
   }.bind(this));
 }

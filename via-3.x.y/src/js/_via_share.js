@@ -19,6 +19,16 @@ function _via_share(data, conf) {
   _via_event.call(this);
 }
 
+_via_share.prototype._disable_share = function() {
+  this.push   = this._disabled_info;
+  this.pull   = this._disabled_info;
+  this.exists = this._disabled_info;
+}
+
+_via_share.prototype._disabled_info = function() {
+  _via_util_msg_show('Share feature has been disabled in demo applications!');
+}
+
 _via_share.prototype.push = function() {
   if ( this.d.store.project.pid === _VIA_PROJECT_ID_MARKER &&
        this.d.store.project.rev === _VIA_PROJECT_REV_ID_MARKER &&
@@ -78,7 +88,10 @@ _via_share.prototype.pull = function(pid) {
       _via_util_msg_show('Loaded shared project ' + pid);
     }.bind(this), function(err) {
       console.warn(err)
+      _via_util_msg_show('Failed to load shared project: ' + err);
     }.bind(this));
+  }.bind(this), function(err_msg) {
+    _via_util_msg_show(err_msg + ' fetching remote shared project: ' + pid);
   }.bind(this));
 }
 
@@ -143,10 +156,10 @@ _via_share.prototype._project_pull = function(pid) {
       }
     });
     xhr.addEventListener('timeout', function(e) {
-      err_callback(pid, 'timeout');
+      err_callback('Timeout');
     });
     xhr.addEventListener('error', function(e) {
-      err_callback(pid, 'error')
+      err_callback('Error' )
     });
     xhr.open('GET', this.conf['ENDPOINT'] + pid);
     xhr.send();

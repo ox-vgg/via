@@ -244,38 +244,43 @@ _via_file_annotator.prototype._file_load = function() {
     this.file_html_element = this._file_create_html_element();
     this.file_html_element.setAttribute('title', this.d.store.file[this.fid].fname);
     var file_src = this.d.file_get_src(this.d.store.file[this.fid].fid);
-    if ( file_src !== '' ) {
-      this.file_html_element.setAttribute('src', file_src);
-    } else {
+    if ( file_src === '' ) {
       this.d.file_free_resources(this.fid);
       this._file_load_show_error_page();
       err_callback();
       return;
+    } else {
+      this.file_html_element.setAttribute('src', file_src);
     }
 
     this.file_html_element.addEventListener('load', function() {
-      this.d.file_free_resources(this.fid);
+      //console.log('load:' + this.fid + ', now freeing resources')
+      //this.d.file_free_resources(this.fid);
       this._file_html_element_ready();
       ok_callback();
     }.bind(this));
     this.file_html_element.addEventListener('loadeddata', function() {
+      //console.log('loaddata:' + this.fid + ', now freeing resources')
       this.d.file_free_resources(this.fid);
       this._file_html_element_ready();
       ok_callback();
     }.bind(this));
     this.file_html_element.addEventListener('abort', function(e) {
+      //console.log('abort:' + this.fid + ', now freeing resources')
       this.d.file_free_resources(this.fid);
       _via_util_msg_show('Failed to load file [' + this.d.store.file[this.fid].fname + '] (' + e + ')' );
       this._file_load_show_error_page();
       err_callback();
     }.bind(this));
     this.file_html_element.addEventListener('stalled', function(e) {
+      //console.log('stalled:' + this.fid + ', now freeing resources')
       this.d.file_free_resources(this.fid);
       _via_util_msg_show('Failed to load file [' + this.d.store.file[this.fid].fname + '] (' + e + ')' );
       this._file_load_show_error_page();
       err_callback();
     }.bind(this));
     this.file_html_element.addEventListener('error', function(e) {
+      //console.log('error:' + this.fid + ', now freeing resources')
       this.d.file_free_resources(this.fid);
       _via_util_msg_show('Failed to load file [' + this.d.store.file[this.fid].fname + '] (' + e + ')' );
       this._file_load_show_error_page();
@@ -419,7 +424,7 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this.smetadata_container.setAttribute('class', 'smetadata_container');
   this.smetadata_container.classList.add('hide');
   this.smetadata_container.setAttribute('id', 'smetadata_container');
-  this.smetadata_container.innerHTML = 'Spatial Metadata Editor @todo';
+  this.smetadata_container.innerHTML = 'Spatial Metadata Editor';
   this.c.appendChild(this.smetadata_container);
 
   // draw all existing regions
@@ -1706,21 +1711,32 @@ _via_file_annotator.prototype._smetadata_set_position = function() {
     y = y + this.creg[mid][3];
     break;
   }
-  this.smetadata_container.style.left = x + 'px';
-  this.smetadata_container.style.top  = y + 'px';
+  this.smetadata_container.style.left = Math.round(x) + 'px';
+  this.smetadata_container.style.top  = Math.round(y) + 'px';
 }
 
 _via_file_annotator.prototype._smetadata_show = function() {
   if ( this.selected_mid_list.length === 1 ) {
+    this.smetadata_container.classList.remove('hide');
     this._smetadata_update();
     this._smetadata_set_position();
-    this.smetadata_container.classList.remove('hide');
   } else {
     this._smetadata_hide();
   }
 }
 
 _via_file_annotator.prototype._smetadata_update = function() {
+
+  var aid_list = _via_util_merge_object(this.d.cache.attribute_group['FILE1_Z1_XY1'],
+                                        this.d.cache.attribute_group['FILE1_Z0_XY1']);
+
+  if ( Object.keys(aid_list).length === 0 ) {
+    // no attributes to display
+    this.smetadata_container.innerHTML = '';
+    this._smetadata_hide();
+    return;
+  }
+
   var mid = this.selected_mid_list[0];
   var table = document.createElement('table');
   table.appendChild( this._smetadata_header_html() );
@@ -1729,8 +1745,7 @@ _via_file_annotator.prototype._smetadata_update = function() {
   var tbody = document.createElement('tbody');
   var tr = document.createElement('tr');
   tr.setAttribute('data-mid', mid);
-  var aid_list = _via_util_merge_object(this.d.cache.attribute_group['FILE1_Z1_XY1'],
-                                        this.d.cache.attribute_group['FILE1_Z0_XY1']);
+
   var aid;
   for ( var aindex in aid_list ) {
     aid = aid_list[aindex];
@@ -1787,7 +1802,7 @@ _via_file_annotator.prototype._smetadata_on_change = function(e) {
   }
 
   this.d.metadata_update_av(this.vid, mid, aid, aval).then( function(ok) {
-    console.log( JSON.stringify(this.d.store.metadata[ok.mid].av) );
+    //console.log( JSON.stringify(this.d.store.metadata[ok.mid].av) );
   }.bind(this));
 }
 
