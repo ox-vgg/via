@@ -43,7 +43,7 @@ _via_share.prototype.push = function() {
     }
 
     // create a new project
-    _via_util_msg_show('Initializing new shared project ...');
+    _via_util_msg_show('Initializing new shared project ...', true);
     this._project_push().then( function(ok) {
       this._project_on_push_ok_response(ok);
     }.bind(this), function(err) {
@@ -51,14 +51,17 @@ _via_share.prototype.push = function() {
     }.bind(this));
   } else {
     // update existing project
+    _via_util_msg_show('Checking for updates to remote project ...', true);
     this._project_pull(this.d.store.project.pid).then( function(remote_rev) {
       this.d.project_is_different(remote_rev).then( function(yes) {
+        _via_util_msg_show('Checking for updates to remote project ...', true);
         try {
           var d = JSON.parse(yes);
           if ( this.d.store.project.rev === d.project.rev ) {
             // push new revision
             var pid = this.d.store.project.pid;
             var rev = this.d.store.project.rev;
+            _via_util_msg_show('Pushing project ...', true);
             this._project_push(pid, rev).then( function(ok) {
               this._project_on_push_ok_response(ok);
             }.bind(this), function(err) {
@@ -138,8 +141,8 @@ _via_share.prototype._project_on_push_ok_response = function(ok_response) {
   }
 }
 
-_via_share.prototype._project_on_push_err_response = function(err_response) {
-  _via_util_msg_show('Push failed: ' + err_response);
+_via_share.prototype._project_on_push_err_response = function(reason, err_msg) {
+  _via_util_msg_show('Push failed: ' + reason + ' ' + err_msg);
   console.warn(err_response);
 }
 
@@ -179,9 +182,11 @@ _via_share.prototype._project_push = function(pid, rev) {
       }
     });
     xhr.addEventListener('timeout', function(e) {
+      console.log('timeout');
       err_callback(pid, 'timeout');
     });
     xhr.addEventListener('error', function(e) {
+      console.log(e.target)
       err_callback(pid, 'error')
     });
 
@@ -193,9 +198,12 @@ _via_share.prototype._project_push = function(pid, rev) {
        ) {
       payload.project.pid = _VIA_PROJECT_ID_MARKER;
       xhr.open('POST', this.conf['ENDPOINT']);
+      console.log('POST ' + this.conf['ENDPOINT'])
     } else {
       xhr.open('POST', this.conf['ENDPOINT'] + pid + '?rev=' + rev);
+      console.log('POST ' + this.conf['ENDPOINT' + pid + '?rev=' + rev])
     }
+    xhr.timeout = _VIA_REMOTE_TIMEOUT;
     xhr.send(JSON.stringify(payload));
   }.bind(this));
 }

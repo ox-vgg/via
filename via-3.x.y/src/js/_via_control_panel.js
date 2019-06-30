@@ -89,7 +89,13 @@ _via_control_panel.prototype._add_view_manager_tools = function() {
   this.c.appendChild(add_media_remote);
 
   var add_media_bulk = _via_util_get_svg_button('micon_lib_add', 'Bulk add file URI ( e.g. file:///... or http://... ) contained in a local CSV file where each row is a remote or local filename.', 'add_media_bulk');
-  add_media_bulk.addEventListener('click', this.via.vm._on_add_media_bulk.bind(this.via.vm));
+  //add_media_bulk.addEventListener('click', this.via.vm._on_add_media_bulk.bind(this.via.vm));
+  add_media_bulk.addEventListener('click', function() {
+    var action_map = {
+      'via_page_fileuri_button_bulk_add':this._page_on_action_fileuri_bulk_add.bind(this),
+    }
+    _via_util_page_show('page_fileuri_bulk_add', action_map);
+  }.bind(this));
   this.c.appendChild(add_media_bulk);
 
   var del_view = _via_util_get_svg_button('micon_remove_circle', 'Remove the Current File', 'remove_media');
@@ -319,5 +325,39 @@ _via_control_panel.prototype._share_show_pull = function() {
 _via_control_panel.prototype._page_on_action_open_shared = function(d) {
   if ( d._action_id === 'via_page_button_open_shared' ) {
     this.via.s.pull(d.via_page_input_pid);
+  }
+}
+
+_via_control_panel.prototype._page_on_action_fileuri_bulk_add = function(d) {
+  console.log(JSON.stringify(d))
+  if ( d.via_page_fileuri_list.length ) {
+    var url_list = d.via_page_fileuri_list.split('\n');
+    if ( url_list.length ) {
+      var filelist = [];
+      for ( var i = 0; i < url_list.length; ++i ) {
+        if ( url_list[i] === '' ||
+             url_list[i] === ' ' ||
+             url_list[i] === '\n'
+           ) {
+          continue; // skip
+        }
+        var filetype;
+        if ( d.via_page_fileuri_filetype === '0' ) {
+          filetype = _via_util_infer_file_type_from_filename(url_list[i]);
+        } else {
+          filetype = parseInt(d.via_page_fileuri_filetype);
+        }
+
+        filelist.push({ 'fname':url_list[i],
+                        'type':filetype,
+                        'loc':_via_util_infer_file_loc_from_filename(url_list[i]),
+                        'src':url_list[i],
+                      });
+      }
+      console.log(filelist)
+      this.vm._file_add_from_filelist(filelist);
+    }
+  } else {
+    // load from file
   }
 }

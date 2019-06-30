@@ -233,16 +233,6 @@
     <div id="via_page_container">
       <div data-pageid="page_import_export" class="via_page">
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
-        <h2>Import</h2>
-        <ol>
-          <li>Select Input Format:
-            <select id="via_page_import_format">
-              <option value="coco">COCO</option>
-              <option value="via2">VIA-2.x.y</option>
-            </select>
-          </li>
-          <li>Choose File: <input id="via_page_import_file" type="file"></li>
-        </ol>
         <h2>Export</h2>
         <ul>
           <li>Select Export Format:
@@ -260,6 +250,26 @@
         <div class="controls">
           <button id="via_page_button_import" onclick="_via_util_page_process_action(event)">Import</button>
           <button id="via_page_button_export" onclick="_via_util_page_process_action(event)">Export</button>
+          <button onclick="_via_util_page_hide()">Cancel</button>
+        </div>
+      </div>
+
+      <div data-pageid="page_fileuri_bulk_add" class="via_page">
+        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
+        <p>File Type:&nbsp;<select id="via_page_fileuri_filetype">
+          <option value="2" selected>Image</option>
+          <option value="4">Video</option>
+          <option value="8">Audio</option>
+          <option value="0">Detect Automatically</option>
+          </select>
+        </p>
+        <h2>Paste File URI (one URI per line)</h2>
+        <textarea id="via_page_fileuri_list" placeholder="For example, http://www.robots.ox.ac.uk/~vgg/software/via/images/via_logo.png \n file:///data/images/img001.jpg \n file:///C:/Documents%20and%20Settings/tlm/video001.mp4" rows="10" cols="80"></textarea>
+        <h2>Import URI from a File</h2>
+        <input id="via_page_fileuri_file" type="file">
+
+        <div class="controls">
+          <button id="via_page_fileuri_button_bulk_add" onclick="_via_util_page_process_action(event)">Add</button>
           <button onclick="_via_util_page_hide()">Cancel</button>
         </div>
       </div>
