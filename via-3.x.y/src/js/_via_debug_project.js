@@ -902,7 +902,20 @@ _via_dp[4]['store']['config'] = {
     'file_content_align':'center'
   }
 };
-_via_dp[4]['store']['attribute'] = {};
+_via_dp[4]['store']['attribute'] = {
+  '1':{
+    'aname':'name',
+    'anchor_id':'FILE1_Z0_XY1',
+    'type': 3,
+    'desc': 'Name of Object',
+    'options': {
+      '0': 'Swan',
+      '1': 'Human',
+      '2': 'Unknown',
+    },
+    'default_option_id': ''
+  },
+};
 
 _via_dp[4]['store']['file'] = {
   '1': {
@@ -933,4 +946,12 @@ _via_dp[4]['store']['view'] = {
     ]
   },
 };
-_via_dp[4]['store']['metadata'] = {};
+_via_dp[4]['store']['metadata'] = {
+  '1_rozl5hQT':{
+    'vid':'1',
+    'flg':0,
+    'z':[],
+    'xy':[2,104.553,119.393,319.056,154.469],
+    'av':{'1':'0'},
+  },
+};

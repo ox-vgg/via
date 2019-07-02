@@ -39,6 +39,7 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   // canvas regions
   this.creg = {}; // canvas regions
   this.selected_mid_list = [];
+  this.creg_label_aid = '1';
 
   // last known mouse cursor position
   this.last_cx = 0;
@@ -447,6 +448,8 @@ _via_file_annotator.prototype._rinput_attach_input_handlers = function(container
   container.addEventListener('mouseup', this._rinput_mouseup_handler.bind(this));
   container.addEventListener('mousemove', this._rinput_mousemove_handler.bind(this));
 
+  container.addEventListener('wheel', this._rinput_wheel_handler.bind(this));
+
   container.addEventListener('keydown', this._rinput_keydown_handler.bind(this));
 }
 
@@ -679,7 +682,7 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
     this._smetadata_show();
     this._creg_draw_all();
     this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
-    _via_util_msg_show('Region selected. Press <span class="key">Backspace</span> key to delete and arrow keys to move selected region', true);
+    _via_util_msg_show('Region selected. Press <span class="key">Backspace</span> key to delete and arrow keys to move selected region. Use mouse wheel to update region label.', true);
     return;
   }
 
@@ -856,6 +859,40 @@ _via_file_annotator.prototype._rinput_region_draw_nclick_done = function() {
   var canvas_input_pts = this.user_input_pts.slice(0);
   this._metadata_add(this.va.region_draw_shape, canvas_input_pts);
 }
+
+_via_file_annotator.prototype._rinput_wheel_handler = function(e) {
+  if ( this.selected_mid_list.length ) {
+    e.preventDefault();
+    var aid_list = Object.keys(this.d.store.attribute);
+    if ( this.creg_label_aid === '' ) {
+      this.creg_label_aid = aid_list[0];
+    } else {
+      var aid_index = aid_list.indexOf(this.creg_label_aid);
+      if ( aid_index !== -1 ) {
+        if (e.deltaY < 0) {
+          var next_aid_index = aid_index + 1;
+          if ( next_aid_index >= aid_list.length ) {
+            this.creg_label_aid = '';
+          } else {
+            this.creg_label_aid = aid_list[next_aid_index];
+          }
+        } else {
+          var prev_aid_index = aid_index - 1;
+          if ( prev_aid_index < 0 ) {
+            this.creg_label_aid = '';
+          } else {
+            this.creg_label_aid = aid_list[prev_aid_index];
+          }
+        }
+      } else {
+        this.creg_label_aid = '';
+      }
+    }
+    this._creg_update();
+    this._creg_draw_all();
+  }
+}
+
 
 //
 // user input state
@@ -1141,25 +1178,64 @@ _via_file_annotator.prototype._creg_clear = function() {
 
 _via_file_annotator.prototype._creg_draw_all = function() {
   this._creg_clear();
-  for ( var mid in this.creg ) {
-    this._creg_draw(mid);
+
+  if ( this.creg_label_aid === '' ) {
+    for ( var mid in this.creg ) {
+      this._creg_draw(mid);
+    }
+  } else {
+    for ( var mid in this.creg ) {
+      this._creg_draw(mid);
+      this._creg_draw_label(mid);
+    }
   }
 
-  this._creg_draw_file_label();
+  // file label: used for image pair annotation
+  if ( this.file_label.length !== 0 ) {
+    this._creg_draw_file_label();
+  }
 }
 
 _via_file_annotator.prototype._creg_draw_file_label = function() {
-  if ( this.file_label.length !== 0 ) {
-    this.rshapectx.fillStyle = 'yellow';
-    this.rshapectx.font = '16px mono';
-    var label_width = this.rshapectx.measureText(this.file_label).width;
-    this.rshapectx.fillText(this.file_label, this.rshape_canvas.width/2 - label_width/2, 20);
-  }
+  this.rshapectx.fillStyle = 'yellow';
+  this.rshapectx.font = '16px mono';
+  var label_width = this.rshapectx.measureText(this.file_label).width;
+  this.rshapectx.fillText(this.file_label, this.rshape_canvas.width/2 - label_width/2, 20);
 }
 
 _via_file_annotator.prototype._creg_draw = function(mid) {
   var is_selected = this.selected_mid_list.includes(mid);
   this._draw(this.rshapectx, this.creg[mid], is_selected)
+}
+
+_via_file_annotator.prototype._creg_draw_label = function(mid) {
+  if ( this.d.store.metadata[mid].av.hasOwnProperty(this.creg_label_aid) ) {
+    var lx = this.creg[mid][1];
+    var ly = this.creg[mid][2];
+    var option_id = this.d.store.metadata[mid].av[this.creg_label_aid];
+    var label = this.d.store.attribute[this.creg_label_aid].options[option_id];
+    if ( label.length > _VIA_SPATIAL_REGION_LABEL_MAXLENGTH ) {
+      label = label.substr(0, _VIA_SPATIAL_REGION_LABEL_MAXLENGTH) + '.';
+    }
+
+    //this.rshapectx.shadowColor = 'transparent';
+    this.rshapectx.font = _VIA_SPATIAL_REGION_LABEL_FONT;
+    var cw = this.rshapectx.measureText('M').width;
+    var ch = 1.8 * cw;
+    var bgnd_rect_width = cw * (label.length);
+
+    // draw background rectangle
+    this.rshapectx.fillStyle = 'black';
+    this.rshapectx.fillRect(Math.floor(lx),
+                            Math.floor(ly - 1.1*ch),
+                            Math.floor(bgnd_rect_width),
+                            Math.floor(ch));
+    // then, draw text over this background rectangle
+    this.rshapectx.fillStyle = 'yellow';
+    this.rshapectx.fillText(label,
+                          Math.floor(lx + 0.5*cw),
+                          Math.floor(ly - 0.35*ch));
+  }
 }
 
 _via_file_annotator.prototype._creg_is_inside = function(xy, cx, cy, tolerance) {
