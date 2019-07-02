@@ -86,20 +86,21 @@ _via_temporal_segmenter.prototype._init = function() {
       if ( this.d.cache.attribute_group['FILE1_Z2_XY0'].length ) {
         this._group_init( this.d.cache.attribute_group['FILE1_Z2_XY0'][0] );
       }
+
+      if ( this.d.store.file[this.fid].type === _VIA_FILE_TYPE.VIDEO ) {
+        this._thumbview_init();
+      }
+
+      this._vtimeline_init();
+      this._tmetadata_init();
+      this._toolbar_init();
+
+      // trigger the update of animation frames
+      this._redraw_all();
+      this._redraw_timeline();
+    } else {
+      this.c.innerHTML = '<p>You must define an attribute with anchor "Temporal Segment in Video or Audio" in order to define temporal segments in this file. Click&nbsp;<svg class="svg_icon" viewbox="0 0 24 24"><use xlink:href="#micon_insertcomment"></use></svg>&nbsp;button to define such attributes using attribute editor.</p><p>After defining the attribute, <span class="text_button" onclick="via.va.view_show(via.va.vid);">reload this file</span>.' ;
     }
-
-    if ( this.d.store.file[this.fid].type === _VIA_FILE_TYPE.VIDEO ) {
-      this._thumbview_init();
-    }
-
-    this._audio_spectrum_init();
-    this._vtimeline_init();
-    this._tmetadata_init();
-    this._toolbar_init();
-
-    // trigger the update of animation frames
-    this._redraw_all();
-    this._redraw_timeline();
   } catch(err) {
     console.log(err);
   }
@@ -1257,6 +1258,7 @@ _via_temporal_segmenter.prototype._tmetadata_mid_move = function(dt) {
 _via_temporal_segmenter.prototype._tmetadata_mid_del_sel = function(mid) {
   this._tmetadata_mid_del(this.selected_mid);
   this._tmetadata_group_gid_remove_mid_sel();
+  _via_util_msg_show('Temporal segment deleted.');
 }
 
 _via_temporal_segmenter.prototype._tmetadata_mid_del = function(mid) {
@@ -1265,8 +1267,8 @@ _via_temporal_segmenter.prototype._tmetadata_mid_del = function(mid) {
     this.tmetadata_gtimeline_mid[this.selected_gid].splice(mindex, 1);
 
     this._group_gid_del_mid(this.selected_gid, mid);
-    this.d.metadata_delete(this.vid, mid);
     this._tmetadata_group_gid_draw(this.selected_gid);
+    this.d.metadata_delete(this.vid, mid);
   }
 }
 
@@ -1595,7 +1597,7 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     return;
   }
 
-  if ( e.key === 'a' || e.key === 'A' && !e.ctrlKey ) {
+  if ( (e.key === 'a' || e.key === 'A') && ! e.ctrlKey ) {
     e.preventDefault();
     var t = this.m.currentTime;
     if ( e.key === 'a' ) {

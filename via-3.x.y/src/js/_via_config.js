@@ -13,3 +13,5 @@ const _VIA_REMOTE_TIMEOUT = 6000; // in milliseconds
 
 const _VIA_DEFAULT_ATTRIBUTE_ANCHOR_ID = '';
 
+var _VIA_FLOAT_FIXED_POINT = 3; // floats are stored as 3 decimal places
+var _VIA_SPATIAL_REGION_MOVE_DELTA = 10; // in pixels

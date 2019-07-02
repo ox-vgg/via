@@ -330,8 +330,9 @@ _via_control_panel.prototype._page_on_action_open_shared = function(d) {
 
 _via_control_panel.prototype._page_on_action_fileuri_bulk_add = function(d) {
   console.log(JSON.stringify(d))
-  if ( d.via_page_fileuri_list.length ) {
-    var url_list = d.via_page_fileuri_list.split('\n');
+
+  if ( d.via_page_fileuri_urilist.length ) {
+    var url_list = d.via_page_fileuri_urilist.split('\n');
     if ( url_list.length ) {
       var filelist = [];
       for ( var i = 0; i < url_list.length; ++i ) {
@@ -355,7 +356,7 @@ _via_control_panel.prototype._page_on_action_fileuri_bulk_add = function(d) {
                       });
       }
       console.log(filelist)
-      this.vm._file_add_from_filelist(filelist);
+      this.via.vm._file_add_from_filelist(filelist);
     }
   } else {
     // load from file

@@ -81,6 +81,9 @@ function _via(via_container) {
     }
   }
 
+  // default region shape: RECTANGLE
+  this.cp._set_region_shape('RECTANGLE');
+
   // load any external modules (e.g. demo) which should be defined as follows
   // function _via_load_submodules()
   if (typeof _via_load_submodules === 'function') {
@@ -97,7 +100,7 @@ function _via(via_container) {
   } else {
     // debug code (disabled for release)
     if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
-      //this.d.project_load_json(_via_dp[2]['store']); // video
+      this.d.project_load_json(_via_dp[2]['store']); // video
       //this.d.project_load_json(_via_dp[1]['store']); // audio
       //this.d.project_load_json(_via_dp[4]['store']); // image
       setTimeout( function() {

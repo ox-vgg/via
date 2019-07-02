@@ -506,57 +506,31 @@ _via_view_annotator.prototype._attribute_html_element = function(aid, onchange_h
 // keyboard handler
 //
 _via_view_annotator.prototype._on_event_keydown = function(e) {
-  if ( e.key === ' ' ) {
-    if ( this.view_mode === _VIA_VIEW_MODE.VIDEO1 ||
-         this.view_mode === _VIA_VIEW_MODE.AUDIO1
-       ) {
-      e.preventDefault();
-      if ( this.file_annotator[0][0].file_html_element.paused ) {
-        this.file_annotator[0][0].file_html_element.play();
-      } else {
-        this.file_annotator[0][0].file_html_element.pause();
+  if ( this.view_mode === _VIA_VIEW_MODE.VIDEO1 ) {
+    this.file_annotator[0][0]._rinput_keydown_handler(e);
+    if ( this.file_annotator[0][0].selected_mid_list.length === 0 ) {
+      // no spatial region is selected
+      // therefore, the temporal segmenter keyhandler should further handle this event
+      if ( this.temporal_segmenter ) {
+        this.temporal_segmenter._on_event_keydown(e);
       }
     }
     return;
   }
 
-  if ( e.key === 'ArrowLeft' || e.key === 'ArrowRight' ) {
-    if ( this.view_mode === _VIA_VIEW_MODE.IMAGE2 ) {
-      e.preventDefault();
-      if ( e.key === 'ArrowRight' ) {
-        this.emit_event('view_next', {});
-      } else {
-        this.emit_event('view_prev', {});
-      }
-      return;
+  if ( this.view_mode === _VIA_VIEW_MODE.AUDIO1 ) {
+    this.file_annotator[0][0]._rinput_keydown_handler(e);
+    if ( this.temporal_segmenter ) {
+      this.temporal_segmenter._on_event_keydown(e);
     }
-    if ( ( this.view_mode === _VIA_VIEW_MODE.IMAGE1 ||
-           this.view_mode === _VIA_VIEW_MODE.VIDEO1 ) &&
-         ! this.file_annotator[0][0].selected_mid_list.length
-       ) {
-      e.preventDefault();
-      if ( e.key === 'ArrowRight' ) {
-        this.emit_event('view_next', {});
-      } else {
-        this.emit_event('view_prev', {});
-      }
-      return;
-    }
+    return;
   }
 
   if ( this.view_mode === _VIA_VIEW_MODE.IMAGE1 ||
-       this.view_mode === _VIA_VIEW_MODE.VIDEO1
+       this.view_mode === _VIA_VIEW_MODE.IMAGE2
      ) {
-    if ( this.file_annotator[0][0].selected_mid_list.length ) {
-      // a spatial region has been selected
-      // @todo
-      this.file_annotator[0][0]._rinput_keydown_handler(e);
-    }
+    this.file_annotator[0][0]._rinput_keydown_handler(e);
     return;
-  }
-
-  if ( this.temporal_segmenter ) {
-    this.temporal_segmenter._on_event_keydown(e);
   }
 }
 

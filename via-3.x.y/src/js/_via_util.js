@@ -319,10 +319,10 @@ function _via_util_page_gather_user_input() {
     }
   }
 
-	// textarea
+  // textarea
   var textarea_list = _via_page_current.getElementsByTagName('textarea');
   for ( var i = 0; i < textarea_list.length; ++i ) {
-    user_input[textarea_list[i].id] = textarea_list[i].innerHTML;
+    user_input[textarea_list[i].id] = textarea_list[i].value;
   }
 
   return user_input;

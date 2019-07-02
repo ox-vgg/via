@@ -40,6 +40,10 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.creg = {}; // canvas regions
   this.selected_mid_list = [];
 
+  // last known mouse cursor position
+  this.last_cx = 0;
+  this.last_cy = 0;
+
   // constants
   this.conf = {};
   this.conf.CONTROL_POINT_RADIUS = 2;
@@ -452,23 +456,98 @@ _via_file_annotator.prototype._rinput_remove_input_handlers = function() {
 
 _via_file_annotator.prototype._rinput_keydown_handler = function(e) {
   if ( e.key === 'Backspace' || e.key === 'Delete' ) {
-    e.preventDefault();
     if ( this.selected_mid_list.length ) {
+      e.preventDefault();
       this._creg_del_sel_regions();
-      _via_util_msg_show('Deleted selected regions.');
-    } else {
-      _via_util_msg_show('Select a region to delete it.');
+      _via_util_msg_show('Spatial region deleted.');
     }
     return;
   }
 
   if ( e.key === 'a' ) {
-    e.preventDefault();
     if ( e.ctrlKey ) {
+      e.preventDefault();
       this._creg_select_all();
+      this._creg_draw_all();
       _via_util_msg_show('Selected all regions.');
     }
+    return;
   }
+
+  if ( e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+       e.key === 'ArrowUp' || e.key === 'ArrowDown'
+     ) {
+    if ( this.selected_mid_list.length ) {
+      e.preventDefault();
+      // move selected region
+      var cdx = 0;
+      var cdy = 0;
+      switch(e.key) {
+      case 'ArrowLeft':
+        cdx = -1;
+        break;
+      case 'ArrowRight':
+        cdx = +1;
+        break;
+      case 'ArrowUp':
+        cdy = -1;
+        break;
+      case 'ArrowDown':
+        cdy = +1;
+        break;
+      }
+      if ( e.shiftKey ) {
+        cdx = cdx * _VIA_SPATIAL_REGION_MOVE_DELTA;
+        cdy = cdy * _VIA_SPATIAL_REGION_MOVE_DELTA;
+      }
+      var mid_list = this.selected_mid_list.slice(0);
+      this._metadata_move_region(mid_list, cdx, cdy);
+    }
+    return;
+  }
+
+  if ( e.key === 'Escape' ) {
+    e.preventDefault();
+    if ( this.state_id === _VIA_RINPUT_STATE.REGION_DRAW_NCLICK_ONGOING &&
+         this.user_input_pts.length > 2
+       ) {
+      this._rinput_cancel_last_nclick();
+      this._tmpreg_clear();
+      var pts = this.user_input_pts.slice(0);
+      pts.push(this.last_cx, this.last_cy);
+      this._tmpreg_draw_region(this.va.region_draw_shape, pts);
+      _via_util_msg_show('Discarded last drawn vertex.');
+    } else {
+      this._creg_select_none();
+      this._smetadata_hide();
+      this._tmpreg_clear();
+      this.user_input_pts = [];
+      this._state_set( _VIA_RINPUT_STATE.IDLE );
+      _via_util_msg_show('Reset done.');
+    }
+    this._creg_draw_all();
+    return;
+  }
+
+  if ( e.key === 'Enter' ) {
+    e.preventDefault();
+    if ( this.state_id === _VIA_RINPUT_STATE.REGION_DRAW_NCLICK_ONGOING &&
+         this.user_input_pts.length > 4
+       ) {
+      this._rinput_region_draw_nclick_done();
+      this.user_input_pts = [];
+      this._tmpreg_clear();
+      this._state_set( _VIA_RINPUT_STATE.IDLE );
+      _via_util_msg_show( 'Finished drawing a region shape with multiple vertices.');
+    } else {
+      _via_util_msg_show('You must define at least 2 vertices. Press <span class="key">Esc</span> to cancel last drawn vertex.');
+    }
+  }
+}
+
+_via_file_annotator.prototype._rinput_cancel_last_nclick = function() {
+  var n = this.user_input_pts.length;
+  this.user_input_pts.splice(n-2, 2); // delete last two points
 }
 
 _via_file_annotator.prototype._rinput_mousedown_handler = function(e) {
@@ -499,14 +578,13 @@ _via_file_annotator.prototype._rinput_mousedown_handler = function(e) {
   }
 
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_DRAW_NCLICK_ONGOING ) {
-    if ( this. _rinput_is_near_first_user_input_point(cx, cy) ) {
+    if ( this._rinput_is_near_first_user_input_point(cx, cy) ) {
       // marks the completion of definition of polygon and polyline shape
-      var canvas_input_pts = this.user_input_pts.slice(0);
-      this._metadata_add(this.va.region_draw_shape, canvas_input_pts);
+      this._rinput_region_draw_nclick_done();
       this.user_input_pts = [];
       this._tmpreg_clear();
       this._state_set( _VIA_RINPUT_STATE.IDLE );
-      _via_util_msg_show( 'Finished drawing shape with multiple vertices.');
+      _via_util_msg_show( 'Finished drawing a region shape with multiple vertices.');
     } else {
       this.user_input_pts.push(cx, cy);
     }
@@ -569,7 +647,7 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
     case _VIA_RSHAPE.POLYLINE:
       // region shape requiring more than two points (polygon, polyline)
       this._state_set( _VIA_RINPUT_STATE.REGION_DRAW_NCLICK_ONGOING );
-      _via_util_msg_show( 'To finish, click at the first vertex.', true);
+      _via_util_msg_show( 'To finish, click at the first vertex or press <span class="key">Enter</span> key. To discard the last drawn vertex, press <span class="key">Esc</span> key.', true);
       break;
 
     default:
@@ -601,6 +679,7 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
     this._smetadata_show();
     this._creg_draw_all();
     this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
+    _via_util_msg_show('Region selected. Press <span class="key">Backspace</span> key to delete and arrow keys to move selected region', true);
     return;
   }
 
@@ -662,6 +741,8 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
   e.stopPropagation();
   var cx = e.offsetX;
   var cy = e.offsetY;
+  this.last_cx = cx;
+  this.last_cy = cy;
 
   var pts = this.user_input_pts.slice(0);
   pts.push(cx, cy);
@@ -763,12 +844,17 @@ _via_file_annotator.prototype._rinput_is_near_first_user_input_point = function(
   if ( n >= 2 ) {
     var dx = Math.abs(cx - this.user_input_pts[0]);
     var dy = Math.abs(cy - this.user_input_pts[1]);
-    if ( dx <= this.conf.CONTROL_POINT_CLICK_TOL ||
+    if ( dx <= this.conf.CONTROL_POINT_CLICK_TOL &&
          dy <= this.conf.CONTROL_POINT_CLICK_TOL ) {
       return true;
     }
   }
   return false;
+}
+
+_via_file_annotator.prototype._rinput_region_draw_nclick_done = function() {
+  var canvas_input_pts = this.user_input_pts.slice(0);
+  this._metadata_add(this.va.region_draw_shape, canvas_input_pts);
 }
 
 //
