@@ -725,13 +725,11 @@ _via_data.prototype.project_load = function(project_data_str) {
       this.store = this.project_store_apply_version_fix(project_data);
       this._cache_update();
       this.emit_event( 'project_loaded', { 'pid':this.store.project.pid } );
-      console.log('project load done');
       ok_callback();
     }
     catch(err) {
       _via_util_msg_show('Failed to load project! [' + err + ']');
       this._init_default_project();
-      console.log('failed to load project')
       console.log(err)
       this.emit_event( 'project_load', { 'pid':this.store.project.pid } );
       err_callback();

@@ -1575,7 +1575,6 @@ _via_file_annotator.prototype._on_event_metadata_delete_bulk = function(data, ev
   var mid_list = event_payload.mid_list;
   for ( var mindex in mid_list ) {
     var mid = mid_list[mindex];
-    console.log(mindex + ':' + mid)
     if ( this.vid === vid && this.va.temporal_segmenter ) {
       this.va.temporal_segmenter._tmetadata_boundary_del_spatial_mid(mid);
     }
