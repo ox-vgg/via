@@ -1,7 +1,7 @@
 ## [3.0.5] - not release yet!
  * ...
 
-## [3.0.4] - not release yet!
+## [3.0.4] - 02 July 2019
  * issue with spatial region attribute definition fixed
  * spatial region drawn on image is not shown after region draw operation completes
  * rectangular region selection shows unwanted marker
