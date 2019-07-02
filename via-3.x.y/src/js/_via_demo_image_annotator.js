@@ -75,7 +75,7 @@ function _via_load_submodules() {
   };
 
   _via_demo_project['store']['metadata'] = {
-    '-glfwaaX': {
+    '1-glfwaaX': {
       'vid': '1',
       'flg': 0,
       'z': [],
@@ -84,17 +84,26 @@ function _via_load_submodules() {
         '1':'Swan',
       }
     },
-
-    '+mHHT-tg': {
-      'vid': '1',
+    '2_WIpRNLvX': {
+      'vid': '2',
       'flg': 0,
-      'z': [9, 20],
-      'xy': [],
+      'z': [],
+      'xy': [2, 378.921,121.113,84.991,234.435],
       'av': {
-        '1':'2. pour liquid',
+        '1':'Socrates',
+      }
+    },
+    '2_eA5CqEPf': {
+      'vid': '2',
+      'flg': 0,
+      'z': [],
+      'xy': [2, 198.314,150.152,109.072,238.684],
+      'av': {
+        '1':'Plato',
       }
     },
   };
+
   this.d.store = _via_demo_project['store'];
   this.d._cache_update();
   this.vm._init();

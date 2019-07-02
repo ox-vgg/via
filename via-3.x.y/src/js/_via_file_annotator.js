@@ -39,7 +39,6 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   // canvas regions
   this.creg = {}; // canvas regions
   this.selected_mid_list = [];
-  this.creg_label_aid = '1';
 
   // last known mouse cursor position
   this.last_cx = 0;
@@ -864,28 +863,28 @@ _via_file_annotator.prototype._rinput_wheel_handler = function(e) {
   if ( this.selected_mid_list.length ) {
     e.preventDefault();
     var aid_list = Object.keys(this.d.store.attribute);
-    if ( this.creg_label_aid === '' ) {
-      this.creg_label_aid = aid_list[0];
+    if ( this.va.creg_label_aid === '' ) {
+      this.va.creg_label_aid = aid_list[0];
     } else {
-      var aid_index = aid_list.indexOf(this.creg_label_aid);
+      var aid_index = aid_list.indexOf(this.va.creg_label_aid);
       if ( aid_index !== -1 ) {
         if (e.deltaY < 0) {
           var next_aid_index = aid_index + 1;
           if ( next_aid_index >= aid_list.length ) {
-            this.creg_label_aid = '';
+            this.va.creg_label_aid = '';
           } else {
-            this.creg_label_aid = aid_list[next_aid_index];
+            this.va.creg_label_aid = aid_list[next_aid_index];
           }
         } else {
           var prev_aid_index = aid_index - 1;
           if ( prev_aid_index < 0 ) {
-            this.creg_label_aid = '';
+            this.va.creg_label_aid = '';
           } else {
-            this.creg_label_aid = aid_list[prev_aid_index];
+            this.va.creg_label_aid = aid_list[prev_aid_index];
           }
         }
       } else {
-        this.creg_label_aid = '';
+        this.va.creg_label_aid = '';
       }
     }
     this._creg_update();
@@ -995,6 +994,7 @@ _via_file_annotator.prototype._metadata_move_region = function(mid_list, cdx, cd
     }
 
     Promise.all( promise_list ).then( function(ok) {
+      this._smetadata_set_position();
       this._creg_draw_all();
       ok_callback();
     }.bind(this), function(err) {
@@ -1150,19 +1150,18 @@ _via_file_annotator.prototype._creg_show_current_frame_regions = function() {
 
 _via_file_annotator.prototype._creg_add_current_frame_regions = function(vid) {
   this.creg = {};
-  if ( ! this.file_html_element.paused ) {
-    return;
-  }
+
   var t = this.file_html_element.currentTime;
   var mid;
   for ( var mindex in this.d.cache.mid_list[vid] ) {
     mid = this.d.cache.mid_list[vid][mindex];
-    //console.log('Processing mid=' + mid)
-    if ( this.d.store.metadata[mid].z.length === 1 &&
-         this.d.store.metadata[mid].xy.length !== 0
-       ) {
-      if ( Math.abs(this.d.store.metadata[mid].z[0] - t) < 0.1 ) {
+    if ( this.d.store.metadata[mid].xy.length !== 0 ) {
+      if ( this.d.store.metadata[mid].z.length === 0 ) {
         this.creg[mid] = this._metadata_xy_to_creg(vid, mid);
+      } else {
+        if ( Math.abs(this.d.store.metadata[mid].z[0] - t) < 0.1 ) {
+          this.creg[mid] = this._metadata_xy_to_creg(vid, mid);
+        }
       }
     }
   }
@@ -1179,7 +1178,7 @@ _via_file_annotator.prototype._creg_clear = function() {
 _via_file_annotator.prototype._creg_draw_all = function() {
   this._creg_clear();
 
-  if ( this.creg_label_aid === '' ) {
+  if ( this.va.creg_label_aid === '' ) {
     for ( var mid in this.creg ) {
       this._creg_draw(mid);
     }
@@ -1209,11 +1208,25 @@ _via_file_annotator.prototype._creg_draw = function(mid) {
 }
 
 _via_file_annotator.prototype._creg_draw_label = function(mid) {
-  if ( this.d.store.metadata[mid].av.hasOwnProperty(this.creg_label_aid) ) {
+  if ( this.d.store.metadata[mid].av.hasOwnProperty(this.va.creg_label_aid) ) {
     var lx = this.creg[mid][1];
     var ly = this.creg[mid][2];
-    var option_id = this.d.store.metadata[mid].av[this.creg_label_aid];
-    var label = this.d.store.attribute[this.creg_label_aid].options[option_id];
+    var label = '';
+    switch(this.d.store.attribute[this.va.creg_label_aid].type) {
+    case _VIA_ATTRIBUTE_TYPE.RADIO:
+    case _VIA_ATTRIBUTE_TYPE.SELECT:
+    case _VIA_ATTRIBUTE_TYPE.CHECKBOX:
+      var option_id = this.d.store.metadata[mid].av[this.va.creg_label_aid];
+      label = this.d.store.attribute[this.va.creg_label_aid].options[option_id];
+      break;
+    case _VIA_ATTRIBUTE_TYPE.TEXT:
+      label = this.d.store.metadata[mid].av[this.va.creg_label_aid];
+      break;
+    }
+
+    if ( label === '' ) {
+      return;
+    }
     if ( label.length > _VIA_SPATIAL_REGION_LABEL_MAXLENGTH ) {
       label = label.substr(0, _VIA_SPATIAL_REGION_LABEL_MAXLENGTH) + '.';
     }
@@ -1562,7 +1575,8 @@ _via_file_annotator.prototype._on_event_metadata_delete_bulk = function(data, ev
   var mid_list = event_payload.mid_list;
   for ( var mindex in mid_list ) {
     var mid = mid_list[mindex];
-    if ( this.vid === vid ) {
+    console.log(mindex + ':' + mid)
+    if ( this.vid === vid && this.va.temporal_segmenter ) {
       this.va.temporal_segmenter._tmetadata_boundary_del_spatial_mid(mid);
     }
   }

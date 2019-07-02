@@ -84,10 +84,6 @@ _via_control_panel.prototype._add_view_manager_tools = function() {
   add_media_local.addEventListener('click', this.via.vm._on_add_media_local.bind(this.via.vm));
   this.c.appendChild(add_media_local);
 
-  var add_media_remote = _via_util_get_svg_button('micon_add_remote', 'Add Audio or Video File hosted at Remote Servers (e.g. http://)', 'add_media_remote');
-  add_media_remote.addEventListener('click', this.via.vm._on_add_media_remote.bind(this.via.vm));
-  this.c.appendChild(add_media_remote);
-
   var add_media_bulk = _via_util_get_svg_button('micon_lib_add', 'Bulk add file URI ( e.g. file:///... or http://... ) contained in a local CSV file where each row is a remote or local filename.', 'add_media_bulk');
   //add_media_bulk.addEventListener('click', this.via.vm._on_add_media_bulk.bind(this.via.vm));
   add_media_bulk.addEventListener('click', function() {
@@ -329,36 +325,68 @@ _via_control_panel.prototype._page_on_action_open_shared = function(d) {
 }
 
 _via_control_panel.prototype._page_on_action_fileuri_bulk_add = function(d) {
-  console.log(JSON.stringify(d))
-
   if ( d.via_page_fileuri_urilist.length ) {
-    var url_list = d.via_page_fileuri_urilist.split('\n');
-    if ( url_list.length ) {
-      var filelist = [];
-      for ( var i = 0; i < url_list.length; ++i ) {
-        if ( url_list[i] === '' ||
-             url_list[i] === ' ' ||
-             url_list[i] === '\n'
-           ) {
-          continue; // skip
-        }
-        var filetype;
-        if ( d.via_page_fileuri_filetype === '0' ) {
-          filetype = _via_util_infer_file_type_from_filename(url_list[i]);
-        } else {
-          filetype = parseInt(d.via_page_fileuri_filetype);
-        }
+    fileuri_bulk_add_from_url_list(d.via_page_fileuri_urilist);
+  }
 
-        filelist.push({ 'fname':url_list[i],
-                        'type':filetype,
-                        'loc':_via_util_infer_file_loc_from_filename(url_list[i]),
-                        'src':url_list[i],
-                      });
-      }
-      console.log(filelist)
-      this.via.vm._file_add_from_filelist(filelist);
+  if ( d.via_page_fileuri_importfile.length === 1 ) {
+    switch( parseInt(d.via_page_fileuri_filetype) ) {
+    case _VIA_FILE_TYPE.IMAGE:
+      _via_util_load_text_file(d.via_page_fileuri_importfile[0], this.fileuri_bulk_add_image_from_file.bind(this));
+      break;
+    case _VIA_FILE_TYPE.AUDIO:
+      _via_util_load_text_file(d.via_page_fileuri_importfile[0], this.fileuri_bulk_add_audio_from_file.bind(this));
+      break;
+    case _VIA_FILE_TYPE.VIDEO:
+      _via_util_load_text_file(d.via_page_fileuri_importfile[0], this.fileuri_bulk_add_video_from_file.bind(this));
+      break;
+    default:
+      _via_util_load_text_file(d.via_page_fileuri_importfile[0], this.fileuri_bulk_add_auto_from_file.bind(this));
     }
-  } else {
-    // load from file
+
+  }
+}
+
+_via_control_panel.prototype.fileuri_bulk_add_image_from_file = function(uri_list_str) {
+  this.fileuri_bulk_add_from_url_list(uri_list_str, _VIA_FILE_TYPE.IMAGE);
+}
+
+_via_control_panel.prototype.fileuri_bulk_add_audio_from_file = function(uri_list_str) {
+  this.fileuri_bulk_add_from_url_list(uri_list_str, _VIA_FILE_TYPE.AUDIO);
+}
+
+_via_control_panel.prototype.fileuri_bulk_add_video_from_file = function(uri_list_str) {
+  this.fileuri_bulk_add_from_url_list(uri_list_str, _VIA_FILE_TYPE.VIDEO);
+}
+
+_via_control_panel.prototype.fileuri_bulk_add_auto_from_file = function(uri_list_str) {
+  this.fileuri_bulk_add_from_url_list(uri_list_str, 0);
+}
+
+_via_control_panel.prototype.fileuri_bulk_add_from_url_list = function(uri_list_str, type) {
+  var uri_list = uri_list_str.split('\n');
+  if ( uri_list.length ) {
+    var filelist = [];
+    for ( var i = 0; i < uri_list.length; ++i ) {
+      if ( uri_list[i] === '' ||
+           uri_list[i] === ' ' ||
+           uri_list[i] === '\n'
+         ) {
+        continue; // skip
+      }
+      var filetype;
+      if ( type === 0 ) {
+        filetype = _via_util_infer_file_type_from_filename(uri_list[i]);
+      } else {
+        filetype = type;
+      }
+
+      filelist.push({ 'fname':uri_list[i],
+                      'type':filetype,
+                      'loc':_via_util_infer_file_loc_from_filename(uri_list[i]),
+                      'src':uri_list[i],
+                    });
+    }
+    this.via.vm._file_add_from_filelist(filelist);
   }
 }

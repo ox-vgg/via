@@ -116,7 +116,6 @@ _via_import_export.prototype.export_to_file = function(data_format) {
 
 _via_import_export.prototype.export_to_via3_csv = function() {
   return new Promise( function(ok_callback, err_callback) {
-    console.log(JSON.stringify(this.d.store.attribute))
     var csv = [];
 
     var attribute = {}
@@ -143,11 +142,18 @@ _via_import_export.prototype.export_to_via3_csv = function() {
       var vid_filesrc_list = [];
       for ( var findex in this.d.store.view[vid].fid_list ) {
         fid = this.d.store.view[vid].fid_list[findex];
-        if ( this.d.store.file[fid].src instanceof File ||
-             this.d.store.file[fid].loc === _VIA_FILE_LOC.INLINE
-           ) {
+        switch(this.d.store.file[fid].loc) {
+        case _VIA_FILE_LOC.LOCAL:
+          if ( this.d.file_ref.hasOwnProperty(fid) ) {
+            vid_filesrc_list.push( this.d.file_ref[fid].name );
+          } else {
+            vid_filesrc_list.push( this.d.store.file[fid].fname );
+          }
+          break;
+        case _VIA_FILE_LOC.INLINE:
           vid_filesrc_list.push( this.d.store.file[fid].fname );
-        } else {
+          break;
+        default:
           vid_filesrc_list.push( this.d.store.file[fid].src );
         }
       }

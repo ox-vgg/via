@@ -28,6 +28,7 @@ function _via_view_annotator(data, container ) {
 
   // state variables
   this.region_draw_shape = _VIA_RSHAPE.RECT;
+  this.creg_label_aid = '1';
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
