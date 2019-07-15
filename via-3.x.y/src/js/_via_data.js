@@ -201,15 +201,19 @@ _via_data.prototype.attribute_update_options_from_csv = function(aid, options_cs
 // file
 //
 _via_data.prototype._file_get_new_id = function() {
+  var max_fid = -Infinity;
   var fid;
-  var fid_list = Object.keys(this.store.file).map(Number).sort();
-  var n = fid_list.length;
-  if ( n ) {
-    fid = fid_list[n-1] + 1;
-  } else {
-    fid = 1;
+  for ( var fid_str in this.store.file ) {
+    fid = parseInt(fid_str);
+    if ( fid > max_fid ) {
+      max_fid = fid;
+    }
   }
-  return fid;
+  if ( max_fid === -Infinity ) {
+    return '1';
+  } else {
+    return (max_fid + 1).toString();
+  }
 }
 
 _via_data.prototype.file_add = function(name, type, loc, src) {
@@ -537,15 +541,19 @@ _via_data.prototype.metadata_delete_bulk = function(vid, mid_list, emit) {
 // View
 //
 _via_data.prototype._view_get_new_id = function() {
+  var max_vid = -Infinity;
   var vid;
-  var vid_list = Object.keys(this.store.view).map(Number).sort();
-  var n = vid_list.length;
-  if ( n ) {
-    vid = (vid_list[n-1] + 1).toString();
-  } else {
-    vid = '1';
+  for ( var vid_str in this.store.view ) {
+    vid = parseInt(vid_str);
+    if ( vid > max_vid ) {
+      max_vid = vid;
+    }
   }
-  return vid;
+  if ( max_vid === -Infinity ) {
+    return '1';
+  } else {
+    return (max_vid + 1).toString();
+  }
 }
 
 _via_data.prototype.view_add = function(fid_list) {
@@ -592,7 +600,9 @@ _via_data.prototype.view_bulk_add_from_filelist = function(filelist) {
                                              filelist[i].src);
 
         var vid = this._view_get_new_id();
+        console.log('new vid=' + vid + ', ' + typeof(vid))
         this.store.view[vid] = new _via_view( [ fid ] ); // view with single file
+        console.log('Added: vid=' + vid + ', fid=' + fid + ', src=' + filelist[i].src)
         this.store.project.vid_list.push(vid);
 
         added_fid_list.push(fid);
