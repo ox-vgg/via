@@ -86,7 +86,8 @@ We have prepared the following code documentation for each major version of VIA:
 
 [Code review of via-1.0.0](https://gitlab.com/vgg/via/issues/54) was completed 
 by @ecoto in Feb. 2017. Please [let us know](https://gitlab.com/vgg/via/issues/152) 
-if you would like to contribute to VIA project by reviewing its software code.
+if you would like to contribute to VIA project by reviewing its software code. Here are some updates on this issue:
+ * 16 July 2019: [Ben Armstrong](https://gitlab.com/vgg/via/issues/152#note_187568262) is now conducting a code review of [via-2.x.y](https://gitlab.com/vgg/via/tree/master/via-2.x.y) codebase.
 
 ## Citation
 If you use this software, please cite it as shown below and acknowledge the Seebibyte grant as follows: "Development and maintenance of VGG Image Annotator (VIA) is supported by EPSRC programme grant Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1)" 
