@@ -139,6 +139,9 @@ function _via_util_metadata_shape_str(shape_id) {
     case _VIA_WHERE_SHAPE.POLYGON:
       return 'polygon';
       break;
+    case _VIA_WHERE_SHAPE.EXTREME_BOX:
+      return 'extreme_box';
+      break;
     default:
       return 'unknown';
   }

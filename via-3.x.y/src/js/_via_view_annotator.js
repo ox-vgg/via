@@ -346,6 +346,9 @@ _via_view_annotator.prototype.set_region_draw_shape = function(shape) {
     case _VIA_RSHAPE.POLYGON:
       _via_util_msg_show('Click to define vertices of polygon and to finish click at the last vertex.');
       break;
+    case _VIA_RSHAPE.EXTREME_BOX:
+      _via_util_msg_show('Click to define extreme points of bounding box (left, top, right, bottom)');
+      break;
     }
   }
 }

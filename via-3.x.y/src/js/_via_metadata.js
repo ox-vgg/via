@@ -12,7 +12,7 @@
 
 'use strict';
 
-const _VIA_RSHAPE  = { 'POINT':1, 'RECT':2, 'CIRCLE':3, 'ELLIPSE':4, 'LINE':5, 'POLYLINE':6, 'POLYGON':7 };
+const _VIA_RSHAPE  = { 'POINT':1, 'RECT':2, 'CIRCLE':3, 'ELLIPSE':4, 'LINE':5, 'POLYLINE':6, 'POLYGON':7, 'EXTREME_BOX': 8 };
 const _VIA_METADATA_FLAG = { 'RESERVED_FOR_FUTURE':1 };
 
 function _via_metadata(vid, z, xy, av) {

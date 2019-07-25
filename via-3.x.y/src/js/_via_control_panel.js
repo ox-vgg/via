@@ -140,13 +140,19 @@ _via_control_panel.prototype._add_region_shape_selector = function() {
   }.bind(this));
   this.c.appendChild(polygon);
 
+  var extreme_box = _via_util_get_svg_button('shape_extreme', 'Extreme Box', 'EXTREME_BOX');
+  extreme_box.addEventListener('click', function() {
+    this._set_region_shape('EXTREME_BOX');
+  }.bind(this));
+  this.c.appendChild(extreme_box);
+
   var polyline = _via_util_get_svg_button('shape_polyline', 'Polyline', 'POLYLINE');
   polyline.addEventListener('click', function() {
     this._set_region_shape('POLYLINE');
   }.bind(this));
 
   this.c.appendChild(polyline);
-  this.shape_selector_list = { 'POINT':point, 'RECTANGLE':rect, 'CIRCLE':circle, 'ELLIPSE':ellipse, 'LINE':line, 'POLYGON':polygon, 'POLYLINE':polyline };
+  this.shape_selector_list = { 'POINT':point, 'RECTANGLE':rect, 'CIRCLE':circle, 'ELLIPSE':ellipse, 'LINE':line, 'POLYGON':polygon, 'POLYLINE':polyline, 'EXTREME_BOX': extreme_box };
 }
 
 _via_control_panel.prototype._set_region_shape = function(shape) {
