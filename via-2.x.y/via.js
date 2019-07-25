@@ -91,7 +91,6 @@ var VIA_ANNOTATION_EDITOR_PLACEMENT = {NEAR_REGION:'NEAR_REGION',
 
 var VIA_REGION_EDGE_TOL           = 5;   // pixel
 var VIA_REGION_CONTROL_POINT_SIZE = 2;
-var VIA_REGION_POINT_RADIUS       = 3;
 var VIA_POLYGON_VERTEX_MATCH_TOL  = 5;
 var VIA_REGION_MIN_DIM            = 3;
 var VIA_MOUSE_CLICK_TOL           = 2;
@@ -101,6 +100,8 @@ var VIA_POLYGON_RESIZE_VERTEX_OFFSET  = 100;
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
 var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4, 5, 6, 7, 8, 9, 10];
 var VIA_REGION_COLOR_LIST = ["#E69F00", "#56B4E9", "#009E73", "#D55E00", "#CC79A7", "#F0E442", "#ffffff"];
+var VIA_REGION_POINT_RADIUS         = 3;
+var VIA_REGION_POINT_RADIUS_DEFAULT = 3;
 
 var VIA_THEME_REGION_BOUNDARY_WIDTH = 3;
 var VIA_THEME_BOUNDARY_LINE_COLOR   = "black";
@@ -618,9 +619,11 @@ function import_annotations_from_csv(data) {
     var csvdata = data.split(line_split_regex);
 
     var parsed_header = parse_csv_header_line(csvdata[0]);
+    console.log(parsed_header)
     if ( ! parsed_header.is_header ) {
-      show_message('Header line missing in CSV file');
+      show_message('Header line missing in the CSV file');
       err_callback();
+      return;
     }
 
     var percent_completed = 0;
@@ -4168,6 +4171,14 @@ function set_zoom(zoom_level_index) {
   set_all_canvas_size(canvas_w, canvas_h);
   _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
   _via_canvas_scale = _via_canvas_scale_without_zoom / zoom_scale;
+
+  if ( zoom_scale === 1 ) {
+    VIA_REGION_POINT_RADIUS = VIA_REGION_POINT_RADIUS_DEFAULT;
+  } else {
+    if ( zoom_scale > 1 ) {
+      VIA_REGION_POINT_RADIUS = VIA_REGION_POINT_RADIUS_DEFAULT * zoom_scale;
+    }
+  }
 
   _via_load_canvas_regions(); // image to canvas space transform
   _via_redraw_reg_canvas();
