@@ -312,6 +312,29 @@ _via_view_annotator.prototype._view_split_content_container = function(container
 _via_view_annotator.prototype.set_region_draw_shape = function(shape) {
   if ( _VIA_RSHAPE.hasOwnProperty(shape) ) {
     this.region_draw_shape = _VIA_RSHAPE[shape];
+    switch(this.region_draw_shape) {
+    case _VIA_RSHAPE.POINT:
+      _via_util_msg_show('Click to define feature points');
+      break;
+    case _VIA_RSHAPE.RECT:
+      _via_util_msg_show('Click and drag mouse cursor to define a rectangular region');
+      break;
+    case _VIA_RSHAPE.CIRCLE:
+      _via_util_msg_show('Click and drag mouse cursor to define a circular region');
+      break;
+    case _VIA_RSHAPE.ELLIPSE:
+      _via_util_msg_show('Click and drag mouse cursor to define a elliptical region');
+      break;
+    case _VIA_RSHAPE.LINE:
+      _via_util_msg_show('Click and drag mouse cursor to define a line region');
+      break;
+    case _VIA_RSHAPE.POLYLINE:
+      _via_util_msg_show('Click to define vertices of polyline and to finish click at the last vertex.');
+      break;
+    case _VIA_RSHAPE.POLYGON:
+      _via_util_msg_show('Click to define vertices of polygon and to finish click at the last vertex.');
+      break;
+    }
   }
 }
 

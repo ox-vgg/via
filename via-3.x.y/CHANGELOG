@@ -1,3 +1,16 @@
+## [3.0.3] - not release yet!
+ * csv export: spatial metadata export contains option-id, added notes, removed extra curley brances from csv JSON export "{...}"
+ * temporal (z) and spatial coordinates (xy) are represented numbers with 3 decimal places
+
+## [3.0.2] - 21 May 2019
+ * shape selector icon now gets highlighted
+ * fixed issues caused by rename of temporal segment variable's value
+ * fixed issue in thumbnail caused by files added using file:// uri (path issue)
+ * minor UI updates
+
+## [3.0.1] - 20 May 2019
+ * keyboard event listener attached to window instead of via_container to avoid missing keydown events when something else is in focus
+
 ## [3.0.0] - 17 May 2019
  * development of via-3.x.y began in Dec. 2018 with the aim to create a basic audio and video annotator
  * no external dependency, self contained and easy to use

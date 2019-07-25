@@ -329,7 +329,7 @@ _via_file_annotator.prototype._rinput_mousedown_handler = function(e) {
   e.stopPropagation();
   var cx = e.offsetX;
   var cy = e.offsetY;
-  console.log('[vid=' + this.vid + ', state=' + this._state_id2str(this.state_id) + '] : mousedown at (cx,cy) = (' + cx + ',' + cy + ')');
+  //console.log('[vid=' + this.vid + ', state=' + this._state_id2str(this.state_id) + '] : mousedown at (cx,cy) = (' + cx + ',' + cy + ')');
 
   if ( this.state_id === _VIA_RINPUT_STATE.IDLE ) {
     if ( e.shiftkey ) {
@@ -415,7 +415,7 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
   e.stopPropagation();
   var cx = e.offsetX;
   var cy = e.offsetY;
-  console.log('[vid=' + this.vid + ', state=' + this._state_id2str(this.state_id) + '] : mouseup at (cx,cy) = (' + cx + ',' + cy + ')');
+  //console.log('[vid=' + this.vid + ', state=' + this._state_id2str(this.state_id) + '] : mouseup at (cx,cy) = (' + cx + ',' + cy + ')');
 
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_DRAW_ONGOING ) {
     switch ( this.va.region_draw_shape ) {
@@ -729,10 +729,9 @@ _via_file_annotator.prototype._metadata_add = function(region_shape, canvas_inpu
     var xy = this._metadata_pts_to_xy(region_shape, file_input_pts);
     var z = [];
     if ( this.file.type === _VIA_FILE_TYPE.VIDEO ) {
-      z = _via_util_float_to_fixed(this.file_html_element.currentTime, 3);
+      z[0] = this.file_html_element.currentTime;
     }
     this.d.metadata_add(this.vid, z, xy, {}).then( function(ok) {
-      console.log('z=' + this.d.store.metadata[ok.mid].z + ', xy=' + this.d.store.metadata[ok.mid].xy)
       this._creg_add(this.vid, ok.mid);
       this._creg_draw(ok.mid);
       ok_callback(ok.mid);
@@ -1490,7 +1489,7 @@ _via_file_annotator.prototype._rinput_enable = function() {
     if ( this.file.type === _VIA_FILE_TYPE.VIDEO ) {
       this.file_html_element.removeAttribute('controls');
     }
-    _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.');
+    // _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.');
   }
 }
 

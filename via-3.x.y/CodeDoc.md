@@ -1,4 +1,7 @@
 # Code Documentation for VIA Version 3.x.y
+
+Author: [Abhishek Dutta](mailto:adutta_REMOVE_@robots.ox.ac.uk), Version: 16 May 2019
+
 The full VIA3 software application fits in a single HTML file of size less than 
 300 Kilobyte containing nearly 8000 lines of carefully amalgamated HTML, CSS 
 and Javascript code. This single HTML file can run as an offline application 
@@ -257,7 +260,3 @@ python3 pack_demo.py audio_annotator
 The final packaged application files (e.g. via_video_annotator) is placed in 
 [via-3.x.y/dist](via-3.x.y/dist) folder and are made available to users.
 
-```
-Author: Abhishek Dutta
-Version: 16 May 2019
-```

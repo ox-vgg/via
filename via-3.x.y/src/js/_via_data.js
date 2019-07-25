@@ -223,7 +223,9 @@ _via_data.prototype.metadata_add = function(vid, z, xy, av) {
         return;
       }
       var mid = this._metadata_get_new_id(vid);
-      this.store.metadata[mid] = new _via_metadata(vid, z, xy, av);
+      var z_fp = _via_util_float_arr_to_fixed(z, _VIA_FLOAT_FIXED_POINT);
+      var xy_fp = _via_util_float_arr_to_fixed(xy, _VIA_FLOAT_FIXED_POINT);
+      this.store.metadata[mid] = new _via_metadata(vid, z_fp, xy_fp, av);
       if ( ! this.cache.mid_list.hasOwnProperty(vid) ) {
         this.cache.mid_list[vid] = [];
       }
@@ -251,7 +253,9 @@ _via_data.prototype.metadata_update = function(vid, mid, z, xy, v) {
         return;
       }
 
-      this.store.metadata[mid] = new _via_metadata(vid, z, xy, av);
+      var z_fp = _via_util_float_arr_to_fixed(z, _VIA_FLOAT_FIXED_POINT);
+      var xy_fp = _via_util_float_arr_to_fixed(xy, _VIA_FLOAT_FIXED_POINT);
+      this.store.metadata[mid] = new _via_metadata(vid, z_fp, xy_fp, av);
       this.emit_event( 'metadata_update', { 'vid':vid, 'mid':mid } );
       ok_callback({'vid':vid, 'mid':mid});
     }
@@ -272,8 +276,8 @@ _via_data.prototype.metadata_update_xy = function(vid, mid, xy) {
         err_callback({'mid':mid});
         return;
       }
-
-      this.store.metadata[mid].xy = xy.slice(0);
+      var xy_fp = _via_util_float_arr_to_fixed(xy, _VIA_FLOAT_FIXED_POINT);
+      this.store.metadata[mid].xy = xy_fp;
       this.emit_event( 'metadata_update', { 'vid':vid, 'mid':mid } );
       ok_callback({'vid':vid, 'mid':mid});
     }
@@ -323,7 +327,6 @@ _via_data.prototype.metadata_update_av_bulk = function(vid, av_list) {
         this.store.metadata[mid].av[aid] = avalue;
         updated_mid_list.push(mid);
       }
-      console.log(this.store.metadata)
       var event_payload = { 'vid':vid, 'mid_list':updated_mid_list };
       this.emit_event('metadata_update_bulk', event_payload);
       ok_callback(event_payload);
@@ -346,7 +349,8 @@ _via_data.prototype.metadata_update_z = function(vid, mid, z) {
       return;
     }
 
-    this.store.metadata[mid].z = z;
+    var z_fp = _via_util_float_arr_to_fixed(z, _VIA_FLOAT_FIXED_POINT);
+    this.store.metadata[mid].z = z_fp;
     this.emit_event( 'metadata_update', { 'vid':vid, 'mid':mid } );
     ok_callback({'vid':vid, 'mid':mid});
   }.bind(this));
@@ -363,7 +367,8 @@ _via_data.prototype.metadata_update_zi = function(vid, mid, zindex, zvalue) {
       return;
     }
 
-    this.store.metadata[mid].z[zindex] = zvalue;
+    var zvalue_fp = _via_util_float_to_fixed(zvalue, _VIA_FLOAT_FIXED_POINT);
+    this.store.metadata[mid].z[zindex] = zvalue_fp;
     this.emit_event( 'metadata_update', { 'vid':vid, 'mid':mid } );
     ok_callback({'vid':vid, 'mid':mid});
   }.bind(this));
@@ -410,7 +415,6 @@ _via_data.prototype.metadata_delete_bulk = function(vid, mid_list, emit) {
         this.store.metadata[mid].flg = _VIA_METADATA_FLAG.DELETED;
         deleted_mid_list.push(mid);
       }
-      console.log(deleted_mid_list)
       if ( typeof(emit) !== 'undefined' &&
            emit === true ) {
         this.emit_event( 'metadata_delete_bulk', { 'vid':vid, 'mid_list':deleted_mid_list } );
@@ -625,11 +629,21 @@ _via_data.prototype.project_export_csv = function() {
     }
 
     csv.push('# Exported using VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)');
+    csv.push('# Notes:');
+    csv.push('# - spatial_coordinates of [2,10,20,50,80] denotes a rectangle (shape_id=2) of size 50x80 placed at (10,20)');
+    csv.push('# - temporal coordinate of [1.349,2.741] denotes a temporal segment from time 1.346 sec. to 2.741 sec.');
+    csv.push('# - temporal coordinate of [4.633] denotes a still video frame at 4.633 sec.');
+    csv.push('# - metadata of {""1"":""3""} indicates attribute with id "1" set to an attribute option with id "3"');
+
     csv.push('# SHAPE_ID = ' + JSON.stringify(_VIA_RSHAPE));
     csv.push('# FLAG_ID = ' + JSON.stringify(_VIA_METADATA_FLAG));
-    csv.push('# ATTRIBUTES = ' + JSON.stringify(attribute));
+    var attribute_short = Object.assign({}, this.store.attribute);
+    for ( var aid in attribute_short ) {
+      delete attribute_short[aid].anchor_id;
+      delete attribute_short[aid].type;
+    }
+    csv.push('# ATTRIBUTE = ' + JSON.stringify(attribute_short));
     csv.push('# CSV_HEADER = metadata_id,file_list,flags,temporal_coordinates,spatial_coordinates,metadata');
-
     // build file_list for each view_id
     var vid_filesrc_str_list = {};
     var vid, fid;
@@ -666,6 +680,7 @@ _via_data.prototype.project_export_csv = function() {
     filename.push(this.store.project.pid.substr(0,9) + '_');
     filename.push(_via_util_date_to_filename_str(Date.now()));
     filename.push('_export.csv');
+    console.log(csv.join('\n'));
     _via_util_download_as_file(data_blob, filename.join(''));
   }.bind(this));
 }

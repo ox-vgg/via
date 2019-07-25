@@ -144,20 +144,18 @@ _via_control_panel.prototype._add_region_shape_selector = function() {
   polyline.addEventListener('click', function() {
     this._set_region_shape('POLYLINE');
   }.bind(this));
+
   this.c.appendChild(polyline);
+  this.shape_selector_list = { 'POINT':point, 'RECTANGLE':rect, 'CIRCLE':circle, 'ELLIPSE':ellipse, 'LINE':line, 'POLYGON':polygon, 'POLYLINE':polyline };
 }
 
 _via_control_panel.prototype._set_region_shape = function(shape) {
   this.emit_event( 'region_shape', {'shape':shape});
-  var shapes = this.shape_selector.getElementsByTagName('svg');
-  for ( var si in shapes ) {
-    if ( shapes[si].classList.contains('svg_button') ) {
-      if ( shapes[si].getAttribute('id') === shape ) {
-        shapes[si].classList.add('svg_button_selected');
-      } else {
-        shapes[si].classList.remove('svg_button_selected');
-      }
-      console.log(shapes[si])
+  for ( var si in this.shape_selector_list ) {
+    if ( si === shape ) {
+      this.shape_selector_list[si].classList.add('svg_button_selected');
+    } else {
+      this.shape_selector_list[si].classList.remove('svg_button_selected');
     }
   }
 }
