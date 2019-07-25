@@ -4,4 +4,8 @@ These contributions must adhere to the existing [license](LICENSE) of VIA projec
 In this document, we keep a list of contributors to the VIA project.
 
 ## 3.0.5
- * Achal Dave @achald fixed pack scripts to create target directories if they did not exist (merge request 21)
+* Achal Dave @achald fixed pack scripts to create target directories if they did not exist (merge request 21)
+* Achal Dave @achald implemented the extreme clicking annotation method (merge request 22)
+  - user is required to click only the (left, top, right, bottom) extemeties of an object
+  - these extremeties are used to define the bounding box of an object
+  - the extreme clicking annotation method is described in the following paper: https://arxiv.org/abs/1708.02750

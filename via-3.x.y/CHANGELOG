@@ -1,5 +1,6 @@
 ## [3.0.5] - not release yet!
  * pack script creates target folders if they are missing (merge request 21)
+ * VIA now allows the extreme clicking annotation method (merge request 22)
  * ...
 
 ## [3.0.4] - 02 July 2019
