@@ -332,7 +332,7 @@ _via_control_panel.prototype._page_on_action_open_shared = function(d) {
 
 _via_control_panel.prototype._page_on_action_fileuri_bulk_add = function(d) {
   if ( d.via_page_fileuri_urilist.length ) {
-    fileuri_bulk_add_from_url_list(d.via_page_fileuri_urilist);
+    this.fileuri_bulk_add_from_url_list(d.via_page_fileuri_urilist);
   }
 
   if ( d.via_page_fileuri_importfile.length === 1 ) {
@@ -381,7 +381,7 @@ _via_control_panel.prototype.fileuri_bulk_add_from_url_list = function(uri_list_
         continue; // skip
       }
       var filetype;
-      if ( type === 0 ) {
+      if ( type === 0 || typeof(type) === 'undefined' ) {
         filetype = _via_util_infer_file_type_from_filename(uri_list[i]);
       } else {
         filetype = type;

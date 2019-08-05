@@ -600,9 +600,7 @@ _via_data.prototype.view_bulk_add_from_filelist = function(filelist) {
                                              filelist[i].src);
 
         var vid = this._view_get_new_id();
-        console.log('new vid=' + vid + ', ' + typeof(vid))
         this.store.view[vid] = new _via_view( [ fid ] ); // view with single file
-        console.log('Added: vid=' + vid + ', fid=' + fid + ', src=' + filelist[i].src)
         this.store.project.vid_list.push(vid);
 
         added_fid_list.push(fid);
