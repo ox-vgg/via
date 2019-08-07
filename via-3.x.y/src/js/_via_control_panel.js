@@ -104,23 +104,30 @@ _via_control_panel.prototype._add_region_shape_selector = function() {
     return;
   }
 
-  var point = _via_util_get_svg_button('shape_point', 'Point', 'POINT');
-  point.addEventListener('click', function() {
-    this._set_region_shape('POINT');
-  }.bind(this));
-  this.c.appendChild(point);
-
   var rect = _via_util_get_svg_button('shape_rectangle', 'Rectangle', 'RECTANGLE');
   rect.addEventListener('click', function() {
     this._set_region_shape('RECTANGLE');
   }.bind(this));
   this.c.appendChild(rect);
 
+  var extreme_rect = _via_util_get_svg_button('shape_extreme_rectangle', 'Extreme rectangle is defined using four points along the boundary of a rectangular object.', 'EXTREME_RECTANGLE');
+  extreme_rect.classList.add('shape_selector');
+  extreme_rect.addEventListener('click', function() {
+    this._set_region_shape('EXTREME_RECTANGLE');
+  }.bind(this));
+  this.c.appendChild(extreme_rect);
+
   var circle = _via_util_get_svg_button('shape_circle', 'Circle', 'CIRCLE');
   circle.addEventListener('click', function() {
     this._set_region_shape('CIRCLE');
   }.bind(this));
   this.c.appendChild(circle);
+
+  var extreme_circle = _via_util_get_svg_button('shape_extreme_circle', 'Extreme circle is defined using any three points along the circumference of a circular object.', 'EXTREME_CIRCLE');
+  extreme_circle.addEventListener('click', function() {
+    this._set_region_shape('EXTREME_CIRCLE');
+  }.bind(this));
+  this.c.appendChild(extreme_circle);
 
   var ellipse = _via_util_get_svg_button('shape_ellipse', 'Ellipse', 'ELLIPSE');
   ellipse.addEventListener('click', function() {
@@ -140,19 +147,19 @@ _via_control_panel.prototype._add_region_shape_selector = function() {
   }.bind(this));
   this.c.appendChild(polygon);
 
-  var extreme_box = _via_util_get_svg_button('shape_extreme', 'Extreme Box', 'EXTREME_BOX');
-  extreme_box.addEventListener('click', function() {
-    this._set_region_shape('EXTREME_BOX');
-  }.bind(this));
-  this.c.appendChild(extreme_box);
-
   var polyline = _via_util_get_svg_button('shape_polyline', 'Polyline', 'POLYLINE');
   polyline.addEventListener('click', function() {
     this._set_region_shape('POLYLINE');
   }.bind(this));
-
   this.c.appendChild(polyline);
-  this.shape_selector_list = { 'POINT':point, 'RECTANGLE':rect, 'CIRCLE':circle, 'ELLIPSE':ellipse, 'LINE':line, 'POLYGON':polygon, 'POLYLINE':polyline, 'EXTREME_BOX': extreme_box };
+
+  var point = _via_util_get_svg_button('shape_point', 'Point', 'POINT');
+  point.addEventListener('click', function() {
+    this._set_region_shape('POINT');
+  }.bind(this));
+  this.c.appendChild(point);
+
+  this.shape_selector_list = { 'POINT':point, 'RECTANGLE':rect, 'EXTREME_RECTANGLE':extreme_rect, 'CIRCLE':circle, 'EXTREME_CIRCLE':extreme_circle, 'ELLIPSE':ellipse, 'LINE':line, 'POLYGON':polygon, 'POLYLINE':polyline };
 }
 
 _via_control_panel.prototype._set_region_shape = function(shape) {

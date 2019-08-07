@@ -97,10 +97,10 @@ to annotate temporal segments of a video: contains 4 rows
 #editor_container > .content_container input[type="text"] { width:10em; }
 
 /* Misc */
-.svg_button { position:relative; width:24px; height:24px; top:2px; }
-.svg_button_selected { stroke:blue; fill:none; }
-.svg_button:hover { fill:#707070; cursor:pointer; }
-.svg_button:active { fill:#707070; cursor:pointer; }
+.svg_button { position:relative; width:24px; height:24px; top:2px; stroke:none; fill:#333333; stroke-width:2px; }
+.svg_button_selected { fill:#000000; stroke:none; background-color:#e6e6e6;}
+.svg_button:hover { opacity:0.6; cursor:pointer; }
+.svg_button:active { cursor:pointer; }
 .svg_icon { position:relative; width:24px; height:24px; top:2px; }
 .disabled_button { fill:#cfcfcf !important; cursor:auto !important; }
 .disabled_button:hover { fill:#cfcfcf !important; cursor:auto !important; }

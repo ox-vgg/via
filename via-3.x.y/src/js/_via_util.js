@@ -121,11 +121,17 @@ function _via_util_metadata_shape_str(shape_id) {
     case _VIA_WHERE_SHAPE.TIME:
       return 'time';
       break;
-    case _VIA_WHERE_SHAPE.RECT:
-      return 'rect';
+    case _VIA_WHERE_SHAPE.RECTANGLE:
+      return 'rectangle';
+      break;
+    case _VIA_WHERE_SHAPE.EXTREME_RECTANGLE:
+      return 'extreme_rectangle';
       break;
     case _VIA_WHERE_SHAPE.CIRCLE:
       return 'circle';
+      break;
+    case _VIA_WHERE_SHAPE.EXTREME_CIRCLE:
+      return 'extreme_circle';
       break;
     case _VIA_WHERE_SHAPE.ELLIPSE:
       return 'ellipse';
@@ -138,9 +144,6 @@ function _via_util_metadata_shape_str(shape_id) {
       break;
     case _VIA_WHERE_SHAPE.POLYGON:
       return 'polygon';
-      break;
-    case _VIA_WHERE_SHAPE.EXTREME_BOX:
-      return 'extreme_box';
       break;
     default:
       return 'unknown';
@@ -557,3 +560,8 @@ function _via_util_merge_object(obj1, obj2) {
   Object.assign(merged_obj, obj2);
   return merged_obj;
 }
+
+function _via_util_clamp(x, lower_bound, upper_bound) {
+  return Math.min( Math.max(x, lower_bound), upper_bound );
+}
+

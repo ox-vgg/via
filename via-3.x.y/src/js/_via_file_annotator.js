@@ -61,7 +61,8 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.conf.FIRST_VERTEX_BOUNDARY_COLOR = 'black';
   this.conf.FIRST_VERTEX_FILL_COLOR = 'white';
   this.conf.REGION_SMETADATA_MARGIN = 4; // in pixel
-  this.conf.CROSSHAIR_COLOR = '#eee'
+  this.conf.CROSSHAIR_COLOR1 = '#1a1a1a';
+  this.conf.CROSSHAIR_COLOR2 = '#e6e6e6';
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -588,27 +589,35 @@ _via_file_annotator.prototype._rinput_mousedown_handler = function(e) {
   }
 
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_DRAW_NCLICK_ONGOING ) {
-    var completed_extreme_box = false;
-    if (
-      this.va.region_draw_shape == _VIA_RSHAPE.EXTREME_BOX &&
-      this.user_input_pts.length == 6
-    ) {
+    var nclick_done = false;
+    switch( this.va.region_draw_shape ) {
+    case _VIA_RSHAPE.EXTREME_RECTANGLE:
       this.user_input_pts.push(cx, cy);
-      completed_extreme_box = true;
+      if ( this.user_input_pts.length === 8 ) {
+        nclick_done = true;
+      }
+      break;
+    case _VIA_RSHAPE.EXTREME_CIRCLE:
+      this.user_input_pts.push(cx, cy);
+      if ( this.user_input_pts.length === 6 ) {
+        nclick_done = true;
+      }
+      break;
+    case _VIA_RSHAPE.POLYGON:
+    case _VIA_RSHAPE.POLYLINE:
+      if ( this._rinput_is_near_first_user_input_point(cx, cy) ) {
+        nclick_done = true;
+      } else {
+        this.user_input_pts.push(cx, cy);
+      }
+      break;
     }
-
-    if (
-      this._rinput_is_near_first_user_input_point(cx, cy) ||
-      completed_extreme_box
-    ) {
-      // marks the completion of definition of polygon and polyline shape
+    if ( nclick_done ) {
       this._rinput_region_draw_nclick_done();
       this.user_input_pts = [];
       this._tmpreg_clear();
       this._state_set( _VIA_RINPUT_STATE.IDLE );
-      _via_util_msg_show( 'Finished drawing a region shape with multiple vertices.');
-    } else {
-      this.user_input_pts.push(cx, cy);
+      //_via_util_msg_show( 'Finished drawing a region shape with multiple vertices.');
     }
     return;
   }
@@ -665,7 +674,14 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
 
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_DRAW_ONGOING ) {
     switch ( this.va.region_draw_shape ) {
-    case _VIA_RSHAPE.EXTREME_BOX:
+    case _VIA_RSHAPE.EXTREME_RECTANGLE:
+      this._state_set( _VIA_RINPUT_STATE.REGION_DRAW_NCLICK_ONGOING );
+      _via_util_msg_show( 'First boundary point added. Now click at three remaining points to mark the boundary of a rectangular object.', true);
+      break;
+    case _VIA_RSHAPE.EXTREME_CIRCLE:
+      this._state_set( _VIA_RINPUT_STATE.REGION_DRAW_NCLICK_ONGOING );
+      _via_util_msg_show( 'First point on added. Now click at two remaining points on the circumference to define a circular region.', true);
+      break;
     case _VIA_RSHAPE.POLYGON:
     case _VIA_RSHAPE.POLYLINE:
       // region shape requiring more than two points (polygon, polyline)
@@ -698,6 +714,7 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
     if ( ! e.shiftKey ) {
       this._creg_select_none();
     }
+    this._tmpreg_clear();
     this._creg_select_multiple( this.last_clicked_mid_list );
     this._smetadata_show();
     this._creg_draw_all();
@@ -769,6 +786,14 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
 
   var pts = this.user_input_pts.slice(0);
   pts.push(cx, cy);
+
+  this._tmpreg_clear();
+  if ( this.va.region_draw_shape === _VIA_RSHAPE.EXTREME_RECTANGLE ) {
+    if ( this.state_id !== _VIA_RINPUT_STATE.REGION_SELECTED ) {
+      this._tmpreg_draw_crosshair(this.last_cx, this.last_cy);
+    }
+  }
+
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_DRAW_ONGOING ||
        this.state_id === _VIA_RINPUT_STATE.REGION_DRAW_NCLICK_ONGOING
      ) {
@@ -787,7 +812,7 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
       var shape_id = this.creg[mid][0];
 
       switch(shape_id) {
-      case _VIA_RSHAPE.RECT:
+      case _VIA_RSHAPE.RECTANGLE:
       case _VIA_RSHAPE.CIRCLE:
       case _VIA_RSHAPE.ELLIPSE:
         switch(cp_index) {
@@ -809,7 +834,8 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
           break;
         }
         break;
-      case _VIA_RSHAPE.EXTREME_BOX:
+      case _VIA_RSHAPE.EXTREME_RECTANGLE:
+      case _VIA_RSHAPE.EXTREME_CIRCLE:
       case _VIA_RSHAPE.POINT:
       case _VIA_RSHAPE.LINE:
       case _VIA_RSHAPE.POLYGON:
@@ -834,14 +860,9 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_RESIZE_ONGOING ) {
     this._tmpreg_clear();
     this._tmpreg_move_sel_region_cp(this.resize_selected_mid_index,
-                                 this.resize_control_point_index,
-                                 cx, cy);
+                                    this.resize_control_point_index,
+                                    cx, cy);
     return;
-  }
-
-  this._tmpreg_clear();
-  if (this.va.region_draw_shape == _VIA_RSHAPE.EXTREME_BOX) {
-    this._tmpreg_draw_crosshair(cx, cy);
   }
 }
 
@@ -1062,13 +1083,14 @@ _via_file_annotator.prototype._metadata_move_xy = function(xy0, dx, dy) {
   var shape_id = xy[0];
   switch(shape_id) {
   case _VIA_RSHAPE.POINT:
-  case _VIA_RSHAPE.RECT:
+  case _VIA_RSHAPE.RECTANGLE:
   case _VIA_RSHAPE.CIRCLE:
   case _VIA_RSHAPE.ELLIPSE:
     xy[1] = xy[1] + dx;
     xy[2] = xy[2] + dy;
     break;
-  case _VIA_RSHAPE.EXTREME_BOX:
+  case _VIA_RSHAPE.EXTREME_RECTANGLE:
+  case _VIA_RSHAPE.EXTREME_CIRCLE:
   case _VIA_RSHAPE.LINE:
   case _VIA_RSHAPE.POLYLINE:
   case _VIA_RSHAPE.POLYGON:
@@ -1090,7 +1112,7 @@ _via_file_annotator.prototype._metadata_pts_to_xy = function(shape_id, pts) {
   case _VIA_RSHAPE.POINT:
     xy.push( pts[0], pts[1] );
     break;
-  case _VIA_RSHAPE.RECT:
+  case _VIA_RSHAPE.RECTANGLE:
     var d = this._metadata_pts_to_xy_rect(pts);
     xy.push( d[0], d[1], d[2], d[3] );
     break;
@@ -1106,7 +1128,8 @@ _via_file_annotator.prototype._metadata_pts_to_xy = function(shape_id, pts) {
     xy.push( Math.abs(pts[2] - pts[0]) ); // rx
     xy.push( Math.abs(pts[3] - pts[1]) ); // ry
     break;
-  case _VIA_RSHAPE.EXTREME_BOX:
+  case _VIA_RSHAPE.EXTREME_RECTANGLE:
+  case _VIA_RSHAPE.EXTREME_CIRCLE:
   case _VIA_RSHAPE.LINE:
   case _VIA_RSHAPE.POLYLINE:
   case _VIA_RSHAPE.POLYGON:
@@ -1275,8 +1298,8 @@ _via_file_annotator.prototype._creg_draw_label = function(mid) {
     // then, draw text over this background rectangle
     this.rshapectx.fillStyle = 'yellow';
     this.rshapectx.fillText(label,
-                          Math.floor(lx + 0.5*cw),
-                          Math.floor(ly - 0.35*ch));
+                            Math.floor(lx + 0.5*cw),
+                            Math.floor(ly - 0.35*ch));
   }
 }
 
@@ -1291,18 +1314,17 @@ _via_file_annotator.prototype._creg_is_inside = function(xy, cx, cy, tolerance) 
       is_inside = true;
     }
     break;
-  case _VIA_RSHAPE.EXTREME_BOX:
-    var points = this._extreme_points_to_box(xy);
-    var x0 = points[0], y0 = points[1], w = points[2], h = points[3];
-    if (cx > x0 && cx < x0 + w) {
-      if (cy > y0 && cy < y0 + h) {
+  case _VIA_RSHAPE.RECTANGLE:
+    if ( cx > xy[1] && cx < (xy[1] + xy[3]) ) {
+      if ( cy > xy[2] && cy < (xy[2] + xy[4]) ) {
         is_inside = true;
       }
     }
     break;
-  case _VIA_RSHAPE.RECT:
-    if ( cx > xy[1] && cx < (xy[1] + xy[3]) ) {
-      if ( cy > xy[2] && cy < (xy[2] + xy[4]) ) {
+  case _VIA_RSHAPE.EXTREME_RECTANGLE:
+    var rshape = this._extreme_to_rshape(xy, shape_id);
+    if ( cx > rshape[1] && cx < (rshape[1] + rshape[3]) ) {
+      if ( cy > rshape[2] && cy < (rshape[2] + rshape[4]) ) {
         is_inside = true;
       }
     }
@@ -1310,7 +1332,15 @@ _via_file_annotator.prototype._creg_is_inside = function(xy, cx, cy, tolerance) 
   case _VIA_RSHAPE.CIRCLE:
     var dx = Math.abs(xy[1] - cx);
     var dy = Math.abs(xy[2] - cy);
-    if ( ((dx * dx) + (dy * dy)) < xy[3] ) {
+    if ( Math.sqrt((dx * dx) + (dy * dy)) < xy[3] ) {
+      is_inside = true;
+    }
+    break;
+  case _VIA_RSHAPE.EXTREME_CIRCLE:
+    var rshape = this._extreme_to_rshape(xy, shape_id);
+    var dx = Math.abs(rshape[1] - cx);
+    var dy = Math.abs(rshape[2] - cy);
+    if ( Math.sqrt((dx * dx) + (dy * dy)) < rshape[3] ) {
       is_inside = true;
     }
     break;
@@ -1381,7 +1411,7 @@ _via_file_annotator.prototype._creg_is_inside_polygon = function (xy_pts, px, py
 // >0 if (x2,y2) lies on the left side of line joining (x0,y0) and (x1,y1)
 // =0 if (x2,y2) lies on the line joining (x0,y0) and (x1,y1)
 // >0 if (x2,y2) lies on the right side of line joining (x0,y0) and (x1,y1)
- // source: http://geomalgorithms.com/a03-_inclusion.html
+// source: http://geomalgorithms.com/a03-_inclusion.html
 _via_file_annotator.prototype._creg_is_left = function (x0, y0, x1, y1, x2, y2) {
   return ( ((x1 - x0) * (y2 - y0))  - ((x2 -  x0) * (y1 - y0)) );
 }
@@ -1392,7 +1422,7 @@ _via_file_annotator.prototype._creg_move_control_point = function(xy0, cpindex, 
   switch( shape_id ) {
   case _VIA_RSHAPE.POINT:
     break;
-  case _VIA_RSHAPE.RECT:
+  case _VIA_RSHAPE.RECTANGLE:
     switch(cpindex) {
     case 1:
       xy[2] = new_y;
@@ -1445,7 +1475,8 @@ _via_file_annotator.prototype._creg_move_control_point = function(xy0, cpindex, 
       break;
     }
     break;
-  case _VIA_RSHAPE.EXTREME_BOX:
+  case _VIA_RSHAPE.EXTREME_RECTANGLE:
+  case _VIA_RSHAPE.EXTREME_CIRCLE:
   case _VIA_RSHAPE.LINE:
   case _VIA_RSHAPE.POLYGON:
   case _VIA_RSHAPE.POLYLINE:
@@ -1462,7 +1493,7 @@ _via_file_annotator.prototype._creg_get_control_points = function(xy) {
   case _VIA_RSHAPE.POINT:
     return [ xy[0] ];
     break;
-  case _VIA_RSHAPE.RECT:
+  case _VIA_RSHAPE.RECTANGLE:
     return [
       shape_id,
       xy[1]+xy[3]/2, xy[2],
@@ -1488,7 +1519,8 @@ _via_file_annotator.prototype._creg_get_control_points = function(xy) {
       xy[1] + xy[3], xy[2],
     ]
     break;
-  case _VIA_RSHAPE.EXTREME_BOX:
+  case _VIA_RSHAPE.EXTREME_RECTANGLE:
+  case _VIA_RSHAPE.EXTREME_CIRCLE:
   case _VIA_RSHAPE.LINE:
   case _VIA_RSHAPE.POLYGON:
   case _VIA_RSHAPE.POLYLINE:
@@ -1647,26 +1679,28 @@ _via_file_annotator.prototype._on_event_view_update = function(data, event_paylo
 //
 _via_file_annotator.prototype._tmpreg_draw_region = function(shape_id, pts) {
   var xy = this._metadata_pts_to_xy(shape_id, pts);
-  this._tmpreg_clear();
+
   this._draw(this.temprctx, xy);
 }
 
 _via_file_annotator.prototype._tmpreg_draw_crosshair = function(cx, cy) {
-  var ctx = this.temprctx;
+  // draw cross hair in complementary colours
+  this.temprctx.lineWidth = 1;
+  this.temprctx.strokeStyle = this.conf.CROSSHAIR_COLOR1;
+  this.temprctx.beginPath();
+  this.temprctx.moveTo(0, cy - 0.5);
+  this.temprctx.lineTo(this.tempr_canvas.width, cy - 0.5);
+  this.temprctx.moveTo(cx - 0.5, 0);
+  this.temprctx.lineTo(cx - 0.5, this.tempr_canvas.height);
+  this.temprctx.stroke();
 
-  // Originally from https://codepen.io/MT-WebDev/pen/YGqBQd
-  ctx.beginPath();
-  ctx.setLineDash([5, 5]);
-  ctx.strokeStyle = this.conf.CROSSHAIR_COLOR;
-  ctx.moveTo(0, cy - 1);
-  ctx.lineTo(this.tempr_canvas.width, cy + 1);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(cx - 1, 0);
-  ctx.lineTo(cx + 1, this.tempr_canvas.height);
-  ctx.stroke();
-  ctx.setLineDash([]);
+  this.temprctx.strokeStyle = this.conf.CROSSHAIR_COLOR2;
+  this.temprctx.beginPath();
+  this.temprctx.moveTo(0, cy + 0.5);
+  this.temprctx.lineTo(this.tempr_canvas.width, cy + 0.5);
+  this.temprctx.moveTo(cx + 0.5, 0);
+  this.temprctx.lineTo(cx + 0.5, this.tempr_canvas.height);
+  this.temprctx.stroke();
 }
 
 _via_file_annotator.prototype._tmpreg_move_sel_regions = function(dx, dy) {
@@ -1698,11 +1732,17 @@ _via_file_annotator.prototype._draw = function(ctx, xy, is_selected) {
   case _VIA_RSHAPE.POINT:
     this._draw_point_region(ctx, xy[1], xy[2], is_selected );
     break;
-  case _VIA_RSHAPE.RECT:
+  case _VIA_RSHAPE.RECTANGLE:
     this._draw_rect_region(ctx, xy[1], xy[2], xy[3], xy[4], is_selected );
+    break;
+  case _VIA_RSHAPE.EXTREME_RECTANGLE:
+    this._draw_extreme_rectangle_region(ctx, xy, is_selected );
     break;
   case _VIA_RSHAPE.CIRCLE:
     this._draw_circle_region(ctx, xy[1], xy[2], xy[3], is_selected );
+    break;
+  case _VIA_RSHAPE.EXTREME_CIRCLE:
+    this._draw_extreme_circle_region(ctx, xy, is_selected );
     break;
   case _VIA_RSHAPE.ELLIPSE:
     this._draw_ellipse_region(ctx, xy[1], xy[2], xy[3], xy[4], is_selected );
@@ -1838,76 +1878,106 @@ _via_file_annotator.prototype._draw_ellipse = function(ctx, cx, cy, rx, ry) {
   ctx.closePath();
 }
 
-_via_file_annotator.prototype._extreme_points_to_box = function(pts, ctx) {
-  var xs = [];
-  var ys = [];
-  var n = pts.length;
-  for (let i = 1; i < n; i += 2) {
-    xs.push(pts[i]);
-    ys.push(pts[i+1]);
+_via_file_annotator.prototype._extreme_to_rshape = function(xy, shape_id) {
+  var n = xy.length;
+  switch(shape_id) {
+  case _VIA_RSHAPE.EXTREME_RECTANGLE:
+    var x0 = xy[1];
+    var y0 = xy[2];
+    var x1 = xy[1];
+    var y1 = xy[2];
+    for ( var i = 3; i < n; i = i + 2 ) {
+      if ( xy[i] < x0 ) {
+        x0 = xy[i];
+      }
+      if ( xy[i] > x1 ) {
+        x1 = xy[i];
+      }
+      if ( xy[i+1] < y0 ) {
+        y0 = xy[i+1];
+      }
+      if ( xy[i+1] > y1 ) {
+        y1 = xy[i+1];
+      }
+    }
+    //console.log(JSON.stringify(xy) + ' : ' + JSON.stringify([x0,x1,y0,y1]));
+    return [shape_id, x0, y0, (x1-x0), (y1-y0)];
+    break;
+  case _VIA_RSHAPE.EXTREME_CIRCLE:
+    // let (cx,cy) be center of circle and r be the radius
+    // assuming xy[x1,y1,x2,y2,x3,y3] contains three non-collinear points (x1,y1), (x2,y2) and (x3,y3)
+    // distance between center and 1st point = d1 = (cx - xy[0])^2 + (cy - xy[1])^2
+    // distance between center and 2nd point = d2 = (cx - xy[2])^2 + (cy - xy[3])^2
+    // distance between center and 3rd point = d3 = (cx - xy[4])^2 + (cy - xy[5])^2
+    // we solve for (cx,cy) using the equations: d1 = d2 = d3
+    var xy2 = [0, Math.pow(xy[1],2), Math.pow(xy[2],2), Math.pow(xy[3],2), Math.pow(xy[4],2), Math.pow(xy[5],2), Math.pow(xy[6],2) ];
+    var cy = ( ( ( xy2[3] + xy2[4] - xy2[1] - xy2[2]) * (xy[1] - xy[5]) ) - ( (xy2[1] + xy2[2] - xy2[5] - xy2[6]) * (xy[3] - xy[1]) ) ) / ( 2 * ( ( (xy[4] - xy[2]) * (xy[1] - xy[5]) ) - ( (xy[2] - xy[6]) * (xy[3] - xy[1]) ) ) );
+    var cx = ( (xy2[1] + xy2[2] - xy2[5] - xy2[6]) - 2 * cy * (xy[2] - xy[6]) ) / ( 2 * (xy[1] - xy[5]) );
+    var r = Math.sqrt( Math.pow(cx - xy[1], 2) + Math.pow(cy - xy[2], 2) );
+    return [shape_id, cx, cy, r];
+  default:
+    return [];
   }
-  var x0 = Math.min(...xs);
-  var y0 = Math.min(...ys);
-  var x1 = Math.max(...xs);
-  var y1 = Math.max(...ys);
-
-  x0 = Math.max(x0, 0);
-  y0 = Math.max(y0, 0);
-  if (ctx !== undefined) {
-    x1 = Math.min(x1, ctx.canvas.width);
-    y1 = Math.min(y1, ctx.canvas.height);
-  }
-  return [x0, y0, x1 - x0, y1 - y0];
 }
 
-_via_file_annotator.prototype._draw_extreme_box_region = function(
-  ctx,
-  pts,
-  is_selected
-) {
-  var n_raw = pts.length;
-  var n = (n_raw - 1) / 2;
-  var completed = n == 4 && ctx != this.temprctx;
-  var x0, y0, w, h;
-  if (completed) {
-    var box = this._extreme_points_to_box(pts);
-    x0 = box[0], y0 = box[1], w = box[2], h = box[3];
-  }
-  if (is_selected) {
+_via_file_annotator.prototype._draw_extreme_rectangle_region = function(ctx, xy, is_selected) {
+  var n = xy.length;
+  var ebox = this._extreme_to_rshape(xy, _VIA_RSHAPE.EXTREME_RECTANGLE);
+
+  if ( is_selected ) {
     ctx.strokeStyle = this.conf.SEL_REGION_BOUNDARY_COLOR;
-    ctx.lineWidth = this.conf.SEL_REGION_LINE_WIDTH;
+    ctx.lineWidth   = this.conf.SEL_REGION_LINE_WIDTH;
+    this._draw_rect(ctx, ebox[1], ebox[2], ebox[3], ebox[4]);
+    ctx.stroke();
+
+    ctx.fillStyle   = this.conf.SEL_REGION_FILL_COLOR;
+    ctx.globalAlpha = this.conf.SEL_REGION_FILL_OPACITY;
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
   } else {
     ctx.strokeStyle = this.conf.REGION_BOUNDARY_COLOR;
-    ctx.lineWidth = this.conf.REGION_LINE_WIDTH;
+    ctx.lineWidth   = this.conf.REGION_LINE_WIDTH;
+    this._draw_rect(ctx, ebox[1], ebox[2], ebox[3], ebox[4]);
+    ctx.stroke();
   }
 
-  if (completed) {
-    this._draw_rect(ctx, x0, y0, w, h);
-    ctx.stroke();
-  } else {
-    ctx.setLineDash([5, 5]);
-    // this._draw_polygon(ctx, pts);
-    if (n == 1) {
-      var x0 = pts[1];
-      ctx.beginPath();
-      ctx.setLineDash([5, 5]);
-      ctx.moveTo(x0, 0);
-      ctx.lineTo(x0, ctx.height);
-    } else if (n > 1) {
-      var box = this._extreme_points_to_box(pts, ctx);
-      var x0 = box[0], y0 = box[1], w = box[2], h = box[3];
-      this._draw_rect(ctx, x0, y0, w, h);
+  // draw control points
+  var cp = this._creg_get_control_points(xy); // cp[0] = shape_id
+  var n = cp.length;
+  for ( var i = 1; i < n; i = i + 2 ) {
+    this._draw_control_point(ctx, cp[i], cp[i+1]);
+  }
+}
+
+_via_file_annotator.prototype._draw_extreme_circle_region = function(ctx, xy, is_selected) {
+  var n = xy.length;
+  if ( n === 7 ) {
+  var ebox = this._extreme_to_rshape(xy, _VIA_RSHAPE.EXTREME_CIRCLE);
+    if ( is_selected ) {
+      ctx.strokeStyle = this.conf.SEL_REGION_BOUNDARY_COLOR;
+      ctx.lineWidth   = this.conf.SEL_REGION_LINE_WIDTH;
+      this._draw_circle(ctx, ebox[1], ebox[2], ebox[3]);
+      ctx.stroke();
+
+      ctx.fillStyle   = this.conf.SEL_REGION_FILL_COLOR;
+      ctx.globalAlpha = this.conf.SEL_REGION_FILL_OPACITY;
+      ctx.fill();
+      ctx.globalAlpha = 1.0;
+    } else {
+      ctx.strokeStyle = this.conf.REGION_BOUNDARY_COLOR;
+      ctx.lineWidth   = this.conf.REGION_LINE_WIDTH;
+      this._draw_circle(ctx, ebox[1], ebox[2], ebox[3]);
+      ctx.stroke();
     }
-    ctx.stroke();
-    ctx.setLineDash([]);
   }
 
-  for (var i = 0; i < n; i++) {
-    this._draw_control_point(ctx, pts[2*i+1], pts[2*i+2])
+  // draw control points
+  var cp = this._creg_get_control_points(xy); // cp[0] = shape_id
+  var n = cp.length;
+  for ( var i = 1; i < n; i = i + 2 ) {
+    this._draw_control_point(ctx, cp[i], cp[i+1]);
   }
-
-  ctx.globalAlpha = 1.0;
-};
+}
 
 _via_file_annotator.prototype._draw_polygon_region = function(ctx, pts, is_selected, shape_id) {
   if ( is_selected ) {
@@ -2010,7 +2080,7 @@ _via_file_annotator.prototype._smetadata_set_position = function() {
   var y = this.conf.REGION_SMETADATA_MARGIN + this.creg[mid][2];
   var shape_id = this.creg[mid][0];
   switch(shape_id) {
-  case _VIA_RSHAPE.RECT:
+  case _VIA_RSHAPE.RECTANGLE:
     y = y + this.creg[mid][4];
     break;
   case _VIA_RSHAPE.CIRCLE:

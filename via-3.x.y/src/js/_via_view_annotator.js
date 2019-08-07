@@ -27,7 +27,7 @@ function _via_view_annotator(data, container ) {
   this.view_mode = _VIA_VIEW_MODE.UNKNOWN;
 
   // state variables
-  this.region_draw_shape = _VIA_RSHAPE.RECT;
+  this.region_draw_shape = _VIA_RSHAPE.RECTANGLE;
   this.creg_label_aid = '1';
 
   // registers on_event(), emit_event(), ... methods from
@@ -328,11 +328,17 @@ _via_view_annotator.prototype.set_region_draw_shape = function(shape) {
     case _VIA_RSHAPE.POINT:
       _via_util_msg_show('Click to define feature points');
       break;
-    case _VIA_RSHAPE.RECT:
+    case _VIA_RSHAPE.RECTANGLE:
       _via_util_msg_show('Click and drag mouse cursor to define a rectangular region');
+      break;
+    case _VIA_RSHAPE.EXTREME_RECTANGLE:
+      _via_util_msg_show('Click and define the left, top, right and bottom (in any order) extreme points of a rectangular object to define its bounding box.');
       break;
     case _VIA_RSHAPE.CIRCLE:
       _via_util_msg_show('Click and drag mouse cursor to define a circular region');
+      break;
+    case _VIA_RSHAPE.EXTREME_CIRCLE:
+      _via_util_msg_show('Click  and define three points on the circumference to define the a circular region.');
       break;
     case _VIA_RSHAPE.ELLIPSE:
       _via_util_msg_show('Click and drag mouse cursor to define a elliptical region');
@@ -345,9 +351,6 @@ _via_view_annotator.prototype.set_region_draw_shape = function(shape) {
       break;
     case _VIA_RSHAPE.POLYGON:
       _via_util_msg_show('Click to define vertices of polygon and to finish click at the last vertex.');
-      break;
-    case _VIA_RSHAPE.EXTREME_BOX:
-      _via_util_msg_show('Click to define extreme points of bounding box (left, top, right, bottom)');
       break;
     }
   }

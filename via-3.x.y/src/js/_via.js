@@ -83,6 +83,7 @@ function _via(via_container) {
 
   // default region shape: RECTANGLE
   this.cp._set_region_shape('RECTANGLE');
+  //this.cp._set_region_shape('EXTREME_CIRCLE');
 
   // load any external modules (e.g. demo) which should be defined as follows
   // function _via_load_submodules()

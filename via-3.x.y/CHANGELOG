@@ -1,6 +1,8 @@
 ## [3.0.5] - not release yet!
  * pack script creates target folders if they are missing (merge request 21)
- * VIA now allows the extreme clicking annotation method (merge request 22)
+ * VIA now allows the extreme clicking annotation method for defining rectangular (merge request 22) and circular regions
+ * circle selection issue fixed
+ * bulk add file uri issue fixed (issue 206)
  * ...
 
 ## [3.0.4] - 02 July 2019
