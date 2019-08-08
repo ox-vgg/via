@@ -65,7 +65,6 @@ _via_view_annotator.prototype.view_show = function(vid) {
 
 _via_view_annotator.prototype._view_init = function(vid) {
   var file_count = this.d.store.view[vid].fid_list.length;
-
   switch(file_count) {
   case 1:
     if ( this._view_has_only_image(vid) ) {
@@ -118,6 +117,8 @@ _via_view_annotator.prototype._view_annotate_single_image = function(vid) {
   this.file_annotator[0][0] = new _via_file_annotator(this, this.d, vid0, '', this.file_container[0][0]);
   this.file_annotator[0][0]._file_load().then( function(ok) {
     this.file_annotator[0][0]._rinput_enable();
+  }.bind(this), function(err) {
+    // handled by _via_file_annotator._file_load_show_error_page();
   }.bind(this));
 }
 
@@ -338,7 +339,7 @@ _via_view_annotator.prototype.set_region_draw_shape = function(shape) {
       _via_util_msg_show('Click and drag mouse cursor to define a circular region');
       break;
     case _VIA_RSHAPE.EXTREME_CIRCLE:
-      _via_util_msg_show('Click  and define three points on the circumference to define the a circular region.');
+      _via_util_msg_show('Click and define three points on the circumference to define a circular region.');
       break;
     case _VIA_RSHAPE.ELLIPSE:
       _via_util_msg_show('Click and drag mouse cursor to define a elliptical region');
@@ -360,7 +361,19 @@ _via_view_annotator.prototype.set_region_draw_shape = function(shape) {
 // cleanup
 //
 _via_view_annotator.prototype._view_clear_all_file_annotator = function() {
+  // _via_file_annotator are attached as events listeners in _via_data
+  // we must also remove these events listeners
+  this.d.clear_events('metadata_add');
+  this.d.clear_events('metadata_update');
+  this.d.clear_events('metadata_delete_bulk');
+  this.d.clear_events('view_update');
+
   // cleanup resources acquired by each of this.file_annotator[i][j]
+  for ( var i = 0; i < this.file_annotator.length; ++i ) {
+    for ( var j = 0; j < this.file_annotator[i].length; ++j ) {
+      delete this.file_annotator[i][j];
+    }
+  }
 }
 
 //

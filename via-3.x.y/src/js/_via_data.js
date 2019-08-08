@@ -919,10 +919,11 @@ _via_data.prototype.project_merge_rev = function(d) {
           new_mid_list.push(mid);
         }
       }
+
       merge_stat['mid_list'] = new_mid_list.length;
       if ( conflict_metadata_list.length ) {
         this.metadata_add_bulk(conflict_metadata_list, false).then( function(ok) {
-          merge_stat['conflict_mid_list'] = ok.length;
+          merge_stat['conflict_mid_list'] = ok.mid_list;
           this.project_merge_on_success(merge_stat);
         }.bind(this), function(err) {
           err_callback();
@@ -960,7 +961,7 @@ _via_data.prototype.project_merge_on_success = function(merge_stat) {
     summary.push(merge_stat['mid_list'] + ' new metadata');
   }
   if ( merge_stat.hasOwnProperty('conflict_mid_list') ) {
-    summary.push(merge_stat['conflict_mid_list'] + ' metadata with conflicts');
+    summary.push(merge_stat['conflict_mid_list'].length + ' metadata with conflicts');
   }
   _via_util_msg_show('Successfully merged to revision ' + merge_stat['rev'] + ' (with ' + summary.join(', ') + ')', true);
 }
@@ -977,6 +978,124 @@ _via_data.prototype.project_is_different = function(others_str) {
       err_callback();
     } else {
       ok_callback(others_str);
+    }
+  }.bind(this));
+}
+
+//
+// Import
+//
+_via_data.prototype.project_import_via2_json = function(via2_project_json) {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      var via2 = JSON.parse(via2_project_json);
+      this.store = this._init_default_project();
+
+      // add project data
+      if ( via2.hasOwnProperty('_via_settings') ) {
+        this.store.project.pname = via2['_via_settings']['project']['name'];
+        this.store.config.file.loc_prefix[_VIA_FILE_LOC.LOCAL] = via2['_via_settings']['core']['default_filepath'];
+      }
+
+      // add attributes
+      var metadata_type_anchor_id_map = { 'region':'FILE1_Z0_XY1', 'file':'FILE1_Z0_XY0' };
+      var via2_aid_to_via3_aid_map = {};
+      for ( var metadata_type in metadata_type_anchor_id_map ) {
+        var anchor_id = metadata_type_anchor_id_map[metadata_type];
+        for ( var aid in via2['_via_attributes'][metadata_type] ) {
+          var options = via2['_via_attributes'][metadata_type][aid]['options'];
+          var default_option_id = [];
+          for ( var default_oid in via2['_via_attributes'][metadata_type][aid]['default_options'] ) {
+            default_option_id.push(default_oid);
+          }
+          var via3_aid = this._attribute_get_new_id();
+          var atype_text = via2['_via_attributes'][metadata_type][aid]['type'].toUpperCase();
+          if ( atype_text === 'DROPDOWN' ) {
+            atype_text = 'SELECT';
+          }
+          var atype = _VIA_ATTRIBUTE_TYPE[atype_text];
+          this.store['attribute'][via3_aid] = new _via_attribute(aid,
+                                                                  anchor_id,
+                                                                  atype,
+                                                                  via2['_via_attributes'][metadata_type][aid]['description'],
+                                                                  options,
+                                                                 default_option_id.join(',')
+                                                                 );
+          via2_aid_to_via3_aid_map[aid] = via3_aid;
+        }
+      }
+
+      // add file, view and metadata
+      for ( var fid in via2['_via_img_metadata'] ) {
+        var fname = via2['_via_img_metadata'][fid]['filename'];
+        var floc = _via_util_infer_file_loc_from_filename(fname);
+        var ftype = _via_util_infer_file_type_from_filename(fname);
+        var via3_fid = this._file_get_new_id();
+        this.store.file[via3_fid] = new _via_file(via3_fid, fname, ftype, floc, fname);
+
+        var vid = this._view_get_new_id();
+        this.store.view[vid] = new _via_view([via3_fid]);
+        this.store.project.vid_list.push(vid);
+
+        for ( var rid in via2['_via_img_metadata'][fid]['regions'] ) {
+          var shape = via2['_via_img_metadata'][fid]['regions'][rid]['shape_attributes'];
+          var z = [];
+          var xy = [];
+          var av = {};
+          switch(shape['name']) {
+          case 'rect':
+            xy = [ _VIA_RSHAPE.RECTANGLE, shape['x'], shape['y'], shape['width'], shape['height'] ];
+            break;
+          case 'circle':
+            xy = [ _VIA_RSHAPE.CIRCLE, shape['cx'], shape['cy'], shape['r'] ];
+            break;
+          case 'ellipse':
+            xy = [ _VIA_RSHAPE.ELLIPSE, shape['cx'], shape['cy'], shape['rx'], shape['ry'] ];
+            break;
+          case 'point':
+            xy = [ _VIA_RSHAPE.POINT, shape['cx'], shape['cy'] ];
+            break;
+          case 'polygon':
+          case 'polyline':
+            if ( shape['name'] === 'polygon' ) {
+              xy[0] = _VIA_RSHAPE.POLYGON;
+            } else {
+              xy[0] = _VIA_RSHAPE.POLYLINE;
+            }
+            var n = shape['all_points_x'].length;
+            for ( var i = 0; i < n; ++i ) {
+              xy.push(shape['all_points_x'][i], shape['all_points_y'][i]);
+            }
+            break;
+          default:
+            console.log('Unknown shape ' + shape['name'] + ' in input file!');
+          }
+
+          var region = via2['_via_img_metadata'][fid]['regions'][rid]['region_attributes'];
+          for ( var via2_aid in via2['_via_img_metadata'][fid]['regions'][rid]['region_attributes'] ) {
+            var via3_aid = via2_aid_to_via3_aid_map[via2_aid];
+            var avalue = via2['_via_img_metadata'][fid]['regions'][rid]['region_attributes'][via2_aid];
+
+            if ( typeof(avalue) === 'object' ) {
+              avalue = Object.keys(avalue).join(',');
+            }
+
+            av[via3_aid] = avalue;
+          }
+
+          var mid = this._metadata_get_new_id(vid);
+          this.store.metadata[mid] = new _via_metadata(vid, z, xy, av);
+         }
+      }
+      _via_util_msg_show('Project import successful');
+      this._cache_update();
+      this.emit_event( 'project_loaded', {} );
+      ok_callback();
+    }
+    catch(ex) {
+      console.log(ex)
+      _via_util_msg_show('Failed to import project');
+      err_callback(ex);
     }
   }.bind(this));
 }

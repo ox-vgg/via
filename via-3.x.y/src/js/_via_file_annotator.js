@@ -261,7 +261,7 @@ _via_file_annotator.prototype._file_load = function() {
 
     this.file_html_element.addEventListener('load', function() {
       //console.log('load:' + this.fid + ', now freeing resources')
-      //this.d.file_free_resources(this.fid);
+      this.d.file_free_resources(this.fid);
       this._file_html_element_ready();
       ok_callback();
     }.bind(this));
@@ -1263,6 +1263,7 @@ _via_file_annotator.prototype._creg_draw_label = function(mid) {
   if ( this.d.store.metadata[mid].av.hasOwnProperty(this.va.creg_label_aid) ) {
     var lx = this.creg[mid][1];
     var ly = this.creg[mid][2];
+
     var label = '';
     switch(this.d.store.attribute[this.va.creg_label_aid].type) {
     case _VIA_ATTRIBUTE_TYPE.RADIO:
@@ -2084,8 +2085,24 @@ _via_file_annotator.prototype._smetadata_set_position = function() {
     y = y + this.creg[mid][4];
     break;
   case _VIA_RSHAPE.CIRCLE:
-  case _VIA_RSHAPE.ELLIPSE:
     y = y + this.creg[mid][3];
+    break;
+  case _VIA_RSHAPE.ELLIPSE:
+    y = y + this.creg[mid][4];
+    break;
+  case _VIA_RSHAPE.POLYGON:
+  case _VIA_RSHAPE.POLYLINE:
+    var ymax_x = this.creg[mid][1];
+    var ymax = this.creg[mid][2];
+    var n = this.creg[mid].length;
+    for ( var i = 4; i < n; i = i + 2 ) {
+      if ( this.creg[mid][i] > ymax ) {
+        ymax = this.creg[mid][i];
+        ymax_x = this.creg[mid][i-1];
+      }
+    }
+    y = ymax;
+    x = this.left_pad + ymax_x;
     break;
   }
   this.smetadata_container.style.left = Math.round(x) + 'px';
@@ -2248,6 +2265,8 @@ _via_file_annotator.prototype._smetadata_attribute_io_html_element = function(mi
   case _VIA_ATTRIBUTE_TYPE.CHECKBOX:
     el = document.createElement('div');
 
+    console.log(dval)
+    console.log(aval)
     if ( typeof(aval) === 'undefined' ) {
       aval = dval;
     }

@@ -55,6 +55,13 @@ _via_event.prototype.enable = function() {
   this._event.enabled = true;
 }
 
-_via_event.prototype.clear = function() {
-  this._event.targets = {};
+_via_event.prototype.clear = function(event_id_suffix) {
+  if ( typeof(event_id_suffix) === 'undefined' ) {
+    this._event.targets = {};
+  } else {
+    var event_id = this._EVENT_ID_PREFIX + event_id_suffix;
+    if ( typeof(this._event.targets.hasOwnProperty(event_id) ) ) {
+      this._event.targets[event_id] = { 'listener_list':[], 'listener_param_list':[] };
+    }
+  }
 }

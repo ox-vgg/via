@@ -1,9 +1,12 @@
+## [3.0.6] - not release yet!
+
 ## [3.0.5] - not release yet!
  * pack script creates target folders if they are missing (merge request 21)
  * VIA now allows the extreme clicking annotation method for defining rectangular (merge request 22) and circular regions
  * circle selection issue fixed
  * bulk add file uri issue fixed (issue 206)
- * ...
+ * VIA projects created in version 2.x.y can now be imported in VIA version 3 (issue 203)
+ * 
 
 ## [3.0.4] - 02 July 2019
  * issue with spatial region attribute definition fixed

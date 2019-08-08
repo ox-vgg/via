@@ -217,9 +217,16 @@ _via_control_panel.prototype._page_on_action_import = function(d) {
       }.bind(this), function(err) {
         _via_util_msg_show(err + ': ' + d.via_page_import_pid);
       }.bind(this));
-    } else {
-      _via_util_msg_show('To import an existing shared project, you must enter its project-id.');
+      return;
     }
+
+    if ( d.via_page_import_via2_project_json.length === 1 ) {
+      _via_util_load_text_file(d.via_page_import_via2_project_json[0],
+                               this._project_import_via2_on_local_file_read.bind(this)
+                              );
+      return;
+    }
+    _via_util_msg_show('To import an existing shared project, you must enter its project-id.');
   }
 }
 
@@ -237,6 +244,10 @@ _via_control_panel.prototype._project_load_on_local_file_select = function(e) {
 
 _via_control_panel.prototype._project_load_on_local_file_read = function(project_data_str) {
   this.via.d.project_load(project_data_str);
+}
+
+_via_control_panel.prototype._project_import_via2_on_local_file_read = function(project_data_str) {
+  this.via.d.project_import_via2_json(project_data_str);
 }
 
 _via_control_panel.prototype._add_project_share_tools = function() {
