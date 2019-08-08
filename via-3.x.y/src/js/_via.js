@@ -56,6 +56,7 @@ function _via(via_container) {
 
   // control panel shows the view_manager_container
   this.cp = new _via_control_panel(this.control_panel_container, this);
+  this.cp._set_region_shape('RECTANGLE');
 
   // event handlers for buttons in the control panel
   this.cp.on_event('region_shape', function(data, event_payload) {
@@ -80,10 +81,6 @@ function _via(via_container) {
       pages[i].innerHTML = content0.replace('__VIA_VERSION__', _VIA_VERSION);
     }
   }
-
-  // default region shape: RECTANGLE
-  this.cp._set_region_shape('RECTANGLE');
-  //this.cp._set_region_shape('EXTREME_CIRCLE');
 
   // load any external modules (e.g. demo) which should be defined as follows
   // function _via_load_submodules()
@@ -112,6 +109,9 @@ function _via(via_container) {
       }.bind(this), 200);
     }
   }
+
+  // ready
+  _via_util_msg_show(_VIA_NAME + ' (' + _VIA_NAME_SHORT + ') ' + _VIA_VERSION + ' ready.');
 }
 
 _via.prototype._hook_on_browser_resize = function() {

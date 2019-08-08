@@ -61,6 +61,7 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.conf.FIRST_VERTEX_BOUNDARY_COLOR = 'black';
   this.conf.FIRST_VERTEX_FILL_COLOR = 'white';
   this.conf.REGION_SMETADATA_MARGIN = 4; // in pixel
+  this.conf.FILE_METADATA_MARGIN = 4; // in pixel
   this.conf.CROSSHAIR_COLOR1 = '#1a1a1a';
   this.conf.CROSSHAIR_COLOR2 = '#e6e6e6';
 
@@ -74,6 +75,8 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.d.on_event('metadata_update', this._on_event_metadata_update.bind(this));
   this.d.on_event('metadata_delete_bulk', this._on_event_metadata_delete_bulk.bind(this));
   this.d.on_event('view_update', this._on_event_view_update.bind(this));
+  this.d.on_event('attribute_update', this._on_event_attribute_update.bind(this));
+  this.d.on_event('attribute_del', this._on_event_attribute_del.bind(this));
 
   this._init();
 }
@@ -162,6 +165,7 @@ _via_file_annotator.prototype._file_load_show_error_page = function() {
     locprefix_input.setAttribute('type', 'text');
     locprefix_input.setAttribute('value', this.d.store.config.file.loc_prefix[fileloc]);
     locprefix_input.setAttribute('data-pname', 'loc_prefix');
+    locprefix_input.setAttribute('title', 'Location prefix (or path) that will be automatically added to file locations. For example, if you add "http://www.mysite.com/data/images/" as the location prefix, all your images will be sourced from this site.');
     locprefix_input.addEventListener('change', this._file_on_attribute_update.bind(this));
     fileloc_cell.appendChild(locprefix_input);
   }
@@ -426,12 +430,22 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this._rinput_attach_input_handlers(this.input);
   this.c.appendChild(this.input);
 
+  // spatial metadata container (i.e. metadata of image or video frame regions)
   this.smetadata_container = document.createElement('div');
-  this.smetadata_container.setAttribute('class', 'smetadata_container');
+  this.smetadata_container.setAttribute('class', 'metadata_container');
   this.smetadata_container.classList.add('hide');
   this.smetadata_container.setAttribute('id', 'smetadata_container');
-  this.smetadata_container.innerHTML = 'Spatial Metadata Editor';
+  this.smetadata_container.innerHTML = '';
   this.c.appendChild(this.smetadata_container);
+
+  // file metadata container (e.g. caption)
+  this.fmetadata_container = document.createElement('div');
+  this.fmetadata_container.setAttribute('class', 'metadata_container');
+  this.fmetadata_container.classList.add('hide');
+  this.fmetadata_container.setAttribute('id', 'fmetadata_container');
+  this.fmetadata_container.innerHTML = '';
+  this.c.appendChild(this.fmetadata_container);
+  this._fmetadata_show();
 
   // draw all existing regions
   this._creg_draw_file_label();
@@ -1675,6 +1689,14 @@ _via_file_annotator.prototype._on_event_view_update = function(data, event_paylo
   }
 }
 
+_via_file_annotator.prototype._on_event_attribute_update = function(data, event_payload) {
+  this._fmetadata_show();
+}
+
+_via_file_annotator.prototype._on_event_attribute_del = function(data, event_payload) {
+  this._fmetadata_show();
+}
+
 //
 // temp. regions
 //
@@ -2069,6 +2091,87 @@ _via_file_annotator.prototype._rinput_disable = function() {
 }
 
 //
+// on-screen file metadata editor
+//
+_via_file_annotator.prototype._fmetadata_hide = function() {
+  this.fmetadata_container.classList.add('hide');
+}
+
+_via_file_annotator.prototype._fmetadata_set_position = function() {
+  var x = this.left_pad + this.conf.FILE_METADATA_MARGIN;
+  var y = this.conf.FILE_METADATA_MARGIN;
+
+  this.fmetadata_container.style.left = Math.round(x) + 'px';
+  this.fmetadata_container.style.top  = Math.round(y) + 'px';
+}
+
+_via_file_annotator.prototype._fmetadata_show = function() {
+  if ( ! this.d.cache.attribute_group.hasOwnProperty('FILE1_Z0_XY0') ) {
+    this.fmetadata_container.innerHTML = '';
+    this._fmetadata_hide();
+    return;
+  }
+
+  var aid_list = this.d.cache.attribute_group['FILE1_Z0_XY0'];
+  if ( Object.keys(aid_list).length === 0 ) {
+    this.fmetadata_container.innerHTML = '';
+    this._fmetadata_hide();
+  } else {
+    this.fmetadata_container.classList.remove('hide');
+    var mid_list = this.d.cache.mid_list[this.vid];
+    var file_mid = '';
+    for ( var mindex in this.d.cache.mid_list[this.vid] ) {
+      var mid = this.d.cache.mid_list[this.vid][mindex];
+      if ( this.d.store.metadata[mid].z.length === 0 &&
+           this.d.store.metadata[mid].xy.length === 0
+         ) {
+        file_mid = mid;
+        break;
+      }
+    }
+
+    if ( file_mid === '' ) {
+      // create a new metadata
+      this.d.metadata_add(this.vid, [], [], {}).then( function(ok) {
+        this._fmetadata_update(ok.mid);
+      }.bind(this), function(err) {
+        console.log('failed to show file metadata!');
+        console.log(err);
+      }.bind(this));
+    } else {
+      this._fmetadata_update(file_mid);
+    }
+
+    this._fmetadata_set_position();
+  }
+}
+
+_via_file_annotator.prototype._fmetadata_update = function(mid) {
+  var aid_list = this.d.cache.attribute_group['FILE1_Z0_XY0'];
+  var table = document.createElement('table');
+  table.appendChild( this._metadata_header_html(aid_list) );
+
+  // show value of each attribute
+  var tbody = document.createElement('tbody');
+  var tr = document.createElement('tr');
+  tr.setAttribute('data-mid', mid);
+
+  var aid;
+  for ( var aindex in aid_list ) {
+    aid = aid_list[aindex];
+    var td = document.createElement('td');
+    td.setAttribute('data-aid', aid);
+    td.appendChild( this._metadata_attribute_io_html_element(mid, aid) );
+    tr.appendChild(td);
+  }
+  tbody.appendChild(tr);
+  table.appendChild(tbody);
+
+  this.fmetadata_container.innerHTML = '';
+  this.fmetadata_container.appendChild(table);
+}
+
+//
 // on-screen spatial metadata editor
 //
 _via_file_annotator.prototype._smetadata_hide = function() {
@@ -2081,17 +2184,18 @@ _via_file_annotator.prototype._smetadata_set_position = function() {
   var y = this.conf.REGION_SMETADATA_MARGIN + this.creg[mid][2];
   var shape_id = this.creg[mid][0];
   switch(shape_id) {
-  case _VIA_RSHAPE.RECTANGLE:
-    y = y + this.creg[mid][4];
-    break;
   case _VIA_RSHAPE.CIRCLE:
     y = y + this.creg[mid][3];
     break;
+  case _VIA_RSHAPE.RECTANGLE:
   case _VIA_RSHAPE.ELLIPSE:
     y = y + this.creg[mid][4];
     break;
   case _VIA_RSHAPE.POLYGON:
   case _VIA_RSHAPE.POLYLINE:
+  case _VIA_RSHAPE.EXTREME_RECTANGLE:
+  case _VIA_RSHAPE.EXTREME_CIRCLE:
+  case _VIA_RSHAPE.LINE:
     var ymax_x = this.creg[mid][1];
     var ymax = this.creg[mid][2];
     var n = this.creg[mid].length;
@@ -2120,7 +2224,6 @@ _via_file_annotator.prototype._smetadata_show = function() {
 }
 
 _via_file_annotator.prototype._smetadata_update = function() {
-
   var aid_list = _via_util_merge_object(this.d.cache.attribute_group['FILE1_Z1_XY1'],
                                         this.d.cache.attribute_group['FILE1_Z0_XY1']);
 
@@ -2133,7 +2236,7 @@ _via_file_annotator.prototype._smetadata_update = function() {
 
   var mid = this.selected_mid_list[0];
   var table = document.createElement('table');
-  table.appendChild( this._smetadata_header_html() );
+  table.appendChild( this._metadata_header_html(aid_list) );
 
   // show value of each attribute
   var tbody = document.createElement('tbody');
@@ -2145,7 +2248,7 @@ _via_file_annotator.prototype._smetadata_update = function() {
     aid = aid_list[aindex];
     var td = document.createElement('td');
     td.setAttribute('data-aid', aid);
-    td.appendChild( this._smetadata_attribute_io_html_element(mid, aid) );
+    td.appendChild( this._metadata_attribute_io_html_element(mid, aid) );
     tr.appendChild(td);
   }
   tbody.appendChild(tr);
@@ -2155,10 +2258,8 @@ _via_file_annotator.prototype._smetadata_update = function() {
   this.smetadata_container.appendChild(table);
 }
 
-_via_file_annotator.prototype._smetadata_header_html = function() {
+_via_file_annotator.prototype._metadata_header_html = function(aid_list) {
   var tr = document.createElement('tr');
-  var aid_list = _via_util_merge_object(this.d.cache.attribute_group['FILE1_Z1_XY1'],
-                                        this.d.cache.attribute_group['FILE1_Z0_XY1']);
   var aid;
   for ( var aindex in aid_list ) {
     aid = aid_list[aindex];
@@ -2169,7 +2270,7 @@ _via_file_annotator.prototype._smetadata_header_html = function() {
   return tr;
 }
 
-_via_file_annotator.prototype._smetadata_on_change = function(e) {
+_via_file_annotator.prototype._metadata_on_change = function(e) {
   var mid = e.target.dataset.mid;
   var aid = e.target.dataset.aid;
   var aval = e.target.value;
@@ -2200,7 +2301,7 @@ _via_file_annotator.prototype._smetadata_on_change = function(e) {
   }.bind(this));
 }
 
-_via_file_annotator.prototype._smetadata_attribute_io_html_element = function(mid, aid) {
+_via_file_annotator.prototype._metadata_attribute_io_html_element = function(mid, aid) {
   var aval  = this.d.store.metadata[mid].av[aid];
   var dval  = this.d.store.attribute[aid].default_option_id;
   var atype = this.d.store.attribute[aid].type;
@@ -2212,7 +2313,7 @@ _via_file_annotator.prototype._smetadata_attribute_io_html_element = function(mi
       aval = dval;
     }
     el = document.createElement('textarea');
-    el.addEventListener('change', this._smetadata_on_change.bind(this));
+    el.addEventListener('change', this._metadata_on_change.bind(this));
     el.innerHTML = aval;
     break;
 
@@ -2231,7 +2332,7 @@ _via_file_annotator.prototype._smetadata_attribute_io_html_element = function(mi
       }
       el.appendChild(oi);
     }
-    el.addEventListener('change', this._smetadata_on_change.bind(this));
+    el.addEventListener('change', this._metadata_on_change.bind(this));
     break;
 
   case _VIA_ATTRIBUTE_TYPE.RADIO:
@@ -2251,7 +2352,7 @@ _via_file_annotator.prototype._smetadata_attribute_io_html_element = function(mi
       if ( oid === aval ) {
         radio.setAttribute('checked', true);
       }
-      radio.addEventListener('change', this._smetadata_on_change.bind(this));
+      radio.addEventListener('change', this._metadata_on_change.bind(this));
       var label = document.createElement('label');
       label.innerHTML = this.d.store.attribute[aid].options[oid];
 
@@ -2282,7 +2383,7 @@ _via_file_annotator.prototype._smetadata_attribute_io_html_element = function(mi
       if ( values.indexOf(oid) !== -1 ) {
         checkbox.setAttribute('checked', true);
       }
-      checkbox.addEventListener('change', this._smetadata_on_change.bind(this));
+      checkbox.addEventListener('change', this._metadata_on_change.bind(this));
       var label = document.createElement('label');
       label.innerHTML = this.d.store.attribute[aid].options[oid];
 

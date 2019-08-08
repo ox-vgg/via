@@ -915,6 +915,14 @@ _via_dp[4]['store']['attribute'] = {
     },
     'default_option_id': ''
   },
+  '2': {
+    'aname':'Caption',
+    'anchor_id':'FILE1_Z0_XY0',
+    'type':1,
+    'desc':'Image Caption',
+    'options':{},
+    'default_option_id':'',
+  },
 };
 
 _via_dp[4]['store']['file'] = {
@@ -952,6 +960,17 @@ _via_dp[4]['store']['metadata'] = {
     'flg':0,
     'z':[],
     'xy':[2,104.553,119.393,319.056,154.469],
-    'av':{'1':'0'},
+    'av':{
+      '1':'0',
+    },
+  },
+  '1_n8iiCJ6Y':{
+    'vid':'1',
+    'flg':0,
+    'z':[],
+    'xy':[],
+    'av':{
+      '2':'A white swan in Geneva lake.',
+    },
   },
 };

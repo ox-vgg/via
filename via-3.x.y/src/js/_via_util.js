@@ -178,7 +178,7 @@ function _via_util_infer_file_loc_from_filename(filename) {
   if ( filename.startsWith('http://') || filename.startsWith('https://') ) {
     return _VIA_FILE_LOC.URIHTTP;
   } else {
-    if ( filename.startsWith('file://') ) {
+    if ( filename.startsWith('file://') || filename.includes('/') ) {
       return _VIA_FILE_LOC.URIFILE;
     } else {
       return _VIA_FILE_LOC.LOCAL;

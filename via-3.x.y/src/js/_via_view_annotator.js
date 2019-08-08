@@ -44,7 +44,6 @@ function _via_view_annotator(data, container ) {
 _via_view_annotator.prototype._init = function() {
   this._view_clear_all_file_annotator();
   this._show_start_info();
-  _via_util_msg_show(_VIA_NAME + ' (' + _VIA_NAME_SHORT + ') ' + _VIA_VERSION + ' ready.');
 }
 
 _via_view_annotator.prototype._show_start_info = function() {

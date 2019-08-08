@@ -47,6 +47,14 @@ function _via_load_submodules() {
       'options':{},
       'default_option_id':'',
     },
+    '2': {
+      'aname':'Caption',
+      'anchor_id':'FILE1_Z0_XY0',
+      'type':1,
+      'desc':'Image Caption',
+      'options':{},
+      'default_option_id':'',
+    },
   };
   _via_demo_project['store']['file'] = {
     '1':{
@@ -82,6 +90,7 @@ function _via_load_submodules() {
       'xy': [2, 101, 125, 286, 146],
       'av': {
         '1':'Swan',
+        '2':'A white swan in Geneva lake.',
       }
     },
     '2_WIpRNLvX': {
@@ -91,6 +100,7 @@ function _via_load_submodules() {
       'xy': [2, 378.921,121.113,84.991,234.435],
       'av': {
         '1':'Socrates',
+        '2':'Death of Socrates painting by David.',
       }
     },
     '2_eA5CqEPf': {

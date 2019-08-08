@@ -36,13 +36,13 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 #view_container > .view_content_container > .file_container * { position:absolute; top:0; }
 #view_container > .view_content_container > .file_container audio { height:3ch; width:90%; }
 #view_container > .view_content_container > .file_container .rinput_enabled { }
-#view_container > .view_content_container > .file_container > .smetadata_container { display:inline-block; font-size:small; background-color:white; }
-#view_container > .view_content_container > .file_container > .smetadata_container * { position:relative; vertical-align:middle; }
-#view_container > .view_content_container > .file_container > .smetadata_container table { position:relative; border-collapse:collapse; border:none; margin:0.2em; }
-#view_container > .view_content_container > .file_container > .smetadata_container td { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.2em; }
-#view_container > .view_content_container > .file_container > .smetadata_container th { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.2em; }
-#view_container > .view_content_container > .file_container > .smetadata_container input { font-size:small; }
-#view_container > .view_content_container > .file_container > .smetadata_container select { font-size:small; }
+#view_container > .view_content_container > .file_container > .metadata_container { display:inline-block; font-size:small; background-color:white; }
+#view_container > .view_content_container > .file_container > .metadata_container * { position:relative; vertical-align:middle; }
+#view_container > .view_content_container > .file_container > .metadata_container table { position:relative; border-collapse:collapse; border:none; margin:0.2em; }
+#view_container > .view_content_container > .file_container > .metadata_container td { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.2em; }
+#view_container > .view_content_container > .file_container > .metadata_container th { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.2em; }
+#view_container > .view_content_container > .file_container > .metadata_container input { font-size:small; }
+#view_container > .view_content_container > .file_container > .metadata_container select { font-size:small; }
 #view_container > .view_content_container > .file_container > .error_page { margin-left:1em; width:50em; }
 #view_container > .view_content_container > .file_container > .error_page * { position:relative; }
 #view_container > .view_content_container > .file_container > .error_page input { font-size:small; width:100%; }

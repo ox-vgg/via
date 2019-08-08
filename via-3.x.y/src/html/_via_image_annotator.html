@@ -68,33 +68,46 @@
     <svg style="display:none;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
         <symbol id="shape_rectangle">
-          <rect width="20" height="14" x="2" y="5" ></rect>
+          <rect width="18" height="14" x="3" y="5" stroke="black" fill="none"></rect>
+        </symbol>
+        <symbol id="shape_extreme_rectangle">
+          <rect width="18" height="14" x="3" y="5" stroke="black" fill="none"></rect>
+          <circle r="2" cx="3"  cy="10" stroke="black" fill="grey"></circle>
+          <circle r="2" cx="10"  cy="19" stroke="black" fill="grey"></circle>
+          <circle r="2" cx="15" cy="5" stroke="black" fill="grey"></circle>
+          <circle r="2" cx="21" cy="14" stroke="black" fill="grey"></circle>
         </symbol>
         <symbol id="shape_circle">
-          <circle r="10" cx="12" cy="12"></circle>
+          <circle r="9" cx="12" cy="12" stroke="black" fill="none"></circle>
+        </symbol>
+        <symbol id="shape_extreme_circle">
+          <circle r="9" cx="12" cy="12" stroke="black" fill="none"></circle>
+          <circle r="2" cx="3" cy="10" stroke="black" fill="grey"></circle>
+          <circle r="2" cx="19" cy="6" stroke="black" fill="grey"></circle>
+          <circle r="2" cx="16" cy="20" stroke="black" fill="grey"></circle>
         </symbol>
         <symbol id="shape_ellipse">
-          <ellipse rx="10" ry="8" cx="12" cy="12"></ellipse>
+          <ellipse rx="10" ry="8" cx="12" cy="12" stroke="black" fill="none"></ellipse>
         </symbol>
         <symbol id="shape_point">
-          <circle r="3" cx="12" cy="12"></circle>
+          <circle r="3" cx="12" cy="12" stroke="black" fill="grey"></circle>
         </symbol>
         <symbol id="shape_polygon">
-          <path d="M 4 12 L 10 2 L 20 6 L 18 16 L 8 20 z"></path>
+          <path d="M 4 12 L 10 2 L 20 6 L 18 16 L 8 20 z" stroke="black" fill="none"></path>
         </symbol>
-        <symbol id="shape_polyline" stroke-width="1" stroke="black">
-          <line x1="3" y1="4" x2="8" y2="18"/>
-          <line x1="8" y1="18" x2="14" y2="6"/>
-          <line x1="14" y1="6" x2="20" y2="14"/>
-          <circle r="2" cx="3" cy="4"></circle>
-          <circle r="2" cx="8" cy="18"></circle>
-          <circle r="2" cx="14" cy="6"></circle>
-          <circle r="2" cx="20" cy="14"></circle>
+        <symbol id="shape_polyline">
+          <line x1="3" y1="4" x2="8" y2="18" stroke="black" fill="none"/>
+          <line x1="8" y1="18" x2="14" y2="6" stroke="black"/>
+          <line x1="14" y1="6" x2="20" y2="14" stroke="black"/>
+          <circle r="2" cx="3" cy="4" stroke="black"></circle>
+          <circle r="2" cx="8" cy="18" stroke="black"></circle>
+          <circle r="2" cx="14" cy="6" stroke="black"></circle>
+          <circle r="2" cx="20" cy="14" stroke="black"></circle>
         </symbol>
-        <symbol id="shape_line" stroke-width="1" stroke="black">
-          <line x1="6" y1="6" x2="19" y2="19"/>
-          <circle r="2" cx="6" cy="6"></circle>
-          <circle r="2" cx="19" cy="19"></circle>
+        <symbol id="shape_line">
+          <line x1="6" y1="6" x2="19" y2="19" stroke="black"/>
+          <circle r="2" cx="6" cy="6" stroke="black"></circle>
+          <circle r="2" cx="19" cy="19" stroke="black"></circle>
         </symbol>
 
         <symbol id="micon_settings">
@@ -245,6 +258,9 @@
         <ul>
           <li>VIA Shared Project: <input id="via_page_import_pid" type="text" placeholder="e.g. 71578187-3cd3-45d0-8198-7c441fbc06af" style="width:25em;">
           </li>
+          <li>VIA2 project created (json file):
+            <input id="via_page_import_via2_project_json" type="file">
+          </li>
         </ul>
 
         <div class="controls">
@@ -264,7 +280,7 @@
           </select>
         </p>
         <h2>Paste File URI (one URI per line)</h2>
-        <textarea id="via_page_fileuri_urilist" placeholder="For example, http://www.robots.ox.ac.uk/~vgg/software/via/images/via_logo.png \n file:///data/images/img001.jpg \n file:///C:/Documents%20and%20Settings/tlm/video001.mp4" rows="10" cols="80"></textarea>
+        <textarea id="via_page_fileuri_urilist" placeholder="For example, (1) http://www.robots.ox.ac.uk/~vgg/software/via/images/via_logo.png ; (2) file:///data/images/img001.jpg ; (3) file:///C:/Documents%20and%20Settings/tlm/video001.mp4" rows="10" cols="80"></textarea>
         <h2>Import URI from a File</h2>
         <input id="via_page_fileuri_importfile" type="file">
 
@@ -457,30 +473,30 @@
 
         <h4>License</h4>
         <pre>
-          Copyright (c) 2019, Abhishek Dutta, Visual Geometry Group, Oxford University.
-          All rights reserved.
+Copyright (c) 2019, Abhishek Dutta, Visual Geometry Group, Oxford University and VIA Contributors.
+All rights reserved.
 
-          Redistribution and use in source and binary forms, with or without
-          modification, are permitted provided that the following conditions are met:
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-          Redistributions of source code must retain the above copyright notice, this
-          list of conditions and the following disclaimer.
-          Redistributions in binary form must reproduce the above copyright notice,
-          this list of conditions and the following disclaimer in the documentation
-          and/or other materials provided with the distribution.
-          THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-          AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-          IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-          ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-          LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-          CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-          SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-          INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-          CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-          ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-          POSSIBILITY OF SUCH DAMAGE.
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
         </pre>
-        <p>Copyright &copy; 2016-2019, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>, Visual Geometry Group, Oxford University.</p>
+        <p>Copyright &copy; 2019, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>, Visual Geometry Group, Oxford University and VIA Contributors.</p>
       </div>
     </div> <!-- end of page container -->
 
@@ -490,7 +506,8 @@
         <li>To start annotation of an image, audio and video, select <span class="text_button" onclick="via.vm._on_add_media_local()">local files</span> or <span class="text_button" onclick="via.vm._on_add_media_remote()">add files</span> (local files using file:// and remote files using http:// URI). You can also add a list of file URI in <span class="text_button" onclick="via.vm._on_add_media_bulk()">bulk</span>.</li>
         <li>Press <span class="key">Space</span> key to play or pause an audio or video at any time (more keyboard <span class="text_button" onclick="_via_util_page_show('page_keyboard_shortcut')">shortcuts</span>).</li>
         <li>Spatial regions (e.g. 50x80 pixel rectangular bounding box) can be defined for image and video frame when video is paused. Temporal segments (e.g. video segment from time 3.1 sec. to 12.5 sec) can be defined for audio and video files.</li>
-        <li>You can also try preloaded demo for <a target="_blank" href="http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_audio_annotator.html">audio</a> and <a target="_blank" href="http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_video_annotator.html">video</a> annotation.</li>
+        <li>Use the <span class="text_button" onclick="via.editor.show()">attribute editor</span> to define or update attributes (e.g. name, colour, etc.) of user defined regions.</li>
+        <li>You can also try preloaded demo for <a target="_blank" href="http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_image_annotator.html">image</a>, <a target="_blank" href="http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_audio_annotator.html">audio</a> and <a target="_blank" href="http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_video_annotator.html">video</a> annotation.</li>
       </ul>
     </div>
 

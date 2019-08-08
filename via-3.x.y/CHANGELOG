@@ -6,7 +6,7 @@
  * circle selection issue fixed
  * bulk add file uri issue fixed (issue 206)
  * VIA projects created in version 2.x.y can now be imported in VIA version 3 (issue 203)
- * 
+ * Added file metadata editor (for example: we use file metadata editor to add a caption to each image, audio or video)
 
 ## [3.0.4] - 02 July 2019
  * issue with spatial region attribute definition fixed
