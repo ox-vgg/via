@@ -1037,6 +1037,7 @@ _via_data.prototype.project_import_via2_json = function(via2_project_json) {
         this.store.view[vid] = new _via_view([via3_fid]);
         this.store.project.vid_list.push(vid);
 
+        // import region metadata
         for ( var rid in via2['_via_img_metadata'][fid]['regions'] ) {
           var shape = via2['_via_img_metadata'][fid]['regions'][rid]['shape_attributes'];
           var z = [];
@@ -1085,7 +1086,22 @@ _via_data.prototype.project_import_via2_json = function(via2_project_json) {
 
           var mid = this._metadata_get_new_id(vid);
           this.store.metadata[mid] = new _via_metadata(vid, z, xy, av);
-         }
+        }
+
+        // import file metadata
+        var file_av = {};
+        for ( var via2_aid in via2['_via_img_metadata'][fid]['file_attributes'] ) {
+          var via3_aid = via2_aid_to_via3_aid_map[via2_aid];
+          var avalue = via2['_via_img_metadata'][fid]['file_attributes'][via2_aid];
+
+          if ( typeof(avalue) === 'object' ) {
+            avalue = Object.keys(avalue).join(',');
+          }
+
+          file_av[via3_aid] = avalue;
+        }
+        var mid = this._metadata_get_new_id(vid);
+        this.store.metadata[mid] = new _via_metadata(vid, [], [], file_av);
       }
       _via_util_msg_show('Project import successful');
       this._cache_update();
