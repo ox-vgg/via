@@ -28,7 +28,7 @@ _via_data.prototype._init_default_project = function() {
     'pid': '__VIA_PROJECT_ID__',
     'rev': '__VIA_PROJECT_REV_ID__',
     'rev_timestamp': '__VIA_PROJECT_REV_TIMESTAMP__',
-    'pname': 'Default Project',
+    'pname': 'Unnamed VIA Project',
     'data_format_version': this.DATA_FORMAT_VERSION,
     'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
     'created': Date.now(),

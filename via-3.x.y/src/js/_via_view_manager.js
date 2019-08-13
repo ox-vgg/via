@@ -67,8 +67,8 @@ _via_view_manager.prototype._init_ui_elements = function() {
 //
 // UI elements change listeners
 //
-_via_view_manager.prototype._on_pname_change = function() {
-  this.d.store.project.pname = this.pname.getAttribute('value').trim();
+_via_view_manager.prototype._on_pname_change = function(e) {
+  this.d.store.project.pname = e.target.value.trim();
 }
 
 _via_view_manager.prototype._on_view_selector_change = function(e) {

@@ -106,11 +106,15 @@ _via_import_export.prototype.import_from_coco = function(json_str) {
 _via_import_export.prototype.export_to_file = function(data_format) {
   console.log(data_format)
   switch(data_format) {
-    case 'via3_csv':
-      this.export_to_via3_csv();
-      break;
-    default:
-      console.warn('Unknown data format: ' + data_format);
+  case 'via3_csv':
+    this.export_to_via3_csv();
+    break;
+  case 'temporal_segments_csv':
+    this.export_to_temporal_segments_csv();
+    break;
+
+  default:
+    console.warn('Unknown data format: ' + data_format);
   }
 }
 
@@ -168,6 +172,67 @@ _via_import_export.prototype.export_to_via3_csv = function() {
       line.push( _via_util_obj2csv(this.d.store.metadata[mid].z) );
       line.push( _via_util_obj2csv(this.d.store.metadata[mid].xy) );
       line.push( _via_util_obj2csv(this.d.store.metadata[mid].av) );
+      csv.push(line.join(','));
+    }
+
+    var data_blob = new Blob( [csv.join('\n')],
+                              {type: 'text/csv;charset=utf-8'});
+    var filename = [];
+    filename.push(this.d.store.project.pname.replace(' ', '-'));
+    filename.push(_via_util_date_to_filename_str(Date.now()));
+    filename.push('_export.csv');
+    _via_util_download_as_file(data_blob, filename.join(''));
+  }.bind(this));
+}
+
+_via_import_export.prototype.export_to_temporal_segments_csv = function() {
+  return new Promise( function(ok_callback, err_callback) {
+    var csv = [];
+
+    var attribute = {}
+    for ( var aid in this.d.store.attribute ) {
+      attribute[aid] = this.d.store.attribute[aid].aname;
+    }
+
+    csv.push('# Exported using VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)');
+    csv.push('# CSV_HEADER = metadata_id,file_list,temporal_segment_start,temporal_segment_end,metadata');
+    // build file_list for each view_id
+    var vid_filesrc_str_list = {};
+    var vid, fid;
+    for ( var vindex in this.d.store.project.vid_list ) {
+      vid = this.d.store.project.vid_list[vindex];
+      var vid_filesrc_list = [];
+      for ( var findex in this.d.store.view[vid].fid_list ) {
+        fid = this.d.store.view[vid].fid_list[findex];
+        switch(this.d.store.file[fid].loc) {
+        case _VIA_FILE_LOC.LOCAL:
+          if ( this.d.file_ref.hasOwnProperty(fid) ) {
+            vid_filesrc_list.push( this.d.file_ref[fid].name );
+          } else {
+            vid_filesrc_list.push( this.d.store.file[fid].fname );
+          }
+          break;
+        case _VIA_FILE_LOC.INLINE:
+          vid_filesrc_list.push( this.d.store.file[fid].fname );
+          break;
+        default:
+          vid_filesrc_list.push( this.d.store.file[fid].src );
+        }
+      }
+      vid_filesrc_str_list[vid] = _via_util_obj2csv(vid_filesrc_list);
+    }
+
+    for ( var mid in this.d.store.metadata ) {
+      var line = [];
+      line.push( '"' + mid + '"');
+      line.push( vid_filesrc_str_list[ this.d.store.metadata[mid].vid ] );
+      line.push(this.d.store.metadata[mid].z[0])
+      line.push(this.d.store.metadata[mid].z[1])
+      var descriptive_av = {};
+      for ( var aid in this.d.store.metadata[mid].av ) {
+        descriptive_av[ this.d.store.attribute[aid].aname ] = this.d.store.metadata[mid].av[aid];
+      }
+      line.push( _via_util_obj2csv(descriptive_av) );
       csv.push(line.join(','));
     }
 
