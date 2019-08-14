@@ -728,17 +728,17 @@ _via_data.prototype.project_save = function() {
 _via_data.prototype.project_load = function(project_data_str) {
   return new Promise( function(ok_callback, err_callback) {
     try {
-      var project_data = JSON.parse(project_data_str);
-      this.store = this.project_store_apply_version_fix(project_data);
-      this._cache_update();
-      this.emit_event( 'project_loaded', { 'pid':this.store.project.pid } );
-      ok_callback();
+      var project_json_data = JSON.parse(project_data_str);
+      this.project_load_json(project_json_data).then( function(ok) {
+        ok_callback();
+      }.bind(this), function(err) {
+        err_callback();
+      }.bind(this));
     }
     catch(err) {
       _via_util_msg_show('Failed to load project! [' + err + ']');
       this._init_default_project();
       console.log(err)
-      this.emit_event( 'project_load', { 'pid':this.store.project.pid } );
       err_callback();
     }
   }.bind(this));
@@ -749,6 +749,7 @@ _via_data.prototype.project_load_json = function(project_json_data) {
     try {
       var project_data = Object.assign({}, project_json_data);
       this.store = this.project_store_apply_version_fix(project_data);
+      this.store0 = Object.assign({}, this.store); // used to detect project changes
       this._cache_update();
       this.emit_event( 'project_loaded', { 'pid':this.store.project.pid } );
       ok_callback();
@@ -758,7 +759,6 @@ _via_data.prototype.project_load_json = function(project_json_data) {
       this._init_default_project();
       console.warn('failed to load project')
       console.log(err)
-      this.emit_event( 'project_load', { 'pid':this.store.project.pid } );
       err_callback();
     }
   }.bind(this));
@@ -796,140 +796,78 @@ _via_data.prototype.project_is_remote = function() {
 //
 // merge
 //
-_via_data.prototype.project_merge_rev = function(d) {
+_via_data.prototype.project_merge_rev = function(remote, merge_strategy) {
+  if ( typeof(merge_strategy) === 'undefined' ) {
+    merge_strategy = _VIA_MERGE_STRATEGY.THREE_WAY;
+  }
+
+  switch(merge_strategy) {
+  case _VIA_MERGE_STRATEGY.THREE_WAY:
+    this.project_merge_three_way(remote).then( function(ok) {
+      console.log('Merge success');
+    }.bind(this), function(err) {
+      console.log('Merge failed');
+    }.bind(this));
+    break;
+  default:
+    console.log('Unknown merge strategy: ' + merge_strategy);
+  }
+}
+
+_via_data.prototype.project_merge_three_way = function(remote) {
   return new Promise( function(ok_callback, err_callback) {
-    if ( this.store.project.pid !== d.project.pid ) {
+    // see https://en.wikipedia.org/wiki/Merge_(version_control)
+    // merge using the three way merge algorithm, where
+    // common ancestor = this.store0 (i.e. the last revision)
+    // remote          = the latest revision pulled from server
+    // local           = this.store (i.e. local version of project with some revisions)
+
+    if ( this.store.project.pid !== remote.project.pid ) {
       err_callback('pid mismatch');
       return;
     }
 
-    var rev0 = this.store.project.rev;
-    var rev1 = d.project.rev;
-    var merge_stat = { 'rev':d.project.rev, 'rev_timestamp':d.project.rev_timestamp };
-
     try {
       // merge project
-      if ( this.store.project['pname'] !== d.project['pname'] ) {
-        this.store.project['pname'] = this.conflict_merge_str(rev0, this.store.project['pname'],
-                                                              rev1, d.project['pname']);
-      }
-      var added_vid_list = [];
-      if ( ! _via_util_array_eq(this.store.project['vid_list'], d.project['vid_list']) ) {
-        for ( var vindex in d.project['vid_list'] ) {
-          if ( ! d.project['vid_list'][vindex] in this.store.project['vid_list'] ) {
-            this.store.project['vid_list'].push( d.project['vid_list'][vindex] );
-            added_vid_list.push( d.project['vid_list'][vindex] );
-          }
-        }
-      }
-      merge_stat['vid_list'] = added_vid_list.length;
+      this.store.project['pname'] = this.merge_3way(this.store0.project['pname'],
+                                                    remote.project['pname'],
+                                                    this.store.project['pname']);
+      this.store.project['vid_list'] = this.merge_3way(this.store0.project['vid_list'],
+                                                       remote.project['vid_list'],
+                                                       this.store.project['vid_list']);
 
-      // merge config
-      for ( var lid in d.config.file.loc_prefix ) {
-        if ( this.store.config.file.loc_prefix[lid] !== d.config.file.loc_prefix[lid] ) {
-          this.store.config.file.loc_prefix[lid] = this.conflict_merge_str(rev0, this.store.config.file.loc_prefix[lid],
-                                                                           rev1, d.config.file.loc_prefix[lid]);
-        }
-      }
-
-      // merge attribute
-      var new_aid_list = [];
-      for ( var aid in d.attribute ) {
-        if ( this.store.attribute.hasOwnProperty(aid) ) {
-          // update existing attribute (if needed)
-          if ( this.store.attribute[aid]['aname'] !== d.attribute[aid]['aname'] ) {
-            this.store.attribute[aid]['aname'] = this.conflict_merge_str(rev0, this.store.attribute[aid]['aname'],
-                                                                         rev1, d.attribute[aid]['aname']);
-          }
-          if ( this.store.attribute[aid]['desc'] !== d.attribute[aid]['desc'] ) {
-            this.store.attribute[aid]['desc'] = this.conflict_merge_str(rev0, this.store.attribute[aid]['desc'],
-                                                                        rev1, d.attribute[aid]['desc']);
-          }
-          for ( var oid in d.attribute[aid]['options'] ) {
-            if ( this.store.attribute[aid]['options'].hasOwnProperty(oid) ) {
-              if ( this.store.attribute[aid]['options'][oid] !== d.attribute[aid]['options'][oid] ) {
-                // update existing option
-                this.store.attribute[aid]['options'][oid] = this.conflict_merge_str(rev0, this.store.attribute[aid]['options'][oid],
-                                                                                    rev1, d.attribute[aid]['options'][oid]);
-              }
-            } else {
-              // add new options
-              this.store.attribute[aid]['options'][oid] = d.attribute[aid]['options'][oid];
+      // merge remote attribute, file, view and metadata
+      var property_list = [ 'config', 'attribute', 'file', 'view', 'metadata' ];
+      for ( var pindex in property_list ) {
+        var property = property_list[pindex]
+        for ( var id in remote[property] ) {
+          if ( this.store[property].hasOwnProperty(id) ) {
+            for ( var afield in this.store[property][id] ) {
+              this.store[property][id][afield] = this.merge_3way(this.store[property][id][afield],
+                                                                 remote[property][id][afield],
+                                                                 this.store0[property][id][afield]);
             }
+          } else {
+            // add new attribute
+            this.store[property][id] = remote[property][id];
           }
-        } else {
-          // add new attribute
-          this.store.attribute[aid] = d.attribute[aid];
-          new_aid_list.push(aid);
-        }
-      }
-      merge_stat['aid_list'] = new_aid_list.length;
-
-      // merge file
-      var new_fid_list = [];
-      for ( var fid in d.file ) {
-        if ( this.store.file.hasOwnProperty(fid) ) {
-          // update existing file (if needed)
-          if ( this.store.file[fid]['fname'] !== d.file[fid]['fname'] ) {
-            this.store.file[fid]['fname'] = this.conflict_merge_str(rev0, this.store.file[fid]['fname'],
-                                                                    rev1, d.file[fid]['fname']);
-          }
-          if ( this.store.file[fid]['src'] !== d.file[fid]['src'] ) {
-            this.store.file[fid]['src'] = this.conflict_merge_str(rev0, this.store.file[fid]['src'],
-                                                                  rev1, d.file[fid]['src']);
-          }
-        } else {
-          // add new file
-          this.store.file[fid] = d.file[fid];
-          new_fid_list.push(fid);
-        }
-      }
-      merge_stat['fid_list'] = new_fid_list.length;
-
-      // merge view
-      for ( var vid in d.view ) {
-        if ( this.store.view.hasOwnProperty(vid) ) {
-          for ( var findex in d.view[vid]['fid_list'] ) {
-            var fid = d.view[vid]['fid_list'][findex];
-            if ( ! fid in this.store.view[vid]['fid_list'] ) {
-              this.store.view[vid]['fid_list'].push(fid);
-            }
-          }
-        } else {
-          this.store.view[vid] = d.view[vid];
         }
       }
 
-      // merge metadata
-      var conflict_metadata_list = [];
-      var new_mid_list = [];
-      for ( var mid in d.metadata ) {
-        if ( this.store.metadata.hasOwnProperty(mid) ) {
-          // has something changed?
-          var mine  = JSON.stringify(this.store.metadata[mid]);
-          var their = JSON.stringify(d.metadata[mid]);
-          if ( mine !== their ) {
-            // add remote metadata as a new metadata
-            conflict_metadata_list.push( d.metadata[mid] );
+      // check for data that was deleted in remote
+      for ( var pindex in property_list ) {
+        var property = property_list[pindex]
+        for ( var id in this.store[property] ) {
+          if ( ! remote[property].hasOwnProperty(id) ) {
+            // something was deleted in remote, therefore we remove it from local version
+            delete this.store[property][id];
           }
-        } else {
-          // add new metadata
-          this.store.metadata[mid] = d.metadata[mid];
-          new_mid_list.push(mid);
         }
       }
 
-      merge_stat['mid_list'] = new_mid_list.length;
-      if ( conflict_metadata_list.length ) {
-        this.metadata_add_bulk(conflict_metadata_list, false).then( function(ok) {
-          merge_stat['conflict_mid_list'] = ok.mid_list;
-          this.project_merge_on_success(merge_stat);
-        }.bind(this), function(err) {
-          err_callback();
-        }.bind(this));
-      } else {
-        this.project_merge_on_success(merge_stat);
-      }
+      this.store.project.rev = remote.project.rev;
+      this.store.project.rev_timestamp = remote.project.rev_timestamp;
+      this.project_merge_on_success();
     }
     catch (e) {
       _via_util_msg_show('Merge failed: ' + e, true);
@@ -939,34 +877,49 @@ _via_data.prototype.project_merge_rev = function(d) {
   }.bind(this));
 }
 
-_via_data.prototype.project_merge_on_success = function(merge_stat) {
-  this.store.project.rev = merge_stat.rev;
-  this.store.project.rev_timestamp = merge_stat.rev_timestamp;
-  this._cache_update();
-  delete merge_stat['rev_timestamp'];
-  this.emit_event( 'project_updated', { 'pid':this.store.project.pid } );
-
-  var summary = [];
-  if ( merge_stat['vid_list'] !== 0 ) {
-    summary.push(merge_stat['vid_list'] + ' new views');
+_via_data.prototype.merge_3way = function(common_ancestor, remote, local) {
+  if ( typeof(common_ancestor) === 'object' ) {
+    if ( Array.isArray(common_ancestor) ) {
+      // use array comparison
+      if ( _via_util_array_eq(remote, local) ) {
+        return local;
+      } else {
+        if ( _via_util_array_eq(common_ancestor, local) ) {
+          return remote;
+        } else {
+          return local; // for conflicts, preserve my local updates
+        }
+      }
+    } else {
+      // use object comparison
+      if ( JSON.stringify(remote) === JSON.stringify(local) ) {
+        return local;
+      } else {
+        if ( JSON.stringify(common_ancestor) === JSON.stringify(local) ) {
+          return remote;
+        } else {
+          return local; // for conflicts, preserve my local updates
+        }
+      }
+    }
+  } else {
+    if ( remote === local ) {
+      return local;
+    } else {
+      if ( common_ancestor === local ) {
+        return remote;
+      } else {
+        return local; // for conflicts, preserve my local updates
+      }
+    }
   }
-  if ( merge_stat['aid_list'] !== 0 ) {
-    summary.push(merge_stat['aid_list'] + ' new attributes');
-  }
-  if ( merge_stat['fid_list'] !== 0 ) {
-    summary.push(merge_stat['fid_list'] + ' new files');
-  }
-  if ( merge_stat['mid_list'] !== 0 ) {
-    summary.push(merge_stat['mid_list'] + ' new metadata');
-  }
-  if ( merge_stat.hasOwnProperty('conflict_mid_list') ) {
-    summary.push(merge_stat['conflict_mid_list'].length + ' metadata with conflicts');
-  }
-  _via_util_msg_show('Successfully merged to revision ' + merge_stat['rev'] + ' (with ' + summary.join(', ') + ')', true);
 }
 
-_via_data.prototype.conflict_merge_str = function(rev0, s0, rev1, s1) {
-  return 'CONFLICT{rev' + rev0 + '=' + s0 + '|rev' + rev1 + '=' + s1 + '}';
+_via_data.prototype.project_merge_on_success = function() {
+  this._cache_update();
+  this.emit_event( 'project_updated', { 'pid':this.store.project.pid } );
+
+  _via_util_msg_show('Successfully merged with revision ' + this.store.project.rev, true);
 }
 
 // is there any difference between local project and remote project?

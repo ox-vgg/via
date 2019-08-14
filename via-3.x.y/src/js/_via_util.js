@@ -565,3 +565,14 @@ function _via_util_clamp(x, lower_bound, upper_bound) {
   return Math.min( Math.max(x, lower_bound), upper_bound );
 }
 
+function _via_util_merge_three_way_str(ancestor, version1, version2) {
+  if ( version1 === version2 ) {
+    return version1;
+  } else {
+    if ( ancestor === version1 ) {
+      return version2;
+    } else {
+      return version1;
+    }
+  }
+}
