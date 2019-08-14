@@ -91,6 +91,7 @@ if you would like to contribute to VIA project by reviewing its software code. H
 
 ## Citation
 If you use this software, please cite it as follows:
+
 <cite>Abhishek Dutta and Andrew Zisserman. 2019. <a href="docs/dutta2019vgg_arxiv.pdf">The VIA Annotation Software for Images, Audio and Video</a>. In Proceedings of the 27th ACM International Conference on Multimedia (MM ’19), October 21–25, 2019, Nice, France. ACM, New York, NY, USA, 4 pages. https://doi.org/10.1145/3343031.3350535</cite>.
 
 ```

@@ -67,6 +67,37 @@ The [Quality Assessment](https://gitlab.com/vgg/via/blob/master/via-1.x.y/Qualit
 page describes the guidelines to ensure the quality of VIA application, source 
 code and its documentation.
 
+
+## Citation
+If you use this software, please cite it as follows:
+
+<cite>Abhishek Dutta and Andrew Zisserman. 2019. <a href="docs/dutta2019vgg_arxiv.pdf">The VIA Annotation Software for Images, Audio and Video</a>. In Proceedings of the 27th ACM International Conference on Multimedia (MM ’19), October 21–25, 2019, Nice, France. ACM, New York, NY, USA, 4 pages. https://doi.org/10.1145/3343031.3350535</cite>.
+
+```
+@inproceedings{dutta2019vgg,
+  author = {Dutta, Abhishek and Zisserman, Andrew},
+  title = {The {VIA} Annotation Software for Images, Audio and Video},
+  booktitle = {Proceedings of the 27th ACM International Conference on Multimedia},
+  series = {MM '19},
+  year = {2019},
+  isbn = {978-1-4503-6889-6/19/10},
+  location = {Nice, France},
+  numpages = {4},
+  url = {https://doi.org/10.1145/3343031.3350535},
+  doi = {10.1145/3343031.3350535},
+  publisher = {ACM},
+  address = {New York, NY, USA},
+} 
+
+@misc{dutta2016via,
+  author = "Dutta, A. and Gupta, A. and Zissermann, A.",
+  title = "{VGG} Image Annotator ({VIA})",
+  year = "2016",
+  howpublished = "http://www.robots.ox.ac.uk/~vgg/software/via/",
+  note = "Version: X.Y.Z, Accessed: INSERT_DATE_HERE" 
+}
+```
+
 ## Contact
 Contact [Abhishek Dutta](adutta_remove_me_@robots.ox.ac.uk) for any queries or feedback related to this application.
 
