@@ -365,22 +365,15 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   gheader_grid.setAttribute('class', 'twocolgrid');
   var group_aname_container = document.createElement('div');
   group_aname_container.setAttribute('class', 'gidcol');
-  this.group_aname_input = document.createElement('input');
-  this.group_aname_input.setAttribute('type', 'text');
-  this.group_aname_input.setAttribute('style', 'width:80%;');
-  this.group_aname_input.setAttribute('value', this.d.store.attribute[this.groupby_aid].aname);
-  this.group_aname_input.setAttribute('title', 'Using this "timeline group variable", you can create multiple copies of the video timeline. For example, if you want to annotate temporal segments for different speakers in a video, you can use "speaker-id" as the timeline group variable to create a video timeline for each speaker thereby allowing you to annotate each speaker separately.');
-  this.group_aname_input.addEventListener('change', this._tmetadata_onchange_groupby_aname.bind(this));
-  group_aname_container.appendChild(this.group_aname_input);
 
   // group variable selector
   if ( this.d.cache.attribute_group.hasOwnProperty('FILE1_Z2_XY0') ) {
     var group_aid_list = Object.keys(this.d.cache.attribute_group['FILE1_Z2_XY0']);
     if ( group_aid_list.length ) {
       this.group_aname_select = document.createElement('select');
-      this.group_aname_select.setAttribute('style', 'width:1em; border:none;');
-      this.group_aname_select.setAttribute('tabIndex', '-1')
+      this.group_aname_select.setAttribute('title', 'Select the variable name that should be used for temporal segmentation. These variable can be edited using the the attribute editor.');
       this.group_aname_select.addEventListener('change', this._tmetadata_onchange_groupby_aid.bind(this));
+
       for ( var aindex in this.d.cache.attribute_group['FILE1_Z2_XY0'] ) {
         var aid = this.d.cache.attribute_group['FILE1_Z2_XY0'][aindex];
         var oi = document.createElement('option');
@@ -459,17 +452,14 @@ _via_temporal_segmenter.prototype._tmetadata_gmetadata_update = function() {
   }
 }
 
-_via_temporal_segmenter.prototype._tmetadata_onchange_groupby_aname = function(e) {
-  this.d.attribute_update_aname(this.groupby_aid, this.group_aname_input.value.trim());
-}
-
 _via_temporal_segmenter.prototype._tmetadata_onchange_groupby_aid = function(e) {
+  this.group_aname_select.blur(); // remove selection of dropdown
   var new_groupby_aid = e.target.options[e.target.selectedIndex].value;
   this._group_init( new_groupby_aid );
   this._tmetadata_gmetadata_update();
   this.gid_list_input.value = this.gid_list.join(',');
-  this.group_aname_input.value = this.d.store.attribute[this.groupby_aid].aname;
   this._tmetadata_boundary_update(this.tmetadata_gtimeline_tstart)
+  this._tmetadata_group_gid_sel(0);
   this._tmetadata_gtimeline_draw();
 }
 

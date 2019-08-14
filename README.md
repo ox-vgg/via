@@ -39,7 +39,7 @@ The development of VIA software began in August 2016 and the first public
 release of version 1 was made in April 2017. Many new advanced features
 for image annotation were introduced in version 2 which was released in June 2018. 
 Recently released version 3 of VIA software supports annotation of audio and video. 
-As of May 2019, the VIA software has been used more than 600,000 times (+150,000 unique pageviews).
+As of July 2019, the VIA software has been used more than 1,000,000 times (+220,000 unique pageviews).
 
 We have nurtured a large and thriving open source community which not
 only provides feedback but also contributes code to add new features
@@ -90,20 +90,30 @@ if you would like to contribute to VIA project by reviewing its software code. H
  * 16 July 2019: [Ben Armstrong](https://gitlab.com/vgg/via/issues/152#note_187568262) is now conducting a code review of [via-2.x.y](https://gitlab.com/vgg/via/tree/master/via-2.x.y) codebase.
 
 ## Citation
-If you use this software, please cite it as shown below and acknowledge the Seebibyte grant as follows: "Development and maintenance of VGG Image Annotator (VIA) is supported by EPSRC programme grant Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1)" 
-```
-@article{dutta2019vgg,
-  title={The {VIA} Annotation Software for Images, Audio and Video},
-  author={Dutta, Abhishek and Zisserman, Andrew},
-  journal={arXiv preprint arXiv:1904.10699},
-  year={2019}
-}
+If you use this software, please cite it as follows:
+<cite>Abhishek Dutta and Andrew Zisserman. 2019. <a href="docs/dutta2019vgg_arxiv.pdf">The VIA Annotation Software for Images, Audio and Video</a>. In Proceedings of the 27th ACM International Conference on Multimedia (MM ’19), October 21–25, 2019, Nice, France. ACM, New York, NY, USA, 4 pages. https://doi.org/10.1145/3343031.3350535</cite>.
 
-@misc{ dutta2016via,
+```
+@inproceedings{dutta2019vgg,
+  author = {Dutta, Abhishek and Zisserman, Andrew},
+  title = {The {VIA} Annotation Software for Images, Audio and Video},
+  booktitle = {Proceedings of the 27th ACM International Conference on Multimedia},
+  series = {MM '19},
+  year = {2019},
+  isbn = {978-1-4503-6889-6/19/10},
+  location = {Nice, France},
+  numpages = {4},
+  url = {https://doi.org/10.1145/3343031.3350535},
+  doi = {10.1145/3343031.3350535},
+  publisher = {ACM},
+  address = {New York, NY, USA},
+} 
+
+@misc{dutta2016via,
   author = "Dutta, A. and Gupta, A. and Zissermann, A.",
   title = "{VGG} Image Annotator ({VIA})",
-  year = "2016",  
-  howpublished = "http://www.robots.ox.ac.uk/~vgg/software/via/",  
+  year = "2016",
+  howpublished = "http://www.robots.ox.ac.uk/~vgg/software/via/",
   note = "Version: X.Y.Z, Accessed: INSERT_DATE_HERE" 
 }
 ```

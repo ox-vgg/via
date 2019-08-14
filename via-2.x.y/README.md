@@ -57,20 +57,30 @@ Such contributions must must adhere to the existing [license](https://gitlab.com
 the VIA project.
 
 ## Citation
-If you use this software, please cite it as shown below and acknowledge the Seebibyte grant as follows: "Development and maintenance of VGG Image Annotator (VIA) is supported by EPSRC programme grant Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1)" 
-```
-@article{dutta2019vgg,
-  title={{The VGG} Image Annotator ({VIA})},
-  author={Dutta, Abhishek and Zisserman, Andrew},
-  journal={arXiv preprint arXiv:1904.10699},
-  year={2019}
-}
+If you use this software, please cite it as follows:
+<cite>Abhishek Dutta and Andrew Zisserman. 2019. <a href="docs/dutta2019vgg_arxiv.pdf">The VIA Annotation Software for Images, Audio and Video</a>. In Proceedings of the 27th ACM International Conference on Multimedia (MM ’19), October 21–25, 2019, Nice, France. ACM, New York, NY, USA, 4 pages. https://doi.org/10.1145/3343031.3350535</cite>.
 
-@misc{ dutta2016via,
+```
+@inproceedings{dutta2019vgg,
+  author = {Dutta, Abhishek and Zisserman, Andrew},
+  title = {The {VIA} Annotation Software for Images, Audio and Video},
+  booktitle = {Proceedings of the 27th ACM International Conference on Multimedia},
+  series = {MM '19},
+  year = {2019},
+  isbn = {978-1-4503-6889-6/19/10},
+  location = {Nice, France},
+  numpages = {4},
+  url = {https://doi.org/10.1145/3343031.3350535},
+  doi = {10.1145/3343031.3350535},
+  publisher = {ACM},
+  address = {New York, NY, USA},
+} 
+
+@misc{dutta2016via,
   author = "Dutta, A. and Gupta, A. and Zissermann, A.",
   title = "{VGG} Image Annotator ({VIA})",
-  year = "2016",  
-  howpublished = "http://www.robots.ox.ac.uk/~vgg/software/via/",  
+  year = "2016",
+  howpublished = "http://www.robots.ox.ac.uk/~vgg/software/via/",
   note = "Version: X.Y.Z, Accessed: INSERT_DATE_HERE" 
 }
 ```
