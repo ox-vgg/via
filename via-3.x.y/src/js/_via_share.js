@@ -10,12 +10,12 @@
 'use strict';
 
 function _via_share(data, conf) {
+  this._ID = '_via_share_';
   this.d = data;
   this.conf = conf;
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this._EVENT_ID_PREFIX = '_via_share_';
   _via_event.call(this);
 }
 

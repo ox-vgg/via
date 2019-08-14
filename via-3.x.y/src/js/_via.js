@@ -10,6 +10,8 @@
 'use strict'
 
 function _via(via_container) {
+  this._ID = '_via';
+
   console.log('Initializing VGG Image Annotator (VIA) version ' + _VIA_VERSION)
   this.via_container = via_container;
 
@@ -59,10 +61,10 @@ function _via(via_container) {
   this.cp._set_region_shape('RECTANGLE');
 
   // event handlers for buttons in the control panel
-  this.cp.on_event('region_shape', function(data, event_payload) {
+  this.cp.on_event('region_shape', this._ID, function(data, event_payload) {
     this.va.set_region_draw_shape(event_payload.shape);
   }.bind(this));
-  this.cp.on_event('editor_toggle', function(data, event_payload) {
+  this.cp.on_event('editor_toggle', this._ID, function(data, event_payload) {
     this.editor.toggle();
   }.bind(this));
 

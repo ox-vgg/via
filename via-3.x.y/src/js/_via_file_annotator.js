@@ -23,6 +23,7 @@ var _VIA_RINPUT_STATE = {
 };
 
 function _via_file_annotator(view_annotator, data, vid, file_label, container) {
+  this._ID = '_via_file_annotator_';
   this.va = view_annotator;
   this.d = data;
   this.vid = vid;
@@ -67,16 +68,15 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this._EVENT_ID_PREFIX = '_via_file_annotator_';
   _via_event.call( this );
 
   // register event listeners
-  this.d.on_event('metadata_add', this._on_event_metadata_add.bind(this));
-  this.d.on_event('metadata_update', this._on_event_metadata_update.bind(this));
-  this.d.on_event('metadata_delete_bulk', this._on_event_metadata_delete_bulk.bind(this));
-  this.d.on_event('view_update', this._on_event_view_update.bind(this));
-  this.d.on_event('attribute_update', this._on_event_attribute_update.bind(this));
-  this.d.on_event('attribute_del', this._on_event_attribute_del.bind(this));
+  this.d.on_event('metadata_add', this._ID, this._on_event_metadata_add.bind(this));
+  this.d.on_event('metadata_update', this._ID, this._on_event_metadata_update.bind(this));
+  this.d.on_event('metadata_delete_bulk', this._ID, this._on_event_metadata_delete_bulk.bind(this));
+  this.d.on_event('view_update', this._ID, this._on_event_view_update.bind(this));
+  this.d.on_event('attribute_update', this._ID, this._on_event_attribute_update.bind(this));
+  this.d.on_event('attribute_del', this._ID, this._on_event_attribute_del.bind(this));
 
   this._init();
 }

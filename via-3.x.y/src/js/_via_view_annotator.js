@@ -21,6 +21,7 @@ const _VIA_PAGE = {
 };
 
 function _via_view_annotator(data, container ) {
+  this._ID = '_via_view_annotator_';
   this.d = data;
   this.c = container;
   this.file_annotator = [];
@@ -32,11 +33,10 @@ function _via_view_annotator(data, container ) {
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this._EVENT_ID_PREFIX = '_via_view_annotator_';
   _via_event.call( this );
 
-  this.d.on_event('metadata_add', this._on_event_metadata_add.bind(this));
-  this.d.on_event('metadata_update', this._on_event_metadata_update.bind(this));
+  this.d.on_event('metadata_add', this._ID, this._on_event_metadata_add.bind(this));
+  this.d.on_event('metadata_update', this._ID, this._on_event_metadata_update.bind(this));
 
   this._init();
 }
@@ -161,7 +161,7 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
                                                           this.d,
                                                           this.file_annotator[0][0].file_html_element
                                                          );
-    this.temporal_segmenter.on_event('edit_frame_regions', this.file_annotator[0][0]._on_event_edit_frame_regions.bind(this.file_annotator[0][0]));
+    this.temporal_segmenter.on_event('edit_frame_regions', this._ID, this.file_annotator[0][0]._on_event_edit_frame_regions.bind(this.file_annotator[0][0]));
   }.bind(this), function(err) {
     this.c.removeChild(this.view_metadata_container);
     this.c.setAttribute('style', 'grid-template-rows:1fr;')
@@ -362,10 +362,10 @@ _via_view_annotator.prototype.set_region_draw_shape = function(shape) {
 _via_view_annotator.prototype._view_clear_all_file_annotator = function() {
   // _via_file_annotator are attached as events listeners in _via_data
   // we must also remove these events listeners
-  this.d.clear_events('metadata_add');
-  this.d.clear_events('metadata_update');
-  this.d.clear_events('metadata_delete_bulk');
-  this.d.clear_events('view_update');
+  this.d.clear_events('metadata_add', this._ID);
+  this.d.clear_events('metadata_update', this._ID);
+  this.d.clear_events('metadata_delete_bulk', this._ID);
+  this.d.clear_events('view_update', this._ID);
 
   // cleanup resources acquired by each of this.file_annotator[i][j]
   for ( var i = 0; i < this.file_annotator.length; ++i ) {

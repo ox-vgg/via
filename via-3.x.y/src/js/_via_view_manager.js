@@ -10,6 +10,7 @@
 'use strict';
 
 function _via_view_manager(data, view_annotator, container) {
+  this._ID = '_via_view_manager_';
   this.d = data;
   this.va = view_annotator;
   this.c = container;
@@ -19,16 +20,15 @@ function _via_view_manager(data, view_annotator, container) {
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this._EVENT_ID_PREFIX = '_via_view_manager_';
   _via_event.call( this );
 
-  this.d.on_event('project_loaded', this._on_event_project_loaded.bind(this));
-  this.d.on_event('project_updated', this._on_event_project_updated.bind(this));
-  this.d.on_event('view_bulk_add', this._on_event_view_bulk_add.bind(this));
-  this.d.on_event('view_del', this._on_event_view_del.bind(this));
-  this.va.on_event('view_show', this._on_event_view_show.bind(this));
-  this.va.on_event('view_next', this._on_event_view_next.bind(this));
-  this.va.on_event('view_prev', this._on_event_view_prev.bind(this));
+  this.d.on_event('project_loaded', this._ID, this._on_event_project_loaded.bind(this));
+  this.d.on_event('project_updated', this._ID, this._on_event_project_updated.bind(this));
+  this.d.on_event('view_bulk_add', this._ID, this._on_event_view_bulk_add.bind(this));
+  this.d.on_event('view_del', this._ID, this._on_event_view_del.bind(this));
+  this.va.on_event('view_show', this._ID, this._on_event_view_show.bind(this));
+  this.va.on_event('view_next', this._ID, this._on_event_view_next.bind(this));
+  this.va.on_event('view_prev', this._ID, this._on_event_view_prev.bind(this));
 
   this._init_ui_elements();
 }

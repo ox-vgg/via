@@ -8,12 +8,12 @@
  */
 
 function _via_control_panel(control_panel_container, via) {
+  this._ID = '_via_control_panel_';
   this.c   = control_panel_container;
   this.via = via;
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this._EVENT_ID_PREFIX = '_via_control_panel_';
   _via_event.call( this );
 
   this._init();

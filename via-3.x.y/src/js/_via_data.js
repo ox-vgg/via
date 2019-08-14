@@ -10,6 +10,7 @@
 'use strict';
 
 function _via_data() {
+  this._ID = '_via_data_';
   this.store = this._init_default_project();
   this.file_ref = {};        // ref. to files selected using browser's file selector
   this.file_object_uri = {}; // WARNING: cleanup using file_object_url[fid]._destroy_file_object_url()
@@ -18,7 +19,6 @@ function _via_data() {
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this._EVENT_ID_PREFIX = '_via_data_';
   _via_event.call(this);
 }
 
@@ -166,7 +166,6 @@ _via_data.prototype.attribute_update_type = function(aid, new_type) {
       return;
     }
     this.store['attribute'][aid]['type'] = new_type;
-    console.log(JSON.stringify(this.store.attribute[aid]))
     this.emit_event( 'attribute_update', { 'aid':aid, 'type':new_type } );
     ok_callback(aid);
   }.bind(this));

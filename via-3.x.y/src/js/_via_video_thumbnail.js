@@ -10,6 +10,7 @@
 'use strict';
 
 function _via_video_thumbnail(fid, data) {
+  this._ID = '_via_video_thumbnail_';
   this.fid = fid;
   this.d = data;
   this.fwidth = 160;
@@ -29,7 +30,6 @@ function _via_video_thumbnail(fid, data) {
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this._EVENT_ID_PREFIX = '_via_video_thumbnail_';
   _via_event.call( this );
 
   this._init();

@@ -13,6 +13,7 @@
 'use strict';
 
 function _via_temporal_segmenter(container, vid, data, media_element) {
+  this._ID = '_via_temporal_segmenter_';
   this.c = container;
   this.vid = vid;
   this.d = data;
@@ -59,10 +60,9 @@ function _via_temporal_segmenter(container, vid, data, media_element) {
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this._EVENT_ID_PREFIX = '_via_temporal_segmenter_';
   _via_event.call( this );
-  this.d.on_event('attribute_update', this._on_event_attribute_update.bind(this));
-  this.d.on_event('metadata_update_bulk', this._on_event_metadata_update_bulk.bind(this));
+  this.d.on_event('attribute_update', this._ID, this._on_event_attribute_update.bind(this));
+  this.d.on_event('metadata_update_bulk', this._ID, this._on_event_metadata_update_bulk.bind(this));
 
   if ( ! this.m instanceof HTMLMediaElement ) {
     throw 'media element must be an instance of HTMLMediaElement!';

@@ -5,17 +5,18 @@
  * @since 14 Jan. 2019
  */
 function _via_editor(data, view_annotator, container) {
+  this._ID = '_via_editor';
   this.d  = data;
   this.va = view_annotator;
   this.c  = container;
 
   // initialise event listeners
-  this.d.on_event('file_show', this.on_event_file_show.bind(this));
-  this.d.on_event('metadata_add', this.on_event_metadata_add.bind(this));
-  this.d.on_event('metadata_del', this.on_event_metadata_del.bind(this));
-  this.d.on_event('attribute_update', this.on_event_attribute_update.bind(this));
-  this.d.on_event('attribute_del', this.on_event_attribute_del.bind(this));
-  this.d.on_event('attribute_add', this.on_event_attribute_add.bind(this));
+  this.d.on_event('file_show', this._ID, this.on_event_file_show.bind(this));
+  this.d.on_event('metadata_add', this._ID, this.on_event_metadata_add.bind(this));
+  this.d.on_event('metadata_del', this._ID, this.on_event_metadata_del.bind(this));
+  this.d.on_event('attribute_update', this._ID, this.on_event_attribute_update.bind(this));
+  this.d.on_event('attribute_del', this._ID, this.on_event_attribute_del.bind(this));
+  this.d.on_event('attribute_add', this._ID, this.on_event_attribute_add.bind(this));
 }
 
 _via_editor.prototype.TYPE = { 'METADATA':2, 'ATTRIBUTE':3 };
