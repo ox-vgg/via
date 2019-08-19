@@ -40,6 +40,7 @@ _via_data.prototype._init_default_project = function() {
     },
     'ui': {
       'file_content_align':'center',
+      'file_metadata_editor_visible':true,
     },
   };
   p['attribute'] = {};
@@ -695,6 +696,17 @@ _via_data.prototype._cache_update_attribute_group = function() {
     }
     this.cache.attribute_group[anchor_id].push(aid);
   }
+}
+
+_via_data.prototype._cache_get_attribute_group = function(anchor_id_list) {
+  var aid_list = [];
+  for ( var i in anchor_id_list ) {
+    var anchor_id = anchor_id_list[i];
+    if ( this.cache.attribute_group.hasOwnProperty(anchor_id) ) {
+      aid_list = aid_list.concat( this.cache.attribute_group[anchor_id] );
+    }
+  }
+  return aid_list;
 }
 
 //

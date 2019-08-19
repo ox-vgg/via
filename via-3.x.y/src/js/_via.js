@@ -100,6 +100,7 @@ function _via(via_container) {
   } else {
     // debug code (disabled for release)
     if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
+      //this.s.pull('e302eadf-aa53-4a5a-b958-11175692c928'); // load shared project
       //this.d.project_load_json(_via_dp[2]['store']); // video
       //this.d.project_load_json(_via_dp[1]['store']); // audio
       //this.d.project_load_json(_via_dp[4]['store']); // image

@@ -78,29 +78,46 @@ function _via_temporal_segmenter(container, vid, data, media_element) {
 }
 
 _via_temporal_segmenter.prototype._init = function() {
+  this.group_aid_candidate_list = [];
+  if ( this.d.cache.attribute_group.hasOwnProperty('FILE1_Z2_XY0') ) {
+    for ( var aindex in this.d.cache.attribute_group['FILE1_Z2_XY0'] ) {
+      this.group_aid_candidate_list.push( this.d.cache.attribute_group['FILE1_Z2_XY0'][aindex] );
+    }
+  }
+  if ( this.d.cache.attribute_group.hasOwnProperty('FILE1_ZN_XYN') ) {
+    for ( var aindex in this.d.cache.attribute_group['FILE1_ZN_XYN'] ) {
+      this.group_aid_candidate_list.push( this.d.cache.attribute_group['FILE1_ZN_XYN'][aindex] );
+    }
+  }
+
+  if ( this.group_aid_candidate_list.length ) {
+    this._init_on_success(this.group_aid_candidate_list[0]);
+  } else {
+    this._init_on_fail();
+  }
+}
+
+_via_temporal_segmenter.prototype._init_on_fail = function() {
+  this.c.innerHTML = '<p>You must define an attribute with anchor "Temporal Segment in Video or Audio" in order to define temporal segments in this file. Click&nbsp;<svg class="svg_icon" viewbox="0 0 24 24"><use xlink:href="#micon_insertcomment"></use></svg>&nbsp;button to define such attributes using attribute editor.</p><p>After defining the attribute, <span class="text_button" onclick="via.va.view_show(via.va.vid);">reload this file</span>.' ;
+}
+
+_via_temporal_segmenter.prototype._init_on_success = function(groupby_aid) {
   try {
     this.fid = this.d.store.view[this.vid].fid_list[0];
     this.file = this.d.store.file[this.fid];
 
-    if ( this.d.cache.attribute_group.hasOwnProperty('FILE1_Z2_XY0') ) {
-      if ( this.d.cache.attribute_group['FILE1_Z2_XY0'].length ) {
-        this._group_init( this.d.cache.attribute_group['FILE1_Z2_XY0'][0] );
-      }
-
-      if ( this.d.store.file[this.fid].type === _VIA_FILE_TYPE.VIDEO ) {
-        this._thumbview_init();
-      }
-
-      this._vtimeline_init();
-      this._tmetadata_init();
-      this._toolbar_init();
-
-      // trigger the update of animation frames
-      this._redraw_all();
-      this._redraw_timeline();
-    } else {
-      this.c.innerHTML = '<p>You must define an attribute with anchor "Temporal Segment in Video or Audio" in order to define temporal segments in this file. Click&nbsp;<svg class="svg_icon" viewbox="0 0 24 24"><use xlink:href="#micon_insertcomment"></use></svg>&nbsp;button to define such attributes using attribute editor.</p><p>After defining the attribute, <span class="text_button" onclick="via.va.view_show(via.va.vid);">reload this file</span>.' ;
+    this._group_init(groupby_aid);
+    if ( this.d.store.file[this.fid].type === _VIA_FILE_TYPE.VIDEO ) {
+      this._thumbview_init();
     }
+
+    this._vtimeline_init();
+    this._tmetadata_init();
+    this._toolbar_init();
+
+    // trigger the update of animation frames
+    this._redraw_all();
+    this._redraw_timeline();
   } catch(err) {
     console.log(err);
   }
@@ -367,25 +384,22 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
   group_aname_container.setAttribute('class', 'gidcol');
 
   // group variable selector
-  if ( this.d.cache.attribute_group.hasOwnProperty('FILE1_Z2_XY0') ) {
-    var group_aid_list = Object.keys(this.d.cache.attribute_group['FILE1_Z2_XY0']);
-    if ( group_aid_list.length ) {
-      this.group_aname_select = document.createElement('select');
-      this.group_aname_select.setAttribute('title', 'Select the variable name that should be used for temporal segmentation. These variable can be edited using the the attribute editor.');
-      this.group_aname_select.addEventListener('change', this._tmetadata_onchange_groupby_aid.bind(this));
+  if ( this.group_aid_candidate_list.length ) {
+    this.group_aname_select = document.createElement('select');
+    this.group_aname_select.setAttribute('title', 'Select the variable name that should be used for temporal segmentation. These variable can be edited using the the attribute editor.');
+    this.group_aname_select.addEventListener('change', this._tmetadata_onchange_groupby_aid.bind(this));
 
-      for ( var aindex in this.d.cache.attribute_group['FILE1_Z2_XY0'] ) {
-        var aid = this.d.cache.attribute_group['FILE1_Z2_XY0'][aindex];
-        var oi = document.createElement('option');
-        oi.innerHTML = this.d.store.attribute[aid].aname;
-        oi.setAttribute('value', aid);
-        if ( aid === this.groupby_aid ) {
-          oi.setAttribute('selected', '');
-        }
-        this.group_aname_select.appendChild(oi);
+    for ( var aindex in this.group_aid_candidate_list ) {
+      var aid = this.group_aid_candidate_list[aindex];
+      var oi = document.createElement('option');
+      oi.innerHTML = this.d.store.attribute[aid].aname;
+      oi.setAttribute('value', aid);
+      if ( aid === this.groupby_aid ) {
+        oi.setAttribute('selected', '');
       }
-      group_aname_container.appendChild(this.group_aname_select);
+      this.group_aname_select.appendChild(oi);
     }
+    group_aname_container.appendChild(this.group_aname_select);
   }
 
   this.gtimeline_container = document.createElement('div');
@@ -1781,6 +1795,7 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
     this.group[default_gid] = [];
     this.gid_list.push(default_gid);
   }
+  this.gid_list.sort(); // sort by group-id
 
   // sort each group elements based on time
   var gid;

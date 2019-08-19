@@ -87,6 +87,10 @@ _via_file_annotator.prototype._init = function() {
     return;
   }
 
+  if ( ! this.d.store.config.ui.hasOwnProperty('file_metadata_editor_visible') ) {
+    this.d.store.config.ui['file_metadata_editor_visible'] = true;
+  }
+
   this.fid = this.d.store.view[this.vid].fid_list[0];
 }
 
@@ -320,6 +324,7 @@ _via_file_annotator.prototype._file_create_html_element = function() {
     media.addEventListener('seeked', function(e) {
       this._creg_show_current_frame_regions();
       this._rinput_enable();
+      this._smetadata_hide();
     }.bind(this));
 
     //media.addEventListener('suspend', this._file_html_element_error.bind(this));
@@ -1074,13 +1079,41 @@ _via_file_annotator.prototype._metadata_add = function(region_shape, canvas_inpu
     if ( this.d.store.file[this.fid].type === _VIA_FILE_TYPE.VIDEO ) {
       z[0] = this.file_html_element.currentTime;
     }
-    this.d.metadata_add(this.vid, z, xy, {}).then( function(ok) {
+    // set default attributes
+    var av = this._metadata_get_default_attribute_values();
+
+    // if a temporal segment is selected, we add this to the metadata
+    if ( this.va.temporal_segmenter ) {
+      if ( this.va.temporal_segmenter.selected_gindex !== -1 ) {
+        av[ this.va.temporal_segmenter.groupby_aid ] = this.va.temporal_segmenter.selected_gid;
+      }
+    }
+
+    this.d.metadata_add(this.vid, z, xy, av).then( function(ok) {
       ok_callback(ok.mid);
     }.bind(this), function(err) {
       console.warn(err);
       err_callback();
     }.bind(this));
   }.bind(this));
+}
+
+_via_file_annotator.prototype._metadata_get_default_attribute_values = function() {
+  var av = {};
+  var aid_list = this.d._cache_get_attribute_group(['FILE1_Z1_XY1',
+                                                    'FILE1_Z0_XY1']);
+
+  if ( Object.keys(aid_list).length) {
+    for ( var aindex in aid_list ) {
+      var aid = aid_list[aindex];
+      if ( this.d.store.attribute[aid].hasOwnProperty('default_option_id') ) {
+        if ( this.d.store.attribute[aid]['default_option_id'] !== '' ) {
+          av[aid] = this.d.store.attribute[aid]['default_option_id'];
+        }
+      }
+    }
+  }
+  return av;
 }
 
 _via_file_annotator.prototype._metadata_xy_to_creg = function(vid, mid) {
@@ -1303,6 +1336,9 @@ _via_file_annotator.prototype._creg_draw_label = function(mid) {
     var cw = this.rshapectx.measureText('M').width;
     var ch = 1.8 * cw;
     var bgnd_rect_width = cw * (label.length);
+    if ( label.length === 1 ) {
+      bgnd_rect_width = 2*bgnd_rect_width;
+    }
 
     // draw background rectangle
     this.rshapectx.fillStyle = 'black';
@@ -2105,6 +2141,11 @@ _via_file_annotator.prototype._fmetadata_set_position = function() {
   this.fmetadata_container.style.top  = Math.round(y) + 'px';
 }
 
+_via_file_annotator.prototype._fmetadata_toggle = function() {
+  this.d.store.config.ui['file_metadata_editor_visible'] = ! this.d.store.config.ui['file_metadata_editor_visible'];
+  this._fmetadata_show();
+}
+
 _via_file_annotator.prototype._fmetadata_show = function() {
   if ( ! this.d.cache.attribute_group.hasOwnProperty('FILE1_Z0_XY0') ) {
     this.fmetadata_container.innerHTML = '';
@@ -2118,38 +2159,62 @@ _via_file_annotator.prototype._fmetadata_show = function() {
     this._fmetadata_hide();
   } else {
     this.fmetadata_container.classList.remove('hide');
-    var mid_list = this.d.cache.mid_list[this.vid];
-    var file_mid = '';
-    for ( var mindex in this.d.cache.mid_list[this.vid] ) {
-      var mid = this.d.cache.mid_list[this.vid][mindex];
-      if ( this.d.store.metadata[mid].z.length === 0 &&
-           this.d.store.metadata[mid].xy.length === 0
-         ) {
-        file_mid = mid;
-        break;
+    if ( this.d.store.config.ui['file_metadata_editor_visible'] ) {
+      var mid_list = this.d.cache.mid_list[this.vid];
+      var file_mid = '';
+      for ( var mindex in this.d.cache.mid_list[this.vid] ) {
+        var mid = this.d.cache.mid_list[this.vid][mindex];
+        if ( this.d.store.metadata[mid].z.length === 0 &&
+             this.d.store.metadata[mid].xy.length === 0
+           ) {
+          file_mid = mid;
+          break;
+        }
       }
-    }
 
-    if ( file_mid === '' ) {
-      // create a new metadata
-      this.d.metadata_add(this.vid, [], [], {}).then( function(ok) {
-        this._fmetadata_update(ok.mid);
-      }.bind(this), function(err) {
-        console.log('failed to show file metadata!');
-        console.log(err);
-      }.bind(this));
+      if ( file_mid === '' ) {
+        // create a new metadata
+        this.d.metadata_add(this.vid, [], [], {}).then( function(ok) {
+          this._fmetadata_update(ok.mid);
+        }.bind(this), function(err) {
+          console.log('failed to show file metadata!');
+          console.log(err);
+        }.bind(this));
+      } else {
+        this._fmetadata_update(file_mid);
+      }
     } else {
-      this._fmetadata_update(file_mid);
+      this.fmetadata_container.innerHTML = '';
+      this.fmetadata_container.appendChild(this._fmetadata_toggle_button());
     }
 
     this._fmetadata_set_position();
   }
 }
 
+_via_file_annotator.prototype._fmetadata_toggle_button = function() {
+  var span = document.createElement('span');
+  span.setAttribute('class', 'text_button');
+  if ( this.d.store.config.ui['file_metadata_editor_visible'] ) {
+    span.innerHTML = '&larr;';
+    span.setAttribute('title', 'Hide (i.e. minimise) file metadata editor');
+  } else {
+    span.innerHTML = '&rarr;';
+    span.setAttribute('title', 'Show file metadata editor (to edit properties of a file like caption, author, etc.)');
+  }
+  span.addEventListener('click', this._fmetadata_toggle.bind(this));
+  return span;
+}
+
 _via_file_annotator.prototype._fmetadata_update = function(mid) {
   var aid_list = this.d.cache.attribute_group['FILE1_Z0_XY0'];
   var table = document.createElement('table');
-  table.appendChild( this._metadata_header_html(aid_list) );
+  var header = this._metadata_header_html(aid_list);
+  var th = document.createElement('th');
+  th.setAttribute('rowspan', '2');
+  th.appendChild(this._fmetadata_toggle_button());
+  header.appendChild(th)
+  table.appendChild(header);
 
   // show value of each attribute
   var tbody = document.createElement('tbody');
@@ -2164,6 +2229,9 @@ _via_file_annotator.prototype._fmetadata_update = function(mid) {
     td.appendChild( this._metadata_attribute_io_html_element(mid, aid) );
     tr.appendChild(td);
   }
+  var td = document.createElement('td');
+  tr.appendChild(td); // empty row for control buttons
+
   tbody.appendChild(tr);
   table.appendChild(tbody);
 
@@ -2224,9 +2292,9 @@ _via_file_annotator.prototype._smetadata_show = function() {
 }
 
 _via_file_annotator.prototype._smetadata_update = function() {
-  var aid_list = _via_util_merge_object(this.d.cache.attribute_group['FILE1_Z1_XY1'],
-                                        this.d.cache.attribute_group['FILE1_Z0_XY1']);
-
+  var aid_list = this.d._cache_get_attribute_group(['FILE1_Z1_XY1',
+                                                    'FILE1_Z0_XY1',
+                                                    'FILE1_Z2_XY0']);
   if ( Object.keys(aid_list).length === 0 ) {
     // no attributes to display
     this.smetadata_container.innerHTML = '';

@@ -561,6 +561,16 @@ function _via_util_merge_object(obj1, obj2) {
   return merged_obj;
 }
 
+function _via_util_collect_object_by_keys(object, keys) {
+  var merged_obj = {};
+  for ( var kindex in keys ) {
+    Object.assign(merged_obj, obj1);
+  }
+  Object.assign(merged_obj, obj1);
+  Object.assign(merged_obj, obj2);
+  return merged_obj;
+}
+
 function _via_util_clamp(x, lower_bound, upper_bound) {
   return Math.min( Math.max(x, lower_bound), upper_bound );
 }

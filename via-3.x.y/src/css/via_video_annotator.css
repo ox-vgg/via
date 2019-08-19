@@ -43,6 +43,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 #view_container > .view_content_container > .file_container > .metadata_container th { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.2em; }
 #view_container > .view_content_container > .file_container > .metadata_container input { font-size:small; }
 #view_container > .view_content_container > .file_container > .metadata_container select { font-size:small; }
+
 #view_container > .view_content_container > .file_container > .error_page { margin-left:1em; width:50em; }
 #view_container > .view_content_container > .file_container > .error_page * { position:relative; }
 #view_container > .view_content_container > .file_container > .error_page input { font-size:small; width:100%; }
@@ -75,6 +76,7 @@ to annotate temporal segments of a video: contains 4 rows
 .temporal_segmenter_container > .tmetadata_container .twocolgrid { display:grid; width:100%; grid-template-columns:8em 1fr; }
 .temporal_segmenter_container > .tmetadata_container .gidcol { align-self:center; padding-left:0.1em; }
 .temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"] { width:80%; border:none; border-bottom:1px solid #cccccc; }
+.temporal_segmenter_container > .tmetadata_container .gidcol select { font-size:small; }
 .temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"]:focus { background-color:#f2f2f2; }
 
 .temporal_segmenter_container > .toolbar_container { font-size:small; vertical-align:middle; margin-top:0.2em;}

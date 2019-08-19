@@ -149,12 +149,12 @@ Such spatial regions and temporal segments are described using textual
 metadata. The module [_via_metadata.js](via-3.x.y/src/js/_via_metadata.js),
 shown below, defines the data structure to hold all these variations of metadata:
 ```
-const _VIA_RSHAPE  = { 'POINT':1, 'RECT':2, 'CIRCLE':3, 'ELLIPSE':4, 'LINE':5, 'POLYLINE':6, 'POLYGON':7 };
-const _VIA_METADATA_FLAG = { 'VISIBLE':0, 'DELETED':1, 'HIDDEN':2, 'RESERVED1':4, 'RESERVED2':8 }
+const _VIA_RSHAPE  = { 'POINT':1, 'RECTANGLE':2, 'CIRCLE':3, 'ELLIPSE':4, 'LINE':5, 'POLYLINE':6, 'POLYGON':7, 'EXTREME_RECTANGLE': 8, 'EXTREME_CIRCLE':9 };
+const _VIA_METADATA_FLAG = { 'RESERVED_FOR_FUTURE':1 };
 
 function _via_metadata(vid, z, xy, av) {
-  this.vid = vid;   // view id
-  this.flg = 0;     // flags: [deleted, hidden, ...]
+  this.vid = vid;   // view id (each view contains one of more files)
+  this.flg = 0;     // flags reserved for future
   this.z   = z;     // [t0, ..., tn] (temporal coordinate e.g. time or frame index)
   this.xy  = xy;    // [shape_id, shape_coordinates, ...] (i.e. spatial coordinate)
   this.av  = av;    // attribute-value pair e.g. {attribute_id : attribute_value, ...}
