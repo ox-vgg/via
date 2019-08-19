@@ -54,7 +54,7 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.conf.REGION_LINE_WIDTH = 2;
   this.conf.SEL_REGION_BOUNDARY_COLOR = 'black';
   this.conf.SEL_REGION_FILL_COLOR = '#808080';
-  this.conf.SEL_REGION_FILL_OPACITY = 0.5;
+  this.conf.SEL_REGION_FILL_OPACITY = 0.1;
   this.conf.SEL_REGION_LINE_WIDTH = 2;
   this.conf.REGION_POINT_RADIUS = 3;
   this.conf.FIRST_VERTEX_CLICK_TOL = 3;
@@ -89,6 +89,9 @@ _via_file_annotator.prototype._init = function() {
 
   if ( ! this.d.store.config.ui.hasOwnProperty('file_metadata_editor_visible') ) {
     this.d.store.config.ui['file_metadata_editor_visible'] = true;
+  }
+  if ( ! this.d.store.config.ui.hasOwnProperty('spatial_metadata_editor_visible') ) {
+    this.d.store.config.ui['spatial_metadata_editor_visible'] = true;
   }
 
   this.fid = this.d.store.view[this.vid].fid_list[0];
@@ -930,28 +933,28 @@ _via_file_annotator.prototype._rinput_wheel_handler = function(e) {
   if ( this.selected_mid_list.length ) {
     e.preventDefault();
     var aid_list = Object.keys(this.d.store.attribute);
-    if ( this.va.creg_label_aid === '' ) {
-      this.va.creg_label_aid = aid_list[0];
+    if ( this.d.store.config.ui['spatial_region_label_attribute_id'] === '' ) {
+      this.d.store.config.ui['spatial_region_label_attribute_id'] = aid_list[0];
     } else {
-      var aid_index = aid_list.indexOf(this.va.creg_label_aid);
+      var aid_index = aid_list.indexOf(this.d.store.config.ui['spatial_region_label_attribute_id']);
       if ( aid_index !== -1 ) {
         if (e.deltaY < 0) {
           var next_aid_index = aid_index + 1;
           if ( next_aid_index >= aid_list.length ) {
-            this.va.creg_label_aid = '';
+            this.d.store.config.ui['spatial_region_label_attribute_id'] = '';
           } else {
-            this.va.creg_label_aid = aid_list[next_aid_index];
+            this.d.store.config.ui['spatial_region_label_attribute_id'] = aid_list[next_aid_index];
           }
         } else {
           var prev_aid_index = aid_index - 1;
           if ( prev_aid_index < 0 ) {
-            this.va.creg_label_aid = '';
+            this.d.store.config.ui['spatial_region_label_attribute_id'] = '';
           } else {
-            this.va.creg_label_aid = aid_list[prev_aid_index];
+            this.d.store.config.ui['spatial_region_label_attribute_id'] = aid_list[prev_aid_index];
           }
         }
       } else {
-        this.va.creg_label_aid = '';
+        this.d.store.config.ui['spatial_region_label_attribute_id'] = '';
       }
     }
     this._creg_update();
@@ -1277,7 +1280,7 @@ _via_file_annotator.prototype._creg_clear = function() {
 _via_file_annotator.prototype._creg_draw_all = function() {
   this._creg_clear();
 
-  if ( this.va.creg_label_aid === '' ) {
+  if ( this.d.store.config.ui['spatial_region_label_attribute_id'] === '' ) {
     for ( var mid in this.creg ) {
       this._creg_draw(mid);
     }
@@ -1307,20 +1310,20 @@ _via_file_annotator.prototype._creg_draw = function(mid) {
 }
 
 _via_file_annotator.prototype._creg_draw_label = function(mid) {
-  if ( this.d.store.metadata[mid].av.hasOwnProperty(this.va.creg_label_aid) ) {
+  if ( this.d.store.metadata[mid].av.hasOwnProperty(this.d.store.config.ui['spatial_region_label_attribute_id']) ) {
     var lx = this.creg[mid][1];
     var ly = this.creg[mid][2];
 
     var label = '';
-    switch(this.d.store.attribute[this.va.creg_label_aid].type) {
+    switch(this.d.store.attribute[this.d.store.config.ui['spatial_region_label_attribute_id']].type) {
     case _VIA_ATTRIBUTE_TYPE.RADIO:
     case _VIA_ATTRIBUTE_TYPE.SELECT:
     case _VIA_ATTRIBUTE_TYPE.CHECKBOX:
-      var option_id = this.d.store.metadata[mid].av[this.va.creg_label_aid];
-      label = this.d.store.attribute[this.va.creg_label_aid].options[option_id];
+      var option_id = this.d.store.metadata[mid].av[this.d.store.config.ui['spatial_region_label_attribute_id']];
+      label = this.d.store.attribute[this.d.store.config.ui['spatial_region_label_attribute_id']].options[option_id];
       break;
     case _VIA_ATTRIBUTE_TYPE.TEXT:
-      label = this.d.store.metadata[mid].av[this.va.creg_label_aid];
+      label = this.d.store.metadata[mid].av[this.d.store.config.ui['spatial_region_label_attribute_id']];
       break;
     }
 
@@ -2281,6 +2284,25 @@ _via_file_annotator.prototype._smetadata_set_position = function() {
   this.smetadata_container.style.top  = Math.round(y) + 'px';
 }
 
+_via_file_annotator.prototype._smetadata_toggle = function() {
+  this.d.store.config.ui['spatial_metadata_editor_visible'] = ! this.d.store.config.ui['spatial_metadata_editor_visible'];
+  this._smetadata_show();
+}
+
+_via_file_annotator.prototype._smetadata_toggle_button = function() {
+  var span = document.createElement('span');
+  span.setAttribute('class', 'text_button');
+  if ( this.d.store.config.ui['spatial_metadata_editor_visible'] ) {
+    span.innerHTML = '&larr;';
+    span.setAttribute('title', 'Hide (i.e. minimise) spatial metadata editor');
+  } else {
+    span.innerHTML = '&rarr;';
+    span.setAttribute('title', 'Show spatial metadata editor (to edit properties of a spatial region)');
+  }
+  span.addEventListener('click', this._smetadata_toggle.bind(this));
+  return span;
+}
+
 _via_file_annotator.prototype._smetadata_show = function() {
   if ( this.selected_mid_list.length === 1 ) {
     this.smetadata_container.classList.remove('hide');
@@ -2302,28 +2324,41 @@ _via_file_annotator.prototype._smetadata_update = function() {
     return;
   }
 
-  var mid = this.selected_mid_list[0];
-  var table = document.createElement('table');
-  table.appendChild( this._metadata_header_html(aid_list) );
+  if ( this.d.store.config.ui['spatial_metadata_editor_visible'] ) {
+    var table = document.createElement('table');
+    var header = this._metadata_header_html(aid_list);
+    var th = document.createElement('th');
+    th.setAttribute('rowspan', '2');
+    th.appendChild(this._smetadata_toggle_button());
+    header.appendChild(th)
+    table.appendChild(header);
 
-  // show value of each attribute
-  var tbody = document.createElement('tbody');
-  var tr = document.createElement('tr');
-  tr.setAttribute('data-mid', mid);
+    // show value of each attribute
+    var tbody = document.createElement('tbody');
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-mid', mid);
 
-  var aid;
-  for ( var aindex in aid_list ) {
-    aid = aid_list[aindex];
+    var mid = this.selected_mid_list[0];
+    var aid;
+    for ( var aindex in aid_list ) {
+      aid = aid_list[aindex];
+      var td = document.createElement('td');
+      td.setAttribute('data-aid', aid);
+      td.appendChild( this._metadata_attribute_io_html_element(mid, aid) );
+      tr.appendChild(td);
+    }
     var td = document.createElement('td');
-    td.setAttribute('data-aid', aid);
-    td.appendChild( this._metadata_attribute_io_html_element(mid, aid) );
-    tr.appendChild(td);
-  }
-  tbody.appendChild(tr);
-  table.appendChild(tbody);
+    tr.appendChild(td); // empty row for control buttons
 
-  this.smetadata_container.innerHTML = '';
-  this.smetadata_container.appendChild(table);
+    tbody.appendChild(tr);
+    table.appendChild(tbody);
+
+    this.smetadata_container.innerHTML = '';
+    this.smetadata_container.appendChild(table);
+  } else {
+    this.smetadata_container.innerHTML = '';
+    this.smetadata_container.appendChild(this._smetadata_toggle_button());
+  }
 }
 
 _via_file_annotator.prototype._metadata_header_html = function(aid_list) {

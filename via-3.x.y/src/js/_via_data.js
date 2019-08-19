@@ -41,6 +41,8 @@ _via_data.prototype._init_default_project = function() {
     'ui': {
       'file_content_align':'center',
       'file_metadata_editor_visible':true,
+      'spatial_metadata_editor_visible':true,
+      'spatial_region_label_attribute_id':'',
     },
   };
   p['attribute'] = {};

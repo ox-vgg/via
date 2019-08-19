@@ -1,4 +1,6 @@
-## [3.0.6] - not release yet!
+## [3.0.6] - 19 August 2019
+ * file and spatial metadata editors are now collapsable
+ * spatial regions are automatically associated with the selected temporal segment
 
 ## [3.0.5] - 14 August 2019
  * pack script creates target folders if they are missing (merge request 21)

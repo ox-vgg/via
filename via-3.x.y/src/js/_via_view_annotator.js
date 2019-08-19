@@ -44,6 +44,10 @@ function _via_view_annotator(data, container ) {
 _via_view_annotator.prototype._init = function() {
   this._view_clear_all_file_annotator();
   this._show_start_info();
+
+  if ( ! this.d.store.config.ui.hasOwnProperty('spatial_region_label_attribute_id') ) {
+    this.d.store.config.ui['spatial_region_label_attribute_id'] = '';
+  }
 }
 
 _via_view_annotator.prototype._show_start_info = function() {
