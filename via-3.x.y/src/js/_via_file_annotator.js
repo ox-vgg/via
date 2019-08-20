@@ -65,6 +65,7 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.conf.FILE_METADATA_MARGIN = 4; // in pixel
   this.conf.CROSSHAIR_COLOR1 = '#1a1a1a';
   this.conf.CROSSHAIR_COLOR2 = '#e6e6e6';
+  this.conf.SPATIAL_REGION_TIME_TOL = 0.02; // in sec
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -1261,7 +1262,7 @@ _via_file_annotator.prototype._creg_add_current_frame_regions = function(vid) {
       if ( this.d.store.metadata[mid].z.length === 0 ) {
         this.creg[mid] = this._metadata_xy_to_creg(vid, mid);
       } else {
-        if ( Math.abs(this.d.store.metadata[mid].z[0] - t) < 0.1 ) {
+        if ( Math.abs(this.d.store.metadata[mid].z[0] - t) < this.conf.SPATIAL_REGION_TIME_TOL ) {
           this.creg[mid] = this._metadata_xy_to_creg(vid, mid);
         }
       }
