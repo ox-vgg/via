@@ -1,6 +1,8 @@
-## [3.0.6] - 19 August 2019
+## [3.0.6] - 20 August 2019
  * file and spatial metadata editors are now collapsable
  * spatial regions are automatically associated with the selected temporal segment
+ * added n/p keyboard shortcut keys to move to next/previous frame
+ * spatial metadata z-index increased to avoid hiding behind temporal segment editor
 
 ## [3.0.5] - 14 August 2019
  * pack script creates target folders if they are missing (merge request 21)

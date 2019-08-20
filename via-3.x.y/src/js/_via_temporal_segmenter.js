@@ -43,10 +43,6 @@ function _via_temporal_segmenter(container, vid, data, media_element) {
   this.METADATA_EDGE_TOL = 0.1;
   this.GTIMELINE_REGION_MARKER_MOUSE_TOL = 0.1; // in sec.
 
-  this.is_audio_spectrum_enabled = false; //  (DISABLED EXPERIMENTAL FEATURE)
-  this.AUDIO_SPECTRUM_MAX_DURATION = 0; // in sec.
-  this.AUDIO_SPECTRUM_HEIGHT = 15;      // in units of char width
-
   this.PLAYBACK_MODE = { NORMAL:'1', REVIEW_SEGMENT:'2', REVIEW_GAP:'3' };
   this.current_playback_mode = this.PLAYBACK_MODE.NORMAL;
 
@@ -1509,6 +1505,27 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     return;
   }
 
+  if ( e.key === 'n' || e.key === 'N' || e.key === 'p' || e.key === 'P') {
+    e.preventDefault();
+    if ( ! this.m.paused ) {
+      return;
+    }
+
+    var t = this.m.currentTime;
+    var delt = this.EDGE_UPDATE_TIME_DELTA;
+    if ( e.key === 'N' || e.key === 'P' ) {
+      delt = delt * 5;
+    }
+    if ( e.key === 'n' || e.key === 'N') {
+      t += delt;
+    } else {
+      t -= delt;
+    }
+    // clamp
+    t = Math.max(0, Math.min(t, this.m.duration));
+    this.m.currentTime = t;
+  }
+
   if ( e.key === 's' || e.key === 'S' ) {
     e.preventDefault();
     this.m.pause();
@@ -1644,9 +1661,7 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
   // cancel ongoing action or event
   if ( e.key === 'Escape' ) {
     e.preventDefault();
-
     this._tmetadata_group_gid_remove_mid_sel();
-
     return;
   }
 
