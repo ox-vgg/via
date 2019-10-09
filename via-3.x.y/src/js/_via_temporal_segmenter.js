@@ -1482,7 +1482,7 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
       this.m.pause();
       _via_util_msg_show('Paused. Press <span class="key">a</span> to add a temporal segment, ' +
                          '<span class="key">Tab</span> to select and ' +
-                         '<span class="key">&uarr;</span>&nbsp;<span class="key">&darr;</span> to select speaker.', true);
+                         '<span class="key">&uarr;</span>&nbsp;<span class="key">&darr;</span> to select another temporal segment timeline.', true);
     }
   }
 
