@@ -10,6 +10,7 @@
 'use strict';
 
 function _via_view_manager(data, view_annotator, container) {
+  this._ID = '_via_view_manager_';
   this.d = data;
   this.va = view_annotator;
   this.c = container;
@@ -19,15 +20,15 @@ function _via_view_manager(data, view_annotator, container) {
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
-  this._EVENT_ID_PREFIX = '_via_view_manager_';
   _via_event.call( this );
 
-  this.d.on_event('project_loaded', this._on_event_project_loaded.bind(this));
-  this.d.on_event('view_bulk_add', this._on_event_view_bulk_add.bind(this));
-  this.d.on_event('view_del', this._on_event_view_del.bind(this));
-  this.va.on_event('view_show', this._on_event_view_show.bind(this));
-  this.va.on_event('view_next', this._on_event_view_next.bind(this));
-  this.va.on_event('view_prev', this._on_event_view_prev.bind(this));
+  this.d.on_event('project_loaded', this._ID, this._on_event_project_loaded.bind(this));
+  this.d.on_event('project_updated', this._ID, this._on_event_project_updated.bind(this));
+  this.d.on_event('view_bulk_add', this._ID, this._on_event_view_bulk_add.bind(this));
+  this.d.on_event('view_del', this._ID, this._on_event_view_del.bind(this));
+  this.va.on_event('view_show', this._ID, this._on_event_view_show.bind(this));
+  this.va.on_event('view_next', this._ID, this._on_event_view_next.bind(this));
+  this.va.on_event('view_prev', this._ID, this._on_event_view_prev.bind(this));
 
   this._init_ui_elements();
 }
@@ -42,32 +43,23 @@ _via_view_manager.prototype._init_ui_elements = function() {
   this.pname.setAttribute('type', 'text');
   this.pname.setAttribute('id', 'via_project_name_input');
   this.pname.setAttribute('value', this.d.store.project.pname);
-  this.pname.setAttribute('title', 'Project Name (click to update)');
-  this.pname.addEventListener('change', this._on_pname_change.bind(this));
+  this.pname.setAttribute('readonly', '');
 
   this.view_selector = document.createElement('select');
   this.view_selector.setAttribute('class', 'view_selector');
   this.view_selector.setAttribute('title', 'Select a file for annotation');
   this.view_selector.addEventListener('change', this._on_view_selector_change.bind(this));
 
-  this.view_filter_regex = document.createElement('input');
-  this.view_filter_regex.setAttribute('type', 'text');
-  this.view_filter_regex.setAttribute('class', 'view_filter_regex');
-  this.view_filter_regex.setAttribute('title', 'Filter file list');
-  this.view_filter_regex.setAttribute('placeholder', 'Search');
-  this.view_filter_regex.addEventListener('input', this._on_view_filter_regex_change.bind(this));
-
   this.c.innerHTML = '';
   this.c.appendChild(this.pname);
   this.c.appendChild(this.view_selector);
-  //this.c.appendChild(this.view_filter_regex);
 }
 
 //
 // UI elements change listeners
 //
-_via_view_manager.prototype._on_pname_change = function() {
-  this.d.store.project.pname = this.pname.getAttribute('value').trim();
+_via_view_manager.prototype._on_pname_change = function(e) {
+  this.d.store.project.pname = e.target.value.trim();
 }
 
 _via_view_manager.prototype._on_view_selector_change = function(e) {
@@ -80,11 +72,11 @@ _via_view_manager.prototype._on_view_selector_change = function(e) {
 _via_view_manager.prototype._on_next_view = function() {
   if ( this.view_selector.options.length ) {
     var vid = this.view_selector.options[this.view_selector.selectedIndex].value;
-    var vindex = this.d.store.vid_list.indexOf(vid);
+    var vindex = this.view_selector_vid_list.indexOf(vid);
     if ( vindex !== -1 ) {
       var next_vindex = vindex + 1;
-      if ( next_vindex < this.d.store.vid_list.length ) {
-        this.va.view_show( this.d.store.vid_list[next_vindex] );
+      if ( next_vindex < this.d.store.project.vid_list.length ) {
+        this.va.view_show( this.d.store.project.vid_list[next_vindex] );
       } else {
         _via_util_msg_show('Reached end of the list!');
       }
@@ -97,11 +89,11 @@ _via_view_manager.prototype._on_next_view = function() {
 _via_view_manager.prototype._on_prev_view = function() {
   if ( this.view_selector.options.length ) {
     var vid = this.view_selector.options[this.view_selector.selectedIndex].value;
-    var vindex = this.d.store.vid_list.indexOf(vid);
+    var vindex = this.d.store.project.vid_list.indexOf(vid);
     if ( vindex !== -1 ) {
       var prev_vindex = vindex - 1;
       if ( prev_vindex >= 0 ) {
-        this.va.view_show( this.d.store.vid_list[prev_vindex] );
+        this.va.view_show( this.d.store.project.vid_list[prev_vindex] );
       } else {
         _via_util_msg_show('Reached beginning of the list!');
       }
@@ -136,9 +128,23 @@ _via_view_manager.prototype._on_event_view_prev = function(data, event_payload) 
 _via_view_manager.prototype._on_event_project_loaded = function(data, event_payload) {
   this._init_ui_elements();
   this._view_selector_update();
-  if ( this.d.store.vid_list.length ) {
+  if ( this.d.store.project.vid_list.length ) {
     // show first view by default
-    this.va.view_show( this.d.store.vid_list[0] );
+    this.va.view_show( this.d.store.project.vid_list[0] );
+  }
+}
+
+_via_view_manager.prototype._on_event_project_updated = function(data, event_payload) {
+  var current_vid = this.va.vid;
+  this._init_ui_elements();
+  this._view_selector_update();
+  if ( this.d.store.project.vid_list.length ) {
+    if ( current_vid in this.d.store.project.vid_list ) {
+      this.va.view_show( current_vid );
+    } else {
+      // show first view by default
+      this.va.view_show( this.d.store.project.vid_list[0] );
+    }
   }
 }
 
@@ -161,7 +167,13 @@ _via_view_manager.prototype._view_selector_option_html = function(vindex, vid) {
     view_name = this.d.store.file[fid].fname;
     oi.innerHTML = '[' + (parseInt(vindex)+1) + '] ' + decodeURI(view_name);
   } else {
-    oi.innerHTML = '[' + (parseInt(vindex)+1) + ']';
+    var filelist = [];
+    var fid;
+    for ( var findex in this.d.store.view[vid].fid_list ) {
+      fid = this.d.store.view[vid].fid_list[findex];
+      filelist.push(this.d.store.file[fid].fname);
+    }
+    oi.innerHTML = '[' + (parseInt(vindex)+1) + '] ' + filelist.join(', ');
   }
   return oi;
 }
@@ -180,11 +192,16 @@ _via_view_manager.prototype._view_selector_update_regex = function(regex) {
      ) {
     this._view_selector_update_showall();
   } else {
-    var existing_vid = this.view_selector.options[this.view_selector.selectedIndex].value;
+    var existing_vid = '';
+    if ( this.view_selector.options.length ) {
+      if ( this.view_selector.selectedIndex !== -1 ) {
+        existing_vid = this.view_selector.options[this.view_selector.selectedIndex].value;
+      }
+    }
     this._view_selector_clear();
     var vid, fid;
-    for ( var vindex in this.d.store.vid_list ) {
-      vid = this.d.store.vid_list[vindex];
+    for ( var vindex in this.d.store.project.vid_list ) {
+      vid = this.d.store.project.vid_list[vindex];
       for ( var findex in this.d.store.view[vid].fid_list ) {
         fid = this.d.store.view[vid].fid_list[findex];
         if ( this.d.store.file[fid].fname.match(regex) !== null ) {
@@ -196,13 +213,13 @@ _via_view_manager.prototype._view_selector_update_regex = function(regex) {
     }
     this.is_view_selector_regex_active = true;
     var existing_vid_index = this.view_selector_vid_list.indexOf(existing_vid);
-    console.log(existing_vid +','+existing_vid_index)
     if ( existing_vid_index === -1 ) {
-      this.view_selector.selectedIndex = -1;
+      if ( this.view_selector_vid_list.length ) {
+        this.va.view_show( this.view_selector_vid_list[0] );
+      }
     } else {
       this.view_selector.selectedIndex = existing_vid_index;
     }
-    console.log(this.view_selector.selectedIndex);
   }
 }
 
@@ -215,8 +232,8 @@ _via_view_manager.prototype._view_selector_update_showall = function() {
   this._view_selector_clear();
 
   var vid;
-  for ( var vindex in this.d.store.vid_list ) {
-    vid = this.d.store.vid_list[vindex];
+  for ( var vindex in this.d.store.project.vid_list ) {
+    vid = this.d.store.project.vid_list[vindex];
     this.view_selector.appendChild( this._view_selector_option_html(vindex, vid) );
     this.view_selector_vid_list.push(vid);
   }
@@ -233,7 +250,6 @@ _via_view_manager.prototype._view_selector_update_showall = function() {
 
 _via_view_manager.prototype._on_view_filter_regex_change = function() {
   var regex = this.view_filter_regex.value;
-  console.log(regex)
   this._view_selector_update_regex(regex);
 }
 
@@ -257,7 +273,7 @@ _via_view_manager.prototype._file_add_from_filelist = function(filelist) {
 }
 
 _via_view_manager.prototype._on_add_media_local = function() {
-  _via_util_file_select_local(_VIA_FILE_TYPE.VIDEO | _VIA_FILE_TYPE.AUDIO | _VIA_FILE_TYPE.IMAGE,
+  _via_util_file_select_local(_VIA_FILE_SELECT_TYPE.IMAGE | _VIA_FILE_SELECT_TYPE.VIDEO | _VIA_FILE_SELECT_TYPE.AUDIO,
                               this._file_add_local.bind(this),
                               true);
 }
@@ -297,7 +313,7 @@ _via_view_manager.prototype._on_add_media_remote = function() {
 }
 
 _via_view_manager.prototype._on_add_media_bulk = function() {
-  _via_util_file_select_local(_VIA_FILE_TYPE.TEXT,
+  _via_util_file_select_local(_VIA_FILE_SELECT_TYPE.TEXT,
                               this._on_add_media_bulk_file_selected.bind(this), false);
 }
 
@@ -329,9 +345,8 @@ _via_view_manager.prototype._on_add_media_bulk_file_load = function(file_data) {
 }
 
 _via_view_manager.prototype._on_del_view = function() {
-  console.log('del vid=' + this.va.vid + ', var type=' + typeof(this.va.vid));
   this.d.view_del(this.va.vid).then( function(ok) {
-    console.log(ok);
+    _via_util_msg_show('Deleted view ' + ( parseInt(ok.vindex) + 1));
   }.bind(this), function(err) {
     console.warn(err);
   }.bind(this));
@@ -340,11 +355,11 @@ _via_view_manager.prototype._on_del_view = function() {
 _via_view_manager.prototype._on_event_view_del = function(data, event_payload) {
   this._view_selector_update();
   var vindex = event_payload.vindex;
-  if ( this.d.store.vid_list.length ) {
-    if ( vindex < this.d.store.vid_list.length ) {
-      this.va.view_show( this.d.store.vid_list[vindex] );
+  if ( this.d.store.project.vid_list.length ) {
+    if ( vindex < this.d.store.project.vid_list.length ) {
+      this.va.view_show( this.d.store.project.vid_list[vindex] );
     } else {
-      this.va.view_show( this.d.store.vid_list[ this.d.store.vid_list.length - 1 ] );
+      this.va.view_show( this.d.store.project.vid_list[ this.d.store.project.vid_list.length - 1 ] );
     }
   } else {
     this.va._init();

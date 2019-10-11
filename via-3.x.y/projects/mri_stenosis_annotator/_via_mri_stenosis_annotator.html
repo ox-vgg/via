@@ -67,6 +67,10 @@
       -->
     <svg style="display:none;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
+        <symbol id="micon_open">
+          <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"></path>
+        </symbol>
+
         <symbol id="micon_navigate_next">
           <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
         </symbol>
@@ -86,40 +90,60 @@
         <symbol id="micon_help">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
         </symbol>
+
+        <symbol id="micon_share">
+          <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+        </symbol>
       </defs>
     </svg>
 
     <!-- VIA Information Pages -->
     <div id="via_page_container">
-      <div data-pageid="page_login" class="via_page">
+      <div data-pageid="page_share_already_shared" class="via_page">
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
-        <h2>Please Identify Youself</h2>
+        <h3>Information about this shared project</h3>
+        <p id="via_page_share_project_info"></p>
+        <div class="controls">
+          <button onclick="_via_util_page_hide()">Close</button>
+        </div>
+      </div>
+
+      <div data-pageid="page_share_open_shared" class="via_page">
+        <h2>Enter Clinician Id</h2>
         <table>
           <tr>
-            <td><label for="username">Name of Annotator</label></td>
-            <!--<td><input id="via_page_login_username" value="cliniciandemo" name="username" placeholder="cliniciandemo" type="text" size="20" required></td>-->
+            <td><label for="via_page_input_pid">Clinician Id</label></td>
             <td>
-              <select id="via_page_login_username">
-                <option value="clinician1">Jeremy Fairbank</option>
-                <option value="clinician2">Sarim Ather</option>
-                <option value="clinician3">Clinician 3</option>
-                <option value="clinician4">Clinician 4</option>
-                <option value="clinician5">Clinician 5</option>
-                <option selected="selected" value="cliniciandemo">Demonstrator (contains sample images)</option>
-              </select>
+              <input style="width:25em;" type="text" placeholder="e.g. 528018f2-be3a-4ff9-8b98-87456d44f104" id="via_page_input_pid">
             </td>
           </tr>
-          <!--
-              <tr>
-                <td><label for="password">Password</label></td>
-                <td><input id="via_page_login_password" value="demo123" name="password" type="password" size="20" required></td>
-              </tr>
-              -->
         </table>
+        <p>To load a demonstration, use the following clinician-id <code>528018f2-be3a-4ff9-8b98-87456d44f104</code></p>
+
         <div class="controls">
-          <button id="via_page_button_signin" onclick="_via_util_page_process_action(event)">Sign in</button>
-          <button onclick="_via_util_page_hide()">Cancel</button>
+          <button id="via_page_button_open_shared" onclick="_via_util_page_process_action(event)">Open Shared Project</button>
         </div>
+
+        <h2>Background</h2>
+        <p>Arising from discussions about inadequacies of current grading systems by the LSS Focus Group, we are proposing to develop a new continuous variable annotation system for spinal stenosis in Lumbar Spinal MRI scans. This will be developed using ‘machine learning’ from comparisons of images pairs by experts. This method has been used successfully to develop a grading system in another area of computer vision, but not to our knowledge in a human imaging application.</p>
+        <p>We are asking, if you, as experts, if you would be willing to compare the gradings between two 2 images (image-pairs) in 3 ways.</p>
+
+        <p>The image-pairs, in each case, are single axial MR slices taken at the same level from different subjects. The text of the 3 questions relating to each pair are:
+          <ol>
+            <li>a ‘<a href="https://www.lexico.com/en/definition/gestalt">Gestalt</a>’ comparison of spinal stenosis. (Q: Overall, which image shows more spinal stenosis?)</li>
+            <li>a comparison of ‘bony’ spinal stenosis. (Q: Which image shows more ‘bony’ spinal stenosis?)</li>
+            <li>a comparison of thecal sac/dural sac stenosis. (Q: Which image shows more ‘thecal sac/dural sac’ spinal stenosis?)</li>
+          </ol>
+        </p>
+
+        <p>A selection of image-pairs from the full dataset of ‘image-pairs’ will be randomised between observers, so that each of you will receive an individual observer-specific link.  Experiments so far suggest it will take each observer 30-60 minutes to complete the review of the selected 99 image-pairs.
+          We recognise a range of views of how to measure spinal stenosis When we have completed this exercise, we plan to correlate the results of this study with at least 3 existing annotation systems where we have, or hope to have, large data sets of annotated images. We are happy to compare the outcome of this study with other quality annotation systems that you draw to our attention.</p>
+
+        <p>We hope at the end to produce an agreed, objective continuous (as opposed to categoric) grading system for spinal stenosis, better able to relate to clinical symptoms. This grading system will be available to potential users via SpineNet. We shall keep all observers posted of the results and the ultimate paper for assent.</p>
+
+        <p>I hope that you will agree to join this development group.</p>
+
+        <p><strong>Jeremy Fairbank</strong> (for the SpineNet Investigation group)</p>
       </div>
 
       <div data-pageid="page_about" class="via_page">
@@ -206,6 +230,7 @@
     <script src="../../src/js/_via_attribute.js"></script>
     <script src="../../src/js/_via_view.js"></script>
     <script src="../../src/js/_via_data.js"></script>
+    <script src="../../src/js/_via_share.js"></script>
 
     <script src="../../src/js/_via_file_annotator.js"></script>
     <script src="../../src/js/_via_view_annotator.js"></script>

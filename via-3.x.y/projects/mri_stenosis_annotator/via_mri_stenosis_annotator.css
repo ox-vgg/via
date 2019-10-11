@@ -128,7 +128,7 @@ to annotate temporal segments of a video: contains 4 rows
 #view_manager_container .pname { border:none; border-bottom:1px solid white; width:10em; }
 #view_manager_container .pname:hover { border:none; background-color: #f2f2f2; }
 #view_manager_container .pname:focus { border-bottom:1px solid #cfcfcf; }
-#view_manager_container .view_selector { margin:0 0.5em; width:18em; }
+#view_manager_container .view_selector { margin:0 0.5em; width:28em; }
 #view_manager_container .view_filter_regex { width:4em; }
 
 /* VIA info pages */
