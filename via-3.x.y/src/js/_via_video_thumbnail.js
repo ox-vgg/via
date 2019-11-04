@@ -15,7 +15,6 @@ function _via_video_thumbnail(fid, data) {
   this.d = data;
   this.fwidth = 160;
   this.file_object_url = undefined; // file contents are in this the object url
-  this.frames = {}; // indexed by second
 
   if ( this.d.store.file[this.fid].type !== _VIA_FILE_TYPE.VIDEO ) {
     console.log('_via_video_thumbnail() : file type must be ' +
@@ -61,7 +60,6 @@ _via_video_thumbnail.prototype._load_video = function() {
     //this.video.setAttribute('crossorigin', 'anonymous');
 
     this.video.addEventListener('loadeddata', function() {
-      this.d.file_free_resources(this.fid);
       var aspect_ratio = this.video.videoHeight / this.video.videoWidth;
       this.fheight = Math.floor(this.fwidth * aspect_ratio);
       this.thumbnail_canvas.width = this.fwidth;
@@ -70,12 +68,10 @@ _via_video_thumbnail.prototype._load_video = function() {
       ok_callback();
     }.bind(this));
     this.video.addEventListener('error', function() {
-      this.d.file_free_resources(this.fid);
       console.log('_via_video_thumnnail._load_video() error')
       err_callback('error');
     }.bind(this));
     this.video.addEventListener('abort', function() {
-      this.d.file_free_resources(this.fid);
       console.log('_via_video_thumbnail._load_video() abort')
       err_callback('abort');
     }.bind(this));

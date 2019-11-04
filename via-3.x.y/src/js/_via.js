@@ -105,7 +105,7 @@ function _via(via_container) {
       //this.d.project_load_json(_via_dp[1]['store']); // audio
       //this.d.project_load_json(_via_dp[4]['store']); // image
       setTimeout( function() {
-        //this.va.view_show('1');
+        //this.va.view_show('3');
         //this.editor.show();
         //this.cp._page_show_import_export();
         //this.cp._share_show_info();

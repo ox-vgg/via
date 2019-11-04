@@ -263,7 +263,6 @@ _via_file_annotator.prototype._file_load = function() {
     this.file_html_element.setAttribute('title', this.d.store.file[this.fid].fname);
     var file_src = this.d.file_get_src(this.d.store.file[this.fid].fid);
     if ( file_src === '' ) {
-      this.d.file_free_resources(this.fid);
       this._file_load_show_error_page();
       err_callback();
       return;
@@ -273,19 +272,16 @@ _via_file_annotator.prototype._file_load = function() {
 
     this.file_html_element.addEventListener('load', function() {
       //console.log('load:' + this.fid + ', now freeing resources')
-      this.d.file_free_resources(this.fid);
       this._file_html_element_ready();
       ok_callback();
     }.bind(this));
     this.file_html_element.addEventListener('loadeddata', function() {
       //console.log('loaddata:' + this.fid + ', now freeing resources')
-      this.d.file_free_resources(this.fid);
       this._file_html_element_ready();
       ok_callback();
     }.bind(this));
     this.file_html_element.addEventListener('abort', function(e) {
       //console.log('abort:' + this.fid + ', now freeing resources')
-      this.d.file_free_resources(this.fid);
       _via_util_msg_show('Failed to load file [' + this.d.store.file[this.fid].fname + '] (' + e + ')' );
       this._file_load_show_error_page();
       err_callback();

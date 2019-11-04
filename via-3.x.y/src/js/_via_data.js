@@ -264,32 +264,38 @@ _via_data.prototype.file_update = function(fid, name, value) {
 }
 
 _via_data.prototype.file_get_src = function(fid) {
+  var filesrc = ''; // empty value triggers file-not-found error
   if ( this.store.file[fid].loc === _VIA_FILE_LOC.LOCAL ) {
-    this.file_free_resources(fid);
     if ( this.file_ref.hasOwnProperty(fid) ) {
-      this.file_object_uri[fid] = URL.createObjectURL( this.file_ref[fid] );
-    } else {
-      this.file_object_uri[fid] = '';
+      if ( ! this.file_object_uri.hasOwnProperty(fid) ) {
+        this.file_object_uri[fid] = URL.createObjectURL( this.file_ref[fid] );
+        // Note: cleanup done by data.file_object_uri_clear_all() method
+      }
+      filesrc = this.file_object_uri[fid];
     }
-    return this.file_object_uri[fid];
   } else {
-    return this.store.config.file.loc_prefix[ this.store.file[fid].loc ] + this.store.file[fid].src;
+    var locprefix = this.store.config.file.loc_prefix[ this.store.file[fid].loc ];
+    filesrc = locprefix + this.store.file[fid].src;
   }
+  return filesrc;
 }
 
 _via_data.prototype.file_get_uri = function(fid) {
+  var fileuri = '';
   if ( this.store.file[fid].loc === _VIA_FILE_LOC.LOCAL ) {
-    return this.store.file[fid].fname;
+    fileuri = this.store.file[fid].fname;
   } else {
-    return this.store.config.file.loc_prefix[ this.store.file[fid].loc ] + this.store.file[fid].src;
+    var locprefix = this.store.config.file.loc_prefix[ this.store.file[fid].loc ];
+    fileuri = locprefix + this.store.file[fid].src;
   }
+  return fileuri;
 }
 
-_via_data.prototype.file_free_resources = function(fid) {
-  if ( this.file_object_uri.hasOwnProperty(fid) ) {
+_via_data.prototype.file_object_uri_clear_all = function() {
+  for ( var fid in this.file_object_uri ) {
     URL.revokeObjectURL( this.file_object_uri[fid] );
-    delete this.file_object_uri[fid];
   }
+  this.file_object_uri = {};
 }
 
 //

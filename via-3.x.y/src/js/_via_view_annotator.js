@@ -377,6 +377,9 @@ _via_view_annotator.prototype._view_clear_all_file_annotator = function() {
       delete this.file_annotator[i][j];
     }
   }
+
+  // clear all object uri created by local files
+  this.d.file_object_uri_clear_all();
 }
 
 //

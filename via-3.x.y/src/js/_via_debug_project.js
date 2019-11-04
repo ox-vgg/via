@@ -500,7 +500,7 @@ _via_dp[2]['store']['config'] = {
     'loc_prefix': {
       '1':'',
       '2':'',
-      '3':'file:///data/datasets/via/via-3.x.y/activity/',
+      '3':'file:///home/tlm/data/via/debug/',
       '4':'',
     },
   },
@@ -571,10 +571,10 @@ _via_dp[2]['store']['file'] = {
   },
   '3':{
     'fid':3,
-    'fname':'Tea.mp4',
+    'fname':'bbc_signdb_001.mp4',
     'type':4,
     'loc':1,
-    'src':'PreparingTea.mp4',
+    'src':'bbc_signdb_001.mp4',
   },
 };
 
