@@ -271,31 +271,24 @@ _via_file_annotator.prototype._file_load = function() {
     }
 
     this.file_html_element.addEventListener('load', function() {
-      //console.log('load:' + this.fid + ', now freeing resources')
       this._file_html_element_ready();
       ok_callback();
     }.bind(this));
     this.file_html_element.addEventListener('loadeddata', function() {
-      //console.log('loaddata:' + this.fid + ', now freeing resources')
       this._file_html_element_ready();
       ok_callback();
     }.bind(this));
     this.file_html_element.addEventListener('abort', function(e) {
-      //console.log('abort:' + this.fid + ', now freeing resources')
       _via_util_msg_show('Failed to load file [' + this.d.store.file[this.fid].fname + '] (' + e + ')' );
       this._file_load_show_error_page();
       err_callback();
     }.bind(this));
     this.file_html_element.addEventListener('stalled', function(e) {
-      //console.log('stalled:' + this.fid + ', now freeing resources')
-      this.d.file_free_resources(this.fid);
       _via_util_msg_show('Failed to load file [' + this.d.store.file[this.fid].fname + '] (' + e + ')' );
       this._file_load_show_error_page();
       err_callback();
     }.bind(this));
     this.file_html_element.addEventListener('error', function(e) {
-      //console.log('error:' + this.fid + ', now freeing resources')
-      this.d.file_free_resources(this.fid);
       _via_util_msg_show('Failed to load file [' + this.d.store.file[this.fid].fname + '] (' + e + ')' );
       this._file_load_show_error_page();
       err_callback();
