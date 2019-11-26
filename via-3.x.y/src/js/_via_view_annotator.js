@@ -422,7 +422,7 @@ _via_view_annotator.prototype._metadata_on_update = function(e) {
   if ( mid ) {
     var mid = e.target.dataset.mid;
     // update existing metadata
-    this.d.metadata_update_av(this.vid, mid, aid, oid).then( function(ok) {
+    this.d.metadata_update_av(mid, aid, oid).then( function(ok) {
       _via_util_msg_show('Update metadata');
     }.bind(this), function(err) {
       _via_util_msg_show('Failed to update metadata!');

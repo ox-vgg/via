@@ -2389,7 +2389,7 @@ _via_file_annotator.prototype._metadata_on_change = function(e) {
     }
   }
 
-  this.d.metadata_update_av(this.vid, mid, aid, aval).then( function(ok) {
+  this.d.metadata_update_av(mid, aid, aval).then( function(ok) {
     //console.log( JSON.stringify(this.d.store.metadata[ok.mid].av) );
   }.bind(this));
 }
