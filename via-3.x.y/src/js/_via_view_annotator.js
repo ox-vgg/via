@@ -414,12 +414,21 @@ _via_view_annotator.prototype._metadata_table_row = function(aid, mid) {
 
 _via_view_annotator.prototype._metadata_on_update = function(e) {
   var aid = e.target.dataset.aid;
-  var oid = e.target.dataset.oid;
   var mid = e.target.dataset.mid;
+
+  var avalue;
+  switch(this.d.store.attribute[aid].type) {
+  case _VIA_ATTRIBUTE_TYPE.TEXT:
+    avalue = e.target.value;
+    break;
+  default:
+    avalue = e.target.dataset.oid;
+  }
+
   if ( mid ) {
     var mid = e.target.dataset.mid;
     // update existing metadata
-    this.d.metadata_update_av(this.vid, mid, aid, oid).then( function(ok) {
+    this.d.metadata_update_av(this.vid, mid, aid, avalue).then( function(ok) {
       _via_util_msg_show('Update metadata');
     }.bind(this), function(err) {
       _via_util_msg_show('Failed to update metadata!');
@@ -427,7 +436,7 @@ _via_view_annotator.prototype._metadata_on_update = function(e) {
   } else {
     // add new metadata
     var av = {};
-    av[aid] = oid;
+    av[aid] = avalue;
     this.d.metadata_add(this.vid, [], [], av).then( function(ok) {
       _via_util_msg_show('Created metadata');
       this._metadata_update();
@@ -446,11 +455,14 @@ _via_view_annotator.prototype._attribute_html_element = function(aid, onchange_h
   switch(this.d.store.attribute[aid].type) {
   case _VIA_ATTRIBUTE_TYPE.TEXT:
     el = document.createElement('textarea');
-    if ( mid !== '' &&
-         this.d.store.metadata[mid].av.hasOwnProperty(aid)
-       ) {
-      el.innerHTML = this.d.store.metadata[mid].av[aid];
+    if ( mid !== '') {
+      el.setAttribute('data-mid', mid);
+      if(this.d.store.metadata[mid].av.hasOwnProperty(aid)) {
+        el.innerHTML = this.d.store.metadata[mid].av[aid];
+      }
     }
+    el.setAttribute('data-aid', aid);
+    el.addEventListener('change', onchange_handler);
     break;
 
   case _VIA_ATTRIBUTE_TYPE.SELECT:

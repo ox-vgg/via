@@ -744,16 +744,18 @@ _via_dp[3]['store']['project'] = {
   'pid': '__VIA_PROJECT_ID__',
   'rev': '__VIA_PROJECT_REV_ID__',
   'rev_timestamp': '__VIA_PROJECT_REV_TIMESTAMP__',
-  'pname':   'MRI Stenosis',
+  'pname': 'Demo Pair Annotation',
+  'pdesc': 'Demonstration of annotation of an image pair',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
   'data_format_version': '3.1.1',
+  'vid_list': ['1', '2', '3', '4'],
 };
 _via_dp[3]['store']['config'] = {
   'file': {
     'loc_prefix': {
-      '1':'/data/datasets/via/via-3.x.y/img_pair_annotation/PairwiseStenosis20190507/Images/',
-      '2':'',
+      '1':'',
+      '2':'https://upload.wikimedia.org/wikipedia/commons/thumb/',
       '3':'',
       '4':'',
     },
@@ -763,116 +765,80 @@ _via_dp[3]['store']['config'] = {
   }
 };
 _via_dp[3]['store']['attribute'] = {
-  "1": {
-    "aname": "structural_central_canal_stenosis",
-    "anchor_id": "FILEN_Z0_XY0",
-    "type": 3,
-    "desc": "Of the above two images, which has more structural central canal stenosis?",
-    "options": {
-      "0": "Image 1",
-      "1": "Not Sure",
-      "2": "Image 2"
+  '1': {
+    'aname':'beautiful',
+    'anchor_id':'FILEN_Z0_XY0',
+    'type':3,
+    'desc':'In your opinion, which image is more beautiful?',
+    'options':{
+      '1': 'Image 1',
+      '2': 'Image 2',
+      '0': 'Not Sure',
     },
-    "default_option_id": ""
+    'default_option_id':'',
   },
-  "2": {
-    "aname": "soft_tissue_encroachment",
-    "anchor_id": "FILEN_Z0_XY0",
-    "type": 3,
-    "desc": "Of the above two images, which has more soft tissue encroachment (disc herniation and/or synovial cyst)?",
-    "options": {
-      "0": "Image 1",
-      "1": "Not Sure",
-      "2": "Image 2"
-    },
-    "default_option_id": ""
-  },
-  "3": {
-    "aname": "crowding_cauda_equina_rootlets",
-    "anchor_id": "FILEN_Z0_XY0",
-    "type": 3,
-    "desc": "Of the above two images, which has more crowding of cauda equina rootlets?",
-    "options": {
-      "0": "Image 1",
-      "1": "Not Sure",
-      "2": "Image 2"
-    },
-    "default_option_id": ""
+  '2': {
+    'aname':'why',
+    'anchor_id':'FILEN_Z0_XY0',
+    'type':1,
+    'desc':'In few words, explain your response',
+    'options':{},
+    'default_option_id':'',
   },
 };
 
 _via_dp[3]['store']['file'] = {
-  "1": {
-    "fid": 1,
-    "fname": "0-SC0001-D20140108-T2-L5S1.png",
-    "type": 2,
-    "loc": 1,
-    "src": "0-SC0001-D20140108-T2-L5S1.png"
+  '1':{
+    'fid':1,
+    'fname':'Red-billed oxpecker (Buphagus erythrorhynchus) on impala (Aepyceros melampus).jpg',
+    'type':2,
+    'loc':2,
+    'src':'d/d5/Red-billed_oxpecker_(Buphagus_erythrorhynchus)_on_impala_(Aepyceros_melampus).jpg/320px-Red-billed_oxpecker_(Buphagus_erythrorhynchus)_on_impala_(Aepyceros_melampus).jpg',
   },
-  "2": {
-    "fid": 2,
-    "fname": "0-SC1692-D20090204-T2-L5S1.png",
-    "type": 2,
-    "loc": 1,
-    "src": "0-SC1692-D20090204-T2-L5S1.png"
+  '2':{
+    'fid':2,
+    'fname':'Balloon over Luxor - Egypt denoised.jpg',
+    'type':2,
+    'loc':2,
+    'src':'4/41/Balloon_over_Luxor_-_Egypt_denoised.jpg/320px-Balloon_over_Luxor_-_Egypt_denoised.jpg',
   },
-  "3": {
-    "fid": 3,
-    "fname": "1-SC1417-D20150411-T2-L5S1.png",
-    "type": 2,
-    "loc": 1,
-    "src": "1-SC1417-D20150411-T2-L5S1.png"
+  '3':{
+    'fid':3,
+    'fname':'Castillo de Montuenga, Montuenga de Soria, Soria, España, 2017-05-23, DD 04.jpg',
+    'type':2,
+    'loc':2,
+    'src':'d/d6/Castillo_de_Montuenga%2C_Montuenga_de_Soria%2C_Soria%2C_España%2C_2017-05-23%2C_DD_04.jpg/320px-Castillo_de_Montuenga%2C_Montuenga_de_Soria%2C_Soria%2C_España%2C_2017-05-23%2C_DD_04.jpg',
   },
-  "4": {
-    "fid": 4,
-    "fname": "1-SC1521-D20151211-T2-L5S1.png",
-    "type": 2,
-    "loc": 1,
-    "src": "1-SC1521-D20151211-T2-L5S1.png"
+  '4':{
+    'fid':4,
+    'fname':'Paradise shelduck portrait, New Zealand.jpg',
+    'type':2,
+    'loc':2,
+    'src':'a/ad/Paradise_shelduck_portrait%2C_New_Zealand.jpg/320px-Paradise_shelduck_portrait%2C_New_Zealand.jpg',
   },
 };
 
 _via_dp[3]['store']['view'] = {
-  "1": {
-    "fid_list": [
-      1,
-      2
-    ]
+  '1': {
+    'fid_list': [ 1, 2 ]
   },
-  "2": {
-    "fid_list": [
-      1,
-      3
-    ]
+  '2': {
+    'fid_list': [ 3, 4 ]
   },
-  "3": {
-    "fid_list": [
-      2,
-      3
-    ]
+  '3': {
+    'fid_list': [ 2, 3 ]
   },
-  "4": {
-    "fid_list": [
-      1,
-      4
-    ]
+  '4': {
+    'fid_list': [ 1, 4 ]
   },
-  '5': {
-    'fid_list': [1],
-  },
-  '6': {
-    'fid_list': [2],
-  },
-  '7': {
-    'fid_list': [3],
-  },
-  '8': {
-    'fid_list': [4],
-  },
+  // add a view for each file (needed when individual images are annotated)
+  // these views are not visible as they are not present in ['project']['vid_list']
+  '5': { 'fid_list': [1] },
+  '6': { 'fid_list': [2] },
+  '7': { 'fid_list': [3] },
+  '8': { 'fid_list': [4] },
 };
-_via_dp[3]['store']['vid_list'] = ['1', '2', '3', '4'];
 _via_dp[3]['store']['metadata'] = {};
-
 
 //
 // Image Annotations
