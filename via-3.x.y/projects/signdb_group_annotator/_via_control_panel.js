@@ -31,6 +31,10 @@ _via_control_panel.prototype._init = function(type) {
 
   this._add_spacer();
 
+  //this._add_project_tools();
+
+  this._add_spacer();
+
   this._add_project_share_tools();
 
   this._add_spacer();
@@ -39,13 +43,13 @@ _via_control_panel.prototype._init = function(type) {
   keyboard.addEventListener('click', function() {
     _via_util_page_show('page_keyboard_shortcut');
   }.bind(this));
-  this.c.appendChild(keyboard);
+  //this.c.appendChild(keyboard);
 
   var help = _via_util_get_svg_button('micon_help', 'About VIA');
   help.addEventListener('click', function() {
     _via_util_page_show('page_about');
   }.bind(this));
-  this.c.appendChild(help);
+  //this.c.appendChild(help);
 }
 
 _via_control_panel.prototype._add_spacer = function() {
@@ -226,7 +230,10 @@ _via_control_panel.prototype._project_load_on_local_file_select = function(e) {
 }
 
 _via_control_panel.prototype._project_load_on_local_file_read = function(project_data_str) {
-  this.via.d.project_load(project_data_str);
+  this.via.d.project_load(project_data_str).then( function(ok) {
+    this.via.ga.group_by('1');
+  }.bind(this), function(err) {
+  }.bind(this));
 }
 
 _via_control_panel.prototype._project_import_via2_on_local_file_read = function(project_data_str) {
@@ -235,11 +242,11 @@ _via_control_panel.prototype._project_import_via2_on_local_file_read = function(
 
 _via_control_panel.prototype._add_project_share_tools = function() {
   if ( this.via.s ) {
-    var share = _via_util_get_svg_button('micon_share', 'Information about sharing this VIA project with others for collaborative annotation');
+    var share = _via_util_get_svg_button('micon_share', 'Information about this shared VIA project');
     share.addEventListener('click', function() {
       this._share_show_info();
     }.bind(this));
-    var push = _via_util_get_svg_button('micon_upload', 'Push (i.e. share this project or share your updates made to this project)');
+    var push = _via_util_get_svg_button('micon_upload', 'Push (i.e. save updates made to this project)');
     push.addEventListener('click', function() {
       this.via.s.push();
     }.bind(this));
@@ -251,7 +258,7 @@ _via_control_panel.prototype._add_project_share_tools = function() {
 
     this.c.appendChild(share);
     this.c.appendChild(push);
-    this.c.appendChild(pull);
+    //this.c.appendChild(pull);
   }
 }
 

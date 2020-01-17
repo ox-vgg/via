@@ -52,10 +52,10 @@ _via_group_manager.prototype._init_ui_elements = function() {
   this.group_name_selector.addEventListener('change', this._on_group_name_update.bind(this));
   this.c.innerHTML = '';
   this.c.appendChild(this.pname);
-  this.c.appendChild(group_values_label);
-  this.c.appendChild(this.group_name_selector);
-  this.c.appendChild(prev_gname);
-  this.c.appendChild(next_gname);
+  //this.c.appendChild(group_values_label);
+  //this.c.appendChild(this.group_name_selector);
+  //this.c.appendChild(prev_gname);
+  //this.c.appendChild(next_gname);
 }
 
 //

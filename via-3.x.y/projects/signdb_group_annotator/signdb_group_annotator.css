@@ -6,7 +6,7 @@ Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
 Date: 4 Nov. 2019
 */
 
-html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-size:1em; }
+html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-size:0.9em; }
 
 *, *:before, *:after { box-sizing:inherit; outline:none; }
 
@@ -23,16 +23,24 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 #via_control_panel_container .logo a { text-decoration:none; }
 #via_control_panel_container select { background-color:inherit; border:1px solid #cfcfcf; font-size:small; }
 #via_control_panel_container input { background-color:inherit; border:1px solid #cfcfcf; width:4em; font-size:small; }
-#via_control_panel_container #via_project_name_input { display:inline-block; font-size:small; width:12.5em; border:none; border-bottom:1px solid #cfcfcf; }
+#via_control_panel_container #via_project_name_input { display:inline-block; font-size:small; width:16em; border:none; border-bottom:1px solid #cfcfcf; margin-left:1em; }
 #via_control_panel_container #via_project_name_input:hover { border-bottom:1px solid #cfcfcf; background-color:#f2f2f2; }
 #via_control_panel_container #via_project_name_input:focus { background-color:#f2f2f2; border-bottom:1px solid #cfcfcf; }
 
 /* Group Container */
 #group_container { position:relative; display:block; }
 
-#group_container .file_container { display:inline-block; border:0px solid #cccccc; border-radius:4px; margin:0.5em 0.3em; text-align:center; padding:0.2em; font-size:small;}
-#group_container .file_container video { height:30vh; }
-#group_container .file_container img { height:30vh; }
+#group_container .toolbar_container { display:grid; background-color:#f2f2f2; grid-template-columns:auto auto auto auto; align-items:center; justify-items:start; padding:0.5em 0;}
+
+#group_container .toolbar_container > div { border:1px solid red; }
+#group_container .toolbar_container div { display:inline; }
+#group_container .toolbar_container .group_metadata { justify-self:center; }
+#group_container .toolbar_container .group_metadata input[type="text"] { margin-left:0.4em; width:6em; }
+#group_container .toolbar_container select { color:#ff6600; font-size:large;}
+
+#group_container .file_container { display:inline-block; border:0px solid #cccccc; border-radius:4px; margin:0.5em 1em; text-align:center; padding:0.2em; }
+#group_container .file_container video { width:25vw; } /* for 3 videos */
+#group_container .file_container img { width:25vh; }
 #group_container .file_container .info { display:block; }
 #group_container .file_container .info .index { float:left; }
 #group_container .file_container .info .control { float:right; }

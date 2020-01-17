@@ -29,35 +29,35 @@
         ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
         POSSIBILITY OF SUCH DAMAGE.
       -->
-    <title>SIGNDB Annotator</title>
+    <title>SignDB Group Annotator</title>
     <meta name="author" content="Abhishek Dutta">
     <meta name="description" content="VGG Image Annotator (VIA) is a standalone manual annotator software for image, audio and video. The full application is packaged as an offline html page of size < 400KB and runs solely from a web browser. More details are available at: http://www.robots.ox.ac.uk/~vgg/software/via/">
 
     <!--
-    Development of VIA is supported by the EPSRC programme grant
-    Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1).
-    Using Google Analytics, we record the usage of this application.
-    A summary of this data is used in reporting of this programme grant
-    and research publications related to the VIA software.
+        Development of VIA is supported by the EPSRC programme grant
+        Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1).
+        Using Google Analytics, we record the usage of this application.
+        A summary of this data is used in reporting of this programme grant
+        and research publications related to the VIA software.
 
-    If you do not wish to share this data, you can safely remove the
-    javascript code below.
+        If you do not wish to share this data, you can safely remove the
+        javascript code below.
       -->
     <script type="text/javascript">
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-                               m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-                              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
       //__ENABLED_BY_PACK_SCRIPT__ga('create', 'UA-20555581-2', 'auto');
-      //__ENABLED_BY_PACK_SCRIPT__ga('set', 'page', '/via/3.0.0/via_signdb_annotator.html');
+      //__ENABLED_BY_PACK_SCRIPT__ga('set', 'page', '/via/3.0.0/via_signdb_group_annotator.html');
       //__ENABLED_BY_PACK_SCRIPT__ga('send', 'pageview');
     </script>
 
-    <link rel="stylesheet" type="text/css" href="signdb_annotator.css">
+    <link rel="stylesheet" type="text/css" href="signdb_group_annotator.css">
   </head>
 
-  <body onresize="via._hook_on_browser_resize()">
+  <body>
 
     <!-- Definition of VIA Assets (e.g. about page, info page, shorcut keys, etc.) -->
 
@@ -280,10 +280,10 @@
       <div data-pageid="page_fileuri_bulk_add" class="via_page">
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <p>File Type:&nbsp;<select id="via_page_fileuri_filetype">
-          <option value="2">Image</option>
-          <option value="4" selected>Video</option>
-          <option value="8">Audio</option>
-          <option value="0">Detect Automatically</option>
+            <option value="2">Image</option>
+            <option value="4" selected>Video</option>
+            <option value="8">Audio</option>
+            <option value="0">Detect Automatically</option>
           </select>
         </p>
         <h2>Paste File URI (one URI per line)</h2>
@@ -343,41 +343,35 @@
       </div>
 
       <div data-pageid="page_share_open_shared" class="via_page">
-        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
-        <h2>Open a Shared VIA Project</h2>
-        <p>A unique project-id is assigned to every shared VIA project. For example, the following two project-id have been publicly shared for demonstration purposes:
-          <ul>
-            <li>Video Annotation: e302eadf-aa53-4a5a-b958-11175692c928</li>
-            <li>Audio Annotation: d4a9bc87-9652-42c3-a336-f41e18d638e6</li>
-          </ul>
-        </p>
-        <p>To open a shared project, enter the project-id below:</p>
+        <h2>Enter Project Id</h2>
         <table>
           <tr>
-            <td><label for="via_page_input_pid">VIA Project Id</label></td>
+            <td><label for="via_page_input_pid">Project Id</label></td>
             <td>
-              <input style="width:25em;" type="text" placeholder="e.g. e302eadf-aa53-4a5a-b958-11175692c928" id="via_page_input_pid">
+              <input style="width:25em;" type="text" placeholder="e.g. 528018f2-be3a-4ff9-8b98-87456d44f104" id="via_page_input_pid">
             </td>
           </tr>
         </table>
+        <p style="font-size:xx-small;">Contact Sam Albanie (albanie@robots.ox.ac.uk) to obtain a project-id.</p>
 
         <div class="controls">
           <button id="via_page_button_open_shared" onclick="_via_util_page_process_action(event)">Open Shared Project</button>
-          <button onclick="_via_util_page_hide()">Cancel</button>
         </div>
+
+        <h1>Guidelines for Annotation</h1>
+        <ul>
+          <li>Use Google Chrome 79.0 (or higher) web browser. If a video does not play, use the small icon in top right corner of each video to open the video in a new window and use browser's refresh or reload button to replay the video segment.</li>
+          <li><strong>Please regularly save your work by pressing the "Push" <svg class="svg_icon" viewbox="0 0 24 24"><use xlink:href="#micon_upload"></use></svg> button.</strong></li>
+          <li>Video clips are categorized automatically according to sign acted by the signer. Your assignment is to check if these automatic categorization are correct.</li>
+          <li>If the automatic detected sign is correct, click the radio button corresponding to "Yes" otherwise click the "No" radio button. If you click "No", then optionally use the input text box to enter the correct sign keyword. Click "Not sure" if you cannot be sure about the sign being shown in the video.</li>
+          <li>Click on a video to play it. To activate the video scrubber, hold your click and move mouse cursor to left or right. To play all the videos simultaneously, click the "Play All" button in the top toolbar.</li>
+          <li>To select videos of a particular sign, click the dropdown menu beside "Sign Keyword" label in the left side of the top toolbar. This will show the first page of containing videos automatically detected as containing a particular sign. If there are a large number of videos in this category, use the "Prev" and "Next" button to show videos contained in other pages.</li>
+          <li>Many thanks for taking the time to use the tool. Any <a href="mailto:albanie@robots.ox.ac.uk">feedback</a> would be appreciated.</li>
+        </ul>
       </div>
 
       <div data-pageid="page_demo_instructions" class="via_page">
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
-        <h1>Some Quick Tips</h1>
-        <ul>
-          <li>Press <span class="key">Space</span> key at any time to play or pause the audio or video.</li>
-          <li>Use <span class="key">a</span> key to add a new temporal segment. Here are more <span class="text_button" onclick="_via_util_show_info_page('page_keyboard_shortcut')">shortcuts</span>.</li>
-          <li>Pre-defined temporal segments appear at the bottom (colourful boxes). Using mouse, select them, move them and delete them (using <span class="key">Backspace</span> key)</li>
-          <li>Move your mouse over the temporal segment timeline and roll your mouse button to zoom in/out</li>
-          <li>Add new timeline by adding a new entry to the Timeline List (at the bottom) and press "Update" button. For example, "Speaker1,Speaker2" to add timelines for two speakers.</li>
-          <li>Use the <span class="text_button" onclick="via.editor.show()">attribute editor</span> to define or update attributes (e.g. name, colour, speaker_id, etc) of user defined spatial regions or temporal segments.</li>
-        </ul>
       </div>
 
       <div data-pageid="page_keyboard_shortcut" class="via_page">
@@ -396,7 +390,7 @@
             <tr><td>Toggle Media Mute</td><td><span class="key">m</span></td></tr>
             <tr><td>Increase / Decrease Media Playback Speed</td><td><span class="key">+</span> / <span class="key">-</span></td></tr>
             <tr><td>Move Media Time Backward by 1, ..., 9 sec. (Ctrl to move forward)</td><td><span class="key">Ctrl</span> + <span class="key">1</span>, <span class="key">2</span>, ..., <span class="key">9</span</td></tr>
-            <tr><td>Move Media Time Forward or Backward by 1 frame (Shift to move by 5 frames)</td><td><span class="key">Shift</span> + <span class="key">n</span> / <span class="key">p</span></td></tr>                                      <tr><td>Add Temporal Segment at Current Time</td><td><span class="key">a</span></td></tr>
+                                                                                                                                                                                                                <tr><td>Move Media Time Forward or Backward by 1 frame (Shift to move by 5 frames)</td><td><span class="key">Shift</span> + <span class="key">n</span> / <span class="key">p</span></td></tr>                                      <tr><td>Add Temporal Segment at Current Time</td><td><span class="key">a</span></td></tr>
             <tr><td>Update the edge (left or right) of last added segment to current time</td><td><span class="key">Shift</span> + <span class="key">a</span></td></tr>
 
             <tr><td>Select Previous / Next Temporal Segment Timeline</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
@@ -484,28 +478,28 @@
 
         <h4>License</h4>
         <pre>
-Copyright (c) 2019, Abhishek Dutta, Visual Geometry Group, Oxford University and VIA Contributors.
-All rights reserved.
+          Copyright (c) 2019, Abhishek Dutta, Visual Geometry Group, Oxford University and VIA Contributors.
+          All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+          Redistribution and use in source and binary forms, with or without
+          modification, are permitted provided that the following conditions are met:
 
-Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
+          Redistributions of source code must retain the above copyright notice, this
+          list of conditions and the following disclaimer.
+          Redistributions in binary form must reproduce the above copyright notice,
+          this list of conditions and the following disclaimer in the documentation
+          and/or other materials provided with the distribution.
+          THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+          AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+          IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+          ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+          LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+          CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+          SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+          INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+          CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+          ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+          POSSIBILITY OF SUCH DAMAGE.
         </pre>
         <p>Copyright &copy; 2019, <a href="mailto:adutta-removeme@robots.ox.ac.uk">Abhishek Dutta</a>, Visual Geometry Group, Oxford University and VIA Contributors.</p>
       </div>
@@ -513,13 +507,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
     <!-- used by _via_view_annotator._show_start_info() -->
     <div id="via_start_info_content" class="hide">
-      <ul>
-        <li>To start annotation of an image, audio and video, select <span class="text_button" onclick="via.vm._on_add_media_local()">local files</span> or <span class="text_button" onclick="via.vm._on_add_media_remote()">add files</span> (local files using file:// and remote files using http:// URI). You can also add a list of file URI in <span class="text_button" onclick="via.vm._on_add_media_bulk()">bulk</span>.</li>
-        <li>Press <span class="key">Space</span> key to play or pause an audio or video at any time (more keyboard <span class="text_button" onclick="_via_util_page_show('page_keyboard_shortcut')">shortcuts</span>).</li>
-        <li>Spatial regions (e.g. 50x80 pixel rectangular bounding box) can be defined for image and video frame when video is paused. Temporal segments (e.g. video segment from time 3.1 sec. to 12.5 sec) can be defined for audio and video files.</li>
-        <li>Use the <span class="text_button" onclick="via.editor.show()">attribute editor</span> to define or update attributes (e.g. name, colour, etc.) of user defined regions.</li>
-        <li>You can also try preloaded demo for <a target="_blank" href="http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_image_annotator.html">image</a>, <a target="_blank" href="http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_audio_annotator.html">audio</a> and <a target="_blank" href="http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_video_annotator.html">video</a> annotation.</li>
-      </ul>
     </div>
 
     <!-- VIA dynamically populates this container with control panel, media (image, video, etc), etc. -->
@@ -527,7 +514,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
     <script src="../../src/js/_via_util.js"></script>
     <script src="../../src/js/_via_const.js"></script>
-    <script src="../../src/js/_via_config.js"></script>
+    <script src="_via_config.js"></script>
 
     <script src="../../src/js/_via_event.js"></script>
     <script src="_via_control_panel.js"></script>
@@ -535,8 +522,8 @@ POSSIBILITY OF SUCH DAMAGE.
     <script src="../../src/js/_via_file.js"></script>
     <script src="../../src/js/_via_attribute.js"></script>
     <script src="../../src/js/_via_view.js"></script>
-    <script src="../../src/js/_via_data.js"></script>
-    <script src="../../src/js/_via_share.js"></script>
+    <script src="_via_data.js"></script>
+    <script src="_via_share.js"></script>
     <script src="../../src/js/_via_import_export.js"></script>
 
     <script src="../../src/js/_via_video_thumbnail.js"></script>
@@ -555,7 +542,6 @@ POSSIBILITY OF SUCH DAMAGE.
       //__ENABLED_BY_PACK_SCRIPT__var _VIA_DEBUG = false;
       var via_container = document.getElementById('via_container');
       var via = new _via(via_container);
-      //__ENABLED_BY_DEMO_PACK_SCRIPT___via_util_page_show('page_demo_instructions');
     </script>
   </body>
 </html>
