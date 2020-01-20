@@ -1236,7 +1236,8 @@ function pack_via_metadata(return_type) {
             if ( region.shape_attributes['name'] === 'rect' ||
                  region.shape_attributes['name'] === 'circle' ||
                  region.shape_attributes['name'] === 'ellipse' ||
-                 region.shape_attributes['name'] === 'polygon' ) {
+                 region.shape_attributes['name'] === 'polygon' ||
+                 region.shape_attributes['name'] === 'point' ) {
               var annotation = via_region_shape_to_coco_annotation(region.shape_attributes);
               var attr_key;
               for(var k in region.region_attributes) {
@@ -1287,6 +1288,16 @@ function via_region_shape_to_coco_annotation(shape_attributes) {
     annotation['area'] = fixfloat( parseFloat(w)*parseFloat(h) );
     annotation['bbox'] = [x0, y0, w, h];
     break;
+
+  case 'point':
+    var cx = shape_attributes['cx'];
+    var cy = shape_attributes['cy'];
+    // 2 is for visibility - currently set to always inside segmentation.
+    // see Keypoint Detection: http://cocodataset.org/#format-data
+    annotation['keypoints'] = [cx, cy, 2];
+    annotation['num_keypoints'] = 1;
+    break;
+
   case 'circle':
   case 'ellipse':
     var a,b;
