@@ -1191,25 +1191,9 @@ function pack_via_metadata(return_type) {
         };
         d.licenses = [ { 'id':1, 'name':'Unknown', 'url':'' } ];
 
-        // initialise categories
-        var attrval_to_catid = {};
-        var cat_id = 1;
-        for ( var rid in _via_attributes['region'] ) {
-          if ( _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.CHECKBOX ||
-               _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.DROPDOWN ||
-               _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.RADIO ) {
-            for ( var oid in _via_attributes['region'][rid]['options'] ) {
-              d.categories.push( { 'id':cat_id, 'name':oid, 'supercategory':rid } );
-              attrval_to_catid[oid] = cat_id;
-              cat_id = cat_id + 1;
-            }
-          }
-        }
-
         // add files
         var img_id, file_src;
         var annotation_id = 0;
-        var export_aid = Object.keys(_via_attributes['region'])[0];
         for ( var img_index in _via_image_id_list ) {
           img_id = _via_image_id_list[img_index];
 
@@ -1231,7 +1215,21 @@ function pack_via_metadata(return_type) {
             'date_captured':'',
           } );
 
-          // add metadata
+          // initialize categories
+          var attrval_to_catid = {};
+          var cat_id = 1;
+          for ( var rid in _via_attributes['region'] ) {
+            if ( _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.CHECKBOX ||
+                 _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.DROPDOWN ||
+                 _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.RADIO ) {
+              for ( var oid in _via_attributes['region'][rid]['options'] ) {
+                d.categories.push( { 'id':cat_id, 'name':oid, 'supercategory':rid } );
+                attrval_to_catid[oid] = cat_id;
+                cat_id = cat_id + 1;
+              }
+            }
+          }
+
           var shape_name, region;
           for ( var rindex in _via_img_metadata[img_id].regions ) {
             region = _via_img_metadata[img_id].regions[rindex];
@@ -1240,10 +1238,18 @@ function pack_via_metadata(return_type) {
                  region.shape_attributes['name'] === 'ellipse' ||
                  region.shape_attributes['name'] === 'polygon' ) {
               var annotation = via_region_shape_to_coco_annotation(region.shape_attributes);
-              var cat_id = '';
-              if ( typeof(export_aid) !== 'undefined' ) {
-                var avalue = _via_img_metadata[img_id].regions[rindex].region_attributes[export_aid];
-                cat_id = attrval_to_catid[avalue];
+              var attr_key;
+              for(var k in region.region_attributes) {
+                if (region.region_attributes[k] !== "undefined") {
+                  attr_key = k;
+                }
+              }
+
+              var attr_val = region.region_attributes[attr_key];
+              if (typeof(attr_val) === "undefined") {
+                cat_id = '';
+              } else {
+                cat_id = attrval_to_catid[attr_val];
               }
 
               d.annotations.push( Object.assign({
@@ -8458,6 +8464,12 @@ function image_grid_cancel_load_ongoing() {
   _via_image_grid_load_ongoing = false;
 }
 
+
+// everything to do with image zooming
+function image_zoom_init() {
+
+}
+
 //
 // hooks for sub-modules
 // implemented by sub-modules
@@ -8870,6 +8882,19 @@ function _via_show_img(img_index) {
       console.log('_via_img_buffer_add_image() failed for file: ' + _via_image_filename_list[err_img_index]);
     });
   }
+
+  // add zooming
+  _via_add_zoom_for_image(img_index)
+
+}
+
+function _via_add_zoom_for_image(img_index) {
+  // var img = document.getElementById('bim' + img_index);
+  // img.style.backgroundRepeat = 'no-repeat';
+  // img.style.backgroundImage = 'url("'+img.src+'")';
+  // tramsparent_img = 'data:image/svg+xml;base64,'+window.btoa('<svg xmlns="http://www.w3.org/2000/svg" width="'+img.naturalWidth+'" height="'+img.naturalHeight+'"></svg>');
+  // img.src = transparentSpaceFiller;
+  // _via_img_panel.style.backgroundSize
 }
 
 function _via_buffer_hide_current_image() {
