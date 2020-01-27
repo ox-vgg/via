@@ -917,11 +917,13 @@ function coco_to_via(coco) {
     if ( annotation_list.hasOwnProperty(coco_img_id) ) {
       for ( var i in annotation_list[coco_img_id] ) {
         var annotation = coco.annotations[ annotation_list[coco_img_id][i] ];
-        var bbox = polygon_to_bbox(annotation['segmentation']);
-        var area = bbox[2] * bbox[3];
-        var r = { 'shape_attributes': { 'name':'polygon', 'all_points_x':[], 'all_points_y':[] },
-                  'region_attributes': {},
-                };
+
+        var category_id = -1;
+        if ( annotation.category_id !== "undefined") {
+          category_id = annotation.category_id - 1;
+        }
+
+        var bbox_from_polygon = polygon_to_bbox(annotation['segmentation']);
 
         // fix for variations in segmentation:
         // annotation['segmentation'] = [x0,y0,x1,y1,...]
@@ -930,12 +932,32 @@ function coco_to_via(coco) {
         if ( seg.length === 1 && seg[0].length !== 0 ) {
           seg = annotation['segmentation'][0];
         }
-        for ( var j = 0; j < seg.length; j = j + 2 ) {
-          r['shape_attributes']['all_points_x'].push( seg[j] );
-          r['shape_attributes']['all_points_y'].push( seg[j+1] );
+        var anno_bbox = annotation['bbox'];
+
+        // check if imported region is polygon or rectangle
+        var is_rectangle = true;
+        for (var i = 0; i < anno_bbox.length; ++i) {
+          if (anno_bbox[i] !== bbox_from_polygon[i]) {
+            is_rectangle = false;
+            break;
+          }
         }
-        var cat_name = category_list[ annotation['category_id'] ];
-        r['region_attributes']['category'] = cat_name;
+
+        if ( seg.length === 8 && is_rectangle ) {
+          // a rectangle
+          var r = { 'shape_attributes': { 'name':'rect', 'x': [], 'y': [], 'width': [], 'height': []},
+                    'region_attributes': {},
+                  };
+          r['shape_attributes']['x'].push( anno_bbox[0] );
+          r['shape_attributes']['y'].push( anno_bbox[1] );
+          r['shape_attributes']['width'].push( anno_bbox[2] );
+          r['shape_attributes']['height'].push( anno_bbox[3] );
+
+          if ( category_id !== -1 && !isNaN(category_id)) {
+            var sup_category = coco.categories[category_id]['supercategory'];
+            r['region_attributes'][sup_category] = coco.categories[category_id]['name'];
+          }
+        }
         d[via_img_id].regions.push(r);
       }
     }
@@ -1239,19 +1261,14 @@ function pack_via_metadata(return_type) {
                  region.shape_attributes['name'] === 'polygon' ||
                  region.shape_attributes['name'] === 'point' ) {
               var annotation = via_region_shape_to_coco_annotation(region.shape_attributes);
-              var attr_key;
+              var attr_val;
               for(var k in region.region_attributes) {
-                if (region.region_attributes[k] !== "undefined") {
-                  attr_key = k;
+                if ( region.region_attributes[k] !== "undefined") {
+                    attr_val = region.region_attributes[k];
                 }
               }
-
-              var attr_val = region.region_attributes[attr_key];
-              if (typeof(attr_val) === "undefined") {
-                cat_id = '';
-              } else {
-                cat_id = attrval_to_catid[attr_val];
-              }
+              // assume there is only one value (radio button)
+              cat_id = attrval_to_catid[attr_val];
 
               d.annotations.push( Object.assign({
                 'id':annotation_id,
@@ -1280,12 +1297,13 @@ function via_region_shape_to_coco_annotation(shape_attributes) {
   case 'rect':
     var x0 = shape_attributes['x'];
     var y0 = shape_attributes['y'];
-    var w  = shape_attributes['width'];
-    var h  = shape_attributes['height'];
+    var w  = parseInt(shape_attributes['width']);
+    var h  = parseInt(shape_attributes['height']);
     var x1 = x0 + w;
     var y1 = y0 + h;
     annotation['segmentation'] = [x0, y0, x1, y0, x1, y1, x0, y1];
-    annotation['area'] = fixfloat( parseFloat(w)*parseFloat(h) );
+    annotation['area'] =  w * h ;
+
     annotation['bbox'] = [x0, y0, w, h];
     break;
 
