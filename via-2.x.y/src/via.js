@@ -932,10 +932,10 @@ function coco_to_via(coco) {
         if ( seg.length === 1 && seg[0].length !== 0 ) {
           seg = annotation['segmentation'][0];
         }
-        var anno_bbox = annotation['bbox'];
 
         // check if imported region is polygon or rectangle
         var is_rectangle = true;
+        var anno_bbox = annotation['bbox'];
         for (var i = 0; i < anno_bbox.length; ++i) {
           if (anno_bbox[i] !== bbox_from_polygon[i]) {
             is_rectangle = false;
@@ -956,6 +956,15 @@ function coco_to_via(coco) {
           if ( category_id !== -1 && !isNaN(category_id)) {
             var sup_category = coco.categories[category_id]['supercategory'];
             r['region_attributes'][sup_category] = coco.categories[category_id]['name'];
+          }
+        } else {
+          // other shapes
+          var r = { 'shape_attributes': { 'name':'polygon', 'all_points_x':[], 'all_points_y':[] },
+            'region_attributes': {},
+          };
+          for ( var j = 0; j < seg.length; j = j + 2 ) {
+            r['shape_attributes']['all_points_x'].push( seg[j] );
+            r['shape_attributes']['all_points_y'].push( seg[j+1] );
           }
         }
         d[via_img_id].regions.push(r);
@@ -1317,20 +1326,36 @@ function via_region_shape_to_coco_annotation(shape_attributes) {
     break;
 
   case 'circle':
-  case 'ellipse':
     var a,b;
-    if ( shape_attributes.hasOwnProperty('rx') && shape_attributes.hasOwnProperty('ry')) {
-      a = shape_attributes['rx'];
-      b = shape_attributes['ry'];
-    } else {
-      a = shape_attributes['r'];
-      b = shape_attributes['r'];
-    }
+    a = shape_attributes['r'];
+    b = shape_attributes['r'];
     var theta_to_radian = Math.PI/180;
+
     for ( var theta = 0; theta < 360; theta = theta + VIA_POLYGON_SEGMENT_SUBTENDED_ANGLE ) {
       var theta_radian = theta * theta_to_radian;
       var x = shape_attributes['cx'] + a * Math.cos(theta_radian);
       var y = shape_attributes['cy'] + b * Math.sin(theta_radian);
+      annotation['segmentation'].push( fixfloat(x), fixfloat(y) );
+    }
+    annotation['bbox'] = polygon_to_bbox(annotation['segmentation']);
+    annotation['area'] = annotation['bbox'][2] * annotation['bbox'][3];
+    break;
+
+  case 'ellipse':
+    var a,b;
+    a = shape_attributes['rx'];
+    b = shape_attributes['ry'];
+    var rotation = shape_attributes['theta'];
+    var theta_to_radian = Math.PI/180;
+
+    for ( var theta = 0; theta < 360; theta = theta + VIA_POLYGON_SEGMENT_SUBTENDED_ANGLE ) {
+      var theta_radian = theta * theta_to_radian;
+      var x = shape_attributes['cx'] +
+              ( a * Math.cos(theta_radian) * Math.cos(rotation) ) -
+              ( b * Math.sin(theta_radian) * Math.sin(rotation) );
+      var y = shape_attributes['cy'] +
+              ( a * Math.cos(theta_radian) * Math.sin(rotation) ) +
+              ( b * Math.sin(theta_radian) * Math.cos(rotation) );
       annotation['segmentation'].push( fixfloat(x), fixfloat(y) );
     }
     annotation['bbox'] = polygon_to_bbox(annotation['segmentation']);
