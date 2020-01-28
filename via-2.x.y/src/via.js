@@ -1272,7 +1272,8 @@ function pack_via_metadata(return_type) {
               var annotation = via_region_shape_to_coco_annotation(region.shape_attributes);
               var attr_val;
               for(var k in region.region_attributes) {
-                if ( region.region_attributes[k] !== "undefined") {
+                if ( region.region_attributes[k] !== "undefined" &&
+                     Object.entries(region.region_attributes[k]).length > 0) {
                     attr_val = region.region_attributes[k];
                 }
               }
