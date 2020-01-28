@@ -1990,6 +1990,32 @@ function _via_reg_canvas_mouseup_handler(e) {
           annotation_editor_hide();
         }
 
+        // show the region info
+        if (_via_is_region_info_visible) {
+          var canvas_attr = _via_canvas_regions[region_id].shape_attributes;
+
+          switch (canvas_attr['name']) {
+          case VIA_REGION_SHAPE.RECT:
+            break;
+
+          case VIA_REGION_SHAPE.CIRCLE:
+            var rf = document.getElementById('region_info');
+            var attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
+            rf.innerHTML +=  ',' + ' Radius:' + attr['r'];
+            break;
+
+          case VIA_REGION_SHAPE.ELLIPSE:
+            var rf = document.getElementById('region_info');
+            var attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
+            rf.innerHTML +=  ',' + ' X-radius:' + attr['rx'] + ',' + ' Y-radius:' + attr['ry'];
+            break;
+
+          case VIA_REGION_SHAPE.POLYLINE:
+          case VIA_REGION_SHAPE.POLYGON:
+            break;
+          }
+        }
+
         show_message('Region selected. If you intended to draw a region, click again inside the selected region to start drawing a region.')
       } else {
         if ( _via_is_user_drawing_region ) {
@@ -2193,6 +2219,31 @@ function _via_reg_canvas_mousemove_handler(e) {
   }
 
   if ( _via_is_region_selected ) {
+    // display the region's info if a region is selected
+    if ( rf != null && _via_is_region_info_visible && _via_user_sel_region_id !== -1) {
+      var canvas_attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
+      switch (canvas_attr['name']) {
+      case VIA_REGION_SHAPE.RECT:
+        break;
+
+      case VIA_REGION_SHAPE.CIRCLE:
+        var rf = document.getElementById('region_info');
+        var attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
+        rf.innerHTML +=  ',' + ' Radius:' + attr['r'];
+        break;
+
+      case VIA_REGION_SHAPE.ELLIPSE:
+        var rf = document.getElementById('region_info');
+        var attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
+        rf.innerHTML +=  ',' + ' X-radius:' + attr['rx'] + ',' + ' Y-radius:' + attr['ry'];
+        break;
+
+      case VIA_REGION_SHAPE.POLYLINE:
+      case VIA_REGION_SHAPE.POLYGON:
+        break;
+      }
+    }
+
     if ( !_via_is_user_resizing_region ) {
       // check if user moved mouse cursor to region boundary
       // which indicates an intention to resize the region
@@ -2373,7 +2424,9 @@ function _via_reg_canvas_mousemove_handler(e) {
                               new_r,
                               true);
       if ( rf != null && _via_is_region_info_visible ) {
-        rf.innerHTML +=  ',' + ' R:' + Math.round(new_r);
+        var curr_texts = rf.innerHTML.split(",");
+        rf.innerHTML = "";
+        rf.innerHTML +=  curr_texts[0] + ',' + curr_texts[1] + ',' + ' Radius:' + Math.round(new_r);
       }
       break;
 
@@ -2408,7 +2461,9 @@ function _via_reg_canvas_mousemove_handler(e) {
                                new_theta,
                                true);
       if ( rf != null && _via_is_region_info_visible ) {
-        rf.innerHTML +=  ',' + ' X-radius:' + fixfloat(new_rx) + ',' + ' Y-radius:' + fixfloat(new_ry);
+        var curr_texts = rf.innerHTML.split(",");
+        rf.innerHTML = "";
+        rf.innerHTML = curr_texts[0] + ',' + curr_texts[1] + ',' + ' X-radius:' + fixfloat(new_rx) + ',' + ' Y-radius:' + fixfloat(new_ry);
       }
       break;
 
@@ -2464,10 +2519,6 @@ function _via_reg_canvas_mousemove_handler(e) {
                               attr['cy'] + move_y,
                               attr['r'],
                               true);
-      // display the current region info
-      if ( rf != null && _via_is_region_info_visible ) {
-        rf.innerHTML +=  ',' + ' Radius:' + attr['r'];
-      }
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
@@ -2477,10 +2528,6 @@ function _via_reg_canvas_mousemove_handler(e) {
                                attr['ry'],
                                attr['theta'],
                                true);
-      // display the current region info
-      if ( rf != null && _via_is_region_info_visible ) {
-        rf.innerHTML +=  ',' + ' X-radius:' + attr['rx'] + ',' + ' Y-radius:' + attr['ry'];
-      }
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
