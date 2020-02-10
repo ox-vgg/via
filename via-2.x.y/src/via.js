@@ -2523,6 +2523,7 @@ function _via_reg_canvas_mousemove_handler(e) {
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
+      if (typeof(attr['theta']) === 'undefined') { attr['theta'] = 0; }
       _via_draw_ellipse_region(attr['cx'] + move_x,
                                attr['cy'] + move_y,
                                attr['rx'],
@@ -2768,6 +2769,7 @@ function draw_all_regions() {
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
+      if (typeof(attr['theta']) === 'undefined') { attr['theta'] = 0; }
       _via_draw_ellipse_region(attr['cx'],
                                attr['cy'],
                                attr['rx'],
