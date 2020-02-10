@@ -9153,14 +9153,17 @@ function _via_img_buffer_add_image(img_index) {
       err_callback(img_index);
     } else {
       var img_id = _via_image_id_list[img_index];
+
       var bimg = document.createElement('img');
       bimg.setAttribute('id', _via_img_buffer_get_html_id(img_index));
+      _via_img_src[img_id] = _via_img_src[img_id].replace('#', '%23');
       bimg.setAttribute('src', _via_img_src[img_id]);
       if ( _via_img_src[img_id].startsWith('data:image') ) {
         bimg.setAttribute('alt', 'Source: image data in base64 format');
       } else {
         bimg.setAttribute('alt', 'Source: ' + _via_img_src[img_id]);
       }
+
       bimg.addEventListener('abort', function() {
         project_file_load_on_fail(img_index);
         err_callback(img_index);
