@@ -3,6 +3,16 @@ We welcome all forms of contributions (code update, documentation, etc) from use
 These contributions must adhere to the existing [license](LICENSE) of VIA project.
 Here is the list of current contributions to VIA project.
 
+* via-2.0.9
+  - size of point region shape increases when zoomed in (issue 186 fixed by Srinivasan Sankar @vasan.shrini)
+  - fixed missing 'category_id' in COCO export (issue 243 fixed by Srinivasan Sankar @vasan.shrini)
+  - fixed incomplete COCO format export (issue 208 fixed by Srinivasan Sankar @vasan.shrini)
+  - COCO import distinguishes between rectangle and polygon region (issue 233 fixed by Srinivasan Sankar @vasan.shrini)
+  - incorrect ellipse orientation issue in COCO import (issue 215 fixed by Srinivasan Sankar @vasan.shrini)
+  - details of ellipse and circle region are shown when selected or are being drawn (issue 211 fixed by Srinivasan Sankar @vasan.shrini)
+  - fixed issue with loading filename containing '#' character (issue 254 fixed by Srinivasan Sankar @vasan.shrini)
+  - project import is now compatible with older version of VIA which did not implement rotated ellipse (issue 253 fixed by Srinivasan Sankar @vasan.shrini)
+
 * via-2.0.8
   - Richard Droste (@rdroste) contributed code to allow freehand rotation of ellipse regions (merge request 14 merged into VIA source by Srinivasan Sankar @vasan.shrini)
   - Mouse cursor coordinates and region shape description is now shown (feature request 118 was implemented by Srinivasan Sankar @vasan.shrini )

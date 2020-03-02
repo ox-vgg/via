@@ -1,4 +1,4 @@
-## [2.0.9] - not released yet
+## [2.0.10] - not released yet
  * fast annotation mode @todo
     - keyboard input '123' denotes the following operation: select region 1, set 3 as the value of region attribute 2.
     - if there is a single region attribute, the '13' sets 3 as the value of region 1
@@ -11,6 +11,16 @@
     - add a "UNASSIGNED" group to denote all the files that do not have a value for the group variable
     - preload images in adjacent groups to speed up visualization
     - label subgroup of images in a group based on a certain variable
+
+## [2.0.9] - March 02, 2020
+ * size of point region shape increases when zoomed in (issue 186)
+ * fixed missing 'category_id' in COCO export (issue 243)
+ * fixed incomplete COCO format export (issue 208)
+ * COCO import distinguishes between rectangle and polygon region (issue 233)
+ * incorrect ellipse orientation issue in COCO import (issue 215)
+ * details of ellipse and circle region are shown when selected or are being drawn (issue 211)
+ * fixed issue with loading filename containing '#' character (issue 254)
+ * project import is now compatible with older version of VIA which did not implement rotated ellipse (issue 253)
 
 ## [2.0.8] - June 14, 2019
  * user selected files are loaded more efficiently using URL.createObjectURL() instead of FileReader()
