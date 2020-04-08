@@ -47,12 +47,13 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
 
   // constants
   this.conf = {};
-  this.conf.CONTROL_POINT_RADIUS = 2;
-  this.conf.CONTROL_POINT_COLOR  = 'red';
-  this.conf.CONTROL_POINT_CLICK_TOL = 3;
+  this.conf.CONTROL_POINT_RADIUS = 4;
+  this.conf.CONTROL_POINT_COLOR  = 'white';
+  this.conf.CONTROL_POINT_BOUNDARY_COLOR  = 'black';
+  this.conf.CONTROL_POINT_CLICK_TOL = 10;
   this.conf.REGION_BOUNDARY_COLOR = 'yellow';
   this.conf.REGION_LINE_WIDTH = 2;
-  this.conf.SEL_REGION_BOUNDARY_COLOR = 'black';
+  this.conf.SEL_REGION_BOUNDARY_COLOR = '#808080';
   this.conf.SEL_REGION_FILL_COLOR = '#808080';
   this.conf.SEL_REGION_FILL_OPACITY = 0.1;
   this.conf.SEL_REGION_LINE_WIDTH = 2;
@@ -352,7 +353,7 @@ _via_file_annotator.prototype._file_create_html_element = function() {
 }
 
 _via_file_annotator.prototype._file_html_element_compute_scale = function() {
-  var maxh = this.c.clientHeight;
+  var maxh = 1.9*this.c.clientHeight;
   var maxw = this.c.clientWidth;
 
   // original size of the content
@@ -778,9 +779,21 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
   }
 
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_RESIZE_ONGOING ) {
-    this._metadata_resize_region(this.resize_selected_mid_index,
-                                 this.resize_control_point_index,
-                                 cx, cy);
+    if( this.va.region_draw_shape === _VIA_RSHAPE.SCOLIOSIS &&
+        (this.resize_control_point_index === 7 ||
+         this.resize_control_point_index === 8)
+      ) {
+      var mid = this.selected_mid_list[this.resize_selected_mid_index];
+      var pts = this._metadata_xy_to_creg(this.vid, mid);
+      var proj_pts = this._draw_scoliosis_project_pt_on_line(pts, cx, cy);
+      this._metadata_resize_region(this.resize_selected_mid_index,
+                                   this.resize_control_point_index,
+                                   proj_pts[0], proj_pts[1]);
+    } else {
+      this._metadata_resize_region(this.resize_selected_mid_index,
+                                   this.resize_control_point_index,
+                                   cx, cy);
+    }
     this._tmpreg_clear();
     this.user_input_pts = [];
     this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
@@ -881,6 +894,7 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
       case _VIA_RSHAPE.LINE:
       case _VIA_RSHAPE.POLYGON:
       case _VIA_RSHAPE.POLYLINE:
+      case _VIA_RSHAPE.SCOLIOSIS:
         this.input.style.cursor = 'cell';
         break;
       }
@@ -1441,6 +1455,16 @@ _via_file_annotator.prototype._creg_is_inside = function(xy, cx, cy, tolerance) 
       }
     }
     break;
+  case _VIA_RSHAPE.SCOLIOSIS:
+    for ( var i = 1; i < xy.length; i = i + 2 ) {   // edge from V[i] to  V[i+1]
+      var dx = Math.abs(xy[i] - cx);
+      var dy = Math.abs(xy[i+1] - cy);
+      if ( dx <= tolerance || dy <= tolerance ) {
+        is_inside = true;
+        break;
+      }
+    }
+    break;
   default:
     console.warn('_via_file_annotator._draw() : shape_id=' + shape_id + ' not implemented');
   }
@@ -1554,6 +1578,7 @@ _via_file_annotator.prototype._creg_move_control_point = function(xy0, cpindex, 
   case _VIA_RSHAPE.LINE:
   case _VIA_RSHAPE.POLYGON:
   case _VIA_RSHAPE.POLYLINE:
+  case _VIA_RSHAPE.SCOLIOSIS:
     xy[ 2*cpindex - 1 ] = new_x;
     xy[ 2*cpindex ]     = new_y;
     break;
@@ -1598,6 +1623,8 @@ _via_file_annotator.prototype._creg_get_control_points = function(xy) {
   case _VIA_RSHAPE.LINE:
   case _VIA_RSHAPE.POLYGON:
   case _VIA_RSHAPE.POLYLINE:
+  case _VIA_RSHAPE.SCOLIOSIS:
+
     return xy;
     break;
   }
@@ -2118,8 +2145,10 @@ _via_file_annotator.prototype._draw_control_point = function(ctx, cx, cy) {
   ctx.closePath();
 
   ctx.fillStyle = this.conf.CONTROL_POINT_COLOR;
+  ctx.strokeStyle = this.conf.CONTROL_POINT_BOUNDARY_COLOR;
   ctx.globalAlpha = 1.0;
   ctx.fill();
+  ctx.stroke();
 }
 
 _via_file_annotator.prototype._draw_scoliosis_region = function(ctx, pts, is_selected, shape_id) {
@@ -2129,7 +2158,11 @@ _via_file_annotator.prototype._draw_scoliosis_region = function(ctx, pts, is_sel
     return; // we need at least two points to start drawing shape
   }
 
-  ctx.strokeStyle = this.conf.REGION_BOUNDARY_COLOR;
+  if(is_selected) {
+    ctx.strokeStyle = this.conf.SEL_REGION_BOUNDARY_COLOR;
+  } else {
+    ctx.strokeStyle = this.conf.REGION_BOUNDARY_COLOR;
+  }
   ctx.lineWidth   = this.conf.REGION_LINE_WIDTH;
   ctx.beginPath();
   // vertical line over spine
@@ -2152,18 +2185,6 @@ _via_file_annotator.prototype._draw_scoliosis_region = function(ctx, pts, is_sel
 
   ctx.stroke();
 
-  for ( var i = 1; i < n; i = i + 2 ) {
-    var pt_id = Math.floor(i/2) + 1;
-    if( i === 13 || i === 15 ) {
-      var proj_pts = this._draw_scoliosis_project_pt_on_line(pts, pts[i], pts[i+1]);
-      this._draw_control_point(ctx, proj_pts[0], proj_pts[1]);
-    } else {
-      this._draw_control_point(ctx, pts[i], pts[i+1]);
-      if(i !== 17) {
-        this._draw_scoliosis_control_pt_label(ctx, pt_id, pts[i], pts[i+1])
-      }
-    }
-  }
   if(n === 19) {
     var p7 = this._draw_scoliosis_project_pt_on_line(pts, pts[13], pts[14]);
     var p8 = this._draw_scoliosis_project_pt_on_line(pts, pts[15], pts[16]);
@@ -2177,13 +2198,30 @@ _via_file_annotator.prototype._draw_scoliosis_region = function(ctx, pts, is_sel
     var angle = Math.acos(cos_theta)  * (180/Math.PI);
     this._draw_scoliosis_angle(ctx, angle, pts[17], pts[18]);
 
-    ctx.strokeStyle = this.conf.REGION_BOUNDARY_COLOR;
+    if(is_selected) {
+      ctx.strokeStyle = this.conf.SEL_REGION_BOUNDARY_COLOR;
+    } else {
+      ctx.strokeStyle = this.conf.REGION_BOUNDARY_COLOR;
+    }
     ctx.lineWidth   = this.conf.REGION_LINE_WIDTH;
     ctx.beginPath();
     ctx.moveTo(p7[0], p7[1]);
     ctx.lineTo(p9[0], p9[1]);
     ctx.lineTo(p8[0], p8[1]);
     ctx.stroke();
+  }
+
+  for ( var i = 1; i < n; i = i + 2 ) {
+    var pt_id = Math.floor(i/2) + 1;
+    if( i === 13 || i === 15 ) {
+      var proj_pts = this._draw_scoliosis_project_pt_on_line(pts, pts[i], pts[i+1]);
+      this._draw_control_point(ctx, proj_pts[0], proj_pts[1]);
+    } else {
+      this._draw_control_point(ctx, pts[i], pts[i+1]);
+      if(i !== 17) {
+        this._draw_scoliosis_control_pt_label(ctx, pt_id, pts[i], pts[i+1])
+      }
+    }
   }
 }
 
@@ -2213,9 +2251,9 @@ _via_file_annotator.prototype._draw_scoliosis_control_pt_label = function(ctx, i
   var dy = 0;
   switch(id) {
   case 1:
-    dx = 40; dy = -20; break;
+    dx = 20; dy = -20; break;
   case 2:
-    dx = 40; dy = 0; break;
+    dx = 40; dy = 10; break;
   case 3:
     dx = -40; dy = 0; break;
   case 4:
