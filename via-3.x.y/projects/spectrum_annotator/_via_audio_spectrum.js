@@ -162,14 +162,25 @@ _via_audio_spectrum.prototype.save_spectrum = function() {
     var log_index = this.log_scale(i, freq.length);
     var value = freq[log_index];
     var percent = i / freq.length;
-    var y = Math.round(percent * this.canvas.height);
-    this.bufctx.fillStyle = this.get_full_color(value);
+    var y = Math.round(percent * this.bufcanvas.height);
+    var color_val = this.get_full_color(value);
+    this.bufctx.fillStyle = color_val;
     this.bufctx.fillRect(this.iter_count, this.bufcanvas.height - y, 1, 1);
+
     if(this.iter_count < (this.canvas.width - 2*this.padx)) {
-      this.ctx.fillStyle = this.get_full_color(value);
-      this.ctx.fillRect(this.padx + this.iter_count, this.canvas.height - y, 1, 1);
+      var yh = Math.round(percent * this.canvas.height);
+      this.ctx.fillStyle = color_val;
+      this.ctx.fillRect(this.padx + this.iter_count, this.canvas.height - yh, 1, 1);
     }
   }
+
+  for (var i = 0; i < freq.length; i+=2) {
+    var log_index = this.log_scale(i, freq.length);
+    var value = freq[log_index];
+    var percent = i / freq.length;
+    var y = Math.round(percent * this.canvas.height);
+  }
+
   this.iter_count = this.iter_count + 1;
 
   var input_is_all_zero = true;

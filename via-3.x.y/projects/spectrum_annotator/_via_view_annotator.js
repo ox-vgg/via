@@ -141,7 +141,7 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
   this.view_metadata_container = document.createElement('div');
   this.view_metadata_container.setAttribute('class', 'view_metadata_container');
 
-  this.c.setAttribute('style', 'grid-template-rows:1fr 512px 20ch;')
+  this.c.setAttribute('style', 'grid-template-rows:1fr 256px 20ch;')
   this.c.appendChild(this.view_content_container);
   this.c.appendChild(this.spectrum_container);
   this.c.appendChild(this.view_metadata_container);
@@ -174,7 +174,7 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
 
     this.scanvas = document.createElement('canvas');
     this.scanvas.width = this.c.clientWidth;
-    this.scanvas.height = 512;
+    this.scanvas.height = 256;
     this.spectrum_container.appendChild(this.scanvas);
     this.audio_spectrum = new _via_audio_spectrum(this.d, this.scanvas, this.d.store.view[this.vid]['fid_list'][0]);
     this.audio_spectrum.show_spectrogram();

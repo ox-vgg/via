@@ -20,7 +20,7 @@ function _via(via_container) {
   this.s  = new _via_share(this.d, conf);
 
   var action_map = { 'via_page_button_open_shared': this._page_on_action_open_shared.bind(this) };
-  //_via_util_page_show('page_share_open_shared', action_map);
+  _via_util_page_show('page_share_open_shared', action_map);
 
   if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
     // ADD DEBUG CODE HERE (IF NEEDED)
@@ -104,7 +104,7 @@ function _via(via_container) {
     // debug code (disabled for release)
     if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
       //this.d.project_load_json(_via_dp[0]['store']); // spectrogram
-      this.s.pull('c6dff60e-c0a7-4356-b18f-dbbc4f1db9af');
+      //this.s.pull('c6dff60e-c0a7-4356-b18f-dbbc4f1db9af');
     }
   }
 

@@ -2032,8 +2032,17 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   this.gid_list_input = document.createElement('input');
   this.gid_list_input.setAttribute('type', 'text');
   this.gid_list_input.setAttribute('title', 'Use this input to (a) delete an existing value of timeline group variable; (b) update the order of existing values of the timeline group variable.');
-  var gid_list_str = this.gid_list.join(',');
-  this.gid_list_input.setAttribute('value', gid_list_str);
+  var gid_name_list = [];
+  if(this.d.store.attribute[this.groupby_aid].type === _VIA_ATTRIBUTE_TYPE.SELECT) {
+    for(var gindex in this.gid_list) {
+      var gid = this.gid_list[gindex];
+      var gid_name = this.d.store.attribute[this.groupby_aid].options[gid];
+      gid_name_list.push(gid_name);
+    }
+  } else {
+    gid_name_list = this.gid_list;
+  }
+  this.gid_list_input.setAttribute('value', gid_name_list.join(','));
   //this.gid_list_input.setAttribute('style', 'width:' + (gid_list_str.length) + 'ch;');
   this.gid_list_input.setAttribute('style', 'width:15em;');
   var gid_list_update_btn = document.createElement('button');
