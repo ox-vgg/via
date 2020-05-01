@@ -272,11 +272,7 @@ _via_temporal_segmenter.prototype._vtimeline_init = function() {
     ctx.lineTo(start, this.lineh - 1);
 
     time = this._vtimeline_canvas2time(start);
-    if ( width_per_sec > width_per_tick ) {
-      ctx.fillText(this._time2strms(time), start, this.linehn[2] - 1);
-    } else {
-      ctx.fillText(this._time2str(time), start, this.linehn[2] - 1);
-    }
+    ctx.fillText(this._time2strms(time), start, this.linehn[2] - 1);
 
     start = start + 10*this.char_width;
   }
@@ -445,7 +441,12 @@ _via_temporal_segmenter.prototype._tmetadata_gmetadata_update = function() {
     gid_container.setAttribute('class', 'gidcol');
     var gid_input = document.createElement('input');
     gid_input.setAttribute('type', 'text');
-    gid_input.setAttribute('value', gid);
+    if ( this.d.store.attribute[this.groupby_aid].type === _VIA_ATTRIBUTE_TYPE.SELECT ) {
+      gid_input.setAttribute('value', this.d.store.attribute[this.groupby_aid].options[gid]);
+    } else {
+      gid_input.setAttribute('value', gid);
+    }
+
     gid_input.setAttribute('title', this.d.store.attribute[this.groupby_aid].aname +
                            ' = ' + gid);
     gid_input.setAttribute('data-gid', gid);
@@ -2030,8 +2031,19 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   this.gid_list_input = document.createElement('input');
   this.gid_list_input.setAttribute('type', 'text');
   this.gid_list_input.setAttribute('title', 'Use this input to (a) delete an existing value of timeline group variable; (b) update the order of existing values of the timeline group variable.');
-  var gid_list_str = this.gid_list.join(',');
-  this.gid_list_input.setAttribute('value', gid_list_str);
+
+  var gid_name_list = [];
+  if(this.d.store.attribute[this.groupby_aid].type === _VIA_ATTRIBUTE_TYPE.SELECT) {
+    for(var gindex in this.gid_list) {
+      var gid = this.gid_list[gindex];
+      var gid_name = this.d.store.attribute[this.groupby_aid].options[gid];
+      gid_name_list.push(gid_name);
+    }
+  } else {
+    gid_name_list = this.gid_list;
+  }
+  this.gid_list_input.setAttribute('value', gid_name_list.join(','));
+
   //this.gid_list_input.setAttribute('style', 'width:' + (gid_list_str.length) + 'ch;');
   this.gid_list_input.setAttribute('style', 'width:15em;');
   var gid_list_update_btn = document.createElement('button');
