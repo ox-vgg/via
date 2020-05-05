@@ -5596,7 +5596,8 @@ function delete_existing_attribute_with_confirm() {
     return;
   }
   if ( attribute_property_id_exists(attr_id) ) {
-    var config = {'title':'Delete ' + _via_attribute_being_updated + ' attribute [' + attr_id + ']' };
+    var config = {'title':'Delete ' + _via_attribute_being_updated + ' attribute [' + attr_id + ']',
+                  'warning': 'Warning: Deleting an attribute will lead to the attribute being deleted in all the annotations. Please click OK only if you are sure.'};
     var input = { 'attr_type':{'type':'text', 'name':'Attribute Type', 'value':_via_attribute_being_updated, 'disabled':true},
                   'attr_id':{'type':'text', 'name':'Attribute Id', 'value':attr_id, 'disabled':true}
                 };
@@ -5616,20 +5617,21 @@ function delete_existing_attribute_confirmed(input) {
   user_input_default_cancel_handler();
 }
 
-function delete_existing_attribute(attribute_type, attribute_id) {
-  if ( _via_attributes[attribute_type].hasOwnProperty( attribute_id ) ) {
+function delete_existing_attribute(attribute_type, attr_id) {
+  if ( _via_attributes[attribute_type].hasOwnProperty( attr_id ) ) {
     var attr_id_list = Object.keys(_via_attributes[attribute_type]);
     if ( attr_id_list.length === 1 ) {
       _via_current_attribute_id = '';
     } else {
-      var current_index = attr_id_list.indexOf(attribute_id);
+      var current_index = attr_id_list.indexOf(attr_id);
       var next_index = current_index + 1;
       if ( next_index === attr_id_list.length ) {
         next_index = current_index - 1;
       }
       _via_current_attribute_id = attr_id_list[next_index];
     }
-    delete _via_attributes[attribute_type][attribute_id];
+    delete _via_attributes[attribute_type][attr_id];
+    delete_region_attribute_in_all_metadata(attr_id);
     update_attributes_update_panel();
     annotation_editor_update_content();
   }
@@ -5766,19 +5768,25 @@ function update_file_attribute_option_in_all_metadata(is_delete, attr_id, option
 function update_region_attribute_option_in_all_metadata(is_delete, attr_id, option_id, new_option_id) {
   var image_id;
   for ( image_id in _via_img_metadata ) {
-    update_region_attribute_option_from_metadata(image_id, is_delete, attr_id, option_id, new_option_id);
+    for (var i = 0; i < _via_img_metadata[image_id].regions.length; ++i ) {
+      if ( _via_img_metadata[image_id].regions[i].region_attributes.hasOwnProperty(attr_id) ) {
+        if ( _via_img_metadata[image_id].regions[i].region_attributes[attr_id].hasOwnProperty(option_id) ) {
+          Object.defineProperty(_via_img_metadata[image_id].regions[i].region_attributes[attr_id],
+                                new_option_id,
+                                Object.getOwnPropertyDescriptor(_via_img_metadata[image_id].regions[i].region_attributes[attr_id], option_id));
+          delete _via_img_metadata[image_id].regions[i].region_attributes[attr_id][option_id];
+        }
+      }
+    }
   }
 }
 
-function update_region_attribute_option_from_metadata(image_id, is_delete, attr_id, option_id, new_option_id) {
-  var i;
-  for ( i = 0; i < _via_img_metadata[image_id].regions.length; ++i ) {
-    if ( _via_img_metadata[image_id].regions[i].region_attributes.hasOwnProperty(attr_id) ) {
-      if ( _via_img_metadata[image_id].regions[i].region_attributes[attr_id].hasOwnProperty(option_id) ) {
-        Object.defineProperty(_via_img_metadata[image_id].regions[i].region_attributes[attr_id],
-                              new_option_id,
-                              Object.getOwnPropertyDescriptor(_via_img_metadata[image_id].regions[i].region_attributes[attr_id], option_id));
-        delete _via_img_metadata[image_id].regions[i].region_attributes[attr_id][option_id];
+function delete_region_attribute_in_all_metadata(attr_id) {
+  var image_id;
+  for ( image_id in _via_img_metadata ) {
+    for (var i = 0; i < _via_img_metadata[image_id].regions.length; ++i ) {
+      if ( _via_img_metadata[image_id].regions[i].region_attributes.hasOwnProperty(attr_id)) {
+        delete _via_img_metadata[image_id].regions[i].region_attributes[attr_id];
       }
     }
   }
@@ -5910,6 +5918,10 @@ function setup_user_input_panel(ok_handler, input, config, cancel_handler) {
     html.push('</div>'); // end of row
   }
   html.push('</div>'); // end of user_input div
+  // optional warning before confirmation
+  if (config.hasOwnProperty("warning") ) {
+    html.push('<div class="warning">' + config.warning + '</div>');
+  }
   html.push('<div class="user_confirm">' +
             '<span class="ok">' +
             '<button id="user_input_ok_button" onclick="user_input_parse_and_invoke_handler()">&nbsp;OK&nbsp;</button></span>' +
@@ -9689,6 +9701,31 @@ function get_filename_from_url( url ) {
   return url.substring( url.lastIndexOf('/') + 1 );
 }
 
+function fixfloat(x) {
+  return parseFloat( x.toFixed(VIA_FLOAT_PRECISION) );
+}
+
+function shape_attribute_fixfloat(sa) {
+  for ( var attr in sa ) {
+    switch(attr) {
+    case 'x':
+    case 'y':
+    case 'width':
+    case 'height':
+    case 'r':
+    case 'rx':
+    case 'ry':
+      sa[attr] = fixfloat( sa[attr] );
+      break;
+    case 'all_points_x':
+    case 'all_points_y':
+      for ( var i in sa[attr] ) {
+        sa[attr][i] = fixfloat( sa[attr][i] );
+      }
+    }
+  }
+}
+
 // start with the array having smallest number of elements
 // check the remaining arrays if they all contain the elements of this shortest array
 function array_intersect( array_list ) {
@@ -9889,33 +9926,6 @@ function img_stat_get(img_index) {
   }.bind(this));
 }
 
-//
-// util
-//
-function fixfloat(x) {
-  return parseFloat( x.toFixed(VIA_FLOAT_PRECISION) );
-}
-
-function shape_attribute_fixfloat(sa) {
-  for ( var attr in sa ) {
-    switch(attr) {
-    case 'x':
-    case 'y':
-    case 'width':
-    case 'height':
-    case 'r':
-    case 'rx':
-    case 'ry':
-      sa[attr] = fixfloat( sa[attr] );
-      break;
-    case 'all_points_x':
-    case 'all_points_y':
-      for ( var i in sa[attr] ) {
-        sa[attr][i] = fixfloat( sa[attr][i] );
-      }
-    }
-  }
-}
 
 // pts = [x0,y0,x1,y1,....]
 function polygon_to_bbox(pts) {
