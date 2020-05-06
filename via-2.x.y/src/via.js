@@ -3863,13 +3863,13 @@ function _via_handle_global_keydown_event(e) {
 }
 
 function _via_reg_canvas_keyup_handler(e) {
-  if ( e.ctrlKey ) {
+  if ( e.key === 'Control' ) {
     _via_is_ctrl_pressed = false;
   }
 }
 
 function _via_reg_canvas_keydown_handler(e) {
-  if ( e.ctrlKey ) {
+  if ( e.key === 'Control' ) {
     _via_is_ctrl_pressed = true;
   }
 
@@ -6765,11 +6765,6 @@ function annotation_editor_update_file_metadata(img_index_list, attr_id, new_val
 
       case 'checkbox':
         var option_id = new_value;
-        console.log('option_id='+option_id)
-        console.log('attr_id='+attr_id)
-        console.log('img_id='+img_id)
-        console.log(_via_img_metadata[img_id].file_attributes)
-        console.log(_via_attributes['file'][attr_id])
         if ( _via_img_metadata[img_id].file_attributes.hasOwnProperty(attr_id) ) {
           if ( typeof(_via_img_metadata[img_id].file_attributes[attr_id]) !== 'object' ) {
             var old_value = _via_img_metadata[img_id].file_attributes[attr_id];
@@ -6783,10 +6778,6 @@ function annotation_editor_update_file_metadata(img_index_list, attr_id, new_val
         } else {
           _via_img_metadata[img_id].file_attributes[attr_id] = {};
         }
-
-        console.log(_via_img_metadata[img_id].file_attributes[attr_id])
-        console.log(new_checked)
-        console.log(new_value)
         if ( new_checked ) {
           _via_img_metadata[img_id].file_attributes[attr_id][option_id] = true;
         } else {
