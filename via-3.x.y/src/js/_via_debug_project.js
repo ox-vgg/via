@@ -500,7 +500,7 @@ _via_dp[2]['store']['config'] = {
     'loc_prefix': {
       '1':'',
       '2':'',
-      '3':'file:///data/datasets/via/via-3.x.y/activity/',
+      '3':'file:///home/tlm/data/via/debug/',
       '4':'',
     },
   },
@@ -512,9 +512,9 @@ _via_dp[2]['store']['attribute'] = {
   '1': {
     'aname':'Activity',
     'anchor_id':'FILE1_Z2_XY0',
-    'type':1,
+    'type':4,
     'desc':'Activity',
-    'options':{},
+    'options':{'1':'a. break egg', '2':'b. pour liquid', '3':'c. cut garlic', '4':'d. mix', '5':'e', '6':'f', '7':'g', '8':'h', '9':'i', '10':'j', '11':'k', '12':'l', '13':'m', '14':'n', '15':'o', '16':'p', '17':'q', '18':'r'},
     'default_option_id':'',
   },
   '5': {
@@ -551,8 +551,8 @@ _via_dp[2]['store']['attribute'] = {
       '2':'Tool',
       '3':'Unknown',
     },
-    'default_option_id':'3',
-  },
+    'default_option_id':'3'
+  }
 };
 _via_dp[2]['store']['file'] = {
   '1':{
@@ -884,9 +884,9 @@ _via_dp[4]['store']['attribute'] = {
   '2': {
     'aname':'Caption',
     'anchor_id':'FILE1_Z0_XY0',
-    'type':1,
+    'type':3,
     'desc':'Image Caption',
-    'options':{},
+    'options':{ '1':'a', '2':'b', '3':'c' },
     'default_option_id':'',
   },
 };

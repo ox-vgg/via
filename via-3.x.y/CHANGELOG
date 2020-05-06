@@ -1,3 +1,11 @@
+## [3.0.7] - not release yet
+ * fix _via_temporal_segmenter.prototype._tmetadata_onchange_gid_list_input = function(e) {
+  - timline list update is broken because this.gid_list contains option-id (not option value) for SELECT attributes, retain existing key values and assign new number-id for each new options
+ * simplify audio annotation (click on temporal segments to define the transcript)
+ * allow users to change the height of metadata window
+ * fix issue with attribute editor window
+ * https://github.com/ox-vgg/via/issues/10 [TODO]
+
 ## [3.0.6] - 20 August 2019
  * file and spatial metadata editors are now collapsable
  * spatial regions are automatically associated with the selected temporal segment

@@ -12,8 +12,9 @@
 
 'use strict';
 
-function _via_temporal_segmenter(container, vid, data, media_element) {
+function _via_temporal_segmenter(file_annotator, container, vid, data, media_element) {
   this._ID = '_via_temporal_segmenter_';
+  this.fa = file_annotator;
   this.c = container;
   this.vid = vid;
   this.d = data;
@@ -363,7 +364,7 @@ _via_temporal_segmenter.prototype._vtimeline_on_mouseout = function(e) {
 //
 // Metadata Panel
 //
-_via_temporal_segmenter.prototype._tmetadata_init = function(e) {
+_via_temporal_segmenter.prototype._tmetadata_init = function() {
   this.tmetadata_container = document.createElement('div');
   this.tmetadata_container.setAttribute('class', 'tmetadata_container');
 
@@ -414,6 +415,9 @@ _via_temporal_segmenter.prototype._tmetadata_init = function(e) {
 
   this.gmetadata_container = document.createElement('div');
   this.gmetadata_container.setAttribute('class', 'gmetadata_container');
+  var gtimeline_container_height = parseInt(this.d.store['config']['ui']['gtimeline_container_height']) - 13;
+  this.gmetadata_container.setAttribute('style', 'max-height:' + gtimeline_container_height + 'ch;');
+
   this.gmetadata_grid = document.createElement('div');
   this.gmetadata_grid.setAttribute('class', 'twocolgrid');
   this._tmetadata_gmetadata_update();
@@ -2023,6 +2027,25 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   }
   pb_mode_container.appendChild(pb_mode_select);
 
+  var gtimeline_height = document.createElement('select');
+  gtimeline_height.setAttribute('title', 'Number of timeline entries visible to the user at any time.');
+  var gtimeline_height_options = {'1':'17', '2':'20', '3':'24', '4':'28', '5':'33', '6':'37', '7':'41', '8':'45',
+                                  '9':'49', '10':'53', '12':'61', '14':'69', '16':'76', '18':'85'};
+  gtimeline_height.addEventListener('change', function(e) {
+    this.d.store['config']['ui']['gtimeline_container_height'] = e.target.options[e.target.selectedIndex].value;
+    this.fa.va.view_show(this.vid);
+  }.bind(this));
+  for(var gtimeline_count in gtimeline_height_options) {
+    var option = document.createElement('option');
+    var height = gtimeline_height_options[gtimeline_count];
+    option.setAttribute('value', height);
+    if(height === this.d.store['config']['ui']['gtimeline_container_height']) {
+      option.setAttribute('selected', '');
+    }
+    option.innerHTML = gtimeline_count;
+    gtimeline_height.appendChild(option);
+  }
+
   var gid_list_update_container = document.createElement('div');
   var label = document.createElement('span');
   label.innerHTML = 'Timeline List: ';
@@ -2061,6 +2084,7 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   });
 
   this.toolbar_container.appendChild(gid_list_update_container);
+  this.toolbar_container.appendChild(gtimeline_height);
   this.toolbar_container.appendChild(pb_mode_container);
   this.toolbar_container.appendChild(keyboard_shortcut);
 

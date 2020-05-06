@@ -72,10 +72,10 @@ to annotate temporal segments of a video: contains 4 rows
 
 .temporal_segmenter_container > .tmetadata_container > .gtimeline_container { }
 /*@todo: height of gmetadata_container must be fixed (and not expandable) */
-.temporal_segmenter_container > .tmetadata_container > .gmetadata_container { max-height:8ch; overflow-y:auto; }
+.temporal_segmenter_container > .tmetadata_container > .gmetadata_container { overflow-y:auto; }
 .temporal_segmenter_container > .tmetadata_container .twocolgrid { display:grid; width:100%; grid-template-columns:8em 1fr; }
 .temporal_segmenter_container > .tmetadata_container .gidcol { align-self:center; padding-left:0.1em; }
-.temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"] { width:80%; border:none; border-bottom:1px solid #cccccc; }
+.temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"] { font-size:small; width:80%; border:none; border-bottom:1px solid #cccccc; }
 .temporal_segmenter_container > .tmetadata_container .gidcol select { font-size:small; }
 .temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"]:focus { background-color:#f2f2f2; }
 
@@ -84,7 +84,7 @@ to annotate temporal segments of a video: contains 4 rows
 .temporal_segmenter_container > .toolbar_container div { display:inline; margin-right:1em; }
 .temporal_segmenter_container > .toolbar_container input[type="text"] { vertical-align:middle; font-size:small; }
 .temporal_segmenter_container > .toolbar_container button { font-size:small; }
-.temporal_segmenter_container > .toolbar_container select { font-size:small; }
+.temporal_segmenter_container > .toolbar_container select { font-size:small; margin-right:0.4em; }
 
 /* Editor panel for add/update/view metadata and attributes */
 #editor_container { display:block; position:absolute; bottom:0; left:0; right:0; height:40vh; overflow:auto; background-color:#f2f2f2; border-top: 0.2em solid #e6e6e6; }
@@ -111,7 +111,7 @@ to annotate temporal segments of a video: contains 4 rows
 .text_button:hover { color:black; }
 
 /* info pages */
-#via_page_container { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:1001; text-align:center; }
+#via_page_container { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:9999; text-align:center; }
 #via_page_container > .via_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow-y:auto; text-align:left; content:"close"; width:80ch; max-height:80vh; }
 #via_page_container > .via_page > .toolbar { display:block; text-align:right; }
 #via_page_container > .via_page > .controls { position:relative; display:block; text-align:center; margin-top:2em; padding-top:1em; border-top:1px solid #cccccc; }
