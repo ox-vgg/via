@@ -514,7 +514,7 @@ _via_dp[2]['store']['attribute'] = {
     'anchor_id':'FILE1_Z2_XY0',
     'type':4,
     'desc':'Activity',
-    'options':{'1':'a. break egg', '2':'b. pour liquid', '3':'c. cut garlic', '4':'d. mix', '5':'e', '6':'f', '7':'g', '8':'h', '9':'i', '10':'j', '11':'k', '12':'l', '13':'m', '14':'n', '15':'o', '16':'p', '17':'q', '18':'r'},
+    'options':{},
     'default_option_id':'',
   },
   '5': {
@@ -621,7 +621,7 @@ _via_dp[2]['store']['metadata'] = {
   'mxCVj1qz': {
     'vid': '1',
     'flg': 0,
-    'z': [32, 63],
+    'z': [32, 44.3],
     'xy': [],
     'av': {
       '1':'3. cut garlic',

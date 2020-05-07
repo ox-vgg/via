@@ -27,7 +27,6 @@ function _via_temporal_segmenter(file_annotator, container, vid, data, media_ele
   this.selected_gindex = -1;
   this.selected_mindex = -1;
   this.edge_show_time = -1;
-  this.group_default_gid_list = [ ]; // group values added by default
 
   // spatial mid
   this.smid = {};
@@ -108,6 +107,7 @@ _via_temporal_segmenter.prototype._init_on_success = function(groupby_aid) {
       this._thumbview_init();
     }
 
+    this.c.innerHTML = '';
     this._vtimeline_init();
     this._tmetadata_init();
     this._toolbar_init();
@@ -1830,17 +1830,10 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
       }
     }
   }
+
+  // add groups contained in metadata
   for ( var gid in this.group ) {
     if ( ! this.gid_list.includes(gid) ) {
-      this.gid_list.push(gid);
-    }
-  }
-
-  // add default groups
-  for ( var i in this.group_default_gid_list ) {
-    var gid = this.group_default_gid_list[i];
-    if ( ! this.group.hasOwnProperty(gid) ) {
-      this.group[gid] = [];
       this.gid_list.push(gid);
     }
   }
@@ -2082,37 +2075,6 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
     gtimeline_height.appendChild(option);
   }
 
-  var gid_list_update_container = document.createElement('div');
-  var label = document.createElement('span');
-  label.innerHTML = 'Timeline List: ';
-  gid_list_update_container.appendChild(label);
-
-  this.gid_list_input = document.createElement('input');
-  this.gid_list_input.setAttribute('type', 'text');
-  this.gid_list_input.setAttribute('title', 'Use this input to (a) delete an existing value of timeline group variable; (b) update the order of existing values of the timeline group variable.');
-
-  var gid_name_list = [];
-  if(this.d.store.attribute[this.groupby_aid].type === _VIA_ATTRIBUTE_TYPE.SELECT &&
-     Object.keys(this.d.store.attribute[this.groupby_aid].options).length !== 0) {
-    for(var gindex in this.gid_list) {
-      var gid = this.gid_list[gindex];
-      var gid_name = this.d.store.attribute[this.groupby_aid].options[gid];
-      gid_name_list.push(gid_name);
-    }
-  } else {
-    gid_name_list = this.gid_list;
-  }
-  this.gid_list_input.setAttribute('value', gid_name_list.join(','));
-
-  //this.gid_list_input.setAttribute('style', 'width:' + (gid_list_str.length) + 'ch;');
-  this.gid_list_input.setAttribute('style', 'width:15em;');
-  var gid_list_update_btn = document.createElement('button');
-  gid_list_update_btn.innerHTML = 'Update';
-  gid_list_update_btn.addEventListener('click', this._tmetadata_onchange_gid_list_input.bind(this));
-
-  gid_list_update_container.appendChild(this.gid_list_input);
-  gid_list_update_container.appendChild(gid_list_update_btn);
-
   var keyboard_shortcut = document.createElement('span');
   keyboard_shortcut.setAttribute('class', 'text_button');
   keyboard_shortcut.innerHTML = 'Keyboard Shortcuts';
@@ -2120,7 +2082,6 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
     _via_util_page_show('page_keyboard_shortcut');
   });
 
-  this.toolbar_container.appendChild(gid_list_update_container);
   this.toolbar_container.appendChild(gtimeline_height);
   this.toolbar_container.appendChild(pb_mode_container);
   this.toolbar_container.appendChild(keyboard_shortcut);
@@ -2148,6 +2109,7 @@ _via_temporal_segmenter.prototype._on_event_attribute_update = function(data, ev
   var aid = event_payload.aid;
   if ( this.groupby_aid === aid ) {
     _via_util_msg_show('Attribute name updated to [' + event_payload.aname + ']');
+    this._init();
   }
 }
 

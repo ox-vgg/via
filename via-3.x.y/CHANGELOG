@@ -1,10 +1,11 @@
-## [3.0.7] - not release yet
- * fix _via_temporal_segmenter.prototype._tmetadata_onchange_gid_list_input = function(e) {
-  - timline list update is broken because this.gid_list contains option-id (not option value) for SELECT attributes, retain existing key values and assign new number-id for each new options
- * simplify audio annotation (click on temporal segments to define the transcript)
- * allow users to change the height of metadata window
- * fix issue with attribute editor window
- * https://github.com/ox-vgg/via/issues/10 [TODO]
+## [3.0.7] - 07 May 2020
+ * value (instead of key) shown for SELECT type attributes in video timeline
+ * users can select the number of timeline that can be seen at any time
+ * timeline entries are taken from both attribute options and new values contained in metadata
+ * selected temporal segment can be moved using up/down arrow key to the previous/next timeline
+ * added n/p shorcut keys for image annotator to move to next/previous image
+ * improve code documentation by adding a description of the structure of VIA3 project json file (see via-3.x.y/CodeDoc.md)
+ * added demo for annotation of image pairs (see via/via-3.x.y/dist/demo/via_pair_annotator.html)
 
 ## [3.0.6] - 20 August 2019
  * file and spatial metadata editors are now collapsable
