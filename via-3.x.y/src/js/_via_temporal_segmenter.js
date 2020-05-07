@@ -1342,6 +1342,30 @@ _via_temporal_segmenter.prototype._tmetadata_mid_merge = function(eindex) {
   }
 }
 
+_via_temporal_segmenter.prototype._tmetadata_mid_change_gid = function(from_gindex,
+                                                                       to_gindex) {
+  var from_gid = this.gid_list[from_gindex];
+  var to_gid = this.gid_list[to_gindex];
+  var mid_to_move = this.tmetadata_gtimeline_mid[from_gid][this.selected_mindex];
+  var mindex_to_move = this.selected_mindex;
+
+  // update metadata
+  this.d.store.metadata[mid_to_move].av[this.groupby_aid] = to_gid;
+
+  this._tmetadata_group_gid_remove_mid_sel(mindex_to_move);
+  this.tmetadata_gtimeline_mid[from_gid].splice(mindex_to_move, 1);
+  var from_group_mindex = this.group[from_gid].indexOf(mid_to_move);
+  this.group[from_gid].splice(from_group_mindex, 1);
+  this.group[to_gid].push(mid_to_move);
+
+  this.tmetadata_gtimeline_mid[to_gid].push(mid_to_move);
+  this.tmetadata_gtimeline_mid[to_gid].sort( this._compare_mid_by_time.bind(this) );
+  var moved_mindex = this.tmetadata_gtimeline_mid[to_gid].indexOf(mid_to_move);
+
+  this._tmetadata_group_gid_sel(to_gindex);
+  this._tmetadata_group_gid_sel_metadata(moved_mindex);
+}
+
 _via_temporal_segmenter.prototype._tmetadata_group_gid_mousemove = function(e) {
   var x = e.offsetX;
   var gid = e.target.dataset.gid;
@@ -1692,7 +1716,6 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
   }
 
   if ( e.key === 'ArrowDown' || e.key === 'ArrowUp' ) {
-    // update the attribute being shown below each temporal segment
     e.preventDefault();
     var selected_gindex = this.gid_list.indexOf(this.selected_gid);
     var next_gindex;
@@ -1707,9 +1730,18 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
         next_gindex = this.gid_list.length - 1;
       }
     }
-    this._tmetadata_group_gid_sel(next_gindex);
-    _via_util_msg_show('Selected group "' + this.selected_gid + '"');
-    return;
+
+    if(this.selected_mindex !== -1 && this.selected_mid !== '') {
+      // move selected temporal segment to the timeline present above/below the current timeline
+      var from_gindex = selected_gindex;
+      var to_gindex = next_gindex;
+      this._tmetadata_mid_change_gid(from_gindex, to_gindex);
+    } else {
+      // selected the group above/below the current group in the timeline list
+      this._tmetadata_group_gid_sel(next_gindex);
+      _via_util_msg_show('Selected group "' + this.selected_gid + '"');
+      return;
+    }
   }
 
   if ( e.key === 'ArrowLeft' || e.key === 'ArrowRight' ) {
