@@ -95,6 +95,9 @@ var VIA_POLYGON_RESIZE_VERTEX_OFFSET  = 100;
 var VIA_CANVAS_DEFAULT_ZOOM_LEVEL_INDEX = 3;
 var VIA_CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 4, 5, 6, 7, 8, 9, 10];
 var VIA_REGION_COLOR_LIST = ["#E69F00", "#56B4E9", "#009E73", "#D55E00", "#CC79A7", "#F0E442", "#ffffff"];
+// radius of control points in all shapes
+var VIA_REGION_SHAPES_POINTS_RADIUS = 3;
+// radius of control points in a point
 var VIA_REGION_POINT_RADIUS         = 3;
 var VIA_REGION_POINT_RADIUS_DEFAULT = 3;
 
@@ -2798,7 +2801,7 @@ function draw_all_regions() {
 // control point for resize of region boundaries
 function _via_draw_control_point(cx, cy) {
   _via_reg_ctx.beginPath();
-  _via_reg_ctx.arc(cx, cy, VIA_REGION_POINT_RADIUS, 0, 2*Math.PI, false);
+  _via_reg_ctx.arc(cx, cy, VIA_REGION_SHAPES_POINTS_RADIUS, 0, 2*Math.PI, false);
   _via_reg_ctx.closePath();
 
   _via_reg_ctx.fillStyle = VIA_THEME_CONTROL_POINT_COLOR;
