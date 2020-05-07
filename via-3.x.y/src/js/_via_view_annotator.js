@@ -192,7 +192,14 @@ _via_view_annotator.prototype._view_annotate_single_audio = function(vid) {
   this.view_metadata_container = document.createElement('div');
   this.view_metadata_container.setAttribute('class', 'view_metadata_container');
 
-  this.c.setAttribute('style', 'grid-template-rows:5ch 50vh;')
+  var gtimeline_container_height = '28';
+  if(typeof(this.d.store['config']['ui']['gtimeline_container_height']) !== 'undefined') {
+    gtimeline_container_height = this.d.store['config']['ui']['gtimeline_container_height'];
+  } else {
+    this.d.store['config']['ui']['gtimeline_container_height'] = gtimeline_container_height;
+  }
+
+  this.c.setAttribute('style', 'grid-template-rows:1fr ' + gtimeline_container_height + 'ch;')
   this.c.appendChild(this.view_content_container);
   this.c.appendChild(this.view_metadata_container);
   this.view_metadata_container.style.display = 'block';
@@ -215,19 +222,15 @@ _via_view_annotator.prototype._view_annotate_single_audio = function(vid) {
     this.temporal_segmenter_container = document.createElement('div');
     this.temporal_segmenter_container.classList.add('temporal_segmenter_container');
     this.view_metadata_container.appendChild(this.temporal_segmenter_container);
-    this.temporal_segmenter = new _via_temporal_segmenter(this.temporal_segmenter_container,
+    this.temporal_segmenter = new _via_temporal_segmenter(this.file_annotator[0][0],
+                                                          this.temporal_segmenter_container,
                                                           vid0,
                                                           this.d,
                                                           this.file_annotator[0][0].file_html_element
                                                          );
-    //_via_util_msg_show('Press <span class="key">Space</span> to Play or Pause the video at any time.', true);
   }.bind(this), function(err) {
     _via_util_msg_show('Failed to load audio!', true);
   }.bind(this));
-  /*
-  this._metadata_show(this.view_metadata_container,
-                      _VIA_ATTRIBUTE_ANCHOR.FILE1_Z1_XY0);
-  */
 }
 
 _via_view_annotator.prototype._view_annotate_two_images = function(vid) {

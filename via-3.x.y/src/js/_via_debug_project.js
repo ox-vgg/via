@@ -202,16 +202,24 @@ _via_dp[1]['store']['project'] = {
   'pname':   'Audio Annotation',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
-  'data_format_version': '3.1.0',
+  'data_format_version': '3.1.1',
+  'vid_list': ['1', '2', '3', '4'],
 };
+
 _via_dp[1]['store']['config'] = {
   'file': {
-    'path':'/data/datasets/via/via-3.x.y/speaker_diarisation/',
+    'loc_prefix': {
+      '1':'',
+      '2':'',
+      '3':'file:///home/tlm/code/via3/via/via-3.x.y/data/sample_audio/',
+      '4':'',
+    },
   },
   'ui': {
     'file_content_align':'center'
   }
 };
+
 _via_dp[1]['store']['attribute'] = {
   '1': {
     'aname':'Speaker',
@@ -246,7 +254,7 @@ _via_dp[1]['store']['file'] = {
     'fid':1,
     'fname':'Drone_liveatc_PRFlyer.mp3',
     'type':8,
-    'loc':1,
+    'loc':3,
     'src':'Drone_liveatc_PRFlyer.mp3',
   },
   '2':{
@@ -288,7 +296,6 @@ _via_dp[1]['store']['view'] = {
   },
 };
 
-_via_dp[1]['store']['vid_list'] = ['1', '2', '3', '4'];
 _via_dp[1]['store']['metadata'] = {
   '-glfwaaX': {
     'vid': '1',
