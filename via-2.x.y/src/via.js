@@ -1231,6 +1231,21 @@ function pack_via_metadata(return_type) {
         for ( var img_index in _via_image_id_list ) {
           img_id = _via_image_id_list[img_index];
 
+          // initialize categories
+          var attrval_to_catid = {};
+          var cat_id = 1;
+          for ( var rid in _via_attributes['region'] ) {
+            if ( _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.CHECKBOX ||
+                 _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.DROPDOWN ||
+                 _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.RADIO ) {
+              for ( var oid in _via_attributes['region'][rid]['options'] ) {
+                d.categories.push( { 'id':cat_id, 'name':oid, 'supercategory':oid } );
+                attrval_to_catid[oid] = cat_id;
+                cat_id = cat_id + 1;
+              }
+            }
+          }
+
           // add file
           if ( _via_img_fileref[img_id] instanceof File ) {
             file_src = _via_img_fileref[img_id].filename;
@@ -1248,21 +1263,6 @@ function pack_via_metadata(return_type) {
             'coco_url':file_src,
             'date_captured':'',
           } );
-
-          // initialize categories
-          var attrval_to_catid = {};
-          var cat_id = 1;
-          for ( var rid in _via_attributes['region'] ) {
-            if ( _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.CHECKBOX ||
-                 _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.DROPDOWN ||
-                 _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.RADIO ) {
-              for ( var oid in _via_attributes['region'][rid]['options'] ) {
-                d.categories.push( { 'id':cat_id, 'name':oid, 'supercategory':rid } );
-                attrval_to_catid[oid] = cat_id;
-                cat_id = cat_id + 1;
-              }
-            }
-          }
 
           var shape_name, region;
           for ( var rindex in _via_img_metadata[img_id].regions ) {
@@ -1285,7 +1285,7 @@ function pack_via_metadata(return_type) {
 
               d.annotations.push( Object.assign({
                 'id':annotation_id,
-                'image_id':img_index,
+                'image_id':parseInt(img_index),
                 'category_id':cat_id,
               }, annotation) );
               annotation_id = annotation_id + 1;
@@ -1304,7 +1304,7 @@ function pack_via_metadata(return_type) {
 }
 
 function via_region_shape_to_coco_annotation(shape_attributes) {
-  var annotation = { 'segmentation':[], 'area':[], 'bbox':[], 'iscrowd':0 };
+  var annotation = { 'segmentation':[[]], 'area':[], 'bbox':[], 'iscrowd':0 };
 
   switch(shape_attributes['name']) {
   case 'rect':
@@ -1314,7 +1314,7 @@ function via_region_shape_to_coco_annotation(shape_attributes) {
     var h  = parseInt(shape_attributes['height']);
     var x1 = x0 + w;
     var y1 = y0 + h;
-    annotation['segmentation'] = [x0, y0, x1, y0, x1, y1, x0, y1];
+    annotation['segmentation'][0] = [x0, y0, x1, y0, x1, y1, x0, y1];
     annotation['area'] =  w * h ;
 
     annotation['bbox'] = [x0, y0, w, h];
@@ -1339,9 +1339,9 @@ function via_region_shape_to_coco_annotation(shape_attributes) {
       var theta_radian = theta * theta_to_radian;
       var x = shape_attributes['cx'] + a * Math.cos(theta_radian);
       var y = shape_attributes['cy'] + b * Math.sin(theta_radian);
-      annotation['segmentation'].push( fixfloat(x), fixfloat(y) );
+      annotation['segmentation'][0].push( fixfloat(x), fixfloat(y) );
     }
-    annotation['bbox'] = polygon_to_bbox(annotation['segmentation']);
+    annotation['bbox'] = polygon_to_bbox(annotation['segmentation'][0]);
     annotation['area'] = annotation['bbox'][2] * annotation['bbox'][3];
     break;
 
@@ -1367,14 +1367,14 @@ function via_region_shape_to_coco_annotation(shape_attributes) {
     break;
 
   case 'polygon':
-    annotation['segmentation'] = [];
+    annotation['segmentation'][0] = [];
     var x0 = +Infinity;
     var y0 = +Infinity;
     var x1 = -Infinity;
     var y1 = -Infinity;
     for ( var i in shape_attributes['all_points_x'] ) {
-      annotation['segmentation'].push( shape_attributes['all_points_x'][i] );
-      annotation['segmentation'].push( shape_attributes['all_points_y'][i] );
+      annotation['segmentation'][0].push( shape_attributes['all_points_x'][i] );
+      annotation['segmentation'][0].push( shape_attributes['all_points_y'][i] );
       if ( shape_attributes['all_points_x'][i] < x0 ) {
         x0 = shape_attributes['all_points_x'][i];
       }
@@ -7073,6 +7073,7 @@ function project_open(event) {
 }
 
 function project_open_parse_json_file(project_file_data) {
+  console.log('in project_open_parse_json_file');
   var d = JSON.parse(project_file_data);
   if ( d['_via_settings'] && d['_via_img_metadata'] && d['_via_attributes'] ) {
     // import settings
@@ -7093,6 +7094,7 @@ function project_open_parse_json_file(project_file_data) {
     var img_id;
     for ( img_id in _via_img_metadata ) {
       _via_image_id_list.push(img_id);
+      console.log('pushing ', _via_img_metadata[img_id].filename);
       _via_image_filename_list.push( _via_img_metadata[img_id].filename );
       set_file_annotations_to_default_value(img_id);
       _via_img_count += 1;
@@ -7229,6 +7231,7 @@ function project_remove_file(img_index) {
   // remove img_index from all array
   // this invalidates all image_index > img_index
   _via_image_id_list.splice( img_index, 1 );
+  console.log('removing index ', img_index);
   _via_image_filename_list.splice( img_index, 1 );
 
   var img_fn_list_index = _via_img_fn_list_img_index_list.indexOf(img_index);
@@ -7250,6 +7253,7 @@ function project_remove_file(img_index) {
 }
 
 function project_add_new_file(filename, size, file_id) {
+  console.log('in project_add_new_file');
   var img_id = file_id;
   if ( typeof(img_id) === 'undefined' ) {
     if ( typeof(size) === 'undefined' ) {
@@ -7261,6 +7265,7 @@ function project_add_new_file(filename, size, file_id) {
   if ( ! _via_img_metadata.hasOwnProperty(img_id) ) {
     _via_img_metadata[img_id] = new file_metadata(filename, size);
     _via_image_id_list.push(img_id);
+    console.log('pushing 1 filename ', filename);
     _via_image_filename_list.push(filename);
     _via_img_count += 1;
   }
@@ -7268,6 +7273,7 @@ function project_add_new_file(filename, size, file_id) {
 }
 
 function project_file_add_local(event) {
+  console.log('in project_file_add_local');
   var user_selected_images = event.target.files;
   var original_image_count = _via_img_count;
 
