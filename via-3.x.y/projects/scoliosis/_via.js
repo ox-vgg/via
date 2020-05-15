@@ -103,7 +103,7 @@ function _via(via_container) {
       //this.s.pull('e302eadf-aa53-4a5a-b958-11175692c928'); // load shared project
       this.d.project_load_json(_via_dp[0]['store']);
       setTimeout( function() {
-        this.va.view_show('1');
+        //this.va.view_show('1');
       }.bind(this), 200);
     }
   }

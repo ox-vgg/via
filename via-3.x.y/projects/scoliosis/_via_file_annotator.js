@@ -2316,8 +2316,8 @@ _via_file_annotator.prototype._fmetadata_hide = function() {
 }
 
 _via_file_annotator.prototype._fmetadata_set_position = function() {
-  var x = this.left_pad + this.conf.FILE_METADATA_MARGIN;
-  var y = this.conf.FILE_METADATA_MARGIN;
+  var x = this.left_pad + this.cwidth + this.conf.FILE_METADATA_MARGIN;
+  var y = 0;
 
   this.fmetadata_container.style.left = Math.round(x) + 'px';
   this.fmetadata_container.style.top  = Math.round(y) + 'px';
@@ -2391,30 +2391,33 @@ _via_file_annotator.prototype._fmetadata_toggle_button = function() {
 _via_file_annotator.prototype._fmetadata_update = function(mid) {
   var aid_list = this.d.cache.attribute_group['FILE1_Z0_XY0'];
   var table = document.createElement('table');
-  var header = this._metadata_header_html(aid_list);
-  var th = document.createElement('th');
-  th.setAttribute('rowspan', '2');
-  th.appendChild(this._fmetadata_toggle_button());
-  header.appendChild(th)
-  table.appendChild(header);
-
-  // show value of each attribute
   var tbody = document.createElement('tbody');
-  var tr = document.createElement('tr');
-  tr.setAttribute('data-mid', mid);
+
+  // add control buttons
+  var control_row = document.createElement('tr');
+  var controls = document.createElement('td');
+  controls.setAttribute('colspan', '2');
+  controls.appendChild(this._fmetadata_toggle_button());
+  control_row.appendChild(controls)
+  tbody.appendChild(control_row);
 
   var aid;
   for ( var aindex in aid_list ) {
     aid = aid_list[aindex];
-    var td = document.createElement('td');
-    td.setAttribute('data-aid', aid);
-    td.appendChild( this._metadata_attribute_io_html_element(mid, aid) );
-    tr.appendChild(td);
-  }
-  var td = document.createElement('td');
-  tr.appendChild(td); // empty row for control buttons
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-mid', mid);
 
-  tbody.appendChild(tr);
+    var field = document.createElement('td');
+    field.setAttribute('data-aid', aid);
+    field.innerHTML = '<strong>' + this.d.store.attribute[aid].aname + '</strong>';
+    tr.appendChild(field);
+
+    var value = document.createElement('td');
+    value.appendChild( this._metadata_attribute_io_html_element(mid, aid) );
+    value.setAttribute('data-aid', aid);
+    tr.appendChild(value);
+    tbody.appendChild(tr);
+  }
   table.appendChild(tbody);
 
   this.fmetadata_container.innerHTML = '';
@@ -2595,6 +2598,8 @@ _via_file_annotator.prototype._metadata_attribute_io_html_element = function(mid
       aval = dval;
     }
     el = document.createElement('textarea');
+    el.setAttribute('rows', '6');
+    el.setAttribute('cols', '36');
     el.addEventListener('change', this._metadata_on_change.bind(this));
     el.innerHTML = aval;
     break;
@@ -2648,8 +2653,6 @@ _via_file_annotator.prototype._metadata_attribute_io_html_element = function(mid
   case _VIA_ATTRIBUTE_TYPE.CHECKBOX:
     el = document.createElement('div');
 
-    console.log(dval)
-    console.log(aval)
     if ( typeof(aval) === 'undefined' ) {
       aval = dval;
     }
