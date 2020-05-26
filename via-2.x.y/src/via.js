@@ -900,10 +900,14 @@ function coco_to_via(coco) {
 
   // add all files and annotations
   for ( var coco_img_index in coco.images ) {
-    var filename = coco.images[coco_img_index]['file_name'];
-    if ( coco.images[coco_img_index].hasOwnProperty('coco_url') ) {
+    var filename;
+    if ( coco.images[coco_img_index].hasOwnProperty('coco_url') &&
+         coco.images[coco_img_index]['coco_url'] !== "") {
       filename = coco.images[coco_img_index]['coco_url'];
+    } else {
+       filename = coco.images[coco_img_index]['file_name'];
     }
+
     var size = -1;
     var via_img_id = _via_get_image_id(filename, size);
     var coco_img_id = coco.images[coco_img_index]['id'];
