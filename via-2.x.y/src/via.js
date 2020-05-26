@@ -50,7 +50,7 @@
 
 "use strict";
 
-var VIA_VERSION      = '2.0.9';
+var VIA_VERSION      = '2.0.10';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -1229,26 +1229,27 @@ function pack_via_metadata(return_type) {
         };
         d.licenses = [ { 'id':1, 'name':'Unknown', 'url':'' } ];
 
+
+        // initialize categories
+        var attrval_to_catid = {};
+        var cat_id = 1;
+        for ( var rid in _via_attributes['region'] ) {
+          if ( _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.CHECKBOX ||
+               _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.DROPDOWN ||
+               _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.RADIO ) {
+            for ( var oid in _via_attributes['region'][rid]['options'] ) {
+              d.categories.push( { 'id':cat_id, 'name':oid, 'supercategory':rid } );
+              attrval_to_catid[oid] = cat_id;
+              cat_id = cat_id + 1;
+            }
+          }
+        }
+
         // add files
         var img_id, file_src;
         var annotation_id = 0;
         for ( var img_index in _via_image_id_list ) {
           img_id = _via_image_id_list[img_index];
-
-          // initialize categories
-          var attrval_to_catid = {};
-          var cat_id = 1;
-          for ( var rid in _via_attributes['region'] ) {
-            if ( _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.CHECKBOX ||
-                 _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.DROPDOWN ||
-                 _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.RADIO ) {
-              for ( var oid in _via_attributes['region'][rid]['options'] ) {
-                d.categories.push( { 'id':cat_id, 'name':oid, 'supercategory':oid } );
-                attrval_to_catid[oid] = cat_id;
-                cat_id = cat_id + 1;
-              }
-            }
-          }
 
           // add file
           if ( _via_img_fileref[img_id] instanceof File ) {
@@ -1353,7 +1354,12 @@ function via_region_shape_to_coco_annotation(shape_attributes) {
     var a,b;
     a = shape_attributes['rx'];
     b = shape_attributes['ry'];
-    var rotation = shape_attributes['theta'];
+    var rotation = 0;
+    // older version of VIA2 did not support rotated ellipse and hence 'theta' attribute may not be available
+    if( shape_attributes.hasOwnProperty('theta') ) {
+      rotation = shape_attributes['theta'];
+    }
+
     var theta_to_radian = Math.PI/180;
 
     for ( var theta = 0; theta < 360; theta = theta + VIA_POLYGON_SEGMENT_SUBTENDED_ANGLE ) {
@@ -1364,9 +1370,9 @@ function via_region_shape_to_coco_annotation(shape_attributes) {
       var y = shape_attributes['cy'] +
               ( a * Math.cos(theta_radian) * Math.sin(rotation) ) +
               ( b * Math.sin(theta_radian) * Math.cos(rotation) );
-      annotation['segmentation'].push( fixfloat(x), fixfloat(y) );
+      annotation['segmentation'][0].push( fixfloat(x), fixfloat(y) );
     }
-    annotation['bbox'] = polygon_to_bbox(annotation['segmentation']);
+    annotation['bbox'] = polygon_to_bbox(annotation['segmentation'][0]);
     annotation['area'] = annotation['bbox'][2] * annotation['bbox'][3];
     break;
 
@@ -9001,19 +9007,6 @@ function _via_show_img(img_index) {
       console.log('_via_img_buffer_add_image() failed for file: ' + _via_image_filename_list[err_img_index]);
     });
   }
-
-  // add zooming
-  _via_add_zoom_for_image(img_index)
-
-}
-
-function _via_add_zoom_for_image(img_index) {
-  // var img = document.getElementById('bim' + img_index);
-  // img.style.backgroundRepeat = 'no-repeat';
-  // img.style.backgroundImage = 'url("'+img.src+'")';
-  // tramsparent_img = 'data:image/svg+xml;base64,'+window.btoa('<svg xmlns="http://www.w3.org/2000/svg" width="'+img.naturalWidth+'" height="'+img.naturalHeight+'"></svg>');
-  // img.src = transparentSpaceFiller;
-  // _via_img_panel.style.backgroundSize
 }
 
 function _via_buffer_hide_current_image() {
