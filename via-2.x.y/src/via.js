@@ -5521,7 +5521,6 @@ function attribute_property_on_option_add(p) {
 function attribute_property_reset_new_entry_inputs() {
   var container = document.getElementById('attribute_options');
   var p = container.lastChild;
-  console.log(p.childNodes)
   if ( p.childNodes[0] ) {
     p.childNodes[0].value = '';
   }
@@ -6347,7 +6346,6 @@ function annotation_editor_get_metadata_row_html(row_id) {
             default:
               attr_value = '';
               attr_placeholder = attr_value_set.length + ' different values: ' + JSON.stringify(attr_value_set).replace(/"/g,'\'');
-              console.log(JSON.stringify(attr_value_set))
             }
           }
         } else {
@@ -7073,7 +7071,6 @@ function project_open(event) {
 }
 
 function project_open_parse_json_file(project_file_data) {
-  console.log('in project_open_parse_json_file');
   var d = JSON.parse(project_file_data);
   if ( d['_via_settings'] && d['_via_img_metadata'] && d['_via_attributes'] ) {
     // import settings
@@ -7090,14 +7087,21 @@ function project_open_parse_json_file(project_file_data) {
     _via_buffer_remove_all();
 
     // import image metadata
-    _via_img_metadata = d['_via_img_metadata'];
-    var img_id;
-    for ( img_id in _via_img_metadata ) {
-      _via_image_id_list.push(img_id);
-      console.log('pushing ', _via_img_metadata[img_id].filename);
-      _via_image_filename_list.push( _via_img_metadata[img_id].filename );
-      set_file_annotations_to_default_value(img_id);
-      _via_img_count += 1;
+    _via_img_metadata = {};
+    for ( var img_id in d['_via_img_metadata'] ) {
+      if('filename' in d['_via_img_metadata'][img_id] &&
+         'size' in d['_via_img_metadata'][img_id] &&
+         'regions' in d['_via_img_metadata'][img_id] &&
+         'file_attributes' in d['_via_img_metadata'][img_id]) {
+        _via_image_id_list.push(img_id);
+        _via_image_filename_list.push( d['_via_img_metadata'][img_id].filename );
+        set_file_annotations_to_default_value(img_id);
+        _via_img_metadata[img_id] = d['_via_img_metadata'][img_id];
+        _via_img_count += 1;
+      } else {
+        console.log('discarding malformed entry for ' + img_id +
+                    ': ' + JSON.stringify(d['_via_img_metadata'][img_id]));
+      }
     }
 
     // import attributes
@@ -7231,7 +7235,6 @@ function project_remove_file(img_index) {
   // remove img_index from all array
   // this invalidates all image_index > img_index
   _via_image_id_list.splice( img_index, 1 );
-  console.log('removing index ', img_index);
   _via_image_filename_list.splice( img_index, 1 );
 
   var img_fn_list_index = _via_img_fn_list_img_index_list.indexOf(img_index);
@@ -7253,7 +7256,6 @@ function project_remove_file(img_index) {
 }
 
 function project_add_new_file(filename, size, file_id) {
-  console.log('in project_add_new_file');
   var img_id = file_id;
   if ( typeof(img_id) === 'undefined' ) {
     if ( typeof(size) === 'undefined' ) {
@@ -7265,7 +7267,6 @@ function project_add_new_file(filename, size, file_id) {
   if ( ! _via_img_metadata.hasOwnProperty(img_id) ) {
     _via_img_metadata[img_id] = new file_metadata(filename, size);
     _via_image_id_list.push(img_id);
-    console.log('pushing 1 filename ', filename);
     _via_image_filename_list.push(filename);
     _via_img_count += 1;
   }
@@ -7273,7 +7274,6 @@ function project_add_new_file(filename, size, file_id) {
 }
 
 function project_file_add_local(event) {
-  console.log('in project_file_add_local');
   var user_selected_images = event.target.files;
   var original_image_count = _via_img_count;
 
@@ -7437,7 +7437,6 @@ function project_filepath_add_from_input(p, button) {
 }
 
 function project_filepath_add(new_path) {
-  console.log('adding path: ' + new_path);
   if ( path === '' ) {
     return;
   }
