@@ -469,6 +469,14 @@ _via_temporal_segmenter.prototype._tmetadata_gmetadata_update = function() {
   }
 }
 
+_via_temporal_segmenter.prototype._tmetadata_gid_list_reorder = function(gindex_now, gindex_new) {
+  var new_loc_gid = this.gid_list[gindex_new];
+  this.gid_list[gindex_new] = this.gid_list[gindex_now];
+  this.gid_list[gindex_now] = new_loc_gid;
+  this._tmetadata_gmetadata_update();
+}
+
+
 _via_temporal_segmenter.prototype._tmetadata_onchange_groupby_aid = function(e) {
   this.group_aname_select.blur(); // remove selection of dropdown
   var new_groupby_aid = e.target.options[e.target.selectedIndex].value;
@@ -1661,6 +1669,8 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
 
   if ( e.key === 'ArrowDown' || e.key === 'ArrowUp' ) {
     e.preventDefault();
+
+    // determine the current and new gid
     var selected_gindex = this.gid_list.indexOf(this.selected_gid);
     var next_gindex;
     if ( e.key === 'ArrowDown' ) {
@@ -1675,16 +1685,24 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
       }
     }
 
-    if(this.selected_mindex !== -1 && this.selected_mid !== '') {
-      // move selected temporal segment to the timeline present above/below the current timeline
-      var from_gindex = selected_gindex;
-      var to_gindex = next_gindex;
-      this._tmetadata_mid_change_gid(from_gindex, to_gindex);
+    if(e.ctrlKey) {
+      // change the order of timeline entries by moving a timeline
+      // to the position of next/prev timeline
+      this._tmetadata_gid_list_reorder(selected_gindex, next_gindex);
     } else {
-      // selected the group above/below the current group in the timeline list
-      this._tmetadata_group_gid_sel(next_gindex);
-      _via_util_msg_show('Selected group "' + this.selected_gid + '"');
-      return;
+      // select next/prev timeline or move selected segment to next/prev timeline
+
+      if(this.selected_mindex !== -1 && this.selected_mid !== '') {
+        // move selected temporal segment to the timeline present above/below the current timeline
+        var from_gindex = selected_gindex;
+        var to_gindex = next_gindex;
+        this._tmetadata_mid_change_gid(from_gindex, to_gindex);
+      } else {
+        // selected the group above/below the current group in the timeline list
+        this._tmetadata_group_gid_sel(next_gindex);
+        _via_util_msg_show('Selected group "' + this.selected_gid + '"');
+        return;
+      }
     }
   }
 
