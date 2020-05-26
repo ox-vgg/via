@@ -81,9 +81,11 @@ to annotate temporal segments of a video: contains 4 rows
 
 .temporal_segmenter_container > .toolbar_container { font-size:small; vertical-align:middle; margin-top:0.2em;}
 .temporal_segmenter_container > .toolbar_container * { vertical-align:middle; }
-.temporal_segmenter_container > .toolbar_container div { display:inline; margin-right:1em; }
+.temporal_segmenter_container > .toolbar_container div { display:inline; }
+.temporal_segmenter_container > .toolbar_container div:nth-child(n+2) { margin:0 2em;}
+.temporal_segmenter_container > .toolbar_container .newgid { width:10em; }
 .temporal_segmenter_container > .toolbar_container input[type="text"] { vertical-align:middle; font-size:small; }
-.temporal_segmenter_container > .toolbar_container button { font-size:small; }
+.temporal_segmenter_container > .toolbar_container button { font-size:small; padding:0 2px; margin:0 0.1em;}
 .temporal_segmenter_container > .toolbar_container select { font-size:small; margin-right:0.4em; }
 
 /* Editor panel for add/update/view metadata and attributes */

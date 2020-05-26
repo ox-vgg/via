@@ -379,7 +379,7 @@ _via_temporal_segmenter.prototype._tmetadata_init = function() {
   // group variable selector
   if ( this.group_aid_candidate_list.length ) {
     this.group_aname_select = document.createElement('select');
-    this.group_aname_select.setAttribute('title', 'Select the variable name that should be used for temporal segmentation. These variable can be edited using the the attribute editor.');
+    this.group_aname_select.setAttribute('title', 'Select the variable name that should be used for temporal segmentation. These variables can be edited using the the attribute editor.');
     this.group_aname_select.addEventListener('change', this._tmetadata_onchange_groupby_aid.bind(this));
 
     for ( var aindex in this.group_aid_candidate_list ) {
@@ -474,64 +474,9 @@ _via_temporal_segmenter.prototype._tmetadata_onchange_groupby_aid = function(e) 
   var new_groupby_aid = e.target.options[e.target.selectedIndex].value;
   this._group_init( new_groupby_aid );
   this._tmetadata_gmetadata_update();
-  this.gid_list_input.value = this.gid_list.join(',');
   this._tmetadata_boundary_update(this.tmetadata_gtimeline_tstart)
   this._tmetadata_group_gid_sel(0);
   this._tmetadata_gtimeline_draw();
-}
-
-_via_temporal_segmenter.prototype._tmetadata_onchange_gid_list_input = function(e) {
-  var input_gid_list = this.gid_list_input.value.split(',');
-  if ( _via_util_array_eq(input_gid_list, this.gid_list) ) {
-    _via_util_msg_show('Timeline group variable values remain unchanged!');
-    return;
-  }
-
-  // filter any empty values
-  var new_gid_list = [];
-  var discarded_gid_list = [];
-  for ( var i in input_gid_list ) {
-    if ( input_gid_list[i] === '' ||
-         input_gid_list[i] === ' ' ) {
-      discarded_gid_list.push( input_gid_list[i] );
-    } else {
-      new_gid_list.push( input_gid_list[i].trim() );
-    }
-  }
-
-  if ( discarded_gid_list.length ) {
-    _via_util_msg_show('Discarded following ' + discarded_gid_list.length + ' values: ' +
-                       discarded_gid_list.join(','));
-  }
-
-  // get a list of timeline group variable values that needs to be deleted
-  var del_gid_list = [];
-  for ( var i in this.gid_list ) {
-    if ( new_gid_list.indexOf(this.gid_list[i]) === -1 ) {
-      del_gid_list.push(this.gid_list[i]);
-    }
-  }
-  this._group_del_gid(del_gid_list).then( function(del_mid_list) {
-    this.d.metadata_delete_bulk(this.vid, del_mid_list, false).then( function(ok) {
-      this._group_init(this.groupby_aid);
-      // add the missing gid
-      var gid;
-      for ( var i in new_gid_list ) {
-        gid = new_gid_list[i];
-        if ( ! this.group.hasOwnProperty(gid) ) {
-          this.group[gid] = [];
-          this.gid_list.push(gid);
-        }
-      }
-      this.gid_list = new_gid_list.slice(0); // ensure the order of gid is as set by user
-      this._tmetadata_gmetadata_update();
-      this.gid_list_input.value = this.gid_list.join(',');
-    }.bind(this), function(err) {
-      console.log(err);
-    }.bind(this));
-  }.bind(this), function(err) {
-    console.log(err);
-  }.bind(this));
 }
 
 _via_temporal_segmenter.prototype._tmetadata_boundary_move = function(dt) {
@@ -890,7 +835,6 @@ _via_temporal_segmenter.prototype._tmetadata_group_update_gid = function(e) {
     delete this.group[old_gid];
     var gindex = this.gid_list.indexOf(old_gid);
     this.gid_list[gindex] = new_gid;
-    this.gid_list_input.value = this.gid_list.join(',');
 
     this._tmetadata_gmetadata_update();
     delete this.tmetadata_gtimeline_mid[old_gid];
@@ -2074,6 +2018,8 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
     option.innerHTML = gtimeline_count;
     gtimeline_height.appendChild(option);
   }
+  var gtimeline_height_container = document.createElement('div');
+  gtimeline_height_container.appendChild(gtimeline_height);
 
   var keyboard_shortcut = document.createElement('span');
   keyboard_shortcut.setAttribute('class', 'text_button');
@@ -2082,7 +2028,30 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
     _via_util_page_show('page_keyboard_shortcut');
   });
 
-  this.toolbar_container.appendChild(gtimeline_height);
+  // tool to add/delete timeline
+  var attrupdate_container = document.createElement('div');
+  var add = document.createElement('button');
+  add.innerHTML = 'Add';
+  add.setAttribute('title', 'Add a new timeline');
+  add.addEventListener('click', this._toolbar_gid_add.bind(this));
+
+  var del = document.createElement('button');
+  del.innerHTML = 'Del';
+  del.setAttribute('title', 'Delete an existing timeline');
+  del.addEventListener('click', this._toolbar_gid_del.bind(this));
+
+  var attrval = document.createElement('input');
+  attrval.setAttribute('class', 'newgid');
+  attrval.setAttribute('id', 'gid_add_del_input');
+  attrval.setAttribute('type', 'text');
+  attrval.setAttribute('title', 'Name of timeline to add or delete');
+  attrval.setAttribute('placeholder', 'add/del ' + this.d.store.attribute[this.groupby_aid].aname);
+  attrupdate_container.appendChild(attrval)
+  attrupdate_container.appendChild(add)
+  attrupdate_container.appendChild(del)
+
+  this.toolbar_container.appendChild(attrupdate_container);
+  this.toolbar_container.appendChild(gtimeline_height_container);
   this.toolbar_container.appendChild(pb_mode_container);
   this.toolbar_container.appendChild(keyboard_shortcut);
 
@@ -2100,6 +2069,49 @@ _via_temporal_segmenter.prototype._toolbar_playback_rate_set = function(rate) {
   if ( this.m.playbackRate !== rate ) {
     this.m.playbackRate = rate;
   }
+}
+
+_via_temporal_segmenter.prototype._toolbar_gid_add = function() {
+  var new_gid = document.getElementById('gid_add_del_input').value.trim();
+  if(new_gid === '') {
+    _via_util_msg_show('Name of new timeline cannot be empty. Enter the name of new timeline in the input panel.');
+    return;
+  }
+  if ( this.group.hasOwnProperty(new_gid) ) {
+    _via_util_msg_show('Timeline [' + new_gid + '] already exists!');
+    return;
+  }
+
+  this.group[new_gid] = [];
+  this.gid_list.push(new_gid);
+  this._tmetadata_gmetadata_update();
+  document.getElementById('gid_add_del_input').value = '';
+}
+
+_via_temporal_segmenter.prototype._toolbar_gid_del = function() {
+  var del_gid = document.getElementById('gid_add_del_input').value.trim();
+  if(del_gid === '') {
+    _via_util_msg_show('To delete, you must provide the name of an existing timeline.');
+    return;
+  }
+
+  if(!this.gid_list.includes(del_gid)) {
+    _via_util_msg_show('Timeline [' + del_gid + '] does not exist and therefore deletion is not possible');
+    return;
+  }
+
+  var del_gid_list = [del_gid];
+  this._group_del_gid(del_gid_list).then( function(del_mid_list) {
+    this.d.metadata_delete_bulk(this.vid, del_mid_list, false).then( function(ok) {
+      this._tmetadata_gmetadata_update();
+      document.getElementById('gid_add_del_input').value = '';
+      _via_util_msg_show('Deleted timeline ' + JSON.stringify(del_gid_list) + ' and ' + del_mid_list.length + ' metadata associated with this timeline.');
+    }.bind(this), function(err) {
+      _via_util_msg_show('Failed to delete ' + del_mid_list.length + ' metadata associated with timeline ' + JSON.stringify(del_gid_list));
+    }.bind(this));
+  }.bind(this), function(err) {
+    _via_util_msg_show('Failed to delete timeline ' + JSON.stringify(del_gid_list));
+  }.bind(this));
 }
 
 //
