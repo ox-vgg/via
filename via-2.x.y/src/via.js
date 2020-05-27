@@ -308,6 +308,8 @@ var VIA_LEFTSIDEBAR_WIDTH_CHANGE          = 1;   // in rem
 var VIA_POLYGON_SEGMENT_SUBTENDED_ANGLE   = 5;   // in degree (used to approximate shapes using polygon)
 var VIA_FLOAT_PRECISION = 3; // number of decimal places to include in float values
 
+// COCO Export
+var VIA_COCO_EXPORT_RSHAPE = ['rect', 'circle', 'ellipse', 'polygon', 'point'];
 //
 // Data structure to store metadata about file and regions
 //
@@ -527,6 +529,7 @@ function sel_local_images() {
   }
 }
 
+// invoked by menu-item buttons in HTML UI
 function download_all_region_data(type, file_extension) {
   if ( typeof(file_extension) === 'undefined' ) {
     file_extension = type;
@@ -1248,6 +1251,7 @@ function pack_via_metadata(return_type) {
         // add files
         var img_id, file_src;
         var annotation_id = 0;
+        var discarded_region_count = 0;
         for ( var img_index in _via_image_id_list ) {
           img_id = _via_image_id_list[img_index];
 
@@ -1272,30 +1276,33 @@ function pack_via_metadata(return_type) {
           var shape_name, region;
           for ( var rindex in _via_img_metadata[img_id].regions ) {
             region = _via_img_metadata[img_id].regions[rindex];
-            if ( region.shape_attributes['name'] === 'rect' ||
-                 region.shape_attributes['name'] === 'circle' ||
-                 region.shape_attributes['name'] === 'ellipse' ||
-                 region.shape_attributes['name'] === 'polygon' ||
-                 region.shape_attributes['name'] === 'point' ) {
-              var annotation = via_region_shape_to_coco_annotation(region.shape_attributes);
-              var attr_val;
-              for(var k in region.region_attributes) {
-                if ( region.region_attributes[k] !== "undefined" &&
-                     Object.entries(region.region_attributes[k]).length > 0) {
-                    attr_val = region.region_attributes[k];
+            if( !VIA_COCO_EXPORT_RSHAPE.includes(region.shape_attributes['name']) ) {
+              discarded_region_count = discarded_region_count + 1;
+              continue;
+            }
+
+            var annotation = via_region_shape_to_coco_annotation(region.shape_attributes);
+            var attr_val;
+            for(var rid in region.region_attributes) {
+              // all values in region_attributes contribute to a unique annotation
+              // as COCO format cannot accomodate a region with multiple attributes
+              for(var attr_option in _via_attributes['region'][rid].options) {
+                if( region.region_attributes[rid].hasOwnProperty(attr_option) &&
+                    region.region_attributes[rid][attr_option] === true
+                  ) {
+                  d.annotations.push( Object.assign({
+                    'id':annotation_id,
+                    'image_id':parseInt(img_index),
+                    'category_id':attrval_to_catid[attr_option],
+                  }, annotation) );
+                  annotation_id = annotation_id + 1;
                 }
               }
-              // assume there is only one value (radio button)
-              cat_id = attrval_to_catid[attr_val];
-
-              d.annotations.push( Object.assign({
-                'id':annotation_id,
-                'image_id':parseInt(img_index),
-                'category_id':cat_id,
-              }, annotation) );
-              annotation_id = annotation_id + 1;
             }
           }
+        }
+        if(discarded_region_count) {
+          show_message('Discarded ' + discarded_region_count + ' regions that are incompatible with COCO format');
         }
         ok_callback( [ JSON.stringify(d) ] );
       }.bind(this), function(err) {
