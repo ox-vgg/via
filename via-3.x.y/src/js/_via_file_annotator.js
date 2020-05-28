@@ -742,7 +742,9 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
       this._creg_select_none();
     }
     this._tmpreg_clear();
-    this._creg_select_multiple( this.last_clicked_mid_list );
+    if(this.last_clicked_mid_list.length) {
+      this._creg_select( this.last_clicked_mid_list[0] );
+    }
     this._smetadata_show();
     this._creg_draw_all();
     this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
@@ -752,14 +754,39 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
 
   if ( this.state_id === _VIA_RINPUT_STATE.REGION_MOVE_ONGOING ) {
     this.user_input_pts.push(cx, cy);
-    var canvas_input_pts = this.user_input_pts.slice(0);
-    var cdx = canvas_input_pts[2] - canvas_input_pts[0];
-    var cdy = canvas_input_pts[3] - canvas_input_pts[1];
-    var mid_list = this.selected_mid_list.slice(0);
-    this._metadata_move_region(mid_list, cdx, cdy);
-    this._tmpreg_clear();
-    this.user_input_pts = [];
-    this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
+    // region shape requiring just two points (rectangle, circle, ellipse, etc.)
+    if ( this._is_user_input_pts_equal() ) {
+      // implies user performed a click operation
+      // check if click is on another region
+      var clicked_mid_list = this._is_point_inside_existing_regions(cx, cy);
+      if(clicked_mid_list.length) {
+        if(clicked_mid_list[0] === this.last_clicked_mid_list[0]) {
+          this._creg_select_none();
+          this.user_input_pts = [];
+          this._state_set( _VIA_RINPUT_STATE.IDLE );
+        } else {
+          // select the new region
+          if ( e.shiftKey ) {
+            this._creg_select( clicked_mid_list[0] );
+          } else {
+            this._creg_select_one( clicked_mid_list[0] );
+          }
+          this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
+        }
+        this._smetadata_show();
+        this._creg_draw_all();
+      }
+      this.user_input_pts = [];
+    } else {
+      var canvas_input_pts = this.user_input_pts.slice(0);
+      var cdx = canvas_input_pts[2] - canvas_input_pts[0];
+      var cdy = canvas_input_pts[3] - canvas_input_pts[1];
+      var mid_list = this.selected_mid_list.slice(0);
+      this._metadata_move_region(mid_list, cdx, cdy);
+      this._tmpreg_clear();
+      this.user_input_pts = [];
+      this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
+    }
     return;
   }
 
@@ -1010,13 +1037,33 @@ _via_file_annotator.prototype._is_user_input_pts_equal = function() {
 
 _via_file_annotator.prototype._is_point_inside_existing_regions = function(cx, cy) {
   var mid_list = [];
+  var mid_edge_dist = [];
+  var dist_minmax;
   for ( var mid in this.creg ) {
     if ( this._creg_is_inside(this.creg[mid],
                               cx,
                               cy,
                               this.conf.CONTROL_POINT_CLICK_TOL) ) {
+
       mid_list.push(mid);
     }
+  }
+
+  if(mid_list.length) {
+    // if multiple regions, sort mid based on distance on (cx,cy) to its nearest edge
+    var dist_minmax;
+    for( var mindex in mid_list ) {
+      dist_minmax = this._creg_edge_minmax_dist_to_point(this.creg[ mid_list[mindex] ], cx, cy);
+      mid_edge_dist.push(dist_minmax[0]);
+    }
+
+    mid_list.sort( function(mid1, mid2) {
+      if( mid_edge_dist[ mid_list.indexOf(mid1) ] < mid_edge_dist[ mid_list.indexOf(mid2) ] ) {
+        return -1;
+      } else {
+        return 1;
+      }
+    });
   }
   return mid_list;
 }
@@ -1679,6 +1726,69 @@ _via_file_annotator.prototype._creg_del_sel_regions = function() {
   }.bind(this));
 }
 
+_via_file_annotator.prototype._creg_edge_minmax_dist_to_point = function(xy, px, py) {
+  var shape_id = xy[0];
+  var edge_pts = [];
+  switch( shape_id ) {
+  case _VIA_RSHAPE.POINT:
+    edge_pts = [ xy[0], xy[1] ];
+    break;
+  case _VIA_RSHAPE.RECTANGLE:
+    var w2 = xy[3] / 2.0;
+    var h2 = xy[4] / 2.0;
+    edge_pts = [xy[1], xy[2], xy[1] + w2, xy[2], xy[1] + xy[3], xy[2],
+                xy[1] + xy[3], xy[2] + h2, xy[1] + xy[3], xy[2] + xy[4],
+                xy[1] + w2, xy[2] + xy[4], xy[1], xy[2] + xy[4], xy[1], xy[2] + h2 ];
+    break;
+  case _VIA_RSHAPE.EXTREME_RECTANGLE:
+    var exy = this._extreme_to_rshape(xy, shape_id);
+    var w2 = exy[3] / 2.0;
+    var h2 = exy[4] / 2.0;
+    edge_pts = [exy[1], exy[2], exy[1] + w2, exy[2], exy[1] + exy[3], exy[2],
+                exy[1] + exy[3], exy[2] + h2, exy[1] + exy[3], exy[2] + exy[4],
+                exy[1] + w2, exy[2] + h2, exy[1], exy[2] + exy[4], exy[1], exy[2] + h2 ];
+    break;
+  case _VIA_RSHAPE.CIRCLE:
+    edge_pts = [xy[1] + xy[3], xy[2], xy[1], xy[2] - xy[3],
+                xy[1] - xy[3], xy[2], xy[1], xy[2] + xy[3] ]
+    break;
+  case _VIA_RSHAPE.EXTREME_CIRCLE:
+    var exy = this._extreme_to_rshape(xy, shape_id);
+    edge_pts = [exy[1] + exy[3], exy[2], exy[1], exy[2] - exy[3],
+                exy[1] - exy[3], exy[2], exy[1], exy[2] + exy[3] ]
+    break;
+  case _VIA_RSHAPE.ELLIPSE:
+    edge_pts = [xy[1] + xy[3], xy[2], xy[1], xy[2] - xy[4],
+                xy[1] - xy[3], xy[2] - xy[4], xy[1], xy[2] + xy[4] ];
+    break;
+  case _VIA_RSHAPE.LINE:
+    var w2 = (xy[3] + xy[1]) / 2.0;
+    var h2 = (xy[4] + xy[2]) / 2.0;
+    edge_pts = [ xy[1], xy[2], xy[1] + w2, xy[2] + h2, xy[3], xy[4] ];
+    break;
+  case _VIA_RSHAPE.POLYGON:
+  case _VIA_RSHAPE.POLYLINE:
+    edge_pts = xy.slice(1); // discard shape_id;
+    break;
+  default:
+    console.warn('_via_file_annotator._draw() : shape_id=' + shape_id + ' not implemented');
+  }
+  var dist_minmax = [+Infinity, -Infinity];
+  var dist, dx, dy;
+  for(var i=0; i<edge_pts.length; i=i+2) {
+    dx = Math.abs(edge_pts[i] - px);
+    dy = Math.abs(edge_pts[i+1] - py);
+    dist = Math.sqrt(dx*dx + dy*dy);
+    if(dist < dist_minmax[0]) {
+      dist_minmax[0] = dist;
+    }
+    if(dist > dist_minmax[1]) {
+      dist_minmax[1] = dist;
+    }
+  }
+  return dist_minmax;
+}
+
 //
 // external event listener
 //
@@ -2281,8 +2391,8 @@ _via_file_annotator.prototype._smetadata_set_position = function() {
         ymax_x = this.creg[mid][i-1];
       }
     }
-    y = ymax;
-    x = this.left_pad + ymax_x;
+    y = ymax + this.conf.REGION_SMETADATA_MARGIN;
+    x = ymax_x + this.conf.REGION_SMETADATA_MARGIN;
     break;
   }
   this.smetadata_container.style.left = Math.round(x) + 'px';
