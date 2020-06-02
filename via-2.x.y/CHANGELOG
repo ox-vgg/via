@@ -1,4 +1,4 @@
-## [2.0.10] - not released yet
+## [2.0.11] - not released yet
  * fast annotation mode @todo
     - keyboard input '123' denotes the following operation: select region 1, set 3 as the value of region attribute 2.
     - if there is a single region attribute, the '13' sets 3 as the value of region 1
@@ -11,6 +11,16 @@
     - add a "UNASSIGNED" group to denote all the files that do not have a value for the group variable
     - preload images in adjacent groups to speed up visualization
     - label subgroup of images in a group based on a certain variable
+
+## [2.0.10] - June 02, 2020
+ * added missing category_id in COCO exported annotation (issue 273,275)
+ * fix for issue #262 coco format for segmentation field
+ * fixed annotation import from COCO format (issue 271)
+ * COCO export for checkbox and radio attributes now creates a new annotation for each selected opt
+ * malformed entries in project json file are discarded
+ * fix for issue #258 - polygon points get bigger with zooming
+ * fix for issue #264 to delete region attributes when deleting an attribute
+ * fix for issue #259 zoom locking aspect ratio of rectangle resize
 
 ## [2.0.9] - March 02, 2020
  * size of point region shape increases when zoomed in (issue 186)
