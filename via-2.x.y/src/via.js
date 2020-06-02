@@ -164,7 +164,7 @@ var _via_is_region_id_visible        = true;
 var _via_is_region_boundary_visible  = true;
 var _via_is_region_info_visible      = false;
 var _via_is_ctrl_pressed             = false;
-var _via_is_debug_mode               = false;
+var _via_is_debug_mode               = true;
 
 // region
 var _via_current_shape             = VIA_REGION_SHAPE.RECT;
@@ -310,6 +310,9 @@ var VIA_FLOAT_PRECISION = 3; // number of decimal places to include in float val
 
 // COCO Export
 var VIA_COCO_EXPORT_RSHAPE = ['rect', 'circle', 'ellipse', 'polygon', 'point'];
+var VIA_COCO_EXPORT_ATTRIBUTE_TYPE = [VIA_ATTRIBUTE_TYPE.CHECKBOX,
+                                      VIA_ATTRIBUTE_TYPE.DROPDOWN,
+                                      VIA_ATTRIBUTE_TYPE.RADIO];
 //
 // Data structure to store metadata about file and regions
 //
@@ -640,7 +643,6 @@ function import_annotations_from_csv(data) {
       return;
     }
 
-    var percent_completed = 0;
     var n = csvdata.length;
     var i;
     var first_img_id = '';
@@ -808,8 +810,7 @@ function import_annotations_from_json(data_str) {
       }
 
       // copy file attributes
-      var key;
-      for ( key in d[img_id].file_attributes ) {
+      for ( var key in d[img_id].file_attributes ) {
         if ( key === '' ) {
           continue;
         }
@@ -824,10 +825,9 @@ function import_annotations_from_json(data_str) {
 
       // copy regions
       var regions = d[img_id].regions;
-      var key, i;
-      for ( i in regions ) {
+      for ( var i in regions ) {
         var region_i = new file_region();
-        for ( key in regions[i].shape_attributes ) {
+        for ( var key in regions[i].shape_attributes ) {
           region_i.shape_attributes[key] = regions[i].shape_attributes[key];
         }
         for ( var key in regions[i].region_attributes ) {
@@ -883,14 +883,14 @@ function coco_to_via(coco) {
   var d = {};
 
   // create an index of all categories
-  var category_list = {}
+  var category_list = {};
   for ( var cat_index in coco.categories ) {
     var catid = coco.categories[cat_index]['id'];
     category_list[catid] = coco.categories[cat_index]['name'];
   }
 
   // create an index of all annotations
-  var annotation_list = {}
+  var annotation_list = {};
   for ( var annotation_index in coco.annotations ) {
     var coco_image_id = coco.annotations[annotation_index]['image_id'];
     if ( ! annotation_list.hasOwnProperty(coco_image_id) ) {
@@ -1228,17 +1228,14 @@ function pack_via_metadata(return_type) {
           'url': 'http://www.robots.ox.ac.uk/~vgg/software/via/',
           'date_created': new Date().toString(),
         };
-        d.licenses = [ { 'id':1, 'name':'Unknown', 'url':'' } ];
+        d.licenses = [];
 
 
         // initialize categories
         var attrval_to_catid = {};
         var cat_id = 1;
         for ( var rid in _via_attributes['region'] ) {
-          if ( _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.CHECKBOX ||
-               _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.DROPDOWN ||
-               _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.RADIO
-             ) {
+          if ( VIA_COCO_EXPORT_ATTRIBUTE_TYPE.includes(_via_attributes['region'][rid].type) ) {
             for ( var oid in _via_attributes['region'][rid]['options'] ) {
               d.categories.push( { 'id':cat_id, 'name':oid, 'supercategory':rid } );
               attrval_to_catid[oid] = cat_id;
@@ -1250,7 +1247,6 @@ function pack_via_metadata(return_type) {
         // add files
         var img_id, file_src;
         var annotation_id = 0;
-        var discarded_region_count = 0;
         for ( var img_index in _via_image_id_list ) {
           img_id = _via_image_id_list[img_index];
 
@@ -1276,25 +1272,33 @@ function pack_via_metadata(return_type) {
           var shape_name, region;
           for ( var rindex in _via_img_metadata[img_id].regions ) {
             region = _via_img_metadata[img_id].regions[rindex];
-            console.log(region.shape_attributes['name'] + ':' + VIA_COCO_EXPORT_RSHAPE.includes(region.shape_attributes['name']))
             if( !VIA_COCO_EXPORT_RSHAPE.includes(region.shape_attributes['name']) ) {
-              discarded_region_count = discarded_region_count + 1;
               continue;
             }
 
             var annotation = via_region_shape_to_coco_annotation(region.shape_attributes);
-            var attr_val;
-            for(var region_attr_id in region.region_attributes) {
-              // all values in region_attributes contribute to a unique annotation
-              // as COCO format cannot accomodate a region with multiple attributes
-              for(var attr_option in _via_attributes['region'][rid].options) {
-                if( region.region_attributes[rid].hasOwnProperty(attr_option) &&
-                    region.region_attributes[rid][attr_option] === true
-                  ) {
+            for(var region_aid in region.region_attributes) {
+              if(!VIA_COCO_EXPORT_ATTRIBUTE_TYPE.includes(_via_attributes['region'][region_aid].type)) {
+                // discard all the attributes (e.g. text) not supported by COCO format
+                continue;
+              }
+
+              var region_aval_list = [];
+              if ( _via_attributes['region'][region_aid].type === VIA_ATTRIBUTE_TYPE.CHECKBOX ) {
+                // checkbox can assign multiple values to an attribute
+                region_aval_list = Object.keys(region.region_attributes[region_aid]);
+              } else {
+                // other types (e.g. radio and dropdown) have a single value
+                region_aval_list = [ region.region_attributes[region_aid] ];
+              }
+              for(var region_aval_index in region_aval_list) {
+                // create a new annotation for each value of a region attribute
+                var region_aval = region_aval_list[region_aval_index];
+                if( region_aval in attrval_to_catid) {
                   d.annotations.push( Object.assign({
                     'id':annotation_id,
                     'image_id':parseInt(img_index),
-                    'category_id':attrval_to_catid[attr_option],
+                    'category_id':attrval_to_catid[region_aval],
                   }, annotation) );
                   annotation_id = annotation_id + 1;
                 }
@@ -1302,9 +1306,7 @@ function pack_via_metadata(return_type) {
             }
           }
         }
-        if(discarded_region_count) {
-          show_message('Discarded ' + discarded_region_count + ' regions that are incompatible with COCO format');
-        }
+        show_message('Note: COCO export only supports the following attribute types: ' + JSON.stringify(VIA_COCO_EXPORT_ATTRIBUTE_TYPE) + ' and region shapes: ' + JSON.stringify(VIA_COCO_EXPORT_RSHAPE));
         ok_callback( [ JSON.stringify(d) ] );
       }.bind(this), function(err) {
         err_callback(err);
