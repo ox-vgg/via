@@ -1,12 +1,13 @@
-# Merge two VIA2 projects
+# Merge two or more VIA2 projects
 #
 # Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
 # Date: 18 May 2020
 
 import json
 
+# add the filename of all VIA2 projects
 # Note: all VIA projects should have same attributes and project settings
-filename_list = ['via_project1.json', 'via_project2.json']
+filename_list = ['via_project1.json', 'via_project2.json', 'via_project3.json']
 output_filename = 'via_project_merged.json'
 
 # copy attributes and other project settings from one of the projects
