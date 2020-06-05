@@ -310,8 +310,7 @@ var VIA_FLOAT_PRECISION = 3; // number of decimal places to include in float val
 
 // COCO Export
 var VIA_COCO_EXPORT_RSHAPE = ['rect', 'circle', 'ellipse', 'polygon', 'point'];
-var VIA_COCO_EXPORT_ATTRIBUTE_TYPE = [VIA_ATTRIBUTE_TYPE.CHECKBOX,
-                                      VIA_ATTRIBUTE_TYPE.DROPDOWN,
+var VIA_COCO_EXPORT_ATTRIBUTE_TYPE = [VIA_ATTRIBUTE_TYPE.DROPDOWN,
                                       VIA_ATTRIBUTE_TYPE.RADIO];
 //
 // Data structure to store metadata about file and regions
@@ -544,6 +543,11 @@ function download_all_region_data(type, file_extension) {
     var all_region_data_blob = new Blob(data, blob_attr);
 
     var filename = 'via_export';
+    if(typeof(_via_settings) !== 'undefined' &&
+       _via_settings.hasOwnProperty('project') &&
+       _via_settings['project']['name'] !== '') {
+      filename = _via_settings['project']['name'];
+    }
     if ( file_extension !== 'csv' || file_extension !== 'json' ) {
       filename += '_' + type + '.' + file_extension;
     }
@@ -781,6 +785,7 @@ function parse_csv_header_line(line) {
   }
 }
 
+// see http://cocodataset.org/#format-data
 function import_coco_annotations_from_json(data_str) {
   return new Promise( function(ok_callback, err_callback) {
     if (data_str === '' || typeof(data_str) === 'undefined') {
@@ -803,7 +808,7 @@ function import_coco_annotations_from_json(data_str) {
       var cid   = coco['categories'][i]['id'];
       var cname = coco['categories'][i]['name'];
       if( !_via_attributes['region'].hasOwnProperty(sc)) {
-        _via_attributes['region'][sc] = {'type':VIA_ATTRIBUTE_TYPE.DROPDOWN,
+        _via_attributes['region'][sc] = {'type':VIA_ATTRIBUTE_TYPE.RADIO,
                                          'description':'coco["categories"][' + i + ']=' + JSON.stringify(coco['categories'][i]),
                                          'options':{},
                                          'default_options':{}
@@ -811,6 +816,12 @@ function import_coco_annotations_from_json(data_str) {
       }
       _via_attributes['region'][sc]['options'][cid] = cname;
       category_id_to_attribute_name[cid] = sc;
+    }
+    // if more than 5 options, convert the attribute type to DROPDOWN
+    for( var attr_name in _via_attributes['region'] ) {
+      if( Object.keys(_via_attributes['region'][attr_name]['options']).length > 5 ) {
+        _via_attributes['region'][attr_name]['type'] = VIA_ATTRIBUTE_TYPE.DROPDOWN;
+      }
     }
 
     // create an map of image_id and their annotations
@@ -915,7 +926,6 @@ function import_coco_annotations_from_json(data_str) {
   });
 }
 
-// see http://cocodataset.org/#format-data
 function import_annotations_from_json(data_str) {
   return new Promise( function(ok_callback, err_callback) {
     if (data_str === '' || typeof(data_str) === 'undefined') {
@@ -1242,95 +1252,8 @@ function pack_via_metadata(return_type) {
     // see http://cocodataset.org/#format-data
     if( return_type === 'coco' ) {
       img_stat_set_all().then( function(ok) {
-        var d = { 'info':{}, 'images':[], 'annotations':[], 'licenses':[], 'categories':[] };
-        d.info = {
-          'year': new Date().getFullYear(),
-          'version': '1',
-          'description': 'Exported using VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via/)',
-          'contributor': '',
-          'url': 'http://www.robots.ox.ac.uk/~vgg/software/via/',
-          'date_created': new Date().toString(),
-        };
-        d.licenses = [];
-
-
-        // initialize categories
-        var attrval_to_catid = {};
-        var cat_id = 1;
-        for ( var rid in _via_attributes['region'] ) {
-          if ( VIA_COCO_EXPORT_ATTRIBUTE_TYPE.includes(_via_attributes['region'][rid].type) ) {
-            for ( var oid in _via_attributes['region'][rid]['options'] ) {
-              d.categories.push( { 'id':cat_id, 'name':oid, 'supercategory':rid } );
-              attrval_to_catid[oid] = cat_id;
-              cat_id = cat_id + 1;
-            }
-          }
-        }
-
-        // add files
-        var img_id, file_src;
-        var annotation_id = 0;
-        for ( var img_index in _via_image_id_list ) {
-          img_id = _via_image_id_list[img_index];
-
-          // add file
-          if ( _via_img_fileref[img_id] instanceof File ) {
-            file_src = _via_img_fileref[img_id].filename;
-          } else {
-            //file_src = _via_img_src[img_id];
-            file_src = _via_img_metadata[img_id].filename;
-          }
-
-          d.images.push( {
-            'id':parseInt(img_index),
-            'width':_via_img_stat[img_index][0],
-            'height':_via_img_stat[img_index][1],
-            'file_name':_via_img_metadata[img_id].filename,
-            'license':1,
-            'flickr_url':file_src,
-            'coco_url':file_src,
-            'date_captured':'',
-          } );
-
-          var shape_name, region;
-          for ( var rindex in _via_img_metadata[img_id].regions ) {
-            region = _via_img_metadata[img_id].regions[rindex];
-            if( !VIA_COCO_EXPORT_RSHAPE.includes(region.shape_attributes['name']) ) {
-              continue;
-            }
-
-            var annotation = via_region_shape_to_coco_annotation(region.shape_attributes);
-            for(var region_aid in region.region_attributes) {
-              if(!VIA_COCO_EXPORT_ATTRIBUTE_TYPE.includes(_via_attributes['region'][region_aid].type)) {
-                // discard all the attributes (e.g. text) not supported by COCO format
-                continue;
-              }
-
-              var region_aval_list = [];
-              if ( _via_attributes['region'][region_aid].type === VIA_ATTRIBUTE_TYPE.CHECKBOX ) {
-                // checkbox can assign multiple values to an attribute
-                region_aval_list = Object.keys(region.region_attributes[region_aid]);
-              } else {
-                // other types (e.g. radio and dropdown) have a single value
-                region_aval_list = [ region.region_attributes[region_aid] ];
-              }
-              for(var region_aval_index in region_aval_list) {
-                // create a new annotation for each value of a region attribute
-                var region_aval = region_aval_list[region_aval_index];
-                if( region_aval in attrval_to_catid) {
-                  d.annotations.push( Object.assign({
-                    'id':annotation_id,
-                    'image_id':parseInt(img_index),
-                    'category_id':attrval_to_catid[region_aval],
-                  }, annotation) );
-                  annotation_id = annotation_id + 1;
-                }
-              }
-            }
-          }
-        }
-        show_message('Note: COCO export only supports the following attribute types: ' + JSON.stringify(VIA_COCO_EXPORT_ATTRIBUTE_TYPE) + ' and region shapes: ' + JSON.stringify(VIA_COCO_EXPORT_RSHAPE));
-        ok_callback( [ JSON.stringify(d) ] );
+        var coco = export_project_to_coco_format();
+        ok_callback( [ coco ] );
       }.bind(this), function(err) {
         err_callback(err);
       }.bind(this));
@@ -1339,6 +1262,135 @@ function pack_via_metadata(return_type) {
       ok_callback( [ JSON.stringify(_via_img_metadata) ] );
     }
   }.bind(this));
+}
+
+function export_project_to_coco_format() {
+  var coco = { 'info':{}, 'images':[], 'annotations':[], 'licenses':[], 'categories':[] };
+  coco['info'] = { 'year': new Date().getFullYear(),
+                   'version': '1.0',
+                   'description': 'VIA project exported to COCO format using VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via/)',
+                   'contributor': '',
+                   'url': 'http://www.robots.ox.ac.uk/~vgg/software/via/',
+                   'date_created': new Date().toString(),
+                 };
+  coco['licenses'] = [ {'id':0, 'name':'Unknown License', 'url':''} ]; // indicates that license is unknown
+
+  var skipped_annotation_count = 0;
+  // We want to ensure that a COCO project imported in VIA and then exported again back to
+  // COCO format using VIA retains the image_id and category_id present in the original COCO project.
+  // A VIA project that has been created by importing annotations from a COCO project contains
+  // unique image_id of type integer and contains all unique option id. If we detect this, we reuse
+  // the existing image_id and category_id, otherwise we assign a new unique id sequentially.
+  // Currently, it is not possible to preserve the annotation_id
+  var assign_unique_id = false;
+  for(var img_id in _via_img_metadata) {
+    if(Number.isNaN(parseInt(img_id))) {
+      assign_unique_id = true; // since COCO only supports image_id of type integer, we cannot reuse the VIA's image-id
+      break;
+    }
+  }
+  if(assign_unique_id) {
+    // check if all the options have unique id
+    var attribute_option_id_list = [];
+    for(var attr_name in _via_attributes) {
+      if( !VIA_COCO_EXPORT_ATTRIBUTE_TYPE.includes(_via_attributes[attr_name]['type']) ) {
+        continue; // skip this attribute as it will not be included in COCO export
+      }
+
+      for(var attr_option_id in _via_attributes[attr_name]['options']) {
+        if(attribute_option_id_list.includes(attr_option_id) ||
+           Number.isNaN(parseInt(attr_option_id)) ) {
+          assign_unique_id = true;
+          break;
+        } else {
+          attribute_option_id_list.push(assign_unique_id);
+        }
+      }
+    }
+  }
+
+  // add categories
+  var attr_option_id_list = [];
+  var attr_option_id_to_category_id = {};
+  var unique_category_id = 1;
+  for(var attr_name in _via_attributes['region']) {
+    if( VIA_COCO_EXPORT_ATTRIBUTE_TYPE.includes(_via_attributes['region'][attr_name]['type']) ) {
+      for(var attr_option_id in _via_attributes['region'][attr_name]['options']) {
+        var category_id;
+        if(assign_unique_id) {
+          category_id = unique_category_id;
+          unique_category_id = unique_category_id + 1;
+        } else {
+          category_id = parseInt(attr_option_id);
+        }
+        coco['categories'].push({
+          'supercategory':attr_name,
+          'id':category_id,
+          'name':_via_attributes['region'][attr_name]['options'][attr_option_id]
+        });
+        attr_option_id_to_category_id[attr_option_id] = category_id;
+      }
+    }
+  }
+
+  // add files and all their associated annotations
+  var annotation_id = 1;
+  var unique_img_id = 1;
+  for( var img_index in _via_image_id_list ) {
+    var img_id = _via_image_id_list[img_index];
+    var file_src = _via_settings['core']['default_filepath'] + _via_img_metadata[img_id].filename;
+    if ( _via_img_fileref[img_id] instanceof File ) {
+      file_src = _via_img_fileref[img_id].filename;
+    }
+
+    var coco_img_id;
+    if(assign_unique_id) {
+      coco_img_id = unique_img_id;
+      unique_img_id = unique_img_id + 1;
+    } else {
+      coco_img_id = parseInt(img_id);
+    }
+
+    coco['images'].push( {
+      'id':coco_img_id,
+      'width':_via_img_stat[img_index][0],
+      'height':_via_img_stat[img_index][1],
+      'file_name':_via_img_metadata[img_id].filename,
+      'license':0,
+      'flickr_url':file_src,
+      'coco_url':file_src,
+      'date_captured':'',
+    } );
+
+    // add all annotations associated with this file
+    for( var rindex in _via_img_metadata[img_id].regions ) {
+      var region = _via_img_metadata[img_id].regions[rindex];
+      if( !VIA_COCO_EXPORT_RSHAPE.includes(region.shape_attributes['name']) ) {
+        skipped_annotation_count = skipped_annotation_count + 1;
+        continue; // skip this region as COCO does not allow it
+      }
+
+      var coco_annotation = via_region_shape_to_coco_annotation(region.shape_attributes);
+      coco_annotation['id'] = annotation_id;
+      coco_annotation['image_id'] = coco_img_id;
+
+      var region_aid_list = Object.keys(region['region_attributes']);
+      for(var region_attribute_id in region['region_attributes']) {
+        var region_attribute_value = region['region_attributes'][region_attribute_id];
+        if(attr_option_id_to_category_id.hasOwnProperty(region_attribute_value)) {
+          coco_annotation['category_id'] = attr_option_id_to_category_id[region_attribute_value];
+          coco['annotations'].push(coco_annotation);
+          annotation_id = annotation_id + 1;
+        } else {
+          skipped_annotation_count = skipped_annotation_count + 1;
+          continue; // skip attribute value not supported by COCO format
+        }
+      }
+    }
+  }
+
+  show_message('Skipped ' + skipped_annotation_count + ' annotations. COCO format only supports the following attribute types: ' + JSON.stringify(VIA_COCO_EXPORT_ATTRIBUTE_TYPE) + ' and region shapes: ' + JSON.stringify(VIA_COCO_EXPORT_RSHAPE));
+  return [ JSON.stringify(coco) ];
 }
 
 function via_region_shape_to_coco_annotation(shape_attributes) {
@@ -5407,6 +5459,17 @@ function attribute_property_on_update(p) {
           _via_attributes[attr_type][attr_id].options[attr_val] = attr_val;
         }
       }
+
+      if( _via_attributes[attr_type][attr_id].type === VIA_ATTRIBUTE_TYPE.RADIO) {
+        var radio_new_default_options = {};
+        for(var default_option_id in _via_attributes[attr_type][attr_id]['default_options']) {
+          if(_via_attributes[attr_type][attr_id]['default_options'][default_option_id] === true) {
+            radio_new_default_options[default_option_id] = true;
+            break;
+          }
+        }
+        _via_attributes[attr_type][attr_id]['default_options'] = radio_new_default_options;
+      }
     }
     show_attribute_properties();
     show_attribute_options();
@@ -5435,8 +5498,16 @@ function attribute_get_unique_values(attr_type, attr_id) {
       for ( i = 0; i < _via_img_metadata[img_id].regions.length; ++i ) {
         if ( _via_img_metadata[img_id].regions[i].region_attributes.hasOwnProperty(attr_id) ) {
           attr_val = _via_img_metadata[img_id].regions[i].region_attributes[attr_id];
-          if ( ! values.includes(attr_val) ) {
-            values.push(attr_val);
+          if( typeof(attr_val) === 'object' ) {
+            for(var option_id in _via_img_metadata[img_id].regions[i].region_attributes[attr_id]) {
+              if ( ! values.includes(option_id) ) {
+                values.push(option_id);
+              }
+            }
+          } else {
+            if ( ! values.includes(attr_val) ) {
+              values.push(attr_val);
+            }
           }
         }
       }
@@ -7088,7 +7159,10 @@ function project_save_confirmed(input) {
   // via project
   var _via_project = { '_via_settings': _via_settings,
                        '_via_img_metadata': _via_img_metadata,
-                       '_via_attributes': _via_attributes };
+                       '_via_attributes': _via_attributes,
+                       '_via_data_format_version': '2.0.10',
+                       '_via_image_id_list': _via_image_id_list
+                     };
 
   var filename = input.project_name.value + '.json';
   var data_blob = new Blob( [JSON.stringify(_via_project)],
@@ -7136,14 +7210,27 @@ function project_open_parse_json_file(project_file_data) {
          'size' in d['_via_img_metadata'][img_id] &&
          'regions' in d['_via_img_metadata'][img_id] &&
          'file_attributes' in d['_via_img_metadata'][img_id]) {
-        _via_image_id_list.push(img_id);
-        _via_image_filename_list.push( d['_via_img_metadata'][img_id].filename );
+        if( !d.hasOwnProperty('_via_image_id_list') ) {
+          _via_image_id_list.push(img_id);
+          _via_image_filename_list.push( d['_via_img_metadata'][img_id].filename );
+        }
+
         set_file_annotations_to_default_value(img_id);
         _via_img_metadata[img_id] = d['_via_img_metadata'][img_id];
         _via_img_count += 1;
       } else {
         console.log('discarding malformed entry for ' + img_id +
                     ': ' + JSON.stringify(d['_via_img_metadata'][img_id]));
+      }
+    }
+
+
+    // import image_id_list which records the order of images
+    if( d.hasOwnProperty('_via_image_id_list') ) {
+      _via_image_id_list = d['_via_image_id_list'];
+      for(var img_id_index in d['_via_image_id_list']) {
+        var img_id = d['_via_image_id_list'][img_id_index];
+        _via_image_filename_list.push(_via_img_metadata[img_id]['filename']);
       }
     }
 

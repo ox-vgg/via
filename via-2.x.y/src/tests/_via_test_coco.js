@@ -10,37 +10,86 @@ var coco_proj_str = '{"info": {"description": "COCO 2017 Dataset", "url": "http:
 
 function _via_test_case_coco_import() {
   return new Promise( async function(ok_callback, err_callback) {
-    //console.log(coco_proj_str);
     import_coco_annotations_from_json(coco_proj_str).then(function(ok) {
       if( !_via_attributes['region'].hasOwnProperty('furniture') ||
           !_via_attributes['region'].hasOwnProperty('kitchen') ||
           !_via_attributes['region'].hasOwnProperty('person') ) {
-        err_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'malformed attributes'});
+        ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'malformed attributes'});
+        return;
       }
       if( !_via_attributes['region']['furniture']['options']['64'] === 'potted plant' ||
           !_via_attributes['region']['kitchen']['options']['44'] === 'bottle' ||
           !_via_attributes['region']['person']['options']['1'] === 'person' ) {
-        err_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'malformed attribute options'});
+        ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'malformed attribute options'});
+        return;
       }
 
       if( !_via_img_metadata.hasOwnProperty('37777') ||
           !_via_img_metadata.hasOwnProperty('87038') ||
           !_via_img_metadata.hasOwnProperty('397133') ) {
-        err_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'image missing'});
+        ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'image missing'});
+        return;
       }
       if( !_via_img_metadata['37777']['regions'][0]['region_attributes']['furniture'] === '64' ||
           !_via_img_metadata['87038']['regions'][0]['region_attributes']['person'] === '1' ||
           !_via_img_metadata['397133']['regions'][0]['region_attributes']['kitchen'] === '44' ) {
-        err_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'region attribute malformed'});
+        ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'region attribute malformed'});
+        return;
       }
       if( !_via_img_metadata['37777']['regions'][0]['shape_attributes']['all_points_x'].length === 11 ||
           !_via_img_metadata['87038']['regions'][0]['shape_attributes']['all_points_x'].length === 23 ||
           !_via_img_metadata['397133']['regions'][0]['shape_attributes']['all_points_x'].length === 24 ) {
-        err_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'shape attribute malformed'});
+        ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'shape attribute malformed'});
+        return;
       }
       ok_callback({'has_passed':true, 'name':_via_test_case_coco_import.name, 'message':'coco import done'});
     }, function(err) {
-      err_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'import_coco_annotations_from_json() failed'});
+      ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'import_coco_annotations_from_json() failed'});
+    });
+  });
+}
+
+function _via_test_case_coco_export() {
+  return new Promise( async function(ok_callback, err_callback) {
+    import_coco_annotations_from_json(coco_proj_str).then(function() {
+      img_stat_set_all().then( function() {
+        var coco_sent = JSON.parse(coco_proj_str);
+        var coco_got = JSON.parse(export_project_to_coco_format());
+
+        if( !(coco_got['images'].length === coco_sent['images'].length) ||
+            !(coco_got['annotations'].length === coco_sent['annotations'].length) ||
+            !(coco_got['categories'].length === coco_sent['categories'].length)
+          ) {
+          ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'wrong number of entries'});
+          return;
+        }
+
+        if( JSON.stringify(coco_got['categories']) !== JSON.stringify(coco_sent['categories']) ) {
+          ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'malformed categories'});
+          return;
+        }
+
+        if( !(coco_got['images'][0]['coco_url'] === coco_sent['images'][0]['coco_url']) ||
+            !(coco_got['images'][1]['coco_url'] === coco_sent['images'][1]['coco_url']) ||
+            !(coco_got['images'][2]['coco_url'] === coco_sent['images'][2]['coco_url']) ||
+            !(coco_got['images'][0]['id'] === coco_sent['images'][0]['id']) ||
+            !(coco_got['images'][1]['id'] === coco_sent['images'][1]['id']) ||
+            !(coco_got['images'][2]['id'] === coco_sent['images'][2]['id']) ||
+            !(coco_got['images'][0]['height'] === coco_sent['images'][0]['height']) ||
+            !(coco_got['images'][1]['width'] === coco_sent['images'][1]['width']) ||
+            !(coco_got['images'][2]['height'] !== coco_sent['images'][2]['height'])
+          ) {
+          ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'malformed images'});
+          return;
+        }
+        //console.log(JSON.stringify(coco_got['annotations'][0]))
+        //console.log(JSON.stringify(coco_sent['annotations'][0]))
+        ok_callback({'has_passed':true, 'name':_via_test_case_coco_import.name, 'message':'coco import done'});
+      }, function(imstat_err) {
+        ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'failed to compute image width and height using img_stat_set_all()'});
+      });
+    }, function(err) {
+      ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'import_coco_annotations_from_json() failed'});
     });
   });
 }

@@ -27,10 +27,8 @@ async function _via_test_init_regression_tests() {
 }
 
 async function _via_test_run_regression_tests() {
-  var i, n;
-  n = _via_test_regression_tests.length;
   var test_case_result, test_case_name;
-  for ( i = 0; i < n; ++i ) {
+  for( var i = 0; i < _via_test_regression_tests.length; ++i ) {
     _via_test_ongoing_unit_test_id = i;
     test_case_name   = _via_test_regression_tests[_via_test_ongoing_unit_test_id].name;
     test_case_result = await _via_test_regression_tests[_via_test_ongoing_unit_test_id]();
@@ -39,10 +37,11 @@ async function _via_test_run_regression_tests() {
       _via_test_log(test_case_name + ' : PASSED ');
     } else {
       _via_test_result_failed.push( test_case_result );
-      _via_test_log(test_case_name + ' : FAILED ************************************');
+      _via_test_log(test_case_name + ' : FAILED : ' + test_case_result.message);
     }
   }
 
+  /*
   if ( _via_test_result_passed.length ) {
   _via_test_log('_via_test_run_regression_tests(): summary of PASSED test cases');
     _via_test_print_test_result(_via_test_result_passed);
@@ -52,6 +51,7 @@ async function _via_test_run_regression_tests() {
     _via_test_log('_via_test_run_regression_tests(): summary of FAILED test cases');
     _via_test_print_test_result(_via_test_result_failed);
   }
+  */
 }
 
 function _via_test_print_test_result(results) {
@@ -79,7 +79,7 @@ function _via_test_search_regression_tests() {
       }
     }
   }
-  _via_test_log('_via_test_search_regression_tests(): test cases count = ' + _via_test_regression_tests.length);
+  //_via_test_log('_via_test_search_regression_tests(): test cases count = ' + _via_test_regression_tests.length);
 }
 
 //
