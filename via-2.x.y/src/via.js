@@ -5409,13 +5409,13 @@ function attribute_property_add_new_entry_option(attr_id, attribute_type) {
 function attribute_property_on_update(p) {
   var attr_id = get_current_attribute_id();
   var attr_type = _via_attribute_being_updated;
-  var attr_value = p.value;
+  var new_attr_type = p.value;
 
   switch(p.id) {
   case 'attribute_name':
-    if ( attr_value !== attr_id ) {
+    if ( new_attr_type !== attr_id ) {
       Object.defineProperty(_via_attributes[attr_type],
-                            attr_value,
+                            new_attr_type,
                             Object.getOwnPropertyDescriptor(_via_attributes[attr_type], attr_id));
 
       delete _via_attributes[attr_type][attr_id];
@@ -5424,51 +5424,75 @@ function attribute_property_on_update(p) {
     }
     break;
   case 'attribute_description':
-    _via_attributes[attr_type][attr_id].description = attr_value;
+    _via_attributes[attr_type][attr_id].description = new_attr_type;
     update_attributes_update_panel();
     annotation_editor_update_content();
     break;
   case 'attribute_default_value':
-    _via_attributes[attr_type][attr_id].default_value = attr_value;
+    _via_attributes[attr_type][attr_id].default_value = new_attr_type;
     update_attributes_update_panel();
     annotation_editor_update_content();
     break;
   case 'attribute_type':
-    _via_attributes[attr_type][attr_id].type = attr_value;
-    if( attr_value === VIA_ATTRIBUTE_TYPE.TEXT ) {
+    var old_attr_type = _via_attributes[attr_type][attr_id].type;
+    _via_attributes[attr_type][attr_id].type = new_attr_type;
+    if( new_attr_type === VIA_ATTRIBUTE_TYPE.TEXT ) {
       _via_attributes[attr_type][attr_id].default_value = '';
       delete _via_attributes[attr_type][attr_id].options;
       delete _via_attributes[attr_type][attr_id].default_options;
     } else {
-      // preserve existing options
+      // add options entry (if missing)
       if ( ! _via_attributes[attr_type][attr_id].hasOwnProperty('options') ) {
         _via_attributes[attr_type][attr_id].options = {};
         _via_attributes[attr_type][attr_id].default_options = {};
       }
-
       if ( _via_attributes[attr_type][attr_id].hasOwnProperty('default_value') ) {
         delete _via_attributes[attr_type][attr_id].default_value;
       }
 
-      // collect existing attribute values and add them as options
-      var attr_values = attribute_get_unique_values(attr_type, attr_id);
-      var i;
-      for ( i = 0; i < attr_values.length; ++i ) {
-        var attr_val = attr_values[i];
-        if ( attr_val !== '' ) {
-          _via_attributes[attr_type][attr_id].options[attr_val] = attr_val;
+      // 1. gather all the attribute values in existing metadata
+      var existing_attr_values = attribute_get_unique_values(attr_type, attr_id);
+
+      // 2. for checkbox, radio, dropdown: create options based on existing options and existing values
+      for(var option_id in _via_attributes[attr_type][attr_id]['options']) {
+        if( !existing_attr_values.includes(option_id) ) {
+          _via_attributes[attr_type][attr_id]['options'][option_id] = option_id;
         }
       }
 
-      if( _via_attributes[attr_type][attr_id].type === VIA_ATTRIBUTE_TYPE.RADIO) {
-        var radio_new_default_options = {};
-        for(var default_option_id in _via_attributes[attr_type][attr_id]['default_options']) {
-          if(_via_attributes[attr_type][attr_id]['default_options'][default_option_id] === true) {
-            radio_new_default_options[default_option_id] = true;
-            break;
+      // update existing metadata to reflect changes in attribute type
+      // ensure that attribute has only one value
+      for(var img_id in _via_img_metadata ) {
+        for(var rindex in _via_img_metadata[img_id]['regions']) {
+          if(_via_img_metadata[img_id]['regions'][rindex]['region_attributes'].hasOwnProperty(attr_id)) {
+            if(old_attr_type === VIA_ATTRIBUTE_TYPE.CHECKBOX &&
+               (new_attr_type === VIA_ATTRIBUTE_TYPE.RADIO ||
+                new_attr_type === VIA_ATTRIBUTE_TYPE.DROPDOWN) ) {
+              // add only if checkbox has only single option selected
+              var sel_option_count = 0;
+              var sel_option_id;
+              for(var option_id in _via_img_metadata[img_id]['regions'][rindex]['region_attributes'][attr_id]) {
+                if(_via_img_metadata[img_id]['regions'][rindex]['region_attributes'][attr_id][option_id]) {
+                  sel_option_count = sel_option_count + 1;
+                  sel_option_id = option_id;
+                }
+              }
+              if(sel_option_count === 1) {
+                _via_img_metadata[img_id]['regions'][rindex]['region_attributes'][attr_id] = sel_option_id;
+              } else {
+                // delete as multiple options cannot be represented as radio or dropdown
+                delete _via_img_metadata[img_id]['regions'][rindex]['region_attributes'][attr_id];
+              }
+            }
+            if( (old_attr_type === VIA_ATTRIBUTE_TYPE.RADIO ||
+                 old_attr_type === VIA_ATTRIBUTE_TYPE.DROPDOWN) &&
+                new_attr_type === VIA_ATTRIBUTE_TYPE.CHECKBOX) {
+              var old_option_id = _via_img_metadata[img_id]['regions'][rindex]['region_attributes'][attr_id];
+              _via_img_metadata[img_id]['regions'][rindex]['region_attributes'][attr_id] = {};
+              _via_img_metadata[img_id]['regions'][rindex]['region_attributes'][attr_id][old_option_id] = true;
+            }
           }
         }
-        _via_attributes[attr_type][attr_id]['default_options'] = radio_new_default_options;
       }
     }
     show_attribute_properties();
