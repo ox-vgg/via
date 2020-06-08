@@ -71,19 +71,28 @@ function _via_test_case_coco_export() {
 
         if( !(coco_got['images'][0]['coco_url'] === coco_sent['images'][0]['coco_url']) ||
             !(coco_got['images'][1]['coco_url'] === coco_sent['images'][1]['coco_url']) ||
-            !(coco_got['images'][2]['coco_url'] === coco_sent['images'][2]['coco_url']) ||
-            !(coco_got['images'][0]['id'] === coco_sent['images'][0]['id']) ||
-            !(coco_got['images'][1]['id'] === coco_sent['images'][1]['id']) ||
-            !(coco_got['images'][2]['id'] === coco_sent['images'][2]['id']) ||
-            !(coco_got['images'][0]['height'] === coco_sent['images'][0]['height']) ||
-            !(coco_got['images'][1]['width'] === coco_sent['images'][1]['width']) ||
-            !(coco_got['images'][2]['height'] !== coco_sent['images'][2]['height'])
-          ) {
-          ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'malformed images'});
+            !(coco_got['images'][2]['coco_url'] === coco_sent['images'][2]['coco_url'])) {
+          ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'malformed coco_url'});
           return;
         }
-        //console.log(JSON.stringify(coco_got['annotations'][0]))
-        //console.log(JSON.stringify(coco_sent['annotations'][0]))
+
+        if( !(coco_got['images'][0]['id'] === coco_sent['images'][0]['id']) ||
+            !(coco_got['images'][1]['id'] === coco_sent['images'][1]['id']) ||
+            !(coco_got['images'][2]['id'] === coco_sent['images'][2]['id'])) {
+          ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'malformed image_id'});
+          return;
+        }
+
+        if( !(coco_got['images'][0]['height'] === coco_sent['images'][0]['height']) ||
+            !(coco_got['images'][0]['width'] === coco_sent['images'][0]['width']) ||
+            !(coco_got['images'][1]['width'] === coco_sent['images'][1]['width']) ||
+            !(coco_got['images'][1]['height'] === coco_sent['images'][1]['height']) ||
+            !(coco_got['images'][2]['width'] === coco_sent['images'][2]['width']) ||
+            !(coco_got['images'][2]['height'] === coco_sent['images'][2]['height'])) {
+          ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'malformed image dimension'});
+          return;
+        }
+
         ok_callback({'has_passed':true, 'name':_via_test_case_coco_import.name, 'message':'coco import done'});
       }, function(imstat_err) {
         ok_callback({'has_passed':false, 'name':_via_test_case_coco_import.name, 'message':'failed to compute image width and height using img_stat_set_all()'});
