@@ -12,11 +12,10 @@
     - preload images in adjacent groups to speed up visualization
     - label subgroup of images in a group based on a certain variable
 
-## [2.0.10] - June 02, 2020
- * added missing category_id in COCO exported annotation (issue 273,275)
- * fix for issue #262 coco format for segmentation field
- * fixed annotation import from COCO format (issue 271)
- * COCO export for checkbox and radio attributes now creates a new annotation for each selected opt
+## [2.0.10] - June 08, 2020
+ * rewrote COCO import and export (issues 273, 275, 271, 262)
+ * COCO export only supports RADIO and DROPDOWN attribute types (as these can only be supported by COCO categories)
+ * added tests to ensure that COCO import/export conform to standard COCO dataset
  * malformed entries in project json file are discarded
  * fix for issue #258 - polygon points get bigger with zooming
  * fix for issue #264 to delete region attributes when deleting an attribute
