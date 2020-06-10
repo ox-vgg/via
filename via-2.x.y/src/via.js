@@ -1310,7 +1310,6 @@ function export_project_to_coco_format() {
   }
 
   // add categories
-  var attr_option_id_list = [];
   var attr_option_id_to_category_id = {};
   var unique_category_id = 1;
   for(var attr_name in _via_attributes['region']) {
