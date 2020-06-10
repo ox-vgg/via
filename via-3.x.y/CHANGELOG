@@ -1,3 +1,8 @@
+## [3.0.8] - not release
+ * @todo Annotate an ellipse with five clicks on the border (https://gitlab.com/vgg/via/-/issues/279)
+ * import/export coco format
+ * if attribute values shown as rows of temporal segmenter contains numbers, they are now sorted numerically
+
 ## [3.0.7] - 07 May 2020
  * value (instead of key) shown for SELECT type attributes in video timeline
  * users can select the number of timeline that can be seen at any time

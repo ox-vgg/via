@@ -1806,12 +1806,32 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
     this.group[default_gid] = [];
     this.gid_list.push(default_gid);
   }
-  this.gid_list.sort(); // sort by group-id
+  this.gid_list.sort(this._compare_gid.bind(this)); // sort by group-id
 
   // sort each group elements based on time
   var gid;
   for ( gid in this.group ) {
     this.group[gid].sort( this._compare_mid_by_time.bind(this) );
+  }
+}
+
+_via_temporal_segmenter.prototype._compare_gid = function(gid1_str, gid2_str) {
+  var gid1 = parseInt(gid1_str);
+  var gid2 = parseInt(gid2_str);
+  if(isNaN(gid1) || isNaN(gid2)) {
+    // gid are not numbers and therefore sort them as string
+    if(gid1_str < gid2_str) {
+      return -1;
+    } else {
+      return 1;
+    }
+  } else {
+    // gid are numbers and therefore sort them numerically
+    if(gid1 < gid2) {
+      return -1;
+    } else {
+      return 1;
+    }
   }
 }
 
@@ -2138,7 +2158,7 @@ _via_temporal_segmenter.prototype._toolbar_gid_del = function() {
 _via_temporal_segmenter.prototype._on_event_attribute_update = function(data, event_payload) {
   var aid = event_payload.aid;
   if ( this.groupby_aid === aid ) {
-    _via_util_msg_show('Attribute name updated to [' + event_payload.aname + ']');
+    _via_util_msg_show('Attribute [' + this.d.store['attribute'][aid]['aname'] + '] updated.');
     this._init();
   }
 }
