@@ -35,7 +35,7 @@ function _via_temporal_segmenter(file_annotator, container, vid, data, media_ele
   this.EDGE_UPDATE_TIME_DELTA = 1/50;  // in sec
   this.TEMPORAL_SEG_MOVE_OFFSET = 1;   // in sec
   this.DEFAULT_TEMPORAL_SEG_LEN = 1;   // in sec
-  this.GTIMELINE_HEIGHT = 4;           // units of char width
+  this.GTIMELINE_HEIGHT = 8;           // units of char width
   this.GTIMELINE_ZOOM_OFFSET = 4;      // in pixels
   this.DEFAULT_WIDTH_PER_SEC = 6;      // units of char width
   this.GID_COL_WIDTH = 15;             // units of char width
@@ -53,6 +53,8 @@ function _via_temporal_segmenter(file_annotator, container, vid, data, media_ele
   this.metadata_move_start_x = 0;
   this.metadata_move_dx = 0;
   this.metadata_last_added_mid = '';
+
+  this.audio_analyser_active = false;
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -153,10 +155,12 @@ _via_temporal_segmenter.prototype._redraw_all = function() {
     }
   }
 
-  this._redraw_timeline();
+  //this._redraw_timeline(); // this is not required
 
   // draw marker to show current time in group timeline and group metadata
   this._tmetadata_draw_currenttime_mark(tnow);
+
+  this._tmetadata_gtimeline_draw_audio();
 }
 
 _via_temporal_segmenter.prototype._update_playback_rate = function(t) {
@@ -415,8 +419,9 @@ _via_temporal_segmenter.prototype._tmetadata_init = function() {
 
   this.gmetadata_container = document.createElement('div');
   this.gmetadata_container.setAttribute('class', 'gmetadata_container');
-  var gtimeline_container_height = parseInt(this.d.store['config']['ui']['gtimeline_container_height']) - 13;
-  this.gmetadata_container.setAttribute('style', 'max-height:' + gtimeline_container_height + 'ch;');
+
+  var gtimeline_container_maxheight = this.fa.va.gtimeline_container_height - this.METADATA_CONTAINER_HEIGHT + 5; // 5 is offset obtained using visual inspection
+  this.gmetadata_container.setAttribute('style', 'max-height:' + gtimeline_container_maxheight + 'ch;');
 
   this.gmetadata_grid = document.createElement('div');
   this.gmetadata_grid.setAttribute('class', 'twocolgrid');
@@ -427,6 +432,22 @@ _via_temporal_segmenter.prototype._tmetadata_init = function() {
 
   if ( this.gid_list.length ) {
     this._tmetadata_group_gid_sel(0);
+  }
+}
+
+_via_temporal_segmenter.prototype._tmetadata_audio_init = function() {
+  try {
+    this.audioctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.analyser = this.audioctx.createAnalyser();
+    var audiosrc = this.audioctx.createMediaElementSource(this.m);
+    audiosrc.connect(this.analyser);
+    this.analyser.connect(this.audioctx.destination)
+
+    this.analyser.fftSize = 32;
+    this.audio_data = new Float32Array(this.analyser.frequencyBinCount);
+    this.audio_analyser_active = true;
+  } catch(ex) {
+    this.audio_analyser_active = false;
   }
 }
 
@@ -727,6 +748,29 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_draw = function() {
       }
     }
     this.gtimelinectx.fill();
+  }
+
+  // the remaining vertical space (at the bottom) is used to draw audio channel amplitude
+  // drawing of audio visualization is triggered by _tmetadata_init() which in
+  // turn continually triggers the _tmetadata_gtimeline_draw_audio() method
+  // in _redraw_all()
+}
+
+_via_temporal_segmenter.prototype._tmetadata_gtimeline_draw_audio = function() {
+  if(!this.m.paused && this.audio_analyser_active) {
+    var x = this._tmetadata_gtimeline_time2canvas(this.m.currentTime);
+    this.analyser.getFloatTimeDomainData(this.audio_data);
+    var avg = 0.0;
+    for(var i=0; i<this.audio_data.length; ++i) {
+      avg += Math.abs(this.audio_data[i]);
+    }
+    avg = avg / this.audio_data.length;
+
+    var max_height = (this.linehn[8] - this.linehn[4]);
+    var y = Math.round( avg * 3 * max_height );
+    this.gtimelinectx.fillStyle = '#4d4d4d';
+    this.gtimelinectx.lineWidth = this.DRAW_LINE_WIDTH;
+    this.gtimelinectx.fillRect(x, Math.max(this.linehn[4], this.linehn[6] - y), 2, 2*y);
   }
 }
 
@@ -1458,6 +1502,9 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
   // play/pause
   if ( e.key === ' ' ) {
     e.preventDefault();
+    if( !this.audio_analyser_active) {
+      this._tmetadata_audio_init();
+    }
     if ( this.m.paused ) {
       this.m.play();
       _via_util_msg_show('Playing ...');
@@ -2038,26 +2085,23 @@ _via_temporal_segmenter.prototype._toolbar_init = function() {
   }
   pb_mode_container.appendChild(pb_mode_select);
 
-  var gtimeline_height = document.createElement('select');
-  gtimeline_height.setAttribute('title', 'Number of timeline entries visible to the user at any time.');
-  var gtimeline_height_options = {'1':'17', '2':'20', '3':'24', '4':'28', '5':'33', '6':'37', '7':'41', '8':'45',
-                                  '9':'49', '10':'53', '12':'61', '14':'69', '16':'76', '18':'85'};
-  gtimeline_height.addEventListener('change', function(e) {
-    this.d.store['config']['ui']['gtimeline_container_height'] = e.target.options[e.target.selectedIndex].value;
-    this.fa.va.view_show(this.vid);
-  }.bind(this));
-  for(var gtimeline_count in gtimeline_height_options) {
+  var gtimeline_row_count_select = document.createElement('select');
+  gtimeline_row_count_select.setAttribute('title', 'Number of timeline entries visible to the user at any time.');
+  for(var row_count in this.fa.va.GTIMELINE_ROW_HEIGHT_MAP) {
     var option = document.createElement('option');
-    var height = gtimeline_height_options[gtimeline_count];
-    option.setAttribute('value', height);
-    if(height === this.d.store['config']['ui']['gtimeline_container_height']) {
+    option.setAttribute('value', row_count);
+    if(row_count === this.d.store['config']['ui']['gtimeline_visible_row_count']) {
       option.setAttribute('selected', '');
     }
-    option.innerHTML = gtimeline_count;
-    gtimeline_height.appendChild(option);
+    option.innerHTML = row_count;
+    gtimeline_row_count_select.appendChild(option);
   }
+  gtimeline_row_count_select.addEventListener('change', function(e) {
+    this.d.store['config']['ui']['gtimeline_visible_row_count'] = e.target.options[e.target.selectedIndex].value;
+    this.fa.va.view_show(this.vid);
+  }.bind(this));
   var gtimeline_height_container = document.createElement('div');
-  gtimeline_height_container.appendChild(gtimeline_height);
+  gtimeline_height_container.appendChild(gtimeline_row_count_select);
 
   var keyboard_shortcut = document.createElement('span');
   keyboard_shortcut.setAttribute('class', 'text_button');

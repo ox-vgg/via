@@ -43,7 +43,7 @@ _via_data.prototype._init_default_project = function() {
       'file_metadata_editor_visible':true,
       'spatial_metadata_editor_visible':true,
       'spatial_region_label_attribute_id':'',
-      'gtimeline_container_height':'45', // in units of ch where 1ch = width of the character "0"
+      'gtimeline_visible_row_count':'4',
     },
   };
   p['attribute'] = {};

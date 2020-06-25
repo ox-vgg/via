@@ -310,6 +310,7 @@ _via_file_annotator.prototype._file_create_html_element = function() {
     media.setAttribute('controls', 'true');
     media.setAttribute('playsinline', 'true');
     media.setAttribute('loop', 'false');
+    //media.setAttribute('crossorigin', 'anonymous');
     // @todo : add subtitle track for video
     media.setAttribute('preload', 'auto');
     media.addEventListener('pause', function(e) {
