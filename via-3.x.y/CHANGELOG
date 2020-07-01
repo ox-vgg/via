@@ -2,8 +2,12 @@
  * @todo Annotate an ellipse with five clicks on the border (https://gitlab.com/vgg/via/-/issues/279)
 
 ## [3.0.8] - 01 July 2020
- * HTML application () to export frame level video annotations in COCO format
- * if attribute values shown as rows of temporal segmenter contains numbers, they are now sorted numerically
+ * audio amplitude shown in temporal segmentation timeline (experimental feature, hence disabled by default)
+ * HTML application (https://gitlab.com/vgg/via/-/blob/via-3.x.y/via-3.x.y/scripts/io/via3_video_annotation_to_coco.html) to export frame level video annotations in COCO format
+ * if attribute values shown as rows of temporal segmenter contains numbers, they will be sorted numerically
+ * add/delete of timeline entries
+ * timeline list can now be reordered using Ctrl + up/down arrow
+ * fixed issue with nested spatial region selection
 
 ## [3.0.7] - 07 May 2020
  * value (instead of key) shown for SELECT type attributes in video timeline
