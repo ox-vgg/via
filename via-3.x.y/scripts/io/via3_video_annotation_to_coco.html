@@ -15,13 +15,18 @@
       body { font-size:1em; }
       li { margin:0.4em 0; }
       input { font-size:small; }
+      .error { color:red; }
     </style>
   </head>
-
+<!--
+## CHANGELOG
+   May  2020 : initial prototype to extract COCO annotation from insect videos annotated using VIA3
+01 July 2020 : upgraded to support VIA3 shared projects (to extract COCO annotations from mice videos)
+-->
   <body>
     <p id="toolbar">
       <h1>Export VIA3 Frame Level Video Annotations to COCO Format</h1>
-      <p>This self contained HTML application can be used to export manual video annotations created using <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">VIA3</a> to <a href="https://cocodataset.org/#format-data">COCO</a> format. Please follow the instructions below carefully as it is needed to allow your browser to quickly and easily export video frames and its associated annotations. This application has only been tested to work in Firefox.</p>
+    <p>This self contained HTML application can be used to export manual video annotations created using <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">VIA3</a> to <a href="https://cocodataset.org/#format-data">COCO</a> format. Please follow the instructions below carefully as it is needed to allow your browser to quickly and easily export video frames and its associated annotations. This application has only been tested to work in Firefox 68.9.0 (or higher).</p>
       <ol>
         <li>Ensure that:
           <ul>
@@ -201,7 +206,6 @@
         filename_index = 0;
         global_annotation_index = 1;
         document.getElementById('log').innerHTML += 'Starting extraction of annotations from ' + filename_list.length + ' frames of ' + Object.keys(d['file']).length + ' videos ...<br/>';
-
         extract_all_frames(); // trigger download
       }
 
@@ -235,7 +239,17 @@
           extract_all_frames();
         }
 
-        document.getElementById('log').innerHTML += '<br/>[' + (filename_index+1) + '/' + filename_list.length + '] Extracting regions for video ' + filename + ' : ';
+        var filename_without_path = filename;
+        if(filename.includes('/') || filename.includes('\\')) {
+          var last_slash;
+          if(filename.includes('/')) {
+            last_slash = filename.lastIndexOf('/');
+          } else {
+            last_slash = filename.lastIndexOf('\\');
+          }
+          filename_without_path = filename.substring(last_slash+1);
+        }
+        document.getElementById('log').innerHTML += '<br/>[' + (filename_index+1) + '/' + filename_list.length + '] Extracting regions for video ' + filename_without_path + ' : ';
 
         var video = document.createElement('video');
         video.setAttribute('controls', 'false');
@@ -249,12 +263,15 @@
           time_index = 0;
           video.currentTime = parseFloat(time_list[time_index]);
         });
-        video.setAttribute('src', filename);
+        video.addEventListener('error', function() {
+          document.getElementById('log').innerHTML += '<br/><span class="error">Error: failed to load video ' + this.src + '</span>';
+        });
+        video.setAttribute('src', filename_without_path);
       }
 
       function on_video_seeked(e) {
         if(cancel_process) {
-          document.getElementById('log').innerHTML += '<br/>Cancelled';
+          document.getElementById('log').innerHTML += '<br/><span class="error">Cancelled by user</span>';
           return;
         }
         var filename = filename_list[filename_index];
@@ -293,7 +310,7 @@
                   ctx.stroke();
                   break;
                 default:
-                  console.log('cannot draw region shape ' + region[0]);
+                  document.getElementById('log').innerHTML += '<br/>cannot draw region shape ' + JSON.stringify(region);
                 }
               }
 
@@ -325,8 +342,6 @@
         };
         coco['images'].push(image);
 
-        console.log(download_image)
-        console.log(drawn_region_count)
         if(download_image && drawn_region_count) {
           var image = frame_canvas.toDataURL('image/jpeg').replace('image/jpeg', 'image/octet-stream');
           download_as_file(image, framedata[filename][time]['image_filename']);
@@ -412,6 +427,7 @@
         if (text_file) {
           var text_reader = new FileReader();
           text_reader.addEventListener( 'error', function() {
+            document.getElementById('log').innerHTML += '<br/><span class="error">Error: failed to read file ' + JSON.stringify(text_file) + '</span>';
             callback_function('');
           }, false);
 
