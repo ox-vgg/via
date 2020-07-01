@@ -54,6 +54,7 @@ function _via_temporal_segmenter(file_annotator, container, vid, data, media_ele
   this.metadata_move_dx = 0;
   this.metadata_last_added_mid = '';
 
+  this.show_audio = false;             // experimental, hence disabled by default
   this.audio_analyser_active = false;
 
   // registers on_event(), emit_event(), ... methods from
@@ -160,7 +161,9 @@ _via_temporal_segmenter.prototype._redraw_all = function() {
   // draw marker to show current time in group timeline and group metadata
   this._tmetadata_draw_currenttime_mark(tnow);
 
-  this._tmetadata_gtimeline_draw_audio();
+  if(this.show_audio) {
+    this._tmetadata_gtimeline_draw_audio();
+  }
 }
 
 _via_temporal_segmenter.prototype._update_playback_rate = function(t) {
@@ -439,8 +442,8 @@ _via_temporal_segmenter.prototype._tmetadata_audio_init = function() {
   try {
     this.audioctx = new (window.AudioContext || window.webkitAudioContext)();
     this.analyser = this.audioctx.createAnalyser();
-    var audiosrc = this.audioctx.createMediaElementSource(this.m);
-    audiosrc.connect(this.analyser);
+    this.audiosrc = this.audioctx.createMediaElementSource(this.m);
+    this.audiosrc.connect(this.analyser);
     this.analyser.connect(this.audioctx.destination)
 
     this.analyser.fftSize = 32;
@@ -586,6 +589,7 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_spatial_mid = functi
       }
     }
   }
+  this._redraw_timeline();
 }
 
 _via_temporal_segmenter.prototype._tmetadata_boundary_add_spatial_mid = function(mid) {
@@ -682,6 +686,7 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_zoomin = function() {
   if ( wps < this.gtimeline.width ) {
     this.tmetadata_width_per_sec = wps;
     this._tmetadata_boundary_update(this.tmetadata_gtimeline_tstart);
+    this._redraw_timeline();
     this._redraw_all();
   }
 }
@@ -691,6 +696,7 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_zoomout = function() {
   if ( wps > 1 ) {
     this.tmetadata_width_per_sec = wps;
     this._tmetadata_boundary_update(this.tmetadata_gtimeline_tstart);
+    this._redraw_timeline();
     this._redraw_all();
   }
 }
@@ -767,7 +773,7 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_draw_audio = function() {
     avg = avg / this.audio_data.length;
 
     var max_height = (this.linehn[8] - this.linehn[4]);
-    var y = Math.round( avg * 3 * max_height );
+    var y = Math.round( avg * max_height );
     this.gtimelinectx.fillStyle = '#4d4d4d';
     this.gtimelinectx.lineWidth = this.DRAW_LINE_WIDTH;
     this.gtimelinectx.fillRect(x, Math.max(this.linehn[4], this.linehn[6] - y), 2, 2*y);
@@ -779,15 +785,17 @@ _via_temporal_segmenter.prototype._tmetadata_draw_currenttime_mark = function(tn
   this.gtimelinectx.fillStyle = '#ffffff';
   this.gtimelinectx.fillRect(0, 0, this.gtimeline.width, this.linehn[2] - 1);
 
-  var markx = this._tmetadata_gtimeline_time2canvas(tnow);
-
-  this.gtimelinectx.fillStyle = 'black';
-  this.gtimelinectx.beginPath();
-  this.gtimelinectx.moveTo(markx, this.linehn[2]);
-  this.gtimelinectx.lineTo(markx - this.linehb2, this.linehn[1]);
-  this.gtimelinectx.lineTo(markx + this.linehb2, this.linehn[1]);
-  this.gtimelinectx.moveTo(markx, this.linehn[2]);
-  this.gtimelinectx.fill();
+  if ( tnow >= this.tmetadata_gtimeline_tstart &&
+       tnow <= this.tmetadata_gtimeline_tend ) {
+    var markx = this._tmetadata_gtimeline_time2canvas(tnow);
+    this.gtimelinectx.fillStyle = 'black';
+    this.gtimelinectx.beginPath();
+    this.gtimelinectx.moveTo(markx, this.linehn[2]);
+    this.gtimelinectx.lineTo(markx - this.linehb2, this.linehn[1]);
+    this.gtimelinectx.lineTo(markx + this.linehb2, this.linehn[1]);
+    this.gtimelinectx.moveTo(markx, this.linehn[2]);
+    this.gtimelinectx.fill();
+  }
 
   // show playback rate
   this.gtimelinectx.font = '10px Sans';
@@ -1502,7 +1510,7 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
   // play/pause
   if ( e.key === ' ' ) {
     e.preventDefault();
-    if( !this.audio_analyser_active) {
+    if( this.show_audio && !this.audio_analyser_active) {
       this._tmetadata_audio_init();
     }
     if ( this.m.paused ) {

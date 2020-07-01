@@ -1,6 +1,8 @@
-## [3.0.8] - not release
+## [3.0.9] - not release yet
  * @todo Annotate an ellipse with five clicks on the border (https://gitlab.com/vgg/via/-/issues/279)
- * import/export coco format
+
+## [3.0.8] - 01 July 2020
+ * HTML application () to export frame level video annotations in COCO format
  * if attribute values shown as rows of temporal segmenter contains numbers, they are now sorted numerically
 
 ## [3.0.7] - 07 May 2020
