@@ -18,7 +18,7 @@ with open(filename_list[0], 'r') as f:
 
 if '_via_data_format_version' not in via2:
   via2['_via_data_format_version'] = '2.0.10'
-  via2['_via_image_id_list'] = Object.keys(via2['_via_img_metadata'])
+  via2['_via_image_id_list'] = via2['_via_img_metadata'].keys()
 
 discarded_count = 0
 for i in range(1, len(filename_list)):
