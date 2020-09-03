@@ -202,16 +202,24 @@ _via_dp[1]['store']['project'] = {
   'pname':   'Audio Annotation',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
-  'data_format_version': '3.1.0',
+  'data_format_version': '3.1.1',
+  'vid_list': ['1', '2', '3', '4'],
 };
+
 _via_dp[1]['store']['config'] = {
   'file': {
-    'path':'/data/datasets/via/via-3.x.y/speaker_diarisation/',
+    'loc_prefix': {
+      '1':'',
+      '2':'',
+      '3':'file:///home/tlm/code/via3/via/via-3.x.y/data/sample_audio/',
+      '4':'',
+    },
   },
   'ui': {
     'file_content_align':'center'
   }
 };
+
 _via_dp[1]['store']['attribute'] = {
   '1': {
     'aname':'Speaker',
@@ -246,7 +254,7 @@ _via_dp[1]['store']['file'] = {
     'fid':1,
     'fname':'Drone_liveatc_PRFlyer.mp3',
     'type':8,
-    'loc':1,
+    'loc':3,
     'src':'Drone_liveatc_PRFlyer.mp3',
   },
   '2':{
@@ -288,7 +296,6 @@ _via_dp[1]['store']['view'] = {
   },
 };
 
-_via_dp[1]['store']['vid_list'] = ['1', '2', '3', '4'];
 _via_dp[1]['store']['metadata'] = {
   '-glfwaaX': {
     'vid': '1',
@@ -500,7 +507,7 @@ _via_dp[2]['store']['config'] = {
     'loc_prefix': {
       '1':'',
       '2':'',
-      '3':'file:///data/datasets/via/via-3.x.y/activity/',
+      '3':'file:///home/tlm/data/via/debug/',
       '4':'',
     },
   },
@@ -512,7 +519,7 @@ _via_dp[2]['store']['attribute'] = {
   '1': {
     'aname':'Activity',
     'anchor_id':'FILE1_Z2_XY0',
-    'type':1,
+    'type':4,
     'desc':'Activity',
     'options':{},
     'default_option_id':'',
@@ -551,8 +558,8 @@ _via_dp[2]['store']['attribute'] = {
       '2':'Tool',
       '3':'Unknown',
     },
-    'default_option_id':'3',
-  },
+    'default_option_id':'3'
+  }
 };
 _via_dp[2]['store']['file'] = {
   '1':{
@@ -621,7 +628,7 @@ _via_dp[2]['store']['metadata'] = {
   'mxCVj1qz': {
     'vid': '1',
     'flg': 0,
-    'z': [32, 63],
+    'z': [32, 44.3],
     'xy': [],
     'av': {
       '1':'3. cut garlic',
@@ -884,9 +891,9 @@ _via_dp[4]['store']['attribute'] = {
   '2': {
     'aname':'Caption',
     'anchor_id':'FILE1_Z0_XY0',
-    'type':1,
+    'type':3,
     'desc':'Image Caption',
-    'options':{},
+    'options':{ '1':'a', '2':'b', '3':'c' },
     'default_option_id':'',
   },
 };

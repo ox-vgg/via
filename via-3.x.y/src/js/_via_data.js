@@ -43,6 +43,7 @@ _via_data.prototype._init_default_project = function() {
       'file_metadata_editor_visible':true,
       'spatial_metadata_editor_visible':true,
       'spatial_region_label_attribute_id':'',
+      'gtimeline_visible_row_count':'4',
     },
   };
   p['attribute'] = {};
@@ -265,13 +266,16 @@ _via_data.prototype.file_update = function(fid, name, value) {
 
 _via_data.prototype.file_get_src = function(fid) {
   if ( this.store.file[fid].loc === _VIA_FILE_LOC.LOCAL ) {
-    this.file_free_resources(fid);
-    if ( this.file_ref.hasOwnProperty(fid) ) {
-      this.file_object_uri[fid] = URL.createObjectURL( this.file_ref[fid] );
-    } else {
-      this.file_object_uri[fid] = '';
+    if(this.file_object_uri.hasOwnProperty(fid)) {
+      return this.file_object_uri[fid];
     }
-    return this.file_object_uri[fid];
+
+    if(this.file_ref.hasOwnProperty(fid)) {
+      this.file_object_uri[fid] = URL.createObjectURL( this.file_ref[fid] );
+      return this.file_object_uri[fid];
+    } else {
+      return '';
+    }
   } else {
     return this.store.config.file.loc_prefix[ this.store.file[fid].loc ] + this.store.file[fid].src;
   }
@@ -286,10 +290,14 @@ _via_data.prototype.file_get_uri = function(fid) {
 }
 
 _via_data.prototype.file_free_resources = function(fid) {
-  if ( this.file_object_uri.hasOwnProperty(fid) ) {
-    URL.revokeObjectURL( this.file_object_uri[fid] );
-    delete this.file_object_uri[fid];
-  }
+  // for files selected using browser's File Selector, we do not
+  // need to revoke the ObjectURL because these are simply pointers
+  // to the user selected files. If you use revokeObjectURL() to free
+  // resources, it will invalidate the pointer to user selected file
+  // see https://stackoverflow.com/a/49346614
+
+  //URL.revokeObjectURL( this.file_object_uri[fid] );
+  //delete this.file_object_uri[fid];
 }
 
 //

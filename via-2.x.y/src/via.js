@@ -50,7 +50,7 @@
 
 "use strict";
 
-var VIA_VERSION      = '2.0.8';
+var VIA_VERSION      = '2.0.9';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -917,11 +917,13 @@ function coco_to_via(coco) {
     if ( annotation_list.hasOwnProperty(coco_img_id) ) {
       for ( var i in annotation_list[coco_img_id] ) {
         var annotation = coco.annotations[ annotation_list[coco_img_id][i] ];
-        var bbox = polygon_to_bbox(annotation['segmentation']);
-        var area = bbox[2] * bbox[3];
-        var r = { 'shape_attributes': { 'name':'polygon', 'all_points_x':[], 'all_points_y':[] },
-                  'region_attributes': {},
-                };
+
+        var category_id = -1;
+        if ( annotation.category_id !== "undefined") {
+          category_id = annotation.category_id - 1;
+        }
+
+        var bbox_from_polygon = polygon_to_bbox(annotation['segmentation']);
 
         // fix for variations in segmentation:
         // annotation['segmentation'] = [x0,y0,x1,y1,...]
@@ -930,12 +932,41 @@ function coco_to_via(coco) {
         if ( seg.length === 1 && seg[0].length !== 0 ) {
           seg = annotation['segmentation'][0];
         }
-        for ( var j = 0; j < seg.length; j = j + 2 ) {
-          r['shape_attributes']['all_points_x'].push( seg[j] );
-          r['shape_attributes']['all_points_y'].push( seg[j+1] );
+
+        // check if imported region is polygon or rectangle
+        var is_rectangle = true;
+        var anno_bbox = annotation['bbox'];
+        for (var i = 0; i < anno_bbox.length; ++i) {
+          if (anno_bbox[i] !== bbox_from_polygon[i]) {
+            is_rectangle = false;
+            break;
+          }
         }
-        var cat_name = category_list[ annotation['category_id'] ];
-        r['region_attributes']['category'] = cat_name;
+
+        if ( seg.length === 8 && is_rectangle ) {
+          // a rectangle
+          var r = { 'shape_attributes': { 'name':'rect', 'x': [], 'y': [], 'width': [], 'height': []},
+                    'region_attributes': {},
+                  };
+          r['shape_attributes']['x'].push( anno_bbox[0] );
+          r['shape_attributes']['y'].push( anno_bbox[1] );
+          r['shape_attributes']['width'].push( anno_bbox[2] );
+          r['shape_attributes']['height'].push( anno_bbox[3] );
+
+          if ( category_id !== -1 && !isNaN(category_id)) {
+            var sup_category = coco.categories[category_id]['supercategory'];
+            r['region_attributes'][sup_category] = coco.categories[category_id]['name'];
+          }
+        } else {
+          // other shapes
+          var r = { 'shape_attributes': { 'name':'polygon', 'all_points_x':[], 'all_points_y':[] },
+            'region_attributes': {},
+          };
+          for ( var j = 0; j < seg.length; j = j + 2 ) {
+            r['shape_attributes']['all_points_x'].push( seg[j] );
+            r['shape_attributes']['all_points_y'].push( seg[j+1] );
+          }
+        }
         d[via_img_id].regions.push(r);
       }
     }
@@ -1191,25 +1222,9 @@ function pack_via_metadata(return_type) {
         };
         d.licenses = [ { 'id':1, 'name':'Unknown', 'url':'' } ];
 
-        // initialise categories
-        var attrval_to_catid = {};
-        var cat_id = 1;
-        for ( var rid in _via_attributes['region'] ) {
-          if ( _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.CHECKBOX ||
-               _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.DROPDOWN ||
-               _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.RADIO ) {
-            for ( var oid in _via_attributes['region'][rid]['options'] ) {
-              d.categories.push( { 'id':cat_id, 'name':oid, 'supercategory':rid } );
-              attrval_to_catid[oid] = cat_id;
-              cat_id = cat_id + 1;
-            }
-          }
-        }
-
         // add files
         var img_id, file_src;
         var annotation_id = 0;
-        var export_aid = Object.keys(_via_attributes['region'])[0];
         for ( var img_index in _via_image_id_list ) {
           img_id = _via_image_id_list[img_index];
 
@@ -1231,20 +1246,39 @@ function pack_via_metadata(return_type) {
             'date_captured':'',
           } );
 
-          // add metadata
+          // initialize categories
+          var attrval_to_catid = {};
+          var cat_id = 1;
+          for ( var rid in _via_attributes['region'] ) {
+            if ( _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.CHECKBOX ||
+                 _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.DROPDOWN ||
+                 _via_attributes['region'][rid].type === VIA_ATTRIBUTE_TYPE.RADIO ) {
+              for ( var oid in _via_attributes['region'][rid]['options'] ) {
+                d.categories.push( { 'id':cat_id, 'name':oid, 'supercategory':rid } );
+                attrval_to_catid[oid] = cat_id;
+                cat_id = cat_id + 1;
+              }
+            }
+          }
+
           var shape_name, region;
           for ( var rindex in _via_img_metadata[img_id].regions ) {
             region = _via_img_metadata[img_id].regions[rindex];
             if ( region.shape_attributes['name'] === 'rect' ||
                  region.shape_attributes['name'] === 'circle' ||
                  region.shape_attributes['name'] === 'ellipse' ||
-                 region.shape_attributes['name'] === 'polygon' ) {
+                 region.shape_attributes['name'] === 'polygon' ||
+                 region.shape_attributes['name'] === 'point' ) {
               var annotation = via_region_shape_to_coco_annotation(region.shape_attributes);
-              var cat_id = '';
-              if ( typeof(export_aid) !== 'undefined' ) {
-                var avalue = _via_img_metadata[img_id].regions[rindex].region_attributes[export_aid];
-                cat_id = attrval_to_catid[avalue];
+              var attr_val;
+              for(var k in region.region_attributes) {
+                if ( region.region_attributes[k] !== "undefined" &&
+                     Object.entries(region.region_attributes[k]).length > 0) {
+                    attr_val = region.region_attributes[k];
+                }
               }
+              // assume there is only one value (radio button)
+              cat_id = attrval_to_catid[attr_val];
 
               d.annotations.push( Object.assign({
                 'id':annotation_id,
@@ -1273,29 +1307,56 @@ function via_region_shape_to_coco_annotation(shape_attributes) {
   case 'rect':
     var x0 = shape_attributes['x'];
     var y0 = shape_attributes['y'];
-    var w  = shape_attributes['width'];
-    var h  = shape_attributes['height'];
+    var w  = parseInt(shape_attributes['width']);
+    var h  = parseInt(shape_attributes['height']);
     var x1 = x0 + w;
     var y1 = y0 + h;
     annotation['segmentation'] = [x0, y0, x1, y0, x1, y1, x0, y1];
-    annotation['area'] = fixfloat( parseFloat(w)*parseFloat(h) );
+    annotation['area'] =  w * h ;
+
     annotation['bbox'] = [x0, y0, w, h];
     break;
+
+  case 'point':
+    var cx = shape_attributes['cx'];
+    var cy = shape_attributes['cy'];
+    // 2 is for visibility - currently set to always inside segmentation.
+    // see Keypoint Detection: http://cocodataset.org/#format-data
+    annotation['keypoints'] = [cx, cy, 2];
+    annotation['num_keypoints'] = 1;
+    break;
+
   case 'circle':
-  case 'ellipse':
     var a,b;
-    if ( shape_attributes.hasOwnProperty('rx') && shape_attributes.hasOwnProperty('ry')) {
-      a = shape_attributes['rx'];
-      b = shape_attributes['ry'];
-    } else {
-      a = shape_attributes['r'];
-      b = shape_attributes['r'];
-    }
+    a = shape_attributes['r'];
+    b = shape_attributes['r'];
     var theta_to_radian = Math.PI/180;
+
     for ( var theta = 0; theta < 360; theta = theta + VIA_POLYGON_SEGMENT_SUBTENDED_ANGLE ) {
       var theta_radian = theta * theta_to_radian;
       var x = shape_attributes['cx'] + a * Math.cos(theta_radian);
       var y = shape_attributes['cy'] + b * Math.sin(theta_radian);
+      annotation['segmentation'].push( fixfloat(x), fixfloat(y) );
+    }
+    annotation['bbox'] = polygon_to_bbox(annotation['segmentation']);
+    annotation['area'] = annotation['bbox'][2] * annotation['bbox'][3];
+    break;
+
+  case 'ellipse':
+    var a,b;
+    a = shape_attributes['rx'];
+    b = shape_attributes['ry'];
+    var rotation = shape_attributes['theta'];
+    var theta_to_radian = Math.PI/180;
+
+    for ( var theta = 0; theta < 360; theta = theta + VIA_POLYGON_SEGMENT_SUBTENDED_ANGLE ) {
+      var theta_radian = theta * theta_to_radian;
+      var x = shape_attributes['cx'] +
+              ( a * Math.cos(theta_radian) * Math.cos(rotation) ) -
+              ( b * Math.sin(theta_radian) * Math.sin(rotation) );
+      var y = shape_attributes['cy'] +
+              ( a * Math.cos(theta_radian) * Math.sin(rotation) ) +
+              ( b * Math.sin(theta_radian) * Math.cos(rotation) );
       annotation['segmentation'].push( fixfloat(x), fixfloat(y) );
     }
     annotation['bbox'] = polygon_to_bbox(annotation['segmentation']);
@@ -1930,6 +1991,32 @@ function _via_reg_canvas_mouseup_handler(e) {
           annotation_editor_hide();
         }
 
+        // show the region info
+        if (_via_is_region_info_visible) {
+          var canvas_attr = _via_canvas_regions[region_id].shape_attributes;
+
+          switch (canvas_attr['name']) {
+          case VIA_REGION_SHAPE.RECT:
+            break;
+
+          case VIA_REGION_SHAPE.CIRCLE:
+            var rf = document.getElementById('region_info');
+            var attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
+            rf.innerHTML +=  ',' + ' Radius:' + attr['r'];
+            break;
+
+          case VIA_REGION_SHAPE.ELLIPSE:
+            var rf = document.getElementById('region_info');
+            var attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
+            rf.innerHTML +=  ',' + ' X-radius:' + attr['rx'] + ',' + ' Y-radius:' + attr['ry'];
+            break;
+
+          case VIA_REGION_SHAPE.POLYLINE:
+          case VIA_REGION_SHAPE.POLYGON:
+            break;
+          }
+        }
+
         show_message('Region selected. If you intended to draw a region, click again inside the selected region to start drawing a region.')
       } else {
         if ( _via_is_user_drawing_region ) {
@@ -2133,6 +2220,31 @@ function _via_reg_canvas_mousemove_handler(e) {
   }
 
   if ( _via_is_region_selected ) {
+    // display the region's info if a region is selected
+    if ( rf != null && _via_is_region_info_visible && _via_user_sel_region_id !== -1) {
+      var canvas_attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
+      switch (canvas_attr['name']) {
+      case VIA_REGION_SHAPE.RECT:
+        break;
+
+      case VIA_REGION_SHAPE.CIRCLE:
+        var rf = document.getElementById('region_info');
+        var attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
+        rf.innerHTML +=  ',' + ' Radius:' + attr['r'];
+        break;
+
+      case VIA_REGION_SHAPE.ELLIPSE:
+        var rf = document.getElementById('region_info');
+        var attr = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
+        rf.innerHTML +=  ',' + ' X-radius:' + attr['rx'] + ',' + ' Y-radius:' + attr['ry'];
+        break;
+
+      case VIA_REGION_SHAPE.POLYLINE:
+      case VIA_REGION_SHAPE.POLYGON:
+        break;
+      }
+    }
+
     if ( !_via_is_user_resizing_region ) {
       // check if user moved mouse cursor to region boundary
       // which indicates an intention to resize the region
@@ -2313,7 +2425,9 @@ function _via_reg_canvas_mousemove_handler(e) {
                               new_r,
                               true);
       if ( rf != null && _via_is_region_info_visible ) {
-        rf.innerHTML +=  ',' + ' R:' + Math.round(new_r);
+        var curr_texts = rf.innerHTML.split(",");
+        rf.innerHTML = "";
+        rf.innerHTML +=  curr_texts[0] + ',' + curr_texts[1] + ',' + ' Radius:' + Math.round(new_r);
       }
       break;
 
@@ -2348,7 +2462,9 @@ function _via_reg_canvas_mousemove_handler(e) {
                                new_theta,
                                true);
       if ( rf != null && _via_is_region_info_visible ) {
-        rf.innerHTML +=  ',' + ' X-radius:' + fixfloat(new_rx) + ',' + ' Y-radius:' + fixfloat(new_ry);
+        var curr_texts = rf.innerHTML.split(",");
+        rf.innerHTML = "";
+        rf.innerHTML = curr_texts[0] + ',' + curr_texts[1] + ',' + ' X-radius:' + fixfloat(new_rx) + ',' + ' Y-radius:' + fixfloat(new_ry);
       }
       break;
 
@@ -2404,23 +2520,16 @@ function _via_reg_canvas_mousemove_handler(e) {
                               attr['cy'] + move_y,
                               attr['r'],
                               true);
-      // display the current region info
-      if ( rf != null && _via_is_region_info_visible ) {
-        rf.innerHTML +=  ',' + ' Radius:' + attr['r'];
-      }
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
+      if (typeof(attr['theta']) === 'undefined') { attr['theta'] = 0; }
       _via_draw_ellipse_region(attr['cx'] + move_x,
                                attr['cy'] + move_y,
                                attr['rx'],
                                attr['ry'],
                                attr['theta'],
                                true);
-      // display the current region info
-      if ( rf != null && _via_is_region_info_visible ) {
-        rf.innerHTML +=  ',' + ' X-radius:' + attr['rx'] + ',' + ' Y-radius:' + attr['ry'];
-      }
       break;
 
     case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
@@ -2660,6 +2769,7 @@ function draw_all_regions() {
       break;
 
     case VIA_REGION_SHAPE.ELLIPSE:
+      if (typeof(attr['theta']) === 'undefined') { attr['theta'] = 0; }
       _via_draw_ellipse_region(attr['cx'],
                                attr['cy'],
                                attr['rx'],
@@ -8458,6 +8568,12 @@ function image_grid_cancel_load_ongoing() {
   _via_image_grid_load_ongoing = false;
 }
 
+
+// everything to do with image zooming
+function image_zoom_init() {
+
+}
+
 //
 // hooks for sub-modules
 // implemented by sub-modules
@@ -8870,6 +8986,19 @@ function _via_show_img(img_index) {
       console.log('_via_img_buffer_add_image() failed for file: ' + _via_image_filename_list[err_img_index]);
     });
   }
+
+  // add zooming
+  _via_add_zoom_for_image(img_index)
+
+}
+
+function _via_add_zoom_for_image(img_index) {
+  // var img = document.getElementById('bim' + img_index);
+  // img.style.backgroundRepeat = 'no-repeat';
+  // img.style.backgroundImage = 'url("'+img.src+'")';
+  // tramsparent_img = 'data:image/svg+xml;base64,'+window.btoa('<svg xmlns="http://www.w3.org/2000/svg" width="'+img.naturalWidth+'" height="'+img.naturalHeight+'"></svg>');
+  // img.src = transparentSpaceFiller;
+  // _via_img_panel.style.backgroundSize
 }
 
 function _via_buffer_hide_current_image() {
@@ -9026,14 +9155,17 @@ function _via_img_buffer_add_image(img_index) {
       err_callback(img_index);
     } else {
       var img_id = _via_image_id_list[img_index];
+
       var bimg = document.createElement('img');
       bimg.setAttribute('id', _via_img_buffer_get_html_id(img_index));
+      _via_img_src[img_id] = _via_img_src[img_id].replace('#', '%23');
       bimg.setAttribute('src', _via_img_src[img_id]);
       if ( _via_img_src[img_id].startsWith('data:image') ) {
         bimg.setAttribute('alt', 'Source: image data in base64 format');
       } else {
         bimg.setAttribute('alt', 'Source: ' + _via_img_src[img_id]);
       }
+
       bimg.addEventListener('abort', function() {
         project_file_load_on_fail(img_index);
         err_callback(img_index);

@@ -554,7 +554,6 @@ _via_editor.prototype.attribute_on_change = function(e) {
   case 'textarea':
     if ( varname === 'options' ) {
       var options_csv = e.target.value;
-      console.log(options_csv);
       this.d.attribute_update_options_from_csv(aid, options_csv).then(function(ok) {
       }.bind(this));
     }

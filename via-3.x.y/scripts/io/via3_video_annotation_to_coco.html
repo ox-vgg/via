@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>VIA Annotation Downloader</title>
+    <meta name="author" content="Abhishek Dutta">
+    <!--
+    Extract video frames and export region annotations in COCO format for
+    a shared VIA3 project containing frame level region annotations of videos.
+
+    Author: Abhishek Dutta (adutta@robots.ox.ac.uk)
+    Date: May 2020
+      -->
+    <style>
+      body { font-size:1em; }
+      li { margin:0.4em 0; }
+      input { font-size:small; }
+      .error { color:red; }
+    </style>
+  </head>
+<!--
+## CHANGELOG
+   May  2020 : initial prototype to extract COCO annotation from insect videos annotated using VIA3
+01 July 2020 : upgraded to support VIA3 shared projects (to extract COCO annotations from mice videos)
+-->
+  <body>
+    <p id="toolbar">
+      <h1>Export VIA3 Frame Level Video Annotations to COCO Format</h1>
+    <p>This self contained HTML application can be used to export manual video annotations created using <a href="http://www.robots.ox.ac.uk/~vgg/software/via/">VIA3</a> to <a href="https://cocodataset.org/#format-data">COCO</a> format. Please follow the instructions below carefully as it is needed to allow your browser to quickly and easily export video frames and its associated annotations. This application has only been tested to work in Firefox 68.9.0 (or higher).</p>
+      <ol>
+        <li>Ensure that:
+          <ul>
+            <li>Copy this HTML application file (i.e. <code>via3_video_annotation_to_coco.html</code>) to the $TARGER_DIR (e.g. /data/annotation/via3_video_annotation_to_coco.html). Open the newly copied HTML application using a Firefox Web Browser version 68.9.0 (or higher).</li>
+            <li>Copy all video files referenced in VIA3 project to a folder $TARGET_DIR (e.g. /data/annotation/). This allows the HTML application to access all video files referenced in the VIA3 project.</li>
+            <li> (for Google Chrome, you have to start chrome browser from command line with as follows:<code>/usr/bin/google-chrome-stable --allow-file-access-from-files</code>). This allows the Firefox web browser to access all the video files present in the folder that contains the HTML application file. </li>
+            <li>In Firefox browser, enable automatically save downloaded files. Open Preferences &rarr; Files and Applications and set "Save files to" a folder of your choice (e.g. Downloads). This avoids the requirement to confirm each downloaded file.</li>
+          </ul>
+        </li>
+        <li>Allow your web browser to access files in local folder. More details are available <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSRequestNotHttp">here</a>:
+          <ul>
+            <li>Mozilla Firefox (68.9.0+) : enter <code>about:config</code> in address bar and set <code>privacy.file_unique_origin = false</code></li>
+            <li>Google Chrome (83.0.4103.106+) : close all existing Chrome browser windows and start the Chrome browser from command line with as follows: <code>/usr/bin/google-chrome-stable --allow-file-access-from-files</code></li>
+          </ul>
+        </li>
+
+        <li>Enter a VIA3 shared project-id <input type="text" placeholder="e.g. e302eadf-aa53-4a5a-b958-11175692c928" id="via3_shared_project_id_input" style="width:22em;">, or select a local VIA3 project file <input type="file" id="via3_local_project_file_input">
+          <ul>
+            <li>Only polygon and rectangle regions defined in your project get exported in COCO format.</li>
+            <li>Region attributes of type RADIO and SELECT are only included in the exported COCO annotations.</li>
+          </ul>
+        </li>
+
+        <li>Review Export Setting:
+          <ul>
+            <li>Download Images: <input checked="" id="download_image_checkbox" type="checkbox"></li>
+            <li>Download COCO annotations as JSON: <input checked="" id="download_coco_checkbox" type="checkbox"></li>
+            <li>Draw bounding boxes (for debugging only): <input id="draw_bbox_checkbox" type="checkbox"></li>
+          </ul>
+        </li>
+        <li>
+          <input type="button" value="Export Annotations to COCO Format" onclick="start_process()" />
+          <span>&nbsp;&nbsp;</span>
+          <input type="button" value="Cancel" onclick="cancel_process = true;" />
+        </li>
+      </ol>
+    </p>
+    <div style="font-family:mono; width:90vw;" id="log">
+    </div>
+
+    <script>
+      // USERS SHOULD UPDATE THESE VARIABLES AS REQUIRED
+      var SHARED_PROJECT_ID = ''; // video annotator demo project-id
+      var VIA3_SERVER = 'http://zeus.robots.ox.ac.uk/via/store/3.x.y/';
+      var draw_bbox = false;
+      var download_image = true;
+      var download_coco = true;
+      var BBOX_LINE_WIDTH = 3;
+
+      // NOT ESSENTIAL TO UPDATE ANYTHING BEYOND THIS
+      const _VIA_ATTRIBUTE_TYPE = { 'TEXT':1, 'CHECKBOX':2, 'RADIO':3, 'SELECT':4, 'IMAGE':5 };
+      const _VIA_RSHAPE  = { 'POINT':1, 'RECTANGLE':2, 'CIRCLE':3, 'ELLIPSE':4, 'LINE':5, 'POLYLINE':6, 'POLYGON':7, 'EXTREME_RECTANGLE': 8, 'EXTREME_CIRCLE':9 };
+      var COCO_ALLOWED_ATTRIBUTE_TYPE = [ _VIA_ATTRIBUTE_TYPE.RADIO, _VIA_ATTRIBUTE_TYPE.SELECT ];
+      var COCO_ALLOWED_RSHAPE = [ _VIA_RSHAPE.RECTANGLE, _VIA_RSHAPE.POLYGON ];
+      var frame_canvas = document.createElement('canvas');
+      var framedata = {};
+      var attr_option_id_to_category_id = {};
+      var current_framedata = {};
+      var filename_list = [];
+      var filename_index = -1;
+      var time_list = [];
+      var time_index = -1;
+      var cancel_process = false;
+      var global_annotation_index = 0;
+
+      var coco = {
+        'info': {
+          'year':'2020',
+          'version':'',
+          'description':'',
+          'contributor':'',
+          'url':'',
+          'date_created':'',
+        },
+        'images': [],
+        'annotations':[],
+        'categories':[],
+        'licenses':[ {'id':0, 'name':'Unknown License', 'url':''} ] // indicates that license is unknown
+      };
+
+      function start_process() {
+        var pid = document.getElementById('via3_shared_project_id_input').value;
+        if(pid === '') {
+          var local_selected_file = document.getElementById('via3_local_project_file_input').files;
+          if(local_selected_file.length) {
+            load_text_file(local_selected_file[0], on_via_project_data);
+          } else {
+            document.getElementById('log').innerHTML += 'Enter a valid project-id (e.g. e302eadf-aa53-4a5a-b958-11175692c928) or select a local file containing a VIA3 project.<br/>';
+          }
+        } else {
+          fetch_shared_project(pid, on_via_project_data);
+        }
+      }
+
+      function fetch_shared_project(pid, response_handler) {
+        var via_project_data_url = VIA3_SERVER + pid;
+        var xhr = new XMLHttpRequest();
+        xhr.addEventListener('load', function() {
+          if(xhr.statusText === 'OK') {
+            response_handler(xhr.responseText);
+          } else {
+            document.getElementById('log').innerHTML += 'Malformed server response: ' + xhr.statusText + ': ' + xhr.responseText + '<br/>';
+          }
+        });
+        xhr.addEventListener('timeout', function() {
+          document.getElementById('log').innerHTML += 'Server timeout while fetching shared project from ' + via_project_data_url + '<br/>';
+        });
+        xhr.addEventListener('error', function() {
+          document.getElementById('log').innerHTML += 'Error fetching shared project from ' + via_project_data_url + '<br/>';
+        });
+        document.getElementById('log').innerHTML += 'Fetching VIA3 shared project from ' + via_project_data_url + '<br/>';
+        xhr.open('GET', via_project_data_url);
+        xhr.send();
+      }
+
+      function on_via_project_data(data_str) {
+        document.getElementById('log').innerHTML = '';
+        draw_bbox = document.getElementById("draw_bbox_checkbox").checked;
+        download_image = document.getElementById("download_image_checkbox").checked;
+        download_coco = document.getElementById("download_coco_checkbox").checked;
+
+        var d = JSON.parse(data_str);
+
+        coco['info']['description'] = 'Manual annotations exported from VIA3 project=' + d['project']['pname'];
+        if(d['project']['pid'] !== '') {
+          coco['info']['description'] += '(' + d['project']['pid'] + ')';
+        }
+        var now = new Date();
+        coco['info']['date_created'] = now.toString();
+
+        var unique_image_id = 0;
+
+        // add categories
+        var unique_category_id = 1;
+        for(var aid in d['attribute']) {
+          if( COCO_ALLOWED_ATTRIBUTE_TYPE.includes(d['attribute'][aid]['type']) ) {
+            attr_option_id_to_category_id[aid] = {};
+            for(var attr_option_id in d['attribute'][aid]['options']) {
+              var category_id = unique_category_id;
+              unique_category_id = unique_category_id + 1;
+              coco['categories'].push({
+                'supercategory':d['attribute'][aid]['aname'],
+                'id':category_id,
+                'name':d['attribute'][aid]['options'][attr_option_id]
+              });
+              attr_option_id_to_category_id[aid][attr_option_id] = category_id;
+            }
+          }
+        }
+
+        for ( var mid in d['metadata'] ) {
+          var vid = d['metadata'][mid]['vid'].toString()
+          var fid = d['view'][vid]['fid_list'][0]
+          var filename = d['file'][fid]['fname']
+          if ( ! framedata.hasOwnProperty(filename) ) {
+            framedata[filename] = {};
+          }
+          if(d['metadata'][mid]['z'].length === 1) { // since we only export annotations for a single frame
+            var time = d['metadata'][mid]['z'][0];
+            if (!framedata[filename].hasOwnProperty(time)) {
+              unique_image_id = unique_image_id + 1
+              framedata[filename][time] = {
+                'image_id':unique_image_id,
+                'image_filename':filename + '_' + time.toString().replace('.', '-') + '.jpg',
+                'regions':[],
+                'av':[],
+              };
+            }
+
+            if(COCO_ALLOWED_RSHAPE.includes(d['metadata'][mid]['xy'][0])) {
+              framedata[filename][time]['regions'].push(d['metadata'][mid]['xy']);
+              framedata[filename][time]['av'].push(d['metadata'][mid]['av']);
+            }
+          }
+        }
+        filename_list = Object.keys(framedata);
+        filename_index = 0;
+        global_annotation_index = 1;
+        document.getElementById('log').innerHTML += 'Starting extraction of annotations from ' + filename_list.length + ' frames of ' + Object.keys(d['file']).length + ' videos ...<br/>';
+        extract_all_frames(); // trigger download
+      }
+
+      function download_coco_annotations() {
+        // download coco annotations as json
+        var blob_attr = {type: 'application/json;charset=utf-9'}
+        var coco_blob = new Blob([ JSON.stringify(coco) ], blob_attr);
+        download_as_file(URL.createObjectURL(coco_blob), 'via3_coco.json');
+      }
+
+      function extract_all_frames() {
+        if(cancel_process) {
+          document.getElementById('log').innerHTML += '<br/>Cancelled';
+          return;
+        }
+
+        if (filename_index >= filename_list.length) {
+          if(download_coco) {
+            document.getElementById('log').innerHTML += '<br/>Downloading COCO annotations as JSON';
+            download_coco_annotations();
+          }
+          document.getElementById('log').innerHTML += '<br/>Done';
+          return;
+        }
+
+        var filename = filename_list[filename_index];
+        time_list = Object.keys(framedata[filename]);
+        current_framedata = framedata[filename];
+        if (time_list.length === 0) {
+          filename_index = filename_index + 1;
+          extract_all_frames();
+        }
+
+        var filename_without_path = filename;
+        if(filename.includes('/') || filename.includes('\\')) {
+          var last_slash;
+          if(filename.includes('/')) {
+            last_slash = filename.lastIndexOf('/');
+          } else {
+            last_slash = filename.lastIndexOf('\\');
+          }
+          filename_without_path = filename.substring(last_slash+1);
+        }
+        document.getElementById('log').innerHTML += '<br/>[' + (filename_index+1) + '/' + filename_list.length + '] Extracting regions for video ' + filename_without_path + ' : ';
+
+        var video = document.createElement('video');
+        video.setAttribute('controls', 'false');
+        video.setAttribute('playsinline', 'false');
+        video.setAttribute('loop', 'false');
+        video.setAttribute('preload', 'auto');
+        video.addEventListener('seeked', on_video_seeked);
+        video.addEventListener('loadeddata', function() {
+          frame_canvas.width = video.videoWidth;
+          frame_canvas.height = video.videoHeight;
+          time_index = 0;
+          video.currentTime = parseFloat(time_list[time_index]);
+        });
+        video.addEventListener('error', function() {
+          document.getElementById('log').innerHTML += '<br/><span class="error">Error: failed to load video ' + this.src + '</span>';
+        });
+        video.setAttribute('src', filename_without_path);
+      }
+
+      function on_video_seeked(e) {
+        if(cancel_process) {
+          document.getElementById('log').innerHTML += '<br/><span class="error">Cancelled by user</span>';
+          return;
+        }
+        var filename = filename_list[filename_index];
+        var time = time_list[time_index];
+
+        document.getElementById('log').innerHTML += e.target.currentTime + 's, ';
+        var ctx = frame_canvas.getContext('2d', { 'alpha':false });
+
+        if(download_image) {
+          ctx.drawImage(e.target, 0, 0);
+        }
+
+        var drawn_region_count = 0;
+        for(var ri=0; ri<current_framedata[time]['regions'].length; ++ri) {
+          for(var aid in current_framedata[time]['av'][ri]) {
+            if( attr_option_id_to_category_id.hasOwnProperty(aid) ) {
+              var aval = current_framedata[time]['av'][ri][aid];
+              var category_id = attr_option_id_to_category_id[aid][aval];
+              var region = current_framedata[time]['regions'][ri];
+              drawn_region_count = drawn_region_count + 1;
+              if(draw_bbox && download_image) {
+                ctx.strokeStyle = 'yellow';
+                ctx.lineWidth = BBOX_LINE_WIDTH;
+                switch(region[0]) {
+                case _VIA_RSHAPE.RECTANGLE:
+                  ctx.strokeRect(region[1], region[2], region[3], region[4]);
+                  break;
+                case _VIA_RSHAPE.POLYGON:
+                  ctx.beginPath();
+                  ctx.moveTo(region[1], region[2]);
+                  for(var i=3; i<region.length; i=i+2) {
+                    console.log(region[i] + ',' + region[i+1])
+                    ctx.lineTo(region[i], region[i+1]);
+                  }
+                  ctx.closePath();
+                  ctx.stroke();
+                  break;
+                default:
+                  document.getElementById('log').innerHTML += '<br/>cannot draw region shape ' + JSON.stringify(region);
+                }
+              }
+
+              var bbox = via3_region_to_bbox(region);
+              var annotation = {
+                'id':global_annotation_index,
+                'image_id':framedata[filename][time]['image_id'],
+                'category_id':category_id,
+                'segmentation':via3_region_to_segmentation(region),
+                'area':Number.parseFloat(Number.parseFloat(bbox[2]*bbox[3]).toFixed(3)),
+                'bbox':bbox,
+                'iscrowd':0,
+              };
+              coco['annotations'].push(annotation);
+              global_annotation_index = global_annotation_index + 1;
+            }
+          }
+        }
+
+        var image = {
+          'id':framedata[filename][time]['image_id'],
+          'width':frame_canvas.width,
+          'height':frame_canvas.height,
+          'file_name':framedata[filename][time]['image_filename'],
+          'license':'',
+          'flickr_url':'',
+          'coco_url':'',
+          'date_captured':'',
+        };
+        coco['images'].push(image);
+
+        if(download_image && drawn_region_count) {
+          var image = frame_canvas.toDataURL('image/jpeg').replace('image/jpeg', 'image/octet-stream');
+          download_as_file(image, framedata[filename][time]['image_filename']);
+        }
+
+        time_index = time_index + 1;
+        if (time_index < time_list.length) {
+          e.target.currentTime = parseFloat(time_list[time_index]);
+        } else {
+          filename_index = filename_index + 1;
+          time_index = -1;
+          extract_all_frames();
+        }
+      }
+
+      function download_as_file(dataurl, filename) {
+        var a      = document.createElement('a');
+        a.href     = dataurl;
+        a.download = filename;
+
+        // simulate a mouse click event
+        var event = new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true
+        });
+        a.dispatchEvent(event);
+      }
+
+      function via3_region_to_segmentation(region) {
+        switch(region[0]) {
+        case _VIA_RSHAPE.RECTANGLE:
+          var x = region[1];
+          var y = region[2];
+          var w = region[3];
+          var h = region[4];
+          return [[x, y, x+w, y, x+w, y+h, x, y+h]];
+          break;
+        case _VIA_RSHAPE.POLYGON:
+          var pts = [];
+          for(var i=1; i<region.length; ++i) {
+            pts.push(region[i]);
+          }
+          return pts;
+          break;
+        default:
+          return [[]];
+        }
+      }
+
+      function via3_region_to_bbox(region) {
+        switch(region[0]) {
+        case _VIA_RSHAPE.RECTANGLE:
+          return [ region[1], region[2], region[3], region[4] ];
+          break;
+        case _VIA_RSHAPE.POLYGON:
+          var extreme_pts = [-Infinity, -Infinity, -Infinity, -Infinity];
+          for(var i=1; i<region.length; i=i+2) {
+            if(region[i] < extreme_pts[0]) {
+              extreme_pts[0] = region[i];
+            }
+            if(region[i+1] < extreme_pts[1]) {
+              extreme_pts[1] = region[i+1];
+            }
+            if(region[i] > extreme_pts[2]) {
+              extreme_pts[2] = region[i];
+            }
+            if(region[i+1] > extreme_pts[3]) {
+              extreme_pts[3] = region[i+1];
+            }
+          }
+          var bbox = [ extreme_pts[0], extreme_pts[1] ];
+          bbox.push( extreme_pts[2] - extreme_pts[0] );
+          bbox.push( extreme_pts[3] - extreme_pts[1] );
+          return bbox;
+          break;
+        default:
+          return [[]];
+        }
+      }
+
+      function load_text_file(text_file, callback_function) {
+        if (text_file) {
+          var text_reader = new FileReader();
+          text_reader.addEventListener( 'error', function() {
+            document.getElementById('log').innerHTML += '<br/><span class="error">Error: failed to read file ' + JSON.stringify(text_file) + '</span>';
+            callback_function('');
+          }, false);
+
+          text_reader.addEventListener( 'load', function() {
+            callback_function(text_reader.result);
+          }, false);
+          text_reader.readAsText(text_file, 'utf-8');
+        }
+      }
+    </script>
+  </body>
+</html>

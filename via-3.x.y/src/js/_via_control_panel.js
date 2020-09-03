@@ -48,6 +48,15 @@ _via_control_panel.prototype._init = function(type) {
 
   this._add_spacer();
 
+  if ( document.getElementById('micon_zoomin') ) {
+    var zoom = _via_util_get_svg_button('micon_zoomin', 'Enable/disable magnifying glass to inspect finer details');
+    zoom.addEventListener('click', function() {
+      this.emit_event( 'zoom_toggle', {});
+    }.bind(this));
+    this.c.appendChild(zoom);
+    this._add_spacer();
+  }
+
   this._add_project_share_tools();
 
   this._add_spacer();

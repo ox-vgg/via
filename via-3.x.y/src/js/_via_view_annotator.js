@@ -27,6 +27,10 @@ function _via_view_annotator(data, container ) {
   this.file_annotator = [];
   this.view_mode = _VIA_VIEW_MODE.UNKNOWN;
 
+  // constants
+  this.GTIMELINE_ROW_DEFAULT_COUNT = '4';
+  this.GTIMELINE_ROW_HEIGHT_MAP = { '1':21, '2':24, '3':28, '4':32, '5':37, '6':41, '7':45,'8':49,'9':53,'10':57,'12':65,'14':73,'16':80 };
+
   // state variables
   this.region_draw_shape = _VIA_RSHAPE.RECTANGLE;
   this.creg_label_aid = '1';
@@ -47,6 +51,14 @@ _via_view_annotator.prototype._init = function() {
 
   if ( ! this.d.store.config.ui.hasOwnProperty('spatial_region_label_attribute_id') ) {
     this.d.store.config.ui['spatial_region_label_attribute_id'] = '';
+  }
+}
+
+_via_view_annotator.prototype._zoom_toggle = function() {
+  for(var i = 0; i < this.file_annotator.length; ++i) {
+    for(var j = 0; j < this.file_annotator[i].length; ++j) {
+      this.file_annotator[i][j]._zoom_toggle.bind(this.file_annotator[i][j])();
+    }
   }
 }
 
@@ -137,7 +149,21 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
   this.view_metadata_container = document.createElement('div');
   this.view_metadata_container.setAttribute('class', 'view_metadata_container');
 
-  this.c.setAttribute('style', 'grid-template-rows:1fr 20ch;')
+  if(this.d.store['config']['ui'].hasOwnProperty('gtimeline_container_height')) {
+    // fix for pixel height stored by projects created using via-3.0.7
+    var via307_fix = { '17':'1','20':'2','24':'3','28':'4','33':'5','37':'6','41':'7','45':'8','49':'9','53':'10','61':'12','69':'14','76':'16','85':'18' };
+    if(this.d.store['config']['ui']['gtimeline_container_height'] in via307_fix) {
+      this.d.store['config']['ui']['gtimeline_visible_row_count'] = via307_fix[ this.d.store['config']['ui']['gtimeline_container_height'] ];
+    }
+    delete this.d.store['config']['ui']['gtimeline_container_height'];
+  }
+  if( !this.d.store['config']['ui'].hasOwnProperty('gtimeline_visible_row_count')) {
+    this.d.store['config']['ui']['gtimeline_visible_row_count'] = this.GTIMELINE_ROW_DEFAULT_COUNT;
+  }
+
+  var gtimeline_visible_row_count = this.d.store['config']['ui']['gtimeline_visible_row_count'];
+  this.gtimeline_container_height = this.GTIMELINE_ROW_HEIGHT_MAP[gtimeline_visible_row_count];
+  this.c.setAttribute('style', 'grid-template-rows:1fr ' + this.gtimeline_container_height + 'ch;')
   this.c.appendChild(this.view_content_container);
   this.c.appendChild(this.view_metadata_container);
   this.view_metadata_container.style.display = 'block';
@@ -160,7 +186,8 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
     this.temporal_segmenter_container = document.createElement('div');
     this.temporal_segmenter_container.classList.add('temporal_segmenter_container');
     this.view_metadata_container.appendChild(this.temporal_segmenter_container);
-    this.temporal_segmenter = new _via_temporal_segmenter(this.temporal_segmenter_container,
+    this.temporal_segmenter = new _via_temporal_segmenter(this.file_annotator[0][0],
+                                                          this.temporal_segmenter_container,
                                                           vid0,
                                                           this.d,
                                                           this.file_annotator[0][0].file_html_element
@@ -184,7 +211,21 @@ _via_view_annotator.prototype._view_annotate_single_audio = function(vid) {
   this.view_metadata_container = document.createElement('div');
   this.view_metadata_container.setAttribute('class', 'view_metadata_container');
 
-  this.c.setAttribute('style', 'grid-template-rows:5ch 50vh;')
+  if(this.d.store['config']['ui'].hasOwnProperty('gtimeline_container_height')) {
+    // fix for pixel height stored by projects created using via-3.0.7
+    var via307_fix = { '17':'1','20':'2','24':'3','28':'4','33':'5','37':'6','41':'7','45':'8','49':'9','53':'10','61':'12','69':'14','76':'16','85':'18' };
+    if(this.d.store['config']['ui']['gtimeline_container_height'] in via307_fix) {
+      this.d.store['config']['ui']['gtimeline_visible_row_count'] = via307_fix[ this.d.store['config']['ui']['gtimeline_container_height'] ];
+    }
+    delete this.d.store['config']['ui']['gtimeline_container_height'];
+  }
+  if( !this.d.store['config']['ui'].hasOwnProperty('gtimeline_visible_row_count')) {
+    this.d.store['config']['ui']['gtimeline_visible_row_count'] = this.GTIMELINE_ROW_DEFAULT_COUNT;
+  }
+
+  var gtimeline_visible_row_count = this.d.store['config']['ui']['gtimeline_visible_row_count'];
+  this.gtimeline_container_height = this.GTIMELINE_ROW_HEIGHT_MAP[gtimeline_visible_row_count];
+  this.c.setAttribute('style', 'grid-template-rows:1fr ' + this.gtimeline_container_height + 'ch;')
   this.c.appendChild(this.view_content_container);
   this.c.appendChild(this.view_metadata_container);
   this.view_metadata_container.style.display = 'block';
@@ -207,19 +248,15 @@ _via_view_annotator.prototype._view_annotate_single_audio = function(vid) {
     this.temporal_segmenter_container = document.createElement('div');
     this.temporal_segmenter_container.classList.add('temporal_segmenter_container');
     this.view_metadata_container.appendChild(this.temporal_segmenter_container);
-    this.temporal_segmenter = new _via_temporal_segmenter(this.temporal_segmenter_container,
+    this.temporal_segmenter = new _via_temporal_segmenter(this.file_annotator[0][0],
+                                                          this.temporal_segmenter_container,
                                                           vid0,
                                                           this.d,
                                                           this.file_annotator[0][0].file_html_element
                                                          );
-    //_via_util_msg_show('Press <span class="key">Space</span> to Play or Pause the video at any time.', true);
   }.bind(this), function(err) {
     _via_util_msg_show('Failed to load audio!', true);
   }.bind(this));
-  /*
-  this._metadata_show(this.view_metadata_container,
-                      _VIA_ATTRIBUTE_ANCHOR.FILE1_Z1_XY0);
-  */
 }
 
 _via_view_annotator.prototype._view_annotate_two_images = function(vid) {

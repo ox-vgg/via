@@ -69,7 +69,7 @@ _via_share.prototype.push = function() {
             }.bind(this));
           } else {
             // newer revision exists, pull first
-            _via_util_msg_show('You must first pull remote revision first. (local revision=' + this.d.store.project.rev + ', remote rev=' + d['rev'] + ')', true);
+            _via_util_msg_show('You must first pull remote revision first. (local revision=' + this.d.store.project.rev + ', remote rev=' + d['project']['rev'] + ')', true);
             return;
           }
         }
