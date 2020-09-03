@@ -51,6 +51,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 #view_container > .view_content_container > .file_container > .error_page table { border-collapse:collapse; border:1px solid #cccccc;  width:40em;}
 #view_container > .view_content_container > .file_container > .error_page td { padding:0.4em 1em; border:1px solid #cccccc; }
 
+#view_container > .view_content_container > .file_container > .zoom_container { position:absolute; overflow:hidden; border:2px solid red; width:30vw; height:30vh; }
 
 /* metadata associated with a view */
 #view_container > .view_metadata_container { padding:0.2em; border:1px solid #666666; }

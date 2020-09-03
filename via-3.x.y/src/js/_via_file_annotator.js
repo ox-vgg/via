@@ -45,6 +45,13 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.last_cx = 0;
   this.last_cy = 0;
 
+  // zoom
+  this._is_zoom_enabled = false;
+  this.zoom_scale = 3.0;
+  this.zoom_scale_index = 6;
+  this.zoom_scale_list = [0.2, 0.4, 0.6, 0.8, 1.0, 2.0, 3.0, 4.0];
+  // see this.conf.ZOOM_SIZE
+
   // constants
   this.conf = {};
   this.conf.CONTROL_POINT_RADIUS = 2;
@@ -66,6 +73,8 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.conf.CROSSHAIR_COLOR1 = '#1a1a1a';
   this.conf.CROSSHAIR_COLOR2 = '#e6e6e6';
   this.conf.SPATIAL_REGION_TIME_TOL = 0.02; // in sec
+  //this.conf.ZOOM_SIZE = 300; // px
+  this.conf.ZOOM_SIZE_BY2 = 150;
 
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
@@ -96,6 +105,82 @@ _via_file_annotator.prototype._init = function() {
   }
 
   this.fid = this.d.store.view[this.vid].fid_list[0];
+}
+
+_via_file_annotator.prototype._zoom_toggle = function() {
+  if(this._is_zoom_enabled) {
+    this.zoom_container.classList.add('hide');
+    this._is_zoom_enabled = false;
+    this.zoom_container.innerHTML = '';
+    _via_util_msg_show('Deactivated magnifying glass.');
+  } else {
+    this._is_zoom_enabled = true;
+    this._zoom_activate();
+    this.zoom_container.classList.remove('hide');
+    this._zoom_update_position();
+    _via_util_msg_show('Activated magnifying glass to allow finer inspection of feature.');
+  }
+}
+
+_via_file_annotator.prototype._zoom_activate = function() {
+  this.zoom_container.innerHTML = '';
+
+  // add filecontent
+  var filecontent = this.file_html_element.cloneNode(true);
+  filecontent.removeAttribute('style');
+  filecontent.removeAttribute('id');
+
+  this.zoom_canvas_width = this.cwidth * this.zoom_scale;
+  this.zoom_canvas_height = this.cheight * this.zoom_scale;
+  filecontent.setAttribute('width', this.zoom_canvas_width);
+  filecontent.setAttribute('height', this.zoom_canvas_height);
+
+  var rshape = document.createElement('canvas');
+  rshape.setAttribute('id', 'zoom_region_shape');
+  rshape.width = this.zoom_canvas_width;
+  rshape.height = this.zoom_canvas_height;
+  this.zoom_rshape_ctx = rshape.getContext('2d');
+  this.zoom_rshape_ctx.drawImage(this.rshape_canvas, 0, 0, this.cwidth, this.cheight,
+                                 0, 0, this.zoom_canvas_width, this.zoom_canvas_height);
+
+  var tempr = document.createElement('canvas');
+  tempr.setAttribute('id', 'zoom_region_input');
+  tempr.width = this.zoom_canvas_width;
+  tempr.height = this.zoom_canvas_height;
+  this.zoom_tempr_ctx = tempr.getContext('2d');
+
+  this.zoom_container.appendChild(filecontent);
+  this.zoom_container.appendChild(rshape);
+  this.zoom_container.appendChild(tempr);
+
+  // zoom panel position gets updated by _zoom_update_position() on mousemove event
+  // zoom panel content gets updated by _draw()
+}
+
+_via_file_annotator.prototype._zoom_update_position = function() {
+  var zoom_panel_left = this.last_cx - this.zoom_container.offsetWidth/2;
+  var zoom_panel_top  = this.last_cy - this.zoom_container.offsetHeight/2;
+
+  // position zoom container
+  var style = [];
+//  style.push('width:' + this.conf.ZOOM_SIZE + 'px');
+//  style.push('height:' + this.conf.ZOOM_SIZE + 'px');
+  style.push('top:' + zoom_panel_top + 'px');
+  style.push('left:' + zoom_panel_left + 'px');
+  //style.push('border-radius:' + this.conf.ZOOM_SIZE_BY2 + 'px');
+  style.push('border-radius:2em;');
+  this.zoom_container.setAttribute('style', style.join(';'));
+
+  // position filecontent
+  style = [];
+  style.push('position: absolute');
+  var scaled_img_left = this.zoom_container.offsetWidth/2 - this.last_cx * this.zoom_scale;
+  var scaled_img_top  = this.zoom_container.offsetHeight/2 - this.last_cy * this.zoom_scale;
+  style.push('top:' + scaled_img_top + 'px');
+  style.push('left:' + scaled_img_left + 'px');
+  this.zoom_container.childNodes[0].setAttribute('style', style.join(';'));
+  this.zoom_container.childNodes[1].setAttribute('style', style.join(';'));
+  this.zoom_container.childNodes[2].setAttribute('style', style.join(';'));
 }
 
 _via_file_annotator.prototype._file_load_show_error_page = function() {
@@ -428,6 +513,13 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this.temprctx = this.tempr_canvas.getContext('2d', { alpha:true });
   this.c.appendChild(this.tempr_canvas);
 
+  // zoom container
+  this.zoom_container = document.createElement('div');
+  this.zoom_container.setAttribute('class', 'zoom_container');
+  this.zoom_container.classList.add('hide');
+  this.c.appendChild(this.zoom_container);
+
+  // keyboard and mouse input handlers
   this.input = document.createElement('div');
   this.input.setAttribute('style', this.file_html_element_size_css);
   this.input.setAttribute('id', 'input');
@@ -467,6 +559,8 @@ _via_file_annotator.prototype._rinput_attach_input_handlers = function(container
   container.addEventListener('mousedown', this._rinput_mousedown_handler.bind(this));
   container.addEventListener('mouseup', this._rinput_mouseup_handler.bind(this));
   container.addEventListener('mousemove', this._rinput_mousemove_handler.bind(this));
+  container.addEventListener('mouseout', this._rinput_mouseout_handler.bind(this));
+  container.addEventListener('mouseover', this._rinput_mouseover_handler.bind(this));
 
   container.addEventListener('wheel', this._rinput_wheel_handler.bind(this));
 
@@ -536,6 +630,36 @@ _via_file_annotator.prototype._rinput_keydown_handler = function(e) {
       this._metadata_move_region(mid_list, cdx, cdy);
     }
     return;
+  }
+
+  if ( e.key === '-' ) {
+    if(this._is_zoom_enabled) {
+      if(this.zoom_scale_index > 0) {
+        this.zoom_scale_index = this.zoom_scale_index - 1;
+        this.zoom_scale = this.zoom_scale_list[this.zoom_scale_index];
+        _via_util_msg_show('Zoom scale reduced to ' + this.zoom_scale);
+        this.zoom_container.classList.add('hide');
+        this._zoom_activate();
+        this.zoom_container.classList.remove('hide');
+      } else {
+        _via_util_msg_show('Reached minimum limit of zoom');
+      }
+    }
+  }
+
+  if ( e.shiftKey && e.key === '+') {
+    if(this._is_zoom_enabled) {
+      if(this.zoom_scale_index < this.zoom_scale_list.length) {
+        this.zoom_scale_index = this.zoom_scale_index + 1;
+        this.zoom_scale = this.zoom_scale_list[this.zoom_scale_index];
+        _via_util_msg_show('Zoom scale increased to ' + this.zoom_scale);
+        this.zoom_container.classList.add('hide');
+        this._zoom_activate();
+        this.zoom_container.classList.remove('hide');
+      } else {
+        _via_util_msg_show('Reached maximum limit of zoom');
+      }
+    }
   }
 
   if ( e.key === 'Escape' ) {
@@ -784,6 +908,7 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
       var cdy = canvas_input_pts[3] - canvas_input_pts[1];
       var mid_list = this.selected_mid_list.slice(0);
       this._metadata_move_region(mid_list, cdx, cdy);
+      this.zoom_rshape_ctx.clearRect(0, 0, this.zoom_canvas_width, this.zoom_canvas_height); // required to clear old region
       this._tmpreg_clear();
       this.user_input_pts = [];
       this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
@@ -838,6 +963,10 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
   var cy = e.offsetY;
   this.last_cx = cx;
   this.last_cy = cy;
+
+  if(this._is_zoom_enabled) {
+    this._zoom_update_position();
+  }
 
   var pts = this.user_input_pts.slice(0);
   pts.push(cx, cy);
@@ -918,6 +1047,20 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
                                     this.resize_control_point_index,
                                     cx, cy);
     return;
+  }
+}
+
+_via_file_annotator.prototype._rinput_mouseout_handler = function(e) {
+  e.stopPropagation();
+  if(this._is_zoom_enabled) {
+    this.zoom_container.classList.add('hide');
+  }
+}
+
+_via_file_annotator.prototype._rinput_mouseover_handler = function(e) {
+  e.stopPropagation();
+  if(this._is_zoom_enabled) {
+    this.zoom_container.classList.remove('hide');
   }
 }
 
@@ -1898,6 +2041,9 @@ _via_file_annotator.prototype._tmpreg_move_sel_region_cp = function(mindex, cpin
 
 _via_file_annotator.prototype._tmpreg_clear = function() {
   this.temprctx.clearRect(0, 0, this.tempr_canvas.width, this.tempr_canvas.height);
+  if(this._is_zoom_enabled) {
+    this.zoom_tempr_ctx.clearRect(0, 0, this.zoom_canvas_width, this.zoom_canvas_height);
+  }
 }
 
 //
@@ -1942,6 +2088,25 @@ _via_file_annotator.prototype._draw = function(ctx, xy, is_selected) {
     var n = cp.length;
     for ( var i = 1; i < n; i = i + 2 ) {
       this._draw_control_point(ctx, cp[i], cp[i+1]);
+    }
+  }
+
+  if(this._is_zoom_enabled) {
+    var scaled_xy = [ xy[0] ];
+    for(var i=1; i<xy.length; ++i) {
+      scaled_xy[i] = xy[i] * this.zoom_scale;
+    }
+    if(ctx.canvas.id === "region_shape") {
+      this._draw(this.zoom_rshape_ctx, scaled_xy, is_selected);
+      if ( is_selected ) {
+        var cp = this._creg_get_control_points(scaled_xy); // cp[0] = shape_id
+        var n = cp.length;
+        for ( var i = 1; i < n; i = i + 2 ) {
+          this._draw_control_point(this.zoom_rshape_ctx, cp[i], cp[i+1]);
+        }
+      }
+    } else if(ctx.canvas.id === "region_input") {
+      this._draw(this.zoom_tempr_ctx, scaled_xy, is_selected);
     }
   }
 }

@@ -54,6 +54,14 @@ _via_view_annotator.prototype._init = function() {
   }
 }
 
+_via_view_annotator.prototype._zoom_toggle = function() {
+  for(var i = 0; i < this.file_annotator.length; ++i) {
+    for(var j = 0; j < this.file_annotator[i].length; ++j) {
+      this.file_annotator[i][j]._zoom_toggle.bind(this.file_annotator[i][j])();
+    }
+  }
+}
+
 _via_view_annotator.prototype._show_start_info = function() {
   this.c.setAttribute('style', 'grid-template-rows:1fr;')
   var via_page = document.createElement('div');
