@@ -23,6 +23,8 @@ _via_import_export.prototype.import_from_file = function(data_format, file) {
   case 'coco':
     _via_util_load_text_file(file[0], this.import_from_coco.bind(this));
     break;
+  case 'webvtt':
+    _via_util_load_text_file(file[0], this.import_subtitle_from_webvtt.bind(this));
   default:
     console.warn('Unknown data format: ' + data_format);
   }

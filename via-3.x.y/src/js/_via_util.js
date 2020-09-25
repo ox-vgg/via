@@ -586,3 +586,81 @@ function _via_util_merge_three_way_str(ancestor, version1, version2) {
     }
   }
 }
+
+
+function _via_seconds_to_hh_mm_ss_ms(s) {
+  // result = [hh, mm, ss, ms]
+  var result = [0, 0, 0, 0];
+  var sec = parseFloat(s);
+  var ms = parseInt((sec - parseInt(s)) * 1000);
+  if(ms < 99) {
+    if(ms < 9) {
+      result[3] = '00' + ms.toString();
+    } else {
+      result[3] = '0' + ms.toString();
+    }
+  } else {
+    result[3] = ms.toString();
+  }
+
+  if(sec > 60*60) {
+    var hh = parseInt(sec / (60*60));
+    if(hh>9) {
+      result[0] = hh.toString();
+    } else {
+      result[0] = '0' + hh;
+    }
+    sec = sec - result[0] * 60 * 60;
+  } else {
+    result[0] = '00';
+  }
+
+  if(sec > 60) {
+    var mm = parseInt(sec / 60);
+    if(mm>9) {
+      result[1] = mm.toString();
+    } else {
+      result[1] = '0' + mm;
+    }
+    sec = sec - result[1] * 60;
+  } else {
+    result[1] = '00';
+  }
+
+  var ss = parseInt(sec);
+  if(ss>9) {
+    result[2] = ss.toString();
+  } else {
+    result[2] = '0' + ss;
+  }
+
+  return result;
+}
+
+function _via_hh_mm_ss_ms_to_seconds(hh_mm_ss_ms) {
+  // hh_mm_ss_ms = HH:MM:SS.MS
+  var split1 = hh_mm_ss_ms.split('.');
+  if(split1.length !== 2) {
+    return -1;
+  }
+  var split2 = split1[0].split(':');
+  if(split2.length !== 3) {
+    return -1;
+  }
+  var sec = 0;
+  switch(split2.length) {
+  case 3:
+    sec = parseInt(split2[0]) * 60 * 60 + parseInt(split2[1]) * 60 + parseInt(split2[2]);
+    break;
+  case 2:
+    sec = parseInt(split2[1]) * 60 + parseInt(split2[2]);
+    break;
+  case 1:
+    sec = parseInt(split2[2]);
+    break;
+  }
+  if(split1.length === 2) {
+    sec = sec + parseInt(split1[1])/1000;
+  }
+  return sec;
+}
