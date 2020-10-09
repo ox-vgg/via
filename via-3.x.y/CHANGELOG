@@ -1,5 +1,9 @@
-## [3.0.9] - not release yet
+## [3.0.10] - not release yet
  * @todo Annotate an ellipse with five clicks on the border (https://gitlab.com/vgg/via/-/issues/279)
+
+## [3.0.9] - 9 Oct. 2020
+ * added zoom (i.e. magnifying glass) feature to inspect fine image details in image annotator
+ * create subtitle annotator to manage subtitle for audio and video files
 
 ## [3.0.8] - 01 July 2020
  * audio amplitude shown in temporal segmentation timeline (experimental feature, hence disabled by default)

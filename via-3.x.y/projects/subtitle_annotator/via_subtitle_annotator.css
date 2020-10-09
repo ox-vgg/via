@@ -1,0 +1,156 @@
+/*
+
+CSS style definitions for VIA Subtitle Annotator
+
+Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
+Date: 9 Oct. 2020
+*/
+
+html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-size:1em; }
+
+*, *:before, *:after { box-sizing:inherit; outline:none; }
+
+.via_container { position:relative; display:grid; grid-template-rows:auto 1fr; grid-row-gap:0.5em; padding:0.3em; background-color:#ffffff; height:100vh; max-height:100vh; width:100vw; }
+
+/* top control panel */
+#via_control_panel_container { display:block; border:1px solid #707070; padding:0.4em 0.5em; }
+/*#via_control_panel_container { display:block; border:1px solid #707070; padding:0.4em 0.5em; height:2.2em; overflow-y:hidden; }*/
+#via_control_panel_container * { display:inline-block; margin:0 0.2em; outline:none; vertical-align:middle; }
+#via_control_panel_container .spacer { padding:0 0.5em; }
+#via_control_panel_container #region_info_panel { font-size:0.8em; }
+#via_control_panel_container .logo { position:relative; display:inline-block; font-size:large; top:0px; }
+#via_control_panel_container .logo a { text-decoration:none; }
+#via_control_panel_container select { background-color:inherit; border:1px solid #cfcfcf; width:17.5em; }
+#via_control_panel_container input { background-color:inherit; border:1px solid #cfcfcf; width:4em;}
+#via_control_panel_container #via_project_name_input { display:inline-block; font-size:small; width:11.5em; border:none; border-bottom:1px solid #cfcfcf; }
+#via_control_panel_container #via_project_name_input:hover { border-bottom:1px solid #cfcfcf; background-color:#f2f2f2; }
+#via_control_panel_container #via_project_name_input:focus { background-color:#f2f2f2; border-bottom:1px solid #cfcfcf; }
+
+/* View Container : video + temporal segmenter */
+#view_container { display:grid; grid-row-gap:0.5em; } /* grid-template-rows is set dynamically */
+
+/* view content: image, video, audio, image pair, etc. */
+#view_container > .view_content_container { display:grid;  border:1px solid #cfcfcf;} /* grid-template-rows value set by _view_annotate_single_video(), video_annotate_single_image(), etc methods in _via_view_annotator.js */
+
+#view_container > .view_content_container > #subtitle_editor { display:inline-block; position:relative; margin:0; padding:0; overflow-y:scroll; padding-left:10px; }
+#view_container > .view_content_container > #subtitle_editor table { width:100%; border-collapse:collapse; }
+#view_container > .view_content_container > #subtitle_editor table tr { cursor:pointer; color:#666666; }
+#view_container > .view_content_container > #subtitle_editor table .sel_row { background-color:#cccccc; color:#000000; cursor:default; }
+#view_container > .view_content_container > #subtitle_editor table td { padding:0.4em 0.3em; color:#666666; }
+#view_container > .view_content_container > #subtitle_editor table td:nth-child(1) { width:3em; }
+#view_container > .view_content_container > #subtitle_editor table td:nth-child(2) { width:10em; }
+#view_container > .view_content_container > #subtitle_editor table td:nth-child(3) { width:10em; }
+#view_container > .view_content_container > #subtitle_editor table td .hhmmss {font-size:x-large;}
+#view_container > .view_content_container > #subtitle_editor table td .ms {margin-left:2px; font-size:medium;}
+#view_container > .view_content_container > #subtitle_editor table td input[type="text"] { border:none; width:98%; padding:0; margin:0; font-size:medium; color:#666666; background:inherit; border-bottom:1px solid #424242;}
+#view_container > .view_content_container > #subtitle_editor table td input[type="text"]:focus { color:black; border-bottom:1px solid black; }
+
+#view_container > .view_content_container > .file_container { display:block; position:relative; margin:0; padding:0; }
+#view_container > .view_content_container > .file_container * { position:absolute; top:0; }
+#view_container > .view_content_container > .file_container audio { height:3ch; width:90%; }
+#view_container > .view_content_container > .file_container .rinput_enabled { }
+#view_container > .view_content_container > .file_container > .metadata_container { display:inline-block; font-size:small; background-color:white; z-index:1001; }
+#view_container > .view_content_container > .file_container > .metadata_container * { position:relative; vertical-align:middle; }
+#view_container > .view_content_container > .file_container > .metadata_container table { position:relative; border-collapse:collapse; border:none; margin:0.2em; }
+#view_container > .view_content_container > .file_container > .metadata_container td { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.2em; }
+#view_container > .view_content_container > .file_container > .metadata_container th { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.2em; }
+#view_container > .view_content_container > .file_container > .metadata_container input { font-size:small; }
+#view_container > .view_content_container > .file_container > .metadata_container select { font-size:small; }
+
+#view_container > .view_content_container > .file_container > .error_page { margin-left:1em; width:50em; }
+#view_container > .view_content_container > .file_container > .error_page * { position:relative; }
+#view_container > .view_content_container > .file_container > .error_page input { font-size:small; width:100%; }
+#view_container > .view_content_container > .file_container > .error_page select { font-size:small; }
+#view_container > .view_content_container > .file_container > .error_page textarea { font-size:small; }
+#view_container > .view_content_container > .file_container > .error_page table { border-collapse:collapse; border:1px solid #cccccc;  width:40em;}
+#view_container > .view_content_container > .file_container > .error_page td { padding:0.4em 1em; border:1px solid #cccccc; }
+
+
+/* metadata associated with a view */
+#view_container > .view_metadata_container {}
+
+/* @todo: to annotate metadata for an image pair */
+.img_pair_annotator_container { display:block; max-height:100%; font-size:x-large; }
+.img_pair_annotator_container input[type="radio"] { margin-left:2em; }
+.img_pair_annotator_container table { margin:1em auto; }
+/*
+to annotate temporal segments of a video: contains 4 rows
+ - row1: vtimeline_mark (video timeline current time marker)
+ - row2: vtimeline (video timeline with time gradations)
+ - row3: tmetadata_container (temporal segmentation metadata container)
+ - row4: toolbar for temporal segmentation
+*/
+.temporal_segmenter_container { display:grid; grid-template-rows:auto auto 1fr auto; margin:0; padding:0; position:relative; height:100%; max-height:100%; }
+.temporal_segmenter_container > .tmetadata_container { display:grid; grid-template-rows:auto 1fr; height:100%; max-height:100%; }
+
+.temporal_segmenter_container > .tmetadata_container .gtimeline_container { height:100%; margin:0; padding:0; }
+.temporal_segmenter_container > .tmetadata_container .gtimeline_container canvas { display:block; }
+/*@todo: height of gmetadata_container must be fixed (and not expandable) */
+.temporal_segmenter_container > .tmetadata_container > .gmetadata_container { overflow-y:auto; }
+.temporal_segmenter_container > .tmetadata_container .onecolgrid { display:grid; width:100%; grid-template-columns:1fr; }
+
+.temporal_segmenter_container > .toolbar_container { font-size:small; vertical-align:middle; margin-top:0.2em;}
+.temporal_segmenter_container > .toolbar_container * { vertical-align:middle; }
+.temporal_segmenter_container > .toolbar_container div { display:inline; }
+.temporal_segmenter_container > .toolbar_container div:nth-child(n+2) { margin:0 2em;}
+.temporal_segmenter_container > .toolbar_container .newgid { width:10em; }
+.temporal_segmenter_container > .toolbar_container input[type="text"] { vertical-align:middle; font-size:small; }
+.temporal_segmenter_container > .toolbar_container button { font-size:small; padding:0 2px; margin:0 0.1em;}
+.temporal_segmenter_container > .toolbar_container select { font-size:small; margin-right:0.4em; }
+
+/* Editor panel for add/update/view metadata and attributes */
+#editor_container { display:block; position:absolute; bottom:0; left:0; right:0; height:40vh; overflow:auto; background-color:#f2f2f2; border-top: 0.2em solid #e6e6e6; }
+#editor_container svg { font-size:large; margin:0 0.4em; }
+#editor_container > .editor_content_selector { display:block; margin:0; padding:0.4em 1em;  }
+#editor_container > .toolbar { position:absolute; right:1em; top:0.5em; }
+#editor_container > .content_container {display:inline-block; padding:0 1em; }
+#editor_container > .content_container table { border-collapse:collapse; border:1px solid #cccccc; }
+#editor_container > .content_container th { border:1px solid #cccccc; padding:0.3em 0.4em; }
+#editor_container > .content_container td { border:1px solid #cccccc; padding:0.3em 0.4em; }
+#editor_container > .content_container .attribute_entry { display:block; margin-bottom:0.4em; }
+#editor_container > .content_container input[type="text"] { width:10em; }
+
+/* Misc */
+.svg_button { position:relative; width:24px; height:24px; top:2px; stroke:none; fill:#333333; stroke-width:2px; }
+.svg_button_selected { fill:#000000; stroke:none; background-color:#e6e6e6;}
+.svg_button:hover { opacity:0.6; cursor:pointer; }
+.svg_button:active { cursor:pointer; }
+.svg_icon { position:relative; width:24px; height:24px; top:2px; }
+.disabled_button { fill:#cfcfcf !important; cursor:auto !important; }
+.disabled_button:hover { fill:#cfcfcf !important; cursor:auto !important; }
+.disabled_button:active { fill:#cfcfcf !important; cursor:auto !important; }
+.text_button { border:none; color:blue; background-color:inherit; cursor:pointer; display:inline-block; }
+.text_button:hover { color:black; }
+
+/* info pages */
+#via_page_container { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:9999; text-align:center; }
+#via_page_container > .via_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow-y:auto; text-align:left; content:"close"; width:80ch; max-height:80vh; }
+#via_page_container > .via_page > .toolbar { display:block; text-align:right; }
+#via_page_container > .via_page > .controls { position:relative; display:block; text-align:center; margin-top:2em; padding-top:1em; border-top:1px solid #cccccc; }
+#via_page_container > .via_page > .controls button { margin:0 1em; }
+#via_page_container > .via_page table { border-collapse:collapse; border:1px solid #cccccc; }
+#via_page_container > .via_page th { border:1px solid #cccccc; padding:0.3em 0.4em; }
+#via_page_container > .via_page td { border:1px solid #cccccc; padding:0.3em 0.4em; }
+#via_page_container > .via_page li { margin:1em 0; }
+
+/* Message Panel */
+#_via_message_container { display:none; width:100vw; position:fixed; bottom:0px; z-index:9999; text-align:center; }
+#_via_message_container .message_panel_close_button { position:absolute; top:-0.4em; right:0.3em; color:white; cursor:pointer; font-size:small; }
+#_via_message_container #_via_message { position:relative; display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:medium; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}
+.key { font-family:monospace; padding:1px 6px; background:linear-gradient(to bottom,#f0f0f0,#fcfcfc);; border:1px solid #e0e0e0; white-space:nowrap; color:#303030; border-bottom-width:2px; border-radius:3px; font-size:1.2em; }
+
+/* View manager container in the top control panel */
+#view_manager_container {  }
+#view_manager_container .pname { border:none; border-bottom:1px solid white; width:10em; }
+#view_manager_container .pname:hover { border:none; background-color: #f2f2f2; }
+#view_manager_container .pname:focus { border-bottom:1px solid #cfcfcf; }
+#view_manager_container .view_selector { margin:0 0.5em; width:18em; }
+#view_manager_container .view_filter_regex { width:4em; }
+
+/* VIA info pages */
+#via_start_info { display:inline-block; width:80ch; margin-left:1em; }
+#via_start_info li { margin:0.5em 0; }
+#via_start_info input { font-size:small; width:26em; margin:0 1em; }
+#via_start_info button { font-size:small; }
+
+.hide { display:none !important; }
