@@ -100,17 +100,30 @@ function _via(via_container) {
   } else {
     // debug code (disabled for release)
     if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
-      //this.s.pull('e302eadf-aa53-4a5a-b958-11175692c928'); // load shared project
-      //this.d.project_load_json(_via_dp[2]['store']); // video
-      //this.d.project_load_json(_via_dp[1]['store']); // audio
-      //this.d.project_load_json(_via_dp[4]['store']); // image
-      //this.d.project_load_json(_via_dp[3]['store']); // pair
-      setTimeout( function() {
-        //this.va.view_show('1');
-        //this.editor.show();
-        //this.cp._page_show_import_export();
-        //this.cp._share_show_info();
-      }.bind(this), 200);
+      //this.s.pull('c42560da-d42e-44f2-af9b-04e4e1be7867'); // load shared project
+      /*
+      var line_split_regex = new RegExp('\n|\r|\r\n', 'g');
+      var webvtt_lines = _via_dp[0]['subtitle_vtt'].split(line_split_regex);
+      var mid = 1;
+      var vid = '1';
+      for(var i=0; i<webvtt_lines.length; ++i) {
+        if(webvtt_lines[i].includes(' --> ')) {
+          var timestamp_tokens = webvtt_lines[i].split(' --> ');
+          var starttime_sec = _via_hh_mm_ss_ms_to_seconds(timestamp_tokens[0]);
+          var endtime_sec = _via_hh_mm_ss_ms_to_seconds(timestamp_tokens[1]);
+          _via_dp[0]['store']['metadata'][mid] = { 'vid': vid,
+                                                   'flg':0,
+                                                   'z':[starttime_sec, endtime_sec],
+                                                   'xy':[],
+                                                   'av':{
+                                                     '1':webvtt_lines[i+1].trim(),
+                                                   }
+                                                 };
+          mid = mid + 1;
+        }
+      }
+      this.d.project_load_json(_via_dp[0]['store']); // video subtitle editor
+      */
     }
   }
 

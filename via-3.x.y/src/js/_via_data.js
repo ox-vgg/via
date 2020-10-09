@@ -513,7 +513,6 @@ _via_data.prototype.metadata_delete = function(vid, mid) {
       ok_callback({'vid':vid, 'mid':mid});
     }
     catch(ex) {
-      console.log(xy);
       err_callback(ex);
     }
   }.bind(this));
