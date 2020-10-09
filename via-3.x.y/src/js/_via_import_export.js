@@ -114,6 +114,9 @@ _via_import_export.prototype.export_to_file = function(data_format) {
   case 'temporal_segments_csv':
     this.export_to_temporal_segments_csv();
     break;
+  case 'webvtt':
+    this.export_to_webvtt();
+    break;
 
   default:
     console.warn('Unknown data format: ' + data_format);
@@ -244,6 +247,66 @@ _via_import_export.prototype.export_to_temporal_segments_csv = function() {
     filename.push(this.d.store.project.pname.replace(' ', '-'));
     filename.push(_via_util_date_to_filename_str(Date.now()));
     filename.push('_export.csv');
+    _via_util_download_as_file(data_blob, filename.join(''));
+  }.bind(this));
+}
+
+_via_import_export.prototype.export_to_webvtt = function() {
+  return new Promise( function(ok_callback, err_callback) {
+    var csv = [];
+
+    var attribute = {}
+    for ( var aid in this.d.store.attribute ) {
+      attribute[aid] = this.d.store.attribute[aid].aname;
+    }
+
+    csv.push('WEBVTT');
+    csv.push('');
+    // build file_list for each view_id
+    var vid_filesrc_str_list = {};
+    var vid, fid;
+    for ( var vindex in this.d.store.project.vid_list ) {
+      vid = this.d.store.project.vid_list[vindex];
+      var vid_filesrc_list = [];
+      for ( var findex in this.d.store.view[vid].fid_list ) {
+        fid = this.d.store.view[vid].fid_list[findex];
+        switch(this.d.store.file[fid].loc) {
+        case _VIA_FILE_LOC.LOCAL:
+          if ( this.d.file_ref.hasOwnProperty(fid) ) {
+            vid_filesrc_list.push( this.d.file_ref[fid].name );
+          } else {
+            vid_filesrc_list.push( this.d.store.file[fid].fname );
+          }
+          break;
+        case _VIA_FILE_LOC.INLINE:
+          vid_filesrc_list.push( this.d.store.file[fid].fname );
+          break;
+        default:
+          vid_filesrc_list.push( this.d.store.file[fid].src );
+        }
+      }
+      vid_filesrc_str_list[vid] = _via_util_obj2csv(vid_filesrc_list);
+    }
+
+    for ( var mid in this.d.store.metadata ) {
+      var tstart = _via_seconds_to_hh_mm_ss_ms(this.d.store.metadata[mid].z[0]);
+      var tstart_str = tstart[0] + ':' + tstart[1] + ':' + tstart[2] + '.' + tstart[3];
+      var tend = _via_seconds_to_hh_mm_ss_ms(this.d.store.metadata[mid].z[1]);
+      var tend_str = tend[0] + ':' + tend[1] + ':' + tend[2] + '.' + tend[3];
+      var subtitle = [];
+      for ( var aid in this.d.store.metadata[mid].av ) {
+        subtitle.push(this.d.store.metadata[mid].av[aid]);
+      }
+      var subtitle_str = subtitle.join(' ');
+      csv.push(tstart_str + ' --> ' + tend_str);
+      csv.push(subtitle.join(' '))
+      csv.push('');
+    }
+    var data_blob = new Blob( [csv.join('\n')],
+                              {type: 'text/vtt;charset=utf-8'});
+    var filename = [];
+    filename.push(this.d.store.project.pname);
+    filename.push('.vtt');
     _via_util_download_as_file(data_blob, filename.join(''));
   }.bind(this));
 }

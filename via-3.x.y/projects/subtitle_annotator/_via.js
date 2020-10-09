@@ -99,9 +99,8 @@ function _via(via_container) {
     }.bind(this));
   } else {
     // debug code (disabled for release)
-    this.s.pull('c42560da-d42e-44f2-af9b-04e4e1be7867'); // load shared project
-
     if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
+      //this.s.pull('c42560da-d42e-44f2-af9b-04e4e1be7867'); // load shared project
       /*
       var line_split_regex = new RegExp('\n|\r|\r\n', 'g');
       var webvtt_lines = _via_dp[0]['subtitle_vtt'].split(line_split_regex);

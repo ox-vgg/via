@@ -360,7 +360,7 @@ _via_data.prototype.metadata_add_bulk = function(metadata_list, emit) {
   }.bind(this));
 }
 
-_via_data.prototype.metadata_update = function(vid, mid, z, xy, v) {
+_via_data.prototype.metadata_update = function(vid, mid, z, xy, av) {
   return new Promise( function(ok_callback, err_callback) {
     try {
       if ( ! this.store.view.hasOwnProperty(vid) ) {
@@ -513,7 +513,6 @@ _via_data.prototype.metadata_delete = function(vid, mid) {
       ok_callback({'vid':vid, 'mid':mid});
     }
     catch(ex) {
-      console.log(xy);
       err_callback(ex);
     }
   }.bind(this));

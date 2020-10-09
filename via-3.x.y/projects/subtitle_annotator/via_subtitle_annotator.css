@@ -42,7 +42,9 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 #view_container > .view_content_container > #subtitle_editor table td:nth-child(3) { width:10em; }
 #view_container > .view_content_container > #subtitle_editor table td .hhmmss {font-size:x-large;}
 #view_container > .view_content_container > #subtitle_editor table td .ms {margin-left:2px; font-size:medium;}
-#view_container > .view_content_container > #subtitle_editor table td input[type="text"] { border:none; width:98%; padding:0; margin:0; font-size:medium; }
+#view_container > .view_content_container > #subtitle_editor table td input[type="text"] { border:none; width:98%; padding:0; margin:0; font-size:medium; color:#666666; background:inherit; }
+#view_container > .view_content_container > #subtitle_editor table td input[type="text"]:disabled { background:none; color:#666666;}
+#view_container > .view_content_container > #subtitle_editor table td input[type="text"]:focus { color:black; border-bottom:1px solid black; }
 
 #view_container > .view_content_container > .file_container { display:block; position:relative; margin:0; padding:0; }
 #view_container > .view_content_container > .file_container * { position:absolute; top:0; }
@@ -149,5 +151,7 @@ to annotate temporal segments of a video: contains 4 rows
 /* VIA info pages */
 #via_start_info { display:inline-block; width:80ch; margin-left:1em; }
 #via_start_info li { margin:0.5em 0; }
+#via_start_info input { font-size:small; width:26em; margin:0 1em; }
+#via_start_info button { font-size:small; }
 
 .hide { display:none !important; }

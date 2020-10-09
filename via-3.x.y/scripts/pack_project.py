@@ -49,8 +49,8 @@ with open(OUT_HTML, 'w') as outf:
           parsedline = line
           if "//__ENABLED_BY_PACK_SCRIPT__" in line:
             parsedline = line.replace('//__ENABLED_BY_PACK_SCRIPT__', '');
-          if "//__ENABLED_BY_DEMO_PACK_SCRIPT__" in line:
-            parsedline = line.replace('//__ENABLED_BY_DEMO_PACK_SCRIPT__', '');
+          #if "//__ENABLED_BY_DEMO_PACK_SCRIPT__" in line:
+          #  parsedline = line.replace('//__ENABLED_BY_DEMO_PACK_SCRIPT__', '');
 
           outf.write(parsedline)
 print("Written packed file to: " + TARGET_HTML)

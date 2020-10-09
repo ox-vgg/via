@@ -51,6 +51,7 @@ function _via_temporal_segmenter(file_annotator, container, vid, groupby_aid, da
   this.metadata_move_is_ongoing = false;
   this.metadata_resize_is_ongoing = false;
   this.timeline_move_is_ongoing = false;
+  this.gtimeline_drag_ongoing = false;
   this.metadata_resize_edge_index = -1;
   this.metadata_ongoing_update_x = [0, 0];
   this.metadata_move_start_x = 0;
@@ -128,6 +129,7 @@ _via_temporal_segmenter.prototype._init_canvas_settings = function() {
 _via_temporal_segmenter.prototype._redraw_all = function() {
   window.requestAnimationFrame(this._redraw_all.bind(this));
   var tnow = this.m.currentTime;
+  //console.log('tnow=' + tnow + ', this.tmetadata_gtimeline_tstart=' + this.tmetadata_gtimeline_tstart + ', this.tmetadata_gtimeline_tend=' + this.tmetadata_gtimeline_tend);
   var t_last_paused = this.m.last_paused_time;
   this._update_playback_rate(tnow);
 
@@ -141,6 +143,10 @@ _via_temporal_segmenter.prototype._redraw_all = function() {
       this._tmetadata_gtimeline_draw();
     } else {
       //this.m.currentTime = this.tmetadata_gtimeline_tstart;
+      var new_tstart = Math.floor(tnow);
+      this._tmetadata_boundary_update(new_tstart)
+      this._tmetadata_group_gid_draw_all();
+      this._tmetadata_gtimeline_draw();
     }
   }
 
@@ -407,6 +413,7 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_init = function() {
   this.gtimeline.addEventListener('mousedown', this._tmetadata_gtimeline_mousedown.bind(this));
   this.gtimeline.addEventListener('mouseup', this._tmetadata_gtimeline_mouseup.bind(this));
   this.gtimeline.addEventListener('mousemove', this._tmetadata_gtimeline_mousemove.bind(this));
+  this.gtimeline.addEventListener('mouseout', this._tmetadata_gtimeline_mouseout.bind(this));
 
   this.gtimeline.width = this.timeline_container_width;
   this.gtimeline.height = this.linehn[this.GTIMELINE_HEIGHT];
@@ -629,27 +636,25 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_time2canvas = function(t)
 }
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_mousemove= function(e) {
-  var t = this._tmetadata_gtimeline_canvas2time(e.offsetX);
-  var smark_time_str = this._tmetadata_gtimeline_is_on_smark(t);
-  if ( smark_time_str !== '' ) {
-    this.gtimeline.style.cursor = 'pointer';
-    var suffix = this.smid[smark_time_str].length + ' region';
-    if ( this.smid[smark_time_str].length > 1 ) {
-      suffix += 's';
-    }
-    this.gtimeline.setAttribute('title',
-                                'Click to jump to this video frame containing ' + suffix);
-  } else {
-    this.gtimeline.style.cursor = 'default';
+  if(this.gtimeline_drag_ongoing) {
+    var t = this._tmetadata_gtimeline_canvas2time(e.offsetX);
+    this.m.currentTime = t;
   }
 }
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_mousedown = function(e) {
+  this.gtimeline_drag_ongoing = true;
   var t = this._tmetadata_gtimeline_canvas2time(e.offsetX);
   this.m.currentTime = t;
 }
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_mouseup = function(e) {
+  this.gtimeline_drag_ongoing = false;
+  _via_util_msg_show('Press <span class="key">a</span> to add a new temporal segment at current time.');
+}
+
+_via_temporal_segmenter.prototype._tmetadata_gtimeline_mouseout = function(e) {
+  this.gtimeline_drag_ongoing = false;
 }
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_is_on_smark = function(t) {
@@ -957,7 +962,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_sel_metadata = function(m
   _via_util_msg_show('Metadata selected. ' +
                      'Use <span class="key">l</span> or <span class="key">r</span> to expand and ' +
                      '<span class="key">L</span> or <span class="key">R</span> to reduce segment. ' +
-                     'Press <span class="key">&larr;</span>&nbsp;<span class="key">&rarr;</span> to move, ' +
+                     'Press <span class="key">&larr;</span>&nbsp;<span class="key">&rarr;</span> to move (combine with <span class="key">Shift</span> to merge segments), ' +
                      '<span class="key">Backspace</span> to delete and ' +
                      '<span class="key">Esc</span> to unselect.', true);
   if(emit_event) {
@@ -1003,6 +1008,8 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_remove_mid_sel = function
   this.selected_mid = '';
   this.edge_show_time = -1;
   //this._tmetadata_group_gid_draw(this.selected_gid);
+
+  _via_util_msg_show('Use <span class="key">a</span> to add a new temporal segment', true);
 
   this.emit_event('metadata_unselect', { 'mid':unselected_mid });
 }
@@ -1147,6 +1154,38 @@ _via_temporal_segmenter.prototype._tmetadata_mid_del = function(mid) {
     this._group_gid_del_mid(this.selected_gid, mid);
     this._tmetadata_group_gid_draw(this.selected_gid);
     this.d.metadata_delete(this.vid, mid);
+    this.emit_event('metadata_delete', {'mid':this.selected_mid, 'eindex':-1});
+  }
+}
+
+_via_temporal_segmenter.prototype._tmetadata_mid_split_sel = function() {
+  this._tmetadata_mid_split(this.selected_mid);
+  _via_util_msg_show('Temporal segment split into two.');
+}
+
+_via_temporal_segmenter.prototype._tmetadata_mid_split = function(mid) {
+  var mindex = this.tmetadata_gtimeline_mid[this.selected_gid].indexOf(mid);
+  if ( mindex !== -1 ) {
+    var tnow = this.m.currentTime;
+    if(tnow < this.d.store.metadata[mid].z[0] ||
+       tnow > this.d.store.metadata[mid].z[1]) {
+      _via_util_msg_show('To perform split operation, you must position current playback time within the boundary of selected temporal segment.');
+      return;
+
+    }
+    var new_right_edge_t = _via_util_float_to_fixed(tnow, 3);
+
+    var new_z = [new_right_edge_t, this.d.store.metadata[mid].z[1] ];
+    var new_av = this.d.store.metadata[mid].av; // duplicate subtitle
+    this.d.metadata_add(this.vid, new_z, [], new_av).then( function(ok) {
+      this.d.metadata_update_zi(this.file.fid, mid, 1, new_right_edge_t);
+      this.metadata_last_added_mid = ok.mid;
+      this._tmetadata_group_gid_draw(this.selected_gid);
+      this.emit_event('metadata_add', {'mid':ok.mid, 'eindex':-1});
+    }.bind(this), function(err) {
+      _via_util_msg_show('Failed to add metadata!');
+      console.log(err);
+    }.bind(this));
   }
 }
 
@@ -1203,10 +1242,11 @@ _via_temporal_segmenter.prototype._tmetadata_mid_add_at_time = function(t) {
   }
   var xy = [];
   var metadata = {};
-  metadata[ this.groupby_aid ] = this.selected_gid;
+  metadata[ this.groupby_aid ] = "";
   this.d.metadata_add(this.vid, z, xy, metadata).then( function(ok) {
     this.metadata_last_added_mid = ok.mid;
     this._tmetadata_group_gid_draw(this.selected_gid);
+    this.emit_event('metadata_add', {'mid':ok.mid, 'eindex':-1});
   }.bind(this), function(err) {
     _via_util_msg_show('Failed to add metadata!');
     console.log(err);
@@ -1236,16 +1276,32 @@ _via_temporal_segmenter.prototype._tmetadata_mid_merge = function(eindex) {
       new_z[1] = this.d.store.metadata[merge_mid].z[1];
     }
 
+    var new_av = {};
+    Object.assign(new_av, this.d.store.metadata[this.selected_mid]['av']);
+    for(var key in this.d.store.metadata[merge_mid]['av']) {
+      if(key in new_av) {
+        var old_val1 = new_av[key];
+        var old_val2 = this.d.store.metadata[merge_mid]['av'][key];
+        if ( eindex === 0 ) {
+          new_av[key] = old_val2 + ' ' + old_val1;
+        } else {
+          new_av[key] = old_val1 + ' ' + old_val2;
+        }
+      } else {
+        new_av[key] = this.d.store.metadata[merge_mid]['av'][key];
+      }
+    }
     this._tmetadata_mid_del(merge_mid);
     // while selected mid remains consistent, mindex changes due to deletion
     this.selected_mindex = this.tmetadata_gtimeline_mid[this.selected_gid].indexOf(this.selected_mid);
-    this.d.metadata_update_z(this.file.fid, this.selected_mid, new_z);
+    this.d.metadata_update(this.file.fid, this.selected_mid, new_z, [], new_av);
     this._tmetadata_group_gid_draw(this.selected_gid);
     if ( eindex === 0 ) {
       this.m.currentTime = new_z[0];
     } else {
       this.m.currentTime = new_z[1];
     }
+    this.emit_event('metadata_update', {'mid':this.selected_mid, 'eindex':-1});
     _via_util_msg_show('Temporal segments merged.');
   } else {
     _via_util_msg_show('Merge is not possible without temporal segments in the neighbourhood');
@@ -1455,7 +1511,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mouseup = function(e) {
   if ( this.metadata_move_is_ongoing ) {
     var dx = x - this.metadata_move_start_x;
     var new_x_list = [ this.metadata_ongoing_update_x[0] + dx,
-                       this.metadata_ongoing_update_x[1] + dx];
+                       this.metadata_ongoing_update_x[1] + dx ];
     for(var i in new_x_list) {
       var xi = new_x_list[i];
       var zi = this._tmetadata_gtimeline_canvas2time(xi);
@@ -1535,12 +1591,16 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     }
     if ( this.m.paused ) {
       this.m.play();
-      _via_util_msg_show('Playing ...');
+      if(this.selected_mindex === -1) {
+        _via_util_msg_show('Playing ...');
+      } else {
+        _via_util_msg_show('Playing video within selected temporal segment. Press <span class="key">Esc</span> to remove selection and unlock playback.', true);
+      }
     } else {
       this.m.pause();
       _via_util_msg_show('Paused. Press <span class="key">a</span> to add a temporal segment, ' +
-                         '<span class="key">Tab</span> to select and ' +
-                         '<span class="key">&uarr;</span>&nbsp;<span class="key">&darr;</span> to select another temporal segment timeline.', true);
+                         '<span class="key">Tab</span> to select temporal segment, ' +
+                         '<span class="key">Esc</span> to remove selection.', true);
     }
   }
 
@@ -1647,14 +1707,20 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
         this._tmetadata_mid_update_last_added_end_edge_to_time(t);
       }
     }
+    this._tmetadata_group_gid_draw(this.selected_gid);
     return;
   }
 
   if ( e.key === 'Backspace' ) {
     e.preventDefault();
     if ( this.selected_mindex !== -1 ) {
-      this._tmetadata_mid_del_sel();
-      this._tmetadata_group_gid_draw(this.selected_gid);
+      var user_confirmed = window.confirm("Confirm that you want to delete the selected temporal segment");
+      if(user_confirmed) {
+        this._tmetadata_mid_del_sel();
+        this._tmetadata_group_gid_draw(this.selected_gid);
+      } else {
+        _via_util_msg_show('Discarded temporal segment delete operation');
+      }
     }
     return;
   }
@@ -1677,13 +1743,11 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
       if ( e.ctrlKey ) {
         delta = 1;
       }
-
       if ( e.key === 'l' ) {
         this._tmetadata_mid_update_edge(0, -delta);
       } else {
         this._tmetadata_mid_update_edge(0, delta);
       }
-      return;
     } else {
       if ( e.key === 'l' ) {
         this.m.currentTime = this.m.currentTime - this.EDGE_UPDATE_TIME_DELTA;
@@ -1691,6 +1755,8 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
         this.m.currentTime = this.m.currentTime - 2*this.EDGE_UPDATE_TIME_DELTA;
       }
     }
+    this._tmetadata_group_gid_draw(this.selected_gid);
+    return;
   }
 
   if ( e.key === 'r' || e.key === 'R') {
@@ -1707,7 +1773,6 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
       } else {
         this._tmetadata_mid_update_edge(1, -delta);
       }
-      return;
     } else {
       if ( e.key === 'r' ) {
         this.m.currentTime = this.m.currentTime + this.EDGE_UPDATE_TIME_DELTA;
@@ -1715,6 +1780,8 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
         this.m.currentTime = this.m.currentTime + 2*this.EDGE_UPDATE_TIME_DELTA;
       }
     }
+    this._tmetadata_group_gid_draw(this.selected_gid);
+    return;
   }
 
   // cancel ongoing action or event
@@ -1748,41 +1815,6 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
 
   if ( e.key === 'ArrowDown' || e.key === 'ArrowUp' ) {
     e.preventDefault();
-
-    // determine the current and new gid
-    var selected_gindex = this.gid_list.indexOf(this.selected_gid);
-    var next_gindex;
-    if ( e.key === 'ArrowDown' ) {
-      next_gindex = selected_gindex + 1;
-      if ( next_gindex >= this.gid_list.length ) {
-        next_gindex = 0;
-      }
-    } else {
-      next_gindex = selected_gindex - 1;
-      if ( next_gindex < 0 ) {
-        next_gindex = this.gid_list.length - 1;
-      }
-    }
-
-    if(e.ctrlKey) {
-      // change the order of timeline entries by moving a timeline
-      // to the position of next/prev timeline
-      this._tmetadata_gid_list_reorder(selected_gindex, next_gindex);
-    } else {
-      // select next/prev timeline or move selected segment to next/prev timeline
-
-      if(this.selected_mindex !== -1 && this.selected_mid !== '') {
-        // move selected temporal segment to the timeline present above/below the current timeline
-        var from_gindex = selected_gindex;
-        var to_gindex = next_gindex;
-        this._tmetadata_mid_change_gid(from_gindex, to_gindex);
-      } else {
-        // selected the group above/below the current group in the timeline list
-        this._tmetadata_group_gid_sel(next_gindex);
-        _via_util_msg_show('Selected group "' + this.selected_gid + '"');
-        return;
-      }
-    }
   }
 
   if ( e.key === 'ArrowLeft' || e.key === 'ArrowRight' ) {
@@ -1824,6 +1856,16 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
         }
       }
     }
+    this._tmetadata_group_gid_draw(this.selected_gid);
+    return;
+  }
+
+  if ( e.key === 'x' ) {
+    if(this.selected_mindex === -1) {
+      _via_util_msg_show('First select the temporal segment that you wish to split into two');
+      return;
+    }
+    this._tmetadata_mid_split_sel();
     return;
   }
 

@@ -17,8 +17,8 @@ function _via_subtitle_editor(groupby_aid, data, temporal_segmenter, container) 
   this.selected_mindex = -1;
 
   // initialise event listeners
-  this.d.on_event('metadata_add', this._ID, this.on_event_metadata_add.bind(this));
-  this.d.on_event('metadata_del', this._ID, this.on_event_metadata_del.bind(this));
+  this.ts.on_event('metadata_add', this._ID, this.on_event_metadata_add.bind(this));
+  this.ts.on_event('metadata_delete', this._ID, this.on_event_metadata_del.bind(this));
   this.ts.on_event('metadata_select', this._ID, this._on_event_metadata_select.bind(this));
   this.ts.on_event('metadata_unselect', this._ID, this._on_event_metadata_unselect.bind(this));
   this.ts.on_event('metadata_update', this._ID, this._on_event_metadata_update.bind(this));
@@ -37,7 +37,7 @@ _via_subtitle_editor.prototype.init = function() {
   var subtitle_head = document.createElement('thead');
   subtitle_head.innerHTML = '<tr><th>Start</td><th>End</th><th>Subtitle Text</th></tr>';
 
-  this.subtitle_body = document.createElement('tbody');
+  this.subtitle_tbody = document.createElement('tbody');
   this.mid_list = Object.keys(this.d.store.metadata);
   this.mid_list.sort( this._compare_mid_by_time.bind(this) );
   var row_index = 1;
@@ -57,14 +57,22 @@ _via_subtitle_editor.prototype.init = function() {
     etime.innerHTML = '<span class="hhmmss">' + end[0] + ':' + end[1] + ':' + end[2] + '</span><span class="ms">' + end[3] + '</span>';
 
     var subtitle = document.createElement('td');
+    var input = document.createElement('input');
+    input.setAttribute('type', 'text');
+    //input.setAttribute('disabled', '');
+    input.setAttribute('data-mid', mid);
+    input.setAttribute('value', this.d.store.metadata[mid]['av'][this.groupby_aid]);
+    input.addEventListener('click', this.onclick_subtitle_text.bind(this));
+    input.addEventListener('change', this.onchange_subtitle_text.bind(this));
+    subtitle.appendChild(input);
     //subtitle.innerHTML = '<input data-mid="' + mid + '" type="text" disabled value="' + this.d.store.metadata[mid]['av'][this.groupby_aid] + '">';
-    subtitle.innerHTML = this.d.store.metadata[mid]['av'][this.groupby_aid];
+    //subtitle.innerHTML = this.d.store.metadata[mid]['av'][this.groupby_aid];
 
     row.appendChild(index);
     row.appendChild(stime);
     row.appendChild(etime);
     row.appendChild(subtitle);
-    this.subtitle_body.appendChild(row);
+    this.subtitle_tbody.appendChild(row);
     row_index = row_index + 1;
 
     this.subtitle_track_cue_list[mindex] = new VTTCue(this.d.store.metadata[mid]['z'][0],
@@ -75,8 +83,39 @@ _via_subtitle_editor.prototype.init = function() {
   }
 
   //this.subtitle_table.appendChild(subtitle_head);
-  this.subtitle_table.appendChild(this.subtitle_body);
+  this.subtitle_table.appendChild(this.subtitle_tbody);
   this.c.appendChild(this.subtitle_table);
+}
+
+_via_subtitle_editor.prototype.onclick_subtitle_text = function(e) {
+  if(e.target.parentNode.parentNode.classList.contains('sel_row')) {
+    // remove selection
+    this.remove_subtitle_sel();
+    e.target.blur();
+    this.inform_temporal_segmenter_of_unselect();
+  } else {
+    var mid = e.target.dataset.mid;
+    var mindex = this.mid_list.indexOf(mid);
+    this.remove_subtitle_sel();
+    this.subtitle_sel(mindex);
+    this.inform_temporal_segmenter_of_select();
+  }
+}
+
+_via_subtitle_editor.prototype.onchange_subtitle_text = function(e) {
+  var mid = e.target.dataset.mid;
+  var new_subtitle_text = e.target.value.trim();
+  this.d.metadata_update_av(this.ts.vid, mid, this.groupby_aid, new_subtitle_text).then( function(ok) {
+    // update subtitle track cue
+    var mindex = this.mid_list.indexOf(mid);
+    var cue = this.subtitle_track_cue_list[mindex];
+    cue.text = this.d.store.metadata[mid]['av'][this.groupby_aid];
+
+    // update temporal segmenter
+    this.ts._tmetadata_group_gid_draw(this.ts.selected_gid);
+  }.bind(this), function(err) {
+    _via_util_msg_show('Failed to update subtitle text.');
+  }.bind(this));
 }
 
 _via_subtitle_editor.prototype.remove_subtitle_sel = function() {
@@ -92,6 +131,14 @@ _via_subtitle_editor.prototype.subtitle_sel = function(mindex) {
   this.selected_mindex = mindex;
   var new_row = document.getElementById('subtitle_mindex_' + this.selected_mindex);
   new_row.classList.add('sel_row');
+  var scrolltop = new_row.parentNode.parentNode.parentNode.scrollTop;
+  var vheight = new_row.parentNode.parentNode.parentNode.clientHeight;
+  var row_height = new_row.clientHeight;
+  var rowtop = new_row.offsetTop;
+  if( (rowtop + row_height) < scrolltop ||
+      (rowtop + row_height) > (scrolltop + vheight) ) {
+    new_row.scrollIntoView();
+  }
 }
 
 _via_subtitle_editor.prototype.inform_temporal_segmenter_of_select = function() {
@@ -115,7 +162,12 @@ _via_subtitle_editor.prototype.inform_temporal_segmenter_of_unselect = function(
   this.ts._tmetadata_group_gid_draw_all();
 }
 
-_via_subtitle_editor.prototype.on_click_row = function(mindex) {
+_via_subtitle_editor.prototype.on_click_row = function(mindex, e) {
+  console.log('clicked ' + mindex + ', target=' + e.target.type)
+  if(e.target.type === 'text') {
+    return; // handled by onclick_subtitle_text()
+  }
+
   if(mindex === this.selected_mindex) {
     this.remove_subtitle_sel();
     this.inform_temporal_segmenter_of_unselect();
@@ -127,11 +179,11 @@ _via_subtitle_editor.prototype.on_click_row = function(mindex) {
 }
 
 _via_subtitle_editor.prototype.on_event_metadata_add = function(data, event_payload) {
-  console.log('metadata add event not implemented');
+  this.init();
 }
 
 _via_subtitle_editor.prototype.on_event_metadata_del = function(data, event_payload) {
-  console.log('metadata del. event not implemented');
+  this.init();
 }
 
 _via_subtitle_editor.prototype._on_event_metadata_select = function(data, event_payload) {

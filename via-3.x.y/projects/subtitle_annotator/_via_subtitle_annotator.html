@@ -243,6 +243,7 @@
         <ul>
           <li>Select Export Format:
             <select id="via_page_export_format">
+              <option value="webvtt" selected="selected">WebVTT</option>
               <option value="via3_csv">VIA3 (CSV)</option>
               <option value="temporal_segments_csv">Only Temporal Segments as CSV</option>
             </select>
@@ -304,7 +305,6 @@
 
       <div data-pageid="page_share_already_shared" class="via_page">
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
-        <p style="color:red;">This feature is not stable yet. If you encounter any issues, please <a href="https://gitlab.com/vgg/via/issues">report</a> it.</p>
         <h3>Information about this shared project</h3>
         <p id="via_page_share_project_info"></p>
         <h3>How can others contribute to this project?</h3>
@@ -321,7 +321,7 @@
           <li>Do not store private or confidential information in a shared VIA project. Furthermore, be careful when you share your project-id with others as it allows them to make any changes to your project.</li>
           <li>The VIA servers do not maintain backup copy of the shared VIA projects. In the event of disk failure, all data will be lost. So, we strongly advise you to always keep a local copy of your project data.</li>
           <li>We <strong>cannot guarantee</strong> 24/7 availability of VIA project share servers. In the event of hardware or disk failure, the VIA project share servers will be offline for an extended period of time.</li>
-          <li>This VIA share feature should <strong>not</strong> be used for large scale collaborative annotation projects. For such use cases, we advise you to setup a dedicated server with sufficient backup and secutiry.</li>
+          <li>This VIA share feature should <strong>not</strong> be used for large scale collaborative annotation projects. For such use cases, we advise you to <a href="https://gitlab.com/vgg/vps">setup a dedicated server</a> with sufficient backup and secutiry.</li>
           <li>The shared VIA project should not exceed 1MB in size.</li>
         </ul>
         <div class="controls">
@@ -385,7 +385,6 @@
             <tr><td>Update the edge (left or right) of last added segment to current time</td><td><span class="key">Shift</span> + <span class="key">a</span></td></tr>
 
             <tr><td>Select Previous / Next Temporal Segment Timeline</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
-            <tr><td>Reorder timeline list by moving current timeline above/below its current position</td><td><span class="key">Ctrl</span> + <span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
 
             <tr><td>Select [Previous] Next Temporal Segment (e.g. 3sec to 5sec)</td><td><span class="key">Shift</span> + <span class="key">Tab</span></td></tr>
             <tr><td>Select Temporal Segment at Current Time (if any)</td><td><span class="key">Enter</span></td></tr>
@@ -417,7 +416,7 @@
             <tr><td>Jump to Start/End of Temporal Segment</td><td><span class="key">s</span> / <span class="key">e</span></td></tr>
             <tr><td>Move Selected Temporal Segment (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
             <tr><td>Merge Selected Temporal Segment with the Segment on Left/Right</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
-            <tr><td>Move Selected Temporal Segment to Previous / Next Temporal Segment Timeline</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
+            <tr><td>Split temporal segment at current playback position</td><td><span class="key">x</span></td></tr>
           </tbody>
         </table>
 
@@ -501,11 +500,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <!-- used by _via_view_annotator._show_start_info() -->
     <div id="via_start_info_content" class="hide">
       <ul>
-        <li>To start annotation of an image, audio and video, select <span class="text_button" onclick="via.vm._on_add_media_local()">local files</span> or <span class="text_button" onclick="via.vm._on_add_media_remote()">add files</span> (local files using file:// and remote files using http:// URI). You can also add a list of file URI in <span class="text_button" onclick="via.vm._on_add_media_bulk()">bulk</span>.</li>
-        <li>Press <span class="key">Space</span> key to play or pause an audio or video at any time (more keyboard <span class="text_button" onclick="_via_util_page_show('page_keyboard_shortcut')">shortcuts</span>).</li>
-        <li>Spatial regions (e.g. 50x80 pixel rectangular bounding box) can be defined for image and video frame when video is paused. Temporal segments (e.g. video segment from time 3.1 sec. to 12.5 sec) can be defined for audio and video files.</li>
-        <li>Use the <span class="text_button" onclick="via.editor.show()">attribute editor</span> to define or update attributes (e.g. name, colour, etc.) of user defined regions.</li>
-        <li>You can also try preloaded demo for <a target="_blank" href="http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_image_annotator.html">image</a>, <a target="_blank" href="http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_audio_annotator.html">audio</a> and <a target="_blank" href="http://www.robots.ox.ac.uk/~vgg/software/via/demo/via_video_annotator.html">video</a> annotation.</li>
+        <li>To load a shared project, click <svg class="svg_icon" viewbox="0 0 24 24"><use xlink:href="#micon_download"></use></svg> in the toolbar.</li>
       </ul>
     </div>
 
@@ -517,7 +512,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <script src="../../src/js/_via_config.js"></script>
 
     <script src="../../src/js/_via_event.js"></script>
-    <script src="../../src/js/_via_control_panel.js"></script>
+    <script src="_via_control_panel.js"></script>
     <script src="../../src/js/_via_metadata.js"></script>
     <script src="../../src/js/_via_file.js"></script>
     <script src="../../src/js/_via_attribute.js"></script>
@@ -535,7 +530,6 @@ POSSIBILITY OF SUCH DAMAGE.
     <script src="../../src/js/_via_view_manager.js"></script>
 
     <script src="../../src/js/_via_editor.js"></script>
-    <script src="_via_debug_project.js"></script>
     <script src="_via.js"></script>
 
     <!-- DEMO SCRIPT AUTOMATICALLY INSERTED BY VIA PACKER SCRIPT -->
