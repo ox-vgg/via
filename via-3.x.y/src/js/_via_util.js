@@ -255,6 +255,9 @@ function _via_util_file_select_local(type, handler, multiple) {
   case _VIA_FILE_SELECT_TYPE.VIDEO | _VIA_FILE_SELECT_TYPE.AUDIO | _VIA_FILE_SELECT_TYPE.IMAGE:
     fsel.accept = 'video/*,audio/*,image/*';
     break;
+  case _VIA_FILE_SELECT_TYPE.WEBVTT:
+    fsel.accept = '.vtt';
+    break;
   }
 
   fsel.onchange = handler;
@@ -641,7 +644,10 @@ function _via_hh_mm_ss_ms_to_seconds(hh_mm_ss_ms) {
   // hh_mm_ss_ms = HH:MM:SS.MS
   var split1 = hh_mm_ss_ms.split('.');
   if(split1.length !== 2) {
-    return -1;
+    split1 = hh_mm_ss_ms.split(',');
+    if(split1.length !== 2) {
+      return -1;
+    }
   }
   var split2 = split1[0].split(':');
   if(split2.length !== 3) {

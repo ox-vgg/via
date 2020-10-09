@@ -1,9 +1,9 @@
 /*
 
-CSS style definitions for VIA Video Annotator
+CSS style definitions for VIA Subtitle Annotator
 
 Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
-Date: 5 Mar. 2019
+Date: 9 Oct. 2020
 */
 
 html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-size:1em; }
@@ -42,8 +42,7 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 #view_container > .view_content_container > #subtitle_editor table td:nth-child(3) { width:10em; }
 #view_container > .view_content_container > #subtitle_editor table td .hhmmss {font-size:x-large;}
 #view_container > .view_content_container > #subtitle_editor table td .ms {margin-left:2px; font-size:medium;}
-#view_container > .view_content_container > #subtitle_editor table td input[type="text"] { border:none; width:98%; padding:0; margin:0; font-size:medium; color:#666666; background:inherit; }
-#view_container > .view_content_container > #subtitle_editor table td input[type="text"]:disabled { background:none; color:#666666;}
+#view_container > .view_content_container > #subtitle_editor table td input[type="text"] { border:none; width:98%; padding:0; margin:0; font-size:medium; color:#666666; background:inherit; border-bottom:1px solid #424242;}
 #view_container > .view_content_container > #subtitle_editor table td input[type="text"]:focus { color:black; border-bottom:1px solid black; }
 
 #view_container > .view_content_container > .file_container { display:block; position:relative; margin:0; padding:0; }

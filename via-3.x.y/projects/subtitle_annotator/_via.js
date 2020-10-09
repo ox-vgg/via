@@ -16,6 +16,10 @@ function _via(via_container) {
   this.via_container = via_container;
 
   this.d  = new _via_data();
+  this.SUBTITLE_AID = '1';
+  // add new attribute for subtitle
+  this.d['store']['attribute'][this.SUBTITLE_AID] = {'aname':'subtitle', 'anchor_id':'FILE1_Z2_XY0', 'type':1, 'desc':'Subtitle text', 'options':{}, 'default_option_id':'' };
+
   var conf = { 'ENDPOINT': _VIA_REMOTE_STORE };
   this.s  = new _via_share(this.d, conf);
 

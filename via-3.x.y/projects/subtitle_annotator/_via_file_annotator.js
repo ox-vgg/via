@@ -1,8 +1,8 @@
 /**
  * @class
- * @classdesc Manages region draw and view operations on an image or video
+ * @classdesc Manages video and audio file for subtitle annotator
  * @author Abhishek Dutta <adutta@robots.ox.ac.uk>
- * @since 8 Apr. 2019
+ * @since 9 Oct. 2020
  */
 
 'use strict';

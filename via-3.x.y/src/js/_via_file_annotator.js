@@ -158,7 +158,7 @@ _via_file_annotator.prototype._zoom_activate = function() {
 }
 
 _via_file_annotator.prototype._zoom_update_position = function() {
-  var zoom_panel_left = this.last_cx - this.zoom_container.offsetWidth/2;
+  var zoom_panel_left = this.left_pad + this.last_cx - this.zoom_container.offsetWidth/2;
   var zoom_panel_top  = this.last_cy - this.zoom_container.offsetHeight/2;
 
   // position zoom container
@@ -480,6 +480,7 @@ _via_file_annotator.prototype._file_html_element_compute_scale = function() {
     this.file_html_element_size_css += 'left:' + this.left_pad + 'px;';
     break;
   default:
+    this.left_pad = 0;
     this.file_html_element_size_css += 'left:0px;';
   }
 }

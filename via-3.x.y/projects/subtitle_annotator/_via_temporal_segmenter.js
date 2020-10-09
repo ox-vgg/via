@@ -1,8 +1,8 @@
 /**
  * @class
- * @classdesc Marks time segments of a {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement|HTMLMediaElement}
+ * @classdesc Marks time segments containing subtitle text of a {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement|HTMLMediaElement}
  * @author Abhishek Dutta <adutta@robots.ox.ac.uk>
- * @since 5 Mar. 2019
+ * @since 9 Oct. 2020
  * @fires _via_temporal_segmenter#segment_add
  * @fires _via_temporal_segmenter#segment_del
  * @fires _via_temporal_segmenter#segment_edit
@@ -71,6 +71,7 @@ function _via_temporal_segmenter(file_annotator, container, vid, groupby_aid, da
   _via_event.call( this );
   this.d.on_event('attribute_update', this._ID, this._on_event_attribute_update.bind(this));
   this.d.on_event('metadata_update_bulk', this._ID, this._on_event_metadata_update_bulk.bind(this));
+  this.d.on_event('metadata_add_bulk', this._ID, this._on_event_metadata_add_bulk.bind(this));
 
   if ( ! this.m instanceof HTMLMediaElement ) {
     throw 'media element must be an instance of HTMLMediaElement!';
@@ -89,10 +90,6 @@ _via_temporal_segmenter.prototype._init = function(groupby_aid) {
   try {
     this.fid = this.d.store.view[this.vid].fid_list[0];
     this.file = this.d.store.file[this.fid];
-
-    // initialise thumbnail viewer
-    this.thumbnail = new _via_video_thumbnail(this.fid, this.d);
-    this.thumbnail.load();
 
     this._group_init(groupby_aid);
 
@@ -2149,4 +2146,10 @@ _via_temporal_segmenter.prototype._on_event_metadata_update_bulk = function(data
   if ( this.vid === event_payload.vid ) {
     _via_util_msg_show('Updated ' + event_payload.mid_list.length + ' metadata');
   }
+}
+
+_via_temporal_segmenter.prototype._on_event_metadata_add_bulk = function(data, event_payload) {
+  _via_util_msg_show('Added ' + event_payload.mid_list.length + ' metadata');
+  this._init(this.groupby_aid);
+  this.emit_event('metadata_add', { 'mid_list':event_payload['mid_list'] });
 }

@@ -1,9 +1,9 @@
 /**
  *
  * @class
- * @classdesc VIA Control Panel
+ * @classdesc VIA Control Panel customized for subtitle annotator
  * @author Abhishek Dutta <adutta@robots.ox.ac.uk>
- * @date 16 May 2019
+ * @date 9 Oct. 2020
  *
  */
 
@@ -31,7 +31,17 @@ _via_control_panel.prototype._init = function(type) {
   this._add_view_manager_tools();
 
   this._add_spacer();
+  var subtitle = _via_util_get_svg_button('micon_subtitle', 'Import Subtitle from a WebVTT file');
+  subtitle.addEventListener('click', function() {
+    if(this.via.va.view_mode === _VIA_VIEW_MODE.AV_SUBTITLE) {
+      _via_util_file_select_local(_VIA_FILE_SELECT_TYPE.WEBVTT, this._subtitle_import_on_local_file_select.bind(this), false);
+    } else {
+      _via_util_msg_show('Load a video or audio file before importing subtitle from WebVTT file.');
+    }
+  }.bind(this));
+  this.c.appendChild(subtitle);
 
+  this._add_spacer();
   this._add_project_tools();
 
   this._add_spacer();
@@ -401,4 +411,19 @@ _via_control_panel.prototype.fileuri_bulk_add_from_url_list = function(uri_list_
     }
     this.via.vm._file_add_from_filelist(filelist);
   }
+}
+
+//
+// subtitle import
+//
+_via_control_panel.prototype._subtitle_import_on_local_file_select = function(e) {
+  if ( e.target.files.length === 1 ) {
+    _via_util_load_text_file(e.target.files[0], this._subtitle_import_on_local_file_read.bind(this));
+  }
+}
+
+_via_control_panel.prototype._subtitle_import_on_local_file_read = function(webvtt_str) {
+  this.via.ie.import_from_webvtt(webvtt_str, this.via.va.vid, this.via.SUBTITLE_AID).then( function(ok) {
+  }.bind(this), function(err) {
+  }.bind(this));
 }

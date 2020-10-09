@@ -310,3 +310,49 @@ _via_import_export.prototype.export_to_webvtt = function() {
     _via_util_download_as_file(data_blob, filename.join(''));
   }.bind(this));
 }
+
+_via_import_export.prototype.import_from_webvtt = function(webvtt_str, vid, subtitle_aid) {
+  return new Promise( function(ok_callback, err_callback) {
+    var line_split_regex = new RegExp('\n|\r|\r\n', 'g');
+    var webvtt_lines = webvtt_str.split(line_split_regex);
+    var metadata_list = [];
+    for(var i=0; i<webvtt_lines.length; ) {
+      if(webvtt_lines[i].includes(' --> ')) {
+        var timestamp_tokens = webvtt_lines[i].split(' --> ');
+        var starttime_sec = _via_hh_mm_ss_ms_to_seconds(timestamp_tokens[0]);
+        var endtime_sec = _via_hh_mm_ss_ms_to_seconds(timestamp_tokens[1]);
+
+        var subtitle_text = [];
+        var end_of_subtitle_text = false;
+        var offset = 1;
+        while(!end_of_subtitle_text) {
+          if ((i+offset) >= webvtt_lines.length) {
+            break;
+          }
+          if(webvtt_lines[i + offset].includes[' --> '] ||
+             webvtt_lines[i + offset] == '') {
+            end_of_subtitle_text = true;
+            if(webvtt_lines[i + offset].includes['']) {
+              offset = offset + 1;
+            }
+            break;
+          } else {
+            subtitle_text.push(webvtt_lines[i + offset]);
+            offset = offset + 1;
+          }
+        }
+        var av = {}
+        av[subtitle_aid] = subtitle_text.join(' ');
+        metadata_list.push({'vid': vid,
+                            'z':[starttime_sec, endtime_sec],
+                            'xy':[],
+                            'av': av
+                           });
+        i = i + offset;
+      } else {
+        i = i + 1;
+      }
+    }
+    this.d.metadata_add_bulk(metadata_list, true);
+  }.bind(this));
+}
