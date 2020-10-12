@@ -724,12 +724,6 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_clear = function(gid) {
 }
 
 _via_temporal_segmenter.prototype._tmetadata_group_gid_draw = function(gid, debug) {
-  /*
-  if(typeof(debug) === 'undefined') {
-    console.log('WARNING: _tmetadata_group_gid_draw() was not invoked by requestAnimationFrame()');
-  }
-  */
-
   this._tmetadata_group_gid_clear(gid);
   this._tmetadata_group_gid_draw_boundary(gid);
   this._tmetadata_group_gid_draw_metadata(gid);
@@ -1536,15 +1530,17 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mouseup = function(e) {
   if(this.timeline_move_is_ongoing) {
     var offset;
     var boundary_type = this._tmetadata_group_gid_is_at_boundary_marker(x);
-    if(boundary_type === 1) {
-      // move to left
-      offset = -1;
-    } else {
-      offset = 1;
+    if(boundary_type !== 0) {
+      if(boundary_type === 1) {
+        // move to left
+        offset = -1;
+      } else {
+        offset = 1;
+      }
+      this._tmetadata_boundary_move(offset);
+      this._tmetadata_gtimeline_draw();
+      this._tmetadata_group_gid_draw_all();
     }
-    this._tmetadata_boundary_move(offset);
-    this._tmetadata_gtimeline_draw();
-    this._tmetadata_group_gid_draw_all();
     return;
   }
 }
