@@ -46,7 +46,7 @@ function _via_view_annotator(data, container ) {
 }
 
 _via_view_annotator.prototype._init = function() {
-  this._view_clear_all_file_annotator();
+  //this._view_clear_all_file_annotator();
   this._show_start_info();
 
   if ( ! this.d.store.config.ui.hasOwnProperty('spatial_region_label_attribute_id') ) {
@@ -403,9 +403,6 @@ _via_view_annotator.prototype.set_region_draw_shape = function(shape) {
 _via_view_annotator.prototype._view_clear_all_file_annotator = function() {
   // _via_file_annotator are attached as events listeners in _via_data
   // we must also remove these events listeners
-  this.d.clear_events(this._ID, 'metadata_add' );
-  this.d.clear_events(this._ID, 'metadata_update' );
-
   // cleanup resources acquired by each of this.file_annotator[i][j]
   for ( var i = 0; i < this.file_annotator.length; ++i ) {
     for ( var j = 0; j < this.file_annotator[i].length; ++j ) {

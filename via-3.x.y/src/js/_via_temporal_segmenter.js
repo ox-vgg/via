@@ -62,6 +62,10 @@ function _via_temporal_segmenter(file_annotator, container, vid, data, media_ele
   _via_event.call( this );
   this.d.on_event('attribute_update', this._ID, this._on_event_attribute_update.bind(this));
   this.d.on_event('metadata_update_bulk', this._ID, this._on_event_metadata_update_bulk.bind(this));
+  // metadata_add and metadata_update events are captured by
+  // _via_view_annotator.prototype._on_event_metadata_add() and
+  // _via_view_annotator.prototype._on_event_metadata_update()
+  // and passed on to the child temporal_segmenter
 
   if ( ! this.m instanceof HTMLMediaElement ) {
     throw 'media element must be an instance of HTMLMediaElement!';
