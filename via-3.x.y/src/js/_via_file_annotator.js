@@ -909,7 +909,9 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
       var cdy = canvas_input_pts[3] - canvas_input_pts[1];
       var mid_list = this.selected_mid_list.slice(0);
       this._metadata_move_region(mid_list, cdx, cdy);
-      this.zoom_rshape_ctx.clearRect(0, 0, this.zoom_canvas_width, this.zoom_canvas_height); // required to clear old region
+      if(this._is_zoom_enabled) {
+        this.zoom_rshape_ctx.clearRect(0, 0, this.zoom_canvas_width, this.zoom_canvas_height); // required to clear old region
+      }
       this._tmpreg_clear();
       this.user_input_pts = [];
       this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
