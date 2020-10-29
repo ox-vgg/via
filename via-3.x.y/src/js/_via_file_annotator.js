@@ -1950,6 +1950,7 @@ _via_file_annotator.prototype._on_event_metadata_add = function(data, event_payl
       this.va.temporal_segmenter._tmetadata_boundary_add_spatial_mid(mid);
       this._creg_add(vid, mid);
       this._creg_draw_all();
+      this.va.temporal_segmenter._tmetadata_gtimeline_draw();
     } else {
       // spatial region in an image was added
       this._creg_add(vid, mid);
@@ -1969,6 +1970,8 @@ _via_file_annotator.prototype._on_event_metadata_delete_bulk = function(data, ev
   }
   this._creg_add_current_frame_regions(this.vid);
   this._creg_draw_all();
+
+  this.va.temporal_segmenter._tmetadata_gtimeline_draw();
 }
 
 _via_file_annotator.prototype._on_event_metadata_update = function(data, event_payload) {

@@ -13,6 +13,7 @@ function _via_event() {
   this.disable_events = _via_event.prototype.disable;
   this.enable_events  = _via_event.prototype.enable;
   this.clear_events   = _via_event.prototype.clear;
+  this.delete_listener  = _via_event.prototype.delete_listener;
 
   this._event = { 'enabled':true, 'targets':{} };
 }
@@ -63,7 +64,7 @@ _via_event.prototype.clear = function(listener_name, event_id) {
                                         'listener_param_list':[] };
     }
   } else {
-    if ( typeof(event_id_suffix) === 'undefined' ) {
+    if ( typeof(event_id) === 'undefined' ) {
       // clear based on listener_name
       for ( var event_id in this._event.targets ) {
         var delete_index_list = [];
