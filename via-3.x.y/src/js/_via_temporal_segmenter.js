@@ -53,6 +53,7 @@ function _via_temporal_segmenter(file_annotator, container, vid, data, media_ele
   this.metadata_move_start_x = 0;
   this.metadata_move_dx = 0;
   this.metadata_last_added_mid = '';
+  this.is_init_success = false;
 
   this.show_audio = false;             // experimental, hence disabled by default
   this.audio_analyser_active = false;
@@ -95,8 +96,10 @@ _via_temporal_segmenter.prototype._init = function() {
 
   if ( this.group_aid_candidate_list.length ) {
     this._init_on_success(this.group_aid_candidate_list[0]);
+    this.is_init_success = true;
   } else {
     this._init_on_fail();
+    this.is_init_success = false;
   }
 }
 
@@ -1509,7 +1512,9 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_get_mindex_at_time = func
 // keyboard input handler
 //
 _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
-  var fid = this.file.fid;
+  if(!this.is_init_success) {
+    return;
+  }
 
   // play/pause
   if ( e.key === ' ' ) {

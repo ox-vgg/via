@@ -22,6 +22,7 @@ function _via_subtitle_editor(groupby_aid, data, temporal_segmenter, container) 
   this.ts.on_event('metadata_select', this._ID, this._on_event_metadata_select.bind(this));
   this.ts.on_event('metadata_unselect', this._ID, this._on_event_metadata_unselect.bind(this));
   this.ts.on_event('metadata_update', this._ID, this._on_event_metadata_update.bind(this));
+  this.ts.on_event('metadata_editor_focus', this._ID, this._on_event_metadata_editor_focus.bind(this));
 
   this.init();
 }
@@ -64,9 +65,9 @@ _via_subtitle_editor.prototype.init = function() {
     input.setAttribute('value', this.d.store.metadata[mid]['av'][this.groupby_aid]);
     input.addEventListener('click', this.onclick_subtitle_text.bind(this));
     input.addEventListener('change', this.onchange_subtitle_text.bind(this));
+    input.addEventListener('keydown', this.keydown_subtitle_text.bind(this));
+
     subtitle.appendChild(input);
-    //subtitle.innerHTML = '<input data-mid="' + mid + '" type="text" disabled value="' + this.d.store.metadata[mid]['av'][this.groupby_aid] + '">';
-    //subtitle.innerHTML = this.d.store.metadata[mid]['av'][this.groupby_aid];
 
     row.appendChild(index);
     row.appendChild(stime);
@@ -85,6 +86,12 @@ _via_subtitle_editor.prototype.init = function() {
   //this.subtitle_table.appendChild(subtitle_head);
   this.subtitle_table.appendChild(this.subtitle_tbody);
   this.c.appendChild(this.subtitle_table);
+}
+
+_via_subtitle_editor.prototype.keydown_subtitle_text = function(e) {
+  if(e.key === 'Escape') {
+    e.target.blur();
+  }
 }
 
 _via_subtitle_editor.prototype.onclick_subtitle_text = function(e) {
@@ -113,6 +120,7 @@ _via_subtitle_editor.prototype.onchange_subtitle_text = function(e) {
 
     // update temporal segmenter
     this.ts._tmetadata_group_gid_draw(this.ts.selected_gid);
+    e.target.blur();
   }.bind(this), function(err) {
     _via_util_msg_show('Failed to update subtitle text.');
   }.bind(this));
@@ -163,7 +171,7 @@ _via_subtitle_editor.prototype.inform_temporal_segmenter_of_unselect = function(
 }
 
 _via_subtitle_editor.prototype.on_click_row = function(mindex, e) {
-  console.log('clicked ' + mindex + ', target=' + e.target.type)
+  //console.log('clicked ' + mindex + ', target=' + e.target.type)
   if(e.target.type === 'text') {
     return; // handled by onclick_subtitle_text()
   }
@@ -197,6 +205,15 @@ _via_subtitle_editor.prototype._on_event_metadata_unselect = function(data, even
   this.remove_subtitle_sel();
 }
 
+_via_subtitle_editor.prototype._on_event_metadata_editor_focus = function(data, event_payload) {
+  var mid = event_payload.mid;
+  var mindex = this.mid_list.indexOf(mid);
+  // update subtitle list
+  var row = document.getElementById('subtitle_mindex_' + mindex);
+  row.childNodes[3].firstChild.focus();
+  _via_util_msg_show('Update the subtitle text and press <span class="key">Enter</span> or <span class="key">Esc</span> to bring focus back to the temporal segment.');
+}
+
 _via_subtitle_editor.prototype._on_event_metadata_update = function(data, event_payload) {
   var mid = event_payload.mid;
   var eindex = event_payload.eindex;
@@ -210,7 +227,7 @@ _via_subtitle_editor.prototype._on_event_metadata_update = function(data, event_
   var etime = document.createElement('td');
   var end = _via_seconds_to_hh_mm_ss_ms(this.d.store.metadata[mid]['z'][1]);
   row.childNodes[2].innerHTML = '<span class="hhmmss">' + end[0] + ':' + end[1] + ':' + end[2] + '</span><span class="ms">' + end[3] + '</span>';
-  row.childNodes[3].innerHTML = this.d.store.metadata[mid]['av'][this.groupby_aid];
+  row.childNodes[3].firstChild.setAttribute('value', this.d.store.metadata[mid]['av'][this.groupby_aid]);
 
   // update subtitle track cue
   var cue = this.subtitle_track_cue_list[mindex];

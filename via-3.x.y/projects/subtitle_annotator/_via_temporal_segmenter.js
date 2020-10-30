@@ -1238,6 +1238,7 @@ _via_temporal_segmenter.prototype._tmetadata_mid_add_at_time = function(t) {
     this.metadata_last_added_mid = ok.mid;
     this._tmetadata_group_gid_draw(this.selected_gid);
     this.emit_event('metadata_add', {'mid':ok.mid, 'eindex':-1});
+    _via_util_msg_show('Temporal segment added. Press <span class="key">Enter</span> to select temporal at current position or press <span class="key">Shift</span> + <span class="key">Enter</span> to select temporal segment and edit its subtitle text.');
   }.bind(this), function(err) {
     _via_util_msg_show('Failed to add metadata!');
     console.log(err);
@@ -1803,6 +1804,11 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     this.m.pause();
     this._tmetadata_group_gid_sel_metadata_at_time();
     this._tmetadata_group_gid_draw(this.selected_gid);
+
+    if(e.shiftKey) {
+      // focus the subtitle text input element in subtitle editor
+      this.emit_event('metadata_editor_focus', { 'mid':this.selected_mid });
+    }
     return;
   }
 
