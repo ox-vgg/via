@@ -866,11 +866,11 @@ function import_coco_annotations_from_json(data_str) {
       if ( image_id_to_annotation_index.hasOwnProperty(coco_img_id) ) {
         for ( var i in image_id_to_annotation_index[coco_img_id] ) {
           var annotation_i = coco['annotations'][ image_id_to_annotation_index[coco_img_id][i] ];
-          var bbox_from_polygon = polygon_to_bbox(annotation_i['segmentation']);
+          var bbox_from_polygon = polygon_to_bbox(annotation_i['segmentation'][0]);
 
           // ensure rectangles get imported as rectangle (and not as polygon)
           var is_rectangle = true;
-          for (var j = 0; i < annotation_i['bbox'].length; ++j) {
+          for (var j = 0; j < annotation_i['bbox'].length; ++j) {
             if (annotation_i['bbox'][j] !== bbox_from_polygon[j]) {
               is_rectangle = false;
               break;
