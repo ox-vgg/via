@@ -546,6 +546,33 @@ _via_data.prototype.metadata_delete_bulk = function(vid, mid_list, emit) {
   }.bind(this));
 }
 
+_via_data.prototype.metadata_delete_all = function(vid, emit) {
+  return new Promise( function(ok_callback, err_callback) {
+    try {
+      if ( ! this.store.view.hasOwnProperty(vid) ) {
+        err_callback({'vid':vid});
+        return;
+      }
+      var deleted_mid_list = [];
+      var mid, cindex;
+      for ( var mid in this.store.metadata ) {
+        delete this.store.metadata[mid];
+        deleted_mid_list.push(mid);
+      }
+      this._cache_mid_list_del(vid, deleted_mid_list);
+      if ( typeof(emit) !== 'undefined' &&
+           emit === true ) {
+        this.emit_event( 'metadata_delete_all', { 'vid':vid, 'mid_list':deleted_mid_list } );
+      }
+      ok_callback({'vid':vid, 'mid_list':deleted_mid_list});
+    }
+    catch(ex) {
+      console.log(ex);
+      err_callback(ex);
+    }
+  }.bind(this));
+}
+
 //
 // View
 //
