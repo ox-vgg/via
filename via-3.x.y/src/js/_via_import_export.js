@@ -353,6 +353,13 @@ _via_import_export.prototype.import_from_webvtt = function(webvtt_str, vid, subt
         i = i + 1;
       }
     }
-    this.d.metadata_add_bulk(metadata_list, true);
+    //this.d.metadata_add_bulk(metadata_list, true); // appends to existing metadata
+
+    // removes existing subtitles and adds new subtitles
+    this.d.metadata_delete_all(vid, true).then( function(ok) {
+      this.d.metadata_add_bulk(metadata_list, true);
+    }.bind(this), function(err) {
+      console.log(err);
+    }.bind(this));
   }.bind(this));
 }
