@@ -2755,11 +2755,12 @@ _via_file_annotator.prototype._metadata_attribute_io_html_element = function(mid
 
   case _VIA_ATTRIBUTE_TYPE.CHECKBOX:
     el = document.createElement('div');
-
-    console.log(dval)
-    console.log(aval)
     if ( typeof(aval) === 'undefined' ) {
-      aval = dval;
+      if ( typeof(dval) === 'undefined' ) {
+        aval = '';
+      } else {
+        aval = dval;
+      }
     }
     var values = aval.split(',');
     for ( var oid in this.d.store.attribute[aid].options ) {
