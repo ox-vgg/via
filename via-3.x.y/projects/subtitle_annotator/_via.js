@@ -104,30 +104,7 @@ function _via(via_container) {
   } else {
     // debug code (disabled for release)
     if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
-      //this.s.pull('c42560da-d42e-44f2-af9b-04e4e1be7867'); // load shared project
-      /*
-      var line_split_regex = new RegExp('\n|\r|\r\n', 'g');
-      var webvtt_lines = _via_dp[0]['subtitle_vtt'].split(line_split_regex);
-      var mid = 1;
-      var vid = '1';
-      for(var i=0; i<webvtt_lines.length; ++i) {
-        if(webvtt_lines[i].includes(' --> ')) {
-          var timestamp_tokens = webvtt_lines[i].split(' --> ');
-          var starttime_sec = _via_hh_mm_ss_ms_to_seconds(timestamp_tokens[0]);
-          var endtime_sec = _via_hh_mm_ss_ms_to_seconds(timestamp_tokens[1]);
-          _via_dp[0]['store']['metadata'][mid] = { 'vid': vid,
-                                                   'flg':0,
-                                                   'z':[starttime_sec, endtime_sec],
-                                                   'xy':[],
-                                                   'av':{
-                                                     '1':webvtt_lines[i+1].trim(),
-                                                   }
-                                                 };
-          mid = mid + 1;
-        }
-      }
-      this.d.project_load_json(_via_dp[0]['store']); // video subtitle editor
-      */
+      //this.s.pull(''); // load shared project
     }
   }
 
