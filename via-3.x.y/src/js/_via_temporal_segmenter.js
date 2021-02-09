@@ -1552,25 +1552,21 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
     return;
   }
 
-  if ( e.key === 'n' || e.key === 'N' || e.key === 'p' || e.key === 'P') {
+  if ( e.key === 'N' || e.key === 'P') {
     e.preventDefault();
     if ( ! this.m.paused ) {
       return;
     }
 
     var t = this.m.currentTime;
-    var delt = this.EDGE_UPDATE_TIME_DELTA;
-    if ( e.key === 'N' || e.key === 'P' ) {
-      delt = delt * 5;
-    }
-    if ( e.key === 'n' || e.key === 'N') {
-      t += delt;
+    if ( e.key === 'N') {
+      t = t + this.EDGE_UPDATE_TIME_DELTA * 5;
     } else {
-      t -= delt;
+      t = t - this.EDGE_UPDATE_TIME_DELTA * 5;
     }
-    // clamp
     t = Math.max(0, Math.min(t, this.m.duration));
     this.m.currentTime = t;
+    return;
   }
 
   if ( e.key === 's' || e.key === 'S' ) {
@@ -1794,19 +1790,23 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
       }
     } else {
       // move temporal seg. timeline
-      var tstart_new;
-      if ( e.key === 'ArrowLeft' ) {
-        if ( e.shiftKey ) {
+      if(e.shiftKey) {
+        // shift visible timeline by 60 sec.
+        if ( e.key === 'ArrowLeft' ) {
           this._tmetadata_boundary_move(-60*this.TEMPORAL_SEG_MOVE_OFFSET);
         } else {
-          this._tmetadata_boundary_move(-this.TEMPORAL_SEG_MOVE_OFFSET);
+          this._tmetadata_boundary_move(60*this.TEMPORAL_SEG_MOVE_OFFSET);
         }
       } else {
-        if ( e.shiftKey ) {
-          this._tmetadata_boundary_move(60*this.TEMPORAL_SEG_MOVE_OFFSET);
+        // shift by 1 frame
+        var t = this.m.currentTime;
+        if ( e.key === 'ArrowLeft' ) {
+          t = t - this.EDGE_UPDATE_TIME_DELTA;
         } else {
-          this._tmetadata_boundary_move(this.TEMPORAL_SEG_MOVE_OFFSET);
+          t = t + this.EDGE_UPDATE_TIME_DELTA;
         }
+        t = Math.max(0, Math.min(t, this.m.duration));
+        this.m.currentTime = t;
       }
     }
     return;
