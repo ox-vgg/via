@@ -201,7 +201,7 @@ _via_share.prototype._project_push = function(pid, rev) {
       console.log('POST ' + this.conf['ENDPOINT'])
     } else {
       xhr.open('POST', this.conf['ENDPOINT'] + pid + '?rev=' + rev);
-      console.log('POST ' + this.conf['ENDPOINT' + pid + '?rev=' + rev])
+      console.log('POST ' + this.conf['ENDPOINT'] + pid + '?rev=' + rev)
     }
     xhr.timeout = _VIA_REMOTE_TIMEOUT;
     xhr.send(JSON.stringify(payload));
