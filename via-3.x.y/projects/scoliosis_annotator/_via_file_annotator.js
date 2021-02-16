@@ -36,6 +36,7 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.last_clicked_mid_list = [];
   this.resize_control_point_index = -1;
   this.resize_selected_mid_index = -1;
+  this.mid_being_updated = '';
 
   // canvas regions
   this.creg = {}; // canvas regions
@@ -45,6 +46,13 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.last_cx = 0;
   this.last_cy = 0;
 
+  // zoom
+  this._is_zoom_enabled = false;
+  this.zoom_scale = 3.0;
+  this.zoom_scale_index = 6;
+  this.zoom_scale_list = [0.2, 0.4, 0.6, 0.8, 1.0, 2.0, 3.0, 4.0];
+  // see this.conf.ZOOM_SIZE
+
   // constants
   this.conf = {};
   this.conf.CONTROL_POINT_RADIUS = 4;
@@ -53,8 +61,8 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.conf.CONTROL_POINT_CLICK_TOL = 10;
   this.conf.REGION_BOUNDARY_COLOR = 'yellow';
   this.conf.REGION_LINE_WIDTH = 2;
-  this.conf.SEL_REGION_BOUNDARY_COLOR = '#808080';
-  this.conf.SEL_REGION_FILL_COLOR = '#808080';
+  this.conf.SEL_REGION_BOUNDARY_COLOR = '#55ffdd';
+  this.conf.SEL_REGION_FILL_COLOR = '#ff0000';
   this.conf.SEL_REGION_FILL_OPACITY = 0.1;
   this.conf.SEL_REGION_LINE_WIDTH = 2;
   this.conf.REGION_POINT_RADIUS = 3;
@@ -97,6 +105,82 @@ _via_file_annotator.prototype._init = function() {
   }
 
   this.fid = this.d.store.view[this.vid].fid_list[0];
+}
+
+_via_file_annotator.prototype._zoom_toggle = function() {
+  if(this._is_zoom_enabled) {
+    this.zoom_container.classList.add('hide');
+    this._is_zoom_enabled = false;
+    this.zoom_container.innerHTML = '';
+    _via_util_msg_show('Deactivated magnifying glass.');
+  } else {
+    this._is_zoom_enabled = true;
+    this._zoom_activate();
+    this.zoom_container.classList.remove('hide');
+    this._zoom_update_position();
+    _via_util_msg_show('Activated magnifying glass to allow finer inspection of feature.');
+  }
+}
+
+_via_file_annotator.prototype._zoom_activate = function() {
+  this.zoom_container.innerHTML = '';
+
+  // add filecontent
+  var filecontent = this.file_html_element.cloneNode(true);
+  filecontent.removeAttribute('style');
+  filecontent.removeAttribute('id');
+
+  this.zoom_canvas_width = this.cwidth * this.zoom_scale;
+  this.zoom_canvas_height = this.cheight * this.zoom_scale;
+  filecontent.setAttribute('width', this.zoom_canvas_width);
+  filecontent.setAttribute('height', this.zoom_canvas_height);
+
+  var rshape = document.createElement('canvas');
+  rshape.setAttribute('id', 'zoom_region_shape');
+  rshape.width = this.zoom_canvas_width;
+  rshape.height = this.zoom_canvas_height;
+  this.zoom_rshape_ctx = rshape.getContext('2d');
+  this.zoom_rshape_ctx.drawImage(this.rshape_canvas, 0, 0, this.cwidth, this.cheight,
+                                 0, 0, this.zoom_canvas_width, this.zoom_canvas_height);
+
+  var tempr = document.createElement('canvas');
+  tempr.setAttribute('id', 'zoom_region_input');
+  tempr.width = this.zoom_canvas_width;
+  tempr.height = this.zoom_canvas_height;
+  this.zoom_tempr_ctx = tempr.getContext('2d');
+
+  this.zoom_container.appendChild(filecontent);
+  this.zoom_container.appendChild(rshape);
+  this.zoom_container.appendChild(tempr);
+
+  // zoom panel position gets updated by _zoom_update_position() on mousemove event
+  // zoom panel content gets updated by _draw()
+}
+
+_via_file_annotator.prototype._zoom_update_position = function() {
+  var zoom_panel_left = this.left_pad + this.last_cx - this.zoom_container.offsetWidth/2;
+  var zoom_panel_top  = this.last_cy - this.zoom_container.offsetHeight/2;
+
+  // position zoom container
+  var style = [];
+//  style.push('width:' + this.conf.ZOOM_SIZE + 'px');
+//  style.push('height:' + this.conf.ZOOM_SIZE + 'px');
+  style.push('top:' + zoom_panel_top + 'px');
+  style.push('left:' + zoom_panel_left + 'px');
+  //style.push('border-radius:' + this.conf.ZOOM_SIZE_BY2 + 'px');
+  style.push('border-radius:2em;');
+  this.zoom_container.setAttribute('style', style.join(';'));
+
+  // position filecontent
+  style = [];
+  style.push('position: absolute');
+  var scaled_img_left = this.zoom_container.offsetWidth/2 - this.last_cx * this.zoom_scale;
+  var scaled_img_top  = this.zoom_container.offsetHeight/2 - this.last_cy * this.zoom_scale;
+  style.push('top:' + scaled_img_top + 'px');
+  style.push('left:' + scaled_img_left + 'px');
+  this.zoom_container.childNodes[0].setAttribute('style', style.join(';'));
+  this.zoom_container.childNodes[1].setAttribute('style', style.join(';'));
+  this.zoom_container.childNodes[2].setAttribute('style', style.join(';'));
 }
 
 _via_file_annotator.prototype._file_load_show_error_page = function() {
@@ -353,7 +437,8 @@ _via_file_annotator.prototype._file_create_html_element = function() {
 }
 
 _via_file_annotator.prototype._file_html_element_compute_scale = function() {
-  var maxh = 1.9*this.c.clientHeight;
+  //var maxh = 3*this.c.clientHeight; // to scale image longer that viewport height
+  var maxh = this.c.clientHeight;
   var maxw = this.c.clientWidth;
 
   // original size of the content
@@ -433,6 +518,13 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this.temprctx = this.tempr_canvas.getContext('2d', { alpha:true });
   this.c.appendChild(this.tempr_canvas);
 
+  // zoom container
+  this.zoom_container = document.createElement('div');
+  this.zoom_container.setAttribute('class', 'zoom_container');
+  this.zoom_container.classList.add('hide');
+  this.c.appendChild(this.zoom_container);
+
+  // keyboard and mouse input handlers
   this.input = document.createElement('div');
   this.input.setAttribute('style', this.file_html_element_size_css);
   this.input.setAttribute('id', 'input');
@@ -470,6 +562,9 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this._creg_draw_all();
 
   this._state_set(_VIA_RINPUT_STATE.IDLE);
+
+  this._zoom_toggle();
+  this.zoom_container.classList.add('hide'); // hide so that it gets activated when mouseover event is triggered
 }
 
 //
@@ -479,6 +574,8 @@ _via_file_annotator.prototype._rinput_attach_input_handlers = function(container
   container.addEventListener('mousedown', this._rinput_mousedown_handler.bind(this));
   container.addEventListener('mouseup', this._rinput_mouseup_handler.bind(this));
   container.addEventListener('mousemove', this._rinput_mousemove_handler.bind(this));
+  container.addEventListener('mouseout', this._rinput_mouseout_handler.bind(this));
+  container.addEventListener('mouseover', this._rinput_mouseover_handler.bind(this));
 
   container.addEventListener('wheel', this._rinput_wheel_handler.bind(this));
 
@@ -490,6 +587,15 @@ _via_file_annotator.prototype._rinput_remove_input_handlers = function() {
 }
 
 _via_file_annotator.prototype._rinput_keydown_handler = function(e) {
+  if ( e.key === 'n' || e.key === 'p' ) {
+    e.preventDefault();
+    if(e.key === 'n') {
+      this.va.emit_event('view_next', {});
+    } else {
+      this.va.emit_event('view_prev', {});
+    }
+  }
+
   if ( e.key === 'Backspace' || e.key === 'Delete' ) {
     if ( this.selected_mid_list.length ) {
       e.preventDefault();
@@ -538,6 +644,43 @@ _via_file_annotator.prototype._rinput_keydown_handler = function(e) {
       var mid_list = this.selected_mid_list.slice(0);
       this._metadata_move_region(mid_list, cdx, cdy);
     }
+    return;
+  }
+
+  if ( e.key === '-' ) {
+    if(this._is_zoom_enabled) {
+      if(this.zoom_scale_index > 0) {
+        this.zoom_scale_index = this.zoom_scale_index - 1;
+        this.zoom_scale = this.zoom_scale_list[this.zoom_scale_index];
+        _via_util_msg_show('Zoom scale reduced to ' + this.zoom_scale);
+        this.zoom_container.classList.add('hide');
+        this._zoom_activate();
+        this.zoom_container.classList.remove('hide');
+      } else {
+        _via_util_msg_show('Reached minimum limit of zoom');
+      }
+      return;
+    }
+  }
+
+  if ( e.shiftKey && e.key === '+') {
+    if(this._is_zoom_enabled) {
+      if(this.zoom_scale_index < this.zoom_scale_list.length) {
+        this.zoom_scale_index = this.zoom_scale_index + 1;
+        this.zoom_scale = this.zoom_scale_list[this.zoom_scale_index];
+        _via_util_msg_show('Zoom scale increased to ' + this.zoom_scale);
+        this.zoom_container.classList.add('hide');
+        this._zoom_activate();
+        this.zoom_container.classList.remove('hide');
+      } else {
+        _via_util_msg_show('Reached maximum limit of zoom');
+      }
+      return;
+    }
+  }
+
+  if ( e.key === 'z' ) {
+    this._zoom_toggle();
     return;
   }
 
@@ -645,9 +788,10 @@ _via_file_annotator.prototype._rinput_mousedown_handler = function(e) {
     case _VIA_RSHAPE.SCOLIOSIS:
       this.user_input_pts.push(cx, cy);
 
-      if(this.user_input_pts.length === 18) {
+      if(this.user_input_pts.length === 18) { // Stage 2
+      //if(this.user_input_pts.length === 12) { // Stage 1
         nclick_done = true;
-        _via_util_msg_show( 'Finished drawing feature points defining scoliosis.');
+        _via_util_msg_show( 'Finished drawing Stage 2 feature points. All feature points have now been defined.');
       }
       break;
     }
@@ -772,6 +916,9 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
     var cdy = canvas_input_pts[3] - canvas_input_pts[1];
     var mid_list = this.selected_mid_list.slice(0);
     this._metadata_move_region(mid_list, cdx, cdy);
+    if(this._is_zoom_enabled) {
+      this.zoom_rshape_ctx.clearRect(0, 0, this.zoom_canvas_width, this.zoom_canvas_height); // required to clear old region
+    }
     this._tmpreg_clear();
     this.user_input_pts = [];
     this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
@@ -795,6 +942,9 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
                                    cx, cy);
     }
     this._tmpreg_clear();
+    if(this._is_zoom_enabled) {
+      this.zoom_rshape_ctx.clearRect(0, 0, this.zoom_canvas_width, this.zoom_canvas_height); // required to clear old region
+    }
     this.user_input_pts = [];
     this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
     return;
@@ -837,6 +987,10 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
   var cy = e.offsetY;
   this.last_cx = cx;
   this.last_cy = cy;
+
+  if(this._is_zoom_enabled) {
+    this._zoom_update_position();
+  }
 
   var pts = this.user_input_pts.slice(0);
   pts.push(cx, cy);
@@ -921,6 +1075,20 @@ _via_file_annotator.prototype._rinput_mousemove_handler = function(e) {
   }
 }
 
+_via_file_annotator.prototype._rinput_mouseout_handler = function(e) {
+  e.stopPropagation();
+  if(this._is_zoom_enabled) {
+    this.zoom_container.classList.add('hide');
+  }
+}
+
+_via_file_annotator.prototype._rinput_mouseover_handler = function(e) {
+  e.stopPropagation();
+  if(this._is_zoom_enabled) {
+    this.zoom_container.classList.remove('hide');
+  }
+}
+
 _via_file_annotator.prototype._rinput_pts_canvas_to_file = function(canvas_input_pts) {
   var file_input_pts = canvas_input_pts.slice(0);
   var n = canvas_input_pts.length;
@@ -959,7 +1127,23 @@ _via_file_annotator.prototype._rinput_is_near_first_user_input_point = function(
 
 _via_file_annotator.prototype._rinput_region_draw_nclick_done = function() {
   var canvas_input_pts = this.user_input_pts.slice(0);
-  this._metadata_add(this.va.region_draw_shape, canvas_input_pts);
+  var file_input_pts = this._rinput_pts_canvas_to_file(canvas_input_pts);
+  var xy = this._metadata_pts_to_xy(this.va.region_draw_shape, file_input_pts);
+
+  switch(canvas_input_pts.length) {
+  case 18: // Stage 2
+    var z = this.d.store.metadata[this.mid_being_updated]['z'];
+    var av = this.d.store.metadata[this.mid_being_updated]['av'];
+    this.d.metadata_update(this.vid, this.mid_being_updated, z, xy, av);
+    break;
+  case 12: // Stage 1
+    var z = [];
+    var av = this._metadata_get_default_attribute_values();
+    this.d.metadata_add(this.vid, z, xy, av);
+    break;
+  default:
+    console.log('Unknown stage, please check');
+  }
 }
 
 _via_file_annotator.prototype._rinput_wheel_handler = function(e) {
@@ -1038,13 +1222,33 @@ _via_file_annotator.prototype._is_user_input_pts_equal = function() {
 
 _via_file_annotator.prototype._is_point_inside_existing_regions = function(cx, cy) {
   var mid_list = [];
+  var mid_edge_dist = [];
+  var dist_minmax;
   for ( var mid in this.creg ) {
     if ( this._creg_is_inside(this.creg[mid],
                               cx,
                               cy,
                               this.conf.CONTROL_POINT_CLICK_TOL) ) {
+
       mid_list.push(mid);
     }
+  }
+
+  if(mid_list.length) {
+    // if multiple regions, sort mid based on distance on (cx,cy) to its nearest edge
+    var dist_minmax;
+    for( var mindex in mid_list ) {
+      dist_minmax = this._creg_edge_minmax_dist_to_point(this.creg[ mid_list[mindex] ], cx, cy);
+      mid_edge_dist.push(dist_minmax[0]);
+    }
+
+    mid_list.sort( function(mid1, mid2) {
+      if( mid_edge_dist[ mid_list.indexOf(mid1) ] < mid_edge_dist[ mid_list.indexOf(mid2) ] ) {
+        return -1;
+      } else {
+        return 1;
+      }
+    });
   }
   return mid_list;
 }
@@ -1721,6 +1925,72 @@ _via_file_annotator.prototype._creg_del_sel_regions = function() {
   }.bind(this));
 }
 
+_via_file_annotator.prototype._creg_edge_minmax_dist_to_point = function(xy, px, py) {
+  var shape_id = xy[0];
+  var edge_pts = [];
+  switch( shape_id ) {
+  case _VIA_RSHAPE.POINT:
+    edge_pts = [ xy[0], xy[1] ];
+    break;
+  case _VIA_RSHAPE.RECTANGLE:
+    var w2 = xy[3] / 2.0;
+    var h2 = xy[4] / 2.0;
+    edge_pts = [xy[1], xy[2], xy[1] + w2, xy[2], xy[1] + xy[3], xy[2],
+                xy[1] + xy[3], xy[2] + h2, xy[1] + xy[3], xy[2] + xy[4],
+                xy[1] + w2, xy[2] + xy[4], xy[1], xy[2] + xy[4], xy[1], xy[2] + h2 ];
+    break;
+  case _VIA_RSHAPE.EXTREME_RECTANGLE:
+    var exy = this._extreme_to_rshape(xy, shape_id);
+    var w2 = exy[3] / 2.0;
+    var h2 = exy[4] / 2.0;
+    edge_pts = [exy[1], exy[2], exy[1] + w2, exy[2], exy[1] + exy[3], exy[2],
+                exy[1] + exy[3], exy[2] + h2, exy[1] + exy[3], exy[2] + exy[4],
+                exy[1] + w2, exy[2] + h2, exy[1], exy[2] + exy[4], exy[1], exy[2] + h2 ];
+    break;
+  case _VIA_RSHAPE.CIRCLE:
+    edge_pts = [xy[1] + xy[3], xy[2], xy[1], xy[2] - xy[3],
+                xy[1] - xy[3], xy[2], xy[1], xy[2] + xy[3] ]
+    break;
+  case _VIA_RSHAPE.EXTREME_CIRCLE:
+    var exy = this._extreme_to_rshape(xy, shape_id);
+    edge_pts = [exy[1] + exy[3], exy[2], exy[1], exy[2] - exy[3],
+                exy[1] - exy[3], exy[2], exy[1], exy[2] + exy[3] ]
+    break;
+  case _VIA_RSHAPE.ELLIPSE:
+    edge_pts = [xy[1] + xy[3], xy[2], xy[1], xy[2] - xy[4],
+                xy[1] - xy[3], xy[2] - xy[4], xy[1], xy[2] + xy[4] ];
+    break;
+  case _VIA_RSHAPE.LINE:
+    var w2 = (xy[3] + xy[1]) / 2.0;
+    var h2 = (xy[4] + xy[2]) / 2.0;
+    edge_pts = [ xy[1], xy[2], xy[1] + w2, xy[2] + h2, xy[3], xy[4] ];
+    break;
+  case _VIA_RSHAPE.POLYGON:
+  case _VIA_RSHAPE.POLYLINE:
+    edge_pts = xy.slice(1); // discard shape_id;
+    break;
+  case _VIA_RSHAPE.SCOLIOSIS:
+    edge_pts = xy.slice(1); // discard shape_id;
+    break;
+  default:
+    console.warn('_via_file_annotator._draw() : shape_id=' + shape_id + ' not implemented');
+  }
+  var dist_minmax = [+Infinity, -Infinity];
+  var dist, dx, dy;
+  for(var i=0; i<edge_pts.length; i=i+2) {
+    dx = Math.abs(edge_pts[i] - px);
+    dy = Math.abs(edge_pts[i+1] - py);
+    dist = Math.sqrt(dx*dx + dy*dy);
+    if(dist < dist_minmax[0]) {
+      dist_minmax[0] = dist;
+    }
+    if(dist > dist_minmax[1]) {
+      dist_minmax[1] = dist;
+    }
+  }
+  return dist_minmax;
+}
+
 //
 // external event listener
 //
@@ -1764,6 +2034,7 @@ _via_file_annotator.prototype._on_event_metadata_update = function(data, event_p
      ) {
     this._creg_add(vid, mid);
     this._creg_draw_all();
+    _via_util_msg_show( 'Metadata updated');
   }
 }
 
@@ -1829,6 +2100,9 @@ _via_file_annotator.prototype._tmpreg_move_sel_region_cp = function(mindex, cpin
 
 _via_file_annotator.prototype._tmpreg_clear = function() {
   this.temprctx.clearRect(0, 0, this.tempr_canvas.width, this.tempr_canvas.height);
+  if(this._is_zoom_enabled) {
+    this.zoom_tempr_ctx.clearRect(0, 0, this.zoom_canvas_width, this.zoom_canvas_height);
+  }
 }
 
 //
@@ -1876,6 +2150,25 @@ _via_file_annotator.prototype._draw = function(ctx, xy, is_selected) {
     var n = cp.length;
     for ( var i = 1; i < n; i = i + 2 ) {
       this._draw_control_point(ctx, cp[i], cp[i+1]);
+    }
+  }
+
+  if(this._is_zoom_enabled) {
+    var scaled_xy = [ xy[0] ];
+    for(var i=1; i<xy.length; ++i) {
+      scaled_xy[i] = xy[i] * this.zoom_scale;
+    }
+    if(ctx.canvas.id === "region_shape") {
+      this._draw(this.zoom_rshape_ctx, scaled_xy, is_selected);
+      if ( is_selected ) {
+        var cp = this._creg_get_control_points(scaled_xy); // cp[0] = shape_id
+        var n = cp.length;
+        for ( var i = 1; i < n; i = i + 2 ) {
+          this._draw_control_point(this.zoom_rshape_ctx, cp[i], cp[i+1]);
+        }
+      }
+    } else if(ctx.canvas.id === "region_input") {
+      this._draw(this.zoom_tempr_ctx, scaled_xy, is_selected);
     }
   }
 }
@@ -2152,7 +2445,8 @@ _via_file_annotator.prototype._draw_control_point = function(ctx, cx, cy) {
 }
 
 _via_file_annotator.prototype._draw_scoliosis_region = function(ctx, pts, is_selected, shape_id) {
-  //console.log('drawing scoliosis with ' + pts.length + ' points');
+  //console.log('drawing scoliosis with ' + pts.length + ' points on ' + ctx.canvas.id);
+
   var n = pts.length;
   if ( n <= 3 ) {
     return; // we need at least two points to start drawing shape
@@ -2164,14 +2458,29 @@ _via_file_annotator.prototype._draw_scoliosis_region = function(ctx, pts, is_sel
     ctx.strokeStyle = this.conf.REGION_BOUNDARY_COLOR;
   }
   ctx.lineWidth   = this.conf.REGION_LINE_WIDTH;
-  ctx.beginPath();
+
   // vertical line over spine
   if(n >= 5) {
-    ctx.moveTo(pts[1], pts[2]);
-    ctx.lineTo(pts[3], pts[4]);
+    // draw a line through the two user clicked points
+    ctx.beginPath();
+    var slope = (pts[3]-pts[1])/(pts[4]-pts[2]);
+    var x0 = ((-pts[2])*slope) + pts[1]; // (x0,0) is the first point in line
+    ctx.moveTo(x0,0);
+
+    var max_height = this.rshape_canvas.height - 1;
+    if(ctx.canvas.id === "zoom_region_shape" ||
+       ctx.canvas.id === "zoom_region_input") {
+      max_height = this.zoom_canvas_height - 1;
+    }
+    for(var y=10; y<max_height; y=y+10) {
+      var x = (y - pts[2])*slope + pts[1];
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
   }
 
   // horizontal line over shoulder
+  ctx.beginPath();
   if(n >= 9) {
     ctx.moveTo(pts[5], pts[6]);
     ctx.lineTo(pts[7], pts[8]);
@@ -2182,7 +2491,6 @@ _via_file_annotator.prototype._draw_scoliosis_region = function(ctx, pts, is_sel
     ctx.moveTo(pts[9], pts[10]);
     ctx.lineTo(pts[11], pts[12]);
   }
-
   ctx.stroke();
 
   if(n === 19) {
@@ -2251,9 +2559,9 @@ _via_file_annotator.prototype._draw_scoliosis_control_pt_label = function(ctx, i
   var dy = 0;
   switch(id) {
   case 1:
-    dx = 20; dy = -20; break;
+    dx = 30; dy = 30; break;
   case 2:
-    dx = 40; dy = 10; break;
+    dx = 30; dy = -30; break;
   case 3:
     dx = -40; dy = 0; break;
   case 4:
@@ -2283,16 +2591,53 @@ _via_file_annotator.prototype._draw_scoliosis_control_pt_label = function(ctx, i
 // region draw enable/disable
 //
 _via_file_annotator.prototype._rinput_enable = function() {
-  this._state_set(_VIA_RINPUT_STATE.IDLE);
-  this.input.style.pointerEvents = 'auto';
-  this.input.classList.add('rinput_enabled');
-  if ( this.d.store.file[this.fid].type === _VIA_FILE_TYPE.VIDEO ||
-       this.d.store.file[this.fid].type === _VIA_FILE_TYPE.AUDIO
-     ) {
-    if ( this.d.store.file[this.fid].type === _VIA_FILE_TYPE.VIDEO ) {
-      this.file_html_element.removeAttribute('controls');
+  // check if region drawing is complete
+  if(this.d.cache.mid_list[this.vid].length) {
+    this.mid_being_updated = '';
+    for(var mindex in this.d.cache.mid_list[this.vid]) {
+      var mid = this.d.cache.mid_list[this.vid][mindex];
+      if(this.d.store.metadata[mid]['xy'].length !== 0) {
+        this.mid_being_updated = mid;
+        break;
+      }
     }
-    // _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.');
+    if(this.mid_being_updated === '') {
+      // Stage 1 points still being defined
+      this._state_set(_VIA_RINPUT_STATE.IDLE);
+      this.input.style.pointerEvents = 'auto';
+      this.input.classList.add('rinput_enabled');
+    } else {
+      // Stage 2 points still being defined
+      this.user_input_pts = [];
+      var n = this.creg[this.mid_being_updated].length;
+      if(n === 19) {
+        this._state_set(_VIA_RINPUT_STATE.IDLE);
+        this.input.style.pointerEvents = 'auto';
+        this.input.classList.add('rinput_enabled');
+
+        _via_util_msg_show( 'All feature points have now been defined. To update position of existing feature points, click on a feature point to select and move the point', true);
+        return;
+      }
+      for(var i=1; i<n; ++i) {
+        this.user_input_pts.push( this.creg[this.mid_being_updated][i] );
+      }
+      this._state_set( _VIA_RINPUT_STATE.REGION_DRAW_NCLICK_ONGOING );
+      this.input.style.pointerEvents = 'auto';
+      this.input.classList.add('rinput_enabled');
+      _via_util_msg_show( 'Stage 1 feature points are already defined. Now, define feature points 7, 8 and 9.', true);
+    }
+  } else {
+    this._state_set(_VIA_RINPUT_STATE.IDLE);
+    this.input.style.pointerEvents = 'auto';
+    this.input.classList.add('rinput_enabled');
+    if ( this.d.store.file[this.fid].type === _VIA_FILE_TYPE.VIDEO ||
+         this.d.store.file[this.fid].type === _VIA_FILE_TYPE.AUDIO
+       ) {
+      if ( this.d.store.file[this.fid].type === _VIA_FILE_TYPE.VIDEO ) {
+        this.file_html_element.removeAttribute('controls');
+      }
+      // _via_util_msg_show('At any time, press <span class="key">Space</span> to play or pause the video.');
+    }
   }
 }
 
@@ -2319,7 +2664,8 @@ _via_file_annotator.prototype._fmetadata_set_position = function() {
   var x = this.left_pad + this.cwidth + this.conf.FILE_METADATA_MARGIN;
   var y = 0;
 
-  this.fmetadata_container.style.left = Math.round(x) + 'px';
+  //this.fmetadata_container.style.left = Math.round(x) + 'px';
+  this.fmetadata_container.style.right = '0px';
   this.fmetadata_container.style.top  = Math.round(y) + 'px';
 }
 
@@ -2378,10 +2724,10 @@ _via_file_annotator.prototype._fmetadata_toggle_button = function() {
   var span = document.createElement('span');
   span.setAttribute('class', 'text_button');
   if ( this.d.store.config.ui['file_metadata_editor_visible'] ) {
-    span.innerHTML = '&larr;';
+    span.innerHTML = '&rarr;';
     span.setAttribute('title', 'Hide (i.e. minimise) file metadata editor');
   } else {
-    span.innerHTML = '&rarr;';
+    span.innerHTML = '&larr;';
     span.setAttribute('title', 'Show file metadata editor (to edit properties of a file like caption, author, etc.)');
   }
   span.addEventListener('click', this._fmetadata_toggle.bind(this));
@@ -2693,12 +3039,20 @@ _via_file_annotator.prototype._metadata_attribute_io_html_element = function(mid
 // Guide (to assist human annotators)
 //
 _via_file_annotator.prototype._guide_init = function() {
+  var guide_text1 = document.createElement('table');
+  guide_text1.innerHTML = '<caption style="color:blue;">Stage 2</caption><thead><tr><th>Point Number</th><th>Anatomical Location</th><th>Notes</th></tr></thead><tbody><tr><td>1 and 2</td><td>T1 - L5</td><td><p>Adjust the line so that the center of the spine is level with the first rib attachment, i.e. the first thoratic vertebra.</p><p>Extend the line down to the center of the fifth lumar vertebrate. This creates the <strong>normal spine line (NSL)</strong>.</p></td></tr><tr><td>7</td><td>Place in the centre of the spinal column</td><td>Position <strong>above</strong> the curve at the point where the center of the spinal column returns to the NSL or, in the case of a double curve, at the point of inflection, i.e. where the direction of the curve changes.</td></tr><tr><td>8</td><td>Place in the centre of the spinal column</td><td>Position <strong>below</strong> the curve at the point where the centre of the spinal column returns to NSL.</td></tr><tr><td>9</td><td>At the apex of the curve</td><td><p>The <strong>apex</strong> of the curve is defined as the point furthest from the centre of the spinal column, i.e. the point furthest away from the NSL.</p><p>Make sure the point is positioned at the <strong>centre</strong> of the spinal column.</p></td></tr></tbody>';
+
+  var guide_text2 = document.createElement('table');
+  guide_text2.innerHTML = '<caption>Stage 1</caption><thead><tr><th>Point Number</th><th>Anatomical Location</th><th>Notes</th></tr></thead><tbody><tr><td>1</td><td>place at L5</td><td rowspan="2">Draw a central sacral line from pubic rami to L5 and then the line will <strong>automatically</strong> extend to above head and below feet</td></tr><tr><td>2</td><td>place at pubic rami</td></tr><tr><td>3 and 4</td><td>Place across the top of the subject’s shoulders</td><td>Check if shoulders symmetrical around the line, not hunched and not translated sideways</td></tr><tr><td>5 and 6</td><td>Place across the top of the subject’s pelvis</td><td>Check if hips symmetrical around the line, without one hip raised or dropped and not translated sideways</td></tr></tbody>';
+
+  this.guide_container.appendChild(guide_text2);
+  this.guide_container.appendChild(guide_text1);
+
   var guide_content = document.getElementById('guide_content');
   var guide = document.createElement('div');
   guide.setAttribute('class', 'guide');
   guide.innerHTML = guide_content.innerHTML;
   this.guide_container.appendChild(guide);
-
 }
 
 _via_file_annotator.prototype._guide_show = function() {

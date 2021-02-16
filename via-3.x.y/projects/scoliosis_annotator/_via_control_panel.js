@@ -28,13 +28,12 @@ _via_control_panel.prototype._init = function(type) {
   this.c.appendChild(logo_panel);
 
   this.c.appendChild(this.via.vm.c);
-  //this._add_view_manager_tools();
+  this._add_view_manager_tools();
 
   this._add_spacer();
 
   this._add_project_tools();
-
-  //this._add_spacer();
+  this._add_spacer();
 
   //this._add_region_shape_selector();
 
@@ -46,7 +45,16 @@ _via_control_panel.prototype._init = function(type) {
   }.bind(this));
   //this.c.appendChild(editor);
 
-  //this._add_spacer();
+  this._add_spacer();
+
+  if ( document.getElementById('micon_zoomin') ) {
+    var zoom = _via_util_get_svg_button('micon_zoomin', 'Enable/disable magnifying glass to inspect finer details');
+    zoom.addEventListener('click', function() {
+      this.emit_event( 'zoom_toggle', {});
+    }.bind(this));
+    this.c.appendChild(zoom);
+    this._add_spacer();
+  }
 
   this._add_project_share_tools();
 
@@ -80,6 +88,7 @@ _via_control_panel.prototype._add_view_manager_tools = function() {
   next_view.addEventListener('click', this.via.vm._on_next_view.bind(this.via.vm));
   this.c.appendChild(next_view);
 
+  /*
   var add_media_local = _via_util_get_svg_button('micon_add_circle', 'Add Audio or Video File in Local Computer', 'add_media_local');
   add_media_local.addEventListener('click', this.via.vm._on_add_media_local.bind(this.via.vm));
   this.c.appendChild(add_media_local);
@@ -97,6 +106,7 @@ _via_control_panel.prototype._add_view_manager_tools = function() {
   var del_view = _via_util_get_svg_button('micon_remove_circle', 'Remove the Current File', 'remove_media');
   del_view.addEventListener('click', this.via.vm._on_del_view.bind(this.via.vm));
   this.c.appendChild(del_view);
+  */
 }
 
 _via_control_panel.prototype._add_region_shape_selector = function() {
@@ -178,13 +188,13 @@ _via_control_panel.prototype._add_project_tools = function() {
   load.addEventListener('click', function() {
     _via_util_file_select_local(_VIA_FILE_SELECT_TYPE.JSON, this._project_load_on_local_file_select.bind(this), false);
   }.bind(this));
-  this.c.appendChild(load);
+  //this.c.appendChild(load);
 
   var save = _via_util_get_svg_button('micon_save', 'Save current VIA Project');
   save.addEventListener('click', function() {
     this.via.d.project_save();
   }.bind(this));
-  this.c.appendChild(save);
+  //this.c.appendChild(save);
 
   var import_export_annotation = _via_util_get_svg_button('micon_import_export', 'Import or Export Annotations');
   import_export_annotation.addEventListener('click', this._page_show_import_export.bind(this));

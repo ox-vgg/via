@@ -9,7 +9,7 @@ _via_dp[0]['store']['project'] = {
   'pid': '__VIA_PROJECT_ID__',
   'rev': '__VIA_PROJECT_REV_ID__',
   'rev_timestamp': '__VIA_PROJECT_REV_TIMESTAMP__',
-  'pname': 'Scholiosis Annotation Project',
+  'pname': 'UK BioBank DXA Set 1 (Apr. 2020)',
   'data_format_version': '3.1.1',
   'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
   'created': Date.now(),
@@ -185,30 +185,3 @@ _via_dp[0]['store']['view'] = {
 
 _via_dp[0]['store']['project']['vid_list'] = ['1','2','3'];
 _via_dp[0]['store']['metadata'] = {};
-_via_dp[0]['store']['metadata']["1_U3XO8pmL"] = {
-  "vid": "1",
-  "flg": 0,
-  "z": [],
-  "xy": [
-    51,
-    143.82,
-    161.003,
-    142.172,
-    412.865,
-    76.029,
-    173.008,
-    210.434,
-    176.539,
-    90.858,
-    361.08,
-    191.368,
-    359.668,
-    144.055,
-    231.854,
-    142.408,
-    336.6,
-    135.346,
-    294.937
-  ],
-  "av": {}
-};

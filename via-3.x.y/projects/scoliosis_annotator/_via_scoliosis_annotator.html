@@ -50,7 +50,7 @@
                               })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
       //__ENABLED_BY_PACK_SCRIPT__ga('create', 'UA-20555581-2', 'auto');
-      //__ENABLED_BY_PACK_SCRIPT__ga('set', 'page', '/via/3.0.0/via_scoliosis_annotator.html');
+      //__ENABLED_BY_PACK_SCRIPT__ga('set', 'page', '/via/3.0.0/via_image_annotator.html');
       //__ENABLED_BY_PACK_SCRIPT__ga('send', 'pageview');
     </script>
 
@@ -417,22 +417,23 @@
         <!-- draw point labels -->
 
         <g fill="#333333" stroke="none">
-          <circle cx="267" cy="200" r="16" />
-          <circle cx="267" cy="600" r="16" />
+          <circle cx="265" cy="540" r="12" />
+          <circle cx="267" cy="640" r="12" />
 
-          <circle cx="150" cy="230" r="16" />
-          <circle cx="377" cy="230" r="16" />
+          <circle cx="150" cy="230" r="12" />
+          <circle cx="377" cy="230" r="12" />
 
-          <circle cx="160" cy="530" r="16" />
-          <circle cx="370" cy="530" r="16" />
-
-          <circle cx="267" cy="400" r="16" />
-          <circle cx="267" cy="500" r="16" />
-          <circle cx="310" cy="450" r="16" />
+          <circle cx="160" cy="530" r="12" />
+          <circle cx="370" cy="530" r="12" />
         </g>
-        <g transform="translate(-8 8)" fill="white" stroke="none">
-          <text x="267" y="200">1</text>
-          <text x="267" y="600">2</text>
+        <g fill="#0000ff" stroke="none">
+          <circle cx="267" cy="305" r="12" />
+          <circle cx="267" cy="400" r="12" />
+          <circle cx="267" cy="480" r="12" />
+        </g>
+        <g transform="translate(-6 6)" fill="white" stroke="none">
+          <text x="265" y="540">1</text>
+          <text x="267" y="640">2</text>
 
           <text x="150" y="230">3</text>
           <text x="377" y="230">4</text>
@@ -440,9 +441,9 @@
           <text x="160" y="530">5</text>
           <text x="370" y="530">6</text>
 
-          <text x="267" y="400">7</text>
-          <text x="267" y="500">8</text>
-          <text x="310" y="450">9</text>
+          <text x="267" y="305">7</text>
+          <text x="267" y="400">9</text>
+          <text x="267" y="480">8</text>
         </g>
       </svg>
     </div>
@@ -455,22 +456,12 @@
         <ul>
           <li>Select Export Format:
             <select id="via_page_export_format">
-              <option value="via3_csv">VIA3 (CSV)</option>
-              <option value="temporal_segments_csv">Only Temporal Segments as CSV</option>
+              <option value="scoliosis_project_csv">CSV</option>
             </select>
-          </li>
-        </ul>
-        <h2>Import</h2>
-        <ul>
-          <li>VIA Shared Project: <input id="via_page_import_pid" type="text" placeholder="e.g. 71578187-3cd3-45d0-8198-7c441fbc06af" style="width:25em;">
-          </li>
-          <li>VIA2 project created (json file):
-            <input id="via_page_import_via2_project_json" type="file">
           </li>
         </ul>
 
         <div class="controls">
-          <button id="via_page_button_import" onclick="_via_util_page_process_action(event)">Import</button>
           <button id="via_page_button_export" onclick="_via_util_page_process_action(event)">Export</button>
           <button onclick="_via_util_page_hide()">Cancel</button>
         </div>
@@ -543,17 +534,11 @@
 
       <div data-pageid="page_share_open_shared" class="via_page">
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
-        <h2>Open a Shared VIA Project</h2>
-        <p>A unique project-id is assigned to every shared VIA project. For example, the following two project-id have been publicly shared for demonstration purposes:
-          <ul>
-            <li>Video Annotation: e302eadf-aa53-4a5a-b958-11175692c928</li>
-            <li>Audio Annotation: d4a9bc87-9652-42c3-a336-f41e18d638e6</li>
-          </ul>
-        </p>
-        <p>To open a shared project, enter the project-id below:</p>
+        <h2>UK BioBank DXA Scoliosis Annotation Project</h2>
+        <p>Contact Amir Jamaludin (amirj@robots.ox.ac.uk) to obtain a project-id.</p>
         <table>
           <tr>
-            <td><label for="via_page_input_pid">VIA Project Id</label></td>
+            <td><label for="via_page_input_pid">Project Id</label></td>
             <td>
               <input style="width:25em;" type="text" placeholder="e.g. e302eadf-aa53-4a5a-b958-11175692c928" id="via_page_input_pid">
             </td>
@@ -564,15 +549,6 @@
           <button id="via_page_button_open_shared" onclick="_via_util_page_process_action(event)">Open Shared Project</button>
           <button onclick="_via_util_page_hide()">Cancel</button>
         </div>
-      </div>
-
-      <div data-pageid="page_demo_instructions" class="via_page">
-        <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
-        <h1>Some Quick Tips</h1>
-        <ul>
-          <li>Click and drag mouse cursor to define a region around an object.</li>
-          <li>Use the <span class="text_button" onclick="via.editor.show()">attribute editor</span> to define or update attributes (e.g. name, colour, etc) of user defined regions.</li>
-        </ul>
       </div>
 
       <div data-pageid="page_keyboard_shortcut" class="via_page">
@@ -587,62 +563,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td>Play/Pause Media</td><td><span class="key">Space</span></td></tr>
-            <tr><td>Toggle Media Mute</td><td><span class="key">m</span></td></tr>
-            <tr><td>Increase / Decrease Media Playback Speed</td><td><span class="key">+</span> / <span class="key">-</span></td></tr>
-            <tr><td>Move Media Time Backward by 1, ..., 9 sec. (Ctrl to move forward)</td><td><span class="key">Ctrl</span> + <span class="key">1</span>, <span class="key">2</span>, ..., <span class="key">9</span</td></tr>
-                                                                                                                                                                                                                <tr><td>Add Temporal Segment at Current Time</td><td><span class="key">a</span></td></tr>
-            <tr><td>Update the edge (left or right) of last added segment to current time</td><td><span class="key">Shift</span> + <span class="key">a</span></td></tr>
-
-            <tr><td>Select Previous / Next Temporal Group (e.g. Speaker)</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
-
-            <tr><td>Select [Previous] Next Temporal Segment (e.g. 3sec to 5sec)</td><td><span class="key">Shift</span> + <span class="key">Tab</span></td></tr>
-            <tr><td>Select Temporal Segment at Current Time (if any)</td><td><span class="key">Enter</span></td></tr>
-
-            <tr><td>Move to Previous / Next Video Frame</td><td><span class="key">l</span> / <span class="key">r</span></td></tr>
-            <tr><td>Jump to Start/End of Video</td><td><span class="key">Shift</span> + <span class="key">s</span> / <span class="key">e</span></td></tr>
-            <tr><td>Shift Visible Timeline by 1 sec.</td><td><span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
-            <tr><td>Shift Visible Timeline by 60 sec.</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
-            <tr><td>Zoom In/Out the Temporal Segment Timeline</td><td>Mouse Wheel<br/></td></tr>
-            <tr><td>Pan the Temporal Segment Timeline Horizontally</td><td><span class="key">Shift</span> + Mouse Wheel</td></tr>
+            <tr><td>Activate or Deactivate Zoom Tool</td><td><span class="key">z</span></td></tr>
+            <tr><td>Increase or Decrease Zoom Level</td><td><span class="key">+</span> / <span class="key">-</span></td></tr>
+            <tr><td>Discard the last defined feature point</td><td><span class="key">Esc</span></td></tr>
+            <tr><td>Move to Previous / Next Image</td><td><span class="key">p</span> / <span class="key">n</span></td></tr>
           </tbody>
         </table>
-        <h3>When a Temporal Segment is Selected</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Command</th>
-              <th>Shortcut</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Play/Pause Video Locked to Segment Boundary</td><td><span class="key">Spc</span></td></tr>
-            <tr><td>Delete Selected Temporal Segment</td><td><span class="key">Backspace</span></td></tr>
-            <tr><td>Select [Previous] Next Temporal Segment</td><td>[<span class="key">Shift</span>] + <span class="key">Tab</span></td></tr>
-            <tr><td>Unselect Temporal Segment</td><td><span class="key">Esc</span></td></tr>
-            <tr><td>Increase/Decrease the Extent of Left Edge (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">l</span> / <span class="key">L</span></td></tr>
-            <tr><td>Increase/Decrease the Extent of Right edge (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">r</span> / <span class="key">R</span></td></tr>
-
-            <tr><td>Jump to Start/End of Temporal Segment</td><td><span class="key">s</span> / <span class="key">e</span></td></tr>
-            <tr><td>Move Selected Temporal Segment (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
-            <tr><td>Merge Selected Temporal Segment with the Segment on Left/Right</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
-          </tbody>
-        </table>
-
-        <h3>Spatial Regions in an Image or a Video Frame</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Command</th>
-              <th>Shortcut</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Select All Regions</td><td><span class="key">Ctrl</span> + a</td></tr>
-            <tr><td>Delete Selected Regions</td><td><span class="key">Backspace</span> or <span class="key">Delete</span></td></tr>
-          </tbody>
-        </table>
-
         <p>&nbsp;</p>
       </div>
 
@@ -732,7 +658,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <script src="../../src/js/_via_view.js"></script>
     <script src="../../src/js/_via_data.js"></script>
     <script src="../../src/js/_via_share.js"></script>
-    <script src="../../src/js/_via_import_export.js"></script>
+    <script src="_via_import_export.js"></script>
 
     <script src="../../src/js/_via_video_thumbnail.js"></script>
     <script src="_via_file_annotator.js"></script>
@@ -751,7 +677,8 @@ POSSIBILITY OF SUCH DAMAGE.
       //__ENABLED_BY_PACK_SCRIPT__var _VIA_DEBUG = false;
       var via_container = document.getElementById('via_container');
       var via = new _via(via_container);
-      //__ENABLED_BY_DEMO_PACK_SCRIPT___via_util_page_show('page_demo_instructions');
+      //__ENABLED_BY_DEMO_PACK_SCRIPT__var action_map = { 'via_page_button_open_shared':via.cp._page_on_action_open_shared.bind(via.cp) };
+      //__ENABLED_BY_DEMO_PACK_SCRIPT___via_util_page_show('page_share_open_shared', action_map);
     </script>
   </body>
 </html>

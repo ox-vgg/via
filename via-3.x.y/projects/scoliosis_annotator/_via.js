@@ -67,6 +67,9 @@ function _via(via_container) {
   this.cp.on_event('editor_toggle', this._ID, function(data, event_payload) {
     this.editor.toggle();
   }.bind(this));
+  this.cp.on_event('zoom_toggle', this._ID, function(data, event_payload) {
+    this.va._zoom_toggle();
+  }.bind(this));
 
   // keyboard event handlers
   //this.via_container.focus()
@@ -100,11 +103,13 @@ function _via(via_container) {
   } else {
     // debug code (disabled for release)
     if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
-      //this.s.pull('e302eadf-aa53-4a5a-b958-11175692c928'); // load shared project
-      this.d.project_load_json(_via_dp[0]['store']);
+      //this.s.pull(''); // load demo shared project
+      /*
+      //this.d.project_load_json(_via_dp[0]['store']);
       setTimeout( function() {
         //this.va.view_show('1');
       }.bind(this), 200);
+      */
     }
   }
 

@@ -38,8 +38,8 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 #view_container > .view_content_container > .file_container > .metadata_container { display:inline-block; font-size:small; background-color:white; z-index:1001; }
 #view_container > .view_content_container > .file_container > .metadata_container * { position:relative; vertical-align:middle; }
 #view_container > .view_content_container > .file_container > .metadata_container table { position:relative; border-collapse:collapse; border:none; margin:0.2em; }
-#view_container > .view_content_container > .file_container > .metadata_container td { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.2em; }
-#view_container > .view_content_container > .file_container > .metadata_container th { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.2em; }
+#view_container > .view_content_container > .file_container > .metadata_container td { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.5em; }
+#view_container > .view_content_container > .file_container > .metadata_container th { vertical-align:middle; border:1px solid #cccccc; padding:0.4em 0.5em; }
 #view_container > .view_content_container > .file_container > .metadata_container input { font-size:small; }
 #view_container > .view_content_container > .file_container > .metadata_container select { font-size:small; }
 
@@ -51,9 +51,14 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
 #view_container > .view_content_container > .file_container > .error_page table { border-collapse:collapse; border:1px solid #cccccc;  width:40em;}
 #view_container > .view_content_container > .file_container > .error_page td { padding:0.4em 1em; border:1px solid #cccccc; }
 
-#view_container > .view_content_container > .file_container > #guide_container { position:absolute; display:inline-block; }
-#view_container > .view_content_container > .file_container > #guide_container .guide { position:relative; display:inline-block; width:250px; height:600px; }
-#view_container > .view_content_container > .file_container > #guide_container .guide svg { font-size:1.6em; }
+#view_container > .view_content_container > .file_container > #guide_container { position:absolute; display:inline-block; width:20em; }
+#view_container > .view_content_container > .file_container > #guide_container .guide { position:absolute; display:inline-block; left:20em; }
+#view_container > .view_content_container > .file_container > #guide_container .guide svg { font-size:1.2em; height:30em; }
+#view_container > .view_content_container > .file_container > #guide_container * { position:relative; }
+#view_container > .view_content_container > .file_container > #guide_container table { font-size:0.8em; border-collapse:collapse; background-color:#f2f2f2; margin:1em 0.2em;}
+#view_container > .view_content_container > .file_container > #guide_container td, th { border:1px solid #444444; padding:0.2em 0.4em; }
+
+#view_container > .view_content_container > .file_container > .zoom_container { position:absolute; overflow:hidden; border:2px solid #ccff00; width:20vw; height:30vh; }
 
 /* metadata associated with a view */
 #view_container > .view_metadata_container { padding:0.2em; border:1px solid #666666; }
@@ -113,8 +118,8 @@ to annotate temporal segments of a video: contains 4 rows
 .text_button:hover { color:black; }
 
 /* info pages */
-#via_page_container { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:1001; text-align:center; }
-#via_page_container > .via_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow-y:auto; text-align:left; content:"close"; width:80ch; max-height:80vh; }
+#via_page_container { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:1002; text-align:center; }
+#via_page_container > .via_page { position:relative; display:inline-block; color:black; background-color:white; padding:1em 2em; overflow-y:auto; text-align:left; content:"close"; width:90ch; max-height:80vh; }
 #via_page_container > .via_page > .toolbar { display:block; text-align:right; }
 #via_page_container > .via_page > .controls { position:relative; display:block; text-align:center; margin-top:2em; padding-top:1em; border-top:1px solid #cccccc; }
 #via_page_container > .via_page > .controls button { margin:0 1em; }

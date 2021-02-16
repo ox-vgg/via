@@ -27,6 +27,10 @@ function _via_view_annotator(data, container ) {
   this.file_annotator = [];
   this.view_mode = _VIA_VIEW_MODE.UNKNOWN;
 
+  // constants
+  this.GTIMELINE_ROW_DEFAULT_COUNT = '4';
+  this.GTIMELINE_ROW_HEIGHT_MAP = { '1':21, '2':24, '3':28, '4':32, '5':37, '6':41, '7':45,'8':49,'9':53,'10':57,'12':65,'14':73,'16':80 };
+
   // state variables
   this.region_draw_shape = _VIA_RSHAPE.SCOLIOSIS;
   this.creg_label_aid = '1';
@@ -47,6 +51,14 @@ _via_view_annotator.prototype._init = function() {
 
   if ( ! this.d.store.config.ui.hasOwnProperty('spatial_region_label_attribute_id') ) {
     this.d.store.config.ui['spatial_region_label_attribute_id'] = '';
+  }
+}
+
+_via_view_annotator.prototype._zoom_toggle = function() {
+  for(var i = 0; i < this.file_annotator.length; ++i) {
+    for(var j = 0; j < this.file_annotator[i].length; ++j) {
+      this.file_annotator[i][j]._zoom_toggle.bind(this.file_annotator[i][j])();
+    }
   }
 }
 
