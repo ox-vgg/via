@@ -50,7 +50,7 @@
 
 "use strict";
 
-var VIA_VERSION      = '2.0.10';
+var VIA_VERSION      = '2.0.11';
 var VIA_NAME         = 'VGG Image Annotator';
 var VIA_SHORT_NAME   = 'VIA';
 var VIA_REGION_SHAPE = { RECT:'rect',
@@ -165,6 +165,7 @@ var _via_is_region_boundary_visible  = true;
 var _via_is_region_info_visible      = false;
 var _via_is_ctrl_pressed             = false;
 var _via_is_debug_mode               = false;
+var _via_is_message_visible          = true;
 
 // region
 var _via_current_shape             = VIA_REGION_SHAPE.RECT;
@@ -1522,10 +1523,24 @@ function init_message_panel() {
   }, false);
 }
 
+function toggle_message_visibility() {
+  if(_via_is_message_visible) {
+    show_message('Disabled status messages');
+    _via_is_message_visible = false;
+  } else {
+    _via_is_message_visible = true;
+    show_message('Status messages are now visible');
+  }
+}
+
 function show_message(msg, t) {
   if ( _via_message_clear_timer ) {
     clearTimeout(_via_message_clear_timer); // stop any previous timeouts
   }
+  if ( !_via_is_message_visible ) {
+    return;
+  }
+
   var timeout = t;
   if ( typeof t === 'undefined' ) {
     timeout = VIA_THEME_MESSAGE_TIMEOUT_MS;
