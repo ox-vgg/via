@@ -158,8 +158,12 @@ _via_import_export.prototype.export_to_scoliosis_project_csv = function() {
             var aname = this.d.store.attribute[aid]['aname'];
             var avalue = '';
             if(this.d.store.metadata[mid].av.hasOwnProperty(aid)) {
-              var oid = this.d.store.metadata[mid].av[aid];
-              avalue = this.d.store.attribute[aid]['options'][oid];
+              if(this.d.store.attribute[aid]['type'] === _VIA_ATTRIBUTE_TYPE.TEXT) {
+                avalue = this.d.store.metadata[mid].av[aid];
+              } else {
+                var oid = this.d.store.metadata[mid].av[aid];
+                avalue = this.d.store.attribute[aid]['options'][oid];
+              }
             }
             fmetadata.push(avalue);
           }
