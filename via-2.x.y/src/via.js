@@ -2016,7 +2016,7 @@ function _via_reg_canvas_mouseup_handler(e) {
     case VIA_REGION_SHAPE.POLYGON:
       var moved_vertex_id = _via_region_edge[1] - VIA_POLYGON_RESIZE_VERTEX_OFFSET;
 
-      if ( e.ctrlKey ) {
+      if ( e.ctrlKey || e.metaKey ) {
         // if on vertex, delete it
         // if on edge, add a new vertex
         var r = _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
@@ -2399,7 +2399,7 @@ function _via_reg_canvas_mousemove_handler(e) {
         if (_via_region_edge[1] >= VIA_POLYGON_RESIZE_VERTEX_OFFSET) {
           // indicates mouse over polygon vertex
           _via_reg_canvas.style.cursor = "crosshair";
-          show_message('To move vertex, simply drag the vertex. To add vertex, press [Ctrl] key and click on the edge. To delete vertex, press [Ctrl] key and click on vertex.');
+          show_message('To move vertex, simply drag the vertex. To add vertex, press [Ctrl] key and click on the edge. To delete vertex, press [Ctrl] (or [Command]) key and click on vertex.');
         }
       } else {
         var yes = is_inside_this_region(_via_current_x,
