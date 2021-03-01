@@ -22,6 +22,8 @@ var _VIA_RINPUT_STATE = {
   REGION_DRAW_NCLICK_ONGOING: 11,
 };
 
+
+
 function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this._ID = '_via_file_annotator_';
   this.va = view_annotator;
@@ -566,8 +568,9 @@ _via_file_annotator.prototype._rinput_attach_input_handlers = function(container
 _via_file_annotator.prototype._rinput_remove_input_handlers = function() {
   // @todo
 }
-
+// TODO: Add listener to tracking events to set state
 _via_file_annotator.prototype._rinput_keydown_handler = function(e) {
+
   if ( e.key === 'n' || e.key === 'p' ) {
     e.preventDefault();
     if(e.key === 'n') {
@@ -1996,14 +1999,9 @@ _via_file_annotator.prototype._on_event_metadata_add = function(data, event_payl
     if ( this.d.store.metadata[mid].z.length === 1 ) {
       // spatial region in a video frame was added
       this.va.temporal_segmenter._tmetadata_boundary_add_spatial_mid(mid);
-      this._creg_add(vid, mid);
-      this._creg_draw_all();
-      this.va.temporal_segmenter._tmetadata_gtimeline_draw();
-    } else {
-      // spatial region in an image was added
-      this._creg_add(vid, mid);
-      this._creg_draw_all();
     }
+    this._creg_add(vid, mid);
+    this._creg_draw_all();
   }
 }
 
@@ -2014,6 +2012,8 @@ _via_file_annotator.prototype._on_event_metadata_delete_bulk = function(data, ev
     var mid = mid_list[mindex];
     if ( this.vid === vid && this.va.temporal_segmenter ) {
       this.va.temporal_segmenter._tmetadata_boundary_del_spatial_mid(mid);
+    
+      // TODO: Do we delete track segments? how?
     }
   }
   this._creg_add_current_frame_regions(this.vid);

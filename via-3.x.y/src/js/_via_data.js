@@ -307,7 +307,7 @@ _via_data.prototype._metadata_get_new_id = function(vid) {
   return vid + '_' + _via_util_uid6();
 }
 
-_via_data.prototype.metadata_add = function(vid, z, xy, av) {
+_via_data.prototype.metadata_add = function(vid, z, xy, av, track_opts={}) {
   return new Promise( function(ok_callback, err_callback) {
     try {
       if ( ! this.store['view'].hasOwnProperty(vid) ) {
@@ -317,7 +317,7 @@ _via_data.prototype.metadata_add = function(vid, z, xy, av) {
       var mid = this._metadata_get_new_id(vid);
       var z_fp = _via_util_float_arr_to_fixed(z, _VIA_FLOAT_FIXED_POINT);
       var xy_fp = _via_util_float_arr_to_fixed(xy, _VIA_FLOAT_FIXED_POINT);
-      this.store.metadata[mid] = new _via_metadata(vid, z_fp, xy_fp, av);
+      this.store.metadata[mid] = new _via_metadata(vid, z_fp, xy_fp, av, track_opts);
       if ( ! this.cache.mid_list.hasOwnProperty(vid) ) {
         this.cache.mid_list[vid] = [];
       }
