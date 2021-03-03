@@ -1602,8 +1602,19 @@ _via_file_annotator.prototype._creg_is_inside = function(xy, cx, cy, tolerance) 
     }
     break;
   case _VIA_RSHAPE.LINE:
-  case _VIA_RSHAPE.POLYGON:
   case _VIA_RSHAPE.POLYLINE:
+    var dx = Math.abs(xy[1] - cx);
+    var dy = Math.abs(xy[2] - cy);
+    if ( dx <= this.conf.FIRST_VERTEX_CLICK_TOL &&
+         dy <= this.conf.FIRST_VERTEX_CLICK_TOL ) {
+      is_inside = true;
+    } else {
+      if ( this._creg_is_inside_polyline(xy, cx, cy, tolerance) !== 0 ) {
+        is_inside = true;
+      }
+    }
+    break;
+  case _VIA_RSHAPE.POLYGON:
     var dx = Math.abs(xy[1] - cx);
     var dy = Math.abs(xy[2] - cy);
     if ( dx <= this.conf.FIRST_VERTEX_CLICK_TOL &&
@@ -1619,6 +1630,45 @@ _via_file_annotator.prototype._creg_is_inside = function(xy, cx, cy, tolerance) 
     console.warn('_via_file_annotator._draw() : shape_id=' + shape_id + ' not implemented');
   }
   return is_inside;
+}
+
+// returns 0 when (px,py) is far from the polyline
+// based on algorithm described at
+// https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
+_via_file_annotator.prototype._creg_is_inside_polyline = function (xy_pts, px, py, tolerance) {
+  var xy = xy_pts.slice(0);
+  if ( xy.length === 0 || xy.length === 1 ) {
+    return 0;
+  }
+  var mn = tolerance * 10.0; // a relatively large number
+  // loop through all points of the polyline
+  for ( var i = 1; i < xy.length; i = i + 2 ) {   // line from V[i] to  V[i+1]
+    var ldx = xy[i+2] - xy[i];
+    var ldy = xy[i+3] - xy[i+1];
+    var line_seg_length_sq = ldx * ldx + ldy * ldy;
+    var pdx = px - xy[i];
+    var pdy = py - xy[i+1];
+    var dst = mn;
+    if ( line_seg_length_sq === 0 ) {
+      dst = Math.sqrt( pdx * pdx + pdy * pdy );
+    }
+    else {
+      var pld = (pdx * ldx + pdy * ldy) / line_seg_length_sq;
+      var t = Math.max( 0, Math.min( 1, pld ) );  // constrain line to this segment
+      var tdx = px - ( xy[i] + t * ldx );
+      var tdy = py - ( xy[i+1] + t * ldy );
+      dst = Math.sqrt( tdx * tdx + tdy * tdy );
+    }
+    if ( dst < mn ) {
+      mn = dst;
+    }
+  }
+  if ( mn < tolerance ) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
 }
 
 // returns 0 when (px,py) is outside the polygon
