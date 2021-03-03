@@ -131,6 +131,7 @@ _via_share.prototype._project_on_push_ok_response = function(ok_response) {
       this.d.store.project.pid = d['pid'];
       this.d.store.project.rev = d['rev'];
       this.d.store.project.rev_timestamp = d['rev_timestamp'];
+      this.d.store0 = JSON.parse(JSON.stringify(this.d.store)); // helps keep track of local changes
       _via_util_msg_show('Pushed revision ' + d['rev']);
     } else {
       _via_util_msg_show('Malformed response from server: ' + ok);
@@ -201,7 +202,6 @@ _via_share.prototype._project_push = function(pid, rev) {
       console.log('POST ' + this.conf['ENDPOINT'])
     } else {
       xhr.open('POST', this.conf['ENDPOINT'] + pid + '?rev=' + rev);
-      console.log('POST ' + this.conf['ENDPOINT'] + pid + '?rev=' + rev)
     }
     xhr.timeout = _VIA_REMOTE_TIMEOUT;
     xhr.send(JSON.stringify(payload));

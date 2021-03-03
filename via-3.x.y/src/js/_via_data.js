@@ -797,7 +797,7 @@ _via_data.prototype.project_load_json = function(project_json_data) {
     try {
       var project_data = Object.assign({}, project_json_data);
       this.store = this.project_store_apply_version_fix(project_data);
-      this.store0 = Object.assign({}, this.store); // used to detect project changes
+      this.store0 = JSON.parse(JSON.stringify(this.store)); // helps keep track of local changes
       this._cache_update();
       this.emit_event( 'project_loaded', { 'pid':this.store.project.pid } );
       ok_callback();
@@ -891,9 +891,9 @@ _via_data.prototype.project_merge_three_way = function(remote) {
         for ( var id in remote[property] ) {
           if ( this.store[property].hasOwnProperty(id) ) {
             for ( var afield in this.store[property][id] ) {
-              this.store[property][id][afield] = this.merge_3way(this.store[property][id][afield],
+              this.store[property][id][afield] = this.merge_3way(this.store0[property][id][afield],
                                                                  remote[property][id][afield],
-                                                                 this.store0[property][id][afield]);
+                                                                 this.store[property][id][afield]);
             }
           } else {
             // add new attribute
@@ -905,8 +905,8 @@ _via_data.prototype.project_merge_three_way = function(remote) {
       // check for data that was deleted in remote
       for ( var pindex in property_list ) {
         var property = property_list[pindex]
-        for ( var id in this.store[property] ) {
-          if ( ! remote[property].hasOwnProperty(id) ) {
+        for ( var id in this.store0[property] ) {
+          if(!remote[property].hasOwnProperty(id)) {
             // something was deleted in remote, therefore we remove it from local version
             delete this.store[property][id];
           }
@@ -915,6 +915,7 @@ _via_data.prototype.project_merge_three_way = function(remote) {
 
       this.store.project.rev = remote.project.rev;
       this.store.project.rev_timestamp = remote.project.rev_timestamp;
+      this.store0 = JSON.parse(JSON.stringify(remote)); // update our copy of latest remote revision
       this.project_merge_on_success();
     }
     catch (e) {
