@@ -1558,7 +1558,7 @@ _via_file_annotator.prototype._creg_is_inside = function(xy, cx, cy, tolerance) 
   case _VIA_RSHAPE.POINT:
     var dx = Math.abs(xy[1] - cx);
     var dy = Math.abs(xy[2] - cy);
-    if ( dx <= tolerance || dy <= tolerance ) {
+    if ( dx <= tolerance && dy <= tolerance ) {
       is_inside = true;
     }
     break;
