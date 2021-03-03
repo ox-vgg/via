@@ -918,6 +918,9 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
     this._metadata_resize_region(this.resize_selected_mid_index,
                                  this.resize_control_point_index,
                                  cx, cy);
+    if(this._is_zoom_enabled) {
+      this.zoom_rshape_ctx.clearRect(0, 0, this.zoom_canvas_width, this.zoom_canvas_height); // required to clear old region
+    }
     this._tmpreg_clear();
     this.user_input_pts = [];
     this._state_set( _VIA_RINPUT_STATE.REGION_SELECTED );
