@@ -365,7 +365,7 @@ the project. Here is an annotated example of a project JSON file.
       "vid": "1",
       "flg": 0,
       "z": [0.917],                # defines the video frame at 0.917 sec.
-      "xy": [4, 263, 184, 17, 13], # defines a rectangular region at (263,184) of size (17,13). The first number "4" denotes a rectangular region. Other possible region shapes are: { 'POINT':1, 'RECTANGLE':2, 'CIRCLE':3, 'ELLIPSE':4, 'LINE':5, 'POLYLINE':6, 'POLYGON':7, 'EXTREME_RECTANGLE': 8, 'EXTREME_CIRCLE':9 }
+      "xy": [2, 263, 184, 17, 13], # defines a rectangular region at (263,184) of size (17,13). The first number "2" denotes a rectangular region. Other possible region shapes are: { 'POINT':1, 'RECTANGLE':2, 'CIRCLE':3, 'ELLIPSE':4, 'LINE':5, 'POLYLINE':6, 'POLYGON':7, 'EXTREME_RECTANGLE': 8, 'EXTREME_CIRCLE':9 }
       "av": {
         "2":"Egg"                  # the value of attribute-id "2" is "Egg" (i.e. Object = Egg)
       }
