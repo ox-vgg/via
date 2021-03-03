@@ -1,4 +1,4 @@
-## [2.0.11] - not released yet
+## [2.0.X] - not released yet
  * fast annotation mode @todo
     - keyboard input '123' denotes the following operation: select region 1, set 3 as the value of region attribute 2.
     - if there is a single region attribute, the '13' sets 3 as the value of region 1
@@ -11,6 +11,10 @@
     - add a "UNASSIGNED" group to denote all the files that do not have a value for the group variable
     - preload images in adjacent groups to speed up visualization
     - label subgroup of images in a group based on a certain variable
+
+## [2.0.11] - March 03, 2021
+ * polygon points can now be added/deleted using [Command] key and Click in MacOS (issue 335)
+ * status messages can now be disabled (issue 328)
 
 ## [2.0.10] - June 08, 2020
  * rewrote COCO import and export (issues 273, 275, 271, 262)
