@@ -112,12 +112,13 @@ _via_temporal_segmenter.prototype._init_on_success = function(groupby_aid) {
     this.fid = this.d.store.view[this.vid].fid_list[0];
     this.file = this.d.store.file[this.fid];
 
+    this.c.innerHTML = '';
+
     this._group_init(groupby_aid);
     if ( this.d.store.file[this.fid].type === _VIA_FILE_TYPE.VIDEO ) {
       this._thumbview_init();
     }
 
-    this.c.innerHTML = '';
     this._vtimeline_init();
     this._tmetadata_init();
     this._toolbar_init();

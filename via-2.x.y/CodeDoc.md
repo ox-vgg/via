@@ -46,6 +46,7 @@ Now we describe how some of the core actions (like loading images,
 drawing regions, etc) are facilitated by the javascript codebase.
 
 ## Table of Contents
+ * [Description of VIA Project JSON File](#description-of-via-project-json-file)
  * [Core Data Structures](#core-data-structures)
  * [Loading Images](#loading-images)
  * [Displaying Image](#displaying-image)
@@ -60,6 +61,96 @@ drawing regions, etc) are facilitated by the javascript codebase.
  * [Building Applications using VIA as a Module](#building-applications-using-via-as-a-module)
  * [Source Code License](#source-code-license)
 
+Description of VIA Project JSON File
+------------------------------------
+A VIA project is simply a JSON file containing all the details associated with
+the project. Here is an annotated example of a project JSON file.
+```
+{
+  "_via_settings": {                # settings used by the VIA application
+    "ui": {
+      "annotation_editor_height": 25,
+      "annotation_editor_fontsize": 0.8,
+      "leftsidebar_width": 18,
+      "image_grid": {
+        "img_height": 80,
+        "rshape_fill": "none",
+        "rshape_fill_opacity": 0.3,
+        "rshape_stroke": "yellow",
+        "rshape_stroke_width": 2,
+        "show_region_shape": true,
+        "show_image_policy": "all"
+      },
+      "image": {
+        "region_label": "__via_region_id__",
+        "region_color": "__via_default_region_color__",
+        "region_label_font": "10px Sans",
+        "on_image_annotation_editor_placement": "NEAR_REGION"
+      }
+    },
+    "core": {
+      "buffer_size": 18,
+      "filepath": {},
+      "default_filepath": ""
+    },
+    "project": {
+      "name": "via_project_16Feb2021_13h17m"
+    }
+  },
+  "_via_img_metadata": {              # stores information about all images and their associated metadata
+    "adutta_swan.jpg-1": {            # each image is indexed using a unique key: FILENAME-FILESIZE
+      "filename": "adutta_swan.jpg",  # image filename
+      "size": -1,                     # file size in bytes (-1 indicates unknown)
+      "regions": [                    # an array of all manually defined regions (only 1 region here)
+        {                             
+          "shape_attributes": {       # shape of the first region
+            "name": "rect",           # region shape: {rect, polygon, circle, ellipse, point, ...}
+            "x": 108,                 # x-coordinate of the top-left point
+            "y": 123,                 # y-coordinate of the top-left point
+            "width": 283,             # width of rectangle
+            "height": 150             # height of rectangle
+          },
+          "region_attributes": {      # attributes (i.e. metadata) of the first region
+            "name": "Swan"            # "name" is a region attribute and it has a value of "Swan"
+          }
+        }
+      ],
+      "file_attributes": {                # attributes associated with the full image
+        "caption": "Swan in lake Geneve", # "caption" is a file attribute and it has a value of "Swan in ..."
+      }
+    },
+    "wikimedia_death_of_socrates.jpg-1": {
+      "filename": "wikimedia_death_of_socrates.jpg",
+      "size": -1,
+      "regions": [],                  # this image has no regions (so far)
+      "file_attributes": {            # the "caption" file attribute for this image has a user defined value
+        "caption": "The Death of Socrates by David",
+      }
+    }
+  },
+  "_via_attributes": {                # attributes that can be attached to image and its regions
+    "region": {                       # definition of region attributes (i.e. attributes belonging to an image region)
+      "name": {                       # "name" is region attribute which defines the name of the object contained in that region
+        "type": "text",               # attribute type can be {text, dropdown, radio, checkbox, ...}
+        "description": "Name of the object",
+        "default_value": "not_defined"
+      }
+    },
+    "file": {                         # file attributes correspond to the full image (and not image region)
+      "caption": {                    # "caption" is a file attribute
+        "type": "text",
+        "description": "",
+        "default_value": ""
+      }
+    }
+  },
+  "_via_data_format_version": "2.0.10",
+  "_via_image_id_list": [             # this contains the list of image-id present in the "_via_img_metadata" dictionary
+    "adutta_swan.jpg-1",
+    "wikimedia_death_of_socrates.jpg-1"
+  ]
+}
+```
 
 Core Data Structures
 --------------------
