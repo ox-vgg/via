@@ -2019,7 +2019,9 @@ _via_file_annotator.prototype._on_event_metadata_delete_bulk = function(data, ev
   this._creg_add_current_frame_regions(this.vid);
   this._creg_draw_all();
 
-  this.va.temporal_segmenter._tmetadata_gtimeline_draw();
+  if(this.va.temporal_segmenter) {
+    this.va.temporal_segmenter._tmetadata_gtimeline_draw();
+  }
 }
 
 _via_file_annotator.prototype._on_event_metadata_update = function(data, event_payload) {
