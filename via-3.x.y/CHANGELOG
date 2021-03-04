@@ -1,5 +1,24 @@
-## [3.0.10] - not release yet
+## [3.0.X] - not release yet
  * @todo Annotate an ellipse with five clicks on the border (https://gitlab.com/vgg/via/-/issues/279)
+
+## [3.0.10] - 04-March-2021
+ * n/p now maps unambiguously to next/prev file; left/right arrow keys move to prev/next frame
+ * improved error log message when file load issue
+ * fixed typo in endpoint url address sent to console for debug (minor non user facing issue)
+ * for checkbox attribute type, handle the cases when default_option_id is missing
+ * subtitle import now removes all existing subtitle (requested by @albanie)
+ * (bugfix) temporal segment selection and subtitle text focus issue fixed, keyboard event handlers only respond when file is loaded
+ * (bugfix) _via_view_annotator does not wrongly clear its methods bound to metadata_{add,update} events from _via_data
+ * (bugfix) timeline marker for spatial region gets updates correctly, existing event listeners are cleared properly when a new project is loaded
+ * (bugfix) check if zoom is enabled before drawing on the zoom canvas
+ * move boundary left/right by clicking boundary arrow pads, select a segment moved timeline by 1sec, fixed by handling case when boundary click identifier was 0
+ * selection of line and polyline region is now more intuitive (thanks Charles Carman @cscarman, issue 337)
+ * point selection checks both dx and dy coordinates (issue 330)
+ * region resize operation with zoom activated now removes old region (issue 316)
+ * fixed 3 way merge for cases when multiple users are collaboratively working on same image (issue 300, 285)
+ * deleting a region in via_image_annotator now clears its on-image metadata editor (issue 341, 342)
+ * added python3 script to merge multiple VIA3 projects
+ * Fix bug where thumbnail view gets removed after initialisation
 
 ## [3.0.9] - 9 Oct. 2020
  * added zoom (i.e. magnifying glass) feature to inspect fine image details in image annotator
