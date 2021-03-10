@@ -2089,10 +2089,18 @@ _via_temporal_segmenter.prototype._on_event_metadata_add = function(vid, mid) {
     this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
     _via_util_msg_show('Metadata added');
   }
+  this._redraw_timeline();
+  if(this.selected_gindex !== -1) {
+    this._tmetadata_group_gid_draw(this.selected_gid);
+  }
 }
 
 _via_temporal_segmenter.prototype._on_event_metadata_update = function(vid, mid) {
   _via_util_msg_show('Metadata updated');
+  this._redraw_timeline();
+  if (this.selected_gindex !== -1) {
+    this._tmetadata_group_gid_draw(this.selected_gid);
+  }
 }
 
 //
