@@ -662,7 +662,9 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_init = function() {
   this.gtimeline.addEventListener('mousedown', this._tmetadata_gtimeline_mousedown.bind(this));
   this.gtimeline.addEventListener('mouseup', this._tmetadata_gtimeline_mouseup.bind(this));
   this.gtimeline.addEventListener('mousemove', this._tmetadata_gtimeline_mousemove.bind(this));
+  this.gtimeline.addEventListener('mouseleave', this._tmetadata_gtimeline_mouseleave.bind(this));
 
+  this.gtimeline_pressed = false;
   this.gtimeline.width = this.timeline_container_width;
   this.gtimeline.height = this.linehn[this.GTIMELINE_HEIGHT];
   this.gtimelinectx = this.gtimeline.getContext('2d', {alpha:false});
@@ -840,6 +842,12 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_time2canvas = function(t)
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_mousemove= function(e) {
   var t = this._tmetadata_gtimeline_canvas2time(e.offsetX);
+  if(this.gtimeline_pressed) {
+    // Mouse is pressed. Seek to time t
+    this.gtimeline.style.cursor = 'col-resize';
+    this.m.currentTime = t;
+    return;
+  }
   var smark_time_str = this._tmetadata_gtimeline_is_on_smark(t);
   if ( smark_time_str !== '' ) {
     this.gtimeline.style.cursor = 'pointer';
@@ -866,9 +874,17 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_mousedown = function(e) {
   } else {
     this.m.currentTime = t;
   }
+  this.gtimeline_pressed = true;
 }
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_mouseup = function(e) {
+  this.gtimeline_pressed = false;
+  this.gtimeline.style.cursor = 'default';
+}
+
+_via_temporal_segmenter.prototype._tmetadata_gtimeline_mouseleave = function(e) {
+  this.gtimeline_pressed = false;
+  this.gtimeline.style.cursor = 'default';
 }
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_is_on_smark = function(t) {
