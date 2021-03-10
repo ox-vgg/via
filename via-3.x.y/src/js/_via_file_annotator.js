@@ -868,6 +868,18 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
     this._tmpreg_clear();
     if(this.last_clicked_mid_list.length) {
       this._creg_select( this.last_clicked_mid_list[0] );
+      if (this.va.temporal_segmenter) {
+        // Select the track associated with the metadata
+        let { root_mid } = this.d.store.metadata[this.last_clicked_mid_list[0]];
+        if (!root_mid) {
+          root_mid = this.last_clicked_mid_list[0];
+        }
+        const { gid_list } = this.va.temporal_segmenter;
+        const _idx = gid_list.indexOf(root_mid);
+        if (_idx !== -1) {
+          this.va.temporal_segmenter._tmetadata_group_gid_sel(_idx);
+        }
+      }
     }
     this._smetadata_show();
     this._creg_draw_all();
