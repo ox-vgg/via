@@ -2010,15 +2010,12 @@ _via_temporal_segmenter.prototype._group_del_gid = function(gid_list) {
 
 _via_temporal_segmenter.prototype._group_add_gid = function(gid) {
   if ( this.group.hasOwnProperty(gid) ) {
-    _via_util_msg_show(this.d.attribute_store[this.groupby_aid].aname +
+    _via_util_msg_show(this.d.store.attribute[this.groupby_aid].aname +
                        ' [' + gid + '] already exists!');
   } else {
     this.group[gid] = [];
     this.gid_list.push(gid);
-    this.metadata_tbody.appendChild( this._tmetadata_group_gid_html(gid) );
-    this.new_group_id_input.value = ''; // clear input field
-    _via_util_msg_show('Add ' + this.d.attribute_store[this.groupby_aid].aname +
-                       ' [' + gid + ']');
+    this._tmetadata_gmetadata_update();
   }
 }
 
@@ -2081,10 +2078,17 @@ _via_temporal_segmenter.prototype._on_event_metadata_del = function(vid, mid) {
 }
 
 _via_temporal_segmenter.prototype._on_event_metadata_add = function(vid, mid) {
+  const { xy, z, av, root_mid } = this.d.store.metadata[mid];
   if ( this.vid === vid &&
-       this.d.store.metadata[mid].z.length === 2 &&
-       this.d.store.metadata[mid].xy.length === 0
+       z.length === 2 &&
+       xy.length === 0
      ) {
+    // TODO: Surround with feature flag
+    if (av[this.groupby_aid] !== this.selected_gid){
+      // Add a new track, select it before continuing
+      this._group_add_gid(root_mid);
+      this._tmetadata_group_gid_sel(this.gid_list.indexOf(root_mid));
+    }
     this._group_gid_add_mid(this.selected_gid, mid); // add at correct location
     this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
     _via_util_msg_show('Metadata added');
