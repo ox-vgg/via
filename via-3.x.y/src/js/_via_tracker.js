@@ -328,7 +328,8 @@ class TrackingHandler {
           let _t = [_t_mid, _t_mid + this.delta ];
           _t = _via_util_float_arr_to_fixed(_t, 3);
           
-          const { mid: tmid } = await this.d.metadata_add(vid, _t, [], {[aid]: track_mid}); 
+          const {av: av_segment} = metadata[segment_mid];
+          const { mid: tmid } = await this.d.metadata_add(vid, _t, [], av_segment, {root_mid: track_mid}); 
           this.tracks[track_mid].update(
             mid,
             segment_mid,
@@ -369,8 +370,10 @@ class TrackingHandler {
 
       _t = _via_util_float_arr_to_fixed(_t, 3);
       
-      const _m = {}
-      _m[aid] = mid;
+      const _m = {
+        [aid]: mid,
+        readonly: true,
+      }
 
       // Add temporal segment and set the segment_mid of box
       this.d.metadata_add(vid, _t, [], _m, {root_mid: mid}).then(res => {
