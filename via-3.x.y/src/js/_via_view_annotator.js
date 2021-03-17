@@ -73,6 +73,10 @@ _via_view_annotator.prototype._show_start_info = function() {
 
 _via_view_annotator.prototype.view_show = function(vid) {
   this._view_clear_all_file_annotator();
+  if (this.tracking_handler) {
+    this.tracking_handler.clear();
+    delete this.tracking_handler;
+  }
   this.vid = vid;
   this._view_init(vid);
   this.emit_event( 'view_show', { 'vid':this.vid } );
