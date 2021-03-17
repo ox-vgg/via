@@ -2281,7 +2281,7 @@ _via_temporal_segmenter.prototype._toolbar_gid_del = function() {
 
   var del_gid_list = [del_gid];
   this._group_del_gid(del_gid_list).then( function(del_mid_list) {
-    this.d.metadata_delete_bulk(this.vid, del_mid_list, false).then( function(ok) {
+    this.d.metadata_delete_bulk(this.vid, del_mid_list, true).then( function(ok) {
       this._tmetadata_gmetadata_update();
       document.getElementById('gid_add_del_input').value = '';
       _via_util_msg_show('Deleted timeline ' + JSON.stringify(del_gid_list) + ' and ' + del_mid_list.length + ' metadata associated with this timeline.');

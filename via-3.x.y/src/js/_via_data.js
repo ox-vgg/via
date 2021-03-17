@@ -494,7 +494,7 @@ _via_data.prototype.metadata_update_zi = function(vid, mid, zindex, zvalue) {
   }.bind(this));
 }
 
-
+// TODO: Handle delete listener case when it is a callback
 _via_data.prototype.metadata_delete = function(vid, mid) {
   return new Promise( function(ok_callback, err_callback) {
     try {
@@ -508,8 +508,8 @@ _via_data.prototype.metadata_delete = function(vid, mid) {
       }
 
       this._cache_mid_list_del(vid, [mid]);
-      delete this.store.metadata[mid];
       this.emit_event( 'metadata_delete', { 'vid':vid, 'mid':mid } );
+      delete this.store.metadata[mid];
       ok_callback({'vid':vid, 'mid':mid});
     }
     catch(ex) {
@@ -518,6 +518,7 @@ _via_data.prototype.metadata_delete = function(vid, mid) {
   }.bind(this));
 }
 
+// TODO: Handle case when delete listener is a promise
 _via_data.prototype.metadata_delete_bulk = function(vid, mid_list, emit) {
   return new Promise( function(ok_callback, err_callback) {
     try {
@@ -529,13 +530,15 @@ _via_data.prototype.metadata_delete_bulk = function(vid, mid_list, emit) {
       var mid, cindex;
       for ( var mindex in mid_list ) {
         mid = mid_list[mindex];
-        delete this.store.metadata[mid];
         deleted_mid_list.push(mid);
       }
       this._cache_mid_list_del(vid, deleted_mid_list);
       if ( typeof(emit) !== 'undefined' &&
            emit === true ) {
         this.emit_event( 'metadata_delete_bulk', { 'vid':vid, 'mid_list':deleted_mid_list } );
+      }
+      for (var mindex in mid_list ) {
+        delete this.store.metadata[mid_list[mindex]];
       }
       ok_callback({'vid':vid, 'mid_list':deleted_mid_list});
     }
@@ -556,13 +559,15 @@ _via_data.prototype.metadata_delete_all = function(vid, emit) {
       var deleted_mid_list = [];
       var mid, cindex;
       for ( var mid in this.store.metadata ) {
-        delete this.store.metadata[mid];
         deleted_mid_list.push(mid);
       }
       this._cache_mid_list_del(vid, deleted_mid_list);
       if ( typeof(emit) !== 'undefined' &&
            emit === true ) {
         this.emit_event( 'metadata_delete_all', { 'vid':vid, 'mid_list':deleted_mid_list } );
+      }
+      for ( var mid in this.store.metadata ) {
+        delete this.store.metadata[mid];
       }
       ok_callback({'vid':vid, 'mid_list':deleted_mid_list});
     }
