@@ -56,10 +56,22 @@ Tracker.last_success_time = -1;
 // Class to maintain mappings between temporal segments
 // and boxes on each frame.
 class Track {
-  constructor(mid, segment_mid) {
+  constructor(segment_mid = null, mid = null) {
     this.segments = new Map();
-    this.segments.set(segment_mid, [mid]);
-    this.order = [segment_mid];
+    this.order = [];
+
+    if (segment_mid) {
+      this.add_segment(segment_mid);
+    }
+
+    if (mid) {
+      this.add(mid, segment_mid);
+    }
+  }
+
+  add_segment(segment_mid) {
+    this.segments.set(segment_mid, []);
+    this.order.push(segment_mid);
   }
 
   add(mid, segment_mid) {
@@ -107,6 +119,35 @@ class Track {
     this.segments.set(segment_mid, segment.slice(0, _idx));
     this.segments.set(new_segment_mid, segment.slice(_idx));
   }
+
+  sort(d) {
+    // Sort segment order
+    const cmp = (a, b) => {
+      const { z: z_a } = d.store.metadata[a];
+      const { z: z_b } = d.store.metadata[b];
+
+      let t0 = z_a[0];
+      let t1 = z_b[0];
+
+      if ( typeof(t0) === 'string' ) {
+        t0 = parseFloat(t0);
+      }
+      if ( typeof(t1) === 'string' ) {
+        t1 = parseFloat(t1);
+      }
+
+      if (t0 === t1) {
+        return 0;
+      }
+
+      return t0 < t1 ? -1 : 1;
+    }
+    this.order.sort(cmp);
+
+    this.segments.forEach((val) => {
+      val.sort(cmp);
+    });
+  }
 };
 
 class TrackingHandler {
@@ -123,7 +164,6 @@ class TrackingHandler {
       return false;
     }
 
-    this.tracks = {};
     this.delta = 1/25;
     this.tracking = false;
 
@@ -144,11 +184,61 @@ class TrackingHandler {
 
     Tracker.height = Math.floor(this.video.videoHeight * this.scale);
     
+    this.tracks = {};
+    this.init_tracks();
     
     this.d.on_event('metadata_add', this._ID, this.metadata_handler.bind(this), 'metadata_add');
     this.d.on_event('metadata_update', this._ID, this.metadata_handler.bind(this), 'metadata_update');
     this.d.on_event('metadata_delete', this._ID, this.metadata_handler.bind(this), 'metadata_delete');
   }
+
+  init_tracks() {
+
+    if(!(this.vid in this.d.cache.mid_list)) {
+      // Nothing to add
+      return;
+    }
+    // Add all segments and create tracks
+    this.d.cache.mid_list[this.vid].filter(_mid => {
+      // find readonly segments
+      const { xy, z, av: { readonly }} = this.d.store.metadata[_mid];
+      if (xy.length === 0 && z.length === 2 && readonly) {
+        return true;
+      }
+      return false;
+    }).forEach(mid => {
+      // Add them to tracks data structure
+      const { root_mid } = this.d.store.metadata[mid];
+      if (!(root_mid in this.tracks)) {
+        this.tracks[root_mid] = new Track(mid);
+      } else {
+        this.tracks[root_mid].add_segment(mid);
+      }
+    });
+    
+    // Add all bounding boxes associated to the tracks
+    const track_ids = Object.keys(this.tracks);
+    this.d.cache.mid_list[this.vid].filter(_mid => {
+      // Find the associated box ids
+      let { root_mid, segment_mid } = this.d.store.metadata[_mid];
+      return ( segment_mid && 
+        (track_ids.includes(root_mid)
+        || track_ids.includes(_mid)));
+    }).forEach(mid => {
+      let { root_mid, segment_mid } = this.d.store.metadata[mid];
+      if (!root_mid) {
+        root_mid = mid;
+      }
+
+      this.tracks[root_mid].add(mid, segment_mid);
+    });
+
+    // Sort each track segment based on timestamp
+    Object.values(this.tracks).forEach(val => {
+      val.sort(this.d);
+    });
+  }
+
   reset_tracker(){
     Tracker.reset_tracker();
   }
@@ -253,7 +343,7 @@ class TrackingHandler {
       let should_seek = (currentTime + this.delta + 1e-3 < boundary_ts);
       
       if (!should_seek) {
-        Tracker.reset_tracker();
+        this.reset_tracker();
         video.currentTime = Tracker.last_success_time;
         return;
       }
@@ -284,7 +374,7 @@ class TrackingHandler {
 
       // Add temporal segment and set the segment_mid of box
       this.d.metadata_add(vid, _t, [], _m, {root_mid: mid}).then(res => {
-        this.tracks[mid] = new Track(mid, res.mid)
+        this.tracks[mid] = new Track(res.mid, mid)
         this.d.store.metadata[mid]['segment_mid'] = res.mid;
         // Tracker will be reset during the update call
         this.d.metadata_update_av(vid, mid, aid, mid);
@@ -432,5 +522,11 @@ class TrackingHandler {
       return false;
     }
     return true;
+  }
+
+  clear() {
+    this.d.clear_events(this._ID);
+    this.reset_tracker();
+    this.overlay.style.display = 'none';
   }
 }
