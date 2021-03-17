@@ -190,6 +190,8 @@ class TrackingHandler {
     this.d.on_event('metadata_add', this._ID, this.metadata_handler.bind(this), 'metadata_add');
     this.d.on_event('metadata_update', this._ID, this.metadata_handler.bind(this), 'metadata_update');
     this.d.on_event('metadata_delete', this._ID, this.metadata_handler.bind(this), 'metadata_delete');
+    this.d.on_event('metadata_delete_bulk', this._ID, this.bulk_delete_handler.bind(this), 'metadata_delete_bulk');
+    this.d.on_event('metadata_delete_all', this._ID, this.bulk_delete_handler.bind(this), 'metadata_delete_all');
   }
 
   init_tracks() {
@@ -444,42 +446,57 @@ class TrackingHandler {
   }
 
   handle_metadata_delete_rect(event_payload) {
-    const { mid, val } = event_payload;
+    const { mid } = event_payload;
 
-    const { root_mid, segment_mid } = val;
+    let { root_mid, segment_mid } = this.d.store.metadata[mid];
+
+    if (!root_mid) {
+      root_mid = mid;
+    }
     this.tracks[root_mid].delete(mid, segment_mid);
 
     // TODO Update temporal segment based on the remaining mid in segment 
   }
 
   handle_metadata_delete_segment(event_payload) {
-    const { vid, mid, val } = event_payload;
+    const { vid, mid } = event_payload;
 
-    const { root_mid } = val;
+    if (!(mid in this.d.store.metadata)) {
+      // Segment already deleted
+      return;
+    }
+    const { root_mid } = this.d.store.metadata[mid];
     const segment = this.tracks[root_mid].delete_segment(mid);
 
     this.d.metadata_delete_bulk(vid, segment, true);
   }
 
   // TODO handle track delete
+  bulk_delete_handler(data, event_payload) {
+    const { mid_list, vid } = event_payload;
+    if (vid !== this.vid) {
+      // Ignore metadata added to some other vid
+      return;
+    }
 
+    if (data === 'metadata_delete_bulk' || data === 'metadata_delete_all') {
+      mid_list.filter(_mid => {
+        // find readonly segments
+        const { xy, z, av: { readonly }} = this.d.store.metadata[_mid];
+        if (xy.length === 0 && z.length === 2 && readonly) {
+          return true;
+        }
+        return false;
+      }).forEach(mid => {
+        this.handle_metadata_delete_segment({vid, mid});
+      });
+    }
+  }
   metadata_handler (data, event_payload) {
     // Ignore metadata added to some other file annotator and segmenter
     const { mid, vid } = event_payload;
     if (vid !== this.vid) {
       return;
-    }
-
-    if (data === 'metadata_delete') {
-      const { xy, z } = event_payload.val;
-      if (xy.length && xy[0] === 2 && z.length === 1) {
-        // Rectangle was deleted
-        this.handle_metadata_delete_rect(event_payload);
-      } else if (xy.length === 0 && z.length === 2) {
-        // Temporal segment was deleted
-        this.handle_metadata_delete_segment(event_payload);
-      }    
-      return;  
     }
 
     const { xy, z } = this.d.store.metadata[mid];
@@ -495,6 +512,15 @@ class TrackingHandler {
           // Rectangle was updated
           this.handle_metadata_update_rect(event_payload);
         }
+        break;
+      case 'metadata_delete':
+        if (xy.length && xy[0] === 2 && z.length === 1) {
+          // Rectangle was deleted
+          this.handle_metadata_delete_rect(event_payload);
+        } else if (xy.length === 0 && z.length === 2) {
+          // Temporal segment was deleted
+          this.handle_metadata_delete_segment(event_payload);
+        }    
         break;
       default:
         console.log(data);
