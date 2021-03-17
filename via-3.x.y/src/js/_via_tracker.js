@@ -116,6 +116,12 @@ class TrackingHandler {
     this.video = video;
     this.ts = ts;
     this.d  = d;
+    this.overlay = document.getElementById('via_overlay');
+    this.overlay.onclick = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      return false;
+    }
 
     this.tracks = {};
     this.delta = 1/25;
@@ -174,6 +180,8 @@ class TrackingHandler {
       this.tracking = true;
       if (!Tracker.instance) {
         video.removeEventListener('seeked', seekListener);
+        this.overlay.style.display = 'none';
+        _via_util_msg_show('Tracking stopped. Draw / Update box to start / resume tracking');
         video.currentTime = Tracker.last_success_time;
         Tracker.last_success_time = -1;
         this.tracking = false;
@@ -418,6 +426,8 @@ class TrackingHandler {
       }
       e.preventDefault();
       this.video.addEventListener('seeked', seekListener);
+      _via_util_msg_show('Tracking in progress, press [Esc] to cancel', true);
+      this.overlay.style.display = 'block';
       this.video.currentTime += this.delta;
       return false;
     }
