@@ -273,7 +273,12 @@ class TrackingHandler {
       if (!Tracker.instance) {
         video.removeEventListener('seeked', seekListener);
         this.overlay.style.display = 'none';
-        _via_util_msg_show('Tracking stopped. Draw / Update box to start / resume tracking');
+        if (Math.abs(video.duration - video.currentTime) < this.delta) {
+          // End of video
+          _via_util_msg_show('Reached end of video. Use timeline to seek to point of interest');
+        } else {
+          _via_util_msg_show('Tracking stopped. Draw / Update box to start / resume tracking', true);
+        }
         video.currentTime = Tracker.last_success_time;
         Tracker.last_success_time = -1;
         this.tracking = false;
@@ -434,6 +439,7 @@ class TrackingHandler {
           root_mid,
           res.mid,
         );
+        _via_util_msg_show('Tracking initialised. Press <span class="key">t</span> to continue tracking', true);
       });
     } else {
       Tracker.reset(
@@ -442,6 +448,7 @@ class TrackingHandler {
         root_mid,
         segment_mid,
       );
+      _via_util_msg_show('Tracking initialised. Press <span class="key">t</span> to continue tracking', true);
     }
   }
 
@@ -540,12 +547,12 @@ class TrackingHandler {
     if (e.key === 't') {
       const seekListener = this.get_seek_listener(this.vid);
       if (!seekListener) {
-        _via_util_msg_show('cannot start tracking without initialisation');
+        _via_util_msg_show('Cannot start tracking without initialisation');
         return false;
       }
       e.preventDefault();
       this.video.addEventListener('seeked', seekListener);
-      _via_util_msg_show('Tracking in progress, press [Esc] to cancel', true);
+      _via_util_msg_show('Tracking in progress, press <span class="key">Esc</span> to cancel', true);
       this.overlay.style.display = 'block';
       this.video.currentTime += this.delta;
       return false;
