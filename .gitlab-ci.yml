@@ -8,12 +8,12 @@ pages:
   rules:
     - if: '$CI_COMMIT_BRANCH == "add-tracking"'
 
-  image: alpine:latest
+  image: python:3.8-alpine
 
   script:
-    - apk add --no-cache --update tar curl gunzip
+    - apk add --no-cache --update tar curl gzip
     - mkdir -p public/
-    - 'curl -L --header "DEPLOY-TOKEN: ${TRACKING_PACKAGE_TOKEN} --output tracking.tar.gz "${CI_API_V4_URL}/projects/${TRACKING_PROJECT_ID}/packages/generic/tracking/${TRACKING_VERSION}/tracking-${TRACKING_VERSION}.tar.gz"'
+    - 'curl -L --header "DEPLOY-TOKEN: ${TRACKING_PACKAGE_TOKEN}" --output tracking.tar.gz "${CI_API_V4_URL}/projects/${TRACKING_PROJECT_ID}/packages/generic/tracking/${TRACKING_VERSION}/tracking-${TRACKING_VERSION}.tar.gz"'
     - tar -zxvf tracking.tar.gz -C via-3.x.y/src/js/
     - (cd via-3.x.y/scripts && python3 pack_via.py video_annotator --enable-tracking)
     - cp via-3.x.y/dist/via_video_annotator.html public/index.html
