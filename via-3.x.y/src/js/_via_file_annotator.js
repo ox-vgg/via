@@ -548,6 +548,7 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
   this._creg_draw_all();
 
   this._state_set(_VIA_RINPUT_STATE.IDLE);
+  _via_util_msg_show('File loaded. For tracking, Press <span class="key">Space</span> to play and pause at point of interest', true);
 }
 
 //
