@@ -11,7 +11,7 @@
  function _via_load_submodules() {
     console.log('Loading video annotator demo');
     const urlParams = new URLSearchParams(window.location.search);
-    const filenames = _via_demo_data['video'].filter(el => el.src)
+    const filenames = _via_demo_data['video'].map(el => el.src)
     let idx = 0;
     if (urlParams.has('video')
         && filenames.includes(urlParams.get('video'))){
