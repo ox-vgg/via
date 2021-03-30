@@ -24,7 +24,6 @@ function _via_temporal_segmenter(file_annotator, container, vid, data, media_ele
   this.groupby_aid = '';
   this.group = {};
   this.gid_list = [];
-  this.readonly_gid_list = [];
   this.selected_gindex = -1;
   this.selected_mindex = -1;
   this.edge_show_time = -1;
@@ -489,15 +488,8 @@ _via_temporal_segmenter.prototype._tmetadata_gmetadata_update = function() {
     gid_input.setAttribute('title', this.d.store.attribute[this.groupby_aid].aname +
                            ' = ' + gid);
     gid_input.setAttribute('data-gid', gid);
-    if (this.readonly_gid_list.includes(gid)) {
-      gid_input.setAttribute('readonly', true);
-    } else {
     gid_input.addEventListener('change', this._tmetadata_group_update_gid.bind(this));
-    }
     gid_container.appendChild(gid_input);
-    if (this.readonly_gid_list.includes(gid)) {
-      gid_container.appendChild(document.createTextNode('🔒'));
-    }
 
     // column containing temporal segments for this value timeline-id
     this._tmetadata_group_gid_init(gid);
@@ -1122,18 +1114,12 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_sel_metadata = function(m
   this.selected_mid = this.tmetadata_gtimeline_mid[this.selected_gid][mindex];
   this.m.currentTime = this.d.store.metadata[this.selected_mid].z[0];
   this._tmetadata_group_gid_draw(this.selected_gid);
-  if(this.readonly_gid_list.includes(this.selected_gid)) {
   _via_util_msg_show('Metadata selected. ' +
-    '<span class="key">Backspace</span> to delete and ' +
-    '<span class="key">Esc</span> to unselect.', true);
-  } else {
-    _via_util_msg_show('Metadata selected. ' +
                      'Use <span class="key">l</span> or <span class="key">r</span> to expand and ' +
                      '<span class="key">L</span> or <span class="key">R</span> to reduce segment. ' +
                      'Press <span class="key">&larr;</span>&nbsp;<span class="key">&rarr;</span> to move, ' +
                      '<span class="key">Backspace</span> to delete and ' +
                      '<span class="key">Esc</span> to unselect.', true);
-  }
 }
 
 _via_temporal_segmenter.prototype._tmetadata_group_gid_remove_mid_sel = function(mindex) {
@@ -1200,10 +1186,6 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_sel_prev_metadata = funct
 }
 
 _via_temporal_segmenter.prototype._tmetadata_mid_update_edge = function(eindex, dz) {
-  if(this.readonly_gid_list.includes(this.selected_gid)) {
-    _via_util_msg_show(`Cannot update segment on readonly group [${this.selected_gid}]`);
-    return;
-  }
   this.edge_show_time = eindex;
   // to ensure only 3 decimal values are stored for time
   var new_value = this.d.store.metadata[this.selected_mid].z[eindex] + dz;
@@ -1237,10 +1219,6 @@ _via_temporal_segmenter.prototype._tmetadata_mid_update_edge = function(eindex, 
 }
 
 _via_temporal_segmenter.prototype._tmetadata_mid_move = function(dt) {
-  if(this.readonly_gid_list.includes(this.selected_gid)) {
-    _via_util_msg_show(`Cannot move segment in readonly group [${this.selected_gid}]`);
-    return;
-  }
   var n = this.d.store.metadata[this.selected_mid].z.length;
   var newz = this.d.store.metadata[this.selected_mid].z.slice();
   for ( var i = 0; i < n; ++i ) {
@@ -1322,10 +1300,6 @@ _via_temporal_segmenter.prototype._tmetadata_mid_update_last_added_end_edge_to_t
 }
 
 _via_temporal_segmenter.prototype._tmetadata_mid_add_at_time = function(t) {
-  if(this.readonly_gid_list.includes(this.selected_gid)) {
-    _via_util_msg_show(`Cannot add segment to readonly group [${this.selected_gid}]`);
-    return;
-  }
   var z = [ t ];
   if ( z[0] < 0 ) {
     z[0] = 0.0;
@@ -1358,10 +1332,6 @@ _via_temporal_segmenter.prototype._tmetadata_mid_add_at_time = function(t) {
 }
 
 _via_temporal_segmenter.prototype._tmetadata_mid_merge = function(eindex) {
-  if(this.readonly_gid_list.includes(this.selected_gid)) {
-    _via_util_msg_show(`Cannot merge segments from readonly group [${this.selected_gid}]`);
-    return;
-  }
   var merge_mid;
   if ( eindex === 0 ) {
     var left_mindex = parseInt(this.selected_mindex) - 1;
@@ -1403,15 +1373,7 @@ _via_temporal_segmenter.prototype._tmetadata_mid_merge = function(eindex) {
 _via_temporal_segmenter.prototype._tmetadata_mid_change_gid = function(from_gindex,
                                                                        to_gindex) {
   var from_gid = this.gid_list[from_gindex];
-  if(this.readonly_gid_list.includes(from_gid)) {
-    _via_util_msg_show(`Cannot move segment from readonly group [${from_gid}]`);
-    return;
-  }
   var to_gid = this.gid_list[to_gindex];
-  if(this.readonly_gid_list.includes(to_gid)) {
-    _via_util_msg_show(`Cannot move segment to readonly group [${to_gid}]`);
-    return;
-  }
   var mid_to_move = this.tmetadata_gtimeline_mid[from_gid][this.selected_mindex];
   var mindex_to_move = this.selected_mindex;
 
@@ -1519,7 +1481,6 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_mouseup = function(e) {
     this.metadata_resize_is_ongoing = false;
     this.metadata_resize_edge_index = -1;
     this.metadata_ongoing_update_x = [0, 0];
-    this._tmetadata_group_gid_draw(this.selected_gid);
     return;
   }
 
@@ -1583,8 +1544,7 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
       _via_util_msg_show('Playing ...');
     } else {
       this.m.pause();
-      _via_util_msg_show('Paused. Draw a box around Region of interest to start tracking it. &emsp;&ensp;' + 
-                         '<br>&emsp;&emsp;Press <span class="key">a</span> to add a temporal segment, ' +
+      _via_util_msg_show('Paused. Press <span class="key">a</span> to add a temporal segment, ' +
                          '<span class="key">Tab</span> to select and ' +
                          '<span class="key">&uarr;</span>&nbsp;<span class="key">&darr;</span> to select another temporal segment timeline.', true);
     }
@@ -1884,7 +1844,7 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
   this.group = {};
   this.groupby_aid = aid;
 
-  var mid, avalue, ro;
+  var mid, avalue;
   for ( var mindex in this.d.cache.mid_list[this.vid] ) {
     mid = this.d.cache.mid_list[this.vid][mindex];
     if ( this.d.store.metadata[mid].z.length >= 2 &&
@@ -1892,12 +1852,8 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
        ) {
       if ( this.d.store.metadata[mid].av.hasOwnProperty(this.groupby_aid) ) {
         avalue = this.d.store.metadata[mid].av[this.groupby_aid];
-        ro = this.d.store.metadata[mid].av['readonly'];
         if ( ! this.group.hasOwnProperty(avalue) ) {
           this.group[avalue] = [];
-          if (ro) {
-            this.readonly_gid_list.push(avalue);
-          }
         }
         this.group[avalue].push(mid);
       }
@@ -2041,9 +1997,6 @@ _via_temporal_segmenter.prototype._group_del_gid = function(gid_list) {
         delete this.tmetadata_gtimeline_mid[gid];
         var gindex = this.gid_list.indexOf(gid);
         this.gid_list.splice(gindex, 1);
-        if (this.readonly_gid_list.includes(gid)) {
-          this.readonly_gid_list.splice(this.readonly_gid_list.indexOf(gid), 1);
-        }
         delete this.gctx[gid];
         delete this.gcanvas[gid];
       }
@@ -2055,17 +2008,17 @@ _via_temporal_segmenter.prototype._group_del_gid = function(gid_list) {
   }.bind(this));
 }
 
-_via_temporal_segmenter.prototype._group_add_gid = function(gid, readonly = false) {
+_via_temporal_segmenter.prototype._group_add_gid = function(gid) {
   if ( this.group.hasOwnProperty(gid) ) {
-    _via_util_msg_show(this.d.store.attribute[this.groupby_aid].aname +
+    _via_util_msg_show(this.d.attribute_store[this.groupby_aid].aname +
                        ' [' + gid + '] already exists!');
   } else {
     this.group[gid] = [];
     this.gid_list.push(gid);
-    if (readonly) {
-      this.readonly_gid_list.push(gid);
-    }
-    this._tmetadata_gmetadata_update();
+    this.metadata_tbody.appendChild( this._tmetadata_group_gid_html(gid) );
+    this.new_group_id_input.value = ''; // clear input field
+    _via_util_msg_show('Add ' + this.d.attribute_store[this.groupby_aid].aname +
+                       ' [' + gid + ']');
   }
 }
 
@@ -2128,35 +2081,18 @@ _via_temporal_segmenter.prototype._on_event_metadata_del = function(vid, mid) {
 }
 
 _via_temporal_segmenter.prototype._on_event_metadata_add = function(vid, mid) {
-  const { xy, z, av, root_mid } = this.d.store.metadata[mid];
   if ( this.vid === vid &&
-       z.length === 2 &&
-       xy.length === 0
+       this.d.store.metadata[mid].z.length === 2 &&
+       this.d.store.metadata[mid].xy.length === 0
      ) {
-    // TODO: Surround with feature flag
-    if (av[this.groupby_aid] !== this.selected_gid){
-      // Add a new track, select it before continuing
-      this._group_add_gid(root_mid, true);
-      this._tmetadata_group_gid_sel(this.gid_list.indexOf(root_mid));
-    }
     this._group_gid_add_mid(this.selected_gid, mid); // add at correct location
     this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
-    this._tmetadata_group_gid_draw(this.selected_gid);
     _via_util_msg_show('Metadata added');
   }
-  this._redraw_timeline();
 }
 
 _via_temporal_segmenter.prototype._on_event_metadata_update = function(vid, mid) {
-  const { av: { readonly } } = this.d.store.metadata[mid]; 
-  if (!readonly) {
-    // Updated metadata was not added by us
-    _via_util_msg_show('Metadata updated');
-  }
-  this._redraw_timeline();
-  if (this.selected_gindex !== -1) {
-    this._tmetadata_group_gid_draw(this.selected_gid);
-  }
+  _via_util_msg_show('Metadata updated');
 }
 
 //
@@ -2282,7 +2218,7 @@ _via_temporal_segmenter.prototype._toolbar_gid_del = function() {
 
   var del_gid_list = [del_gid];
   this._group_del_gid(del_gid_list).then( function(del_mid_list) {
-    this.d.metadata_delete_bulk(this.vid, del_mid_list, true).then( function(ok) {
+    this.d.metadata_delete_bulk(this.vid, del_mid_list, false).then( function(ok) {
       this._tmetadata_gmetadata_update();
       document.getElementById('gid_add_del_input').value = '';
       _via_util_msg_show('Deleted timeline ' + JSON.stringify(del_gid_list) + ' and ' + del_mid_list.length + ' metadata associated with this timeline.');
