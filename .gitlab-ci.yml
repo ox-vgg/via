@@ -25,17 +25,17 @@ pages:
       <html lang="en">
       	<head><title>VGG Image Annotator Tracking demo</title><meta charset="UTF-8"></head>
       	<body>
-          <h1> VGG Image Annotator tracking demo
+          <h1> VGG Image Annotator tracking demo </h1>
           <p> 
             You can try the pre-loaded demos listed below or try it on your 
             <br> 
-            own videos <a href="./via_video_annotator.html>here</a>.
+            own videos <a href="./via_video_annotator.html">here</a>.
           </p>
           <ul>
-            <li> <a href="./demo.html?video=fish.mp4>Fish in an aquarium</a></li>
-            <li> <a href="./demo.html?video=mouse.mp4>Mouse going in circles</a></li>
-            <li> <a href="./demo.html?video=moon.mp4>Moon transit in front of sun</a></li>
-            <li> <a href="./demo.html?video=david.webm>Person with changing illumination, pose, etc.</a></li>
+            <li> <a href="./demo.html?video=fish.mp4">Fish in an aquarium</a></li>
+            <li> <a href="./demo.html?video=mouse.mp4">Mouse going in circles</a></li>
+            <li> <a href="./demo.html?video=moon.mp4">Moon transit in front of sun</a></li>
+            <li> <a href="./demo.html?video=david.webm">Person with changing illumination, pose, etc.</a></li>
           </ul>
         </body>
       </html>
