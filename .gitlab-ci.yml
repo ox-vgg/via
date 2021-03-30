@@ -14,7 +14,7 @@ pages:
     - apk add --no-cache --update tar curl gzip
     - mkdir -p public/assets/
     - 'curl -L --header "DEPLOY-TOKEN: ${TRACKING_PACKAGE_TOKEN}" --output tracking.tar.gz "${CI_API_V4_URL}/projects/${TRACKING_PROJECT_ID}/packages/generic/tracking/${TRACKING_VERSION}/tracking-${TRACKING_VERSION}.tar.gz"'
-    - 'curl -L --header "DEPLOY-TOKEN: ${TRACKING_PACKAGE_TOKEN}" --output tracking_demo_videos.tar.gz "${CI_API_V4_URL}/projects/${TRACKING_PROJECT_ID}/packages/generic/traqcking_demo_videos/1.0.0/tracking_demo_videos.tar.gz"'
+    - 'curl -L --header "DEPLOY-TOKEN: ${TRACKING_PACKAGE_TOKEN}" --output tracking_demo_videos.tar.gz "${CI_API_V4_URL}/projects/${TRACKING_PROJECT_ID}/packages/generic/tracking_demo_videos/1.0.0/tracking_demo_videos.tar.gz"'
     - tar -zxvf tracking.tar.gz tracking.js && mv tracking.js via-3.x.y/src/js/_via_tracking.js
     - tar -zxvf tracking_demo_videos.tar.gz -C public/assets/
     - (cd via-3.x.y/scripts && python3 pack_via.py video_annotator --enable-tracking)
