@@ -151,7 +151,7 @@ _via_import_export.prototype.export_to_scoliosis_project_csv = function() {
       var shape_metadata = []
       for ( var mindex in this.d.cache.mid_list[vid] ) {
         var mid = this.d.cache.mid_list[vid][mindex];
-        console.log('mid=' + mid + ' : ' + JSON.stringify(this.d.store.metadata[mid]));
+        //console.log('mid=' + mid + ' : ' + JSON.stringify(this.d.store.metadata[mid]));
         if(this.d.store.metadata[mid]['xy'].length === 0) {
           // file attributes
           for(var aid in this.d.store.attribute) {
@@ -165,7 +165,7 @@ _via_import_export.prototype.export_to_scoliosis_project_csv = function() {
                 avalue = this.d.store.attribute[aid]['options'][oid];
               }
             }
-            fmetadata.push(avalue);
+            fmetadata.push('"' + avalue + '"');
           }
         } else {
           // scoliosis shape attribute
