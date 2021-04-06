@@ -4,6 +4,7 @@
  * Static Singleton Class for tracking
  * Attaches to the track segment being processed
  */
+const VIA_TRACKING = true;
 class Tracker {
     
   // Resets the tracker to zero state

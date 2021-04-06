@@ -197,11 +197,13 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
                                                           this.file_annotator[0][0].file_html_element
                                                          );
     this.temporal_segmenter.on_event('edit_frame_regions', this._ID, this.file_annotator[0][0]._on_event_edit_frame_regions.bind(this.file_annotator[0][0]));
-    this.tracking_handler = new TrackingHandler(
-      vid0,
-      this.file_annotator[0][0].file_html_element,
-      this.temporal_segmenter,
-      this.d);
+    if (VIA_TRACKING) {
+      this.tracking_handler = new TrackingHandler(
+        vid0,
+        this.file_annotator[0][0].file_html_element,
+        this.temporal_segmenter,
+        this.d);
+    }
   }.bind(this), function(err) {
     this.c.removeChild(this.view_metadata_container);
     this.c.setAttribute('style', 'grid-template-rows:1fr;')
@@ -584,10 +586,11 @@ _via_view_annotator.prototype._attribute_html_element = function(aid, onchange_h
 //
 _via_view_annotator.prototype._on_event_keydown = function(e) {
   if ( this.view_mode === _VIA_VIEW_MODE.VIDEO1 ) {
-    // TODO: Surround with feature flag
-    const should_propagate = this.tracking_handler.keydown_handler(e);
-    if (!should_propagate) {
-      return;
+    if (this.tracking_handler) {
+      const should_propagate = this.tracking_handler.keydown_handler(e);
+      if (!should_propagate) {
+        return;
+      }
     }
     this.file_annotator[0][0]._rinput_keydown_handler(e);
     if ( this.file_annotator[0][0].selected_mid_list.length === 0 ) {
