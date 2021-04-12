@@ -164,7 +164,7 @@ _via_temporal_segmenter.prototype._redraw_all = function() {
     }
   }
 
-  //this._redraw_timeline(); // this is not required
+  this._redraw_timeline();
 
   // draw marker to show current time in group timeline and group metadata
   this._tmetadata_draw_currenttime_mark(tnow);
@@ -1189,7 +1189,7 @@ _via_temporal_segmenter.prototype._tmetadata_mid_update_edge = function(eindex, 
   this.edge_show_time = eindex;
   // to ensure only 3 decimal values are stored for time
   var new_value = this.d.store.metadata[this.selected_mid].z[eindex] + dz;
-  new_value = _via_util_float_to_fixed(new_value, 3);
+  new_value = _via_util_float_to_fixed(new_value, _VIA_FLOAT_FIXED_POINT);
 
   // consistency check
   if ( eindex === 0 ) {
