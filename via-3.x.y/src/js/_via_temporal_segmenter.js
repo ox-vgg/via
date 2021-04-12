@@ -2045,7 +2045,7 @@ _via_temporal_segmenter.prototype._time2strms = function(t) {
   var hh = Math.floor(t / 3600);
   var mm = Math.floor( (t - hh * 3600) / 60 );
   var ss = Math.floor( t - hh*3600 - mm*60 );
-  var ms = Math.floor( (t - Math.floor(t) ) * 1000 );
+  var ms = Math.round( (t - Math.floor(t) ) * 1000 );
   if ( hh < 10 ) {
     hh = '0' + hh;
   }
@@ -2056,7 +2056,11 @@ _via_temporal_segmenter.prototype._time2strms = function(t) {
     ss = '0' + ss;
   }
   if ( ms < 100 ) {
-    ms = '0' + ms;
+    if ( ms < 10 ) {
+      ms = '00' + ms;
+    } else {
+      ms = '0' + ms;
+    }
   }
   return hh + ':' + mm + ':' + ss + '.' + ms;
 }
