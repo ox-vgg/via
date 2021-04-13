@@ -889,9 +889,11 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_mouseleave = function(e) 
 
 _via_temporal_segmenter.prototype._tmetadata_gtimeline_is_on_smark = function(t) {
   var smark_time;
+  var zoom_factor = this.linehn[this.DEFAULT_WIDTH_PER_SEC] / this.tmetadata_width_per_sec;
+  var mouse_tolerance = this.GTIMELINE_REGION_MARKER_MOUSE_TOL * zoom_factor;
   for ( var smark_time_str in this.smid ) {
     smark_time = parseFloat(smark_time_str);
-    if ( Math.abs(smark_time - t) <= this.GTIMELINE_REGION_MARKER_MOUSE_TOL ) {
+    if ( Math.abs(smark_time - t) <= mouse_tolerance ) {
       return smark_time_str;
     }
   }
