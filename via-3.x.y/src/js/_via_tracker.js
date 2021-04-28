@@ -69,9 +69,11 @@ class Track {
     }
   }
 
-  add_segment(segment_mid) {
-    this.segments.set(segment_mid, []);
-    this.order.push(segment_mid);
+  add_segment(segment_mid, mid_list=[]) {
+    this.segments.set(segment_mid, mid_list);
+    if(!(this.order.includes(segment_mid))) {
+      this.order.push(segment_mid);
+    }
   }
 
   add(mid, segment_mid) {
