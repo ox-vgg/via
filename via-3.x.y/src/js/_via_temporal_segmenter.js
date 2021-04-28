@@ -2128,16 +2128,17 @@ _via_temporal_segmenter.prototype._on_event_metadata_del = function(vid, mid) {
 }
 
 _via_temporal_segmenter.prototype._on_event_metadata_add = function(vid, mid) {
-  const { xy, z, av, root_mid } = this.d.store.metadata[mid];
+  const { xy, z, av } = this.d.store.metadata[mid];
   if ( this.vid === vid &&
        z.length === 2 &&
-       xy.length === 0
+       xy.length === 0 &&
+       av.readonly
      ) {
     // TODO: Surround with feature flag
     if (av[this.groupby_aid] !== this.selected_gid){
       // Add a new track, select it before continuing
-      this._group_add_gid(root_mid, true);
-      this._tmetadata_group_gid_sel(this.gid_list.indexOf(root_mid));
+      this._group_add_gid(av[this.groupby_aid], true);
+      this._tmetadata_group_gid_sel(this.gid_list.indexOf(av[this.groupby_aid]));
     }
     this._group_gid_add_mid(this.selected_gid, mid); // add at correct location
     this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
