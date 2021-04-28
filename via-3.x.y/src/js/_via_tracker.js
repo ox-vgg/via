@@ -418,8 +418,21 @@ class TrackingHandler {
         this.id2name[mid] = object_name;
         this.name2id[object_name] = mid;
         this.d.store.metadata[mid]['segment_mid'] = res.mid;
-        // Tracker will be reset during the update call
-        this.d.metadata_update_av(vid, mid, aid, mid);
+        this.d.metadata_update_av(vid, mid, aid, object_name).then(() => {
+          // Get frame and box
+          this.bctx.drawImage(this.video, 0, 0, this.bcanvas.width, this.bcanvas.height);
+          const frame = this.bctx.getImageData(0, 0, this.bcanvas.width, this.bcanvas.height);
+          const { xy } = this.d.store.metadata[mid];
+          const [ _x, _y, _w, _h ] = xy.slice(1).map(el => Math.floor(this.scale * el));
+
+          Tracker.reset(
+            frame.data, 
+            { x: _x, y: _y, width: _w, height: _h},
+            mid,
+            res.mid,
+          );
+          _via_util_msg_show('Tracking initialised. Press <span class="key">t</span> to continue tracking', true);
+        });
       });
     }
   }
@@ -465,9 +478,17 @@ class TrackingHandler {
   }
 
   handle_metadata_update_rect(event_payload) {
+
+    // Fired when attribute / xy is updated.
+    // TODO - Assumption - assuming this only fires when either
+    // xy or attribute is updated. Not handling case where both 
+    // of them are updated.
+
     const { vid, mid } = event_payload;
-    let { xy, z, root_mid, segment_mid } = this.d.store.metadata[mid];
+    let { xy, z, av, root_mid, segment_mid } = this.d.store.metadata[mid];
     let { z: z_segment, av: av_segment } = this.d.store.metadata[segment_mid];
+
+    const { groupby_aid: aid } = this.ts;
 
     if (!root_mid) {
       // If a user-added box is modified before tracking,
@@ -475,6 +496,54 @@ class TrackingHandler {
       root_mid = mid;
     }
 
+    // Check if attribute is updated by comparing against
+    // id2name lookup table
+    if (av[aid] !== this.id2name[root_mid]) {
+
+      // If it doesn't match, move the current segment (and all following segments?)
+      // into an existing track if it exists, rename if no track exists
+      const old_gid = this.id2name[root_mid];
+      const new_gid = av[aid];
+
+      const new_track_id = this.name2id[new_gid];
+
+      if(!new_track_id) {
+        // Track doesn't exist - Must be a rename
+        delete this.name2id[old_gid];
+        this.name2id[new_gid] = root_mid;
+        this.id2name[root_mid] = new_gid;
+
+        // Change attributes in all segments and rects
+        const segment_list = this.tracks[root_mid].order;
+        segment_list.forEach(_segment_mid => {
+          this.d.store.metadata[_segment_mid].av[aid] = new_gid;
+        });
+        this.rename_rects_in_segment(segment_list);
+
+        this.ts._post_tmetadata_group_update_gid(old_gid, new_gid);
+
+      } else {
+       
+        // Move segment to other track
+        this.d.store.metadata[segment_mid].av[aid] = new_gid;
+        this.move_segment(segment_mid, root_mid, new_track_id);
+
+        this.ts._post_tmetadata_mid_change_gid(segment_mid, old_gid, new_gid);
+        this.ts._tmetadata_group_gid_draw(old_gid);
+        this.ts._tmetadata_group_gid_draw(new_gid);
+       
+        if (
+          Tracker.instance
+          && Tracker.track_mid === root_mid 
+          && Tracker.segment_mid === segment_mid) {
+          //Tracker was tracking this segment
+          Tracker.track_mid = new_track_id;
+        }
+      }
+      return;
+    }
+    
+    // Handle case where xy is updated
     // Get timestamps of segment and box
     let _t = z_segment.slice(0);
     const _t_mid = z[0];
