@@ -82,6 +82,10 @@ class Track {
 
   delete_segment(segment_mid) {
     const segment = this.segments.get(segment_mid);
+    if (!segment) {
+      // Segment doesn't exist / already deleted
+      return [];
+    }
     this.segments.delete(segment_mid);
     this.order.splice(this.order.indexOf(segment_mid), 1);
     return segment;
@@ -96,8 +100,12 @@ class Track {
       return [];
     }
 
+    const midx = segment.indexOf(mid);
+    if (midx === -1) {
+      return [];
+    }
     // Remove box from segment
-    return segment.splice(segment.indexOf(mid), 1);
+    return segment.splice(midx, 1);
   }
 
   force_update(segment_mid) {
