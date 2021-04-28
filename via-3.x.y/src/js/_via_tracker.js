@@ -177,6 +177,10 @@ class TrackingHandler {
     this.delta = 1/25;
     this.tracking = false;
 
+    this.id2name = {};
+    this.name2id = {};
+    this.OBJECT_ID = 1;
+
     (async () => {
       await tracking;
     })(); 
@@ -220,9 +224,12 @@ class TrackingHandler {
       return false;
     }).forEach(mid => {
       // Add them to tracks data structure
-      const { root_mid } = this.d.store.metadata[mid];
+      const { root_mid, av } = this.d.store.metadata[mid];
+      const { groupby_aid: aid } = this.ts;
       if (!(root_mid in this.tracks)) {
         this.tracks[root_mid] = new Track(mid);
+        this.id2name[root_mid] = av[aid];
+        this.name2id[av[aid]] = root_mid;
       } else {
         this.tracks[root_mid].add_segment(mid);
       }
@@ -321,7 +328,7 @@ class TrackingHandler {
             this.dscale * _roi.width,
             this.dscale * _roi.height
           ],
-          { [aid]: track_mid },
+          { [aid]: this.id2name[track_mid] },
           { 
             segment_mid: segment_mid,
             root_mid: track_mid 
@@ -372,6 +379,7 @@ class TrackingHandler {
   
     return seekListener;
   };
+  
   handle_metadata_add_rect(event_payload) {
     const { vid, mid } = event_payload;
     const { z, root_mid } = this.d.store.metadata[mid];
@@ -387,14 +395,26 @@ class TrackingHandler {
 
       _t = _via_util_float_arr_to_fixed(_t, 3);
       
+      let object_id = this.OBJECT_ID++;
+      let object_name = `Object #${object_id}`;
+
+      if (object_name in this.name2id) {
+        // Iterate till we get a non colliding name
+        while (!(object_name in this.name2id)) {
+          object_id = this.OBJECT_ID++;
+          object_name = `Object #${object_id}`;
+        }
+      }
       const _m = {
-        [aid]: mid,
+        [aid]: object_name,
         readonly: true,
       }
 
       // Add temporal segment and set the segment_mid of box
       this.d.metadata_add(vid, _t, [], _m, {root_mid: mid}).then(res => {
         this.tracks[mid] = new Track(res.mid, mid)
+        this.id2name[mid] = object_name;
+        this.name2id[object_name] = mid;
         this.d.store.metadata[mid]['segment_mid'] = res.mid;
         // Tracker will be reset during the update call
         this.d.metadata_update_av(vid, mid, aid, mid);
