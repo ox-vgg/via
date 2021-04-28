@@ -69,9 +69,11 @@ class Track {
     }
   }
 
-  add_segment(segment_mid) {
-    this.segments.set(segment_mid, []);
-    this.order.push(segment_mid);
+  add_segment(segment_mid, mid_list=[]) {
+    this.segments.set(segment_mid, mid_list);
+    if(!(this.order.includes(segment_mid))) {
+      this.order.push(segment_mid);
+    }
   }
 
   add(mid, segment_mid) {
@@ -80,6 +82,10 @@ class Track {
 
   delete_segment(segment_mid) {
     const segment = this.segments.get(segment_mid);
+    if (!segment) {
+      // Segment doesn't exist / already deleted
+      return [];
+    }
     this.segments.delete(segment_mid);
     this.order.splice(this.order.indexOf(segment_mid), 1);
     return segment;
@@ -94,8 +100,12 @@ class Track {
       return [];
     }
 
+    const midx = segment.indexOf(mid);
+    if (midx === -1) {
+      return [];
+    }
     // Remove box from segment
-    return segment.splice(segment.indexOf(mid), 1);
+    return segment.splice(midx, 1);
   }
 
   force_update(segment_mid) {
@@ -167,6 +177,10 @@ class TrackingHandler {
     this.delta = 1/25;
     this.tracking = false;
 
+    this.id2name = {};
+    this.name2id = {};
+    this.OBJECT_ID = 1;
+
     (async () => {
       await tracking;
     })(); 
@@ -190,6 +204,8 @@ class TrackingHandler {
     this.d.on_event('metadata_add', this._ID, this.metadata_handler.bind(this), 'metadata_add');
     this.d.on_event('metadata_update', this._ID, this.metadata_handler.bind(this), 'metadata_update');
     this.d.on_event('metadata_delete', this._ID, this.metadata_handler.bind(this), 'metadata_delete');
+
+    this.d.on_event('metadata_update_bulk', this._ID, this.bulk_metadata_update_segment.bind(this), 'metadata_update_bulk');
     this.d.on_event('metadata_delete_bulk', this._ID, this.bulk_delete_handler.bind(this), 'metadata_delete_bulk');
     this.d.on_event('metadata_delete_all', this._ID, this.bulk_delete_handler.bind(this), 'metadata_delete_all');
   }
@@ -210,9 +226,12 @@ class TrackingHandler {
       return false;
     }).forEach(mid => {
       // Add them to tracks data structure
-      const { root_mid } = this.d.store.metadata[mid];
+      const { root_mid, av } = this.d.store.metadata[mid];
+      const { groupby_aid: aid } = this.ts;
       if (!(root_mid in this.tracks)) {
         this.tracks[root_mid] = new Track(mid);
+        this.id2name[root_mid] = av[aid];
+        this.name2id[av[aid]] = root_mid;
       } else {
         this.tracks[root_mid].add_segment(mid);
       }
@@ -311,7 +330,7 @@ class TrackingHandler {
             this.dscale * _roi.width,
             this.dscale * _roi.height
           ],
-          { [aid]: track_mid },
+          { [aid]: this.id2name[track_mid] },
           { 
             segment_mid: segment_mid,
             root_mid: track_mid 
@@ -362,6 +381,7 @@ class TrackingHandler {
   
     return seekListener;
   };
+  
   handle_metadata_add_rect(event_payload) {
     const { vid, mid } = event_payload;
     const { z, root_mid } = this.d.store.metadata[mid];
@@ -377,25 +397,98 @@ class TrackingHandler {
 
       _t = _via_util_float_arr_to_fixed(_t, 3);
       
+      let object_id = this.OBJECT_ID++;
+      let object_name = `Object #${object_id}`;
+
+      if (object_name in this.name2id) {
+        // Iterate till we get a non colliding name
+        while (!(object_name in this.name2id)) {
+          object_id = this.OBJECT_ID++;
+          object_name = `Object #${object_id}`;
+        }
+      }
       const _m = {
-        [aid]: mid,
+        [aid]: object_name,
         readonly: true,
       }
 
       // Add temporal segment and set the segment_mid of box
       this.d.metadata_add(vid, _t, [], _m, {root_mid: mid}).then(res => {
         this.tracks[mid] = new Track(res.mid, mid)
+        this.id2name[mid] = object_name;
+        this.name2id[object_name] = mid;
         this.d.store.metadata[mid]['segment_mid'] = res.mid;
-        // Tracker will be reset during the update call
-        this.d.metadata_update_av(vid, mid, aid, mid);
+        this.d.metadata_update_av(vid, mid, aid, object_name).then(() => {
+          // Get frame and box
+          this.bctx.drawImage(this.video, 0, 0, this.bcanvas.width, this.bcanvas.height);
+          const frame = this.bctx.getImageData(0, 0, this.bcanvas.width, this.bcanvas.height);
+          const { xy } = this.d.store.metadata[mid];
+          const [ _x, _y, _w, _h ] = xy.slice(1).map(el => Math.floor(this.scale * el));
+
+          Tracker.reset(
+            frame.data, 
+            { x: _x, y: _y, width: _w, height: _h},
+            mid,
+            res.mid,
+          );
+          _via_util_msg_show('Tracking initialised. Press <span class="key">t</span> to continue tracking', true);
+        });
       });
     }
   }
 
+  rename_rects_in_segment(mid_list) {
+    const { groupby_aid: aid } = this.ts;
+
+    mid_list.forEach(mid => {
+      let { root_mid, av } = this.d.store.metadata[mid];
+      const new_gid = av[aid];
+
+      if (!(new_gid in this.name2id) && new_gid !== this.id2name[root_mid]){
+        const old_gid = this.id2name[root_mid];
+        delete this.name2id[old_gid];
+        this.name2id[new_gid] = root_mid;
+        this.id2name[root_mid] = new_gid;
+      }
+      const segment = this.tracks[root_mid].segments.get(mid);
+      segment.forEach(_mid => {
+        this.d.store.metadata[_mid].av[aid] = new_gid;
+      });
+    });
+  }
+
+  move_segment(segment_mid, old_track_id, new_track_id) {
+    if (old_track_id === new_track_id) {
+      return;
+    }
+    const { groupby_aid: aid } = this.ts;
+    const new_gid = this.id2name[new_track_id];
+
+    // delete the segment in old track
+    const segment = this.tracks[old_track_id].delete_segment(segment_mid);
+    segment.forEach(_mid => {
+      this.d.store.metadata[_mid].av[aid] = new_gid;
+      this.d.store.metadata[_mid].root_mid = new_track_id;
+    });
+    this.d.store.metadata[segment_mid].root_mid = new_track_id;
+
+    // add segment in new track
+    this.tracks[new_track_id].add_segment(segment_mid, segment)
+    this.tracks[new_track_id].sort(this.d);
+  }
+
   handle_metadata_update_rect(event_payload) {
+
+    // Fired when attribute / xy is updated.
+    // TODO - Assumption - assuming this only fires when either
+    // xy or attribute is updated. Not handling case where both 
+    // of them are updated.
+
     const { vid, mid } = event_payload;
-    let { xy, z, root_mid, segment_mid } = this.d.store.metadata[mid];
+    let { xy, z, av, root_mid, segment_mid } = this.d.store.metadata[mid];
     let { z: z_segment, av: av_segment } = this.d.store.metadata[segment_mid];
+
+    const { groupby_aid: aid } = this.ts;
 
     if (!root_mid) {
       // If a user-added box is modified before tracking,
@@ -403,6 +496,54 @@ class TrackingHandler {
       root_mid = mid;
     }
 
+    // Check if attribute is updated by comparing against
+    // id2name lookup table
+    if (av[aid] !== this.id2name[root_mid]) {
+
+      // If it doesn't match, move the current segment (and all following segments?)
+      // into an existing track if it exists, rename if no track exists
+      const old_gid = this.id2name[root_mid];
+      const new_gid = av[aid];
+
+      const new_track_id = this.name2id[new_gid];
+
+      if(!new_track_id) {
+        // Track doesn't exist - Must be a rename
+        delete this.name2id[old_gid];
+        this.name2id[new_gid] = root_mid;
+        this.id2name[root_mid] = new_gid;
+
+        // Change attributes in all segments and rects
+        const segment_list = this.tracks[root_mid].order;
+        segment_list.forEach(_segment_mid => {
+          this.d.store.metadata[_segment_mid].av[aid] = new_gid;
+        });
+        this.rename_rects_in_segment(segment_list);
+
+        this.ts._post_tmetadata_group_update_gid(old_gid, new_gid);
+
+      } else {
+       
+        // Move segment to other track
+        this.d.store.metadata[segment_mid].av[aid] = new_gid;
+        this.move_segment(segment_mid, root_mid, new_track_id);
+
+        this.ts._post_tmetadata_mid_change_gid(segment_mid, old_gid, new_gid);
+        this.ts._tmetadata_group_gid_draw(old_gid);
+        this.ts._tmetadata_group_gid_draw(new_gid);
+       
+        if (
+          Tracker.instance
+          && Tracker.track_mid === root_mid 
+          && Tracker.segment_mid === segment_mid) {
+          //Tracker was tracking this segment
+          Tracker.track_mid = new_track_id;
+        }
+      }
+      return;
+    }
+    
+    // Handle case where xy is updated
     // Get timestamps of segment and box
     let _t = z_segment.slice(0);
     const _t_mid = z[0];
@@ -452,8 +593,31 @@ class TrackingHandler {
     }
   }
 
+  handle_metadata_update_segment(event_payload) {
+    const { mid } = event_payload;
+    let { root_mid, av } = this.d.store.metadata[mid];
+
+    const { groupby_aid: aid } = this.ts;
+
+    const old_gid = this.id2name[root_mid];
+    const new_gid = av[aid];
+
+    if (new_gid === old_gid) {
+      // Nothing to do.
+      return;
+    }
+
+    const new_track_id = this.name2id[new_gid];
+    this.move_segment(mid, root_mid, new_track_id);
+  }
+
   handle_metadata_delete_rect(event_payload) {
     const { mid } = event_payload;
+
+    if (!(mid in this.d.store.metadata)) {
+      // rect already deleted
+      return;
+    }
 
     let { root_mid, segment_mid } = this.d.store.metadata[mid];
 
@@ -478,6 +642,61 @@ class TrackingHandler {
     this.d.metadata_delete_bulk(vid, segment, true);
   }
 
+  bulk_metadata_update_segment(data, event_payload) {
+    const { mid_list, vid } = event_payload;
+
+    if (vid !== this.vid) {
+      return;
+    }
+
+    if (data !== 'metadata_update_bulk') {
+      return;
+    }
+    
+    const filtered_list = mid_list.filter(_mid => {
+      const { xy, z, av: { readonly }} = this.d.store.metadata[_mid];
+      if (xy.length === 0 && z.length === 2 && readonly) {
+        return true;
+      }
+      return false;
+    });
+
+    if (filtered_list.length === 0) {
+      // Nothing to do
+      return;
+    }
+
+    // A bulk update can mean two things
+    //  - A rename, where a group doesn't exist and the names are changed
+    //  - A move all request, where another group exists and we move all segments
+    //    into that
+    // We can figure this by checking whether an equivalent track exists
+
+    const segment_mid = filtered_list[0];
+    const { root_mid, av } = this.d.store.metadata[segment_mid];
+    const { groupby_aid: aid } = this.ts;
+
+    const old_gid = this.id2name[root_mid];
+    const new_gid = av[aid];
+
+    if (new_gid === old_gid) {
+      // Nothing to do
+      return;
+    }
+
+    const new_track_id = this.name2id[new_gid];
+
+    if (!new_track_id) {
+      // Rename
+      this.rename_rects_in_segment(filtered_list);
+    } else {
+      // Move
+      filtered_list.forEach(mid => {
+        this.move_segment(mid, root_mid, new_track_id);
+      });
+    }
+  }
+
   // TODO handle track delete
   bulk_delete_handler(data, event_payload) {
     const { mid_list, vid } = event_payload;
@@ -487,15 +706,20 @@ class TrackingHandler {
     }
 
     if (data === 'metadata_delete_bulk' || data === 'metadata_delete_all') {
-      mid_list.filter(_mid => {
-        // find readonly segments
-        const { xy, z, av: { readonly }} = this.d.store.metadata[_mid];
+
+      // Handle segments
+      mid_list.forEach((mid) => {
+        const { xy, z, av: { readonly }} = this.d.store.metadata[mid];
+
         if (xy.length === 0 && z.length === 2 && readonly) {
-          return true;
+          // Delete segment
+          this.handle_metadata_delete_segment({vid, mid});
+        } else if (xy.length && xy[0] === 2 && z.length === 1) {
+          // Delete rect
+          this.handle_metadata_delete_rect({vid, mid});
+        } else {
+          // Ignore
         }
-        return false;
-      }).forEach(mid => {
-        this.handle_metadata_delete_segment({vid, mid});
       });
     }
   }
@@ -518,6 +742,9 @@ class TrackingHandler {
         if (xy.length && xy[0] === 2 && z.length === 1) {
           // Rectangle was updated
           this.handle_metadata_update_rect(event_payload);
+        } else if (xy.length === 0 && z.length === 2) {
+          // Timeline segment was updated
+          this.handle_metadata_update_segment(event_payload);
         }
         break;
       case 'metadata_delete':

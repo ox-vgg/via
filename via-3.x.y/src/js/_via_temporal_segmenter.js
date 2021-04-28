@@ -489,11 +489,7 @@ _via_temporal_segmenter.prototype._tmetadata_gmetadata_update = function() {
     gid_input.setAttribute('title', this.d.store.attribute[this.groupby_aid].aname +
                            ' = ' + gid);
     gid_input.setAttribute('data-gid', gid);
-    if (this.readonly_gid_list.includes(gid)) {
-      gid_input.setAttribute('readonly', true);
-    } else {
     gid_input.addEventListener('change', this._tmetadata_group_update_gid.bind(this));
-    }
     gid_container.appendChild(gid_input);
     if (this.readonly_gid_list.includes(gid)) {
       gid_container.appendChild(document.createTextNode('🔒'));
@@ -909,9 +905,42 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_is_on_smark = function(t)
 //
 // metadata for a given group-id
 //
+_via_temporal_segmenter.prototype._post_tmetadata_group_update_gid = function(old_gid, new_gid) {
+ 
+  if (new_gid in this.group) {
+    const segments = this.group[old_gid].slice(0);
+    segments.forEach(mid => {
+      this._post_tmetadata_mid_change_gid(mid, old_gid, new_gid);
+    });
+  } else {
+    this.group[new_gid] = this.group[old_gid];
+    var gindex = this.gid_list.indexOf(old_gid);
+    this.gid_list[gindex] = new_gid;
+
+    var _idx = this.readonly_gid_list.indexOf(old_gid);
+    if (_idx !== -1) {
+      this.readonly_gid_list[_idx] = new_gid;
+    }
+
+    delete this.group[old_gid];
+    delete this.tmetadata_gtimeline_mid[old_gid];
+  }  
+ 
+  this._tmetadata_gmetadata_update();
+  this._tmetadata_boundary_fetch_gid_mid(new_gid);
+  this._tmetadata_group_gid_draw(new_gid);
+
+  // update selection to new_gid
+  if ( this.selected_gid === old_gid ) {
+    var new_gindex = this.gid_list.indexOf(new_gid);
+    this._tmetadata_group_gid_sel(new_gindex);
+  }
+};
+
 _via_temporal_segmenter.prototype._tmetadata_group_update_gid = function(e) {
   var old_gid = e.target.dataset.gid;
   var new_gid = e.target.value.trim();
+  
   var mindex, mid;
   var av_update_list = [];
   for ( mindex in this.group[old_gid] ) {
@@ -923,21 +952,7 @@ _via_temporal_segmenter.prototype._tmetadata_group_update_gid = function(e) {
   }
 
   this.d.metadata_update_av_bulk(this.vid, av_update_list).then( function(ok) {
-    this.group[new_gid] = this.group[old_gid];
-    delete this.group[old_gid];
-    var gindex = this.gid_list.indexOf(old_gid);
-    this.gid_list[gindex] = new_gid;
-
-    this._tmetadata_gmetadata_update();
-    delete this.tmetadata_gtimeline_mid[old_gid];
-    this._tmetadata_boundary_fetch_gid_mid(new_gid);
-    this._tmetadata_group_gid_draw(new_gid);
-
-    // update selection to new_gid
-    if ( this.selected_gid === old_gid ) {
-      var new_gindex = this.gid_list.indexOf(new_gid);
-      this._tmetadata_group_gid_sel(new_gindex);
-    }
+    this._post_tmetadata_group_update_gid(old_gid, new_gid);
   }.bind(this), function(err) {
     console.warn('_via_data.metadata_update_av_bulk() failed');
   }.bind(this));
@@ -1400,25 +1415,8 @@ _via_temporal_segmenter.prototype._tmetadata_mid_merge = function(eindex) {
   }
 }
 
-_via_temporal_segmenter.prototype._tmetadata_mid_change_gid = function(from_gindex,
-                                                                       to_gindex) {
-  var from_gid = this.gid_list[from_gindex];
-  if(this.readonly_gid_list.includes(from_gid)) {
-    _via_util_msg_show(`Cannot move segment from readonly group [${from_gid}]`);
-    return;
-  }
-  var to_gid = this.gid_list[to_gindex];
-  if(this.readonly_gid_list.includes(to_gid)) {
-    _via_util_msg_show(`Cannot move segment to readonly group [${to_gid}]`);
-    return;
-  }
-  var mid_to_move = this.tmetadata_gtimeline_mid[from_gid][this.selected_mindex];
-  var mindex_to_move = this.selected_mindex;
-
-  // update metadata
-  this.d.store.metadata[mid_to_move].av[this.groupby_aid] = to_gid;
-
-  this._tmetadata_group_gid_remove_mid_sel(mindex_to_move);
+_via_temporal_segmenter.prototype._post_tmetadata_mid_change_gid = function(mid_to_move, from_gid, to_gid) {
+  const mindex_to_move = this.tmetadata_gtimeline_mid[from_gid].indexOf(mid_to_move);
   this.tmetadata_gtimeline_mid[from_gid].splice(mindex_to_move, 1);
   var from_group_mindex = this.group[from_gid].indexOf(mid_to_move);
   this.group[from_gid].splice(from_group_mindex, 1);
@@ -1428,8 +1426,37 @@ _via_temporal_segmenter.prototype._tmetadata_mid_change_gid = function(from_gind
   this.tmetadata_gtimeline_mid[to_gid].sort( this._compare_mid_by_time.bind(this) );
   var moved_mindex = this.tmetadata_gtimeline_mid[to_gid].indexOf(mid_to_move);
 
+  const to_gindex = this.gid_list.indexOf(to_gid);
   this._tmetadata_group_gid_sel(to_gindex);
   this._tmetadata_group_gid_sel_metadata(moved_mindex);
+}
+
+_via_temporal_segmenter.prototype._tmetadata_mid_change_gid = function(from_gindex,
+                                                                       to_gindex) {
+  var from_gid = this.gid_list[from_gindex];
+  var is_from_gid_readonly = this.readonly_gid_list.includes(from_gid);
+ 
+  var to_gid = this.gid_list[to_gindex];
+  var is_to_gid_readonly = this.readonly_gid_list.includes(to_gid);
+
+  if (is_from_gid_readonly !== is_to_gid_readonly) {
+    // They differ. Don't allow move
+    _via_util_msg_show(`Cannot move segment from [${from_gid}] to [${to_gid}]`);
+    return;
+  }
+  var mid_to_move = this.tmetadata_gtimeline_mid[from_gid][this.selected_mindex];
+
+  // update metadata
+  //this.d.store.metadata[mid_to_move].av[this.groupby_aid] = to_gid;
+  this.d.metadata_update_av(
+      this.vid,
+      mid_to_move,
+      this.groupby_aid,
+      to_gid,
+  ).then(() => {
+    this._tmetadata_group_gid_remove_mid_sel(this.selected_mindex);
+    this._post_tmetadata_mid_change_gid(mid_to_move, from_gid, to_gid);
+  });
 }
 
 _via_temporal_segmenter.prototype._tmetadata_group_gid_mousemove = function(e) {
@@ -2128,16 +2155,17 @@ _via_temporal_segmenter.prototype._on_event_metadata_del = function(vid, mid) {
 }
 
 _via_temporal_segmenter.prototype._on_event_metadata_add = function(vid, mid) {
-  const { xy, z, av, root_mid } = this.d.store.metadata[mid];
+  const { xy, z, av } = this.d.store.metadata[mid];
   if ( this.vid === vid &&
        z.length === 2 &&
-       xy.length === 0
+       xy.length === 0 &&
+       av.readonly
      ) {
     // TODO: Surround with feature flag
     if (av[this.groupby_aid] !== this.selected_gid){
       // Add a new track, select it before continuing
-      this._group_add_gid(root_mid, true);
-      this._tmetadata_group_gid_sel(this.gid_list.indexOf(root_mid));
+      this._group_add_gid(av[this.groupby_aid], true);
+      this._tmetadata_group_gid_sel(this.gid_list.indexOf(av[this.groupby_aid]));
     }
     this._group_gid_add_mid(this.selected_gid, mid); // add at correct location
     this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
