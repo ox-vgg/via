@@ -485,6 +485,11 @@ class TrackingHandler {
   handle_metadata_delete_rect(event_payload) {
     const { mid } = event_payload;
 
+    if (!(mid in this.d.store.metadata)) {
+      // rect already deleted
+      return;
+    }
+
     let { root_mid, segment_mid } = this.d.store.metadata[mid];
 
     if (!root_mid) {
@@ -517,15 +522,20 @@ class TrackingHandler {
     }
 
     if (data === 'metadata_delete_bulk' || data === 'metadata_delete_all') {
-      mid_list.filter(_mid => {
-        // find readonly segments
-        const { xy, z, av: { readonly }} = this.d.store.metadata[_mid];
+
+      // Handle segments
+      mid_list.forEach((mid) => {
+        const { xy, z, av: { readonly }} = this.d.store.metadata[mid];
+
         if (xy.length === 0 && z.length === 2 && readonly) {
-          return true;
+          // Delete segment
+          this.handle_metadata_delete_segment({vid, mid});
+        } else if (xy.length && xy[0] === 2 && z.length === 1) {
+          // Delete rect
+          this.handle_metadata_delete_rect({vid, mid});
+        } else {
+          // Ignore
         }
-        return false;
-      }).forEach(mid => {
-        this.handle_metadata_delete_segment({vid, mid});
       });
     }
   }
