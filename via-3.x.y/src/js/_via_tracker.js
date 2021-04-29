@@ -836,10 +836,6 @@ class TrackingHandler {
 
   async keydown_handler (e) {
     if (this.tracking) {
-      if (e.key !== 'Escape') {
-        return false;
-      }
-      // Escape is pressed when tracking is in progress - reset the tracker
       this.reset_tracker();
       return false;
     }
@@ -851,7 +847,7 @@ class TrackingHandler {
       }
       e.preventDefault();
       this.video.addEventListener('seeked', seekListener);
-      _via_util_msg_show('Tracking in progress, Click anywhere / press <span class="key">Esc</span> to cancel', true);
+      _via_util_msg_show('Tracking in progress, Press any key to cancel', true);
       this.overlay.style.display = 'block';
       this.video.currentTime += ((e.shiftKey ? -1 : 1) * this.delta);
       return false;
