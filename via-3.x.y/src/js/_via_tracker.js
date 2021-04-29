@@ -171,12 +171,14 @@ class TrackingHandler {
     this.video = video;
     this.ts = ts;
     this.d  = d;
+
     this.overlay = document.getElementById('via_overlay');
-    this.overlay.onclick = (e) => {
+    this.overlay.addEventListener('mousedown', (e) => {
       e.stopPropagation();
       e.preventDefault();
+      this.reset_tracker();
       return false;
-    }
+    }, { capture: true });
 
     this.delta = 1/25;
     this.tracking = false;
@@ -359,7 +361,6 @@ class TrackingHandler {
           _via_util_msg_show('Tracking stopped. Draw / Update box to start / resume tracking', true);
         }
         if (Tracker.last_success_time !== -1) {
-          video.currentTime = Tracker.last_success_time;
           Tracker.last_success_time = -1;
         }
         this.tracking = false;
@@ -831,7 +832,7 @@ class TrackingHandler {
       }
       e.preventDefault();
       this.video.addEventListener('seeked', seekListener);
-      _via_util_msg_show('Tracking in progress, press <span class="key">Esc</span> to cancel', true);
+      _via_util_msg_show('Tracking in progress, Click anywhere / press <span class="key">Esc</span> to cancel', true);
       this.overlay.style.display = 'block';
       this.video.currentTime += ((e.shiftKey ? -1 : 1) * this.delta);
       return false;

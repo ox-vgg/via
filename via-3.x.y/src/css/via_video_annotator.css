@@ -21,7 +21,6 @@ html, body { margin:0; padding:0; box-sizing:border-box; font-family:Sans; font-
     height: 100vh;
     max-height: 100vh;
     display: none;
-    background-color: rgba(40, 40, 40, 0.5);
     overflow: hidden;
     z-index: 10;
 }
