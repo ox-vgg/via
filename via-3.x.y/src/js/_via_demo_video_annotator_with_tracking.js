@@ -36,6 +36,7 @@
       },
       'ui': {
         'file_content_align':'center',
+        'filter_gid': true,
         'file_metadata_editor_visible': false,
         'spatial_metadata_editor_visible': true,
         "spatial_region_label_attribute_id": "1",

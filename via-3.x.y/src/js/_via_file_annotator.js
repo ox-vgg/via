@@ -1493,14 +1493,25 @@ _via_file_annotator.prototype._creg_clear = function() {
 _via_file_annotator.prototype._creg_draw_all = function() {
   this._creg_clear();
 
+  let filter_f = (() => {
+    return true;
+  });
+  if(this.d.store.config.ui['filter_gid'] && this.va.temporal_segmenter) {
+    const { groupby_aid: aid, selected_gid } = this.va.temporal_segmenter;
+    filter_f = ((mid) => {
+      return (this.d.store.metadata[mid].av[aid] === selected_gid);
+    });
+  }
+  const mid_list = Object.keys(this.creg).filter(filter_f);
+    
   if ( this.d.store.config.ui['spatial_region_label_attribute_id'] === '' ) {
-    for ( var mid in this.creg ) {
-      this._creg_draw(mid);
+    for ( var mid in mid_list ) {
+      this._creg_draw(mid_list[mid]);
     }
   } else {
-    for ( var mid in this.creg ) {
-      this._creg_draw(mid);
-      this._creg_draw_label(mid);
+    for ( var mid in mid_list ) {
+      this._creg_draw(mid_list[mid]);
+      this._creg_draw_label(mid_list[mid]);
     }
   }
 
