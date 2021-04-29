@@ -41,7 +41,7 @@ class Tracker {
     }
 
     // Delete tracker of failed tracking (draw metadata in different color?)
-    if (this.fail_counter > 50) {
+    if (false) { //this.fail_counter > 50) {
       this.reset_tracker();
     } else {
       this.fail_counter += 1;
