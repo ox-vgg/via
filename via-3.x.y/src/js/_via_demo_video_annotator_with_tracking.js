@@ -37,8 +37,8 @@
       'ui': {
         'file_content_align':'center',
         'file_metadata_editor_visible': false,
-        'spatial_metadata_editor_visible': false,
-        "spatial_region_label_attribute_id": "",
+        'spatial_metadata_editor_visible': true,
+        "spatial_region_label_attribute_id": "1",
         "gtimeline_visible_row_count": "2",
       },
     };
