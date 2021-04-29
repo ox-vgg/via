@@ -455,7 +455,7 @@ class TrackingHandler {
 
       if (object_name in this.name2id) {
         // Iterate till we get a non colliding name
-        while (!(object_name in this.name2id)) {
+        while (object_name in this.name2id) {
           object_id = this.OBJECT_ID++;
           object_name = `Object #${object_id}`;
         }
