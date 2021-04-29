@@ -61,6 +61,8 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.conf.CONTROL_POINT_CLICK_TOL = 3;
   this.conf.REGION_BOUNDARY_COLOR = 'yellow';
   this.conf.REGION_LINE_WIDTH = 2;
+  this.conf.FILTERED_REGION_BOUNDARY_COLOR = 'hsla(0, 0%, 50%, 0.8)'
+  this.conf.FILTERED_REGION_LINE_WIDTH = 1;
   this.conf.SEL_REGION_BOUNDARY_COLOR = 'black';
   this.conf.SEL_REGION_FILL_COLOR = '#808080';
   this.conf.SEL_REGION_FILL_OPACITY = 0.1;
@@ -871,12 +873,10 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
       this._creg_select( this.last_clicked_mid_list[0] );
       if (this.va.temporal_segmenter) {
         // Select the track associated with the metadata
-        let { root_mid } = this.d.store.metadata[this.last_clicked_mid_list[0]];
-        if (!root_mid) {
-          root_mid = this.last_clicked_mid_list[0];
-        }
-        const { gid_list } = this.va.temporal_segmenter;
-        const _idx = gid_list.indexOf(root_mid);
+        const { groupby_aid: aid, gid_list } = this.va.temporal_segmenter;
+        const { av } = this.d.store.metadata[this.last_clicked_mid_list[0]];
+        
+        const _idx = gid_list.indexOf(av[aid]);
         if (_idx !== -1) {
           this.va.temporal_segmenter._tmetadata_group_gid_sel(_idx);
         }
@@ -1493,27 +1493,26 @@ _via_file_annotator.prototype._creg_clear = function() {
 _via_file_annotator.prototype._creg_draw_all = function() {
   this._creg_clear();
 
-  let filter_f = (() => {
-    return true;
+  const attr_id = this.d.store.config.ui['spatial_region_label_attribute_id'];
+
+  const draw_f = ((mid, is_filtered=false) => {
+    this._creg_draw(mid, is_filtered);
+    if (attr_id !== '' && is_filtered === false) {
+      this._creg_draw_label(mid);
+    }
   });
+  let forEach_f = draw_f;
   if(this.d.store.config.ui['filter_gid'] && this.va.temporal_segmenter) {
     const { groupby_aid: aid, selected_gid } = this.va.temporal_segmenter;
-    filter_f = ((mid) => {
-      return (this.d.store.metadata[mid].av[aid] === selected_gid);
+    forEach_f = ((mid) => {
+      if (this.d.store.metadata[mid].av[aid] === selected_gid) {
+        draw_f(mid, false);
+      } else {
+        draw_f(mid, true);
+      }
     });
   }
-  const mid_list = Object.keys(this.creg).filter(filter_f);
-    
-  if ( this.d.store.config.ui['spatial_region_label_attribute_id'] === '' ) {
-    for ( var mid in mid_list ) {
-      this._creg_draw(mid_list[mid]);
-    }
-  } else {
-    for ( var mid in mid_list ) {
-      this._creg_draw(mid_list[mid]);
-      this._creg_draw_label(mid_list[mid]);
-    }
-  }
+  Object.keys(this.creg).forEach(forEach_f);
 
   // file label: used for image pair annotation
   if ( this.file_label.length !== 0 ) {
@@ -1528,9 +1527,9 @@ _via_file_annotator.prototype._creg_draw_file_label = function() {
   this.rshapectx.fillText(this.file_label, this.rshape_canvas.width/2 - label_width/2, 20);
 }
 
-_via_file_annotator.prototype._creg_draw = function(mid) {
+_via_file_annotator.prototype._creg_draw = function(mid, is_filtered = false) {
   var is_selected = this.selected_mid_list.includes(mid);
-  this._draw(this.rshapectx, this.creg[mid], is_selected)
+  this._draw(this.rshapectx, this.creg[mid], is_selected, is_filtered);
 }
 
 _via_file_annotator.prototype._creg_draw_label = function(mid) {
@@ -2130,14 +2129,14 @@ _via_file_annotator.prototype._tmpreg_clear = function() {
 // region draw routines
 //
 // Note: xy = [shape_id, x0, y0, x1, y1, ..., xk, yk]
-_via_file_annotator.prototype._draw = function(ctx, xy, is_selected) {
+_via_file_annotator.prototype._draw = function(ctx, xy, is_selected, is_filtered = false) {
   var shape_id = xy[0];
   switch( shape_id ) {
   case _VIA_RSHAPE.POINT:
     this._draw_point_region(ctx, xy[1], xy[2], is_selected );
     break;
   case _VIA_RSHAPE.RECTANGLE:
-    this._draw_rect_region(ctx, xy[1], xy[2], xy[3], xy[4], is_selected );
+    this._draw_rect_region(ctx, xy[1], xy[2], xy[3], xy[4], is_selected, is_filtered);
     break;
   case _VIA_RSHAPE.EXTREME_RECTANGLE:
     this._draw_extreme_rectangle_region(ctx, xy, is_selected );
@@ -2219,7 +2218,7 @@ _via_file_annotator.prototype._draw_point = function(ctx, cx, cy, r) {
   ctx.closePath();
 }
 
-_via_file_annotator.prototype._draw_rect_region = function(ctx, x, y, w, h, is_selected) {
+_via_file_annotator.prototype._draw_rect_region = function(ctx, x, y, w, h, is_selected, is_filtered = false) {
   if (is_selected) {
     ctx.strokeStyle = this.conf.SEL_REGION_BOUNDARY_COLOR;
     ctx.lineWidth   = this.conf.SEL_REGION_LINE_WIDTH;
@@ -2230,6 +2229,11 @@ _via_file_annotator.prototype._draw_rect_region = function(ctx, x, y, w, h, is_s
     ctx.globalAlpha = this.conf.SEL_REGION_FILL_OPACITY;
     ctx.fill();
     ctx.globalAlpha = 1.0;
+  } else if (is_filtered) {
+    ctx.strokeStyle = this.conf.FILTERED_REGION_BOUNDARY_COLOR;
+    ctx.lineWidth   = this.conf.FILTERED_REGION_LINE_WIDTH;
+    this._draw_rect(ctx, x, y, w, h);
+    ctx.stroke();
   } else {
     ctx.strokeStyle = this.conf.REGION_BOUNDARY_COLOR;
     ctx.lineWidth   = this.conf.REGION_LINE_WIDTH;
