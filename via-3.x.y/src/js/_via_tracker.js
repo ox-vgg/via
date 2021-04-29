@@ -484,7 +484,7 @@ class TrackingHandler {
             mid,
             res.mid,
           );
-          _via_util_msg_show('Tracking initialised. Press <span class="key">t</span> to continue tracking', true);
+          _via_util_msg_show('Tracking initialised. Press <span class="key">t</span> / <span class="key">Shift</span> + <span class="key">t</span> to track forward / backward', true);
         });
       });
     }
