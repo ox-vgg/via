@@ -4,6 +4,34 @@
  * Static Singleton Class for tracking
  * Attaches to the track segment being processed
  */
+/**
+ * @param {string} type - 'KCF or CFNet'
+ * @param {ImageData} frame - Image Data
+ * @param {object} roi - { x, y, width, height }
+ * @returns
+ * Pointer to instance
+ */
+const createTracker = async (type, frame, roi) => {
+  if (type === 'KCF') {
+    const instance = new Module.Tracker(frame.data, frame.height, roi);
+    instance.track = (_frame) => {
+      return new Promise((resolve, reject) => {
+        const roi = instance.track_object(_frame.data);
+        if (roi) {
+          resolve(roi);
+        } else {
+          reject(new Error('Roi missing'));
+        }
+      });
+    };
+    return instance;
+  } 
+  else {
+    _via_util_msg_show(`Unknown tracker type <${type}>`);
+    return null;
+  }
+}
+
 class Tracker {
     
   // Resets the tracker to zero state
@@ -12,30 +40,31 @@ class Tracker {
     this.segment_mid = null;
     this.fail_counter = 0;
     if (this.instance) {
-      this.instance.delete();
+      if (typeof this.instance.delete === 'function') {
+        this.instance.delete();
+      }
       this.instance = null;
     }
   }
 
   // resets and re-initialises tracker to given frame, roi
   // of a given track segment
-  static reset(frame, roi, track_mid, segment_mid) {
+  static async reset(frame, roi, track_mid, segment_mid, type='KCF') {
     this.reset_tracker();
     this.track_mid = track_mid;
     this.segment_mid = segment_mid;    
-    this.instance = new Module.Tracker(frame, this.height, roi);
+    this.instance = await createTracker(type, frame, roi);
   }
 
   // performs tracking on the given frame
   // for the attached track segment
-  static track(frame) {
+  static async track(frame) {
     if (!this.instance) {
       throw new Error('Cannot call track without an active tracker');
     }
     // On tracking, update tracking list
-    const _roi = this.instance.track_object(frame)
-
-    if (this.instance.status) {
+    const _roi = await this.instance.track(frame);
+    if (this.instance && this.instance.status) {
       this.fail_counter = 0;
       return _roi;
     }
@@ -374,7 +403,7 @@ class TrackingHandler {
       // Do tracking for active track
       const fail_counter = Tracker.fail_counter;
       console.time('track')
-      const _roi = Tracker.track(frame.data);
+      const _roi = await Tracker.track(frame);
       console.timeEnd('track')
 
       // On successful tracking
@@ -629,21 +658,27 @@ class TrackingHandler {
         );
         this.d.store.metadata[mid]['segment_mid'] = res.mid;
         Tracker.reset(
-          frame.data,
+          frame,
           { x: _x, y: _y, width: _w, height: _h},
           root_mid,
           res.mid,
-        );
-        _via_util_msg_show('Tracking initialised. Press <span class="key">t</span> to continue tracking', true);
+        ).then(() => {
+          _via_util_msg_show('Tracking initialised. Press <span class="key">t</span> / <span class="key">Shift</span> + <span class="key">t</span> to track forward / backward', true);
+        }).catch(() => {
+          _via_util_msg_show('Error initialising tracker');
+        });
       });
     } else {
       Tracker.reset(
-        frame.data, 
+        frame, 
         { x: _x, y: _y, width: _w, height: _h},
         root_mid,
         segment_mid,
-      );
-      _via_util_msg_show('Tracking initialised. Press <span class="key">t</span> to continue tracking', true);
+      ).then(() => {
+        _via_util_msg_show('Tracking initialised. Press <span class="key">t</span> / <span class="key">Shift</span> + <span class="key">t</span> to track forward / backward', true);
+      }).catch(() => {
+        _via_util_msg_show('Error initialising tracker');
+      });
     }
   }
 
