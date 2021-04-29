@@ -41,7 +41,7 @@ class Tracker {
     }
 
     // Delete tracker of failed tracking (draw metadata in different color?)
-    if (this.fail_counter > 50) {
+    if (false) { //this.fail_counter > 50) {
       this.reset_tracker();
     } else {
       this.fail_counter += 1;
@@ -76,8 +76,12 @@ class Track {
     }
   }
 
-  add(mid, segment_mid) {
-    this.segments.get(segment_mid).push(mid);
+  add(mid, segment_mid, add_to_start=false) {
+    if (add_to_start) {
+      this.segments.get(segment_mid).unshift(mid);
+    } else {
+      this.segments.get(segment_mid).push(mid);
+    }   
   }
 
   delete_segment(segment_mid) {
@@ -264,9 +268,10 @@ class TrackingHandler {
     Tracker.reset_tracker();
   }
   
-  get_seek_listener = (vid) => {
+  async get_seek_listener(vid, backward=false) {
     
     if (!Tracker.instance) {
+      _via_util_msg_show('Cannot start tracking without initialisation');
       return null;
     }
    
@@ -274,38 +279,93 @@ class TrackingHandler {
     const { metadata } = this.d.store;
   
     const current_track = this.tracks[Tracker.track_mid];
-    const delete_list = current_track.force_update(Tracker.segment_mid);
-    this.d.metadata_delete_bulk(vid, delete_list, true);
-    
-    // Get boundary ts from next temporal segment
-    let boundary_ts = this.video.duration;
-    const _oidx = current_track.order.indexOf(Tracker.segment_mid) + 1;
-    if (_oidx < current_track.order.length) {
+
+    // Get boundary ts
+    let boundary_ts = backward ? 0 : this.video.duration;
+    const _oidx = current_track.order.indexOf(Tracker.segment_mid) + (backward ? -1 : 1);
+    const current_ts = metadata[Tracker.segment_mid].z[0];
+
+    if (_oidx >=0 && _oidx < current_track.order.length) {
+      // Either the previous segment / next segment will act as the 
+      // boundary
       const next_segment_id = current_track.order[_oidx];
-      boundary_ts = metadata[next_segment_id].z[0];
+      boundary_ts = metadata[next_segment_id].z[(backward ? 1 : 0)];
+    } 
+    
+    if (Math.abs(current_ts - boundary_ts) < this.delta) {
+      // Already at boundary
+      // TODO Add more informative message
+      if (boundary_ts === 0) {
+        _via_util_msg_show('Reached start of video');
+      } else if (boundary_ts === this.video.duration) {
+        _via_util_msg_show('Reached end of video');
+      } else {
+        _via_util_msg_show(`Cannot track ${(backward ? 'backwards' : '')}: Reached segment boundary`);
+      }
+      return null;
     }
-  
+      
+    if(backward) {
+      // Add a segment, cloning the properties from current segment
+      const { av: av_segment} = metadata[Tracker.segment_mid];
+      const t_segment = _via_util_float_arr_to_fixed([current_ts - this.delta, current_ts], 3)
+      const { mid: smid } = await this.d.metadata_add(this.vid, t_segment, [], av_segment, {root_mid: Tracker.track_mid});
+
+      // Clone the anchor point from current segment
+      //const anchor_mid = current_track.segments.get(Tracker.segment_mid)[0];
+      //const { xy, z, av } = metadata[anchor_mid];
+      //const {mid: amid } = await this.d.metadata_add(this.vid, z, xy, av, {root_mid: Tracker.track_mid, segment_mid: smid});
+
+      // Add segment and sort
+      current_track.add_segment(smid, []);
+      current_track.sort(this.d);
+
+      // Replace tracker segment_mid with cloned segment
+      Tracker.segment_mid = smid;
+    } else {
+      const delete_list = current_track.force_update(Tracker.segment_mid);
+      this.d.metadata_delete_bulk(vid, delete_list, true);
+    }
+
+    this.tracking = true;
     const seekListener = async (ev) => {
       console.time('frame');
       const video = ev.target;
-      this.tracking = true;
+      const { currentTime } = video;
+
+      let should_process;
+      if (backward) {
+        should_process = (currentTime - 1e-3 > boundary_ts);
+      } else {
+        should_process = (currentTime + 1e-3 < boundary_ts);
+      }
+      if (!should_process) {
+        this.reset_tracker();
+      }
+
       if (!Tracker.instance) {
         video.removeEventListener('seeked', seekListener);
         this.overlay.style.display = 'none';
-        if (Math.abs(video.duration - video.currentTime) < this.delta) {
+        if(backward) {
+          if(currentTime < this.delta) {
+            _via_util_msg_show('Reached start of video. Use timeline to seek to point of interest');
+          } else {
+            _via_util_msg_show('Tracking stopped. Draw / Update box to start / resume tracking', true);
+          }
+        } else if (Math.abs(video.duration - video.currentTime) < this.delta) {
           // End of video
           _via_util_msg_show('Reached end of video. Use timeline to seek to point of interest');
         } else {
           _via_util_msg_show('Tracking stopped. Draw / Update box to start / resume tracking', true);
         }
-        video.currentTime = Tracker.last_success_time;
-        Tracker.last_success_time = -1;
+        if (Tracker.last_success_time !== -1) {
+          video.currentTime = Tracker.last_success_time;
+          Tracker.last_success_time = -1;
+        }
         this.tracking = false;
         return;
       }
-  
-      const { currentTime } = video;
-  
+    
       // Get frame.
       this.bctx.drawImage(this.video, 0, 0, this.bcanvas.width, this.bcanvas.height);
       const frame = this.bctx.getImageData(0, 0, this.bcanvas.width, this.bcanvas.height);
@@ -338,14 +398,14 @@ class TrackingHandler {
         );
         
         // add mid to current_segment
-        this.tracks[track_mid].add(mid, segment_mid);
+        this.tracks[track_mid].add(mid, segment_mid, backward);
   
         if (!fail_counter) {
           //tracking is continuous, keep extending current segment
           await this.d.metadata_update_zi(
             vid,
             segment_mid,
-            1,
+            (backward ? 0 : 1),
             currentTime);
         } else {
           // Tracking failed previously, create new segment
@@ -367,16 +427,8 @@ class TrackingHandler {
         Tracker.last_success_time = currentTime;
       }
   
-      let should_seek = (currentTime + this.delta + 1e-3 < boundary_ts);
-      
-      if (!should_seek) {
-        this.reset_tracker();
-        video.currentTime = Tracker.last_success_time;
-        return;
-      }
-      video.currentTime += this.delta;
+      video.currentTime += (backward ? -1 : 1) * this.delta;
       console.timeEnd('frame');
-
     }
   
     return seekListener;
@@ -544,6 +596,7 @@ class TrackingHandler {
     }
     
     // Handle case where xy is updated
+
     // Get timestamps of segment and box
     let _t = z_segment.slice(0);
     const _t_mid = z[0];
@@ -761,7 +814,7 @@ class TrackingHandler {
     }    
   }
 
-  keydown_handler (e) {
+  async keydown_handler (e) {
     if (this.tracking) {
       if (e.key !== 'Escape') {
         return false;
@@ -771,17 +824,16 @@ class TrackingHandler {
       return false;
     }
 
-    if (e.key === 't') {
-      const seekListener = this.get_seek_listener(this.vid);
+    if (e.key === 't' || e.key === 'T') {
+      const seekListener = await this.get_seek_listener(this.vid, e.shiftKey);
       if (!seekListener) {
-        _via_util_msg_show('Cannot start tracking without initialisation');
         return false;
       }
       e.preventDefault();
       this.video.addEventListener('seeked', seekListener);
       _via_util_msg_show('Tracking in progress, press <span class="key">Esc</span> to cancel', true);
       this.overlay.style.display = 'block';
-      this.video.currentTime += this.delta;
+      this.video.currentTime += ((e.shiftKey ? -1 : 1) * this.delta);
       return false;
     }
     return true;

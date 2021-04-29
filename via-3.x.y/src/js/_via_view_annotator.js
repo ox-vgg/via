@@ -585,19 +585,20 @@ _via_view_annotator.prototype._attribute_html_element = function(aid, onchange_h
 _via_view_annotator.prototype._on_event_keydown = function(e) {
   if ( this.view_mode === _VIA_VIEW_MODE.VIDEO1 ) {
     // TODO: Surround with feature flag
-    const should_propagate = this.tracking_handler.keydown_handler(e);
-    if (!should_propagate) {
-      return;
-    }
-    this.file_annotator[0][0]._rinput_keydown_handler(e);
-    if ( this.file_annotator[0][0].selected_mid_list.length === 0 ) {
-      // no spatial region is selected
-      // therefore, the temporal segmenter keyhandler should further handle this event
-      if ( this.temporal_segmenter ) {
-        this.temporal_segmenter._on_event_keydown(e);
+    this.tracking_handler.keydown_handler(e).then((should_propagate) => {
+      if (!should_propagate) {
+        return;
       }
-    }
-    return;
+      this.file_annotator[0][0]._rinput_keydown_handler(e);
+      if ( this.file_annotator[0][0].selected_mid_list.length === 0 ) {
+        // no spatial region is selected
+        // therefore, the temporal segmenter keyhandler should further handle this event
+        if ( this.temporal_segmenter ) {
+          this.temporal_segmenter._on_event_keydown(e);
+        }
+      }
+      return;
+    });
   }
 
   if ( this.view_mode === _VIA_VIEW_MODE.AUDIO1 ) {
