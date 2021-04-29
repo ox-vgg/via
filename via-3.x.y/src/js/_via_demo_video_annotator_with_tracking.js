@@ -52,6 +52,14 @@
         'options':{},
         'default_option_id':'',
       },
+      '2': {
+        'aname': 'Tracker',
+        'anchor_id': 'FILE1_Z1_XY1',
+        'type': 3,
+        'desc': 'Tracker',
+        'options': {"0":"KCF","1":"CFNet"},
+        'default_option_id': '0',
+      }
     };
     _via_demo_project['store']['file'] = {
       '1':{

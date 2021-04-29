@@ -48,6 +48,10 @@ with open(OUT_HTML, 'w') as outf:
       lines = lines[:sidx] + lines[(eidx+1):]
     
     for line in lines:
+      if 'tensorflow' in line:
+        outf.write(line)
+        continue
+      
       if '<script src="' in line:
         tok = line.split('"')
         filename = tok[1][3:]
