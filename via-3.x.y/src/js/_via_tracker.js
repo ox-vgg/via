@@ -759,20 +759,39 @@ class TrackingHandler {
       return;
     }
 
+    // Assumption - when a bulk delete call is made with segment mids,
+    // we will check if the associated track is empty
+    // and delete it as well.
+
     if (data === 'metadata_delete_bulk' || data === 'metadata_delete_all') {
 
-      // Handle segments
+      // Handle segments, rects
+      const track_delete = [];
+
       mid_list.forEach((mid) => {
-        const { xy, z, av: { readonly }} = this.d.store.metadata[mid];
+        const { xy, z, av: { readonly }, root_mid } = this.d.store.metadata[mid];
 
         if (xy.length === 0 && z.length === 2 && readonly) {
           // Delete segment
           this.handle_metadata_delete_segment({vid, mid});
+          if(!(track_delete.includes(root_mid))) {
+            track_delete.push(root_mid);
+          }
         } else if (xy.length && xy[0] === 2 && z.length === 1) {
           // Delete rect
           this.handle_metadata_delete_rect({vid, mid});
         } else {
           // Ignore
+        }
+      });
+
+      // Handle tracks
+      track_delete.forEach(track_mid => {
+        if (this.tracks[track_mid].segments.size === 0 && this.tracks[track_mid].order.length === 0) {
+          delete this.tracks[track_mid];
+          const track_name = this.id2name[track_mid];
+          delete this.name2id[track_name];
+          delete this.id2name[track_mid];
         }
       });
     }
