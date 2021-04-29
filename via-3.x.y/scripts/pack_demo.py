@@ -76,10 +76,6 @@ with open(OUT_HTML, 'w') as outf:
     TARGET_DEMO_JS = get_file_contents(TARGET_DEMO_JS_FILENAME)
 
     for line in lines:
-      if 'tensorflow' in line:
-        outf.write(line)
-        continue
-      
       if '<script src="' in line:
         tok = line.split('"')
         filename = tok[1][3:]
