@@ -466,55 +466,61 @@ class TrackingHandler {
   
   handle_metadata_add_rect(event_payload) {
     const { vid, mid } = event_payload;
-    const { z, root_mid } = this.d.store.metadata[mid];
+    const { z, av, root_mid } = this.d.store.metadata[mid];
+    
     if (!root_mid) {
       // Added by user - Create a temporal segment
 
       // TODO: Infer aid from metadata added, barring default attributes
       const { groupby_aid: aid } = this.ts;
 
+      let object_name = av[aid];
+
+      let _m = {
+        [aid]: object_name,
+        readonly: true
+      }
+      let track_mid = this.name2id[object_name];
+
+      if (!track_mid) {
+        // Added box doesn't have a track. Create one
+        // Mostly will only be valid for box ever drawn
+        // with _DEFAULT gid - the first timeline
+        let object_id = this.OBJECT_ID++;
+        object_name = `Object #${object_id}`;
+  
+        if (object_name in this.name2id) {
+          // Iterate till we get a non colliding name
+          while (object_name in this.name2id) {
+            object_id = this.OBJECT_ID++;
+            object_name = `Object #${object_id}`;
+          }
+        }
+        track_mid = mid;
+        _m[aid] = object_name;
+      }
+      
       // Get time of box being added.
       let _t = [ z[0] ];
       _t[1] = _t[0] + this.delta - 1e-3;
 
       _t = _via_util_float_arr_to_fixed(_t, 3);
-      
-      let object_id = this.OBJECT_ID++;
-      let object_name = `Object #${object_id}`;
-
-      if (object_name in this.name2id) {
-        // Iterate till we get a non colliding name
-        while (object_name in this.name2id) {
-          object_id = this.OBJECT_ID++;
-          object_name = `Object #${object_id}`;
-        }
-      }
-      const _m = {
-        [aid]: object_name,
-        readonly: true,
-      }
 
       // Add temporal segment and set the segment_mid of box
-      this.d.metadata_add(vid, _t, [], _m, {root_mid: mid}).then(res => {
-        this.tracks[mid] = new Track(res.mid, mid)
-        this.id2name[mid] = object_name;
-        this.name2id[object_name] = mid;
+      this.d.metadata_add(vid, _t, [], _m, {root_mid: track_mid}).then(async (res) => {
+        if (track_mid in this.tracks) {
+          this.tracks[track_mid].add_segment(res.mid, [mid]);
+          this.tracks[track_mid].sort(this.d);
+          this.d.store.metadata[mid]['root_mid'] = track_mid;
+        } else {
+          this.tracks[track_mid] = new Track(res.mid, mid)
+          this.id2name[track_mid] = object_name;
+          this.name2id[object_name] = track_mid;
+        }
         this.d.store.metadata[mid]['segment_mid'] = res.mid;
-        this.d.metadata_update_av(vid, mid, aid, object_name).then(() => {
-          // Get frame and box
-          this.bctx.drawImage(this.video, 0, 0, this.bcanvas.width, this.bcanvas.height);
-          const frame = this.bctx.getImageData(0, 0, this.bcanvas.width, this.bcanvas.height);
-          const { xy } = this.d.store.metadata[mid];
-          const [ _x, _y, _w, _h ] = xy.slice(1).map(el => Math.floor(this.scale * el));
 
-          Tracker.reset(
-            frame.data, 
-            { x: _x, y: _y, width: _w, height: _h},
-            mid,
-            res.mid,
-          );
-          _via_util_msg_show('Tracking initialised. Press <span class="key">t</span> / <span class="key">Shift</span> + <span class="key">t</span> to track forward / backward', true);
-        });
+        // A no-op just to reset the tracker through handle_metadata_update_rect
+        await this.d.metadata_update_av(vid, mid, aid, object_name);
       });
     }
   }
@@ -582,38 +588,49 @@ class TrackingHandler {
     // id2name lookup table
     if (av[aid] !== this.id2name[root_mid]) {
 
-      // If it doesn't match, move the current segment (and all following segments?)
-      // into an existing track if it exists, rename if no track exists
-      const old_gid = this.id2name[root_mid];
+      // If it doesn't match, 
+      //  - move the current segment
+      //    into an existing track if it exists;
+      //  - create a new track and move the segment if it doesn't exist
       const new_gid = av[aid];
+      const old_gid = this.id2name[root_mid];
 
-      const new_track_id = this.name2id[new_gid];
+      let new_track_id = this.name2id[new_gid];
 
       if(!new_track_id) {
-        // Track doesn't exist - Must be a rename
-        delete this.name2id[old_gid];
-        this.name2id[new_gid] = root_mid;
-        this.id2name[root_mid] = new_gid;
+        // Track doesn't exist 
+        // - If it is the only segment, rename
+        if (this.tracks[root_mid].order.length === 1) {
+          delete this.name2id[old_gid];
+          this.name2id[new_gid] = root_mid;
+          this.id2name[root_mid] = new_gid;
+  
+          // Change attributes in all segments and rects
+          const segment_list = this.tracks[root_mid].order;
+          segment_list.forEach(_segment_mid => {
+            this.d.store.metadata[_segment_mid].av[aid] = new_gid;
+          });
+          this.rename_rects_in_segment(segment_list);
+  
+          this.ts._post_tmetadata_group_update_gid(old_gid, new_gid);
 
-        // Change attributes in all segments and rects
-        const segment_list = this.tracks[root_mid].order;
-        segment_list.forEach(_segment_mid => {
-          this.d.store.metadata[_segment_mid].av[aid] = new_gid;
-        });
-        this.rename_rects_in_segment(segment_list);
+          // rename done. return
+          return;
+        }
+        // - If there are more segments, create track
+        this.tracks[mid] = new Track();
+        this.name2id[new_gid] = mid;
+        this.id2name[mid] = new_gid;
 
-        this.ts._post_tmetadata_group_update_gid(old_gid, new_gid);
-
-      } else {
-       
-        // Move segment to other track
-        this.d.store.metadata[segment_mid].av[aid] = new_gid;
-        this.move_segment(segment_mid, root_mid, new_track_id);
-
-        this.ts._post_tmetadata_mid_change_gid(segment_mid, old_gid, new_gid);
-        this.ts._tmetadata_group_gid_draw(old_gid);
-        this.ts._tmetadata_group_gid_draw(new_gid);
-       
+        new_track_id = mid;
+      } 
+      // Move segment to existing / created track
+      this.d.metadata_update_av(
+        vid,
+        segment_mid,
+        aid,
+        new_gid
+      ).then(() => {
         if (
           Tracker.instance
           && Tracker.track_mid === root_mid 
@@ -621,7 +638,7 @@ class TrackingHandler {
           //Tracker was tracking this segment
           Tracker.track_mid = new_track_id;
         }
-      }
+      });
       return;
     }
     

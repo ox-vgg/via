@@ -2198,10 +2198,25 @@ _via_temporal_segmenter.prototype._on_event_metadata_add = function(vid, mid) {
 }
 
 _via_temporal_segmenter.prototype._on_event_metadata_update = function(vid, mid) {
-  const { av: { readonly } } = this.d.store.metadata[mid]; 
-  if (!readonly) {
+  const { xy, z, av } = this.d.store.metadata[mid]; 
+  if (!av.readonly) {
     // Updated metadata was not added by us
     _via_util_msg_show('Metadata updated');
+  } else if (this.vid === vid
+    && z.length === 2
+    && xy.length === 0
+    && av.readonly
+    ) {
+    if (av[this.groupby_aid] !== this.selected_gid) {
+      const new_gid = av[this.groupby_aid];
+      const old_gid = this.selected_gid;
+      if (!(new_gid in this.group)) {
+        this._group_add_gid(new_gid, true);
+        this._tmetadata_boundary_fetch_gid_mid(new_gid);
+      }
+      this._post_tmetadata_mid_change_gid(mid, old_gid, new_gid);
+      this._tmetadata_group_gid_sel(this.gid_list.indexOf(new_gid));
+    }
   }
   this._redraw_timeline();
   if (this.selected_gindex !== -1) {
