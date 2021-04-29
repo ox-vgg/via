@@ -4,6 +4,14 @@
  * Static Singleton Class for tracking
  * Attaches to the track segment being processed
  */
+let cfnet;
+(async () => {
+  await tf.setBackend('webgl');
+  cfnet = new CFNet('https://vgg.gitlab.io/assets/models/tfjs_cfnet/model.json');
+  await tracking;
+  await cfnet.init_models();
+})();
+
 /**
  * @param {string} type - 'KCF or CFNet'
  * @param {ImageData} frame - Image Data
@@ -26,6 +34,11 @@ const createTracker = async (type, frame, roi) => {
     };
     return instance;
   } 
+  else if (type === 'CFNet') {
+    cfnet.status = true;
+    await cfnet.template(frame, roi);
+    return cfnet;
+  }
   else {
     _via_util_msg_show(`Unknown tracker type <${type}>`);
     return null;
@@ -52,7 +65,8 @@ class Tracker {
   static async reset(frame, roi, track_mid, segment_mid, type='KCF') {
     this.reset_tracker();
     this.track_mid = track_mid;
-    this.segment_mid = segment_mid;    
+    this.segment_mid = segment_mid;
+    this.type = type;
     this.instance = await createTracker(type, frame, roi);
   }
 
@@ -216,10 +230,6 @@ class TrackingHandler {
     this.name2id = {};
     this.OBJECT_ID = 1;
 
-    (async () => {
-      await tracking;
-    })(); 
-
     // Canvas for getting video frame
     this.bcanvas = document.createElement('canvas');
     this.bcanvas.style.pointerEvents = 'none';
@@ -358,6 +368,14 @@ class TrackingHandler {
       this.d.metadata_delete_bulk(vid, delete_list, true);
     }
 
+    // Get tracker attribute key
+    const aid_list = Object.keys(this.d.store.attribute);
+    const attribute_id = aid_list.find(el => this.d.store.attribute[el].aname === 'Tracker');
+    let aid_key = null;
+    if (attribute_id) {
+      const options = this.d.store.attribute[attribute_id].options;
+      aid_key = Object.keys(options).find(k => options[k] === Tracker.type);
+    }
     this.tracking = true;
     const seekListener = async (ev) => {
       const video = ev.target;
@@ -417,7 +435,7 @@ class TrackingHandler {
             this.dscale * _roi.width,
             this.dscale * _roi.height
           ],
-          { [aid]: this.id2name[track_mid] },
+          { [aid]: this.id2name[track_mid], ...(aid_key && { [attribute_id]: aid_key }) },
           { 
             segment_mid: segment_mid,
             root_mid: track_mid 
@@ -576,6 +594,15 @@ class TrackingHandler {
     let { xy, z, av, root_mid, segment_mid } = this.d.store.metadata[mid];
     let { z: z_segment, av: av_segment } = this.d.store.metadata[segment_mid];
 
+    // Find attribute that corresponds to Tracker
+    let tracker_type = 'KCF';
+    const tracker_aid = Object.keys(av).find(el => this.d.store.attribute[el].aname === 'Tracker');
+    if (tracker_aid) {
+      let tracker_val = av[tracker_aid] || this.d.store.attribute[tracker_aid].default_option_id ;
+      if (tracker_val && this.d.store.attribute[tracker_aid].options) {
+        tracker_type = this.d.store.attribute[tracker_aid].options[tracker_val] || 'KCF';
+      }
+    }
     const { groupby_aid: aid } = this.ts;
 
     if (!root_mid) {
@@ -679,6 +706,7 @@ class TrackingHandler {
           { x: _x, y: _y, width: _w, height: _h},
           root_mid,
           res.mid,
+          tracker_type,
         ).then(() => {
           _via_util_msg_show('Tracking initialised. Press <span class="key">t</span> / <span class="key">Shift</span> + <span class="key">t</span> to track forward / backward', true);
         }).catch(() => {
@@ -691,6 +719,7 @@ class TrackingHandler {
         { x: _x, y: _y, width: _w, height: _h},
         root_mid,
         segment_mid,
+        tracker_type,
       ).then(() => {
         _via_util_msg_show('Tracking initialised. Press <span class="key">t</span> / <span class="key">Shift</span> + <span class="key">t</span> to track forward / backward', true);
       }).catch(() => {
