@@ -498,17 +498,19 @@ _via_temporal_segmenter.prototype._tmetadata_gmetadata_update = function() {
     p.style.cursor = 'pointer';
     p.addEventListener('click', async (e) => {
       const _gid = e.target.dataset.gid;
-      const del_gid_list = [_gid];
-      try {
-        const del_mid_list = await this._group_del_gid(del_gid_list);
-        await this.d.metadata_delete_bulk(this.vid, del_mid_list, true)
-        this._tmetadata_gmetadata_update();
-        _via_util_msg_show('Deleted timeline ' + JSON.stringify(del_gid_list) + ' and ' + del_mid_list.length + ' metadata associated with this timeline.');
-      } catch (err) {
-        if (del_mid_list) {
-          _via_util_msg_show('Failed to delete ' + del_mid_list.length + ' metadata associated with timeline ' + JSON.stringify(del_gid_list));
-        } else {
-          _via_util_msg_show('Failed to delete timeline ' + JSON.stringify(del_gid_list));
+      if(window.confirm(`Delete timeline [${_gid}] and all associated metadata? This action is irreversible.` )){
+        const del_gid_list = [_gid];
+        try {
+          const del_mid_list = await this._group_del_gid(del_gid_list);
+          await this.d.metadata_delete_bulk(this.vid, del_mid_list, true)
+          this._tmetadata_gmetadata_update();
+          _via_util_msg_show('Deleted timeline ' + JSON.stringify(del_gid_list) + ' and ' + del_mid_list.length + ' metadata associated with this timeline.');
+        } catch (err) {
+          if (del_mid_list) {
+            _via_util_msg_show('Failed to delete ' + del_mid_list.length + ' metadata associated with timeline ' + JSON.stringify(del_gid_list));
+          } else {
+            _via_util_msg_show('Failed to delete timeline ' + JSON.stringify(del_gid_list));
+          }
         }
       }
     });
