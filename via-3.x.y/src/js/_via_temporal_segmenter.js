@@ -122,7 +122,7 @@ _via_temporal_segmenter.prototype._init_on_success = function(groupby_aid) {
 
     this._vtimeline_init();
     this._tmetadata_init();
-    this._toolbar_init();
+    //this._toolbar_init();
 
     // trigger the update of animation frames
     this._redraw_all();

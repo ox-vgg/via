@@ -28,7 +28,7 @@ function _via_view_annotator(data, container ) {
   this.view_mode = _VIA_VIEW_MODE.UNKNOWN;
 
   // constants
-  this.GTIMELINE_ROW_DEFAULT_COUNT = '4';
+  this.GTIMELINE_ROW_DEFAULT_COUNT = '2';
   this.GTIMELINE_ROW_HEIGHT_MAP = { '1':21, '2':24, '3':28, '4':32, '5':37, '6':41, '7':45,'8':49,'9':53,'10':57,'12':65,'14':73,'16':80 };
 
   // state variables
@@ -167,7 +167,9 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
 
   var gtimeline_visible_row_count = this.d.store['config']['ui']['gtimeline_visible_row_count'];
   this.gtimeline_container_height = this.GTIMELINE_ROW_HEIGHT_MAP[gtimeline_visible_row_count];
-  this.c.setAttribute('style', 'grid-template-rows:1fr ' + this.gtimeline_container_height + 'ch;')
+  console.log(this.gtimeline_container_height)
+  //this.c.setAttribute('style', 'grid-template-rows:1fr ' + this.gtimeline_container_height + 'ch;')
+  this.c.setAttribute('style', 'grid-template-rows:1fr 0.15fr')
   this.c.appendChild(this.view_content_container);
   this.c.appendChild(this.view_metadata_container);
   this.view_metadata_container.style.display = 'block';
