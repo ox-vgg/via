@@ -490,10 +490,30 @@ _via_temporal_segmenter.prototype._tmetadata_gmetadata_update = function() {
                            ' = ' + gid);
     gid_input.setAttribute('data-gid', gid);
     gid_input.addEventListener('change', this._tmetadata_group_update_gid.bind(this));
+    
+    const p = document.createElement('span');
+    p.setAttribute('title', `Delete ${gid}`);
+    p.setAttribute('data-gid', gid);
+    p.textContent = '❌ ';
+    p.style.cursor = 'pointer';
+    p.addEventListener('click', async (e) => {
+      const _gid = e.target.dataset.gid;
+      const del_gid_list = [_gid];
+      try {
+        const del_mid_list = await this._group_del_gid(del_gid_list);
+        await this.d.metadata_delete_bulk(this.vid, del_mid_list, true)
+        this._tmetadata_gmetadata_update();
+        _via_util_msg_show('Deleted timeline ' + JSON.stringify(del_gid_list) + ' and ' + del_mid_list.length + ' metadata associated with this timeline.');
+      } catch (err) {
+        if (del_mid_list) {
+          _via_util_msg_show('Failed to delete ' + del_mid_list.length + ' metadata associated with timeline ' + JSON.stringify(del_gid_list));
+        } else {
+          _via_util_msg_show('Failed to delete timeline ' + JSON.stringify(del_gid_list));
+        }
+      }
+    });
+    gid_container.appendChild(p);
     gid_container.appendChild(gid_input);
-    if (this.readonly_gid_list.includes(gid)) {
-      gid_container.appendChild(document.createTextNode('🔒'));
-    }
 
     // column containing temporal segments for this value timeline-id
     this._tmetadata_group_gid_init(gid);

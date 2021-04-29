@@ -87,7 +87,7 @@ to annotate temporal segments of a video: contains 4 rows
 .temporal_segmenter_container > .tmetadata_container > .gmetadata_container { overflow-y:auto; }
 .temporal_segmenter_container > .tmetadata_container .twocolgrid { display:grid; width:100%; grid-template-columns:8em 1fr; }
 .temporal_segmenter_container > .tmetadata_container .gidcol { align-self:center; padding-left:0.1em; }
-.temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"] { font-size:small; width:80%; border:none; border-bottom:1px solid #cccccc; }
+.temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"] { font-size:small; width:70%; border:none; border-bottom:1px solid #cccccc; }
 .temporal_segmenter_container > .tmetadata_container .gidcol select { font-size:small; }
 .temporal_segmenter_container > .tmetadata_container .gidcol input[type="text"]:focus { background-color:#f2f2f2; }
 
