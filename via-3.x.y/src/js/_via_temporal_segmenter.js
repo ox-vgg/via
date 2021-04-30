@@ -143,7 +143,9 @@ _via_temporal_segmenter.prototype._redraw_all = function() {
   if ( tnow < this.tmetadata_gtimeline_tstart ||
        tnow > this.tmetadata_gtimeline_tend
      ) {
-    if ( ! this.m.paused ) {
+    // Check for pause isn't required since tnow won't change 
+    // if video is not playing or seeking
+    if (true) { 
       var new_tstart = Math.floor(tnow);
       this._tmetadata_boundary_update(new_tstart)
       this._tmetadata_gtimeline_draw();
@@ -2207,9 +2209,9 @@ _via_temporal_segmenter.prototype._on_event_metadata_update = function(vid, mid)
     && xy.length === 0
     && av.readonly
     ) {
-    if (av[this.groupby_aid] !== this.selected_gid) {
-      const new_gid = av[this.groupby_aid];
-      const old_gid = this.selected_gid;
+    const new_gid = av[this.groupby_aid];
+    const old_gid = this.selected_gid;
+    if (new_gid !== old_gid) {
       if (!(new_gid in this.group)) {
         this._group_add_gid(new_gid, true);
         this._tmetadata_boundary_fetch_gid_mid(new_gid);
@@ -2217,6 +2219,10 @@ _via_temporal_segmenter.prototype._on_event_metadata_update = function(vid, mid)
       this._post_tmetadata_mid_change_gid(mid, old_gid, new_gid);
       this._tmetadata_group_gid_sel(this.gid_list.indexOf(new_gid));
     }
+    if (!(this.tmetadata_gtimeline_mid[new_gid].includes(mid))) {
+      this._tmetadata_boundary_fetch_gid_mid(new_gid);
+    }
+
   }
   this._redraw_timeline();
   if (this.selected_gindex !== -1) {
