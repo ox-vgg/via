@@ -1983,11 +1983,11 @@ _via_temporal_segmenter.prototype._group_init = function(aid) {
   }
 
   // for clarity, ensure that there is at least one group
-  if ( this.gid_list.length === 0 ) {
+  /*if ( this.gid_list.length === 0 ) {
     var default_gid = '_DEFAULT';
     this.group[default_gid] = [];
     this.gid_list.push(default_gid);
-  }
+  }*/
   this.gid_list.sort(this._compare_gid.bind(this)); // sort by group-id
 
   // sort each group elements based on time

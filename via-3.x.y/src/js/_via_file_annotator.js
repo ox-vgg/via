@@ -714,6 +714,7 @@ _via_file_annotator.prototype._rinput_cancel_last_nclick = function() {
 }
 
 _via_file_annotator.prototype._rinput_mousedown_handler = function(e) {
+  e.preventDefault();
   e.stopPropagation();
   var cx = e.offsetX;
   var cy = e.offsetY;
@@ -819,6 +820,7 @@ _via_file_annotator.prototype._rinput_mousedown_handler = function(e) {
 }
 
 _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
+  e.preventDefault();
   e.stopPropagation();
   var cx = e.offsetX;
   var cy = e.offsetY;
