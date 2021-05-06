@@ -360,7 +360,6 @@ class TrackingHandler {
 
     this.tracking = true;
     const seekListener = async (ev) => {
-      console.time('frame');
       const video = ev.target;
       const { currentTime } = video;
 
@@ -402,9 +401,7 @@ class TrackingHandler {
    
       // Do tracking for active track
       const fail_counter = Tracker.fail_counter;
-      console.time('track')
       const _roi = await Tracker.track(frame);
-      console.timeEnd('track')
 
       // On successful tracking
       if (_roi) {
@@ -456,9 +453,12 @@ class TrackingHandler {
         }
         Tracker.last_success_time = currentTime;
       }
-  
-      video.currentTime += (backward ? -1 : 1) * this.delta;
-      console.timeEnd('frame');
+      video.currentTime = Math.max(
+        0,
+        Math.min(
+          video.duration - 1e-3, 
+          (video.currentTime  + (backward ? -1 : 1) * this.delta)
+        ));
     }
   
     return seekListener;
