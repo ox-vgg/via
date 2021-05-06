@@ -61,8 +61,6 @@ function _via_file_annotator(view_annotator, data, vid, file_label, container) {
   this.conf.CONTROL_POINT_CLICK_TOL = 3;
   this.conf.REGION_BOUNDARY_COLOR = 'yellow';
   this.conf.REGION_LINE_WIDTH = 2;
-  this.conf.FILTERED_REGION_BOUNDARY_COLOR = 'hsla(0, 0%, 50%, 0.8)'
-  this.conf.FILTERED_REGION_LINE_WIDTH = 1;
   this.conf.SEL_REGION_BOUNDARY_COLOR = 'black';
   this.conf.SEL_REGION_FILL_COLOR = '#808080';
   this.conf.SEL_REGION_FILL_OPACITY = 0.1;
@@ -1529,7 +1527,23 @@ _via_file_annotator.prototype._creg_draw_file_label = function() {
 
 _via_file_annotator.prototype._creg_draw = function(mid, is_filtered = false) {
   var is_selected = this.selected_mid_list.includes(mid);
-  this._draw(this.rshapectx, this.creg[mid], is_selected, is_filtered);
+  let { REGION_BOUNDARY_COLOR, REGION_LINE_WIDTH } = this.conf;
+
+  const { av } = this.d.store.metadata[mid];
+  const { groupby_aid: aid, gid_list, COLOR_LIST, HSLA_COLOR_LIST, NCOLOR } = this.va.temporal_segmenter;
+  const gindex = gid_list.indexOf(av[aid]);
+  if (is_filtered) {
+    REGION_BOUNDARY_COLOR = HSLA_COLOR_LIST[gindex % NCOLOR];
+    REGION_LINE_WIDTH = 1;
+  } else if (gindex !== -1) {
+    REGION_BOUNDARY_COLOR = COLOR_LIST[gindex % NCOLOR];
+  }
+
+  var colour_opts = {
+    REGION_BOUNDARY_COLOR,
+    REGION_LINE_WIDTH,
+  }
+  this._draw(this.rshapectx, this.creg[mid], is_selected, colour_opts);
 }
 
 _via_file_annotator.prototype._creg_draw_label = function(mid) {
@@ -2129,14 +2143,14 @@ _via_file_annotator.prototype._tmpreg_clear = function() {
 // region draw routines
 //
 // Note: xy = [shape_id, x0, y0, x1, y1, ..., xk, yk]
-_via_file_annotator.prototype._draw = function(ctx, xy, is_selected, is_filtered = false) {
+_via_file_annotator.prototype._draw = function(ctx, xy, is_selected, colour_opts={}) {
   var shape_id = xy[0];
   switch( shape_id ) {
   case _VIA_RSHAPE.POINT:
     this._draw_point_region(ctx, xy[1], xy[2], is_selected );
     break;
   case _VIA_RSHAPE.RECTANGLE:
-    this._draw_rect_region(ctx, xy[1], xy[2], xy[3], xy[4], is_selected, is_filtered);
+    this._draw_rect_region(ctx, xy[1], xy[2], xy[3], xy[4], is_selected, colour_opts);
     break;
   case _VIA_RSHAPE.EXTREME_RECTANGLE:
     this._draw_extreme_rectangle_region(ctx, xy, is_selected );
@@ -2218,7 +2232,7 @@ _via_file_annotator.prototype._draw_point = function(ctx, cx, cy, r) {
   ctx.closePath();
 }
 
-_via_file_annotator.prototype._draw_rect_region = function(ctx, x, y, w, h, is_selected, is_filtered = false) {
+_via_file_annotator.prototype._draw_rect_region = function(ctx, x, y, w, h, is_selected, colour_opts) {
   if (is_selected) {
     ctx.strokeStyle = this.conf.SEL_REGION_BOUNDARY_COLOR;
     ctx.lineWidth   = this.conf.SEL_REGION_LINE_WIDTH;
@@ -2229,14 +2243,9 @@ _via_file_annotator.prototype._draw_rect_region = function(ctx, x, y, w, h, is_s
     ctx.globalAlpha = this.conf.SEL_REGION_FILL_OPACITY;
     ctx.fill();
     ctx.globalAlpha = 1.0;
-  } else if (is_filtered) {
-    ctx.strokeStyle = this.conf.FILTERED_REGION_BOUNDARY_COLOR;
-    ctx.lineWidth   = this.conf.FILTERED_REGION_LINE_WIDTH;
-    this._draw_rect(ctx, x, y, w, h);
-    ctx.stroke();
   } else {
-    ctx.strokeStyle = this.conf.REGION_BOUNDARY_COLOR;
-    ctx.lineWidth   = this.conf.REGION_LINE_WIDTH;
+    ctx.strokeStyle = colour_opts.REGION_BOUNDARY_COLOR || this.conf.REGION_BOUNDARY_COLOR;
+    ctx.lineWidth   = colour_opts.REGION_LINE_WIDTH || this.conf.REGION_LINE_WIDTH;
     this._draw_rect(ctx, x, y, w, h);
     ctx.stroke();
   }

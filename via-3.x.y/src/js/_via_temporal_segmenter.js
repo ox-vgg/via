@@ -75,6 +75,15 @@ function _via_temporal_segmenter(file_annotator, container, vid, data, media_ele
 
   // colour
   this.COLOR_LIST = ["#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442"];
+  this.HSLA_COLOR_LIST = [
+    'hsla(42, 100%, 45%, 0.6)',
+    'hsla(202, 77%, 63%, 0.6)',
+    'hsla(164, 100%, 31%, 0.6)',
+    'hsla(202, 100%, 35%, 0.6)',
+    'hsla(26, 100%, 42%, 0.6)',
+    'hsla(327, 45%, 64%, 0.6)',
+    'hsla(56, 85%, 60%, 0.6)',
+  ]
   this.NCOLOR = this.COLOR_LIST.length;
 
   this.current_playback_mode = this.PLAYBACK_MODE.NORMAL;
