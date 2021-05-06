@@ -12,9 +12,9 @@ var _via_msg_clear_timer; // holds a reference to current message timoout
 var _via_page_current;    // holds a reference to current info page
 var _via_page_action_map; // holds a reference to action map for current info page
 
-function _via_util_get_svg_button(icon_id, title, id) {
+function _via_util_get_svg_button(icon_id, title, id, view_box='0 0 24 24') {
   var el = document.createElementNS(_VIA_SVG_NS, 'svg');
-  el.setAttributeNS(null, 'viewBox', '0 0 24 24');
+  el.setAttributeNS(null, 'viewBox', view_box);
   el.innerHTML = '<use xlink:href="#' + icon_id + '"></use><title>' + title + '</title>';
   el.setAttributeNS(null, 'class', 'svg_button');
   if ( typeof(id) !== 'undefined' ) {

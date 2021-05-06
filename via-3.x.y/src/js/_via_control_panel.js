@@ -66,6 +66,12 @@ _via_control_panel.prototype._init = function(type) {
   }.bind(this));
   this.c.appendChild(keyboard);
 
+  var tips = _via_util_get_svg_button('micon_tips', 'Tips', undefined, '0 0 100 100');
+  tips.addEventListener('click', function() {
+    _via_util_page_show('page_demo_instructions');
+  }.bind(this));
+  this.c.appendChild(tips);
+
   var help = _via_util_get_svg_button('micon_help', 'About VIA');
   help.addEventListener('click', function() {
     _via_util_page_show('page_about');
