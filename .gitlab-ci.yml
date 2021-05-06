@@ -38,6 +38,8 @@ pages:
             <li> <a href="./demo.html?video=mouse.mp4">Mouse going in circles</a></li>
             <li> <a href="./demo.html?video=moon.mp4">Moon transit in front of sun</a></li>
             <li> <a href="./demo.html?video=david.webm">Person with changing illumination, pose, etc.</a></li>
+            <li> <a href="./demo.html?video=bike.mp4">Bike on road sequence (VOT 2018)</a></li>
+            <li> <a href="./demo.html?video=bolt.mp4">Usain bolt running (VOT 2018)</a></li> 
           </ul>
         </body>
       </html>

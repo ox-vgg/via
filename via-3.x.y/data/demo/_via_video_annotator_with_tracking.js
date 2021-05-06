@@ -38,3 +38,23 @@ _via_demo_data['video'].push(
         'src': 'david.webm',
     }
 )
+
+_via_demo_data['video'].push(
+    {
+        'filename': 'Bike on road sequence',
+        'author': '',
+        'original_source': 'https://www.votchallenge.net/vot2018/dataset.html',
+        'description': 'Video made using frames obtained from VOT 2018 dataset website - https://www.votchallenge.net/vot2018/dataset.html',
+        'src': 'bike.mp4',
+    }
+)
+
+_via_demo_data['video'].push(
+    {
+        'filename': 'Usain Bolt',
+        'author': '',
+        'original_source': 'https://www.votchallenge.net/vot2018/dataset.html',
+        'description': 'Video made using frames obtained from VOT 2018 dataset website - https://www.votchallenge.net/vot2018/dataset.html',
+        'src': 'bolt.mp4',
+    }
+)
