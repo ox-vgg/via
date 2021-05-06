@@ -501,10 +501,12 @@ class TrackingHandler {
       }
       let track_mid = this.name2id[object_name];
 
-      if (!track_mid) {
+      if (!track_mid || ('alt' in av && av['alt'])) {
         // Added box doesn't have a track. Create one
         // Mostly will only be valid for box ever drawn
         // with _DEFAULT gid - the first timeline
+        // or 
+        // if alt key is held
         let object_id = this.OBJECT_ID++;
         object_name = `Object #${object_id}`;
   

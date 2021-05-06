@@ -853,7 +853,7 @@ _via_file_annotator.prototype._rinput_mouseup_handler = function(e) {
         }
       } else {
         var canvas_input_pts = this.user_input_pts.slice(0);
-        this._metadata_add(this.va.region_draw_shape, canvas_input_pts);
+        this._metadata_add(this.va.region_draw_shape, canvas_input_pts, e.altKey);
       }
       this.user_input_pts = [];
       this._tmpreg_clear();
@@ -1285,7 +1285,7 @@ _via_file_annotator.prototype._metadata_move_region = function(mid_list, cdx, cd
   }.bind(this));
 }
 
-_via_file_annotator.prototype._metadata_add = function(region_shape, canvas_input_pts) {
+_via_file_annotator.prototype._metadata_add = function(region_shape, canvas_input_pts, is_alt_pressed=false) {
   return new Promise( function(ok_callback, err_callback) {
     var file_input_pts = this._rinput_pts_canvas_to_file(canvas_input_pts);
     var xy = this._metadata_pts_to_xy(region_shape, file_input_pts);
@@ -1295,7 +1295,10 @@ _via_file_annotator.prototype._metadata_add = function(region_shape, canvas_inpu
     }
     // set default attributes
     var av = this._metadata_get_default_attribute_values();
-
+    if (is_alt_pressed) {
+      av['alt'] = is_alt_pressed;
+    }
+    
     // if a temporal segment is selected, we add this to the metadata
     if ( this.va.temporal_segmenter ) {
       if ( this.va.temporal_segmenter.selected_gindex !== -1 ) {
