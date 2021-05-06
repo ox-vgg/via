@@ -358,15 +358,18 @@
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <h1>Some Quick Tips</h1>
         <ul>
-          <li>Press <span class="key">Space</span> key at any time to play or pause the audio or video.</li>
-          <li>Use <span class="key">a</span> key to add a new temporal segment. Here are more <span class="text_button" onclick="_via_util_show_info_page('page_keyboard_shortcut')">shortcuts</span>.</li>
-          <li>Pre-defined temporal segments appear at the bottom (colourful boxes). Using mouse, select them, move them and delete them (using <span class="key">Backspace</span> key)</li>
-          <li>Move your mouse over the temporal segment timeline and roll your mouse button to zoom in/out</li>
-          <li>Add new timeline by adding a new entry to the Timeline List (at the bottom) and press "Update" button. For example, "Speaker1,Speaker2" to add timelines for two speakers.</li>
-          <li>Use the <span class="text_button" onclick="via.editor.show()">attribute editor</span> to define or update attributes (e.g. name, colour, speaker_id, etc) of user defined spatial regions or temporal segments.</li>
+          <li>Press <span class="key">Space</span> key at any time to play or pause the video. You can also use the timeline to seek.</li>
+          <li>Use the mouse to define a region of interest. Press <span class="key">t</span> / <span class="key">Shift</span> + <span class="key">t</span> to track it forward / backward.</li>
+          <li>When tracking is in progress, Press any key / click anywhere to stop.</li>
+          <li>To reinitialise tracking, Draw a new box / Adjust an existing box to start tracking again.</li>
+          <li>The tracked temporal segments appear at the bottom (colourful boxes).</li>
+          <li>Move your mouse over the temporal segment timeline and scroll your mouse wheel to zoom in/out. Click and drag horizontally to seek the video.</li>
+          <li>To delete a temporal segment, select it with your mouse and delete them using <span class="key">Backspace</span> key. This will delete the associated spatial regions as well.</li>
+          <li>Press the red 'X' to delete the entire track, and its associated segments and spatial regions.</li>
+          <li>Here are more <span class="text_button" onclick="_via_util_show_info_page('page_keyboard_shortcut')">shortcuts</span>.</li>
         </ul>
       </div>
-
+ 
       <div data-pageid="page_keyboard_shortcut" class="via_page">
         <div class="toolbar"><span onclick="_via_util_page_hide()" class="text_button">&times;</span></div>
         <h1>Keyboard Shortcuts</h1>
@@ -383,8 +386,7 @@
             <tr><td>Toggle Media Mute</td><td><span class="key">m</span></td></tr>
             <tr><td>Increase / Decrease Media Playback Speed</td><td><span class="key">+</span> / <span class="key">-</span></td></tr>
             <tr><td>Move Media Time Backward by 1, ..., 9 sec. (Ctrl to move forward)</td><td><span class="key">Ctrl</span> + <span class="key">1</span>, <span class="key">2</span>, ..., <span class="key">9</span</td></tr>
-            <tr><td>Move Media Time Forward or Backward by 5 frames</td><td><span class="key">N</span> / <span class="key">P</span></td></tr>                                      <tr><td>Add Temporal Segment at Current Time</td><td><span class="key">a</span></td></tr>
-            <tr><td>Update the edge (left or right) of last added segment to current time</td><td><span class="key">Shift</span> + <span class="key">a</span></td></tr>
+            <tr><td>Move Media Time Forward or Backward by 5 frames</td><td><span class="key">N</span> / <span class="key">P</span></td></tr>                                      
 
             <tr><td>Select Previous / Next Temporal Segment Timeline</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
             <tr><td>Reorder timeline list by moving current timeline above/below its current position</td><td><span class="key">Ctrl</span> + <span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
@@ -398,6 +400,8 @@
             <tr><td>Shift Visible Timeline by 60 sec.</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
             <tr><td>Zoom In/Out the Temporal Segment Timeline</td><td>Mouse Wheel<br/></td></tr>
             <tr><td>Pan the Temporal Segment Timeline Horizontally</td><td><span class="key">Shift</span> + Mouse Wheel</td></tr>
+            <tr><td>Continuously seek video</td><td>Click and drag horizontally on the temporal segment timeline</td></tr>
+            <tr><td>To track an object after drawing / adjusting a spatial region</td><td><span class="key">t</span> (<span class="key">Shift</span> + <span class="key">t</span> for backward)</td></tr>
           </tbody>
         </table>
         <h3>When a Temporal Segment is Selected</h3>
@@ -413,12 +417,8 @@
             <tr><td>Delete Selected Temporal Segment</td><td><span class="key">Backspace</span></td></tr>
             <tr><td>Select [Previous] Next Temporal Segment</td><td>[<span class="key">Shift</span>] + <span class="key">Tab</span></td></tr>
             <tr><td>Unselect Temporal Segment</td><td><span class="key">Esc</span></td></tr>
-            <tr><td>Increase/Decrease the Extent of Left Edge (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">l</span> / <span class="key">L</span></td></tr>
-            <tr><td>Increase/Decrease the Extent of Right edge (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">r</span> / <span class="key">R</span></td></tr>
 
             <tr><td>Jump to Start/End of Temporal Segment</td><td><span class="key">s</span> / <span class="key">e</span></td></tr>
-            <tr><td>Move Selected Temporal Segment (Ctrl updates by 1 sec.)</td><td>[<span class="key">Ctrl</span>] + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
-            <tr><td>Merge Selected Temporal Segment with the Segment on Left/Right</td><td><span class="key">Shift</span> + <span class="key">&larr;</span> / <span class="key">&rarr;</span></td></tr>
             <tr><td>Move Selected Temporal Segment to Previous / Next Temporal Segment Timeline</td><td><span class="key">&uarr;</span> / <span class="key">&darr;</span></td></tr>
           </tbody>
         </table>

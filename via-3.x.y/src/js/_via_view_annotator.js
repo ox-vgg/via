@@ -169,7 +169,7 @@ _via_view_annotator.prototype._view_annotate_single_video = function(vid) {
   this.gtimeline_container_height = this.GTIMELINE_ROW_HEIGHT_MAP[gtimeline_visible_row_count];
   console.log(this.gtimeline_container_height)
   //this.c.setAttribute('style', 'grid-template-rows:1fr ' + this.gtimeline_container_height + 'ch;')
-  this.c.setAttribute('style', 'grid-template-rows:1fr 0.15fr')
+  this.c.setAttribute('style', 'grid-template-rows:auto minmax(24ch, 0.15fr)')
   this.c.appendChild(this.view_content_container);
   this.c.appendChild(this.view_metadata_container);
   this.view_metadata_container.style.display = 'block';

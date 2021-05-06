@@ -167,7 +167,7 @@ _via_temporal_segmenter.prototype._redraw_all = function() {
     }
   }
 
-  //this._redraw_timeline(); // this is not required
+  this._redraw_timeline();
 
   // draw marker to show current time in group timeline and group metadata
   this._tmetadata_draw_currenttime_mark(tnow);
@@ -1634,10 +1634,7 @@ _via_temporal_segmenter.prototype._on_event_keydown = function(e) {
       _via_util_msg_show('Playing ...');
     } else {
       this.m.pause();
-      _via_util_msg_show('Paused. Draw a box around Region of interest to start tracking it. &emsp;&ensp;' + 
-                         '<br>&emsp;&emsp;Press <span class="key">a</span> to add a temporal segment, ' +
-                         '<span class="key">Tab</span> to select and ' +
-                         '<span class="key">&uarr;</span>&nbsp;<span class="key">&darr;</span> to select another temporal segment timeline.', true);
+      _via_util_msg_show('Paused. Draw a box around Region of interest to start tracking it.', true);
     }
   }
 

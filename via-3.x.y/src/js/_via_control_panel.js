@@ -34,9 +34,8 @@ _via_control_panel.prototype._init = function(type) {
 
   this._add_project_tools();
 
-  this._add_spacer();
-
-  this._add_region_shape_selector();
+  //this._add_spacer();
+  //this._add_region_shape_selector();
 
   this._add_spacer();
 
