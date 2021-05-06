@@ -7,7 +7,7 @@
 let cfnet;
 (async () => {
   await tf.setBackend('webgl');
-  cfnet = new CFNet('https://vgg.gitlab.io/assets/models/tfjs_cfnet/model.json');
+  cfnet = new CFNet('https://vgg.gitlab.io/via/assets/models/tfjs_cfnet/model.json');
   await tracking;
   await cfnet.init_models();
 })();
