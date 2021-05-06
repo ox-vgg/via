@@ -407,6 +407,7 @@ class TrackingHandler {
           _via_util_msg_show('Tracking stopped. Draw / Update box to start / resume tracking', true);
         }
         if (Tracker.last_success_time !== -1) {
+          video.currentTime = Tracker.last_success_time;
           Tracker.last_success_time = -1;
         }
         this.tracking = false;
