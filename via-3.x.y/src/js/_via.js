@@ -106,7 +106,7 @@ function _via(via_container) {
     // debug code (disabled for release)
     if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
       //this.s.pull(''); // load shared project
-      //this.d.project_load_json(_via_dp[2]['store']); // video
+        this.d.project_load_json(_via_dp[5]['store']); // video
       //this.d.project_load_json(_via_dp[1]['store']); // audio
       //this.d.project_load_json(_via_dp[4]['store']); // image
       //this.d.project_load_json(_via_dp[3]['store']); // pair
