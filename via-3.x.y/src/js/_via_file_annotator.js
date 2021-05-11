@@ -358,10 +358,10 @@ _via_file_annotator.prototype._file_load = function() {
       this.file_html_element.setAttribute('src', file_src);
     }
 
-    this.file_html_element.addEventListener('load', function() {
-      this._file_html_element_ready();
-      ok_callback();
-    }.bind(this));
+    // this.file_html_element.addEventListener('load', function() {
+    //   this._file_html_element_ready();
+    //   ok_callback();
+    // }.bind(this));
     this.file_html_element.addEventListener('loadeddata', function() {
       this._file_html_element_ready();
       ok_callback();
@@ -404,7 +404,10 @@ _via_file_annotator.prototype._file_create_html_element = function() {
       this._rinput_disable();
     }.bind(this));
     media.addEventListener('seeked', function(e) {
-      this._creg_show_current_frame_regions();
+      this._creg_add_current_frame_regions(this.vid);
+      if (Object.keys(this.creg).length) {
+        this._creg_draw_all();
+      }
       this._rinput_enable();
       this._smetadata_hide();
     }.bind(this));

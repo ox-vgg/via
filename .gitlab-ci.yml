@@ -25,22 +25,35 @@ pages:
       cat <<-EOF > public/index.html
       <!DOCTYPE html>
       <html lang="en">
-      	<head><title>VGG Image Annotator Tracking demo</title><meta charset="UTF-8"></head>
-      	<body>
+        <head><title>VGG Image Annotator Tracking demo</title><meta charset="UTF-8"></head>
+        <body>
           <h1> VGG Image Annotator tracking demo </h1>
-          <p> 
-            You can try the pre-loaded demos listed below or try it on your 
-            <br> 
-            own videos <a href="./via_video_annotator.html">here</a>.
-          </p>
+          <p><em>Note: This demo currently works only on the Chrome Browser</em></p>
+          <h3> Links to demo (on VOT 2018 data)</h2>
+          <ul>
+            <li> <a href="./demo.html?video=bolt.mp4">Usain bolt running</a></li>
+            <li> <a href="./demo.html?video=bike.mp4">Bike on road sequence</a></li>
+          </ul> 
+          <h3> Other demos </h3>
           <ul>
             <li> <a href="./demo.html?video=fish.mp4">Fish in an aquarium</a></li>
+            <li> <a href="./demo.html?video=david.webm">Person with changing illumination, pose, etc.</a></li>
             <li> <a href="./demo.html?video=mouse.mp4">Mouse going in circles</a></li>
             <li> <a href="./demo.html?video=moon.mp4">Moon transit in front of sun</a></li>
-            <li> <a href="./demo.html?video=david.webm">Person with changing illumination, pose, etc.</a></li>
-            <li> <a href="./demo.html?video=bike.mp4">Bike on road sequence (VOT 2018)</a></li>
-            <li> <a href="./demo.html?video=bolt.mp4">Usain bolt running (VOT 2018)</a></li> 
           </ul>
+          <br>
+          <h3> Try it! </h3>
+          <p> You can try the tracker on your own videos! </p>
+          <h4> Instructions </h4>
+          <ol>
+            <li>Click <a href="./via_video_annotator.html" target="_blank">here</a> to load the tracker.</li>
+            <li>Click the <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 30"><g transform="translate(0, 6)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></g></svg>	icon on the top panel to select a video from your computer. <em>(Supported format: mp4/webm)</em></li>
+            <li>Hints will appear at the bottom of the page for each step.</li>
+            <li>Helpful hints (<svg width="24" height="24" viewBox="0 0 100 120">
+                    <g transform="translate(0, 25)">
+                    <path d="M61.1 80.2H38.9c-.6 0-1.1.5-1.1 1.1v7.8c0 .6.5 1.1 1.1 1.1h2.6c.7 4.1 4.2 7.2 8.5 7.2s7.8-3.1 8.5-7.2h2.6c.6 0 1.1-.5 1.1-1.1v-7.8c.1-.5-.4-1.1-1.1-1.1zM50 15.4c1.6 0 2.9-1.3 2.9-2.9V5.4c0-1.6-1.3-2.9-2.9-2.9-1.6 0-2.9 1.3-2.9 2.9v7.1c0 1.6 1.3 2.9 2.9 2.9zM31.1 18.3c.5.9 1.5 1.4 2.5 1.4.5 0 1-.1 1.4-.4 1.4-.8 1.8-2.6 1.1-3.9l-3.6-6.2c-.8-1.4-2.6-1.8-3.9-1.1-1.4.8-1.8 2.6-1.1 3.9l3.6 6.3zM23 26.4l-6.2-3.6c-1.4-.8-3.1-.3-3.9 1.1-.8 1.4-.3 3.1 1.1 3.9l6.2 3.6c.5.3.9.4 1.4.4 1 0 2-.5 2.5-1.4.8-1.5.3-3.2-1.1-4zM20.1 45.3c0-1.6-1.3-2.9-2.9-2.9h-7.1c-1.6 0-2.9 1.3-2.9 2.9 0 1.6 1.3 2.9 2.9 2.9h7.1c1.6 0 2.9-1.3 2.9-2.9zM20.1 59.2L14 62.8c-1.4.8-1.8 2.6-1.1 3.9.5.9 1.5 1.4 2.5 1.4.5 0 1-.1 1.4-.4l6.2-3.6c1.4-.8 1.8-2.6 1.1-3.9-.8-1.3-2.6-1.8-4-1zM86 62.8l-6.2-3.6c-1.4-.8-3.1-.3-3.9 1.1-.8 1.4-.3 3.1 1.1 3.9l6.2 3.6c.5.3.9.4 1.4.4 1 0 2-.5 2.5-1.4.8-1.5.3-3.2-1.1-4zM89.9 42.4h-7.1c-1.6 0-2.9 1.3-2.9 2.9 0 1.6 1.3 2.9 2.9 2.9h7.1c1.6 0 2.9-1.3 2.9-2.9 0-1.6-1.3-2.9-2.9-2.9zM78.4 31.8c.5 0 1-.1 1.4-.4l6.2-3.6c1.4-.8 1.8-2.6 1.1-3.9-.8-1.4-2.6-1.8-3.9-1.1L77 26.4c-1.4.8-1.8 2.6-1.1 3.9.6.9 1.5 1.5 2.5 1.5zM65 19.4c.5.3.9.4 1.4.4 1 0 2-.5 2.5-1.4l3.6-6.2c.8-1.4.3-3.1-1.1-3.9-1.4-.8-3.1-.3-3.9 1.1l-3.6 6.2c-.8 1.2-.3 3 1.1 3.8zM51.1 20.9c-8-.4-15.5 3.1-20.6 9.6-2.7 3.4-4.4 7.6-4.8 11.9-.7 6.6 1.1 12.9 5.1 18 2.9 3.7 5 7.3 6.2 11l.5 1.5c.2.7.9 1.2 1.6 1.2h21.8c.7 0 1.4-.5 1.6-1.2l.5-1.5c1.2-3.6 3.1-7.1 5.9-10.7 2.2-2.8 3.9-6 4.8-9.5 3.8-15.4-7.8-29.7-22.6-30.3zm-4.3 14.7c0-1.8 1.5-3.2 3.2-3.2 1.8 0 3.2 1.5 3.2 3.2v14.2c0 1.8-1.5 3.2-3.2 3.2-1.8 0-3.2-1.5-3.2-3.2V35.6zM50 63.3c-1.9 0-3.4-1.5-3.4-3.4s1.5-3.4 3.4-3.4 3.4 1.5 3.4 3.4-1.5 3.4-3.4 3.4z"></path>
+                    </g></svg>) / keyboard shortcuts (<svg width="24" height="24" viewBox="0 0 24 30"><g transform="translate(0, 10)"><path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"></path></g></svg>) can be accessed from the top panel.</li>
+          </ol>
         </body>
       </html>
       EOF

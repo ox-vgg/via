@@ -947,3 +947,63 @@ _via_dp[4]['store']['metadata'] = {
     },
   },
 };
+
+//
+// David - Tracking benchmark
+// source: http://cvlab.hanyang.ac.kr/tracker_benchmark/seq/David.zip
+
+_via_dp[5] = {};
+_via_dp[5]['store'] = {};
+_via_dp[5]['store']['project'] = {
+  'pid': '__VIA_PROJECT_ID__',
+  'rev': '__VIA_PROJECT_REV_ID__',
+  'rev_timestamp': '__VIA_PROJECT_REV_TIMESTAMP__',
+  'pname':   'Video Annotation Project',
+  'creator': 'VGG Image Annotator (http://www.robots.ox.ac.uk/~vgg/software/via)',
+  'created': Date.now(),
+  'data_format_version': '3.1.1',
+  'vid_list': ['1'],
+};
+_via_dp[5]['store']['config'] = {
+  'file': {
+    'loc_prefix': {
+      '1': 'file:///home/devil/Videos/',
+      '2': 'https://vgg-dvar.robots.ox.ac.uk/_internal/prasanna/assets/',
+    },
+  },
+  'ui': {
+    'file_content_align':'center',
+    'filter_gid': true,
+    'file_metadata_editor_visible': false,
+    'spatial_metadata_editor_visible': true,
+    'spatial_region_label_attribute_id': '1',
+    'gtimeline_visible_row_count': '2',
+  }
+};
+_via_dp[5]['store']['attribute'] = {
+  '1': {
+    'aname':'Tracks',
+    'anchor_id':'FILE1_Z2_XY0',
+    'type': 1,
+    'desc':'Tracks',
+    'options':{},
+    'default_option_id':'',
+  },
+  '2': {
+    'aname': 'Tracker',
+    'anchor_id': 'FILE1_Z1_XY1',
+    'type': 3,
+    'desc': 'Tracker',
+    'options': {"0":"KCF","1":"CFNet"},
+    'default_option_id': '0',
+  }
+};
+_via_dp[5]['store']['file'] = {};
+// _via_dp[5]['store']['file'] = {
+_via_dp[5]['store']['view'] = {
+  '1': {
+    'fid_list':[1],
+  }
+};
+
+_via_dp[5]['store']['metadata'] = {};
