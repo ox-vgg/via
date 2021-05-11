@@ -46,7 +46,7 @@ pages:
           <p> You can try the tracker on your own videos! </p>
           <h4> Instructions </h4>
           <ol>
-            <li>Click <a href="./via_video_annotator.html" target="_blank">here</a> to load the tracker.</li>
+            <li>Click <a href="./via_video_annotator.html" target="_blank">here</a> to open the tracker (opens in a new tab).</li>
             <li>Click the <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 30"><g transform="translate(0, 6)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></g></svg>	icon on the top panel to select a video from your computer. <em>(Supported format: mp4/webm)</em></li>
             <li>Hints will appear at the bottom of the page for each step.</li>
             <li>Helpful hints (<svg width="24" height="24" viewBox="0 0 100 120">
