@@ -55,7 +55,7 @@ function _via_temporal_segmenter(file_annotator, container, vid, data, media_ele
   this.metadata_last_added_mid = '';
   this.is_init_success = false;
 
-  this.show_audio = false;             // experimental, hence disabled by default
+  //this.show_audio = true;             // experimental, hence disabled by default
   this.audio_analyser_active = false;
 
   // registers on_event(), emit_event(), ... methods from
@@ -98,8 +98,21 @@ _via_temporal_segmenter.prototype._init = function() {
     this._init_on_success(this.group_aid_candidate_list[0]);
     this.is_init_success = true;
   } else {
-    this._init_on_fail();
-    this.is_init_success = false;
+    // add a default temporal segment attribute
+    var promise = this.d.attribute_add('_TEMPORAL_SEGMENT',
+                                       'FILE1_Z2_XY0',
+                                       _VIA_ATTRIBUTE_TYPE.SELECT,
+                                       'Temporal segments',
+                                       {'default':'Default'},
+                                       '');
+    promise.then(function(new_attribute_aid) {
+      this.group_aid_candidate_list.push(new_attribute_aid);
+      this._init_on_success(new_attribute_aid);
+      this.is_init_success = true;
+    }.bind(this), function(err) {
+      this._init_on_fail();
+      this.is_init_success = false;
+    }.bind(this));
   }
 }
 
@@ -164,7 +177,7 @@ _via_temporal_segmenter.prototype._redraw_all = function() {
     }
   }
 
-  this._redraw_timeline();
+  //this._redraw_timeline();
 
   // draw marker to show current time in group timeline and group metadata
   this._tmetadata_draw_currenttime_mark(tnow);
@@ -327,6 +340,9 @@ _via_temporal_segmenter.prototype._vtimeline_canvas2time = function(x) {
 }
 
 _via_temporal_segmenter.prototype._vtimeline_mark_draw = function() {
+  // continually update the video timeline timer (required for responsive update)
+  window.requestAnimationFrame(this._vtimeline_mark_draw.bind(this));
+
   var time = this.m.currentTime;
   var cx = this._vtimeline_time2canvas(time);
 
