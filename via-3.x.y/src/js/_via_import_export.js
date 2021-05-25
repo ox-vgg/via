@@ -24,7 +24,7 @@ _via_import_export.prototype.import_from_file = function(data_format, file) {
     _via_util_load_text_file(file[0], this.import_from_coco.bind(this));
     break;
   case 'webvtt':
-    _via_util_load_text_file(file[0], this.import_subtitle_from_webvtt.bind(this));
+    _via_util_load_text_file(file[0], this.import_from_webvtt.bind(this));
   default:
     console.warn('Unknown data format: ' + data_format);
   }
@@ -316,43 +316,62 @@ _via_import_export.prototype.import_from_webvtt = function(webvtt_str, vid, subt
     var line_split_regex = new RegExp('\n|\r|\r\n', 'g');
     var webvtt_lines = webvtt_str.split(line_split_regex);
     var metadata_list = [];
-    for(var i=0; i<webvtt_lines.length; ) {
-      if(webvtt_lines[i].includes(' --> ')) {
-        var timestamp_tokens = webvtt_lines[i].split(' --> ');
-        var starttime_sec = _via_hh_mm_ss_ms_to_seconds(timestamp_tokens[0]);
-        var endtime_sec = _via_hh_mm_ss_ms_to_seconds(timestamp_tokens[1]);
-
-        var subtitle_text = [];
-        var end_of_subtitle_text = false;
-        var offset = 1;
-        while(!end_of_subtitle_text) {
-          if ((i+offset) >= webvtt_lines.length) {
-            break;
-          }
-          if(webvtt_lines[i + offset].includes[' --> '] ||
-             webvtt_lines[i + offset] == '') {
-            end_of_subtitle_text = true;
-            if(webvtt_lines[i + offset].includes['']) {
-              offset = offset + 1;
-            }
-            break;
-          } else {
-            subtitle_text.push(webvtt_lines[i + offset]);
-            offset = offset + 1;
-          }
+    var webvtt_lines_count = webvtt_lines.length;
+    var current_line_index = 0;
+    var timestamp_found = false;
+    var timestamp_line_index = -1;
+    var subtitles_parse_started = false;
+    var subtitle_text = [];
+    while(current_line_index < webvtt_lines_count) {
+      //console.log('Processing line [' + current_line_index + '] : ' + webvtt_lines[current_line_index]);
+      if( webvtt_lines[current_line_index] === '' ) {
+        // ignore empty lines
+        current_line_index += 1;
+        //console.log('  ignored empty line');
+        continue;
+      }
+      if( webvtt_lines[current_line_index].includes(' --> ') ) {
+        if(timestamp_found) {
+          // encountered timestamp for a new subtitle
+          // we now process previous subtitle
+          // we do not increment current_line_index so that the parser
+          // encounters this line again and begins parsing the new subtitle
+          var timestamp_tokens = webvtt_lines[timestamp_line_index].split(' --> ');
+          var starttime_sec = _via_hh_mm_ss_ms_to_seconds(timestamp_tokens[0]);
+          var endtime_sec = _via_hh_mm_ss_ms_to_seconds(timestamp_tokens[1]);
+          var metadata = {'vid': vid,
+                          'z':[starttime_sec, endtime_sec],
+                          'xy':[],
+                          'av':{}
+                         }
+          metadata['av'][subtitle_aid] = subtitle_text.join(' ');
+          metadata_list.push(metadata);
+          //console.log('  added subtitle: ' + JSON.stringify(metadata))
+          timestamp_found = false; // to allow this new timestamp to be processed in next iteration
+          timestamp_line_index = -1;
+          subtitle_text = [];
+        } else {
+          timestamp_found = true;
+          timestamp_line_index = current_line_index;
+          //console.log('  timestamp found at index: ' + timestamp_line_index);
+          current_line_index += 1;
         }
-        var av = {}
-        av[subtitle_aid] = subtitle_text.join(' ');
-        metadata_list.push({'vid': vid,
-                            'z':[starttime_sec, endtime_sec],
-                            'xy':[],
-                            'av': av
-                           });
-        i = i + offset;
+        continue;
       } else {
-        i = i + 1;
+        if(timestamp_found) {
+          subtitle_text.push(webvtt_lines[current_line_index]);
+          //console.log('  pushed part of subtitle to subtitle text array');
+        } else {
+          // not an empty line
+          // timestamp has not been encountered yet
+          // we ignore other irrelevant parts (e.g. header)
+          //console.log('  IGNORE: ' + webvtt_lines[current_line_index]);
+        }
+        current_line_index += 1;
+        continue;
       }
     }
+
     //this.d.metadata_add_bulk(metadata_list, true); // appends to existing metadata
 
     // removes existing subtitles and adds new subtitles
