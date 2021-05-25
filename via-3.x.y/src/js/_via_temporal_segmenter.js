@@ -99,10 +99,10 @@ _via_temporal_segmenter.prototype._init = function() {
     this.is_init_success = true;
   } else {
     // add a default temporal segment attribute
-    var promise = this.d.attribute_add('_TEMPORAL_SEGMENT',
+    var promise = this.d.attribute_add('TEMPORAL-SEGMENTS',
                                        'FILE1_Z2_XY0',
                                        _VIA_ATTRIBUTE_TYPE.SELECT,
-                                       'Temporal segments',
+                                       'Temporal segment attribute added by default',
                                        {'default':'Default'},
                                        '');
     promise.then(function(new_attribute_aid) {
