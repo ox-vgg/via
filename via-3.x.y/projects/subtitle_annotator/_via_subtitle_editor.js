@@ -15,6 +15,8 @@ function _via_subtitle_editor(groupby_aid, data, temporal_segmenter, container) 
   this.mid_list = [];
   this.subtitle_track_cue_list = [];
   this.selected_mindex = -1;
+  this.subtitle_track = null;
+  this.row_index_list = [];
 
   // initialise event listeners
   this.ts.on_event('metadata_add', this._ID, this.on_event_metadata_add.bind(this));
@@ -28,8 +30,8 @@ function _via_subtitle_editor(groupby_aid, data, temporal_segmenter, container) 
 }
 
 _via_subtitle_editor.prototype.init = function() {
-  var subtitle_track = this.ts.m.addTextTrack('subtitles', 'English', 'en');
-  subtitle_track.mode = 'showing';
+  this.subtitle_track = this.ts.m.addTextTrack('subtitles', 'English', 'en');
+  this.subtitle_track.mode = 'showing';
 
   this.c.setAttribute('style', 'height:' + this.c.clientHeight + 'px');
   this.c.innerHTML = '';
@@ -44,48 +46,57 @@ _via_subtitle_editor.prototype.init = function() {
   var row_index = 1;
   for(var mindex in this.mid_list) {
     var mid = this.mid_list[mindex];
-    var index = document.createElement('td');
-    index.innerHTML = row_index;
-    var row = document.createElement('tr');
-    row.setAttribute('id', 'subtitle_mindex_' + mindex);
-    row.addEventListener('click', this.on_click_row.bind(this, parseInt(mindex)));
-
-    var stime = document.createElement('td');
-    var start = _via_seconds_to_hh_mm_ss_ms(this.d.store.metadata[mid]['z'][0]);
-    stime.innerHTML = '<span class="hhmmss">' + start[0] + ':' + start[1] + ':' + start[2] + '</span><span class="ms">' + start[3] + '</span>';
-    var etime = document.createElement('td');
-    var end = _via_seconds_to_hh_mm_ss_ms(this.d.store.metadata[mid]['z'][1]);
-    etime.innerHTML = '<span class="hhmmss">' + end[0] + ':' + end[1] + ':' + end[2] + '</span><span class="ms">' + end[3] + '</span>';
-
-    var subtitle = document.createElement('td');
-    var input = document.createElement('input');
-    input.setAttribute('type', 'text');
-    //input.setAttribute('disabled', '');
-    input.setAttribute('data-mid', mid);
-    input.setAttribute('value', this.d.store.metadata[mid]['av'][this.groupby_aid]);
-    input.addEventListener('click', this.onclick_subtitle_text.bind(this));
-    input.addEventListener('change', this.onchange_subtitle_text.bind(this));
-    input.addEventListener('keydown', this.keydown_subtitle_text.bind(this));
-
-    subtitle.appendChild(input);
-
-    row.appendChild(index);
-    row.appendChild(stime);
-    row.appendChild(etime);
-    row.appendChild(subtitle);
+    var row = this.get_subtitle_table_row(row_index, mindex, mid);
     this.subtitle_tbody.appendChild(row);
+
+    this.row_index_list[mindex] = row_index;
     row_index = row_index + 1;
 
     this.subtitle_track_cue_list[mindex] = new VTTCue(this.d.store.metadata[mid]['z'][0],
                                                       this.d.store.metadata[mid]['z'][1],
                                                       this.d.store.metadata[mid]['av'][this.groupby_aid]);
 
-    subtitle_track.addCue(this.subtitle_track_cue_list[mindex]);
+    this.subtitle_track_cue_list[mindex].id = 'cue_' + mid;
+    this.subtitle_track.addCue(this.subtitle_track_cue_list[mindex]);
   }
 
   //this.subtitle_table.appendChild(subtitle_head);
   this.subtitle_table.appendChild(this.subtitle_tbody);
   this.c.appendChild(this.subtitle_table);
+}
+
+_via_subtitle_editor.prototype.get_subtitle_table_row = function(row_index, mindex, mid) {
+  var row = document.createElement('tr');
+  row.setAttribute('id', 'subtitle_mindex_' + mindex);
+  row.addEventListener('click', this.on_click_row.bind(this, parseInt(mindex)));
+
+  var stime = document.createElement('td');
+  var start = _via_seconds_to_hh_mm_ss_ms(this.d.store.metadata[mid]['z'][0]);
+  stime.innerHTML = '<span class="hhmmss">' + start[0] + ':' + start[1] + ':' + start[2] + '</span><span class="ms">' + start[3] + '</span>';
+  var etime = document.createElement('td');
+  var end = _via_seconds_to_hh_mm_ss_ms(this.d.store.metadata[mid]['z'][1]);
+  etime.innerHTML = '<span class="hhmmss">' + end[0] + ':' + end[1] + ':' + end[2] + '</span><span class="ms">' + end[3] + '</span>';
+
+  var subtitle = document.createElement('td');
+  var input = document.createElement('input');
+  input.setAttribute('type', 'text');
+  //input.setAttribute('disabled', '');
+  input.setAttribute('data-mid', mid);
+  input.setAttribute('value', this.d.store.metadata[mid]['av'][this.groupby_aid]);
+  input.addEventListener('click', this.onclick_subtitle_text.bind(this));
+  input.addEventListener('change', this.onchange_subtitle_text.bind(this));
+  input.addEventListener('keydown', this.keydown_subtitle_text.bind(this));
+
+  subtitle.appendChild(input);
+
+  var index = document.createElement('td');
+  index.innerHTML = row_index;
+
+  row.appendChild(index);
+  row.appendChild(stime);
+  row.appendChild(etime);
+  row.appendChild(subtitle);
+  return row;
 }
 
 _via_subtitle_editor.prototype.keydown_subtitle_text = function(e) {
@@ -187,11 +198,67 @@ _via_subtitle_editor.prototype.on_click_row = function(mindex, e) {
 }
 
 _via_subtitle_editor.prototype.on_event_metadata_add = function(data, event_payload) {
-  this.init();
+  // find the appropriate location of new mid in this.mid_list
+  var new_mid = event_payload['mid'];
+  var new_mindex = -1;
+  for(var mindex in this.mid_list) {
+    var mid = this.mid_list[mindex];
+    if(this.d.store.metadata[mid]['z'][0] > this.d.store.metadata[new_mid]['z'][1]) {
+      new_mindex = mindex - 1;
+      break;
+    }
+  }
+  if(new_mindex === -1) {
+    _via_util_msg_show('Failed to find appropriate location for new metadata');
+    return;
+  }
+
+  // update internal data structures like
+  // this.mid_list, this.subtitle_track, this.subtitle_track_cue_list
+  this.mid_list.splice(new_mindex, 0, new_mid);
+  var new_mid_cue = new VTTCue(this.d.store.metadata[new_mid]['z'][0],
+                               this.d.store.metadata[new_mid]['z'][1],
+                               this.d.store.metadata[new_mid]['av'][this.groupby_aid]);
+  new_mid_cue.id = 'cue_' + new_mid;
+  this.subtitle_track_cue_list.splice(new_mindex, 0, new_mid_cue);
+  this.subtitle_track.addCue(this.subtitle_track_cue_list[new_mindex]);
+
+  // recreate the subtitle_tbody as row_index and mindex have been invalidated
+  this.subtitle_tbody.innerHTML = '';
+  this.row_index_list = [];
+  var row_index = 1;
+  for(var mindex in this.mid_list) {
+    var mid = this.mid_list[mindex];
+    var row = this.get_subtitle_table_row(row_index, mindex, mid);
+    this.subtitle_tbody.appendChild(row);
+
+    this.row_index_list[mindex] = row_index;
+    row_index = row_index + 1;
+  }
 }
 
 _via_subtitle_editor.prototype.on_event_metadata_del = function(data, event_payload) {
-  this.init();
+  var del_mid = event_payload.mid;
+  var del_mindex = this.mid_list.indexOf(del_mid);
+  this.mid_list.splice(del_mindex, 1);
+  this.subtitle_track_cue_list.splice(del_mindex, 1);
+  // see https://stackoverflow.com/a/53091426
+  this.subtitle_track.mode = 'hidden';
+  this.subtitle_track.removeCue(this.subtitle_track.cues.getCueById('cue_' + del_mid));
+  this.subtitle_track.mode = 'showing';
+
+  // recreate the subtitle_tbody as row_index and mindex have been invalidated
+  this.subtitle_tbody.innerHTML = '';
+  this.row_index_list = [];
+  var row_index = 1;
+  for(var mindex in this.mid_list) {
+    var mid = this.mid_list[mindex];
+    var row = this.get_subtitle_table_row(row_index, mindex, mid);
+    this.subtitle_tbody.appendChild(row);
+
+    this.row_index_list[mindex] = row_index;
+    row_index = row_index + 1;
+  }
 }
 
 _via_subtitle_editor.prototype._on_event_metadata_select = function(data, event_payload) {
