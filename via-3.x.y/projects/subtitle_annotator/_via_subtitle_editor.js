@@ -204,7 +204,7 @@ _via_subtitle_editor.prototype.on_event_metadata_add = function(data, event_payl
   for(var mindex in this.mid_list) {
     var mid = this.mid_list[mindex];
     if(this.d.store.metadata[mid]['z'][0] > this.d.store.metadata[new_mid]['z'][1]) {
-      new_mindex = mindex - 1;
+      new_mindex = mindex;
       break;
     }
   }
