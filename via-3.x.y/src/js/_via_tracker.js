@@ -211,7 +211,8 @@ class TrackingHandler {
   constructor(vid, video, ts, d) {
     this._ID = 'TrackingHandler';
     this.vid = vid;
-    this.video = video;
+    this.originalVideo = video;
+    this.video = video.cloneNode(false);
     this.ts = ts;
     this.d  = d;
 
@@ -237,9 +238,12 @@ class TrackingHandler {
     
     this.scale = 0.5;
     this.dscale = 1 / this.scale;
-    this.bcanvas.width = Math.floor(this.video.videoWidth * this.scale);
-    this.bcanvas.height = Math.floor(this.video.videoHeight * this.scale);
+    this.video.addEventListener('loadedmetadata', () => {
+      this.bcanvas.width = Math.floor(this.video.videoWidth * this.scale);
+      this.bcanvas.height = Math.floor(this.video.videoHeight * this.scale);
+    })
     this.bctx = this.bcanvas.getContext('2d');
+    this.video.load()
 
     Tracker.height = Math.floor(this.video.videoHeight * this.scale);
     
@@ -407,6 +411,7 @@ class TrackingHandler {
           _via_util_msg_show('Tracking stopped. Draw / Update box to start / resume tracking', true);
         }
         if (Tracker.last_success_time !== -1) {
+          this.originalVideo.currentTime = Tracker.last_success_time;
           video.currentTime = Tracker.last_success_time;
           Tracker.last_success_time = -1;
         }
@@ -472,6 +477,7 @@ class TrackingHandler {
         }
         Tracker.last_success_time = currentTime;
       }
+      this.originalVideo.currentTime = video.currentTime;
       video.currentTime = Math.max(
         0,
         Math.min(
@@ -930,6 +936,7 @@ class TrackingHandler {
         return false;
       }
       e.preventDefault();
+      this.video.currentTime = this.originalVideo.currentTime;
       this.video.addEventListener('seeked', seekListener);
       _via_util_msg_show('Tracking in progress, Press any key to cancel', true);
       this.overlay.style.display = 'block';

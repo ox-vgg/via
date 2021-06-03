@@ -404,10 +404,7 @@ _via_file_annotator.prototype._file_create_html_element = function() {
       this._rinput_disable();
     }.bind(this));
     media.addEventListener('seeked', function(e) {
-      this._creg_add_current_frame_regions(this.vid);
-      if (Object.keys(this.creg).length) {
-        this._creg_draw_all();
-      }
+      this._creg_show_current_frame_regions(this.vid);
       this._rinput_enable();
       this._smetadata_hide();
     }.bind(this));
@@ -2046,7 +2043,8 @@ _via_file_annotator.prototype._on_event_metadata_add = function(data, event_payl
       this.va.temporal_segmenter._tmetadata_boundary_add_spatial_mid(mid);
     }
     this._creg_add(vid, mid);
-    this._creg_draw_all();
+    // No need to draw again. Other functions which added the metadata will take 
+    // care of it
   }
 }
 
