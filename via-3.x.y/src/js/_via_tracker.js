@@ -685,7 +685,7 @@ class TrackingHandler {
     const _t_mid = z[0];
 
     // Get frame and box
-    this.bctx.drawImage(this.video, 0, 0, this.bcanvas.width, this.bcanvas.height);
+    this.bctx.drawImage(this.originalVideo, 0, 0, this.bcanvas.width, this.bcanvas.height);
     const frame = this.bctx.getImageData(0, 0, this.bcanvas.width, this.bcanvas.height);
    
     const [ _x, _y, _w, _h ] = xy.slice(1).map(el => Math.floor(this.scale * el));
