@@ -40,7 +40,9 @@ function _via_view_annotator(data, container ) {
   _via_event.call( this );
 
   this.d.on_event('metadata_add', this._ID, this._on_event_metadata_add.bind(this));
+  this.d.on_event('metadata_add_from', this._ID, this._on_event_metadata_add.bind(this));
   this.d.on_event('metadata_update', this._ID, this._on_event_metadata_update.bind(this));
+  this.d.on_event('metadata_delete_bulk', this._ID, this._on_event_metadata_delete_bulk.bind(this));
 
   this._init();
 }
@@ -645,5 +647,14 @@ _via_view_annotator.prototype._on_event_metadata_update = function(data, event_p
 
   if ( typeof(this.temporal_segmenter) !== 'undefined' ) {
     this.temporal_segmenter._on_event_metadata_update(vid, mid);
+  }
+}
+
+_via_view_annotator.prototype._on_event_metadata_delete_bulk = function(data, event_payload) {
+  var vid = event_payload.vid;
+  var mid_list = event_payload.mid_list;
+
+  if ( typeof(this.temporal_segmenter) !== 'undefined' ) {
+    this.temporal_segmenter._on_event_metadata_del(vid, mid_list);
   }
 }

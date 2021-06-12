@@ -49,8 +49,8 @@ class Tracker {
     
   // Resets the tracker to zero state
   static reset_tracker() {
-    this.track_mid = null;
-    this.segment_mid = null;
+    // this.track_mid = null;
+    // this.segment_mid = null;
     this.fail_counter = 0;
     if (this.instance) {
       if (typeof this.instance.delete === 'function') {
@@ -177,11 +177,113 @@ class Track {
     this.segments.set(new_segment_mid, segment.slice(_idx));
   }
 
+  overwrite(segment_mid, d, vid) {
+    const { metadata } = d.store
+    // Find all overlapping segments
+    const [tsegment_0, tsegment_1] = metadata[segment_mid].z;
+    const overlapping_segments = this.order.filter(_mid => {
+      // Ignore the input segment
+      if (_mid === segment_mid) {
+        return false;
+      }
+      const [t0, t1] = metadata[_mid].z;
+      if (t1 < tsegment_0 || t0 > tsegment_1) {
+        // Happens before or after the segment
+        return false;
+      }
+      return true
+    });
+
+    // Remove and replace.
+    // for each segment
+    // find A - B
+    overlapping_segments.forEach(_segment_mid => {
+      const segment = this.segments.get(_segment_mid);
+
+      // Find the index of overlap
+      const _sidx = segment.findIndex(_mid => metadata[_mid].z[0] >= tsegment_0 - 1/50 + 1e-3);
+      const _lidx = segment.length - (segment.slice().reverse().findIndex(_mid => metadata[_mid].z[0] <= tsegment_1 + 1/50 - 1e-3));
+
+      if (_sidx !== -1 && _lidx !== -1) {
+        // Non empty segment, remove elements
+        if (_lidx - _sidx === segment.length) {
+          // Segment is fully contained inside new segment. Delete
+          d.metadata_delete_bulk(
+            vid,
+            [_segment_mid],
+            true
+          );
+        } 
+        else {
+          // Partial Overlap
+          if (_sidx > 0 && _lidx === segment.length) {
+            // Last portion overlaps, Reduce z_1 to last non overlapping element
+            d.metadata_update_zi(
+              vid,
+              _segment_mid,
+              1,
+              metadata[segment[_sidx - 1]].z[0]
+            );
+            // Delete the rest, and let the event handlers delete the mid in segment
+            d.metadata_delete_bulk(vid, segment.slice(_sidx, _lidx), true);
+          } 
+          else if (_sidx === 0 && _lidx < segment.length) {
+            // First portion overlaps, Increase z_0 to first non overlapping element
+            d.metadata_update_zi(
+                vid,
+              _segment_mid,
+              0,
+              metadata[segment[_lidx]].z[0]
+            );
+            // Delete the rest, and let the event handlers delete the mid in segment
+            d.metadata_delete_bulk(vid, segment.slice(_sidx, _lidx), true);
+          }
+          else {
+            // New segment is contained within, reduce end time of segment and split into parts
+            d.metadata_update_zi(
+              vid,
+              _segment_mid,
+              1,
+              metadata[segment[_sidx - 1]].z[0]
+            );
+            const second_part = segment.splice(_lidx);
+            const { av, root_mid } = metadata[_segment_mid];
+
+            const {0: first_mid, length: l, [l - 1]: last_mid} = second_part;
+            const { z: [tfirst] } = metadata[first_mid];
+            const { z: [tlast] } = metadata[last_mid];
+
+            let _t = [ tfirst, tlast ];
+            _t = _via_util_float_arr_to_fixed(_t, 3);
+
+            // Add temporal segment and set the segment_mid of box
+            d.metadata_add(vid, _t, [], av, {root_mid}).then((res) => {
+              this.add_segment(res.mid, second_part);
+              this.segments.get(res.mid).forEach(_mid => {
+                d.store.metadata[_mid]['segment_mid'] = res.mid;
+              });
+              this.sort(d);
+              // Delete the middle portion.
+              d.metadata_delete_bulk(vid, segment.slice(_sidx, _lidx), true);
+            });
+          }
+        }
+      }
+    });
+  }
+
   sort(d) {
     // Sort segment order
+    const { metadata } = d.store;
     const cmp = (a, b) => {
-      const { z: z_a } = d.store.metadata[a];
-      const { z: z_b } = d.store.metadata[b];
+      if (!(a in metadata)) {
+        return 1;
+      }
+      const { z: z_a } = metadata[a];
+      if (!(b in metadata)) {
+        return -1;
+      }
+      const { z: z_b } = metadata[b];
 
       let t0 = z_a[0];
       let t1 = z_b[0];
@@ -327,16 +429,19 @@ class TrackingHandler {
 
     // Get boundary ts
     let boundary_ts = backward ? 0 : this.video.duration;
+    const segment_backup = {};
+    
+    let next_ts = boundary_ts;
+    let next_segment_id = -1;
     const _oidx = current_track.order.indexOf(Tracker.segment_mid) + (backward ? -1 : 1);
-    const current_ts = metadata[Tracker.segment_mid].z[0];
-
     if (_oidx >=0 && _oidx < current_track.order.length) {
       // Either the previous segment / next segment will act as the 
       // boundary
-      const next_segment_id = current_track.order[_oidx];
-      boundary_ts = metadata[next_segment_id].z[(backward ? 1 : 0)];
-    } 
+      next_segment_id = current_track.order[_oidx];
+      next_ts = metadata[next_segment_id].z[(backward ? 1 : 0)] + (backward ? 1e-3 : -1e-3);
+    }
     
+    const current_ts = metadata[Tracker.segment_mid].z[(backward ? 0 : 1)];
     if (Math.abs(current_ts - boundary_ts) < this.delta) {
       // Already at boundary
       // TODO Add more informative message
@@ -396,6 +501,19 @@ class TrackingHandler {
       }
 
       if (!Tracker.instance) {
+        if (VIA_TRACKING_OVERWRITE_SEGMENTS) {
+          // Restore backup segments
+          Promise.all(Object.keys(segment_backup).map(async _segment_mid => {
+            const { segment_metadata, spatial_metadata } = segment_backup[_segment_mid];
+            await this.d.metadata_add_from_bulk(vid, spatial_metadata);
+            await this.d.metadata_add_from(vid, _segment_mid, segment_metadata);
+            current_track.add_segment(_segment_mid, Object.keys(spatial_metadata));
+            delete segment_backup[_segment_mid];
+          })).then(() => {
+            current_track.sort(this.d);
+            current_track.overwrite(Tracker.segment_mid, this.d, vid);
+          });
+        }
         video.removeEventListener('seeked', seekListener);
         this.overlay.style.display = 'none';
         if(backward) {
@@ -419,6 +537,33 @@ class TrackingHandler {
         return;
       }
     
+      if (VIA_TRACKING_OVERWRITE_SEGMENTS) {
+        const is_intersecting = backward ? (currentTime < next_ts) : (currentTime > next_ts);
+        if (is_intersecting) {
+          // Remove next segment and keep a reference to restore later.
+          if (next_segment_id !== -1) {
+            segment_backup[next_segment_id] = {
+              segment_metadata: this.d.store.metadata[next_segment_id],
+              spatial_metadata: {}
+            };
+            current_track.segments.get(next_segment_id).forEach(_mid => {
+              segment_backup[next_segment_id]['spatial_metadata'][_mid] = this.d.store.metadata[_mid];
+            });
+            await this.d.metadata_delete_bulk(vid, [next_segment_id], true);
+          }
+          // Keep track of the next segment
+          const _oidx = current_track.order.indexOf(Tracker.segment_mid) + (backward ? -1 : 1);    
+          if (_oidx >=0 && _oidx < current_track.order.length) {
+            // Either the previous segment / next segment will act as the 
+            // boundary
+            next_segment_id = current_track.order[_oidx];
+            next_ts = metadata[next_segment_id].z[(backward ? 1 : 0)];
+          } else {
+            next_segment_id = -1;
+            next_ts = boundary_ts;
+          }
+        }
+      }
       // Get frame.
       this.bctx.drawImage(this.video, 0, 0, this.bcanvas.width, this.bcanvas.height);
       const frame = this.bctx.getImageData(0, 0, this.bcanvas.width, this.bcanvas.height);
@@ -459,7 +604,24 @@ class TrackingHandler {
             (backward ? 0 : 1),
             currentTime);
         } else {
-          // Tracking failed previously, create new segment
+          // Tracking failed previously
+
+          // Overwrite with the previously tracked segment
+          if (VIA_TRACKING_OVERWRITE_SEGMENTS) {
+            // TODO CODE SECTION NOT TESTED
+            // Restore backup segments
+            await Promise.all(
+              Object.keys(segment_backup).map(async _segment_mid => {
+                const { segment_metadata, spatial_metadata } = segment_backup[_segment_mid];
+                await this.d.metadata_add_from_bulk(vid, spatial_metadata)
+                await this.d.metadata_add_from(vid, _segment_mid, segment_metadata)
+                current_track.add_segment(_segment_mid, Object.keys(spatial_metadata));
+                delete segment_backup[_segment_mid];
+              }));
+              current_track.sort(this.d);
+              current_track.overwrite(Tracker.segment_mid, this.d, vid);
+          }
+          // create new segment
           const _t_mid = currentTime;
         
           let _t = [_t_mid, _t_mid + this.delta ];
@@ -538,6 +700,7 @@ class TrackingHandler {
         if (track_mid in this.tracks) {
           this.tracks[track_mid].add_segment(res.mid, [mid]);
           this.tracks[track_mid].sort(this.d);
+          this.tracks[track_mid].overwrite(res.mid, this.d, vid);
           this.d.store.metadata[mid]['root_mid'] = track_mid;
         } else {
           this.tracks[track_mid] = new Track(res.mid, mid)
@@ -709,6 +872,9 @@ class TrackingHandler {
           segment_mid,
           res.mid
         );
+        this.tracks[root_mid].segments.get(res.mid).forEach(_mid => {
+          this.d.store.metadata[_mid]['segment_mid'] = res.mid;
+        })
         this.d.store.metadata[mid]['segment_mid'] = res.mid;
         Tracker.reset(
           frame,
@@ -756,21 +922,21 @@ class TrackingHandler {
   }
 
   handle_metadata_delete_rect(event_payload) {
-    const { mid } = event_payload;
+    const { vid, mid } = event_payload;
 
-    if (!(mid in this.d.store.metadata)) {
+    const { metadata } = this.d.store;
+    if (!(mid in metadata)) {
       // rect already deleted
       return;
     }
 
-    let { root_mid, segment_mid } = this.d.store.metadata[mid];
+    let { root_mid, segment_mid } = metadata[mid];
 
     if (!root_mid) {
       root_mid = mid;
     }
     this.tracks[root_mid].delete(mid, segment_mid);
-
-    // TODO Update temporal segment based on the remaining mid in segment 
+    // TODO Update temporal segment based on the remaining mid in segment
   }
 
   handle_metadata_delete_segment(event_payload) {
@@ -857,9 +1023,13 @@ class TrackingHandler {
 
       // Handle segments, rects
       const track_delete = [];
-
+      const { metadata } = this.d.store;
       mid_list.forEach((mid) => {
-        const { xy, z, av: { readonly }, root_mid } = this.d.store.metadata[mid];
+        if (!(mid in metadata)) {
+          // Already deleted, can't proceed
+          return;
+        }
+        const { xy, z, av: { readonly }, root_mid } = metadata[mid];
 
         if (xy.length === 0 && z.length === 2 && readonly) {
           // Delete segment

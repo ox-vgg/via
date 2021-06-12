@@ -29,6 +29,7 @@ function _via_temporal_segmenter(file_annotator, container, vid, data, media_ele
   this.selected_mindex = -1;
   this.edge_show_time = -1;
 
+  this.last_redraw_time = -1;
   // spatial mid
   this.smid = {};
 
@@ -144,8 +145,8 @@ _via_temporal_segmenter.prototype._init_on_success = function(groupby_aid) {
 //
 // All animation frame routines
 //
-_via_temporal_segmenter.prototype._redraw_all = function() {
-  window.requestAnimationFrame(this._redraw_all.bind(this));
+_via_temporal_segmenter.prototype._draw = function() {
+
   var tnow = this.m.currentTime;
   this._update_playback_rate(tnow);
 
@@ -176,14 +177,24 @@ _via_temporal_segmenter.prototype._redraw_all = function() {
     }
   }
 
-  this._redraw_timeline();
-
   // draw marker to show current time in group timeline and group metadata
-  this._tmetadata_draw_currenttime_mark(tnow);
+  if (Math.abs(this.last_redraw_time - tnow) > 5e-3) {
+    this._vtimeline_mark_draw();
+    this._tmetadata_draw_currenttime_mark(tnow);
+    this.last_redraw_time = tnow;
+  }
 
   if(this.show_audio) {
     this._tmetadata_gtimeline_draw_audio();
   }
+}
+_via_temporal_segmenter.prototype._redraw_all = function() {
+  const draw_fn = this._draw.bind(this);
+  const draw_callback = () => {
+    window.requestAnimationFrame(draw_callback);
+    draw_fn();
+  }
+  window.requestAnimationFrame(draw_callback);
 }
 
 _via_temporal_segmenter.prototype._update_playback_rate = function(t) {
@@ -208,9 +219,7 @@ _via_temporal_segmenter.prototype._update_playback_rate = function(t) {
   }
 }
 
-_via_temporal_segmenter.prototype._redraw_timeline = function() {
-  // draw the full video timeline (on the top)
-  this._vtimeline_mark_draw();
+_via_temporal_segmenter.prototype._redraw_timeline = function() {  
   // draw group timeline
   this._tmetadata_gtimeline_draw();
 }
@@ -650,6 +659,7 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_add_spatial_mid = function
       this.smid[time].push(mid);
     }
   }
+  this._redraw_timeline();
 }
 
 _via_temporal_segmenter.prototype._tmetadata_boundary_del_spatial_mid = function(mid) {
@@ -662,6 +672,7 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_del_spatial_mid = function
       }
     }
   }
+  this._redraw_timeline();
 }
 
 _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_gid_mid = function(gid) {
@@ -670,6 +681,9 @@ _via_temporal_segmenter.prototype._tmetadata_boundary_fetch_gid_mid = function(g
   var mindex, mid, t0, t1;
   for ( mindex in this.group[gid] ) {
     mid = this.group[gid][mindex];
+    if(!(mid in this.d.store.metadata)){
+      continue;
+    }
     if ( this.d.store.metadata[mid].z.length === 2 &&
          this.d.store.metadata[mid].xy.length === 0
        ) {
@@ -734,7 +748,6 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_zoomin = function() {
     this.tmetadata_width_per_sec = wps;
     this._tmetadata_boundary_update(this.tmetadata_gtimeline_tstart);
     this._redraw_timeline();
-    this._redraw_all();
   }
 }
 
@@ -744,7 +757,6 @@ _via_temporal_segmenter.prototype._tmetadata_gtimeline_zoomout = function() {
     this.tmetadata_width_per_sec = wps;
     this._tmetadata_boundary_update(this.tmetadata_gtimeline_tstart);
     this._redraw_timeline();
-    this._redraw_all();
   }
 }
 
@@ -1038,6 +1050,10 @@ _via_temporal_segmenter.prototype._tmetadata_group_gid_draw_boundary = function(
 }
 
 _via_temporal_segmenter.prototype._tmetadata_group_gid_mark_selected = function() {
+  if (!(mid in this.d.store.metadata)) {
+    // Somebody deleted while this call was added to stack.
+    return;
+  }
   var gid = this.selected_gid;
   var mid = this.selected_mid;
   var t0, t1, x0, x1;
@@ -1328,6 +1344,10 @@ _via_temporal_segmenter.prototype._tmetadata_mid_del_sel = function(mid) {
 }
 
 _via_temporal_segmenter.prototype._tmetadata_mid_del = function(mid) {
+  if (!(this.selected_gid in this.tmetadata_gtimeline_mid)) {
+    // Cannot delete. Already deleted?
+    return;
+  }
   var mindex = this.tmetadata_gtimeline_mid[this.selected_gid].indexOf(mid);
   if ( mindex !== -1 ) {
     this.tmetadata_gtimeline_mid[this.selected_gid].splice(mindex, 1);
@@ -2180,7 +2200,12 @@ _via_temporal_segmenter.prototype._vtimeline_playbackrate2str = function(t) {
 //
 // external events
 //
-_via_temporal_segmenter.prototype._on_event_metadata_del = function(vid, mid) {
+_via_temporal_segmenter.prototype._on_event_metadata_del = function(vid, mid_list) {
+  mid_list.forEach(_mid => {
+    // TODO Event also true for spatial region delete, filter it?
+    this._tmetadata_mid_del(_mid);
+  })
+  this._tmetadata_boundary_fetch_gid_mid(this.selected_gid)
   _via_util_msg_show('Metadata deleted');
 }
 
@@ -2199,10 +2224,10 @@ _via_temporal_segmenter.prototype._on_event_metadata_add = function(vid, mid) {
     }
     this._group_gid_add_mid(this.selected_gid, mid); // add at correct location
     this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
+    this._tmetadata_boundary_fetch_spatial_mid();
     this._tmetadata_group_gid_draw(this.selected_gid);
     _via_util_msg_show('Metadata added');
   }
-  this._redraw_timeline();
 }
 
 _via_temporal_segmenter.prototype._on_event_metadata_update = function(vid, mid) {
@@ -2230,7 +2255,6 @@ _via_temporal_segmenter.prototype._on_event_metadata_update = function(vid, mid)
     }
 
   }
-  this._redraw_timeline();
   if (this.selected_gindex !== -1) {
     this._tmetadata_group_gid_draw(this.selected_gid);
   }

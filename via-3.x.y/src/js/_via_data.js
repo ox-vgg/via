@@ -307,6 +307,28 @@ _via_data.prototype._metadata_get_new_id = function(vid) {
   return vid + '_' + _via_util_uid6();
 }
 
+_via_data.prototype.metadata_add_from = function(vid, mid, metadata) {
+  return new Promise((resolve, reject) => {
+    try {
+      if ( !this.store['view'].hasOwnProperty(vid) ) {
+        return reject({'vid':vid});
+      }
+      if ( ! this.cache.mid_list.hasOwnProperty(vid) ) {
+        this.cache.mid_list[vid] = [];
+      }
+      
+      if (metadata instanceof _via_metadata) {
+        this.store.metadata[mid] = metadata;
+        this.cache.mid_list[vid].push(mid);
+      }
+    
+      this.emit_event( 'metadata_add_from', {vid, mid} );
+      resolve({vid, mid});
+    } catch(ex) {
+      reject(ex);
+    }
+  })
+}
 _via_data.prototype.metadata_add = function(vid, z, xy, av, track_opts={}) {
   return new Promise( function(ok_callback, err_callback) {
     try {
@@ -330,6 +352,31 @@ _via_data.prototype.metadata_add = function(vid, z, xy, av, track_opts={}) {
       err_callback(ex);
     }
   }.bind(this));
+}
+_via_data.prototype.metadata_add_from_bulk = function(vid, metadata) {
+  return new Promise((resolve, reject) => {
+    try {
+      if ( !this.store['view'].hasOwnProperty(vid) ) {
+        return reject({'vid':vid});
+      }
+      if ( ! this.cache.mid_list.hasOwnProperty(vid) ) {
+        this.cache.mid_list[vid] = [];
+      }
+      Object.keys(metadata).forEach(mid => {
+        //const { xy, z, av, root_mid, segment_mid } = metadata[mid];
+        if (metadata[mid] instanceof _via_metadata) {
+          this.store.metadata[mid] = metadata[mid];
+          this.cache.mid_list[vid].push(mid);
+        }
+      })
+     
+      const mid_list = Object.keys(metadata)
+      this.emit_event( 'metadata_add_from_bulk', {vid, mid_list} );
+      resolve({vid, mid_list});
+    } catch(ex) {
+      reject(ex);
+    }
+  })
 }
 
 _via_data.prototype.metadata_add_bulk = function(metadata_list, emit) {
