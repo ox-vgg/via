@@ -72,6 +72,22 @@ function _via(via_container) {
       this.va.file_annotator[0][0]._zoom_toggle();
     }
   }.bind(this));
+  this.cp.on_event('overwrite', this._ID, (data, event_payload) => {
+    if (this.va && this.va.tracking_handler) {
+      this.va.tracking_handler.OVERWRITE_SEGMENTS = event_payload;
+      if (event_payload) {
+        _via_util_msg_show('Tracker will overwrite following segments as it tracks.');
+      } else {
+        _via_util_msg_show('Tracker will track till the next segment and stop.');
+      }
+    }
+  });
+  this.cp.on_event('tracker', this._ID, (data, event_payload) => {
+    if (this.va && this.va.tracking_handler) {
+      this.va.tracking_handler.TRACKER_TYPE = event_payload;
+      _via_util_msg_show(`${event_payload} Tracker selected. Draw / Update box to start tracking with it.`)
+    }
+  });
 
   // keyboard event handlers
   //this.via_container.focus()

@@ -2694,9 +2694,9 @@ _via_file_annotator.prototype._smetadata_show = function() {
 }
 
 _via_file_annotator.prototype._smetadata_update = function() {
-  var aid_list = this.d._cache_get_attribute_group(['FILE1_Z1_XY1',
+  var aid_list = []; /* this.d._cache_get_attribute_group(['FILE1_Z1_XY1',
                                                     'FILE1_Z0_XY1',
-                                                    'FILE1_Z2_XY0']);
+                                                    'FILE1_Z2_XY0']);*/
   if ( Object.keys(aid_list).length === 0 ) {
     // no attributes to display
     this.smetadata_container.innerHTML = '';

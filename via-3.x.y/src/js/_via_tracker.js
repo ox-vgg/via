@@ -7,10 +7,11 @@
 let cfnet;
 (async () => {
   await tf.setBackend('webgl');
-  cfnet = new CFNet('https://vgg.gitlab.io/via/assets/models/tfjs_cfnet/model.json');
+  cfnet = new CFNet('./assets/models/tfjs_cfnet/model.json');
   await tracking;
   await cfnet.init_models();
 })();
+
 
 /**
  * @param {string} type - 'KCF or CFNet'
@@ -317,6 +318,8 @@ class TrackingHandler {
     this.video = video.cloneNode(false);
     this.ts = ts;
     this.d  = d;
+    this.OVERWRITE_SEGMENTS = true;
+    this.TRACKER_TYPE = 'KCF';
 
     this.overlay = document.getElementById('via_overlay');
     this.overlay.addEventListener('mousedown', (e) => {
@@ -418,7 +421,7 @@ class TrackingHandler {
   async get_seek_listener(vid, backward=false) {
     
     if (!Tracker.instance) {
-      _via_util_msg_show('Cannot start tracking without initialisation');
+      _via_util_msg_show('To start tracking, Draw / Update a box.', true);
       return null;
     }
    
@@ -438,23 +441,26 @@ class TrackingHandler {
       // Either the previous segment / next segment will act as the 
       // boundary
       next_segment_id = current_track.order[_oidx];
-      next_ts = metadata[next_segment_id].z[(backward ? 1 : 0)] + (backward ? 1e-3 : -1e-3);
+      next_ts = metadata[next_segment_id].z[(backward ? 1 : 0)] + (backward ? 1/50 : -1/50);
+    }
+    if(!this.OVERWRITE_SEGMENTS) {
+      boundary_ts = next_ts;
     }
     
-    const current_ts = metadata[Tracker.segment_mid].z[(backward ? 0 : 1)];
-    if (Math.abs(current_ts - boundary_ts) < this.delta) {
+    if (Math.abs(this.originalVideo.currentTime - boundary_ts) < this.delta) {
       // Already at boundary
       // TODO Add more informative message
       if (boundary_ts === 0) {
-        _via_util_msg_show('Reached start of video');
+        _via_util_msg_show('Tracker cannot track backwards beyond start of video!');
       } else if (boundary_ts === this.video.duration) {
-        _via_util_msg_show('Reached end of video');
+        _via_util_msg_show('Tracker cannot track beyond end of video!');
       } else {
-        _via_util_msg_show(`Cannot track ${(backward ? 'backwards' : '')}: Reached segment boundary`);
+        _via_util_msg_show(`Segment of video already tracked! To overwrite existing metadata and track ${backward ? 'backwards' : ''}: Select 'Overwrite' segments option.`, true);
       }
       return null;
     }
-      
+    
+    const current_ts = metadata[Tracker.segment_mid].z[(backward ? 0 : 1)];
     if(backward) {
       // Add a segment, cloning the properties from current segment
       const { av: av_segment} = metadata[Tracker.segment_mid];
@@ -478,13 +484,13 @@ class TrackingHandler {
     }
 
     // Get tracker attribute key
-    const aid_list = Object.keys(this.d.store.attribute);
-    const attribute_id = aid_list.find(el => this.d.store.attribute[el].aname === 'Tracker');
-    let aid_key = null;
-    if (attribute_id) {
-      const options = this.d.store.attribute[attribute_id].options;
-      aid_key = Object.keys(options).find(k => options[k] === Tracker.type);
-    }
+    // const aid_list = Object.keys(this.d.store.attribute);
+    // const attribute_id = aid_list.find(el => this.d.store.attribute[el].aname === 'Tracker');
+    // let aid_key = null;
+    // if (attribute_id) {
+    //   const options = this.d.store.attribute[attribute_id].options;
+    //   aid_key = Object.keys(options).find(k => options[k] === Tracker.type);
+    // }
     this.tracking = true;
     const seekListener = async (ev) => {
       const video = ev.target;
@@ -501,7 +507,7 @@ class TrackingHandler {
       }
 
       if (!Tracker.instance) {
-        if (VIA_TRACKING_OVERWRITE_SEGMENTS) {
+        if (this.OVERWRITE_SEGMENTS) {
           // Restore backup segments
           Promise.all(Object.keys(segment_backup).map(async _segment_mid => {
             const { segment_metadata, spatial_metadata } = segment_backup[_segment_mid];
@@ -520,13 +526,21 @@ class TrackingHandler {
           if(currentTime < this.delta) {
             _via_util_msg_show('Reached start of video. Use timeline to seek to point of interest');
           } else {
-            _via_util_msg_show('Tracking stopped. Draw / Update box to start / resume tracking', true);
+            if (should_process) {
+              _via_util_msg_show('Tracking stopped. Draw / Update box to start / resume tracking', true);
+            } else {
+              _via_util_msg_show('Stopped tracking as previous section of video is already tracked.', true);
+            }
           }
         } else if (Math.abs(video.duration - video.currentTime) < this.delta) {
           // End of video
           _via_util_msg_show('Reached end of video. Use timeline to seek to point of interest');
         } else {
-          _via_util_msg_show('Tracking stopped. Draw / Update box to start / resume tracking', true);
+          if (should_process) {
+            _via_util_msg_show('Tracking stopped. Draw / Update box to start / resume tracking', true);
+          } else {
+            _via_util_msg_show('Stopped tracking as next section of video is already tracked.', true)
+          }
         }
         if (Tracker.last_success_time !== -1) {
           this.originalVideo.currentTime = Tracker.last_success_time;
@@ -537,7 +551,7 @@ class TrackingHandler {
         return;
       }
     
-      if (VIA_TRACKING_OVERWRITE_SEGMENTS) {
+      if (this.OVERWRITE_SEGMENTS) {
         const is_intersecting = backward ? (currentTime < next_ts) : (currentTime > next_ts);
         if (is_intersecting) {
           // Remove next segment and keep a reference to restore later.
@@ -557,7 +571,7 @@ class TrackingHandler {
             // Either the previous segment / next segment will act as the 
             // boundary
             next_segment_id = current_track.order[_oidx];
-            next_ts = metadata[next_segment_id].z[(backward ? 1 : 0)];
+            next_ts = metadata[next_segment_id].z[(backward ? 1 : 0)] + (backward ? 1/50 : -1/50);
           } else {
             next_segment_id = -1;
             next_ts = boundary_ts;
@@ -586,7 +600,7 @@ class TrackingHandler {
             this.dscale * _roi.width,
             this.dscale * _roi.height
           ],
-          { [aid]: this.id2name[track_mid], ...(aid_key && { [attribute_id]: aid_key }) },
+          { [aid]: this.id2name[track_mid], 'tracker': Tracker.type },
           { 
             segment_mid: segment_mid,
             root_mid: track_mid 
@@ -607,7 +621,7 @@ class TrackingHandler {
           // Tracking failed previously
 
           // Overwrite with the previously tracked segment
-          if (VIA_TRACKING_OVERWRITE_SEGMENTS) {
+          if (this.OVERWRITE_SEGMENTS) {
             // TODO CODE SECTION NOT TESTED
             // Restore backup segments
             await Promise.all(
@@ -767,14 +781,14 @@ class TrackingHandler {
     let { z: z_segment, av: av_segment } = this.d.store.metadata[segment_mid];
 
     // Find attribute that corresponds to Tracker
-    let tracker_type = 'KCF';
-    const tracker_aid = Object.keys(av).find(el => this.d.store.attribute[el].aname === 'Tracker');
-    if (tracker_aid) {
-      let tracker_val = av[tracker_aid] || this.d.store.attribute[tracker_aid].default_option_id ;
-      if (tracker_val && this.d.store.attribute[tracker_aid].options) {
-        tracker_type = this.d.store.attribute[tracker_aid].options[tracker_val] || 'KCF';
-      }
-    }
+    let tracker_type = this.TRACKER_TYPE;
+    // const tracker_aid = Object.keys(av).find(el => this.d.store.attribute[el].aname === 'Tracker');
+    // if (tracker_aid) {
+    //   let tracker_val = av[tracker_aid] || this.d.store.attribute[tracker_aid].default_option_id ;
+    //   if (tracker_val && this.d.store.attribute[tracker_aid].options) {
+    //     tracker_type = this.d.store.attribute[tracker_aid].options[tracker_val] || 'KCF';
+    //   }
+    // }
     const { groupby_aid: aid } = this.ts;
 
     if (!root_mid) {

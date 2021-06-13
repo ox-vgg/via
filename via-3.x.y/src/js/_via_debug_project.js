@@ -967,8 +967,8 @@ _via_dp[5]['store']['project'] = {
 _via_dp[5]['store']['config'] = {
   'file': {
     'loc_prefix': {
-      '1': 'file:///home/devil/Videos/',
-      '2': 'https://vgg-dvar.robots.ox.ac.uk/_internal/prasanna/assets/',
+      '1': '',
+      '2': '',
     },
   },
   'ui': {
@@ -989,14 +989,6 @@ _via_dp[5]['store']['attribute'] = {
     'options':{},
     'default_option_id':'',
   },
-  '2': {
-    'aname': 'Tracker',
-    'anchor_id': 'FILE1_Z1_XY1',
-    'type': 3,
-    'desc': 'Tracker',
-    'options': {"0":"KCF","1":"CFNet"},
-    'default_option_id': '0',
-  }
 };
 _via_dp[5]['store']['file'] = {};
 // _via_dp[5]['store']['file'] = {

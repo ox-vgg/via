@@ -39,14 +39,6 @@ _via_control_panel.prototype._init = function(type) {
 
   this._add_spacer();
 
-  var editor = _via_util_get_svg_button('micon_insertcomment', 'Show/Hide Attribute Editor');
-  editor.addEventListener('click', function() {
-    this.emit_event( 'editor_toggle', {});
-  }.bind(this));
-  this.c.appendChild(editor);
-
-  this._add_spacer();
-
   if ( document.getElementById('micon_zoomin') ) {
     var zoom = _via_util_get_svg_button('micon_zoomin', 'Enable/disable magnifying glass to inspect finer details');
     zoom.addEventListener('click', function() {
@@ -77,6 +69,35 @@ _via_control_panel.prototype._init = function(type) {
     _via_util_page_show('page_about');
   }.bind(this));
   this.c.appendChild(help);
+
+  this._add_spacer();
+
+  const tracker_settings_div = document.createElement('div');
+  
+  const overwrite_segments_div = document.createElement('div');
+  overwrite_segments_div.innerHTML = `
+<span> Segments: </span>
+<input style="width: auto" checked type="checkbox" id="overwrite" name="overwrite" value="overwrite">
+<label for="overwrite">Overwrite</label>
+&emsp;
+<span> Tracker: </span>
+<input style="width: auto" checked type="radio" id="kcf" name="tracker" value="KCF">
+<label for="kcf">KCF</label>
+<input style="width: auto" type="radio" id="cfnet" name="tracker" value="CFNet">
+<label for="cfnet">CFNet</label>
+`;
+  const overwrite_el = overwrite_segments_div.querySelector('input[name="overwrite"]');
+  overwrite_el.addEventListener('change', (e) => {
+    this.emit_event('overwrite', e.target.checked);
+  });
+
+  const tracker_el = overwrite_segments_div.querySelectorAll('input[name="tracker"]');
+  tracker_el.forEach(_el =>_el.addEventListener('change', (e) => {
+    this.emit_event('tracker', e.target.value);
+  }));
+
+  tracker_settings_div.appendChild(overwrite_segments_div);
+  this.c.appendChild(tracker_settings_div)
 }
 
 _via_control_panel.prototype._add_spacer = function() {

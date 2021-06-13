@@ -219,9 +219,12 @@ _via_temporal_segmenter.prototype._update_playback_rate = function(t) {
   }
 }
 
-_via_temporal_segmenter.prototype._redraw_timeline = function() {  
+_via_temporal_segmenter.prototype._redraw_timeline = function() {
   // draw group timeline
   this._tmetadata_gtimeline_draw();
+
+  // draw the full video timeline (on the top)
+  this._tmetadata_draw_currenttime_mark(this.m.currentTime);
 }
 
 //
@@ -414,21 +417,21 @@ _via_temporal_segmenter.prototype._tmetadata_init = function() {
 
   // group variable selector
   if ( this.group_aid_candidate_list.length ) {
-    this.group_aname_select = document.createElement('select');
-    this.group_aname_select.setAttribute('title', 'Select the variable name that should be used for temporal segmentation. These variables can be edited using the the attribute editor.');
-    this.group_aname_select.addEventListener('change', this._tmetadata_onchange_groupby_aid.bind(this));
+    // this.group_aname_select = document.createElement('select');
+    // this.group_aname_select.setAttribute('title', 'Select the variable name that should be used for temporal segmentation. These variables can be edited using the the attribute editor.');
+    // this.group_aname_select.addEventListener('change', this._tmetadata_onchange_groupby_aid.bind(this));
 
-    for ( var aindex in this.group_aid_candidate_list ) {
-      var aid = this.group_aid_candidate_list[aindex];
-      var oi = document.createElement('option');
-      oi.innerHTML = this.d.store.attribute[aid].aname;
-      oi.setAttribute('value', aid);
-      if ( aid === this.groupby_aid ) {
-        oi.setAttribute('selected', '');
-      }
-      this.group_aname_select.appendChild(oi);
-    }
-    group_aname_container.appendChild(this.group_aname_select);
+    // for ( var aindex in this.group_aid_candidate_list ) {
+    //   var aid = this.group_aid_candidate_list[aindex];
+    //   var oi = document.createElement('option');
+    //   oi.innerHTML = this.d.store.attribute[aid].aname;
+    //   oi.setAttribute('value', aid);
+    //   if ( aid === this.groupby_aid ) {
+    //     oi.setAttribute('selected', '');
+    //   }
+    //   this.group_aname_select.appendChild(oi);
+    // }
+    // group_aname_container.appendChild(this.group_aname_select);
   }
 
   this.gtimeline_container = document.createElement('div');
@@ -2206,7 +2209,7 @@ _via_temporal_segmenter.prototype._on_event_metadata_del = function(vid, mid_lis
     this._tmetadata_mid_del(_mid);
   })
   this._tmetadata_boundary_fetch_gid_mid(this.selected_gid)
-  _via_util_msg_show('Metadata deleted');
+  // _via_util_msg_show('Metadata deleted');
 }
 
 _via_temporal_segmenter.prototype._on_event_metadata_add = function(vid, mid) {
@@ -2226,7 +2229,7 @@ _via_temporal_segmenter.prototype._on_event_metadata_add = function(vid, mid) {
     this._tmetadata_boundary_fetch_gid_mid(this.selected_gid);
     this._tmetadata_boundary_fetch_spatial_mid();
     this._tmetadata_group_gid_draw(this.selected_gid);
-    _via_util_msg_show('Metadata added');
+    //_via_util_msg_show('Metadata added');
   }
 }
 

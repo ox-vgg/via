@@ -32,7 +32,7 @@
     };
     _via_demo_project['store']['config'] = {
       'file': {
-        'loc_prefix': { '1':'', '2':'https://vgg.gitlab.io/via/assets/', '3':'', '4':'' }, // constants defined in _via_file._VIA_FILE_LOC
+        'loc_prefix': { '1':'', '2':'./assets/', '3':'', '4':'' }, // constants defined in _via_file._VIA_FILE_LOC
       },
       'ui': {
         'file_content_align':'center',
@@ -52,14 +52,6 @@
         'options':{},
         'default_option_id':'',
       },
-      '2': {
-        'aname': 'Tracker',
-        'anchor_id': 'FILE1_Z1_XY1',
-        'type': 3,
-        'desc': 'Tracker',
-        'options': {"0":"KCF","1":"CFNet"},
-        'default_option_id': '0',
-      }
     };
     _via_demo_project['store']['file'] = {
       '1':{
