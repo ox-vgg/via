@@ -40,18 +40,19 @@ def get_src_file_contents(filename):
 with open(OUT_HTML, 'w') as outf:
   with open(TARGET_HTML, 'r') as inf:
     lines = inf.readlines()
-    
-    if args.target == 'video_annotator' and args.enable_tracking:
-      lines = [l for l in lines if 'ENABLE_TRACKING' not in l] 
-    else:
-      sidx, eidx = tuple(i for i, x in enumerate(lines) if 'ENABLE_TRACKING' in x)
-      lines = lines[:sidx] + lines[(eidx+1):]
-    
+
+    if args.target == 'video_annotator':
+      if args.enable_tracking:
+        lines = [l for l in lines if 'ENABLE_TRACKING' not in l]
+      else:
+        sidx, eidx = tuple(i for i, x in enumerate(lines) if 'ENABLE_TRACKING' in x)
+        lines = lines[:sidx] + lines[(eidx+1):]
+
     for line in lines:
       if 'tensorflow' in line:
         outf.write(line)
         continue
-      
+
       if '<script src="' in line:
         tok = line.split('"')
         filename = tok[1][3:]

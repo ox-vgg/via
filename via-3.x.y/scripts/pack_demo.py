@@ -47,7 +47,7 @@ def get_file_contents(filename):
 with open(OUT_HTML, 'w') as outf:
   with open(TARGET_HTML, 'r') as inf:
     lines = inf.readlines()
-      
+
     TARGET_DEMO_DATA_FILENAME = [
       'data',
       'demo',
@@ -59,16 +59,20 @@ with open(OUT_HTML, 'w') as outf:
       '_via_demo_' + TARGET
     ]
 
-    if args.target == 'video_annotator' and args.enable_tracking:
-      lines = [l for l in lines if 'ENABLE_TRACKING' not in l]
-      TARGET_DEMO_DATA_FILENAME[-1] += '_with_tracking.js'
-      TARGET_DEMO_JS_FILENAME[-1] += '_with_tracking.js'
+    if args.target == 'video_annotator':
+      if args.enable_tracking:
+        lines = [l for l in lines if 'ENABLE_TRACKING' not in l]
+        TARGET_DEMO_DATA_FILENAME[-1] += '_with_tracking.js'
+        TARGET_DEMO_JS_FILENAME[-1] += '_with_tracking.js'
+      else:
+        sidx, eidx = tuple(i for i, x in enumerate(lines) if 'ENABLE_TRACKING' in x)
+        lines = lines[:sidx] + lines[(eidx+1):]
+        TARGET_DEMO_DATA_FILENAME[-1] += '.js'
+        TARGET_DEMO_JS_FILENAME[-1] += '.js'
     else:
-      sidx, eidx = tuple(i for i, x in enumerate(lines) if 'ENABLE_TRACKING' in x)
-      lines = lines[:sidx] + lines[(eidx+1):]
       TARGET_DEMO_DATA_FILENAME[-1] += '.js'
       TARGET_DEMO_JS_FILENAME[-1] += '.js'
-    
+
     # fetch demo data and demo script
     TARGET_DEMO_DATA_FILENAME = os.path.join(*TARGET_DEMO_DATA_FILENAME)
     TARGET_DEMO_JS_FILENAME = os.path.join(*TARGET_DEMO_JS_FILENAME)
@@ -79,7 +83,7 @@ with open(OUT_HTML, 'w') as outf:
       if 'tensorflow' in line:
         outf.write(line)
         continue
-      
+
       if '<script src="' in line:
         tok = line.split('"')
         filename = tok[1][3:]

@@ -358,10 +358,10 @@ _via_file_annotator.prototype._file_load = function() {
       this.file_html_element.setAttribute('src', file_src);
     }
 
-    // this.file_html_element.addEventListener('load', function() {
-    //   this._file_html_element_ready();
-    //   ok_callback();
-    // }.bind(this));
+    this.file_html_element.addEventListener('load', function() {
+      this._file_html_element_ready();
+      ok_callback();
+    }.bind(this));
     this.file_html_element.addEventListener('loadeddata', function() {
       this._file_html_element_ready();
       ok_callback();
@@ -1573,13 +1573,15 @@ _via_file_annotator.prototype._creg_draw = function(mid, is_filtered = false) {
   let { REGION_BOUNDARY_COLOR, REGION_LINE_WIDTH } = this.conf;
 
   const { av } = this.d.store.metadata[mid];
-  const { groupby_aid: aid, gid_list, COLOR_LIST, HSLA_COLOR_LIST, NCOLOR } = this.va.temporal_segmenter;
-  const gindex = gid_list.indexOf(av[aid]);
-  if (is_filtered) {
-    REGION_BOUNDARY_COLOR = HSLA_COLOR_LIST[gindex % NCOLOR];
-    REGION_LINE_WIDTH = 1;
-  } else if (gindex !== -1) {
-    REGION_BOUNDARY_COLOR = COLOR_LIST[gindex % NCOLOR];
+  if (this.va.temporal_segmenter) {
+    const { groupby_aid: aid, gid_list, COLOR_LIST, HSLA_COLOR_LIST, NCOLOR } = this.va.temporal_segmenter;
+    const gindex = gid_list.indexOf(av[aid]);
+    if (is_filtered) {
+      REGION_BOUNDARY_COLOR = HSLA_COLOR_LIST[gindex % NCOLOR];
+      REGION_LINE_WIDTH = 1;
+    } else if (gindex !== -1) {
+      REGION_BOUNDARY_COLOR = COLOR_LIST[gindex % NCOLOR];
+    }
   }
 
   var colour_opts = {
