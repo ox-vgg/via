@@ -555,6 +555,11 @@ _via_file_annotator.prototype._file_html_element_ready = function() {
 // input event listeners
 //
 _via_file_annotator.prototype._rinput_attach_input_handlers = function(container) {
+
+  container.addEventListener("touchstart", this._rtouch_handler.bind(this), false);
+  container.addEventListener("touchend", this._rtouch_handler.bind(this), false);
+  container.addEventListener("touchmove", this._rtouch_handler.bind(this), false);
+
   container.addEventListener('mousedown', this._rinput_mousedown_handler.bind(this));
   container.addEventListener('mouseup', this._rinput_mouseup_handler.bind(this));
   container.addEventListener('mousemove', this._rinput_mousemove_handler.bind(this));
@@ -564,6 +569,39 @@ _via_file_annotator.prototype._rinput_attach_input_handlers = function(container
   container.addEventListener('wheel', this._rinput_wheel_handler.bind(this));
 
   container.addEventListener('keydown', this._rinput_keydown_handler.bind(this));
+}
+
+_via_file_annotator.prototype._rtouch_handler = function(e) {
+  // https://developer.mozilla.org/en-US/docs/Web/API/Touch_events#handling_clicks
+  // Ignore multi touch and propagate single touch events as mouse
+
+  e.preventDefault();
+  if (e.touches.length > 1 || (e.type == "touchend" && e.touches.length > 0))
+    return;
+
+  var newEvt = document.createEvent("MouseEvents");
+  var type = null;
+  var touch = null;
+
+  switch (e.type) {
+    case "touchstart":
+      type = "mousedown";
+      touch = e.changedTouches[0];
+      break;
+    case "touchmove":
+      type = "mousemove";
+      touch = e.changedTouches[0];
+      break;
+    case "touchend":
+      type = "mouseup";
+      touch = e.changedTouches[0];
+      break;
+  }
+
+  newEvt.initMouseEvent(type, true, true, e.target.ownerDocument.defaultView, 0,
+    touch.screenX, touch.screenY, touch.clientX, touch.clientY,
+    e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, 0, null);
+  e.target.dispatchEvent(newEvt);
 }
 
 _via_file_annotator.prototype._rinput_remove_input_handlers = function() {
