@@ -13,7 +13,7 @@ and released under the BSD-2 clause [license](https://gitlab.com/vgg/via/blob/ma
 which allows it to be useful for both academic projects and commercial applications.
 
 ## Screenshots
-![Screenshot showing basic image annotation](via-1.x.y/doc/screenshots/big_ben_annotation.jpg)
+![Screenshot showing basic image annotation](doc/screenshots/big_ben_annotation.jpg)
 
 ## Download
 Detailed instructions for download of VIA are available at http://www.robots.ox.ac.uk/~vgg/software/via/
