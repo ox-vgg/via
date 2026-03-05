@@ -1,3 +1,5 @@
+**This is a mirror repository and is not monitored or maintained. See https://gitlab.com/vgg/via/ for latest updates.**
+
 # VGG Image Annotator
 
 VGG Image Annotator is a simple and standalone manual annotation software for

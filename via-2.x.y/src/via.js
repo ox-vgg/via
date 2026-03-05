@@ -1290,6 +1290,10 @@ function export_project_to_coco_format() {
       break;
     }
   }
+  const rawKeys = Object.keys(_via_img_metadata);
+  const keys = rawKeys.map(k => parseInt(k)); // parse each key to integer
+  const duplicated_image_id = new Set(keys).size !== keys.length || keys.some(id => Number.isNaN(id));
+  
   if(assign_unique_id) {
     // check if all the options have unique id
     var attribute_option_id_list = [];
@@ -1344,7 +1348,7 @@ function export_project_to_coco_format() {
     }
 
     var coco_img_id;
-    if(assign_unique_id) {
+    if(assign_unique_id || duplicated_image_id) {
       coco_img_id = unique_img_id;
       unique_img_id = unique_img_id + 1;
     } else {
